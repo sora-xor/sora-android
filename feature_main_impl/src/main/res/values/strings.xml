@@ -1,0 +1,233 @@
+<resources>
+    <!-- TODO: Remove or change this placeholder text -->
+
+    <string name="pincode">Pin code</string>
+    <string name="pincode_title">Set your pin code</string>
+    <string name="pincode_title_check">Enter pin code</string>
+    <string name="pincode_repeat_error">Pin code repeat error</string>
+    <string name="pincode_title2">Confirm your pin code</string>
+
+    <string name="invite_fragment_title">Friends</string>
+    <string name="invite_title">Invitе friends to get more votes daily!</string>
+    <string name="invite_subtitle">Share a promo link and get more invited when users registers using your link. Learn more.</string>
+    <string name="send_invite">Send invite</string>
+    <string name="share_invite">Share promo link</string>
+    <string name="votes_left_template">%1$d left</string>
+    <string name="votes_template">%1$s votes</string>
+    <string name="votes_k_template">%1$sK</string>
+    <string name="friends_template">%1$s %2$s voted</string>
+    <string name="friends_and_favourites_template">%1$s %2$s</string>
+    <string name="ended_template">Ended %1$s</string>
+    <string name="spent">You\'ve spent %1$s votes</string>
+    <string name="accepted_invitations_title">Accepted invitations</string>
+    <string name="how_it_works">How it works?</string>
+    <string name="votes_left">Votes left</string>
+    <string name="future_sora">Future Sora</string>
+    <string name="invite_to_sora">Invite friends to get more votes</string>
+    <string name="projects">Sora projects</string>
+    <string name="vote">Vote</string>
+    <string name="new_project">New</string>
+    <string name="founded_template">%1$d%% votes of %2$s</string>
+    <string name="ending_today">Ending today</string>
+    <string name="parent_invitation_template">You were invited by %1$s %2$s</string>
+    <string name="learn_more">Learn more</string>
+    <string name="how_many_votes">How many votes</string>
+    <string name="cancel">Cancel</string>
+    <string name="expected_sora_template">Get %1$s if project is fund</string>
+    <string name="invite_link_format">Join Sora using link below:\n%1$s</string>
+    <string name="invite_code_sharing_title">Share your invite code</string>
+    <string name="promo_share_title">Share promo link</string>
+
+
+    <!-- Navigation menu titles -->
+    <string name="activity">Activity</string>
+    <string name="wallet">Wallet</string>
+    <string name="profile">Profile</string>
+    <string name="friends">Friends</string>
+    <string name="question_mark">\?</string>
+    <string name="profile_title">Profile</string>
+    <string name="add">Add</string>
+    <string name="remove">Remove</string>
+    <string name="show_more">Show more...</string>
+    <string name="gallery">Gallery</string>
+    <string name="contacts">Contacts and information</string>
+    <string name="website">Website</string>
+    <string name="email">E-mail</string>
+
+    <string name="empty_activity_description">Updates and notifications like\n project updates, received votes,\n accepted invitations will appear here</string>
+    <string name="empty_votehistory_description">Whenever your votes will\n change, you will see the\n history of that here</string>
+    <string name="empty_friends_description">Your invitation status and\nreward will be displayed here</string>
+    <string name="empty_all_project_description">We are waiting for new\n projects to arrive</string>
+    <string name="wallet_empty">Incoming and outgoing\n transactions will appear here</string>
+    <string name="empty_voted_project_description">Vote for the projets and they\n will be appear here</string>
+    <string name="empty_completed_project_description">When voting is complete you\n will find projects here</string>
+    <string name="empty_favorite_project_description">Add projects to favourites and\n they will appear here</string>
+    <string name="save">Save</string>
+
+
+    <string name="my_reputation">My Reputation</string>
+    <string name="votes">Votes</string>
+    <string name="personal_details">Change personal details</string>
+    <string name="passphrase">View passphrase</string>
+    <string name="conversion">Conversion display</string>
+
+    <string name="reputationScreenTitle">Reputation</string>
+    <string name="reputation_screen_what_is_reputation">What is reputation?</string>
+    <string name="reputation_screen_how_to_level_up">How to level up a rank?</string>
+    <string name="reputation_screen_your_current_reputation">Your reputation rank</string>
+    <string name="no_reputation">Your current reputation will be available tomorrow</string>
+    <string name="reputation_screen_reputation_rank">%1$s (Ranking %2$d of %3$d users)</string>
+    <string name="votesHistoryScreenTitle">Votes History</string>
+    <string name="sora_announcement">SORA announcement</string>
+    <string name="sora_support">SORA support</string>
+    <string name="succesfull_voting">Succesfull voting</string>
+    <string name="unsuccesfull_voting">Unsuccessful voting</string>
+
+    <string name="help">Help</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+
+    <string name="send_email">Select email app</string>
+    <string name="sora_account">Sora account</string>
+    <string name="send">Send</string>
+    <string name="receive">Receive</string>
+    <string name="withdraw">Withdrawal</string>
+    <string name="receive_money">Receive money</string>
+    <string name="vote_regularly">Vote regularly</string>
+    <string name="invite_more_people">Invite more people to Sora</string>
+    <string name="rank_template">%1$d</string>
+    <string name="rank_total_rank_template">%1$d of %2$d</string>
+    <string name="rank_empty">Your reputation will be updated in %02d:%02d</string>
+    <string name="last_votes_template">%1$s votes received today</string>
+    <string name="sora_support_text">If you have feedback or need help contact us at</string>
+    <string name="sora_support_email">sora@soramitsu.co.jp</string>
+
+    <plurals name="friends">
+        <item quantity="zero">friends</item>
+        <item quantity="one">friend</item>
+        <item quantity="two">friends</item>
+        <item quantity="few">friends</item>
+        <item quantity="many">friends</item>
+        <item quantity="other">friends</item>
+    </plurals>
+
+    <plurals name="favourites">
+        <item quantity="zero">favourites</item>
+        <item quantity="one">favourite</item>
+        <item quantity="two">favourites</item>
+        <item quantity="few">favourites</item>
+        <item quantity="many">favourites</item>
+        <item quantity="other">favourites</item>
+    </plurals>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="error_zero_votes">Amount must be greater than zero</string>
+    <string name="transaction_details">Transaction details</string>
+    <string name="send_money">Send money</string>
+    <string name="set_amount">Set amount</string>
+    <string name="scan_qr">Scan qr code</string>
+    <string name="scan_canceled">Scan canceled</string>
+    <string name="next">Next</string>
+    <string name="description">Description</string>
+    <string name="check_transaction_details">Please check and confirm details</string>
+    <string name="tranasction_has_been_process">Your transaction is being processed</string>
+    <string name="recipient">Recipient</string>
+    <string name="receive_tutorial_header">Show this code to sender</string>
+    <string name="receive_tutorial_subheader">Sender should select</string>
+    <string name="enter_amount_button">Enter required amount</string>
+    <string name="amount_error">Amount field should be filled</string>
+    <string name="amount_is_zero_error">Amount should be bigger than zero</string>
+    <string name="insufficient_balance">You haven\'t got enough XOR on your balance</string>
+    <string name="status">Status</string>
+    <string name="identifier">Identifier</string>
+    <string name="date_and_time">Date and time</string>
+    <string name="type">Type</string>
+    <string name="all_done">All done</string>
+    <string name="done">Done</string>
+    <string name="transasction_details">Transaction details</string>
+    <string name="sender">Sender</string>
+    <string name="country_not_supported">Your country is\nnot supported yet</string>
+    <string name="country_not_supported_subtitle">We don’t have an identity\nprovider partners in your\ncountry at this moment.</string>
+    <string name="you_can_send_to_eth">You still can send XOR to ETH Wallet</string>
+    <string name="send_to_eth">Send to my Ethereum wallet</string>
+    <string name="send_to_eth_title">Send to ETH</string>
+    <string name="signin">Sign-in</string>
+    <string name="verify_identity">Verify identity</string>
+    <string name="verify_your_identity">Verify your identity</string>
+    <string name="verify_your_identity_subtitle">For legal reasons you need to\nverify your identity to\nbe able to manage your funds.</string>
+    <string name="what_does_it_mean">What does it mean?</string>
+    <string name="what_does_it_mean_description">For legal reasons we need a proof of identity in order to allow sending and receiving of Sora. We will notify you when this feature will be available in your region. You can change country it in Profile tab.</string>
+    <string name="what_you_will_need">What you will need</string>
+    <string name="what_you_will_need_description">Sign-up on identity provider\'s website. Sign-in with your credentials and verify your identity.</string>
+    <string name="send_to_contacts_title">Send</string>
+    <string name="search_contacts_hint">Phone number or account id</string>
+    <string name="in_review">In review</string>
+    <string name="rejected">Rejected</string>
+    <string name="transaction_confirmation">Confirmation</string>
+    <string name="transaction_confirmation_header">Please check and confirm details</string>
+    <string name="fingerprint_error">You are not authorized. Try another finger.</string>
+    <string name="touch_fingerprint_scanner">Touch the fingerprint scanner</string>
+    <string name="funds_are_being_sent">Funds are being sent</string>
+    <string name="eth_address">Ethereum wallet address</string>
+    <string name="transaction_fee_template">Transaction fee %1$s %2$s</string>
+    <string name="transaction_fee">Transaction fee</string>
+    <string name="eth_hint">42 lowercase hex symbols starting with 0x</string>
+    <string name="total_template">Total amount %1$s %2$.2f</string>
+    <string name="amount_to_send">Amount to send</string>
+    <string name="wallet_updating_subtitle">You wallet is being updated to allow you to freely manage your funds. Please wait.</string>
+    <string name="wallet_updating_title">Updating wallet...</string>
+    <string name="eth_address_error">Eth address should be 42 chars long and start with 0x</string>
+    <string name="sora_account_template">Sora account - %1$s</string>
+
+    <string name="wallet_identity_verification">Identity verification</string>
+    <string name="wallet_identity_verification_in_review">In review</string>
+    <string name="wallet_identity_verification_start">Start</string>
+    <string name="wallet_identity_verification_not_available">Not available</string>
+    <string name="wallet_identity_verification_rejected">Rejected</string>
+    <string name="wallet_identity_verification_update">Update</string>
+    <string name="wallet_identity_verification_update_dialog_title">Congratulations</string>
+    <string name="wallet_identity_verification_update_dialog_body">Your documents have been successfully verified.
+        Please, confirm account update to receive more features.</string>
+    <string name="wallet_identity_verification_update_dialog_later">Later</string>
+    <string name="wallet_identity_verification_update_dialog_confirm">Confirm</string>
+    <string name="verification">Verification</string>
+    <string name="country_not_supported_title">Country not supported</string>
+
+    <plurals name="project_date_day_plurals">
+        <item quantity="one">%1$d day left</item>
+        <item quantity="other">%1$d days left</item>
+    </plurals>
+
+    <plurals name="project_date_hour_plurals">
+        <item quantity="one">%1$d hour left</item>
+        <item quantity="other">%1$d hours left</item>
+    </plurals>
+
+    <plurals name="project_date_minute_plurals">
+        <item quantity="one">%1$d minute left</item>
+        <item quantity="other">%1$d minutes left</item>
+    </plurals>
+
+    <plurals name="project_date_second_plurals">
+        <item quantity="one">%1$d minute left</item>
+        <item quantity="other">%1$d minutes left</item>
+    </plurals>
+
+    <string name="you_have_already_registered">You have already registered</string>
+
+    <string name="software">Software</string>
+    <string name="version">Version</string>
+    <string name="open_source">Source code</string>
+    <string name="contact_us">Contact Us</string>
+    <string name="legal">Legal</string>
+    <string name="about">About</string>
+    <string name="open_source_link">https://github.com/sora-xor/Sora-Android</string>
+    <string name="total_amount">Total amount</string>
+    <string name="faq">FAQ</string>
+    <string name="send_back">Send back</string>
+
+    <string name="network_connection_error">Network connection unavailable</string>
+
+    <string name="no_video_app_installed_error">No video app installed</string>
+</resources>

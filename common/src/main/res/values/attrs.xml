@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <declare-styleable name="CustomTabView">
+    <attr name="textSize" format="dimension" />
+  </declare-styleable>
+
+  <attr name="searchViewHeight" format="reference" />
+
+</resources>

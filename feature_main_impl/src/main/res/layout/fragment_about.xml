@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/software_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginTop="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:lineSpacingExtra="5sp"
+                android:text="@string/software"
+                android:textColor="@color/lightGrey"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <View
+                android:id="@+id/border1"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginTop="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:background="@color/thick_border"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/software_text" />
+
+            <TextView
+                android:id="@+id/version_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:lineSpacingExtra="5sp"
+                android:text="@string/version"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toStartOf="@+id/version_text"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/border1" />
+
+            <TextView
+                android:id="@+id/version_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:gravity="end"
+                android:lineSpacingExtra="5sp"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toEndOf="@+id/version_title"
+                app:layout_constraintTop_toBottomOf="@+id/border1"
+                tools:text="1.0" />
+
+            <View
+                android:id="@+id/border"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginTop="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:background="@color/thin_border"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/version_title" />
+
+            <TextView
+                android:id="@+id/contacts_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:foreground="?selectableItemBackground"
+                android:lineSpacingExtra="5sp"
+                android:padding="@dimen/margin_padding_by_side"
+                android:text="@string/contact_us"
+                android:textColor="@color/lightRed"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/border" />
+
+            <View
+                android:id="@+id/border2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:background="@color/thin_border"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/contacts_text" />
+
+            <TextView
+                android:id="@+id/open_source_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:foreground="?selectableItemBackground"
+                android:lineSpacingExtra="5sp"
+                android:padding="@dimen/margin_padding_by_side"
+                android:text="@string/open_source"
+                android:textColor="@color/lightRed"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/border2" />
+
+            <TextView
+                android:id="@+id/legal_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginTop="@dimen/x2"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:lineSpacingExtra="5sp"
+                android:text="@string/legal"
+                android:textColor="@color/lightGrey"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/open_source_text" />
+
+            <View
+                android:id="@+id/border3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginTop="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:background="@color/thick_border"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/legal_text" />
+
+
+            <TextView
+                android:id="@+id/terms_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:foreground="?selectableItemBackground"
+                android:lineSpacingExtra="5sp"
+                android:padding="@dimen/margin_padding_by_side"
+                android:text="@string/terms_title"
+                android:textColor="@color/lightRed"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/border3" />
+
+            <View
+                android:id="@+id/border4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:background="@color/thin_border"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/terms_text" />
+
+            <TextView
+                android:id="@+id/privacy_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:foreground="?selectableItemBackground"
+                android:lineSpacingExtra="5sp"
+                android:padding="@dimen/margin_padding_by_side"
+                android:text="@string/privacy_fragment_title"
+                android:textColor="@color/lightRed"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/border4" />
+
+            <View
+                android:id="@+id/border5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_by_side"
+                android:background="@color/thin_border"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/privacy_text" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

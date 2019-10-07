@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/indicator"
+        android:layout_width="match_parent"
+        android:layout_height="12dp"
+        android:background="@android:color/white"
+        app:tabBackground="@drawable/indicator_selector"
+        app:tabGravity="center"
+        app:tabIndicatorHeight="0dp"
+        android:layout_marginTop="@dimen/x1"
+        android:layout_marginBottom="@dimen/x1" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tutorialSignUpButton"
+        style="@style/FilledButton"
+        android:layout_width="184dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/x1"
+        android:text="@string/sign_up" />
+
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/x1" />
+
+    <TextView
+        android:id="@+id/tutorialRestoreTextView"
+        style="@style/RedTextStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/restore_account" />
+
+    <TextView
+        android:id="@+id/tutorialTerms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/x2"
+        android:gravity="center"
+        android:textSize="12sp"
+        tools:text="@string/tutorial_terms" />
+
+</LinearLayout>

@@ -1,0 +1,84 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+        versionCode appVersionCode
+        versionName appVersionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    dataBinding {
+        enabled = true
+    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(":core_di")
+    implementation project(":common")
+    implementation project(":feature_main_api")
+    implementation project(":feature_account_api")
+    implementation project(":feature_project_api")
+    implementation project(":feature_information_api")
+    implementation project(":feature_did_api")
+    implementation project(":feature_wallet_api")
+    implementation project(":core_network_api")
+
+    implementation kotlinDeps.values()
+
+    implementation androidDeps.values()
+
+    implementation navigationDeps.values()
+
+    implementation shimmerDeps.values()
+
+    implementation roundedImageViewDeps.values()
+
+    implementation picassoDeps.values()
+
+    implementation gsonDeps.values()
+
+    implementation daggerDeps.values()
+    kapt daggerKapt.values()
+
+    implementation lifecycleDeps.values()
+    kapt lifecycleKapt.values()
+
+    implementation phoenixDeps.values()
+
+    implementation rxBindingDeps.values()
+
+    implementation capitalDeps.values()
+
+    implementation soraDeps.values()
+    implementation birtDeps.values()
+
+    implementation zXingDeps.values()
+
+    implementation rxPermissionsDeps.values()
+
+    testImplementation unitTestsDeps.values()
+    testImplementation robolectricDeps.values()
+    testImplementation archTestDeps.values()
+    testImplementation project(":test_shared")
+}

@@ -1,0 +1,5 @@
+<resources>
+  <!-- Firebase -->
+  <string name="channel_name">Global channel</string>
+  <string name="channel_description">Notifications sent from the app admin</string>
+</resources>

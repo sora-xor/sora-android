@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="jp.co.soramitsu.feature_main_impl">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+
+    <application>
+
+        <activity
+            android:name=".presentation.MainActivity"
+            android:screenOrientation="portrait"
+            android:supportsRtl="true"
+            android:clearTaskOnLaunch="true"
+            android:launchMode="singleTop"
+            android:theme="@style/OnboardingActivityTheme"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".presentation.detail.gallery.GalleryActivity"
+            android:theme="@style/OnboardingActivityTheme" />
+
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="fullSensor"
+            android:theme="@style/OnboardingActivityTheme"
+            tools:replace="android:theme,screenOrientation" />
+
+    </application>
+
+</manifest>

@@ -1,0 +1,98 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion compileVersion
+    flavorDimensions "default"
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+        versionCode appVersionCode
+        versionName appVersionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            resValue "string", "server_url", "http://199.247.26.56:8888/sora-web/"
+        }
+
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            resValue "string", "server_url", "http://199.247.26.56:8888/sora-web/"
+        }
+    }
+
+    productFlavors {
+        develop {
+            buildConfigField "String", "HOST_URL", "\"https://s1.dev.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/dev/join/\""
+            dimension 'default'
+        }
+
+        tst {
+            buildConfigField "String", "HOST_URL", "\"https://s1.tst.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/tst/join/\""
+            dimension 'default'
+        }
+
+        staging {
+            buildConfigField "String", "HOST_URL", "\"https://s4.stg1.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/stg/join/\""
+            dimension 'default'
+        }
+
+        production {
+            buildConfigField "String", "HOST_URL", "\"https://s6.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
+            dimension 'default'
+        }
+
+        demo {
+            buildConfigField "String", "HOST_URL", "\"https://s4.stg2.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(":core_di")
+    implementation project(":common")
+    implementation project(":core_network_api")
+    implementation project(':feature_did_api')
+    implementation project(':feature_account_api')
+
+    implementation kotlinDeps.values()
+
+    implementation androidDeps.appCompat
+
+    implementation loggerDeps.values()
+
+    implementation daggerDeps.values()
+    kapt daggerKapt.values()
+
+    implementation networkDeps.values()
+
+    implementation soraDeps.values()
+    implementation birtDeps.values()
+
+    implementation gsonDeps.values()
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+}

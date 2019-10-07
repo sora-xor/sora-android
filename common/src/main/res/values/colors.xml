@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="subtitleGrey">#616161</color>
+    <color name="circleBgGrey">#7f7f7f</color>
+    <color name="darkGreyBlue">#24494e</color>
+    <color name="grey">#797979</color>
+    <color name="transparentGrey">#32797979</color>
+    <color name="greyBlue">#899f9e</color>
+    <color name="titleDarkGreyBlue">#035C5A</color>
+    <color name="indicatorDot">#c4d4d3</color>
+    <color name="lightBlack">#2c2c2c</color>
+    <color name="lightRed">#d0021b</color>
+    <color name="greyBackground">#f2f7f7</color>
+    <color name="inviteListBackground">#631c504e</color>
+    <color name="invitesDividerColor">#e1e1e1</color>
+    <color name="bluishGrey">#9d799292</color>
+    <color name="cardBackground">#408ab3b1</color>
+    <color name="seekbarColor">#f0f7f7</color>
+    <color name="oceanBlue">#73a8a6</color>
+    <color name="black">#000000</color>
+    <color name="white">#f5f5f5</color>
+    <color name="lightGrey">#799292</color>
+    <color name="green">#1c504e</color>
+    <color name="tabsUnderline">#cde1e0</color>
+    <color name="tabsTitleColor">#73a8a6</color>
+    <color name="profileDividerColor">#cee1e1</color>
+    <color name="greyDivider">#8C999999</color>
+    <color name="backgroundGrey">#f2f2f2</color>
+    <color name="blackText">#333333</color>
+</resources>

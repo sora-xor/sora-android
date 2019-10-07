@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/menuView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <jp.co.soramitsu.common.presentation.view.SoraToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/reputationScreenLeftGuidline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.05" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/reputationScreenRightGuidline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.95" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/reputationWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="174dp"
+            android:background="@color/greyBackground"
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/reputationWrapperLeftGuidline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.05" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/reputationWrapperRightGuidline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.95" />
+
+            <ImageView
+                android:id="@+id/reputationRankIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/icon_reputation"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/reputationWrapperLeftGuidline"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x3"
+                android:layout_marginEnd="@dimen/x3"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/reputationRankTitle"
+                    style="@style/GreyTextStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/reputation_screen_your_current_reputation"
+                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/reputationRankText"
+                    style="@style/TextAppearance.Capital.Header2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/x1"
+                    android:fontFamily="@font/sora_regular"
+                    android:textColor="@color/lightBlack"
+                    android:textSize="28sp"
+                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
+                    app:layout_constraintTop_toBottomOf="@id/reputationRankTitle"
+                    tools:text="13 of 300" />
+
+                <View
+                    android:id="@+id/reputationWrapperSeparateLineView"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
+                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
+                    app:layout_constraintTop_toBottomOf="@id/reputationRankText" />
+
+                <TextView
+                    android:id="@+id/dailyVotesText"
+                    style="@style/GreyTextStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/x2"
+                    android:drawableLeft="@drawable/icon_reputation_heart"
+                    android:drawablePadding="@dimen/x1"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
+                    app:layout_constraintHorizontal_bias="0.0"
+                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
+                    app:layout_constraintTop_toBottomOf="@id/reputationWrapperSeparateLineView"
+                    app:layout_constraintVertical_bias="0.0"
+                    tools:text="300 votes received today" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/reputationScreenTitleTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x3"
+            android:fontFamily="@font/sora_semibold"
+            android:text="@string/reputation_screen_what_is_reputation"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"
+            app:layout_constraintStart_toEndOf="@id/reputationScreenLeftGuidline"
+            app:layout_constraintTop_toBottomOf="@id/reputationWrapper" />
+
+        <TextView
+            android:id="@+id/reputationScreenDescriptionTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:fontFamily="@font/sora_regular"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"
+            app:layout_constraintStart_toEndOf="@id/reputationScreenLeftGuidline"
+            app:layout_constraintTop_toBottomOf="@+id/reputationScreenTitleTextView"
+            tools:text="Reputation (latest agreement) is based on user's activity and invitations. Activity measures by how often user opens app weekly, has user voted during the week or not, has user seen all project details. Invitations following the rule the more is the better" />
+
+        <View
+            android:id="@+id/reputationScreenSeparateLineView"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@color/invitesDividerColor"
+            android:importantForAccessibility="no"
+            app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"
+            app:layout_constraintStart_toEndOf="@id/reputationScreenLeftGuidline"
+            app:layout_constraintTop_toBottomOf="@id/reputationScreenDescriptionTextView" />
+
+        <TextView
+            android:id="@+id/reputationScreenCurrentReputationTitleTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:fontFamily="@font/sora_semibold"
+            android:text="@string/reputation_screen_how_to_level_up"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"
+            app:layout_constraintStart_toEndOf="@id/reputationScreenLeftGuidline"
+            app:layout_constraintTop_toBottomOf="@id/reputationScreenSeparateLineView" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/reputationList"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:overScrollMode="never"
+            app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@id/reputationScreenLeftGuidline"
+            app:layout_constraintTop_toBottomOf="@id/reputationScreenCurrentReputationTitleTextView" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.core.widget.NestedScrollView>

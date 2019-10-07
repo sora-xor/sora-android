@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@android:color/white"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@+id/sidedButtonLayout"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <LinearLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <include
+                android:id="@+id/currency_header"
+                layout="@layout/account_selector_header" />
+
+            <View
+                android:id="@+id/currency_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="?marginPaddingContentBySide"
+                android:layout_marginEnd="?marginPaddingContentBySide"
+                android:background="?colorThickBorder" />
+
+            <include layout="@layout/account_selector_amount" />
+
+            <LinearLayout
+                android:id="@+id/transactionFeeWrapper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="?marginPaddingContentBySide"
+                android:layout_marginTop="?marginPaddingContentBySide"
+                android:layout_marginEnd="?marginPaddingContentBySide"
+                android:layout_marginBottom="?marginPaddingDescription">
+
+                <TextView
+                    android:id="@+id/transactionFeeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/transaction_fee"
+                    android:textColor="@android:color/black"
+                    android:textSize="14sp" />
+
+                <ProgressBar
+                    android:id="@+id/preloader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/shadowView" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="?marginPaddingContentBySide"
+                android:layout_marginEnd="?marginPaddingContentBySide"
+                android:background="?colorThinBorder" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="?marginPaddingContentBySide">
+
+                <TextView
+                    android:id="@+id/accountDescriptionTitleTextView"
+                    style="@style/TextAppearance.Capital.Body.Left.SubHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/eth_address" />
+
+                <EditText
+                    android:id="@+id/accountDescriptionBodyTextView"
+                    style="@style/TextAppearance.Capital.Body.Left"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:digits="0123456789abcdefABCDEFx"
+                    android:hint="@string/eth_hint"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:maxLength="42"
+                    android:lines="2"
+                    tools:text="text"
+                    android:paddingTop="?marginPaddingContentBySide"
+                    android:paddingBottom="?marginPaddingContentBySide" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <include
+        android:id="@+id/sidedButtonLayout"
+        layout="@layout/sided_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

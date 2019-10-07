@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/onboarding_nav_graph"
+    app:startDestination="@id/initialFragment">
+
+    <fragment
+        android:id="@+id/initialFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.tutorial.TutorialFragment"
+        android:label="InitialFragment">
+        <action
+            android:id="@+id/action_initialFragment_to_mnemonicFragment"
+            app:destination="@id/mnemonicFragment" />
+        <action
+            android:id="@+id/action_initialFragment_to_recoveryFragment"
+            app:destination="@id/recoveryFragment" />
+        <action
+            android:id="@+id/action_initialFragment_to_personalInfoFragment"
+            app:destination="@id/personalInfoFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/personalInfoFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info.PersonalInfoFragment"
+        android:label="PersonalInfoFragment" />
+
+    <fragment
+        android:id="@+id/recoveryFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.recovery.RecoveryFragment"
+        android:label="RecoveryFragment" />
+
+    <fragment
+        android:id="@+id/mnemonicFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic.MnemonicFragment"
+        android:label="MnemonicFragment" />
+
+    <fragment
+        android:id="@+id/selectCountryFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.country.SelectCountryFragment"
+        android:label="SelectCountryFragment" />
+
+    <fragment
+        android:id="@+id/phoneNumberFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.phone.PhoneNumberFragment"
+        android:label="PhoneNumberFragment" />
+
+    <fragment
+        android:id="@+id/verificationFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.verification.VerificationFragment"
+        android:label="VerificationFragment" />
+
+    <fragment
+        android:id="@+id/termsFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.terms.TermsFragment"
+        android:label="TermsFragment" />
+
+    <fragment
+        android:id="@+id/privacyFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.privacy.PrivacyFragment"
+        android:label="PrivacyFragment" />
+
+    <fragment
+        android:id="@+id/unsupportedVersionFragment"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.version.UnsupportedVersionFragment"
+        android:label="UnsupportedVersionFragment" />
+
+</navigation>

@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/projectView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <jp.co.soramitsu.common.presentation.view.SoraToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/projectDetailCenterGuideLine"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.5" />
+
+                <ImageView
+                    android:id="@+id/projectDetailHeaderImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:scaleType="centerCrop"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@color/lightGrey" />
+
+                <TextView
+                    android:id="@+id/projectDetailTitleTextView"
+                    style="@style/TitleStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailHeaderImageView"
+                    tools:text="Vincero" />
+
+                <View
+                    android:id="@+id/projectDetailSeparateLineView"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailTitleTextView" />
+
+                <TextView
+                    android:id="@+id/projectDetailProgressTextView"
+                    style="@style/GreyTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    app:layout_constraintEnd_toStartOf="@+id/projectDaysLeftTv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView"
+                    tools:text="80% funded of 3,405,043" />
+
+                <TextView
+                    android:id="@+id/projectDaysLeftTv"
+                    style="@style/GreyTextStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:gravity="end"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailCenterGuideLine"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView"
+                    tools:text="Ended Jan 21, 2019" />
+
+                <ProgressBar
+                    android:id="@+id/projectDetailVotesProgressBar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:indeterminate="false"
+                    android:max="100"
+                    android:maxHeight="10dp"
+                    android:minHeight="10dp"
+                    android:progressDrawable="@drawable/progress_limit"
+                    android:secondaryProgress="100"
+                    app:layout_constraintTop_toBottomOf="@+id/projectDetailProgressTextView" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/projectDetailVoteButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:clickable="true"
+                    android:foreground="?selectableItemBackground"
+                    app:cardBackgroundColor="@color/lightRed"
+                    app:cardCornerRadius="@dimen/x3"
+                    app:cardElevation="0dp"
+                    app:layout_constraintEnd_toEndOf="@id/projectDetailCenterGuideLine"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/projectDetailVotesProgressBar">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_marginTop="14dp"
+                        android:layout_marginBottom="13dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/projectDetailsVoteButtonIcon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/x1" />
+
+                        <TextView
+                            android:id="@+id/projectVoteTv"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/sora_regular"
+                            android:padding="0dp"
+                            android:textAllCaps="false"
+                            android:textColor="@color/white"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <LinearLayout
+                    android:id="@+id/projectDetailAddToFavouritesButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:clickable="true"
+                    android:foreground="?selectableItemBackground"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="13dp"
+                    app:layout_constraintBottom_toBottomOf="@+id/projectDetailVoteButton"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailCenterGuideLine"
+                    app:layout_constraintTop_toTopOf="@+id/projectDetailVoteButton">
+
+                    <ImageView
+                        android:id="@+id/favImg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/x1" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/sora_regular"
+                        android:padding="0dp"
+                        android:text="@string/favourite"
+                        android:textAppearance="@style/RedTextStyle"
+                        android:textSize="15sp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/reward"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:drawableLeft="@drawable/icon_reward"
+                    android:drawablePadding="@dimen/x1"
+                    android:gravity="left"
+                    android:textColor="@color/lightGrey"
+                    android:textSize="13sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/projectDetailVoteButton"
+                    tools:text="$1300 reward if successfull" />
+
+                <View
+                    android:id="@+id/projectDetailSeparateLineView0"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/reward" />
+
+                <TextView
+                    android:id="@+id/friendsFavoritesCountText"
+                    style="@style/GreyTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView0"
+                    tools:text="20 friends count  20 favourites" />
+
+                <View
+                    android:id="@+id/projectDetailSeparateLineView2"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/friendsFavoritesCountText" />
+
+                <TextView
+                    android:id="@+id/projectDetailDescriptionTextView"
+                    style="@style/LightBlackTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:autoLink="web"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView2"
+                    tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit,Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  " />
+
+                <TextView
+                    android:id="@+id/projectDetailShowMoreTextView"
+                    style="@style/RedTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:text="@string/show_more"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailDescriptionTextView" />
+
+                <View
+                    android:id="@+id/projectDetailSeparateLineView3"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailShowMoreTextView" />
+
+                <TextView
+                    android:id="@+id/projectDetailGalleryTextView"
+                    style="@style/TitleStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:text="@string/gallery"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView3" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/projectDetailGalleryRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/x2"
+                    android:clipToPadding="false"
+                    android:orientation="horizontal"
+                    android:paddingLeft="@dimen/x1"
+                    android:paddingRight="@dimen/x1"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailGalleryTextView" />
+
+                <TextView
+                    android:id="@+id/projectDetailContactsTextView"
+                    style="@style/TitleStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:text="@string/contacts"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailGalleryRecyclerView" />
+
+                <androidx.constraintlayout.widget.Guideline
+                    android:id="@+id/projectDetailLeftGuideLine"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    app:layout_constraintGuide_percent="0.3" />
+
+                <TextView
+                    android:id="@+id/projectDetailWebsiteTitleTextView"
+                    style="@style/LightBlackTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x4"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:text="@string/website"
+                    app:layout_constraintEnd_toStartOf="@id/projectDetailLeftGuideLine"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailContactsTextView" />
+
+                <TextView
+                    android:id="@+id/webSiteTv"
+                    style="@style/RedTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x4"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:clickable="true"
+                    android:gravity="end"
+                    android:linksClickable="true"
+                    android:singleLine="true"
+                    android:textColorLink="@color/lightRed"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailLeftGuideLine"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailContactsTextView"
+                    tools:text="www.vincero.com/media.sdda" />
+
+                <View
+                    android:id="@+id/projectDetailSeparateLineView4"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailWebsiteTitleTextView" />
+
+                <TextView
+                    android:id="@+id/projectDetailEmailTitleTextView"
+                    style="@style/LightBlackTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:layout_marginBottom="@dimen/x2"
+                    android:text="@string/email"
+                    app:layout_constraintEnd_toStartOf="@id/projectDetailLeftGuideLine"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView4" />
+
+                <TextView
+                    android:id="@+id/emailTv"
+                    style="@style/RedTextStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:clickable="true"
+                    android:gravity="end"
+                    android:singleLine="true"
+                    android:textColorLink="@color/lightRed"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailLeftGuideLine"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView4"
+                    tools:text="info@vincero.com" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/x2"
+                    app:layout_constraintTop_toBottomOf="@id/emailTv" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ProgressBar
+        android:id="@+id/preloaderView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

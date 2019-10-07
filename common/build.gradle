@@ -1,0 +1,65 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+        versionCode appVersionCode
+        versionName appVersionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    dataBinding {
+        enabled = true
+    }
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(':core_di')
+    implementation project(':core_network_api')
+
+    implementation kotlinDeps.values()
+
+    implementation androidDeps.values()
+
+    implementation irohaDeps.values()
+
+    implementation soraDeps.values()
+    implementation novaCryptoDeps.values()
+
+    implementation loggerDeps.values()
+
+    implementation shimmerDeps.values()
+
+    implementation daggerDeps.values()
+    kapt daggerKapt.values()
+
+    implementation navigationDeps.values()
+
+    implementation(crashlyticsDeps.values()) {
+        transitive = true
+    }
+
+    implementation capitalDeps.values()
+
+    implementation zXingDeps.values()
+}

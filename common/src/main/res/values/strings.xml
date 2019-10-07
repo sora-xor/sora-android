@@ -1,0 +1,131 @@
+<resources>
+    <!-- Errors -->
+    <string name="sora_ok">Ok</string>
+    <string name="personal_info_title">Personal information</string>
+    <string name="passphrase_title">Passphrase</string>
+    <string name="general_error_title">Error occurred</string>
+    <string name="general_error_message">General error occurred. Please try again later.</string>
+    <string name="sms_code_not_correct">You entered wrong code. Please try again.</string>
+    <string name="sms_code_expired">This code has expired. Please try another one.</string>
+    <string name="save_or_send">Save or send</string>
+    <string name="not_enough_invitations">No invitations left</string>
+    <string name="user_not_found">Your passphrase is invalid. Please, try another one.</string>
+    <string name="user_values_not_found">User values with credentials not found</string>
+    <string name="invitation_code_not_found">Invitation code not found</string>
+    <string name="application_form_not_found">Application form not found</string>
+    <string name="project_not_found">Project not found</string>
+    <string name="voting_is_not_allowed">Project is not opened for voting</string>
+    <string name="votes_not_enough">You haven\'t got enough votes to proceed.</string>
+    <string name="not_authorized">You are not authorized. Try reinstall app and sign in again.</string>
+
+    <string name="email_is_not_valid">Email is not valid</string>
+    <string name="first_name_is_empty">First name shouldn\'t be empty</string>
+    <string name="last_name_is_empty">Last name shouldn\'t be empty</string>
+    <string name="first_name_hyphen_error">First name can\'t start or end on hyphen or have double hyphen</string>
+    <string name="last_name_hyphen_error">Last name can\'t start or end on hyphen or have double hyphen</string>
+
+    <string name="share_title">Share</string>
+    <string name="share_subject">You were invited to Sora Passport</string>
+    <string name="code_copied">Your code has been copied to clipboard</string>
+    <string name="mnemonic_length_error">Mnemonic must contain 15 words</string>
+    <string name="mnemonic_is_not_valid">Your mnemonic is not valid. Please try again.</string>
+
+    <string name="tabs_all">All</string>
+    <string name="tabs_voted">Voted</string>
+    <string name="tabs_favourites">Favourites</string>
+    <string name="tabs_complete">Completed</string>
+
+    <string name="user_registered_type_template">Friend Registered</string>
+    <string name="user_registered_title_template">%1$s %2$s</string>
+    <string name="user_registered_description_template">Your reputation will be increased!</string>
+
+    <string name="xor_between_users_transferred_type_template">%1$s XOR Received</string>
+    <string name="xor_between_users_transferred_title_template">From %1$s %2$s</string>
+    <string name="xor_between_users_transferred_description_template">"%1$s"</string>
+
+    <string name="voting_rights_credited_type_template">Votes distribution</string>
+    <string name="voting_rights_title_template">Daily votes</string>
+
+    <string name="user_reputation_changed_type_template">Reputation changed</string>
+    <string name="user_reputation_changed_title_template">Your reputation now is %1$s</string>
+
+    <string name="invitation_credited_type_template">Invitations distribution</string>
+    <string name="invitation_credited_title_template">You have received %1$s invitations</string>
+
+    <string name="project_funded_type_template">Project has been completed!</string>
+    <string name="project_funded_title_template">%1$s</string>
+    <string name="project_funded_description_template">You will receive information about XOR reward soon</string>
+
+    <string name="project_created_type_template">New project!</string>
+    <string name="project_created_title_template">%1$s</string>
+    <string name="project_created_description_template">%1$s</string>
+
+    <string name="project_closed_type_template">Project reached deadline</string>
+    <string name="project_closed_title_template">%1$s</string>
+
+    <string name="xor_reward_credited_from_project_type_template">XOR Reward for voting</string>
+    <string name="xor_reward_credited_from_project_title_template">%1$s</string>
+    <string name="xor_reward_credited_from_project_description_template">You have received %1$s XOR for successful voting!</string>
+
+    <string name="voted_friend_added_type_template">Friend voted for project</string>
+    <string name="voted_friend_added_title_template">%1$s %2$s</string>
+    <string name="voted_friend_added_description_template">%1$s has spent %2$s votes for %3$s project</string>
+
+    <string name="user_rank_changed_type_template">Rank changed</string>
+    <string name="user_rank_changed_title_template">Your rank now is %1$s (of %2$s)</string>
+    <string name="phone_already_exists">User with this phone number already exists</string>
+    <string name="network_error">Some network problems. Please try again later.</string>
+    <string name="favourite">Favourite</string>
+    <string name="terms_title">Terms and conditions</string>
+    <string name="privacy_fragment_title">Privacy policy</string>
+    <string name="save_mnemonic_title">Save or send passphrase</string>
+    <string name="search_string_error">Search size must be between 3 and 32</string>
+    <string name="qr_error">Qr can\'t be decoded</string>
+    <string name="invalid_query_format">Your query is wrong. Please try again.</string>
+    <string name="something_went_wrong">Something went wrong. Please try again.</string>
+
+    <string name="search_hint_default">Search</string>
+    <string name="qr_user_not_found">User with such QR not found</string>
+    <string name="phone_already_registered">Phone number already used during registration with this or another user</string>
+
+    <string name="fragment_mnemonic_header">Passphrase is\na type of password.</string>
+    <string name="fragment_mnemonic_body">It is used to recover access to account. Write in down, we will not be able
+        to recover your account without it!</string>
+    <string name="fragment_mnemonic_your_passphrase">Your passphrase</string>
+
+    <string name="fragment_unsupported_version_title">Update your Sora App</string>
+    <string name="fragment_unsupported_version_body">Updated Sora Application is available in Google Play. It includes improvements and bug fixes.</string>
+    <string name="fragment_unsupported_version_open_google_play">Open Google Play</string>
+
+    <string name="project">Project</string>
+    <string name="user">User</string>
+
+    <string name="loading">Loading..</string>
+
+    <string name="personal_first_name_hint">First name</string>
+    <string name="personal_last_name_hint">Last name</string>
+    <string name="fee_rate_not_available">Can\'t contact withdrawal provider. Please, try again later.</string>
+
+    <string name="qr_dialog_title">Scan QR from</string>
+    <string name="select_qr">Select QR image</string>
+
+
+    <string-array name="qr_dialog_array">
+        <item>Camera</item>
+        <item>Gallery</item>
+    </string-array>
+
+    <string name="qr_share_message_template">My Sora network address to Receive </string>
+    <string name="withdrawal_description">Withdrawal to</string>
+
+    <string name="sending_to_myself">You can\'t send XOR to yourself</string>
+    <string name="invalid_parameters_title">Invalid Parameters</string>
+    <string name="invalid_parameters_body">Please, check internet connection and try again later.</string>
+    <string name="unauthorized_title">Authorization Failed</string>
+    <string name="unauthorized_body">Please, check internet connection and try again later.</string>
+    <string name="not_found_title">Resource unavailable</string>
+    <string name="not_found_body">We are working hard to fix the problem. Please, try again later.</string>
+    <string name="internal_error_title">Internal error</string>
+    <string name="pincode_check_error">Entered code is wrong</string>
+
+</resources>

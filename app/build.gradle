@@ -1,0 +1,220 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'io.fabric'
+
+android {
+    compileSdkVersion compileVersion
+    flavorDimensions "default"
+    defaultConfig {
+        applicationId "jp.co.soramitsu.sora"
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+        versionCode appVersionCode
+        versionName appVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+    }
+    signingConfigs {
+        cidebug {
+            storeFile file(System.env.CI_KEYSTORE_PATH ?: "key.jks")
+            storePassword System.env.CI_KEYSTORE_PASS ?: "password"
+            keyAlias System.env.CI_KEYSTORE_KEY_ALIAS ?: "alias"
+            keyPassword System.env.CI_KEYSTORE_KEY_PASS ?: "password"
+        }
+    }
+    buildTypes {
+        release {
+//            minifyEnabled true
+//            shrinkResources true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            versionNameSuffix '-debug'
+        }
+        cidebug {
+//            minifyEnabled true
+//            shrinkResources true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            initWith debug
+            matchingFallbacks = ['debug']
+            signingConfig signingConfigs.cidebug
+        }
+        cifabricdebug {
+//            minifyEnabled true
+//            shrinkResources true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            initWith debug
+            matchingFallbacks = ['debug']
+            versionNameSuffix '-fabric'
+            signingConfig signingConfigs.cidebug
+            //Init Fabric variables
+            if (System.getenv('CI_FABRIC_RELEASENOTES') == null) {
+                //throw new GradleException("Environment variable CI_FABRIC_RELEASENOTES is not defined!")
+                ext.betaDistributionReleaseNotes = ''
+            }
+            else {
+                ext.betaDistributionReleaseNotes = System.env.CI_FABRIC_RELEASENOTES
+            }
+            if (System.getenv('CI_FABRIC_GROUP') == null) {
+                //throw new GradleException("Environment variable CI_FABRIC_GROUP is not defined!")
+                ext.betaDistributionGroupAliases = ''
+
+            }
+            else {
+                ext.betaDistributionGroupAliases = System.env.CI_FABRIC_GROUP
+            }
+            ext.betaDistributionNotifications = true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    configurations {
+        all*.exclude group: 'com.google.guava', module: 'listenablefuture'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/io.netty.versions.properties'
+    }
+
+    productFlavors {
+        develop {
+            applicationIdSuffix ".develop"
+            versionName "1.0"
+            resValue "string", "app_name", "Sora Develop"
+            dimension 'default'
+            manifestPlaceholders.pathPrefix = "/dev/join"
+        }
+
+        tst {
+            applicationIdSuffix ".test"
+            versionName "1.0"
+            resValue "string", "app_name", "Sora Test"
+            dimension 'default'
+            manifestPlaceholders.pathPrefix = "/tst/join"
+        }
+
+        staging {
+            applicationIdSuffix ".stage"
+            versionName "1.3.1"
+            resValue "string", "app_name", "Sora Staging"
+            dimension 'default'
+            manifestPlaceholders.pathPrefix = "/stg/join"
+        }
+
+        production {
+            versionName "1.0"
+            resValue "string", "app_name", "Sora"
+            dimension 'default'
+            manifestPlaceholders.pathPrefix = "/join"
+        }
+
+        demo {
+            applicationIdSuffix ".demo"
+            versionName "1.0"
+            resValue "string", "app_name", "Sora Demo"
+            dimension 'default'
+            manifestPlaceholders.pathPrefix = "/join"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(":core_di")
+    implementation project(":common")
+    implementation project(':core_db')
+    implementation project(':core_network_api')
+    implementation project(':core_network_impl')
+    implementation project(":feature_onboarding_api")
+    implementation project(":feature_onboarding_impl")
+    implementation project(":feature_main_api")
+    implementation project(":feature_main_impl")
+    implementation project(":feature_account_api")
+    implementation project(":feature_account_impl")
+    implementation project(":feature_did_api")
+    implementation project(":feature_did_impl")
+    implementation project(":feature_information_api")
+    implementation project(":feature_information_impl")
+    implementation project(":feature_project_api")
+    implementation project(":feature_project_impl")
+    implementation project(":feature_wallet_api")
+    implementation project(":feature_wallet_impl")
+
+    implementation kotlinDeps.values()
+
+    implementation loggerDeps.values()
+
+    implementation daggerDeps.values()
+    kapt daggerKapt.values()
+
+    implementation lifecycleDeps.values()
+    kapt lifecycleKapt.values()
+
+    implementation rxDeps.values()
+    implementation rxBindingDeps.values()
+
+    implementation firebaseDeps.values()
+
+    implementation androidDeps.values()
+
+    implementation multidexDeps.values()
+
+    implementation (crashlyticsDeps.values()) {
+        transitive = true
+    }
+
+    // Tests
+    testImplementation "junit:junit:${versions.junit}"
+    testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
+    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
+    androidTestAnnotationProcessor "com.google.dagger:dagger-compiler:${versions.dagger}"
+    androidTestImplementation 'com.github.fabioCollini.daggermock:daggermock:0.8.4'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.1.0'
+    androidTestImplementation 'com.jakewharton.espresso:okhttp3-idling-resource:1.0.0'
+}
+
+apply plugin: 'com.google.gms.google-services'
+
+afterEvaluate {
+    initProperties()
+}
+
+def initProperties() {
+    //Init fabric.properties
+    def propertiesFile = file('fabric.properties')
+    if (!propertiesFile.exists()) {
+        if (System.getenv('CRASHLYTIC_APISECRET') == null) {
+            throw new GradleException("Environment variable CRASHLYTIC_APISECRET is not defined!")
+        }
+        if (System.getenv('CRASHLYTIC_APIKEY') == null) {
+            throw new GradleException("Environment variable CRASHLYTIC_APIKEY is not defined!")
+        }
+        def commentMessage = "This is autogenerated fabric property from system environment to prevent key to be committed to source control."
+        ant.propertyfile(file: "fabric.properties", comment: commentMessage) {
+            entry(key: "apiSecret", value: System.env.CRASHLYTIC_APISECRET)
+            entry(key: "apiKey", value: System.env.CRASHLYTIC_APIKEY)
+        }
+    }
+}

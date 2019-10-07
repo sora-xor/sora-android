@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/activityFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_menu_activity"
+        android:title="@string/activity"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/mainFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_menu_projects"
+        android:title="@string/projects"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/walletFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_menu_wallet"
+        android:title="@string/wallet"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/profileFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_menu_profile"
+        android:title="@string/profile"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/inviteFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_menu_friends"
+        android:title="@string/invite_fragment_title"
+        app:showAsAction="ifRoom" />
+
+</menu>

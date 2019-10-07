@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_nav_graph"
+    app:startDestination="@id/mainFragment">
+
+    <fragment
+        android:id="@+id/inviteFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.invite.InviteFragment"
+        android:label="fragment_invite"
+        tools:layout="@layout/fragment_invite" />
+
+    <fragment
+        android:id="@+id/conversionFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.conversion.ConversionFragment"
+        android:label="fragment_conversion"
+        tools:layout="@layout/fragment_conversion" />
+
+    <fragment
+        android:id="@+id/votesFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.voteshistory.VotesHistoryFragment"
+        android:label="fragment_invite"
+        tools:layout="@layout/fragment_votes_history" />
+
+    <fragment
+        android:id="@+id/termsFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.terms.TermsFragment"
+        android:label="fragment_terms"
+        tools:layout="@layout/fragment_terms" />
+
+    <fragment
+        android:id="@+id/privacyFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.privacy.PrivacyFragment"
+        android:label="fragment_privacy"
+        tools:layout="@layout/fragment_terms" />
+
+    <fragment
+        android:id="@+id/pincodeFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment"
+        android:label="fragment_pincode"
+        tools:layout="@layout/fragment_pincode" />
+
+    <fragment
+        android:id="@+id/projectDetailFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.DetailFragment"
+        android:label="fragment_detail"
+        tools:layout="@layout/fragment_project_detail" />
+
+    <fragment
+        android:id="@+id/personalDataEditFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.personaldataedit.PersonalDataEditFragment"
+        android:label="fragment_personal_data_edit"
+        tools:layout="@layout/fragment_personal_data_edit" />
+
+    <fragment
+        android:id="@+id/passphraseFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.passphrase.PassphraseFragment"
+        android:label="fragment_passphrase"
+        tools:layout="@layout/fragment_my_mnemonic" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.ProfileFragment"
+        android:label="fragment_detail"
+        tools:layout="@layout/fragment_profile" />
+
+    <fragment
+        android:id="@+id/activityFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.activity.ActivityFragment"
+        android:label="fragment_activity"
+        tools:layout="@layout/fragment_activity" />
+
+    <fragment
+        android:id="@+id/reputationFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.reputation.ReputationFragment"
+        android:label="fragment_detail"
+        tools:layout="@layout/fragment_reputation" />
+
+    <fragment
+        android:id="@+id/faqFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.faq.FaqFragment"
+        android:label="fragment_faq"
+        tools:layout="@layout/fragment_terms" />
+
+    <fragment
+        android:id="@+id/walletFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.wallet.WalletFragment"
+        android:label="fragmen_wallet"
+        tools:layout="@layout/fragment_wallet" />
+
+    <fragment
+        android:id="@+id/contactsFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.contacts.ContactsFragment"
+        android:label="fragment_contacts"
+        tools:layout="@layout/contacts_layout" />
+
+    <fragment
+        android:id="@+id/transferAmountFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.transfer.TransferAmountFragment"
+        android:label="fragment_transfer_amount"
+        tools:layout="@layout/contacts_layout" />
+
+    <fragment
+        android:id="@+id/withdrawalAmountFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.withdrawal.WithdrawalAmountFragment"
+        android:label="fragment_withdrawal_amount"
+        tools:layout="@layout/contacts_layout" />
+
+    <fragment
+        android:id="@+id/transactionDetails"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.transactiondetails.TransactionDetailsFragment"
+        android:label="fragment_transaction_details"
+        tools:layout="@layout/fragment_transaction_details" />
+
+    <fragment
+        android:id="@+id/transactionConfirmation"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.transactionconfirmation.TransactionConfirmationFragment"
+        android:label="fragment_transaction_confirmation"
+        tools:layout="@layout/fragment_transaction_details" />
+
+    <fragment
+        android:id="@+id/receive_amount_fragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.receiveamount.ReceiveAmountFragment"
+        android:label="fragment_receive_amount"
+        tools:layout="@layout/fragment_receive_amount" />
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment"
+        android:label="fragment_main"
+        tools:layout="@layout/fragment_main" />
+
+    <fragment
+        android:id="@+id/unsupportedVersionFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment"
+        android:label="fragment_transaction_details"
+        tools:layout="@layout/fragment_unsupported_version" />
+
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.about.AboutFragment"
+        android:label="fragment_about"
+        tools:layout="@layout/fragment_about" />
+
+</navigation>

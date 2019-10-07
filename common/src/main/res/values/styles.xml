@@ -1,0 +1,157 @@
+<resources>
+
+    <style name="OnboardingActivityTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/grey</item>
+        <item name="colorPrimaryDark">@color/grey</item>
+        <item name="windowActionBarOverlay">true</item>
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="android:fontFamily">@font/sora_regular</item>
+
+        <item name="colorSecondary">@color/secondary_color</item>
+        <item name="colorAccent">@color/accent_color</item>
+        <item name="colorControlNormal">@color/accent_color</item>
+        <item name="colorTertiary">@color/tertiary_color</item>
+        <item name="colorBackground">@color/background_color</item>
+        <item name="colorBody">@color/body_text_color</item>
+        <item name="colorHeader">@color/header_text_color</item>
+        <item name="colorInformation">@color/information_text_color</item>
+        <item name="colorShadowBorder">@color/shadow_border</item>
+        <item name="colorElementBackground">@color/element_background_color</item>
+        <item name="colorThinBorder">@color/thin_border</item>
+        <item name="colorThickBorder">@color/thick_border</item>
+
+        <!--text sizes-->
+        <item name="textSizeB2">@dimen/text_size_b2</item>
+        <item name="textSizeB1">@dimen/text_size_b1</item>
+        <item name="textSizeH4">@dimen/text_size_h4</item>
+        <item name="textSizeH3">@dimen/text_size_h3</item>
+        <item name="textSizeH2">@dimen/text_size_h2</item>
+        <item name="textSizeH1">@dimen/text_size_h1</item>
+        <!--text sizes-->
+
+        <item name="userIconSize">@dimen/user_icon_size</item>
+
+        <!--fonts-->
+        <item name="fontSemiBold">@font/sora_semibold</item>
+        <item name="fontBold">@font/sora_bold</item>
+        <item name="fontExtraBold">@font/sora_extrabold</item>
+        <item name="fontRegular">@font/sora_regular</item>
+        <!--fonts-->
+
+        <!--margins-->
+        <item name="marginPaddingBySide">@dimen/margin_padding_by_side</item>
+        <item name="marginPaddingDescription">@dimen/margin_padding_description</item>
+        <item name="marginPaddingListElement">@dimen/margin_padding_list_element</item>
+        <item name="marginPaddingContentBySide">@dimen/margin_padding_content_by_side</item>
+        <item name="marginPaddingContent">@dimen/margin_padding_content</item>
+        <!--margins-->
+
+        <item name="roundCornerRadius">@dimen/round_corner_radius</item>
+        <item name="buttonCornerRadius">@dimen/button_corner_radius</item>
+
+        <item name="searchViewHeight">@dimen/search_view_height</item>
+    </style>
+
+    <style name="FilledButton">
+        <item name="cornerRadius">28dp</item>
+        <item name="backgroundTint">@color/lightRed</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineSpacingExtra">2sp</item>
+        <item name="android:fontFamily">@font/sora_bold</item>
+    </style>
+
+    <style name="RedButtonStyle" parent="ButtonTextWhite">
+        <item name="textAllCaps">false</item>
+        <item name="android:padding">12dp</item>
+        <item name="backgroundTint">@color/red_color_selector</item>
+        <item name="cornerRadius">28dp</item>
+    </style>
+
+    <style name="OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="cornerRadius">28dp</item>
+        <item name="strokeColor">@color/lightRed</item>
+        <item name="android:textColor">@color/lightRed</item>
+        <item name="paddingStart">@dimen/x6</item>
+        <item name="paddingEnd">@dimen/x6</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <style name="TextButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/lightRed</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <style name="TitleTextView">
+        <item name="android:textSize">23dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/darkGreyBlue</item>
+    </style>
+
+    <style name="SecondTitleTextView">
+        <item name="android:textSize">18dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/lightBlack</item>
+    </style>
+
+    <style name="SubTitleTextView">
+        <item name="android:textSize">15dp</item>
+        <item name="android:textColor">@color/grey</item>
+        <item name="android:gravity">center_horizontal</item>
+    </style>
+
+    <style name="UrlTitleTextView" parent="SubTitleTextView">
+        <item name="android:textColor">@color/lightRed</item>
+    </style>
+
+    <style name="PersonalInfoTextView" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/darkGreyBlue</item>
+        <item name="android:textColor">@color/lightBlack</item>
+    </style>
+
+    <style name="MainFragmentCard">
+        <item name="android:layout_height">66dp</item>
+        <item name="android:layout_width">150dp</item>
+        <item name="cardBackgroundColor">@android:color/white</item>
+        <item name="cardCornerRadius">@dimen/x1</item>
+    </style>
+
+    <style name="MainFragmentCardLinearLayout">
+        <item name="paddingStart">@dimen/x2</item>
+        <item name="paddingEnd">@dimen/x2</item>
+        <item name="android:paddingTop">@dimen/x1</item>
+        <item name="android:paddingBottom">@dimen/x1</item>
+    </style>
+
+    <style name="BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/bottomSheetStyleWrapper</item>
+        <item name="android:windowIsFloating">false</item>
+    </style>
+
+    <style name="bottomSheetStyleWrapper" parent="Widget.MaterialComponents.BottomSheet.Modal">
+        <item name="behavior_peekHeight">600dp</item>
+    </style>
+
+    <style name="OnboardingActivityTheme.SearchView" parent="OnboardingActivityTheme">
+        <item name="colorAccent">@color/grey</item>
+        <item name="colorControlNormal">@color/grey</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="SearchViewStyle" parent="Widget.AppCompat.SearchView">
+        <item name="android:theme">@style/OnboardingActivityTheme.SearchView</item>
+        <item name="iconifiedByDefault">false</item>
+        <item name="queryBackground">@android:color/transparent</item>
+        <item name="android:background">@drawable/background_rounded_grey</item>
+    </style>
+
+    <style name="LeftFilledButton" parent="FilledButton">
+        <item name="android:layout_height">35dp</item>
+        <item name="android:layout_width">105dp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+</resources>
