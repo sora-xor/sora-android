@@ -43,6 +43,7 @@ dependencies {
     implementation project(":feature_did_api")
     implementation project(":feature_wallet_api")
     implementation project(":core_network_api")
+    implementation project(":feature_onboarding_api")
 
     implementation kotlinDeps.values()
 

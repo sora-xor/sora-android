@@ -34,7 +34,7 @@ class DeciminalFormatter {
 
         @JvmStatic
         fun formatBigDecimal(num: BigDecimal): String {
-            val formatter = DecimalFormat()
+            val formatter = DecimalFormat(PATTERN)
             val decimalFormatSymbols = formatter.decimalFormatSymbols
             decimalFormatSymbols.groupingSeparator = ' '
             decimalFormatSymbols.decimalSeparator = '.'

@@ -47,8 +47,8 @@ buildscript {
     ]
 
     ext {
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 6)
-        appVersionName = '1.3.1'
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 10)
+        appVersionName = '1.3.2'
 
         compileVersion = 28
         minVersion = 21

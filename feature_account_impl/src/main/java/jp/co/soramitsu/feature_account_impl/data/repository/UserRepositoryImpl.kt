@@ -251,8 +251,17 @@ class UserRepositoryImpl @Inject constructor(
             }
     }
 
-    override fun clearUserData() {
-        userDatasource.clearUserData()
+    override fun clearUserData(): Completable {
+        return Completable.fromAction {
+            userDatasource.clearUserData()
+            db.activityFeedDao().clearTable()
+            db.announcementDao().clearTable()
+            db.galleryDao().clearTable()
+            db.projectDao().clearTable()
+            db.projectDetailsDao().clearTable()
+            db.transactionDao().clearTable()
+            db.votesHistoryDao().clearTable()
+        }
     }
 
     override fun getAllCountries(): Single<List<Country>> {

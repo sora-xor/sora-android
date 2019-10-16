@@ -101,9 +101,10 @@ class PinCodeViewModel(
                     }
                 }, {
                     progress.hideProgress()
-                    onError(it)
                     if (it.message != null && ResponseCode.DID_NOT_FOUND == ResponseCode.valueOf(it.message!!)) {
                         resetUser()
+                    } else {
+                        onError(it)
                     }
                 })
         )

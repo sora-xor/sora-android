@@ -39,7 +39,7 @@ object EventsConverter {
                 Transaction.Type.WITHDRAW -> it.recipient
             }
 
-            val isIncoming = Transaction.Type.INCOMING == it.type
+            val isIncoming = Transaction.Type.OUTGOING != it.type && Transaction.Type.WITHDRAW != it.type
 
             (cards[dayString] as ArrayList<EventItem>)
                 .add(

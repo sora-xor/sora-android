@@ -21,10 +21,10 @@ import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.jakewharton.processphoenix.ProcessPhoenix
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
@@ -41,6 +41,7 @@ import jp.co.soramitsu.feature_main_impl.presentation.transactiondetails.Transac
 import jp.co.soramitsu.feature_main_impl.presentation.transfer.TransferAmountFragment
 import jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment
 import jp.co.soramitsu.feature_main_impl.presentation.withdrawal.WithdrawalAmountFragment
+import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import kotlinx.android.synthetic.main.activity_main.badConnectionView
 import java.net.URL
@@ -287,7 +288,9 @@ class MainActivity : ToolbarActivity(), MainRouter {
     }
 
     override fun restartApp() {
-        ProcessPhoenix.triggerRebirth(this)
+        FeatureUtils.getFeature<OnboardingFeatureApi>(application, OnboardingFeatureApi::class.java)
+            .provideOnboardingStarter()
+            .start(this, OnboardingState.INITIAL)
     }
 
     override fun returnToWalletFragment() {

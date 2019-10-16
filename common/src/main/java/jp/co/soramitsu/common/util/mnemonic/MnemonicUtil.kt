@@ -13,7 +13,7 @@ import java.text.Normalizer
 object MnemonicUtil {
 
     fun splitToArray(mnemonic: String): Array<String> {
-        return mnemonic.trim().replace(" ", ",").split(",").toTypedArray()
+        return mnemonic.trim().split(" ").toTypedArray()
     }
 
     fun generateMnemonic(entropy: ByteArray): String {

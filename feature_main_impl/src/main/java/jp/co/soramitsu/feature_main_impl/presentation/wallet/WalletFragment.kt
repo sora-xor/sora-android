@@ -22,7 +22,6 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.ext.gone
@@ -63,6 +62,8 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
 
     private lateinit var sectionAdapter: BaseListAdapter
 
+    private var bottomSheetExpanded = false
+
     private val itemListener: (EventItem) -> Unit = {
         viewModel.eventClicked(it)
     }
@@ -100,26 +101,6 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        bottomSheetBehavior = LockBottomSheetBehavior.fromView(recent_events)
-        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            }
-
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (isAdded) swipeLayout.isEnabled = BottomSheetBehavior.STATE_EXPANDED != newState
-            }
-        })
-
-        swipeLayout.setOnRefreshListener {
-            viewModel.getBalance(true)
-            viewModel.getTransactionHistory(true)
-        }
-
-        configureBottomSheetHeight()
-    }
-
     override fun inject() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .walletSubComponentBuilder()
@@ -146,14 +127,36 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
         doubleButtonLeftButton.text = getString(R.string.send)
         doubleButtonRightButton.text = getString(R.string.receive)
 
-        RxView.clicks(doubleButtonLeftButton)
-            .subscribe { viewModel.sendButtonClicked(accountInformationCardHeaderTextView.text.toString()) }
+        doubleButtonLeftButton.setOnClickListener { viewModel.sendButtonClicked() }
 
-        RxView.clicks(doubleButtonRightButton)
-            .subscribe { viewModel.receiveButtonClicked() }
+        doubleButtonRightButton.setOnClickListener { viewModel.receiveButtonClicked() }
 
-        RxView.clicks(howItWorksCard)
-            .subscribe { viewModel.btnHelpClicked() }
+        howItWorksCard.setOnClickListener { viewModel.btnHelpClicked() }
+
+        bottomSheetBehavior = LockBottomSheetBehavior.fromView(recent_events)
+        bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+            }
+
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                bottomSheetExpanded = BottomSheetBehavior.STATE_EXPANDED == newState
+                if (isAdded) swipeLayout.isEnabled = !bottomSheetExpanded
+            }
+        })
+
+        swipeLayout.setOnRefreshListener {
+            viewModel.getBalance(true)
+            viewModel.getTransactionHistory(true)
+        }
+
+        pageContainer.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                pageContainer.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                bottomSheetBehavior.peekHeight = pageContainer.measuredHeight - contentContainer.measuredHeight
+            }
+        })
+
+        if (bottomSheetExpanded) swipeLayout.isEnabled = false
     }
 
     override fun subscribe(viewModel: WalletViewModel) {
@@ -189,14 +192,5 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
 
         viewModel.getBalance(false)
         viewModel.getTransactionHistory(false)
-    }
-
-    private fun configureBottomSheetHeight() {
-        pageContainer.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                pageContainer.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                bottomSheetBehavior.peekHeight = pageContainer.measuredHeight - contentContainer.measuredHeight
-            }
-        })
     }
 }

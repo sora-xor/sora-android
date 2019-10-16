@@ -7,94 +7,132 @@ package jp.co.soramitsu.feature_main_impl.presentation.util
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.view.View
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.WindowManager.LayoutParams
-import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.SeekBar
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.jakewharton.rxbinding2.view.RxView
-import com.jakewharton.rxbinding2.widget.RxSeekBar
-import com.jakewharton.rxbinding2.widget.RxTextView
-import io.reactivex.Observable
+import jp.co.soramitsu.common.util.ext.hide
+import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_impl.R
+import kotlinx.android.synthetic.main.vote_bottom_dialog.cancelBtn
+import kotlinx.android.synthetic.main.vote_bottom_dialog.closeBtn
+import kotlinx.android.synthetic.main.vote_bottom_dialog.keyboardImg
+import kotlinx.android.synthetic.main.vote_bottom_dialog.messageTv
+import kotlinx.android.synthetic.main.vote_bottom_dialog.voteBtn
+import kotlinx.android.synthetic.main.vote_bottom_dialog.votesEt
+import kotlinx.android.synthetic.main.vote_bottom_dialog.votesSb
 
 @SuppressLint("CheckResult")
 class CustomBottomSheetDialog(
-    context: Activity
+    context: Activity,
+    private val maxVoteType: MaxVoteType,
+    private val maxVotesNeeded: Int,
+    private val voteClickListener: (Long) -> Unit,
+    private val keyboardClickListener: (EditText) -> Unit
 ) : BottomSheetDialog(context, R.style.BottomSheetDialog) {
 
-    val view: View = context.layoutInflater.inflate(R.layout.vote_bottom_dialog, null)
-    val votesEditText: EditText
-    val voteButton: Button
-    val keyboardButton: ImageView
-
-    private val votesSeekBar: SeekBar
+    enum class MaxVoteType {
+        USER_CAN_GIVE,
+        PROJECT_NEED
+    }
 
     init {
-        voteButton = view.findViewById(R.id.btn_vote)
-        val cancelDialog = view.findViewById<Button>(R.id.btn_cancel)
-        val btnClose = view.findViewById<ImageView>(R.id.btn_close)
-        votesEditText = view.findViewById(R.id.votes_count)
-        votesSeekBar = view.findViewById(R.id.votes_seekbar)
-        keyboardButton = view.findViewById(R.id.btn_keyboard)
+        setContentView(LayoutInflater.from(context).inflate(R.layout.vote_bottom_dialog, null))
 
-        votesEditText.tag = 0
+        votesEt.tag = 0
 
-        RxTextView.afterTextChangeEvents(votesEditText)
-            .subscribe({ str ->
-                votesEditText.tag = 1
+        votesEt.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(afterChangeEvent: Editable?) {
+                votesEt.tag = 1
+                votesEt.removeTextChangedListener(this)
 
-                if (str.editable()!!.toString().isEmpty()) {
-                    setProgress(0)
-                    setEditTextVotes("0")
-                } else {
-                    val votes = java.lang.Double.valueOf(str.editable()!!.toString())
-                    setProgress(votes.toInt())
-                    voteButton.isEnabled = true
-                    if (votesEditText.text.toString().startsWith("0") and (votesEditText.length() > 1)) {
-                        setEditTextVotes(votesEditText.text.toString().substring(1))
-                    }
+                val votesCount = afterChangeEvent.toString().toIntOrNull() ?: 0
+                votesChanged(votesCount)
+
+                votesEt.addTextChangedListener(this)
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+        })
+
+        votesSb.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (votesEt.tag == 0) {
+                    val votesStr = if (progress == 0) "1" else progress.toString()
+                    votesEt.setText(votesStr)
+                    votesEt.setSelection(votesEt.length())
                 }
-                voteButton.isEnabled = votesEditText.text.toString() != "0"
-            }, { e -> e.printStackTrace() })
+                votesEt.tag = 0
+            }
 
-        RxSeekBar.changes(votesSeekBar)
-            .subscribe({ value ->
-                if (votesEditText.tag as Int != 1) {
-                    setEditTextVotes(value.toString())
-                }
-                votesEditText.tag = 0
-            }, { e -> e.printStackTrace() })
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
 
-        Observable.merge(RxView.clicks(btnClose), RxView.clicks(cancelDialog))
-            .subscribe({ dismiss() }, { })
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            }
+        })
 
-        setEditTextVotes("1")
+        closeBtn.setOnClickListener { dismiss() }
+        cancelBtn.setOnClickListener { dismiss() }
 
-        setContentView(view)
         window!!.setSoftInputMode(LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-    }
 
-    fun getVotes(): Long {
-        return java.lang.Long.valueOf(votesEditText.text.toString())
-    }
-
-    fun setSeekBarMax(max: Int) {
-        votesSeekBar.max = max
-    }
-
-    fun setEditTextVotes(votes: String) {
-        votesEditText.setText(votes)
-        votesEditText.setSelection(votesEditText.length())
-    }
-
-    fun setProgress(votes: Int) {
-        if (votes < votesSeekBar.max) {
-            votesSeekBar.progress = votes
-        } else {
-            votesSeekBar.progress = votesSeekBar.max
+        voteBtn.setOnClickListener {
+            dismiss()
+            voteClickListener(votesEt.text.toString().toLong())
         }
+
+        keyboardImg.setOnClickListener { keyboardClickListener(votesEt) }
+
+        votesSb.max = maxVotesNeeded
+    }
+
+    private fun votesChanged(votesCount: Int) {
+        if (votesCount == 0) {
+            messageTv.text = context.getString(R.string.you_can_vote_at_least_1_point)
+            messageTv.show()
+            voteBtn.alpha = 0.5f
+            voteBtn.isEnabled = false
+            return
+        }
+
+        if (votesCount > maxVotesNeeded) {
+            if (MaxVoteType.PROJECT_NEED == maxVoteType) {
+
+                votesEt.setText(maxVotesNeeded.toString())
+                votesEt.setSelection(votesEt.length())
+
+                messageTv.text = context.getString(R.string.project_requires_votes_format, maxVotesNeeded)
+                voteBtn.isEnabled = true
+                voteBtn.alpha = 1f
+            } else {
+                messageTv.text = context.getString(R.string.user_have_not_enough_votes_message)
+                voteBtn.isEnabled = false
+                voteBtn.alpha = 0.5f
+            }
+            messageTv.show()
+            votesSb.progress = votesSb.max
+            return
+        }
+
+        votesSb.progress = votesCount
+        voteBtn.isEnabled = true
+        voteBtn.alpha = 1f
+        messageTv.hide()
+    }
+
+    fun showOpenKeyboard() {
+        keyboardImg.setImageResource(R.drawable.icon_open_keyboard)
+    }
+
+    fun showCloseKeyboard() {
+        keyboardImg.setImageResource(R.drawable.icon_close_keyboard)
     }
 }

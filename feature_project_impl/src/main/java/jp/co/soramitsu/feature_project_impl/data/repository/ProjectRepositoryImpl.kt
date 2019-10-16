@@ -179,6 +179,12 @@ class ProjectRepositoryImpl @Inject constructor(
                 db.projectDao().addVotesToProject(projectId, voteCount)
                 db.projectDetailsDao().addVotesToProject(projectId, voteCount)
             }
+            .doOnSuccess {
+                val project = db.projectDao().getProjectById(projectId)
+                if (project.fundingCurrent >= project.fundingTarget) {
+                    db.projectDao().updateProjectStatus(projectId, ProjectStatusLocal.COMPLETED)
+                }
+            }
             .ignoreElement()
     }
 
@@ -201,9 +207,11 @@ class ProjectRepositoryImpl @Inject constructor(
     }
 
     private fun saveProjectDetails(projectDetails: ProjectDetails) {
-        db.projectDetailsDao().insert(mapProjectDetailsToProjectDetailsLocal(projectDetails))
-        db.galleryDao().removeByProjectId(projectDetails.id)
-        db.galleryDao().insert(projectDetails.gallery.map { mapGalleryToGalleryLocal(it, projectDetails.id) })
+        db.runInTransaction {
+            db.projectDetailsDao().insert(mapProjectDetailsToProjectDetailsLocal(projectDetails))
+            db.galleryDao().removeByProjectId(projectDetails.id)
+            db.galleryDao().insert(projectDetails.gallery.map { mapGalleryToGalleryLocal(it, projectDetails.id) })
+        }
     }
 
     private fun saveProjects(projects: List<Project>) {

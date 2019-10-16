@@ -33,9 +33,10 @@ class SelectCountryViewModel(
             interactor.getCountries()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { showPreloader() }
+                .doOnSubscribe { if (countries.isEmpty()) showPreloader() }
                 .subscribe({
                     hidePreloader()
+                    countries.clear()
                     countries.addAll(it)
                     countriesLiveData.value = filterCountries(countries, searchFilter)
                 }, {

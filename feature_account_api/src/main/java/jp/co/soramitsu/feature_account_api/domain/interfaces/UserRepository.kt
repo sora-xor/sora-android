@@ -53,7 +53,7 @@ interface UserRepository {
 
     fun createUser(phoneNumber: String): Single<UserCreatingCase>
 
-    fun clearUserData()
+    fun clearUserData(): Completable
 
     fun register(firstName: String, lastName: String, countryIso: String, inviteCode: String): Single<Boolean>
 

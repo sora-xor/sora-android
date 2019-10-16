@@ -13,9 +13,9 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import kotlinx.android.synthetic.main.tool_bar.view.backImg
+import kotlinx.android.synthetic.main.tool_bar.view.shareImg
 import kotlinx.android.synthetic.main.tool_bar.view.titleTv
 import kotlinx.android.synthetic.main.tool_bar.view.votesTv
-import kotlinx.android.synthetic.main.tool_bar.view.shareImg
 
 class SoraToolbar @JvmOverloads constructor(
     context: Context,
@@ -41,6 +41,10 @@ class SoraToolbar @JvmOverloads constructor(
 
     fun showVotes() {
         votesTv.show()
+    }
+
+    fun setOnVotesClickListener(clickListener: () -> Unit) {
+        votesTv.setOnClickListener { clickListener() }
     }
 
     fun setTitle(title: String) {

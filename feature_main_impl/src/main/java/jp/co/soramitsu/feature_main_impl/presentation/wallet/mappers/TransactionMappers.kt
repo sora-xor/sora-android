@@ -45,7 +45,7 @@ fun mapTransactionToInformationItemList(transaction: SoraTransaction, context: C
 
         informationItems.add(InformationItem(context.getString(R.string.status), context.getString(status.status), status.icon))
 
-        var dateTimeString = "${dateTime.formatDate()}, ${dateTime.formatTime()}"
+        val dateTimeString = "${dateTime.formatDate()}, ${dateTime.formatTime()}"
 
         informationItems.add(InformationItem(context.getString(R.string.date_and_time), dateTimeString, null))
 
@@ -56,18 +56,21 @@ fun mapTransactionToInformationItemList(transaction: SoraTransaction, context: C
             Transaction.Type.WITHDRAW -> context.getString(R.string.withdraw)
         }
 
-        if (type == Transaction.Type.WITHDRAW) informationItems.add(InformationItem(context.getString(R.string.type), typeStr, null))
-
-        if (Transaction.Type.WITHDRAW != type && recipient.isNotEmpty()) {
-            informationItems.add(InformationItem(if (Transaction.Type.INCOMING == type) context.getString(R.string.sender) else context.getString(R.string.recipient), recipient, null))
+        if (Transaction.Type.WITHDRAW == type) {
+            informationItems.add(InformationItem(context.getString(R.string.type), typeStr, null))
         }
 
-        informationItems.add(InformationItem(context.getString(R.string.amount), "${Const.SORA_SYMBOL} $amount", if (Transaction.Type.INCOMING == type) R.drawable.ic_plus else null))
+        if (Transaction.Type.WITHDRAW != type && recipient.isNotEmpty()) {
+            val recipientStr = if (Transaction.Type.INCOMING != type) context.getString(R.string.sender) else context.getString(R.string.recipient)
+            informationItems.add(InformationItem(recipientStr, recipient, null))
+        }
 
-        if (type != Transaction.Type.INCOMING) {
+        informationItems.add(InformationItem(context.getString(R.string.amount), "${Const.SORA_SYMBOL} $amount", if (Transaction.Type.OUTGOING != type) R.drawable.ic_plus else null))
+
+        if (Transaction.Type.OUTGOING == type) {
             informationItems.add(InformationItem(context.getString(R.string.transaction_fee), "${Const.SORA_SYMBOL} $fee", null))
 
-            informationItems.add(InformationItem(context.getString(R.string.total_amount), "${Const.SORA_SYMBOL} ${DeciminalFormatter.format(fee + amount)}", if (Transaction.Type.INCOMING == type) R.drawable.ic_plus else R.drawable.ic_minus))
+            informationItems.add(InformationItem(context.getString(R.string.total_amount), "${Const.SORA_SYMBOL} ${DeciminalFormatter.format(fee + amount)}", if (Transaction.Type.OUTGOING == type) R.drawable.ic_minus else R.drawable.ic_plus))
         }
 
         informationItems

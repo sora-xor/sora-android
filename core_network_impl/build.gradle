@@ -52,15 +52,8 @@ android {
         }
 
         production {
-            buildConfigField "String", "HOST_URL", "\"https://s6.sora.soramitsu.co.jp\""
+            buildConfigField "String", "HOST_URL", "\"https://s1.sora.soramitsu.co.jp\""
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora\""
-            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
-            dimension 'default'
-        }
-
-        demo {
-            buildConfigField "String", "HOST_URL", "\"https://s4.stg2.sora.soramitsu.co.jp\""
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
             dimension 'default'
         }

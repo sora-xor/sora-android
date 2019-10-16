@@ -39,7 +39,7 @@ class PinCodeInteractor @Inject constructor(
     }
 
     fun resetUser(): Completable {
-        return Completable.fromAction { userRepository.clearUserData() }
+        return userRepository.clearUserData()
     }
 
     fun runCheckUserFlow(): Single<AppVersion> {

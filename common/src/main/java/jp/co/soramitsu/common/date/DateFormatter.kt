@@ -13,9 +13,9 @@ class DateFormatter {
 
     companion object {
 
-        val YYYY_DD_MM_HH_MM_SS = "yyyy-MM-dd HH:mm:ss"
-        val DD_MM_YYYY = "dd.MM.yyyy"
-        val DD_MMMM = "dd MMMM"
+        const val YYYY_DD_MM_HH_MM_SS = "yyyy-MM-dd HH:mm:ss"
+        const val DD_MM_YYYY = "dd.MM.yyyy"
+        const val DD_MMMM = "dd MMMM"
 
         @JvmStatic
         fun format(date: Date, dateFormat: String): String {

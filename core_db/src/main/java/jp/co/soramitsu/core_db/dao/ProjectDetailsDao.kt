@@ -21,7 +21,7 @@ import jp.co.soramitsu.core_db.model.ProjectDetailsWithGalleryLocal
 @TypeConverters(ProjectStatusConverter::class, ProjectUrlConverter::class, ProjectVotesConverter::class)
 abstract class ProjectDetailsDao {
 
-    @Query("DELETE FROM projects")
+    @Query("DELETE FROM project_details")
     abstract fun clearTable()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -31,10 +31,10 @@ class DetailViewModel(
 
     val projectDetailsLiveData = MutableLiveData<ProjectDetails>()
     val votesLiveData = MutableLiveData<Pair<Int, String>>()
-    val hideVoteDialogLiveData = MutableLiveData<Event<Unit>>()
     val playVideoLiveData = MutableLiveData<Event<String>>()
-    val showVoteDialogLiveData = MutableLiveData<Event<Int>>()
     val sendEmailEvent = MutableLiveData<Event<String>>()
+    val showVoteProjectLiveData = MutableLiveData<Event<Int>>()
+    val showVoteUserLiveData = MutableLiveData<Event<Int>>()
 
     init {
         disposables.add(
@@ -84,7 +84,7 @@ class DetailViewModel(
         )
     }
 
-    fun removeProjectFromFavorites() {
+    private fun removeProjectFromFavorites() {
         disposables.add(
             interactor.removeProjectFromFavorites(projectId)
                 .subscribeOn(Schedulers.io())
@@ -97,7 +97,7 @@ class DetailViewModel(
         )
     }
 
-    fun addProjectToFavorites() {
+    private fun addProjectToFavorites() {
         disposables.add(
             interactor.addProjectToFavorites(projectId)
                 .subscribeOn(Schedulers.io())
@@ -116,7 +116,6 @@ class DetailViewModel(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    hideVoteDialogLiveData.value = Event(Unit)
                     updateProject()
                     getVotes(true)
                 }, {
@@ -150,8 +149,12 @@ class DetailViewModel(
     fun voteClicked() {
         projectDetailsLiveData.value?.let { project ->
             votesLiveData.value?.let { pair ->
-                val minimal = Math.min(pair.first.toLong(), project.fundingTarget)
-                showVoteDialogLiveData.value = Event(minimal.toInt())
+                val votesLeft = (project.fundingTarget - project.fundingCurrent).toInt()
+                if (pair.first.toLong() < votesLeft) {
+                    showVoteUserLiveData.value = Event(pair.first)
+                } else {
+                    showVoteProjectLiveData.value = Event(votesLeft)
+                }
             }
         }
     }
@@ -164,5 +167,9 @@ class DetailViewModel(
                 addProjectToFavorites()
             }
         }
+    }
+
+    fun votesClicked() {
+        router.showVotesScreen()
     }
 }

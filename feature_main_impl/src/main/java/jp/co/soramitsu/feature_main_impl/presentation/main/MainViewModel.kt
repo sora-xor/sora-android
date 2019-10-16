@@ -26,12 +26,12 @@ class MainViewModel(
 ) : BaseViewModel(), WithPreloader by preloader {
 
     val votesFormattedLiveData = MediatorLiveData<String>()
-    val hideVoteDialogLiveData = MutableLiveData<Event<Unit>>()
-    val showVoteDialogLiveData = MutableLiveData<Event<Int>>()
     val allProjectsLiveData = MutableLiveData<List<Project>>()
     val favoriteProjectsLiveData = MutableLiveData<List<Project>>()
     val votedProjectsLiveData = MutableLiveData<List<Project>>()
     val completedProjectsLiveData = MutableLiveData<List<Project>>()
+    val showVoteProjectLiveData = MutableLiveData<Event<Int>>()
+    val showVoteUserLiveData = MutableLiveData<Event<Int>>()
 
     private val votesLiveData = MutableLiveData<BigDecimal>()
     private val selectedProjectLiveData = MutableLiveData<Project>()
@@ -112,7 +112,6 @@ class MainViewModel(
                             val currentVotes = it.toLong() - votesNumber
                             votesLiveData.value = currentVotes.toBigDecimal()
                         }
-                        hideVoteDialogLiveData.value = Event(Unit)
                     }, {
                         onError(it)
                     })
@@ -137,7 +136,15 @@ class MainViewModel(
         )
     }
 
-    fun addProjectToFavorites(project: Project) {
+    fun projectsFavoriteClicked(project: Project) {
+        if (project.isFavorite) {
+            removeProjectFromFavorites(project)
+        } else {
+            addProjectToFavorites(project)
+        }
+    }
+
+    private fun addProjectToFavorites(project: Project) {
         disposables.add(
             interactor.addProjectToFavorites(project.id)
                 .subscribeOn(Schedulers.io())
@@ -149,7 +156,7 @@ class MainViewModel(
         )
     }
 
-    fun removeProjectFromFavorites(project: Project) {
+    private fun removeProjectFromFavorites(project: Project) {
         disposables.add(
             interactor.removeProjectFromFavorites(project.id)
                 .subscribeOn(Schedulers.io())
@@ -171,9 +178,13 @@ class MainViewModel(
 
     fun voteClicked(project: Project) {
         selectedProjectLiveData.value = project
-        votesLiveData.value?.let {
-            val minimal = Math.min(it.toLong(), project.fundingTarget)
-            showVoteDialogLiveData.value = Event(minimal.toInt())
+        votesLiveData.value?.let { userVotes ->
+            val votesLeft = (project.fundingTarget - project.fundingCurrent).toInt()
+            if (userVotes.toInt() < votesLeft) {
+                showVoteUserLiveData.value = Event(userVotes.toInt())
+            } else {
+                showVoteProjectLiveData.value = Event(votesLeft)
+            }
         }
     }
 

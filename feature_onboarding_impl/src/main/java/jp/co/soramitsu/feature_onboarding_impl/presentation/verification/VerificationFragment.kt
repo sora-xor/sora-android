@@ -98,6 +98,10 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
             if (it.isNotEmpty()) codeEt.setText(it)
         })
 
+        observe(viewModel.resetCodeLiveData, EventObserver {
+            codeEt.setText("")
+        })
+
         viewModel.setCountryIso(arguments!!.getString(KEY_COUNTRY_ISO, ""))
 
         viewModel.setTimer(arguments!!.getInt(KEY_BLOCKING_TIME))

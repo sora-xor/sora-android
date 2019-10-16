@@ -148,7 +148,7 @@ class MainInteractor @Inject constructor(
     }
 
     fun clearUser(): Completable {
-        return Completable.fromAction { userRepository.clearUserData() }
+        return userRepository.clearUserData()
     }
 
     fun getActivityFeed(updateCached: Boolean, activityPerPage: Int, activitiesOffset: Int): Single<List<ActivityFeed>> {

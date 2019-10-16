@@ -40,7 +40,6 @@ import kotlinx.android.synthetic.main.fragment_transfer_amount.preloader
 import kotlinx.android.synthetic.main.fragment_transfer_amount.sidedButtonLayout
 import kotlinx.android.synthetic.main.fragment_transfer_amount.toolbar
 import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeTextView
-import kotlinx.android.synthetic.main.vote_bottom_dialog.btn_keyboard
 
 @SuppressLint("CheckResult")
 class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
@@ -51,6 +50,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         private const val FULL_NAME = "full_name"
         private const val ACCOUNT_ID = "account_id"
         private const val BALANCE = "balance"
+        private const val DESCRIPTION_MAX_BYTES = 64
 
         @JvmStatic
         fun start(accountId: String, fullName: String, amount: String, description: String, balance: String, navController: NavController) {
@@ -73,6 +73,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
     private lateinit var nextButtonDescription: TextView
     private lateinit var headerTextView: TextView
     private lateinit var accountAmountBodyTextView: CurrencyEditText
+    private lateinit var keyboardImg: ImageView
     private var keyboardHelper: KeyboardHelper? = null
 
     private lateinit var accountId: String
@@ -101,6 +102,8 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         configureBottomSideButton()
 
         headerTextView.text = getString(R.string.sora_account_template, "${Const.SORA_SYMBOL}${arguments!!.getString(BALANCE, "")}")
+
+        accountDescriptionBodyTextView.filters = arrayOf(DescriptionInputFilter(DESCRIPTION_MAX_BYTES, "UTF-8"))
     }
 
     private fun configureViews() {
@@ -117,7 +120,8 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         val accountAmountSymbolTextView = view!!.findViewById<TextView>(R.id.currencySymbol)
         accountAmountSymbolTextView.text = Const.SORA_SYMBOL
 
-        btn_keyboard.visibility = View.INVISIBLE
+        keyboardImg = view!!.findViewById(R.id.btn_keyboard)
+        keyboardImg.visibility = View.INVISIBLE
 
         if (description.isNotEmpty()) {
             accountDescriptionBodyTextView.setText(description)

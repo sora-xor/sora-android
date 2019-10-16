@@ -74,8 +74,10 @@ class WalletViewModel(
         )
     }
 
-    fun sendButtonClicked(balance: String) {
-        router.showContacts(balance)
+    fun sendButtonClicked() {
+        balanceLiveData.value?.let {
+            router.showContacts(it)
+        }
     }
 
     fun receiveButtonClicked() {
@@ -89,18 +91,20 @@ class WalletViewModel(
     fun eventClicked(eventItem: EventItem) {
         transactionsLiveData.value?.let { transactions ->
             transactions.firstOrNull { it.transactionId == eventItem.transactionId }?.let {
-                router.showTransactionDetailsFromList(
-                    it.recipientId,
-                    balanceLiveData.value!!,
-                    it.recipient,
-                    it.transactionId,
-                    it.amount,
-                    it.status,
-                    it.dateTime,
-                    it.type,
-                    it.description,
-                    it.fee
-                )
+                balanceLiveData.value?.let { balance ->
+                    router.showTransactionDetailsFromList(
+                        it.recipientId,
+                        balance,
+                        it.recipient,
+                        it.transactionId,
+                        it.amount,
+                        it.status,
+                        it.dateTime,
+                        it.type,
+                        it.description,
+                        it.fee
+                    )
+                }
             }
         }
     }

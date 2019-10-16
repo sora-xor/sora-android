@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
@@ -36,9 +35,9 @@ import kotlinx.android.synthetic.main.fragment_main.votesText
 @SuppressLint("CheckResult")
 class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListener {
 
-    private lateinit var keyboardHelper: KeyboardHelper
+    private var keyboardHelper: KeyboardHelper? = null
 
-    private lateinit var bottomSheetDialog: CustomBottomSheetDialog
+    private var voteDialog: CustomBottomSheetDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_main, container, false)
@@ -54,27 +53,7 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
     }
 
     override fun initViews() {
-        bottomSheetDialog = CustomBottomSheetDialog(activity!!)
-
-        RxView.clicks(bottomSheetDialog.voteButton)
-            .subscribe({
-                viewModel.voteForProject(bottomSheetDialog.getVotes())
-            }, {
-                it.printStackTrace()
-            })
-
-        RxView.clicks(bottomSheetDialog.keyboardButton)
-            .subscribe({
-                if (keyboardHelper.isKeyboardShowing) {
-                    hideSoftKeyboard(activity)
-                } else {
-                    openSoftKeyboard(bottomSheetDialog.votesEditText)
-                }
-            }, {
-                it.printStackTrace()
-            })
-
-        RxView.clicks(howItWorksCard).subscribe { viewModel.btnHelpClicked() }
+        howItWorksCard.setOnClickListener { viewModel.btnHelpClicked() }
 
         val adapter = ProjectsViewPagerAdapter(childFragmentManager).apply {
             addPage(getString(R.string.tabs_all), AllProjectsFragment.newInstance())
@@ -89,17 +68,42 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
     }
 
     override fun subscribe(viewModel: MainViewModel) {
-        observe(viewModel.hideVoteDialogLiveData, Observer {
-            bottomSheetDialog.dismiss()
-        })
-
         observe(viewModel.votesFormattedLiveData, Observer {
             votesText.text = it
         })
 
-        observe(viewModel.showVoteDialogLiveData, EventObserver {
-            bottomSheetDialog.setSeekBarMax(it)
-            bottomSheetDialog.show()
+        observe(viewModel.showVoteProjectLiveData, EventObserver {
+            voteDialog = CustomBottomSheetDialog(
+                activity!!,
+                CustomBottomSheetDialog.MaxVoteType.PROJECT_NEED,
+                it,
+                { viewModel.voteForProject(it) },
+                {
+                    if (keyboardHelper!!.isKeyboardShowing) {
+                        hideSoftKeyboard(activity)
+                    } else {
+                        openSoftKeyboard(it)
+                    }
+                }
+            )
+            voteDialog!!.show()
+        })
+
+        observe(viewModel.showVoteUserLiveData, EventObserver {
+            voteDialog = CustomBottomSheetDialog(
+                activity!!,
+                CustomBottomSheetDialog.MaxVoteType.USER_CAN_GIVE,
+                it,
+                { viewModel.voteForProject(it) },
+                {
+                    if (keyboardHelper!!.isKeyboardShowing) {
+                        hideSoftKeyboard(activity)
+                    } else {
+                        openSoftKeyboard(it)
+                    }
+                }
+            )
+            voteDialog!!.show()
         })
 
         viewModel.onActivityCreated()
@@ -108,20 +112,20 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
 
     override fun onResume() {
         super.onResume()
-        keyboardHelper = KeyboardHelper(bottomSheetDialog.view, this)
+        keyboardHelper = KeyboardHelper(view!!, this)
     }
 
     override fun onPause() {
         super.onPause()
-        keyboardHelper.release()
-        bottomSheetDialog.dismiss()
+        keyboardHelper?.release()
+        voteDialog?.dismiss()
     }
 
     override fun onKeyboardShow() {
-        bottomSheetDialog.keyboardButton.setImageResource(R.drawable.icon_close_keyboard)
+        voteDialog?.showCloseKeyboard()
     }
 
     override fun onKeyboardHide() {
-        bottomSheetDialog.keyboardButton.setImageResource(R.drawable.icon_open_keyboard)
+        voteDialog?.showOpenKeyboard()
     }
 }

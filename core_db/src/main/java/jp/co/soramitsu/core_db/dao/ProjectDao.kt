@@ -31,6 +31,9 @@ abstract class ProjectDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract fun insert(projects: List<ProjectLocal>)
 
+    @Query("SELECT * FROM projects WHERE id = :projectId")
+    abstract fun getProjectById(projectId: String): ProjectLocal
+
     @Query("SELECT * FROM projects")
     abstract fun getProjects(): Single<List<ProjectLocal>>
 
@@ -69,4 +72,7 @@ abstract class ProjectDao {
 
     @Query("DELETE FROM projects WHERE status = :status OR status = :secondStatus")
     abstract fun clearProjectsByStatuses(status: ProjectStatusLocal, secondStatus: ProjectStatusLocal)
+
+    @Query("UPDATE projects SET status = :projectStatusLocal WHERE id = :projectId")
+    abstract fun updateProjectStatus(projectId: String, projectStatusLocal: ProjectStatusLocal)
 }

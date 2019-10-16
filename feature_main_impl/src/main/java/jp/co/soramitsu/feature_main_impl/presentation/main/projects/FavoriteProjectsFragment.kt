@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_main_impl.presentation.main.projects
 
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +34,8 @@ class FavoriteProjectsFragment : BaseFragment<MainViewModel>() {
         }
     }
 
+    private var lastState: Parcelable? = null
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_favorite_projects, container, false)
     }
@@ -54,17 +57,14 @@ class FavoriteProjectsFragment : BaseFragment<MainViewModel>() {
             if (projects_recyclerview.adapter == null) {
                 projects_recyclerview.layoutManager = LinearLayoutManager(activity!!)
                 projects_recyclerview.adapter = MainProjectsAdapter(
-                    activity!!, {
-                    viewModel.voteClicked(it)
-                }, {
-                    if (it.isFavorite) {
-                        viewModel.removeProjectFromFavorites(it)
-                    } else {
-                        viewModel.addProjectToFavorites(it)
-                    }
-                }, {
-                    viewModel.projectClick(it)
-                })
+                    activity!!,
+                    { viewModel.voteClicked(it) },
+                    { viewModel.projectsFavoriteClicked(it) },
+                    { viewModel.projectClick(it) }
+                )
+                lastState?.let {
+                    (projects_recyclerview.layoutManager as LinearLayoutManager).onRestoreInstanceState(it)
+                }
             }
             (projects_recyclerview.adapter as MainProjectsAdapter).submitList(it)
             if (it.isEmpty()) {
@@ -77,5 +77,12 @@ class FavoriteProjectsFragment : BaseFragment<MainViewModel>() {
         })
 
         viewModel.updateFavoriteProjects()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        (projects_recyclerview.layoutManager as LinearLayoutManager?)?.let {
+            lastState = it.onSaveInstanceState()
+        }
     }
 }

@@ -101,7 +101,13 @@ class ReceiveAmountFragment : BaseFragment<ReceiveAmountViewModel>(), KeyboardHe
     }
 
     private fun generateQr() {
-        viewModel.generateQr(if (accountAmountBodyTextView.text.isNullOrEmpty()) "" else accountAmountBodyTextView.getBigDecimal().toString())
+        viewModel.generateQr(
+            if (accountAmountBodyTextView.text.isNullOrEmpty() || accountAmountBodyTextView.text!!.startsWith(".")) {
+                ""
+            } else {
+                accountAmountBodyTextView.getBigDecimal().toString()
+            }
+        )
     }
 
     override fun inject() {

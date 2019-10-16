@@ -99,10 +99,15 @@ class ReputationViewModel(
         calendar.set(Calendar.HOUR_OF_DAY, DISTRIBUTION_HOUR)
         calendar.set(Calendar.MINUTE, DISTRIBUTION_MINUTE)
 
-        val differentTimeInMillis = (calendar.timeInMillis - Calendar.getInstance().timeInMillis) % (24 * 60 * 60 * 1000)
+        val differentTimeInMillis = mod(calendar.timeInMillis - Calendar.getInstance().timeInMillis, 24 * 60 * 60 * 1000)
         val hoursDiff = differentTimeInMillis / 1000 / 60 / 60
         val minutesDiff = (differentTimeInMillis - hoursDiff * 60 * 60 * 1000) / 1000 / 60
 
         return Pair(hoursDiff.toInt(), minutesDiff.toInt())
+    }
+
+    private fun mod(x: Long, y: Long): Long {
+        val result = x % y
+        return if (result < 0) result + y else result
     }
 }

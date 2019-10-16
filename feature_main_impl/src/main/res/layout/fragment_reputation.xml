@@ -31,72 +31,50 @@
             android:orientation="vertical"
             app:layout_constraintGuide_percent="0.95" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:id="@+id/reputationWrapper"
             android:layout_width="match_parent"
-            android:layout_height="174dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:background="@color/greyBackground"
-            app:layout_constraintTop_toBottomOf="@id/toolbar">
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/reputationWrapperLeftGuidline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.05" />
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/reputationWrapperRightGuidline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.95" />
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            android:paddingStart="@dimen/x2_5"
+            android:paddingEnd="@dimen/x2_5"
+            android:paddingTop="@dimen/x4"
+            android:paddingBottom="@dimen/x4"
+            android:gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/reputationRankIcon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/icon_reputation"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/reputationWrapperLeftGuidline"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:src="@drawable/icon_reputation" />
+
+            <Space
+                android:layout_width="@dimen/x3"
+                android:layout_height="wrap_content" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x3"
-                android:layout_marginEnd="@dimen/x3"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
-                app:layout_constraintTop_toTopOf="parent">
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/reputationRankTitle"
                     style="@style/GreyTextStyle"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/reputation_screen_your_current_reputation"
-                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:layout_height="match_parent"
+                    android:text="@string/reputation_screen_your_current_reputation" />
 
                 <TextView
                     android:id="@+id/reputationRankText"
                     style="@style/TextAppearance.Capital.Header2"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/x1"
                     android:fontFamily="@font/sora_regular"
                     android:textColor="@color/lightBlack"
                     android:textSize="28sp"
-                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
-                    app:layout_constraintTop_toBottomOf="@id/reputationRankTitle"
                     tools:text="13 of 300" />
 
                 <View
@@ -104,31 +82,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginTop="@dimen/x2"
-                    android:background="@color/invitesDividerColor"
-                    android:importantForAccessibility="no"
-                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
-                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
-                    app:layout_constraintTop_toBottomOf="@id/reputationRankText" />
+                    android:layout_marginBottom="@dimen/x2"
+                    android:background="@color/invitesDividerColor" />
 
                 <TextView
                     android:id="@+id/dailyVotesText"
                     style="@style/GreyTextStyle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/x2"
-                    android:drawableLeft="@drawable/icon_reputation_heart"
+                    android:layout_marginTop="@dimen/x1_2"
+                    android:drawableStart="@drawable/icon_reputation_heart"
                     android:drawablePadding="@dimen/x1"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/reputationWrapperRightGuidline"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@id/reputationRankIcon"
-                    app:layout_constraintTop_toBottomOf="@id/reputationWrapperSeparateLineView"
-                    app:layout_constraintVertical_bias="0.0"
                     tools:text="300 votes received today" />
 
             </LinearLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/reputationScreenTitleTextView"

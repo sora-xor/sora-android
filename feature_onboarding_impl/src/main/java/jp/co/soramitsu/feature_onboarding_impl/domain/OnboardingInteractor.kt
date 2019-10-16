@@ -43,13 +43,15 @@ class OnboardingInteractor @Inject constructor(
 
     private fun registerUserDdo(): Completable {
         return didRepository.retrieveMnemonic()
-            .flatMapCompletable {
-                if (it.isEmpty()) {
+            .flatMapCompletable { cachedMnemonic ->
+                if (cachedMnemonic.isEmpty()) {
                     Single.just(MnemonicUtil.generateMnemonic(Crypto.getSecureRandom(20)))
-                        .doOnSuccess { didRepository.saveMnemonic(it) }
-                        .flatMapCompletable {
-                            Single.just(MnemonicUtil.getBytesFromMnemonic(it))
-                                .flatMapCompletable { didRepository.registerUserDdo(it) }
+                        .flatMapCompletable { mnemonic ->
+                            Single.just(MnemonicUtil.getBytesFromMnemonic(mnemonic))
+                                .flatMapCompletable {
+                                    didRepository.registerUserDdo(it)
+                                        .doOnComplete { didRepository.saveMnemonic(mnemonic) }
+                                }
                         }
                 } else {
                     Completable.fromAction { didRepository.restoreAuth() }

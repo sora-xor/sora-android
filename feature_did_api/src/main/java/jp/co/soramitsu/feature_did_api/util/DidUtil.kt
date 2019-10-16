@@ -33,15 +33,6 @@ object DidUtil {
             .build()
     }
 
-    fun generateDID(identifier: String, path: String, fragment: String): DID {
-        return DID.builder()
-            .method("sora")
-            .identifier(identifier)
-            .fragment(fragment)
-            .path(path)
-            .build()
-    }
-
     fun generateDDO(owner: DID, publicKey: ByteArray): DDO {
         return DDO.builder()
             .id(owner)

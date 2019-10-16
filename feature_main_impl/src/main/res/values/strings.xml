@@ -230,4 +230,8 @@
     <string name="network_connection_error">Network connection unavailable</string>
 
     <string name="no_video_app_installed_error">No video app installed</string>
+
+    <string name="user_have_not_enough_votes_message">You don\'t have enough votes 😔</string>
+    <string name="project_requires_votes_format">Project requires only %1$d votes 🚀</string>
+    <string name="you_can_vote_at_least_1_point">You can vote with at least 1 point 😜</string>
 </resources>

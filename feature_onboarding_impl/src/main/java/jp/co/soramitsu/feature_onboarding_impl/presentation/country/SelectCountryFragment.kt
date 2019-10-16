@@ -53,8 +53,6 @@ class SelectCountryFragment : BaseFragment<SelectCountryViewModel>() {
     }
 
     override fun subscribe(viewModel: SelectCountryViewModel) {
-        viewModel.getCountries()
-
         observe(viewModel.countriesLiveData, Observer {
             showCountries(it)
         })
@@ -62,6 +60,8 @@ class SelectCountryFragment : BaseFragment<SelectCountryViewModel>() {
         observe(viewModel.getPreloadVisibility(), Observer {
             if (it) showPreloader() else hidePreloader()
         })
+
+        viewModel.getCountries()
     }
 
     private val queryListener = object : SearchView.OnQueryTextListener {

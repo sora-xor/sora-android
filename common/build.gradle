@@ -62,4 +62,9 @@ dependencies {
     implementation capitalDeps.values()
 
     implementation zXingDeps.values()
+
+    testImplementation unitTestsDeps.values()
+    testImplementation robolectricDeps.values()
+    testImplementation archTestDeps.values()
+    testImplementation project(":test_shared")
 }

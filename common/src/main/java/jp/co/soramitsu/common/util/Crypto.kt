@@ -5,19 +5,15 @@
 
 package jp.co.soramitsu.common.util
 
-import android.util.Log
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.crypto.ed25519.EdDSAPrivateKey
-import jp.co.soramitsu.crypto.ed25519.EdDSAPublicKey
 import jp.co.soramitsu.sora.sdk.crypto.json.JSONEd25519Sha3SignatureSuite
 import jp.co.soramitsu.sora.sdk.did.model.dto.DDO
 import jp.co.soramitsu.sora.sdk.did.model.dto.Options
 import jp.co.soramitsu.sora.sdk.did.model.type.SignatureTypeEnum
 import jp.co.soramitsu.sora.sdk.json.JsonUtil
 import org.spongycastle.crypto.generators.SCrypt
-import org.spongycastle.jcajce.provider.digest.SHA3
 import org.spongycastle.util.encoders.Hex
-import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.security.KeyPair
 import java.security.SecureRandom
@@ -53,14 +49,6 @@ object Crypto {
         }
     }
 
-    fun SHA3(P: String, salt: String): String? {
-        return try {
-            Hex.toHexString(SHA3.DigestSHA3(256).digest((salt + P).toByteArray(charset(CHARSET))))
-        } catch (e: UnsupportedEncodingException) {
-            null
-        }
-    }
-
     fun generateKeys(seed: ByteArray): KeyPair {
         return ed25519Sha3.generateKeypair(seed)
     }
@@ -78,26 +66,6 @@ object Crypto {
         } catch (e: Exception) {
             e.printStackTrace()
             null
-        }
-    }
-
-    fun signDDO(keyPair: KeyPair, ddo: DDO, options: Options): DDO? {
-        return try {
-            mapper.readValue(suite.sign(ddo, keyPair.private as EdDSAPrivateKey, options).toString(), DDO::class.java)
-        } catch (e: Exception) {
-            Log.e("Crypto", e.localizedMessage)
-            null
-        }
-    }
-
-    fun verifySignedDDO(ddo: DDO): Boolean {
-        val publicKey = Ed25519Sha3.publicKeyFromBytes(getProofKeyFromDdo(ddo)) as EdDSAPublicKey
-
-        return try {
-            suite.verify(ddo, publicKey)
-        } catch (e: IOException) {
-            Log.e("Crypto", e.localizedMessage)
-            false
         }
     }
 

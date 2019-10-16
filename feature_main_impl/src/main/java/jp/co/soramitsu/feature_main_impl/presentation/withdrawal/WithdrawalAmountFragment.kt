@@ -34,8 +34,12 @@ import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.model.FeeType
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithdrawalMeta
-import kotlinx.android.synthetic.main.fragment_transfer_amount.*
-import kotlinx.android.synthetic.main.vote_bottom_dialog.*
+import kotlinx.android.synthetic.main.fragment_transfer_amount.accountDescriptionBodyTextView
+import kotlinx.android.synthetic.main.fragment_transfer_amount.currency_header
+import kotlinx.android.synthetic.main.fragment_transfer_amount.preloader
+import kotlinx.android.synthetic.main.fragment_transfer_amount.sidedButtonLayout
+import kotlinx.android.synthetic.main.fragment_transfer_amount.toolbar
+import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeTextView
 
 @SuppressLint("CheckResult")
 class WithdrawalAmountFragment : BaseFragment<WithdrawalAmountViewModel>() {
@@ -60,6 +64,7 @@ class WithdrawalAmountFragment : BaseFragment<WithdrawalAmountViewModel>() {
     private lateinit var nextButtonDescription: TextView
     private lateinit var headerTextView: TextView
     private lateinit var accountAmountBodyTextView: CurrencyEditText
+    private lateinit var keyboardImg: ImageView
     private var keyboardHelper: KeyboardHelper? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -91,10 +96,11 @@ class WithdrawalAmountFragment : BaseFragment<WithdrawalAmountViewModel>() {
         accountAmountBodyTextView = view!!.findViewById(R.id.accountAmountBodyTextView)
         accountAmountBodyTextView.hint = "0"
 
+        keyboardImg = view!!.findViewById(R.id.btn_keyboard)
+        keyboardImg.visibility = View.INVISIBLE
+
         val accountAmountSymbolTextView = view!!.findViewById<TextView>(R.id.currencySymbol)
         accountAmountSymbolTextView.text = Const.SORA_SYMBOL
-
-        btn_keyboard.visibility = View.INVISIBLE
 
         RxTextView.textChanges(accountAmountBodyTextView)
             .skipInitialValue()
