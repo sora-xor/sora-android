@@ -60,7 +60,7 @@ class PrivacyFragment : BaseFragment<PrivacyViewModel>() {
         }
 
         progressDialog.show()
-        webView.loadUrl(Const.SORA_TERMS_PAGE)
+        webView.loadUrl(Const.SORA_PRIVACY_PAGE)
     }
 
     override fun inject() {
