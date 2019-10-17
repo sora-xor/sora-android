@@ -60,8 +60,8 @@ fun mapTransactionToInformationItemList(transaction: SoraTransaction, context: C
             informationItems.add(InformationItem(context.getString(R.string.type), typeStr, null))
         }
 
-        if (Transaction.Type.WITHDRAW != type && recipient.isNotEmpty()) {
-            val recipientStr = if (Transaction.Type.INCOMING != type) context.getString(R.string.sender) else context.getString(R.string.recipient)
+        if (Transaction.Type.WITHDRAW != type && Transaction.Type.REWARD != type && recipient.isNotEmpty()) {
+            val recipientStr = if (Transaction.Type.OUTGOING == type) context.getString(R.string.recipient) else context.getString(R.string.sender)
             informationItems.add(InformationItem(recipientStr, recipient, null))
         }
 

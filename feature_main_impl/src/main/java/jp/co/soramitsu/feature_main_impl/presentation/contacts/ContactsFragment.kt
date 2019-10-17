@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.zxing.integration.android.IntentIntegrator
-import com.jakewharton.rxbinding2.view.RxView
 import com.tbruyelle.rxpermissions2.RxPermissions
 import jp.co.soramitsu.account_information_list.list.models.Card
 import jp.co.soramitsu.common.base.BaseFragment
@@ -127,7 +126,7 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
             }
         })
 
-        observe(viewModel.initiateScannerLiveData, Observer {
+        observe(viewModel.initiateScannerLiveData, EventObserver {
             initiateScan()
         })
 
@@ -145,19 +144,16 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
     private fun configureClicks() {
         val qrButton = view!!.findViewById<LinearLayout>(R.id.contactQrHeader)
 
-        integrator = IntentIntegrator.forSupportFragment(this)
-        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
-        integrator.setPrompt(getString(R.string.scan_qr))
+        integrator = IntentIntegrator.forSupportFragment(this).apply {
+            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
+            setPrompt(getString(R.string.scan_qr))
+            setBeepEnabled(false)
+        }
 
         viewModel.fetchContacts(false, true)
 
-        RxView.clicks(qrButton)
-            .subscribe {
-                viewModel.showImageChooser()
-            }
-
-        RxView.clicks(ethWithdrawalView)
-            .subscribe { viewModel.ethWithdrawalClicked(arguments!!.getString(BALANCE, "")) }
+        qrButton.setOnClickListener { viewModel.showImageChooser() }
+        ethWithdrawalView.setOnClickListener { viewModel.ethWithdrawalClicked(arguments!!.getString(BALANCE, "")) }
     }
 
     override fun inject() {

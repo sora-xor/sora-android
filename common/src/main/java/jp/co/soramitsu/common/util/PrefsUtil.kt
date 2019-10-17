@@ -34,10 +34,6 @@ class PrefsUtil @Inject constructor(
         putString(field, encryptionUtil.encrypt(value))
     }
 
-    fun clearString(field: String) {
-        preferences.edit().remove(field).apply()
-    }
-
     fun getString(field: String): String {
         return preferences.getString(field, "") ?: ""
     }
