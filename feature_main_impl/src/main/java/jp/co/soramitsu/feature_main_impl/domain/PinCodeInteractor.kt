@@ -9,7 +9,6 @@ import io.reactivex.Completable
 import io.reactivex.Single
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.util.mnemonic.MnemonicUtil
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
@@ -63,9 +62,6 @@ class PinCodeInteractor @Inject constructor(
                 userRepository.getUser(false)
                     .map { mnemonic }
             }
-            .flatMapCompletable { mnemonic ->
-                Single.just(MnemonicUtil.getBytesFromMnemonic(mnemonic))
-                    .flatMapCompletable { didRepository.retrieveUserDdo(it) }
-            }
+            .flatMapCompletable { didRepository.retrieveUserDdo(it) }
     }
 }

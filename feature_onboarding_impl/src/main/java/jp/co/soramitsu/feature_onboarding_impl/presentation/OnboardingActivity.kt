@@ -26,16 +26,24 @@ import jp.co.soramitsu.feature_onboarding_impl.presentation.verification.Verific
 import jp.co.soramitsu.feature_onboarding_impl.presentation.version.UnsupportedVersionFragment
 import javax.inject.Inject
 
-class OnboardingActivity : ToolbarActivity(), OnboardingRouter {
+class OnboardingActivity : ToolbarActivity<OnboardingViewModel>(), OnboardingRouter {
 
     companion object {
 
         private const val KEY_ONBOARDING_STATE = "onboarding_state"
+        const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
 
         fun start(context: Context, state: OnboardingState) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 putExtra(KEY_ONBOARDING_STATE, state)
+            }
+            context.startActivity(intent)
+        }
+
+        fun startWithInviteLink(context: Context) {
+            val intent = Intent(context, OnboardingActivity::class.java).apply {
+                action = ACTION_INVITE
             }
             context.startActivity(intent)
         }
@@ -45,14 +53,32 @@ class OnboardingActivity : ToolbarActivity(), OnboardingRouter {
 
     private lateinit var navController: NavController
 
-    public override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_layout)
+    override fun layoutResource(): Int {
+        return R.layout.activity_layout
+    }
 
+    override fun inject() {
+        FeatureUtils.getFeature<OnboardingFeatureComponent>(this, OnboardingFeatureApi::class.java)
+            .onboardingComponentBuilder()
+            .withActivity(this)
+            .build()
+            .inject(this)
+    }
+
+    override fun initViews() {
         initNavigation()
+    }
 
-        val component = FeatureUtils.getFeature<OnboardingFeatureComponent>(this, OnboardingFeatureApi::class.java)
-        component.inject(this)
+    override fun subscribe(viewModel: OnboardingViewModel) {}
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+        intent?.let {
+            if (ACTION_INVITE == it.action) {
+                viewModel.startedWithInviteAction()
+            }
+        }
     }
 
     private fun initNavigation() {

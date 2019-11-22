@@ -13,6 +13,10 @@ import javax.inject.Inject
 
 class OnboardingStarterImpl @Inject constructor() : OnboardingStarter {
 
+    override fun startWithInviteLink(context: Context) {
+        OnboardingActivity.startWithInviteLink(context)
+    }
+
     override fun start(context: Context, onboardingState: OnboardingState) {
         OnboardingActivity.start(context, onboardingState)
     }

@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.di
 
+import jp.co.soramitsu.common.di.app.CommonApi
 import jp.co.soramitsu.core_di.holder.FeatureApiHolder
 import jp.co.soramitsu.core_di.holder.FeatureContainer
 import jp.co.soramitsu.core_network_api.di.NetworkApi
@@ -27,6 +28,7 @@ class OnboardingFeatureHolder @Inject constructor(
             .mainFeatureApi(getFeature(MainFeatureApi::class.java))
             .walletFeatureApi(getFeature(WalletFeatureApi::class.java))
             .networkApi(getFeature(NetworkApi::class.java))
+            .commonApi(getFeature(CommonApi::class.java))
             .build()
         return DaggerOnboardingFeatureComponent.builder()
             .onboardingFeatureDependencies(onboardingFeatureDependencies)

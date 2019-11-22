@@ -33,6 +33,7 @@ class PrefsUserDatasource @Inject constructor(
         private const val KEY_LAST_NAME = "key_last_name"
         private const val KEY_PHONE = "key_phone"
         private const val KEY_COUNTRY = "key_country"
+        private const val KEY_INVITE_ACCEPT_MOMENT = "key_invite_accept_moment"
         private const val KEY_PARENT_ID = "key_parent_id"
         private const val KEY_STATUS = "key_status"
         private const val KEY_INVITE_CODE = "invite_code"
@@ -72,6 +73,10 @@ class PrefsUserDatasource @Inject constructor(
         prefsUtl.putString(KEY_PHONE, user.phone)
         prefsUtl.putString(KEY_STATUS, user.status)
         prefsUtl.putString(KEY_COUNTRY, user.country)
+        prefsUtl.putLong(KEY_INVITE_ACCEPT_MOMENT, user.inviteAcceptExpirationMomentMillis)
+        prefsUtl.putString(KEY_USER_UD, user.values.userId)
+        prefsUtl.putFloat(PREFS_TOKENS, user.values.tokens)
+        prefsUtl.putInt(PREFS_INVITATIONS, user.values.invitations)
     }
 
     override fun retrieveUser(): User? {
@@ -85,9 +90,19 @@ class PrefsUserDatasource @Inject constructor(
                 prefsUtl.getString(KEY_PHONE),
                 prefsUtl.getString(KEY_STATUS),
                 prefsUtl.getString(KEY_PARENT_ID),
-                prefsUtl.getString(KEY_COUNTRY)
+                prefsUtl.getString(KEY_COUNTRY),
+                prefsUtl.getLong(KEY_INVITE_ACCEPT_MOMENT, 0),
+                retrieveUserValues()
             )
         }
+    }
+
+    private fun retrieveUserValues(): UserValues {
+        return UserValues(
+            prefsUtl.getInt(PREFS_INVITATIONS, 0),
+            prefsUtl.getFloat(PREFS_TOKENS, 0f),
+            prefsUtl.getString(KEY_USER_UD)
+        )
     }
 
     override fun saveRegistrationState(onboardingState: OnboardingState) {
@@ -133,20 +148,6 @@ class PrefsUserDatasource @Inject constructor(
             prefsUtl.getInt(Const.USER_REPUTATION_RANK, 0),
             prefsUtl.getFloat(Const.USER_REPUTATION, 0f),
             prefsUtl.getInt(Const.USER_REPUTATION_TOTAL_RANK, 0)
-        )
-    }
-
-    override fun saveUserValues(userValues: UserValues) {
-        prefsUtl.putString(KEY_USER_UD, userValues.userId)
-        prefsUtl.putFloat(PREFS_TOKENS, userValues.tokens)
-        prefsUtl.putInt(PREFS_INVITATIONS, userValues.invitations)
-    }
-
-    override fun retrieveUserValues(): UserValues {
-        return UserValues(
-            prefsUtl.getInt(PREFS_INVITATIONS, 0),
-            prefsUtl.getFloat(PREFS_TOKENS, 0f),
-            prefsUtl.getString(KEY_USER_UD)
         )
     }
 

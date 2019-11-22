@@ -64,7 +64,8 @@ fun mapProjectDetailsRemoteToProject(projectDetailsRemote: ProjectDetailsRemote)
             unwatched,
             gallery?.map { mapGalleryRemoteToGallery(it) } ?: emptyList(),
             ProjectStatus.valueOf(status),
-            Date(statusUpdateTime * 1000L)
+            Date(statusUpdateTime * 1000L),
+            if (discussionLinkRemote == null) null else mapDiscussionLinkRemoteToDiscussionLink(discussionLinkRemote)
         )
     }
 }
@@ -81,7 +82,7 @@ fun mapProjectDetailsToProjectDetailsLocal(project: ProjectDetails): ProjectDeta
     return with(project) {
         ProjectDetailsLocal(id, image, projectLink, name, email, description, detailedDescription, deadline.time,
             fundingCurrent, fundingTarget, votedFriendsCount, favoriteCount, votes, isFavorite, isUnwatched,
-            mapProjectStatusToProjectStatusLocal(status), statusUpdateTime.time)
+            mapProjectStatusToProjectStatusLocal(status), statusUpdateTime.time, if (discussionLink == null) null else mapDiscussionLinkToDiscussionLinkLocal(discussionLink!!))
     }
 }
 
@@ -171,7 +172,8 @@ fun mapProjectDetailsLocalToProjectDetails(projectWithGalleryLocal: ProjectDetai
             projectLocal.isUnwatched,
             gallery.map { mapGalleryLocalToGallery(it) },
             mapProjectStatusLocalToProjectStatus(projectLocal.status),
-            Date(projectLocal.statusUpdateTimeMillis)
+            Date(projectLocal.statusUpdateTimeMillis),
+            if (projectLocal.discussionLink == null) null else mapDiscussionLinkLocalToDiscussionLink(projectLocal.discussionLink!!)
         )
     }
 }

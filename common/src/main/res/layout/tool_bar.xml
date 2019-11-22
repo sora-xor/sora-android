@@ -47,6 +47,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="@dimen/x2"
             android:layout_marginBottom="8dp"
+            android:gravity="center"
             android:drawableStart="@drawable/icon_vote_filled"
             android:drawablePadding="@dimen/x1"
             app:layout_constraintBottom_toBottomOf="parent"

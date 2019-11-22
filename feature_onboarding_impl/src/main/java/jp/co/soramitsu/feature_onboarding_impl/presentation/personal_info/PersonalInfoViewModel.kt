@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
@@ -17,7 +18,8 @@ import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
 class PersonalInfoViewModel(
     private val interactor: OnboardingInteractor,
     private val router: OnboardingRouter,
-    private val progress: WithProgress
+    private val progress: WithProgress,
+    invitationHandler: InvitationHandler
 ) : BaseViewModel(), WithProgress by progress {
 
     private var countryIso = ""
@@ -30,6 +32,17 @@ class PersonalInfoViewModel(
     val inviteCodeLiveData = MutableLiveData<String>()
 
     init {
+        disposables.add(
+            invitationHandler.observeInvitationApplies()
+                .flatMapSingle { interactor.getParentInviteCode() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    inviteCodeLiveData.value = it
+                }, {
+                    it.printStackTrace()
+                })
+        )
+
         disposables.add(
             interactor.getParentInviteCode()
                 .observeOn(AndroidSchedulers.mainThread())

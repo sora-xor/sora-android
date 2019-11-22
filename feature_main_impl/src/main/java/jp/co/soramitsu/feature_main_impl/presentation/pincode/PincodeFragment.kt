@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_main_impl.presentation.pincode
 import android.app.KeyguardManager
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -21,24 +20,19 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.base.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
-import jp.co.soramitsu.feature_main_impl.presentation.pincode.custom.PinLockListener
-import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerPrintListener
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintWrapper
-import kotlinx.android.synthetic.main.fragment_pincode.indicator_dots
-import kotlinx.android.synthetic.main.fragment_pincode.pin_code_title
-import kotlinx.android.synthetic.main.fragment_pincode.pin_lock_view
+import kotlinx.android.synthetic.main.fragment_pincode.dotsProgressView
+import kotlinx.android.synthetic.main.fragment_pincode.pinCodeTitleTv
+import kotlinx.android.synthetic.main.fragment_pincode.pinCodeView
 import kotlinx.android.synthetic.main.fragment_pincode.toolbar
 
 class PincodeFragment : BaseFragment<PinCodeViewModel>() {
-
-    companion object {
-        private const val WAIT_FOR_DOTS_ANIMATION_TIME: Long = 12
-    }
 
     private lateinit var fingerprintWrapper: FingerprintWrapper
     private lateinit var fingerprintDialog: BottomSheetDialog
@@ -53,6 +47,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
             .pinCodeComponentBuilder()
             .withFragment(this)
             .withRouter(activity as MainRouter)
+            .withMaxPinCodeLength(DotsProgressView.MAX_PROGRESS)
             .build()
             .inject(this)
     }
@@ -69,13 +64,19 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
 
         toolbar.setHomeButtonListener { viewModel.backPressed() }
         toolbar.setTitle(getString(R.string.pincode))
+
+        with(pinCodeView) {
+            pinCodeListener = { viewModel.pinCodeNumberClicked(it) }
+            deleteClickListener = { viewModel.pinCodeDeleteClicked() }
+            fingerprintClickListener = { fingerprintWrapper.toggleScanner() }
+        }
     }
 
     override fun subscribe(viewModel: PinCodeViewModel) {
         fingerprintWrapper = FingerprintWrapper(
             FingerprintManagerCompat.from(activity!!),
             activity!!.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager,
-            fingerprintListener
+            viewModel
         )
 
         observe(viewModel.getProgressVisibility(), Observer {
@@ -90,117 +91,56 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
             }
         })
 
-        observe(viewModel.startFingerprintScannerEventLiveData, Observer {
+        observe(viewModel.startFingerprintScannerEventLiveData, EventObserver {
             fingerprintWrapper.startAuth()
         })
 
-        observe(viewModel.setPinCodeEventLiveData, Observer {
-            showPinCodeSet()
+        observe(viewModel.showFingerPrintEventLiveData, EventObserver {
+            pinCodeView.changeFingerPrintButtonVisibility(fingerprintWrapper.isSensorReady())
         })
 
-        observe(viewModel.checkPinCodeEventLiveData, Observer {
-            showPinCodeCheck()
+        observe(viewModel.toolbarTitleResLiveData, Observer {
+            pinCodeTitleTv.setText(it)
         })
 
-        observe(viewModel.repeatPinCodeEventLiveData, Observer {
-            showRepeatPinCode()
+        observe(viewModel.wrongPinCodeEventLiveData, EventObserver {
+            Toast.makeText(activity, getString(R.string.pincode_check_error), Toast.LENGTH_LONG).show()
         })
 
-        observe(viewModel.resetPinCodeEventLiveData, Observer {
-            resetPinCodeView()
+        observe(viewModel.fingerPrintDialogVisibilityLiveData, Observer {
+            if (it) fingerprintDialog.show() else fingerprintDialog.dismiss()
         })
 
-        observe(viewModel.wrongPinCodeEventLiveData, Observer {
-            pinCodeCheckError()
+        observe(viewModel.fingerPrintAutFailedLiveData, EventObserver {
+            Toast.makeText(context, R.string.fingerprint_error, Toast.LENGTH_SHORT).show()
+        })
+
+        observe(viewModel.fingerPrintErrorLiveData, EventObserver {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        })
+
+        observe(viewModel.pinCodeProgressLiveData, Observer {
+            dotsProgressView.setProgress(it)
+        })
+
+        observe(viewModel.deleteButtonVisibilityLiveData, Observer {
+            pinCodeView.changeDeleteButtonVisibility(it)
         })
 
         val action = arguments!!.getSerializable(Const.PIN_CODE_ACTION) as PinCodeAction
-        viewModel.onActivityCreated(action)
-    }
-
-    private fun showPinCodeSet() {
-        resetPinCodeView()
-        setupPinLockView()
-        pin_lock_view.isFingerprintButtonNeeded = false
-    }
-
-    private val fingerprintListener = object : FingerPrintListener {
-
-        override fun onFingerPrintSuccess() {
-            viewModel.fingerprintSuccess()
-        }
-
-        override fun onAuthFailed() {
-            Toast.makeText(context, R.string.fingerprint_error, Toast.LENGTH_SHORT).show()
-        }
-
-        override fun onAuthenticationHelp(message: String) {
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-
-        override fun onAuthenticationError(message: String) {
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-
-        override fun showFingerPrintDialog() {
-            fingerprintDialog.show()
-        }
-
-        override fun hideFingerPrintDialog() {
-            fingerprintDialog.dismiss()
-        }
-    }
-
-    private fun setupPinLockView() {
-        pin_lock_view.attachIndicatorDots(indicator_dots)
-
-        pin_lock_view.setPinLockListener(object : PinLockListener {
-            override fun onFingerprintButtonClicked() {
-                fingerprintWrapper.toggleScanner()
-            }
-
-            override fun onComplete(pin: String) {
-                Handler().postDelayed({ viewModel.pinCodeEntered(pin) }, WAIT_FOR_DOTS_ANIMATION_TIME)
-            }
-
-            override fun onEmpty() {}
-
-            override fun onPinChange(pinLength: Int, intermediatePin: String) {}
-        })
-    }
-
-    private fun resetPinCodeView() {
-        pin_lock_view.resetPinLockView()
-        pin_code_title.setText(R.string.pincode_title)
-        toolbar.hideHomeButton()
-    }
-
-    private fun pinCodeCheckError() {
-        Toast.makeText(activity, getString(R.string.pincode_check_error), Toast.LENGTH_LONG).show()
-        pin_lock_view.resetPinLockView()
+        viewModel.startAuth(action)
     }
 
     fun onBackPressed() {
         viewModel.backPressed()
     }
 
-    private fun showPinCodeCheck() {
-        pin_code_title.setText(R.string.pincode_title_check)
-        setupPinLockView()
-        pin_lock_view.isFingerprintButtonNeeded = fingerprintWrapper.isSensorReady()
-    }
-
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item!!.itemId == android.R.id.home) {
-            resetPinCodeView()
+            viewModel.backPressed()
             return true
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun showRepeatPinCode() {
-        pin_code_title.setText(R.string.pincode_title2)
-        pin_lock_view.resetPinLockView()
     }
 
     override fun onPause() {

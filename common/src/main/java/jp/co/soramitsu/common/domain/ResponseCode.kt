@@ -79,7 +79,19 @@ enum class ResponseCode(val stringResource: Int) {
 
     FEE_RATE_NOT_AVAILABLE(R.string.fee_rate_not_available),
 
-    WRONG_PIN_CODE(R.string.pincode_check_error);
+    WRONG_PIN_CODE(R.string.pincode_check_error),
+
+    AMBIGUOUS_RESULT(R.string.ambiguous_result),
+
+    WRONG_USER_STATUS(R.string.wrong_user_status),
+
+    INVITER_REGISTERED_AFTER_INVITEE(R.string.inviter_registered_after_invitee),
+
+    INVITATION_ACCEPTING_WINDOW_CLOSED(R.string.invitation_accepting_window_closed),
+
+    PARENT_ALREADY_EXISTS(R.string.invitation_already_accepted),
+
+    SELF_INVITATION(R.string.self_invitation);
 
     companion object {
 

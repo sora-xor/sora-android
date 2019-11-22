@@ -6,19 +6,20 @@
 package jp.co.soramitsu.feature_onboarding_impl.di
 
 import dagger.Component
+import jp.co.soramitsu.common.di.app.CommonApi
 import jp.co.soramitsu.common.di.app.FeatureScope
 import jp.co.soramitsu.core_network_api.di.NetworkApi
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_did_api.di.DidFeatureApi
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
-import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingActivity
+import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.country.di.SelectCountryComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic.di.MnemonicComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info.di.PersonalInfoComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.phone.di.PhoneNumberComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.recovery.di.RecoveryComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.privacy.di.PrivacyComponent
+import jp.co.soramitsu.feature_onboarding_impl.presentation.recovery.di.RecoveryComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.terms.di.TermsComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.tutorial.di.TutorialComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.verification.di.VerificationComponent
@@ -35,8 +36,6 @@ import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 )
 @FeatureScope
 interface OnboardingFeatureComponent : OnboardingFeatureApi {
-
-    fun inject(activity: OnboardingActivity)
 
     fun tutorialComponentBuilder(): TutorialComponent.Builder
 
@@ -58,13 +57,16 @@ interface OnboardingFeatureComponent : OnboardingFeatureApi {
 
     fun privacyComponentBuilder(): PrivacyComponent.Builder
 
+    fun onboardingComponentBuilder(): OnboardingComponent.Builder
+
     @Component(
         dependencies = [
             AccountFeatureApi::class,
             DidFeatureApi::class,
             MainFeatureApi::class,
             WalletFeatureApi::class,
-            NetworkApi::class
+            NetworkApi::class,
+            CommonApi::class
         ]
     )
     interface OnboardingFeatureDependenciesComponent : OnboardingFeatureDependencies

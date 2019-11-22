@@ -25,10 +25,10 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.DeciminalFormatter
 import jp.co.soramitsu.common.util.EllipsizeUtil
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.createSendEmailIntent
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -44,28 +44,31 @@ import jp.co.soramitsu.feature_main_impl.presentation.util.formatToOpenProjectDa
 import jp.co.soramitsu.feature_project_api.domain.model.GalleryItem
 import jp.co.soramitsu.feature_project_api.domain.model.ProjectDetails
 import jp.co.soramitsu.feature_project_api.domain.model.ProjectStatus
-import kotlinx.android.synthetic.main.fragment_project_detail.emailTv
-import kotlinx.android.synthetic.main.fragment_project_detail.favImg
-import kotlinx.android.synthetic.main.fragment_project_detail.friendsFavoritesCountText
-import kotlinx.android.synthetic.main.fragment_project_detail.preloaderView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDaysLeftTv
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailAddToFavouritesButton
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailDescriptionTextView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailGalleryRecyclerView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailGalleryTextView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailHeaderImageView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailProgressTextView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailSeparateLineView0
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailTitleTextView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailVoteButton
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailVotesProgressBar
-import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailsVoteButtonIcon
-import kotlinx.android.synthetic.main.fragment_project_detail.projectView
-import kotlinx.android.synthetic.main.fragment_project_detail.projectVoteTv
-import kotlinx.android.synthetic.main.fragment_project_detail.reward
 import kotlinx.android.synthetic.main.fragment_project_detail.toolbar
+import kotlinx.android.synthetic.main.fragment_project_detail.projectView
+import kotlinx.android.synthetic.main.fragment_project_detail.preloaderView
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailAddToFavouritesButton
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailTitleTextView
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailVotesProgressBar
+import kotlinx.android.synthetic.main.fragment_project_detail.favImg
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailDescriptionTextView
+import kotlinx.android.synthetic.main.fragment_project_detail.friendsFavoritesCountText
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailSeparateLineView0
 import kotlinx.android.synthetic.main.fragment_project_detail.webSiteTv
+import kotlinx.android.synthetic.main.fragment_project_detail.emailTv
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailVoteButton
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailProgressTextView
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDaysLeftTv
+import kotlinx.android.synthetic.main.fragment_project_detail.projectVoteTv
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailsVoteButtonIcon
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailHeaderImageView
+import kotlinx.android.synthetic.main.fragment_project_detail.discussLinkTextView
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailSeparateLineView3
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailGalleryTextView
+import kotlinx.android.synthetic.main.fragment_project_detail.projectDetailGalleryRecyclerView
+import kotlinx.android.synthetic.main.fragment_project_detail.reward
 import java.math.BigDecimal
+import javax.inject.Inject
 
 @SuppressLint("CheckResult")
 class DetailFragment : BaseFragment<DetailViewModel>(), KeyboardHelper.KeyboardListener {
@@ -73,6 +76,8 @@ class DetailFragment : BaseFragment<DetailViewModel>(), KeyboardHelper.KeyboardL
     private var keyboardHelper: KeyboardHelper? = null
 
     private var voteDialog: CustomBottomSheetDialog? = null
+
+    @Inject lateinit var numbersFormatter: NumbersFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_project_detail, container, false)
@@ -185,6 +190,8 @@ class DetailFragment : BaseFragment<DetailViewModel>(), KeyboardHelper.KeyboardL
                 projectDetailAddToFavouritesButton.startAnimation(scaleAnimation)
                 viewModel.favoriteClicked()
             }
+
+        discussLinkTextView.setOnClickListener { viewModel.discussionLinkClicked() }
     }
 
     private fun showProject(project: ProjectDetails) {
@@ -235,27 +242,26 @@ class DetailFragment : BaseFragment<DetailViewModel>(), KeyboardHelper.KeyboardL
 
             projectDetailProgressTextView.text = getString(R.string.founded_template,
                 project.getFundingPercent(),
-                DeciminalFormatter.formatInteger(BigDecimal.valueOf(project.fundingTarget)))
+                numbersFormatter.formatInteger(BigDecimal.valueOf(project.fundingTarget)))
             projectDaysLeftTv.text = project.deadline.formatToOpenProjectDate(resources)
         } else {
             projectDetailVoteButton.isClickable = false
             projectDetailVoteButton.setCardBackgroundColor(ContextCompat.getColor(activity!!, R.color.greyBackground))
 
             projectDetailVotesProgressBar.gone()
-            projectDetailProgressTextView.text = getString(R.string.votes_template, DeciminalFormatter.formatInteger(BigDecimal.valueOf(project.fundingCurrent)))
+            projectDetailProgressTextView.text = getString(R.string.votes_template, numbersFormatter.formatInteger(BigDecimal.valueOf(project.fundingCurrent)))
 
             projectDaysLeftTv.text = project.statusUpdateTime.formatToClosedProjectDate(resources)
         }
-
         when (project.status) {
             ProjectStatus.COMPLETED -> {
-                projectVoteTv.setText(R.string.succesfull_voting)
-                projectVoteTv.setTextColor(ContextCompat.getColor(activity!!, R.color.darkGreyBlue))
+                projectVoteTv.setText(R.string.successful_voting)
+                projectVoteTv.setTextColor(ContextCompat.getColor(activity!!, R.color.green))
                 projectDetailsVoteButtonIcon.setImageDrawable(ContextCompat.getDrawable(activity!!, R.drawable.icon_succ_voting))
             }
             ProjectStatus.FAILED -> {
-                projectVoteTv.setText(R.string.unsuccesfull_voting)
-                projectVoteTv.setTextColor(ContextCompat.getColor(activity!!, R.color.darkGreyBlue))
+                projectVoteTv.setText(R.string.unsuccessful_voting)
+                projectVoteTv.setTextColor(ContextCompat.getColor(activity!!, R.color.green))
                 projectDetailsVoteButtonIcon.setImageDrawable(ContextCompat.getDrawable(activity!!, R.drawable.icon_failed))
             }
             ProjectStatus.OPEN -> {
@@ -265,13 +271,22 @@ class DetailFragment : BaseFragment<DetailViewModel>(), KeyboardHelper.KeyboardL
                     projectVoteTv.text = getString(R.string.vote)
                     projectDetailsVoteButtonIcon.setImageDrawable(ContextCompat.getDrawable(activity!!, R.drawable.icon_vote_shape))
                 } else {
-                    projectVoteTv.text = DeciminalFormatter.formatInteger(project.votes)
+                    projectVoteTv.text = numbersFormatter.formatInteger(project.votes)
                     projectDetailsVoteButtonIcon.setImageDrawable(ContextCompat.getDrawable(activity!!, R.drawable.icon_vote_filled))
                 }
             }
         }
 
         Picasso.get().load(project.image.toString()).fit().centerCrop().into(projectDetailHeaderImageView)
+
+        if (project.discussionLink == null) {
+            discussLinkTextView.gone()
+            projectDetailSeparateLineView3.gone()
+        } else {
+            discussLinkTextView.show()
+            projectDetailSeparateLineView3.show()
+            discussLinkTextView.text = getString(R.string.discussion_template, project.discussionLink!!.title)
+        }
     }
 
     private fun getFavouritesCountString(projectVm: ProjectDetails): String {
@@ -310,7 +325,7 @@ class DetailFragment : BaseFragment<DetailViewModel>(), KeyboardHelper.KeyboardL
     }
 
     private val galleryItemClickListener: (GalleryItem, View, Int) -> Unit = { item, sharedView, position ->
-        viewModel.galleryClicked(activity!!, sharedView, item, position)
+        viewModel.galleryClicked(activity!!, item, position)
     }
 
     private fun showRewardByCurrency(project: ProjectDetails) {

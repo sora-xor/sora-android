@@ -16,11 +16,16 @@ import javax.inject.Inject
 class NumbersFormatter @Inject constructor() {
 
     companion object {
-        private const val DECIMAL_PATTERN = "###.##"
+        private const val DECIMAL_PATTERN = "###,###.##"
     }
 
     fun format(num: Double): String {
-        return DecimalFormat(DECIMAL_PATTERN).format(num)
+        val formatter = DecimalFormat(DECIMAL_PATTERN)
+        val decimalFormatSymbols = formatter.decimalFormatSymbols
+        decimalFormatSymbols.groupingSeparator = ' '
+        decimalFormatSymbols.decimalSeparator = '.'
+        formatter.decimalFormatSymbols = decimalFormatSymbols
+        return formatter.format(num)
     }
 
     fun format(num: BigDecimal, code: String): String {
@@ -30,7 +35,7 @@ class NumbersFormatter @Inject constructor() {
     }
 
     fun formatBigDecimal(num: BigDecimal): String {
-        val formatter = DecimalFormat()
+        val formatter = DecimalFormat(DECIMAL_PATTERN)
         val decimalFormatSymbols = formatter.decimalFormatSymbols
         decimalFormatSymbols.groupingSeparator = ' '
         formatter.decimalFormatSymbols = decimalFormatSymbols

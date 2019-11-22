@@ -106,7 +106,7 @@ class ProfileFragment : BaseFragment<ProfileViewModel>() {
 
         observe(viewModel.userReputationLiveData, Observer { reputation ->
             profileMyReputationNumber.visibility = if (reputation.rank > 0) View.VISIBLE else View.GONE
-            userReputationAmount.text = getString(R.string.rank_template, reputation.rank)
+            userReputationAmount.text = reputation.rank.toString()
         })
 
         viewModel.loadUserData(false)

@@ -9,7 +9,6 @@ import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
-import jp.co.soramitsu.feature_account_api.domain.model.UserValues
 
 interface UserDatasource {
 
@@ -32,10 +31,6 @@ interface UserDatasource {
     fun retrieveUser(): User?
 
     fun retrieveUserReputation(): Reputation
-
-    fun saveUserValues(userValues: UserValues)
-
-    fun retrieveUserValues(): UserValues
 
     fun saveInvitedUsers(invitedUsers: Array<InvitedUser>)
 

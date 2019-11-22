@@ -6,11 +6,11 @@
 package jp.co.soramitsu.common.util.ext
 
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
-fun Date.date2Day(): String {
+fun Date.date2Day(todayStr: String, yesterdayStr: String): String {
     val newTime = Date()
 
     val cal = Calendar.getInstance().apply { time = newTime }
@@ -23,8 +23,8 @@ fun Date.date2Day(): String {
 
     if (oldYear == year) {
         return when (oldDay - day) {
-            -1 -> "-1"
-            0 -> "0"
+            -1 -> yesterdayStr
+            0 -> todayStr
             else -> this.formatDate()
         }
     }

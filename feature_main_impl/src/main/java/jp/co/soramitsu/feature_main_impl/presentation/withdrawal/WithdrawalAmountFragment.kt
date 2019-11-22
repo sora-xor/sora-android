@@ -82,7 +82,7 @@ class WithdrawalAmountFragment : BaseFragment<WithdrawalAmountViewModel>() {
         configureViews()
         configureBottomSideButton()
 
-        headerTextView.text = getString(R.string.sora_account_template, "${Const.SORA_SYMBOL}${arguments!!.getString(BALANCE, "")}")
+        headerTextView.text = getString(R.string.xor_template, "${Const.SORA_SYMBOL}${arguments!!.getString(BALANCE, "")}")
     }
 
     private fun configureViews() {
@@ -139,7 +139,7 @@ class WithdrawalAmountFragment : BaseFragment<WithdrawalAmountViewModel>() {
         viewModel.getBalanceAndWithdrawalMeta()
 
         observe(viewModel.balanceLiveData, Observer {
-            headerTextView.text = getString(R.string.sora_account_template, "${Const.SORA_SYMBOL}$it")
+            headerTextView.text = getString(R.string.xor_template, "${Const.SORA_SYMBOL}$it")
             nextButton.enable()
         })
 

@@ -6,6 +6,7 @@
 package jp.co.soramitsu.common.resourses
 
 import android.content.Context
+import androidx.core.content.ContextCompat
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,5 +17,9 @@ class ResourceManagerImpl @Inject constructor(
 
     override fun getString(resource: Int): String {
         return context.getString(resource)
+    }
+
+    override fun getColor(res: Int): Int {
+        return ContextCompat.getColor(context, res)
     }
 }

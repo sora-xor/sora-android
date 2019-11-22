@@ -28,7 +28,7 @@ class VerificationViewModel(
     private val interactor: OnboardingInteractor,
     private val router: OnboardingRouter,
     private val progress: WithProgress,
-    val timerWrapper: TimerWrapper
+    private val timer: TimerWrapper
 ) : BaseViewModel(), WithProgress by progress {
 
     companion object {
@@ -43,7 +43,6 @@ class VerificationViewModel(
     val smsCodeStartActivityForResult = MutableLiveData<Intent>()
     val smsCodeAutofillLiveData = MutableLiveData<String>()
 
-    val enableButtonLiveData = MutableLiveData<Boolean>()
     val resetCodeLiveData = MutableLiveData<Event<Unit>>()
 
     private var countryIso = ""
@@ -51,7 +50,6 @@ class VerificationViewModel(
     fun onVerify(code: String) {
         if (code.trim().isEmpty()) {
             onError(SoraException.businessError(ResponseCode.SMS_CODE_NOT_CORRECT))
-            enableButtonLiveData.value = true
         } else {
             disposables.add(
                 interactor.verifySmsCode(code)
@@ -60,12 +58,11 @@ class VerificationViewModel(
                     .doOnSubscribe { progress.showProgress() }
                     .subscribe({
                         progress.hideProgress()
-                        timerWrapper.cancel()
+                        timer.cancel()
                         resetCodeLiveData.value = Event(Unit)
                         router.showPersonalInfo(countryIso)
                     }, {
                         progress.hideProgress()
-                        enableButtonLiveData.value = true
                         onError(it)
                     })
             )
@@ -103,15 +100,22 @@ class VerificationViewModel(
     }
 
     fun setTimer(blockingTime: Int) {
-        if (blockingTime != 0) {
-            timerWrapper.setTimerCallbacks({ minutes, seconds ->
-                timerLiveData.value = Pair(minutes, seconds)
-            }, {
-                timerFinishedLiveData.value = Event(Unit)
-            })
-
-            timerWrapper.start(blockingTime.toLong() * 1000, 1000)
-        }
+        if (blockingTime == 0) return
+        disposables.add(
+            timer.start(blockingTime.toLong() * 1000)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    val secondsLeft = (it / 1000).toInt()
+                    val minutes = secondsLeft / 60
+                    val seconds = secondsLeft % 60
+                    timerLiveData.value = Pair(minutes, seconds)
+                }, {
+                    it.printStackTrace()
+                }, {
+                    timerFinishedLiveData.value = Event(Unit)
+                })
+        )
     }
 
     fun setCountryIso(iso: String) {
@@ -128,9 +132,11 @@ class VerificationViewModel(
                     val consentIntent = extras.getParcelable<Intent>(SmsRetriever.EXTRA_CONSENT_INTENT)
                     try {
                         smsCodeStartActivityForResult.value = consentIntent
-                    } catch (e: ActivityNotFoundException) {}
+                    } catch (e: ActivityNotFoundException) {
+                    }
                 }
-                CommonStatusCodes.TIMEOUT -> {}
+                CommonStatusCodes.TIMEOUT -> {
+                }
             }
         }
     }

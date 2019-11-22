@@ -10,7 +10,7 @@ import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -19,11 +19,11 @@ import java.util.Currency
 
 class ProfileViewModel(
     private val interactor: MainInteractor,
-    private val router: MainRouter
+    private val router: MainRouter,
+    private val numbersFormatter: NumbersFormatter
 ) : BaseViewModel() {
 
     val userLiveData = MutableLiveData<User>()
-    val profileReputationVisibilityLiveData = MutableLiveData<Boolean>()
     val votesLiveData = MutableLiveData<String>()
     val userReputationLiveData = MutableLiveData<Reputation>()
     val selectedCurrencyLiveData = MutableLiveData<String>()
@@ -63,7 +63,7 @@ class ProfileViewModel(
         return interactor.getVotes(updateCached)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess { votesLiveData.value = DeciminalFormatter.formatInteger(it) }
+            .doOnSuccess { votesLiveData.value = numbersFormatter.formatInteger(it) }
             .ignoreElement()
     }
 
@@ -80,7 +80,6 @@ class ProfileViewModel(
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSuccess {
-                profileReputationVisibilityLiveData.value = it.reputation.toInt() != -1
                 userReputationLiveData.value = it
             }
             .ignoreElement()

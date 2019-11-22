@@ -29,8 +29,11 @@ interface PinCodeComponent {
         @BindsInstance
         fun withRouter(router: MainRouter): Builder
 
+        @BindsInstance
+        fun withMaxPinCodeLength(maxPinCodeLength: Int): Builder
+
         fun build(): PinCodeComponent
     }
 
-    fun inject(pincodeFragment: PincodeFragment)
+    fun inject(pinCodeFragment: PincodeFragment)
 }

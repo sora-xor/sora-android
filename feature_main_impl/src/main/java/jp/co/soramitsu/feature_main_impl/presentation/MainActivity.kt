@@ -46,13 +46,12 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import kotlinx.android.synthetic.main.activity_main.badConnectionView
 import java.net.URL
 import java.util.Date
-import javax.inject.Inject
 
-class MainActivity : ToolbarActivity(), MainRouter {
+class MainActivity : ToolbarActivity<MainViewModel>(), MainRouter {
 
     companion object {
         private const val IDLE_MINUTES: Long = 5
-        private const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
+        const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
         private const val ANIM_START_POSITION = 100f
         private const val ANIM_DURATION = 150L
 
@@ -66,13 +65,10 @@ class MainActivity : ToolbarActivity(), MainRouter {
         fun startWithInvite(context: Context) {
             val intent = Intent(context, MainActivity::class.java).apply {
                 action = ACTION_INVITE
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
             context.startActivity(intent)
         }
     }
-
-    @Inject lateinit var mainViewModel: MainViewModel
 
     private var timeInBackground: Date? = null
 
@@ -80,35 +76,72 @@ class MainActivity : ToolbarActivity(), MainRouter {
 
     private lateinit var navController: NavController
 
-    public override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    override fun layoutResource(): Int {
+        return R.layout.activity_main
+    }
+
+    override fun inject() {
         FeatureUtils.getFeature<MainFeatureComponent>(this, MainFeatureApi::class.java)
             .mainComponentBuilder()
             .withActivity(this)
             .build()
             .inject(this)
+    }
+
+    override fun initViews() {
         initNavigation()
 
         showPin(PinCodeAction.TIMEOUT_CHECK)
+    }
 
-        mainViewModel.showInviteErrorLiveData.observe(this, EventObserver {
-            if (ACTION_INVITE == intent.action) {
-                AlertDialog.Builder(this)
-                    .setMessage(R.string.you_have_already_registered)
-                    .setPositiveButton(R.string.sora_ok) { _, _ ->
-                    }
-                    .show()
-            }
+    override fun subscribe(viewModel: MainViewModel) {
+        viewModel.showInviteErrorTimeIsUpLiveData.observe(this, EventObserver {
+            AlertDialog.Builder(this)
+                .setMessage(R.string.invite_enter_error_time_is_up)
+                .setPositiveButton(R.string.sora_ok) { _, _ -> }
+                .show()
         })
 
-        mainViewModel.badConnectionVisibilityLiveData.observe(this, Observer {
+        viewModel.showInviteErrorAlreadyAppliedLiveData.observe(this, EventObserver {
+            AlertDialog.Builder(this)
+                .setMessage(R.string.invite_enter_error_already_applied)
+                .setPositiveButton(R.string.sora_ok) { _, _ -> }
+                .show()
+        })
+
+        viewModel.badConnectionVisibilityLiveData.observe(this, Observer {
             if (it) {
                 showBadConnectionView()
             } else {
                 hideBadConnectionView()
             }
         })
+
+        viewModel.addInviteIsPossibleLiveData.observe(this, EventObserver {
+            val message = getString(R.string.invite_enter_confirmation_body_mask, it)
+            AlertDialog.Builder(this)
+                .setMessage(message)
+                .setNegativeButton(R.string.cancel) { _, _ -> }
+                .setPositiveButton(R.string.apply) { _, _ -> viewModel.applyInvitationCode() }
+                .show()
+        })
+
+        viewModel.invitationCodeAppliedSuccessful.observe(this, EventObserver {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.invite_code_applied_title)
+                .setMessage(R.string.invite_code_applied_body)
+                .setPositiveButton(R.string.sora_ok) { _, _ -> }
+                .show()
+        })
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.let {
+            if (ACTION_INVITE == it.action) {
+                viewModel.startedWithInviteAction()
+            }
+        }
     }
 
     private fun showBadConnectionView() {
@@ -171,7 +204,7 @@ class MainActivity : ToolbarActivity(), MainRouter {
     override fun hidePinCode() {
         navController.popBackStack()
         if (ACTION_INVITE == intent.action) {
-            mainViewModel.inviteAction()
+            viewModel.startedWithInviteAction()
         }
     }
 

@@ -6,14 +6,13 @@
 package jp.co.soramitsu.feature_main_impl.presentation.detail
 
 import android.app.Activity
-import android.view.View
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.DeciminalFormatter
 import jp.co.soramitsu.common.util.Event
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.detail.gallery.GalleryActivity
@@ -26,7 +25,8 @@ class DetailViewModel(
     private val interactor: MainInteractor,
     private val preloader: WithPreloader,
     private val router: MainRouter,
-    private val projectId: String
+    private val projectId: String,
+    private val numbersFormatter: NumbersFormatter
 ) : BaseViewModel(), WithPreloader by preloader {
 
     val projectDetailsLiveData = MutableLiveData<ProjectDetails>()
@@ -77,7 +77,7 @@ class DetailViewModel(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ votes ->
-                    votesLiveData.value = Pair(votes.toInt(), DeciminalFormatter.formatInteger(votes))
+                    votesLiveData.value = Pair(votes.toInt(), numbersFormatter.formatInteger(votes))
                 }, {
                     logException(it)
                 })
@@ -138,7 +138,7 @@ class DetailViewModel(
         }
     }
 
-    fun galleryClicked(activity: Activity, sharedView: View, galleryItemVm: GalleryItem, index: Int) {
+    fun galleryClicked(activity: Activity, galleryItemVm: GalleryItem, index: Int) {
         if (GalleryItemType.VIDEO == galleryItemVm.type) {
             playVideoLiveData.value = Event(galleryItemVm.url)
         } else {
@@ -171,5 +171,11 @@ class DetailViewModel(
 
     fun votesClicked() {
         router.showVotesScreen()
+    }
+
+    fun discussionLinkClicked() {
+        projectDetailsLiveData.value?.discussionLink?.link?.let {
+            router.showBrowser(it)
+        }
     }
 }

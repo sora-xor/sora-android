@@ -11,4 +11,6 @@ import jp.co.soramitsu.common.util.OnboardingState
 interface OnboardingStarter {
 
     fun start(context: Context, onboardingState: OnboardingState)
+
+    fun startWithInviteLink(context: Context)
 }

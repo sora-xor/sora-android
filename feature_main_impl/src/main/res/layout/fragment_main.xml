@@ -16,7 +16,6 @@
         android:text="@string/projects"
         android:textColor="@color/titleDarkGreyBlue"
         android:textSize="23sp"
-        app:layout_constraintBottom_toBottomOf="@+id/votes_card"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -24,13 +23,13 @@
         android:id="@+id/votesCard"
         android:layout_width="wrap_content"
         android:layout_height="29dp"
-        android:layout_marginTop="@dimen/x2"
         android:layout_marginEnd="@dimen/x2"
         android:clickable="true"
         android:foreground="?selectableItemBackground"
         app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintEnd_toStartOf="@+id/howItWorksCard"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@+id/title"
+        app:layout_constraintBottom_toBottomOf="@+id/title"
+        app:layout_constraintEnd_toStartOf="@+id/howItWorksCard" >
 
         <TextView
             android:id="@+id/votesText"
@@ -51,13 +50,13 @@
         android:id="@+id/howItWorksCard"
         android:layout_width="29dp"
         android:layout_height="29dp"
-        android:layout_marginTop="@dimen/x2"
         android:layout_marginEnd="@dimen/margin_padding_by_side"
         android:clickable="true"
         android:foreground="?selectableItemBackground"
         app:cardCornerRadius="@dimen/x2"
+        app:layout_constraintBottom_toBottomOf="@+id/votesCard"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@+id/votesCard">
 
         <TextView
             android:layout_width="wrap_content"

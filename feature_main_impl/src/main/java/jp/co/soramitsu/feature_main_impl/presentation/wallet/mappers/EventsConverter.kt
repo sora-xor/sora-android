@@ -7,7 +7,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.wallet.mappers
 
 import android.content.Context
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.date2Day
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.wallet.model.SoraTransaction
@@ -16,19 +16,11 @@ import jp.co.soramitsu.recent_events.list.models.EventItem
 
 object EventsConverter {
 
-    fun fromTransactionVmToCard(transactionVms: List<SoraTransaction>, context: Context): Map<String, List<EventItem>> {
+    fun fromTransactionVmToCard(transactionVms: List<SoraTransaction>, context: Context, numbersFormatter: NumbersFormatter): Map<String, List<EventItem>> {
         val cards = LinkedHashMap<String, List<EventItem>>()
 
         transactionVms.forEach {
-            var dayString = it.dateTime.date2Day()
-
-            if (dayString == "-1") {
-                dayString = context.getString(R.string.yesterday)
-            }
-
-            if (dayString == "0") {
-                dayString = context.getString(R.string.today)
-            }
+            val dayString = it.dateTime.date2Day(context.getString(R.string.today), context.getString(R.string.yesterday))
 
             if (!cards.containsKey(dayString)) cards[dayString] = ArrayList()
 
@@ -46,7 +38,7 @@ object EventsConverter {
                     EventItem(
                         recipient,
                         it.transactionId,
-                        "${Const.SORA_SYMBOL} ${DeciminalFormatter.format(it.amount)}",
+                        "${Const.SORA_SYMBOL} ${numbersFormatter.format(it.amount)}",
                         it.status,
                         it.dateTime,
                         isIncoming,

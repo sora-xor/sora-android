@@ -12,5 +12,7 @@ data class User(
     val phone: String,
     val status: String,
     val parentId: String,
-    val country: String
+    val country: String,
+    val inviteAcceptExpirationMomentMillis: Long,
+    val values: UserValues
 )

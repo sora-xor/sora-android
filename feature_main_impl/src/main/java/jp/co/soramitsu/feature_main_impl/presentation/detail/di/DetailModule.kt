@@ -18,6 +18,7 @@ import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.detail.DetailViewModel
@@ -42,8 +43,8 @@ class DetailModule {
     @Provides
     @IntoMap
     @ViewModelKey(DetailViewModel::class)
-    fun provideViewModel(interactor: MainInteractor, preloader: WithPreloader, router: MainRouter, projectId: String): ViewModel {
-        return DetailViewModel(interactor, preloader, router, projectId)
+    fun provideViewModel(interactor: MainInteractor, preloader: WithPreloader, router: MainRouter, projectId: String, numbersFormatter: NumbersFormatter): ViewModel {
+        return DetailViewModel(interactor, preloader, router, projectId, numbersFormatter)
     }
 
     @Provides

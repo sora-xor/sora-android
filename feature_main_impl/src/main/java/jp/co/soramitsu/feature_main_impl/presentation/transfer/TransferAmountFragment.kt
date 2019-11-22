@@ -20,8 +20,8 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.base.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.DeciminalFormatter
 import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.gone
@@ -40,6 +40,7 @@ import kotlinx.android.synthetic.main.fragment_transfer_amount.preloader
 import kotlinx.android.synthetic.main.fragment_transfer_amount.sidedButtonLayout
 import kotlinx.android.synthetic.main.fragment_transfer_amount.toolbar
 import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeTextView
+import javax.inject.Inject
 
 @SuppressLint("CheckResult")
 class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
@@ -81,6 +82,8 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
     private lateinit var amount: String
     private lateinit var description: String
 
+    @Inject lateinit var numbersFormatter: NumbersFormatter
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_transfer_amount, container, false)
     }
@@ -101,7 +104,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         configureViews()
         configureBottomSideButton()
 
-        headerTextView.text = getString(R.string.sora_account_template, "${Const.SORA_SYMBOL}${arguments!!.getString(BALANCE, "")}")
+        headerTextView.text = getString(R.string.xor_template, "${Const.SORA_SYMBOL}${arguments!!.getString(BALANCE, "")}")
 
         accountDescriptionBodyTextView.filters = arrayOf(DescriptionInputFilter(DESCRIPTION_MAX_BYTES, "UTF-8"))
     }
@@ -160,7 +163,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         viewModel.getBalanceAndTransferMeta(false)
 
         observe(viewModel.balanceLiveData, Observer {
-            headerTextView.text = getString(R.string.sora_account_template, "${Const.SORA_SYMBOL}$it")
+            headerTextView.text = getString(R.string.xor_template, "${Const.SORA_SYMBOL}$it")
             nextButton.enable()
         })
 
@@ -212,7 +215,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
     private fun showFeeInformation(transferMeta: TransferMeta) {
         this.transferMeta = transferMeta
         updateAmountAndFeeText()
-        transactionFeeTextView.text = getString(R.string.transaction_fee_template, Const.SORA_SYMBOL, DeciminalFormatter.format(fee))
+        transactionFeeTextView.text = getString(R.string.transaction_fee_template, Const.SORA_SYMBOL, numbersFormatter.format(fee))
         preloader.visibility = View.GONE
         nextButton.enable()
     }

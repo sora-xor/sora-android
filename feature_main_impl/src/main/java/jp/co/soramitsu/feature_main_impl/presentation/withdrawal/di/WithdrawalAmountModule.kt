@@ -16,6 +16,7 @@ import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.domain.WalletInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.withdrawal.WithdrawalAmountViewModel
@@ -35,8 +36,8 @@ class WithdrawalAmountModule {
     @Provides
     @IntoMap
     @ViewModelKey(WithdrawalAmountViewModel::class)
-    fun provideViewModel(interactor: WalletInteractor, router: MainRouter, progress: WithProgress): ViewModel {
-        return WithdrawalAmountViewModel(interactor, router, progress)
+    fun provideViewModel(interactor: WalletInteractor, router: MainRouter, progress: WithProgress, numbersFormatter: NumbersFormatter): ViewModel {
+        return WithdrawalAmountViewModel(interactor, router, progress, numbersFormatter)
     }
 
     @Provides

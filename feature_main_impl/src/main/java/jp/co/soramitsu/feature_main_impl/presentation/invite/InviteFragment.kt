@@ -10,11 +10,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.base.SoraProgressDialog
 import jp.co.soramitsu.common.util.EventObserver
@@ -29,11 +29,14 @@ import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_invite.acceptedInvitesRecyclerview
-import kotlinx.android.synthetic.main.fragment_invite.btnSendInvite
+import kotlinx.android.synthetic.main.fragment_invite.addInvitationTv
+import kotlinx.android.synthetic.main.fragment_invite.addInvitationView
 import kotlinx.android.synthetic.main.fragment_invite.howItWorksCard
 import kotlinx.android.synthetic.main.fragment_invite.invitedText
 import kotlinx.android.synthetic.main.fragment_invite.placeholder
+import kotlinx.android.synthetic.main.fragment_invite.sendInviteView
 import kotlinx.android.synthetic.main.fragment_invite.swipeLayout
+import kotlinx.android.synthetic.main.fragment_invite.timerTv
 import kotlinx.android.synthetic.main.fragment_invite.votesCount
 
 @SuppressLint("CheckResult")
@@ -59,23 +62,21 @@ class InviteFragment : BaseFragment<InviteViewModel>() {
     override fun initViews() {
         (activity as MainActivity).showBottomView()
 
-        RxView.clicks(btnSendInvite)
-            .subscribe { viewModel.sendInviteClick() }
-
-        RxView.clicks(howItWorksCard)
-            .subscribe { viewModel.btnHelpClicked() }
+        sendInviteView.setOnClickListener { viewModel.sendInviteClick() }
+        howItWorksCard.setOnClickListener { viewModel.btnHelpClicked() }
+        addInvitationView.setOnClickListener { viewModel.addInvitationClicked() }
 
         adapter = AcceptedInvitesAdapter(acceptedInvites)
         acceptedInvitesRecyclerview.adapter = adapter
         acceptedInvitesRecyclerview.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
 
-        swipeLayout.setOnRefreshListener { viewModel.refreshData(true) }
+        swipeLayout.setOnRefreshListener { viewModel.loadUserInviteInfo(true) }
 
         progressDialog = SoraProgressDialog(activity!!)
     }
 
     override fun subscribe(viewModel: InviteViewModel) {
-        observe(viewModel.parentInvitationLiveData, Observer {
+        observe(viewModel.parentUserLiveData, Observer {
             invitedText.show()
             invitedText.text = getString(R.string.parent_invitation_template, it.firstName, it.lastName)
         })
@@ -94,7 +95,7 @@ class InviteFragment : BaseFragment<InviteViewModel>() {
             }
         })
 
-        observe(viewModel.invitationsLeftLiveData, Observer {
+        observe(viewModel.invitationsCountLiveData, Observer {
             votesCount.text = getString(R.string.votes_left_template, it)
         })
 
@@ -106,7 +107,7 @@ class InviteFragment : BaseFragment<InviteViewModel>() {
             )
         })
 
-        observe(viewModel.hideSwipeProgressLiveData, EventObserver {
+        observe(viewModel.hideSwipeRefreshEventLiveData, EventObserver {
             swipeLayout.isRefreshing = false
         })
 
@@ -114,6 +115,33 @@ class InviteFragment : BaseFragment<InviteViewModel>() {
             if (it) progressDialog.show() else progressDialog.dismiss()
         })
 
-        viewModel.refreshData(false)
+        observe(viewModel.enterInviteCodeButtonVisibilityLiveData, Observer {
+            if (it) {
+                addInvitationTv.show()
+                addInvitationView.show()
+            } else {
+                addInvitationTv.gone()
+                addInvitationView.gone()
+            }
+        })
+
+        observe(viewModel.timerFormattedLiveData, Observer {
+            timerTv.setTextColor(it.second)
+            timerTv.text = it.first
+        })
+
+        observe(viewModel.showInvitationDialogLiveData, EventObserver {
+            EnterInviteCodeDialog(activity!!) { viewModel.invitationCodeEntered(it) }.show()
+        })
+
+        observe(viewModel.enteredCodeAppliedLiveData, EventObserver {
+            AlertDialog.Builder(activity!!)
+                .setTitle(R.string.invite_code_applied_title)
+                .setMessage(R.string.invite_code_applied_body)
+                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .show()
+        })
+
+        viewModel.loadUserInviteInfo(false)
     }
 }

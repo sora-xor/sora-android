@@ -16,6 +16,8 @@ import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
@@ -36,8 +38,8 @@ class ReputationModule {
     @Provides
     @IntoMap
     @ViewModelKey(ReputationViewModel::class)
-    fun provideViewModel(interactor: MainInteractor, router: MainRouter, timerWrapper: TimerWrapper): ViewModel {
-        return ReputationViewModel(interactor, router, timerWrapper)
+    fun provideViewModel(interactor: MainInteractor, router: MainRouter, timerWrapper: TimerWrapper, resourceManager: ResourceManager, formatter: NumbersFormatter): ViewModel {
+        return ReputationViewModel(interactor, router, timerWrapper, resourceManager, formatter)
     }
 
     @Provides

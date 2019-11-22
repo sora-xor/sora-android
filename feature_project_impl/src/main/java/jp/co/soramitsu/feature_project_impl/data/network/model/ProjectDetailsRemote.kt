@@ -27,5 +27,6 @@ data class ProjectDetailsRemote(
     @SerializedName("favoriteCount") val favoriteCount: Int,
     @SerializedName("votes") val votes: BigDecimal,
     @SerializedName("gallery") val gallery: List<GalleryItemRemote>?,
-    @SerializedName("statusUpdateTime") val statusUpdateTime: Long
+    @SerializedName("statusUpdateTime") val statusUpdateTime: Long,
+    @SerializedName("discussionLink") val discussionLinkRemote: DiscussionLinkRemote?
 )

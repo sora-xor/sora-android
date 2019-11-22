@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.wallet.mappers
 import android.content.Context
 import jp.co.soramitsu.capital_ui.presentation.util.TransactionStatus
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.formatDate
 import jp.co.soramitsu.common.util.ext.formatTime
 import jp.co.soramitsu.feature_main_impl.R
@@ -33,7 +33,7 @@ fun mapTransactionToSoraTransaction(transaction: Transaction): SoraTransaction {
     }
 }
 
-fun mapTransactionToInformationItemList(transaction: SoraTransaction, context: Context): List<InformationItem> {
+fun mapTransactionToInformationItemList(transaction: SoraTransaction, context: Context, numbersFormatter: NumbersFormatter): List<InformationItem> {
     return with(transaction) {
         val informationItems = mutableListOf<InformationItem>()
 
@@ -65,12 +65,12 @@ fun mapTransactionToInformationItemList(transaction: SoraTransaction, context: C
             informationItems.add(InformationItem(recipientStr, recipient, null))
         }
 
-        informationItems.add(InformationItem(context.getString(R.string.amount), "${Const.SORA_SYMBOL} $amount", if (Transaction.Type.OUTGOING != type) R.drawable.ic_plus else null))
+        informationItems.add(InformationItem(context.getString(R.string.amount), "${Const.SORA_SYMBOL} ${numbersFormatter.format(amount)}", if (Transaction.Type.OUTGOING != type) R.drawable.ic_plus else null))
 
         if (Transaction.Type.OUTGOING == type) {
-            informationItems.add(InformationItem(context.getString(R.string.transaction_fee), "${Const.SORA_SYMBOL} $fee", null))
+            informationItems.add(InformationItem(context.getString(R.string.transaction_fee), "${Const.SORA_SYMBOL} ${numbersFormatter.format(fee)}", null))
 
-            informationItems.add(InformationItem(context.getString(R.string.total_amount), "${Const.SORA_SYMBOL} ${DeciminalFormatter.format(fee + amount)}", if (Transaction.Type.OUTGOING == type) R.drawable.ic_minus else R.drawable.ic_plus))
+            informationItems.add(InformationItem(context.getString(R.string.total_amount), "${Const.SORA_SYMBOL} ${numbersFormatter.format(fee + amount)}", if (Transaction.Type.OUTGOING == type) R.drawable.ic_minus else R.drawable.ic_plus))
         }
 
         informationItems

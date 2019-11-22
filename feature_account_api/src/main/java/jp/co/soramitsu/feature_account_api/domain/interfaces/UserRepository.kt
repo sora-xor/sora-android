@@ -33,8 +33,6 @@ interface UserRepository {
 
     fun getUser(updateCached: Boolean): Single<User>
 
-    fun getUserValues(updateCached: Boolean): Single<Int>
-
     fun getActivityFeed(count: Int, offset: Int, updateCached: Boolean): Single<List<ActivityFeed>>
 
     fun getUserReputation(updateCached: Boolean): Single<Reputation>
@@ -66,4 +64,10 @@ interface UserRepository {
     fun saveParentInviteCode(inviteCode: String)
 
     fun getParentInviteCode(): Single<String>
+
+    fun checkInviteCodeAvailable(): Completable
+
+    fun enterInviteCode(inviteCode: String): Completable
+
+    fun applyInvitationCode(): Completable
 }

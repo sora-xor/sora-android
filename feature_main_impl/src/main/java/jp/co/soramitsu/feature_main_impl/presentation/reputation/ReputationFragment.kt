@@ -23,17 +23,17 @@ import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
-import kotlinx.android.synthetic.main.fragment_reputation.toolbar
-import kotlinx.android.synthetic.main.fragment_reputation.reputationScreenTitleTextView
-import kotlinx.android.synthetic.main.fragment_reputation.reputationScreenDescriptionTextView
-import kotlinx.android.synthetic.main.fragment_reputation.reputationScreenCurrentReputationTitleTextView
-import kotlinx.android.synthetic.main.fragment_reputation.reputationRankTitle
-import kotlinx.android.synthetic.main.fragment_reputation.reputationWrapperSeparateLineView
-import kotlinx.android.synthetic.main.fragment_reputation.reputationRankText
 import kotlinx.android.synthetic.main.fragment_reputation.dailyVotesText
-import kotlinx.android.synthetic.main.fragment_reputation.reputationRankIcon
 import kotlinx.android.synthetic.main.fragment_reputation.menuView
 import kotlinx.android.synthetic.main.fragment_reputation.reputationList
+import kotlinx.android.synthetic.main.fragment_reputation.reputationRankIcon
+import kotlinx.android.synthetic.main.fragment_reputation.reputationRankText
+import kotlinx.android.synthetic.main.fragment_reputation.reputationRankTitle
+import kotlinx.android.synthetic.main.fragment_reputation.reputationScreenCurrentReputationTitleTextView
+import kotlinx.android.synthetic.main.fragment_reputation.reputationScreenDescriptionTextView
+import kotlinx.android.synthetic.main.fragment_reputation.reputationScreenTitleTextView
+import kotlinx.android.synthetic.main.fragment_reputation.reputationWrapperSeparateLineView
+import kotlinx.android.synthetic.main.fragment_reputation.toolbar
 
 class ReputationFragment : BaseFragment<ReputationViewModel>() {
 
@@ -77,7 +77,7 @@ class ReputationFragment : BaseFragment<ReputationViewModel>() {
             reputationRankTitle.gone()
             reputationWrapperSeparateLineView.gone()
             reputationRankText.gone()
-            dailyVotesText.text = getString(R.string.rank_empty, it.first, it.second)
+            dailyVotesText.text = it
             dailyVotesText.setTextSize(TypedValue.COMPLEX_UNIT_PX, resources.getDimension(R.dimen.reputationRankPlaceholderTextSize))
             dailyVotesText.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
             dailyVotesText.gravity = Gravity.CENTER_HORIZONTAL

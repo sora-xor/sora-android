@@ -10,8 +10,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.DeciminalFormatter
 import jp.co.soramitsu.common.util.Event
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.domain.WalletInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.wallet.mappers.mapTransactionToSoraTransaction
@@ -21,6 +21,7 @@ import jp.co.soramitsu.recent_events.list.models.EventItem
 class WalletViewModel(
     private val interactor: WalletInteractor,
     private val router: MainRouter,
+    private val numbersFormatter: NumbersFormatter,
     pushHandler: PushHandler
 ) : BaseViewModel() {
 
@@ -52,7 +53,7 @@ class WalletViewModel(
                     if (!updateCached) getBalance(true)
                 }
                 .subscribe({
-                    balanceLiveData.value = DeciminalFormatter.formatBigDecimal(it)
+                    balanceLiveData.value = numbersFormatter.formatBigDecimal(it)
                 }, {
                     logException(it)
                 })

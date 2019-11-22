@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
@@ -24,6 +25,7 @@ import jp.co.soramitsu.feature_main_impl.presentation.main.MainProjectsAdapter
 import jp.co.soramitsu.feature_main_impl.presentation.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_voted_projects.placeholder
 import kotlinx.android.synthetic.main.fragment_voted_projects.projects_recyclerview
+import javax.inject.Inject
 
 class VotedProjectsFragment : BaseFragment<MainViewModel>() {
 
@@ -35,6 +37,8 @@ class VotedProjectsFragment : BaseFragment<MainViewModel>() {
     }
 
     private var lastState: Parcelable? = null
+
+    @Inject lateinit var numbersFormatter: NumbersFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_voted_projects, container, false)
@@ -58,6 +62,7 @@ class VotedProjectsFragment : BaseFragment<MainViewModel>() {
                 projects_recyclerview.layoutManager = LinearLayoutManager(activity!!)
                 projects_recyclerview.adapter = MainProjectsAdapter(
                     activity!!,
+                    numbersFormatter,
                     { viewModel.voteClicked(it) },
                     { viewModel.projectsFavoriteClicked(it) },
                     { viewModel.projectClick(it) }

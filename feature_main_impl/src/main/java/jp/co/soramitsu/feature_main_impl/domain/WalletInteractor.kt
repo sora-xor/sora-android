@@ -12,7 +12,6 @@ import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
-import jp.co.soramitsu.feature_did_api.util.DidUtil
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.QrData
@@ -58,8 +57,16 @@ class WalletInteractor @Inject constructor(
         return didRepository.getAccountId()
             .flatMap { userAccountId ->
                 walletRepository.findAccount(search)
-                    .map { it.filter { !DidUtil.areAccountsSame(userAccountId, it.accountId) } }
+                    .map { it.filter { !areAccountsSame(userAccountId, it.accountId) } }
             }
+    }
+
+    private fun areAccountsSame(accountId1: String, accountId2: String): Boolean {
+        return removeDomainFromAccountId(accountId1) == removeDomainFromAccountId(accountId2)
+    }
+
+    private fun removeDomainFromAccountId(accountId: String): String {
+        return accountId.substring(0, accountId.indexOf("@"))
     }
 
     fun getQrCodeAmountString(amount: String): Single<String> {
@@ -131,6 +138,6 @@ class WalletInteractor @Inject constructor(
 
     private fun checkAccountIsMine(account: Account): Single<Boolean> {
         return didRepository.getAccountId()
-            .map { DidUtil.areAccountsSame(account.accountId, it) }
+            .map { areAccountsSame(account.accountId, it) }
     }
 }

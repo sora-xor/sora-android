@@ -12,6 +12,7 @@ import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.core_network_api.NetworkApiCreator
 import jp.co.soramitsu.core_network_api.data.auth.AuthHolder
+import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 import jp.co.soramitsu.core_network_impl.BuildConfig
 import jp.co.soramitsu.core_network_impl.NetworkApiCreatorImpl
 import jp.co.soramitsu.core_network_impl.R
@@ -130,4 +131,13 @@ class NetworkModule {
     @Provides
     @Named("INVITE_LINK_URL")
     fun provideInviteLinkUrl(): String = BuildConfig.INVITE_LINK_URL
+
+    @Singleton
+    @Provides
+    fun provideAppLinksProvider(
+        @Named("DEFAULT_MARKET_URL") defaultMarketUrl: String,
+        @Named("INVITE_LINK_URL") invitekUrl: String
+    ): AppLinksProvider {
+        return AppLinksProvider(defaultMarketUrl, invitekUrl)
+    }
 }

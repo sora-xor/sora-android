@@ -9,10 +9,12 @@ import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_information_api.domain.model.InformationContainer
+import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import java.math.BigDecimal
@@ -22,17 +24,21 @@ import java.util.TimeZone
 class ReputationViewModel(
     private val interactor: MainInteractor,
     private val router: MainRouter,
-    private val timerWrapper: TimerWrapper
+    private val timer: TimerWrapper,
+    private val resourceManager: ResourceManager,
+    private val numbersFormatter: NumbersFormatter
 ) : BaseViewModel() {
 
     companion object {
         private const val ASIA_TIMEZONE = "Asia/Tokyo"
         private const val DISTRIBUTION_HOUR = 13
         private const val DISTRIBUTION_MINUTE = 37
+        private const val DISTRIBUTION_SECOND = 0
+        private const val FULL_DAY_MILLIS = 24 * 60 * 60 * 1000
     }
 
     val reputationLiveData = MutableLiveData<Reputation>()
-    val calculatingReputationLiveData = MutableLiveData<Pair<Int, Int>>()
+    val calculatingReputationLiveData = MutableLiveData<String>()
     val lastVotesLiveData = MutableLiveData<String>()
     val reputationContentLiveData = MutableLiveData<List<InformationContainer>>()
 
@@ -46,11 +52,11 @@ class ReputationViewModel(
                     if (reputation.rank <= 0) {
                         setupTimer()
                     } else {
-                        timerWrapper.cancel()
+                        timer.cancel()
                         reputationLiveData.value = reputation
                         val lastVotes = it.second
                         lastVotesLiveData.value = if (lastVotes > BigDecimal.ZERO) {
-                            DeciminalFormatter.formatInteger(lastVotes)
+                            numbersFormatter.formatInteger(lastVotes)
                         } else {
                             ""
                         }
@@ -81,33 +87,37 @@ class ReputationViewModel(
     }
 
     private fun setupTimer() {
-        timerWrapper.setTimerCallbacks({ _, _ ->
-            calculatingReputationLiveData.value = countHoursAndMinutesLeft()
-        }, {
-            calculatingReputationLiveData.value = Pair(0, 0)
-        })
+        if (timer.isStarted()) return
 
-        val countDownHoursAndMinutes = countHoursAndMinutesLeft()
+        val schedulerCalendar = Calendar.getInstance(TimeZone.getTimeZone(ASIA_TIMEZONE)).apply {
+            set(Calendar.HOUR_OF_DAY, DISTRIBUTION_HOUR)
+            set(Calendar.MINUTE, DISTRIBUTION_MINUTE)
+            set(Calendar.SECOND, DISTRIBUTION_SECOND)
+        }
 
-        val timerSecondsLeft = ((countDownHoursAndMinutes.first * 60) + countDownHoursAndMinutes.second) * 60
+        val currentCalendar = Calendar.getInstance()
 
-        timerWrapper.start(timerSecondsLeft.toLong() * 1000, 60 * 1000)
+        val diffInMillis = calcDiffInMillis(currentCalendar.timeInMillis, schedulerCalendar.timeInMillis)
+        disposables.add(
+            timer.start(diffInMillis)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    val timeLeftStr = resourceManager.getString(R.string.reputation_timer_format).format(timer.calcTimeLeft(it))
+                    calculatingReputationLiveData.value = timeLeftStr
+                }, {
+                    it.printStackTrace()
+                }, {
+                    calculatingReputationLiveData.value = resourceManager.getString(R.string.reputation_soon)
+                })
+        )
     }
 
-    private fun countHoursAndMinutesLeft(): Pair<Int, Int> {
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone(ASIA_TIMEZONE))
-        calendar.set(Calendar.HOUR_OF_DAY, DISTRIBUTION_HOUR)
-        calendar.set(Calendar.MINUTE, DISTRIBUTION_MINUTE)
-
-        val differentTimeInMillis = mod(calendar.timeInMillis - Calendar.getInstance().timeInMillis, 24 * 60 * 60 * 1000)
-        val hoursDiff = differentTimeInMillis / 1000 / 60 / 60
-        val minutesDiff = (differentTimeInMillis - hoursDiff * 60 * 60 * 1000) / 1000 / 60
-
-        return Pair(hoursDiff.toInt(), minutesDiff.toInt())
-    }
-
-    private fun mod(x: Long, y: Long): Long {
-        val result = x % y
-        return if (result < 0) result + y else result
+    private fun calcDiffInMillis(currentTime: Long, schedulerTime: Long): Long {
+        return if (schedulerTime > currentTime) {
+            schedulerTime - currentTime
+        } else {
+            schedulerTime - currentTime + FULL_DAY_MILLIS
+        }
     }
 }

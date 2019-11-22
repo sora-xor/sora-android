@@ -5,9 +5,9 @@
 
 package jp.co.soramitsu.core_network_impl.data.auth
 
+import jp.co.soramitsu.common.util.DidProvider
 import jp.co.soramitsu.core_network_api.data.auth.AuthHolder
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.feature_did_api.util.DidUtil
 import okhttp3.Interceptor
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -20,7 +20,8 @@ import java.util.Date
 import javax.inject.Inject
 
 class DAuthRequestInterceptor @Inject constructor(
-    private val authHolder: AuthHolder
+    private val authHolder: AuthHolder,
+    private val didProvider: DidProvider
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -32,7 +33,7 @@ class DAuthRequestInterceptor @Inject constructor(
 
             val ed25519Sha3 = Ed25519Sha3()
 
-            val owner = DidUtil.generateDID(Hex.toHexString(keyPair.public.encoded).substring(0, 20))
+            val owner = didProvider.generateDID(Hex.toHexString(keyPair.public.encoded).substring(0, 20))
 
             val key = owner.withFragment("keys-1")
             val uri = originalRequest.url().toString()

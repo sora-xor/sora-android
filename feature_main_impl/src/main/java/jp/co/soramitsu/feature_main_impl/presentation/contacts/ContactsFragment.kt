@@ -12,19 +12,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OVER_SCROLL_NEVER
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
-import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.zxing.integration.android.IntentIntegrator
 import com.tbruyelle.rxpermissions2.RxPermissions
-import jp.co.soramitsu.account_information_list.list.models.Card
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.view.ChooserDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
@@ -32,19 +28,14 @@ import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.contact_entry_list.list.ContactItemDecoration
-import jp.co.soramitsu.contact_entry_list.list.ContactsSection
-import jp.co.soramitsu.contact_entry_list.list.models.ContactItem
 import jp.co.soramitsu.core_di.holder.FeatureUtils
-import jp.co.soramitsu.core_ui.presentation.list.BaseListAdapter
-import jp.co.soramitsu.core_ui.presentation.list.Section
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
-import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import kotlinx.android.synthetic.main.fragment_contacts.contactsSearchView
+import kotlinx.android.synthetic.main.fragment_contacts.preloaderView
 import kotlinx.android.synthetic.main.fragment_contacts.toolbar
 
 @SuppressLint("CheckResult")
@@ -53,12 +44,13 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
     companion object {
         private const val PICK_IMAGE_REQUEST = 101
 
-        private const val BALANCE = "balance"
+        private const val KEY_BALANCE = "balance"
 
         @JvmStatic
         fun start(balance: String, navController: NavController) {
-            val bundle = Bundle()
-            bundle.putString(BALANCE, balance)
+            val bundle = Bundle().apply {
+                putString(KEY_BALANCE, balance)
+            }
             navController.navigate(R.id.contactsFragment, bundle)
         }
     }
@@ -66,14 +58,9 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
     private lateinit var integrator: IntentIntegrator
     private lateinit var emptyStateView: View
     private lateinit var emptySearchResultView: View
-    private lateinit var ethWithdrawalView: View
     private lateinit var contactsRecyclerView: RecyclerView
 
     private var keyboardHelper: KeyboardHelper? = null
-
-    private val itemListener: (ContactItem) -> Unit = {
-        viewModel.contactClicked(it.accountId, it.name, arguments!!.getString(BALANCE))
-    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_contacts, container, false)
@@ -94,9 +81,6 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
         emptyStateView = view!!.findViewById(R.id.emptyStatePlaceholder)
         emptySearchResultView = view!!.findViewById(R.id.emptySearchResultPlaceholder)
         contactsRecyclerView = view!!.findViewById(R.id.contactsRecyclerView)
-        ethWithdrawalView = view!!.findViewById(R.id.contactEthHeader)
-
-        ethWithdrawalView.gone()
 
         contactsSearchView.setOnQueryTextListener(this)
     }
@@ -104,20 +88,16 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
     override fun subscribe(viewModel: ContactsViewModel) {
         configureClicks()
 
-        observe(viewModel.fetchContactsResultLiveData, Observer {
-            if (it.isNotEmpty()) {
-                showAccounts(it)
-            } else {
-                showEmptyContacts()
+        observe(viewModel.contactsLiveData, Observer {
+            if (contactsRecyclerView.adapter == null) {
+                contactsRecyclerView.layoutManager = LinearLayoutManager(activity!!)
+                contactsRecyclerView.adapter = ContactsAdapter(
+                    { viewModel.contactClicked(it.accountId, "${it.firstName} ${it.lastName}", arguments!!.getString(KEY_BALANCE)) },
+                    { viewModel.menuItemClicked(it) }
+                )
             }
-        })
 
-        observe(viewModel.searchResultLiveData, Observer {
-            if (it.isNotEmpty()) {
-                showAccounts(it)
-            } else {
-                showEmptySearchResult()
-            }
+            (contactsRecyclerView.adapter as ContactsAdapter).submitList(it)
         })
 
         observe(viewModel.initiateGalleryChooserLiveData, Observer {
@@ -139,21 +119,44 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
                 { viewModel.openGallery() }
             ).show()
         })
+
+        observe(viewModel.emptyContactsVisibilityLiveData, Observer {
+            emptySearchResultView.gone()
+
+            if (it) {
+                emptyStateView.show()
+            } else {
+                emptyStateView.gone()
+            }
+        })
+
+        observe(viewModel.emptySearchResultVisibilityLiveData, Observer {
+            emptyStateView.gone()
+
+            if (it) {
+                emptySearchResultView.show()
+            } else {
+                emptySearchResultView.gone()
+            }
+        })
+
+        observe(viewModel.getPreloadVisibility(), Observer {
+            if (it) {
+                preloaderView.show()
+            } else {
+                preloaderView.gone()
+            }
+        })
     }
 
     private fun configureClicks() {
-        val qrButton = view!!.findViewById<LinearLayout>(R.id.contactQrHeader)
-
         integrator = IntentIntegrator.forSupportFragment(this).apply {
             setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
             setPrompt(getString(R.string.scan_qr))
             setBeepEnabled(false)
         }
 
-        viewModel.fetchContacts(false, true)
-
-        qrButton.setOnClickListener { viewModel.showImageChooser() }
-        ethWithdrawalView.setOnClickListener { viewModel.ethWithdrawalClicked(arguments!!.getString(BALANCE, "")) }
+        viewModel.getContacts(false, true)
     }
 
     override fun inject() {
@@ -181,54 +184,15 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
             if (result.contents == null) {
                 Toast.makeText(activity, R.string.scan_canceled, Toast.LENGTH_LONG).show()
             } else {
-                viewModel.qrResultProcess(result.contents, arguments!!.getString(BALANCE, ""))
+                viewModel.qrResultProcess(result.contents, arguments!!.getString(KEY_BALANCE, ""))
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
-            viewModel.decodeTextFromBitmapQr(activity!!, data.data!!, arguments!!.getString(BALANCE, ""))
+            viewModel.decodeTextFromBitmapQr(data.data!!, arguments!!.getString(KEY_BALANCE, ""))
         }
-    }
-
-    private var sectionAdapter: BaseListAdapter = BaseListAdapter()
-
-    private fun showAccounts(accounts: List<Account>) {
-        sectionAdapter.removeAllSections()
-
-        val section = ContactsSection(sectionAdapter.getAsyncDiffer(Card.diffCallback) as AsyncListDiffer<ContactItem>)
-
-        section.submitContentItems(ContactsConverter.fromVm(accounts), itemListener)
-
-        sectionAdapter.addSection("Contacts", section as Section<Nothing, Nothing, Nothing>)
-
-        if (contactsRecyclerView.adapter == null) {
-            with(contactsRecyclerView) {
-                layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-                adapter = sectionAdapter
-                addItemDecoration(ContactItemDecoration(activity!!))
-                overScrollMode = OVER_SCROLL_NEVER
-            }
-        }
-
-        sectionAdapter.notifyDataSetChanged()
-
-        emptySearchResultView.gone()
-        emptyStateView.gone()
-        contactsRecyclerView.show()
-    }
-
-    private fun showEmptyContacts() {
-        emptySearchResultView.gone()
-        emptyStateView.show()
-        contactsRecyclerView.gone()
-    }
-
-    private fun showEmptySearchResult() {
-        emptySearchResultView.show()
-        emptyStateView.gone()
-        contactsRecyclerView.gone()
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {

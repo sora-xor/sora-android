@@ -17,7 +17,6 @@ import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.passphrase.PassphraseViewModel
 
 @Module(
@@ -33,8 +32,8 @@ class PassphraseModule {
     @Provides
     @IntoMap
     @ViewModelKey(PassphraseViewModel::class)
-    fun provideViewModel(interactor: MainInteractor, router: MainRouter, preloader: WithPreloader): ViewModel {
-        return PassphraseViewModel(interactor, router, preloader)
+    fun provideViewModel(interactor: MainInteractor, preloader: WithPreloader): ViewModel {
+        return PassphraseViewModel(interactor, preloader)
     }
 
     @Provides

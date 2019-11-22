@@ -12,9 +12,14 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
+import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.domain.HealthChecker
+import jp.co.soramitsu.common.domain.InvitationHandler
+import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.util.DeviceParamsProvider
+import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 
 @Module(
     includes = [
@@ -26,12 +31,23 @@ class MainModule {
     @Provides
     @IntoMap
     @ViewModelKey(MainViewModel::class)
-    fun provideViewModel(healthChecker: HealthChecker): ViewModel {
-        return MainViewModel(healthChecker)
+    fun provideViewModel(
+        healthChecker: HealthChecker,
+        interactor: MainInteractor,
+        deviceParamsProvider: DeviceParamsProvider,
+        progress: WithProgress,
+        invitationHandler: InvitationHandler
+    ): ViewModel {
+        return MainViewModel(healthChecker, interactor, deviceParamsProvider, progress, invitationHandler)
     }
 
     @Provides
     fun provideViewModelCreator(activity: AppCompatActivity, viewModelFactory: ViewModelProvider.Factory): MainViewModel {
         return ViewModelProviders.of(activity, viewModelFactory).get(MainViewModel::class.java)
+    }
+
+    @Provides
+    fun provideProgress(): WithProgress {
+        return WithProgressImpl()
     }
 }

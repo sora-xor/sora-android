@@ -11,7 +11,7 @@ import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.mnemonic.MnemonicUtil
+import jp.co.soramitsu.common.util.mnemonic.EnglishWordList
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
 
@@ -22,9 +22,9 @@ class RecoveryViewModel(
 ) : BaseViewModel(), WithProgress by progress {
 
     fun btnNextClick(mnemonic: String) {
-        val mnemonics = MnemonicUtil.splitToArray(mnemonic)
+        val mnemonics = splitToArray(mnemonic)
         if (mnemonics.size == 15) {
-            if (MnemonicUtil.checkMnemonic(mnemonics)) {
+            if (checkMnemonic(mnemonics)) {
                 disposables.add(
                     interactor.runRecoverFlow(mnemonic)
                         .subscribeOn(Schedulers.io())
@@ -46,6 +46,19 @@ class RecoveryViewModel(
             progress.hideProgress()
             onError(SoraException.businessError(ResponseCode.MNEMONIC_LENGTH_ERROR))
         }
+    }
+
+    private fun splitToArray(mnemonic: String): Array<String> {
+        return mnemonic.trim().split(" ").toTypedArray()
+    }
+
+    private fun checkMnemonic(mnemonic: Array<String>): Boolean {
+        for (word in mnemonic) {
+            if (!EnglishWordList.words.contains(word)) {
+                return false
+            }
+        }
+        return true
     }
 
     fun backButtonClick() {

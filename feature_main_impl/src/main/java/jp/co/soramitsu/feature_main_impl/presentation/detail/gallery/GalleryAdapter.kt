@@ -52,6 +52,7 @@ class GalleryViewHolder(
                     galleryItemImageView.setBackgroundColor(Color.TRANSPARENT)
                     Picasso.get()
                         .load(item.preview)
+                        .placeholder(R.color.lighterGrey)
                         .fit()
                         .centerCrop()
                         .into(galleryItemImageView)
@@ -62,6 +63,7 @@ class GalleryViewHolder(
             } else {
                 Picasso.get()
                     .load(item.url)
+                    .placeholder(R.color.lighterGrey)
                     .fit()
                     .centerCrop()
                     .into(galleryItemImageView)

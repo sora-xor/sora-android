@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.di
 
+import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
 import jp.co.soramitsu.feature_main_api.MainStarter
@@ -19,4 +20,6 @@ interface OnboardingFeatureDependencies {
     fun mainStarter(): MainStarter
 
     fun walletRepository(): WalletRepository
+
+    fun inviteationHandler(): InvitationHandler
 }

@@ -25,7 +25,7 @@ import jp.co.soramitsu.core_db.model.TransactionLocal
 import jp.co.soramitsu.core_db.model.VotesHistoryLocal
 
 @Database(
-    version = 13,
+    version = 15,
     entities = [
         ActivityFeedLocal::class,
         AnnouncementLocal::class,

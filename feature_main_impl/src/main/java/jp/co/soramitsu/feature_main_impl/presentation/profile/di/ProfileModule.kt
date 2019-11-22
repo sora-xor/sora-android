@@ -14,6 +14,7 @@ import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.profile.ProfileViewModel
@@ -28,8 +29,8 @@ class ProfileModule {
     @Provides
     @IntoMap
     @ViewModelKey(ProfileViewModel::class)
-    fun provideViewModel(interactor: MainInteractor, router: MainRouter): ViewModel {
-        return ProfileViewModel(interactor, router)
+    fun provideViewModel(interactor: MainInteractor, router: MainRouter, numbersFormatter: NumbersFormatter): ViewModel {
+        return ProfileViewModel(interactor, router, numbersFormatter)
     }
 
     @Provides

@@ -7,7 +7,7 @@ package jp.co.soramitsu.core_network_api.di
 
 import jp.co.soramitsu.core_network_api.NetworkApiCreator
 import jp.co.soramitsu.core_network_api.data.auth.AuthHolder
-import javax.inject.Named
+import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 
 interface NetworkApi {
 
@@ -15,7 +15,5 @@ interface NetworkApi {
 
     fun provideAuthHolder(): AuthHolder
 
-    @Named("DEFAULT_MARKET_URL") fun provideDefaultMarketUrl(): String
-
-    @Named("INVITE_LINK_URL") fun provideInviteLinkUrl(): String
+    fun appLinksProvider(): AppLinksProvider
 }

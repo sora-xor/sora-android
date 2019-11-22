@@ -58,4 +58,5 @@ You can get one from your friends who already use Sora or you can</string>
     <string name="fragment_personal_invitation_try_another">Try another</string>
     <string name="and">and</string>
     <string name="tutorial_terms_3">Privacy Policy</string>
+    <string name="empty_invitation_link_text">👋Got an invitation link? Just tap on it to apply code, or enter 8 length code manually.</string>
 </resources>

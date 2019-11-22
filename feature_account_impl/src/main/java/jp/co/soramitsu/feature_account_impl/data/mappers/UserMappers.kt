@@ -12,7 +12,17 @@ import jp.co.soramitsu.feature_account_impl.data.network.model.UserValuesRemote
 
 fun mapUserRemoteToUser(userRemote: UserRemote): User {
     return with(userRemote) {
-        User(userId, firstName, lastName, phone, status, parentId ?: "", country ?: "")
+        User(
+            userId,
+            firstName,
+            lastName,
+            phone,
+            status,
+            parentId ?: "",
+            country ?: "",
+            inviteAcceptExpirationMomentSeconds * 1000,
+            mapUserValuesRemoteToUserValues(userValues)
+        )
     }
 }
 

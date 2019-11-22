@@ -22,7 +22,7 @@
     <Space
         android:id="@+id/space1"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2"
+        android:layout_height="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/shadowView" />
 
@@ -47,7 +47,7 @@
     <Space
         android:id="@+id/space2"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2"
+        android:layout_height="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/firstNameEt" />
 
@@ -65,7 +65,7 @@
     <Space
         android:id="@+id/space3"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2"
+        android:layout_height="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider1" />
 
@@ -90,7 +90,7 @@
     <Space
         android:id="@+id/space4"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2"
+        android:layout_height="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/lastNameEt" />
 
@@ -108,7 +108,7 @@
     <Space
         android:id="@+id/space5"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2"
+        android:layout_height="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider2" />
 
@@ -132,7 +132,7 @@
     <Space
         android:id="@+id/space6"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2"
+        android:layout_height="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/invCodeEt" />
 
@@ -146,6 +146,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/space6" />
+
+    <TextView
+        android:id="@+id/emptyInvitationLinkTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2_5"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2_5"
+        android:text="@string/empty_invitation_link_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider3" />
 
     <LinearLayout
         android:layout_width="0dp"

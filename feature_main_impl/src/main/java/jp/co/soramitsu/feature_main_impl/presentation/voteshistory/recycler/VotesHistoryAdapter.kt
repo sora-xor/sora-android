@@ -13,7 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
 import kotlinx.android.synthetic.main.votes_hitsory_header_item.view.votesHistoryItemDayTextView
@@ -21,12 +21,12 @@ import kotlinx.android.synthetic.main.votes_hitsory_item.view.voteHistoryItemAmo
 import kotlinx.android.synthetic.main.votes_hitsory_item.view.voteHistoryItemDescriptionTextView
 import kotlinx.android.synthetic.main.votes_hitsory_item.view.voteHistoryItemStatusImageView
 
-class VotesHistoryAdapter : ListAdapter<VotesHistoryItem, VotesHistoryViewHolder>(DiffCallback) {
+class VotesHistoryAdapter(private val numbersFormatter: NumbersFormatter) : ListAdapter<VotesHistoryItem, VotesHistoryViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VotesHistoryViewHolder {
         return if (viewType == R.layout.votes_hitsory_item) {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.votes_hitsory_item, parent, false)
-            VotesHistoryViewHolder.VotesHistoryItemViewHolder(view)
+            VotesHistoryViewHolder.VotesHistoryItemViewHolder(view, numbersFormatter)
         } else {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.votes_hitsory_header_item, parent, false)
             VotesHistoryViewHolder.VotesHistoryHeaderViewHolder(view)
@@ -64,7 +64,7 @@ object DiffCallback : DiffUtil.ItemCallback<VotesHistoryItem>() {
 
 sealed class VotesHistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    class VotesHistoryItemViewHolder(itemView: View) : VotesHistoryViewHolder(itemView) {
+    class VotesHistoryItemViewHolder(itemView: View, private val numbersFormatter: NumbersFormatter) : VotesHistoryViewHolder(itemView) {
 
         private val voteHistoryItemAmountTextView: TextView = itemView.voteHistoryItemAmountTextView
         private val voteHistoryItemDescriptionTextView: TextView = itemView.voteHistoryItemDescriptionTextView
@@ -72,7 +72,7 @@ sealed class VotesHistoryViewHolder(itemView: View) : RecyclerView.ViewHolder(it
 
         fun bind(votesHistoryItem: VotesHistoryItem) {
             voteHistoryItemDescriptionTextView.text = votesHistoryItem.message
-            voteHistoryItemAmountTextView.text = DeciminalFormatter.formatInteger(votesHistoryItem.votes)
+            voteHistoryItemAmountTextView.text = numbersFormatter.formatInteger(votesHistoryItem.votes)
 
             if (votesHistoryItem.operation == '-') {
                 voteHistoryItemStatusImageView.setImageResource(R.drawable.minus)

@@ -7,10 +7,6 @@
     <string name="pincode_repeat_error">Pin code repeat error</string>
     <string name="pincode_title2">Confirm your pin code</string>
 
-    <string name="invite_fragment_title">Friends</string>
-    <string name="invite_title">Invitе friends to get more votes daily!</string>
-    <string name="invite_subtitle">Share a promo link and get more invited when users registers using your link. Learn more.</string>
-    <string name="send_invite">Send invite</string>
     <string name="share_invite">Share promo link</string>
     <string name="votes_left_template">%1$d left</string>
     <string name="votes_template">%1$s votes</string>
@@ -33,11 +29,11 @@
     <string name="learn_more">Learn more</string>
     <string name="how_many_votes">How many votes</string>
     <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
     <string name="expected_sora_template">Get %1$s if project is fund</string>
     <string name="invite_link_format">Join Sora using link below:\n%1$s</string>
     <string name="invite_code_sharing_title">Share your invite code</string>
     <string name="promo_share_title">Share promo link</string>
-
 
     <!-- Navigation menu titles -->
     <string name="activity">Activity</string>
@@ -50,7 +46,7 @@
     <string name="remove">Remove</string>
     <string name="show_more">Show more...</string>
     <string name="gallery">Gallery</string>
-    <string name="contacts">Contacts and information</string>
+    <string name="contacts">Contacts</string>
     <string name="website">Website</string>
     <string name="email">E-mail</string>
 
@@ -59,7 +55,7 @@
     <string name="empty_friends_description">Your invitation status and\nreward will be displayed here</string>
     <string name="empty_all_project_description">We are waiting for new\n projects to arrive</string>
     <string name="wallet_empty">Incoming and outgoing\n transactions will appear here</string>
-    <string name="empty_voted_project_description">Vote for the projets and they\n will be appear here</string>
+    <string name="empty_voted_project_description">Vote for the projects and they\n will appear here</string>
     <string name="empty_completed_project_description">When voting is complete you\n will find projects here</string>
     <string name="empty_favorite_project_description">Add projects to favourites and\n they will appear here</string>
     <string name="save">Save</string>
@@ -80,8 +76,8 @@
     <string name="votesHistoryScreenTitle">Votes History</string>
     <string name="sora_announcement">SORA announcement</string>
     <string name="sora_support">SORA support</string>
-    <string name="succesfull_voting">Succesfull voting</string>
-    <string name="unsuccesfull_voting">Unsuccessful voting</string>
+    <string name="successful_voting">Successful voting</string>
+    <string name="unsuccessful_voting">Unsuccessful voting</string>
 
     <string name="help">Help</string>
     <string name="today">Today</string>
@@ -92,12 +88,12 @@
     <string name="send">Send</string>
     <string name="receive">Receive</string>
     <string name="withdraw">Withdrawal</string>
-    <string name="receive_money">Receive money</string>
+    <string name="receive_xor">Receive XOR</string>
     <string name="vote_regularly">Vote regularly</string>
     <string name="invite_more_people">Invite more people to Sora</string>
-    <string name="rank_template">%1$d</string>
     <string name="rank_total_rank_template">%1$d of %2$d</string>
-    <string name="rank_empty">Your reputation will be updated in %02d:%02d</string>
+    <string name="reputation_timer_format">Your reputation will be updated in %1$s</string>
+    <string name="reputation_soon">Your reputation will be updated soon</string>
     <string name="last_votes_template">%1$s votes received today</string>
     <string name="sora_support_text">If you have feedback or need help contact us at</string>
     <string name="sora_support_email">sora@soramitsu.co.jp</string>
@@ -124,7 +120,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="error_zero_votes">Amount must be greater than zero</string>
     <string name="transaction_details">Transaction details</string>
-    <string name="send_money">Send money</string>
+    <string name="send_xor">Send XOR</string>
     <string name="set_amount">Set amount</string>
     <string name="scan_qr">Scan qr code</string>
     <string name="scan_canceled">Scan canceled</string>
@@ -178,7 +174,7 @@
     <string name="wallet_updating_subtitle">You wallet is being updated to allow you to freely manage your funds. Please wait.</string>
     <string name="wallet_updating_title">Updating wallet...</string>
     <string name="eth_address_error">Eth address should be 42 chars long and start with 0x</string>
-    <string name="sora_account_template">Sora account - %1$s</string>
+    <string name="xor_template">XOR - %1$s</string>
 
     <string name="wallet_identity_verification">Identity verification</string>
     <string name="wallet_identity_verification_in_review">In review</string>
@@ -234,4 +230,22 @@
     <string name="user_have_not_enough_votes_message">You don\'t have enough votes 😔</string>
     <string name="project_requires_votes_format">Project requires only %1$d votes 🚀</string>
     <string name="you_can_vote_at_least_1_point">You can vote with at least 1 point 😜</string>
+    <string name="xor">XOR</string>
+    <string name="discussion_template">Discuss on %1$s</string>
+
+    <string name="invite_fragment_title">Friends</string>
+    <string name="invite_title">Invitе friends to get more votes daily!</string>
+    <string name="invite_subtitle">Share a promo link and get more invited when users registers using your link. Learn more.</string>
+    <string name="send_invite">Send invite</string>
+    <string name="enter_invitation_code">Enter invitation code</string>
+    <string name="invite_code_applied_title">Congratulations!</string>
+    <string name="invite_code_applied_body">Code applied successfully</string>
+    <string name="invite_enter_code_description">Have you been invited to Sora? Tap on the button above and enter the code</string>
+    <string name="invite_code_applied_successful_title">Congratulations!</string>
+    <string name="invite_code_applied_successful_body">Code applied successfully</string>
+    <string name="invite_enter_confirmation_body_mask">Do you want to apply invitation code %1$s?</string>
+    <string name="invite_enter_error_time_is_up">Time to apply invitation code is up</string>
+    <string name="invite_enter_error_already_applied">You have already applied another invitation code</string>
+    <string name="invite_enter_dialog_title_hint">8 alphanumeric characters</string>
+
 </resources>

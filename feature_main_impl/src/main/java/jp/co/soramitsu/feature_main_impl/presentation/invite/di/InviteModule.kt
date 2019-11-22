@@ -15,7 +15,11 @@ import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.di.app.ViewModelKey
 import jp.co.soramitsu.common.di.app.ViewModelModule
+import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.DeviceParamsProvider
+import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.feature_main_impl.domain.InvitationInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.invite.InviteViewModel
@@ -35,12 +39,23 @@ class InviteModule {
     @Provides
     @IntoMap
     @ViewModelKey(InviteViewModel::class)
-    fun provideViewModel(interactor: InvitationInteractor, router: MainRouter, progress: WithProgress): ViewModel {
-        return InviteViewModel(interactor, router, progress)
+    fun provideViewModel(
+        interactor: InvitationInteractor,
+        router: MainRouter,
+        progress: WithProgress,
+        deviceParamsProvider: DeviceParamsProvider,
+        invitationHandler: InvitationHandler,
+        timerWrapper: TimerWrapper,
+        resourceManager: ResourceManager
+    ): ViewModel {
+        return InviteViewModel(interactor, router, progress, deviceParamsProvider, invitationHandler, timerWrapper, resourceManager)
     }
 
     @Provides
     fun provideViewModelCreator(fragment: Fragment, viewModelFactory: ViewModelProvider.Factory): InviteViewModel {
         return ViewModelProviders.of(fragment, viewModelFactory).get(InviteViewModel::class.java)
     }
+
+    @Provides
+    fun provideTimerWrapper(): TimerWrapper = TimerWrapper()
 }

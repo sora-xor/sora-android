@@ -35,8 +35,8 @@ class PinCodeModule {
     @Provides
     @IntoMap
     @ViewModelKey(PinCodeViewModel::class)
-    fun provideViewModel(interactor: PinCodeInteractor, router: MainRouter, progress: WithProgress): ViewModel {
-        return PinCodeViewModel(interactor, router, progress)
+    fun provideViewModel(interactor: PinCodeInteractor, router: MainRouter, progress: WithProgress, maxPinCodeLength: Int): ViewModel {
+        return PinCodeViewModel(interactor, router, progress, maxPinCodeLength)
     }
 
     @Provides

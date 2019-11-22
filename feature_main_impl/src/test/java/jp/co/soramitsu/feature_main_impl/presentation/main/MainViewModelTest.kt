@@ -100,7 +100,7 @@ class MainViewModelTest {
 
         given(selectedProject.id).willReturn(projectId)
         given(interactor.voteForProject(anyString(), anyLong())).willReturn(Completable.complete())
-        mainViewModel.showVoteDialogLiveData.observeForever(showVoteDialogObserver)
+        mainViewModel.showVoteProjectLiveData.observeForever(showVoteDialogObserver)
 
         mainViewModel.voteClicked(selectedProject)
 
@@ -139,7 +139,7 @@ class MainViewModelTest {
         given(projectToRemove.id).willReturn(projectId)
         given(interactor.addProjectToFavorites(anyString())).willReturn(Completable.complete())
 
-        mainViewModel.addProjectToFavorites(projectToRemove)
+        mainViewModel.projectsFavoriteClicked(projectToRemove)
 
         verify(interactor).addProjectToFavorites(projectId)
     }
@@ -148,10 +148,12 @@ class MainViewModelTest {
         val projectId = "test project id"
         val projectToRemove = mock(Project::class.java)
 
+        given(projectToRemove.isFavorite).willReturn(true)
+
         given(projectToRemove.id).willReturn(projectId)
         given(interactor.removeProjectFromFavorites(anyString())).willReturn(Completable.complete())
 
-        mainViewModel.removeProjectFromFavorites(projectToRemove)
+        mainViewModel.projectsFavoriteClicked(projectToRemove)
 
         verify(interactor).removeProjectFromFavorites(projectId)
     }
@@ -159,7 +161,7 @@ class MainViewModelTest {
     @Test fun `click on help calls router howItWorks() function`() {
         mainViewModel.btnHelpClicked()
 
-        verify(router).showHowItWorks()
+        verify(router).showFaq()
     }
 
     @Test fun `click on votes calls router showVotesScreen() function`() {

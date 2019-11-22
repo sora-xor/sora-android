@@ -12,7 +12,7 @@ object ContactsConverter {
 
     fun fromVm(accountVms: List<Account>): List<ContactItem> {
         return accountVms.map {
-            ContactItem(it.accountId, "${it.firstName} ${it.lastName}", "", "" + it.firstName[0] + it.lastName[0])
+            ContactItem(it.accountId, "${it.firstName} ${it.lastName}", "", "${it.firstName[0]}${it.lastName[0]}")
         }
     }
 }

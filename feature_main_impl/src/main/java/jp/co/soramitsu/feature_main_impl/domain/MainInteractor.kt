@@ -9,10 +9,12 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
+import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
+import jp.co.soramitsu.feature_account_api.domain.model.AddInvitationCase
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
@@ -147,10 +149,6 @@ class MainInteractor @Inject constructor(
         return projectRepository.getVotesHistory(votesPerPage, historyOffset, updateCached)
     }
 
-    fun clearUser(): Completable {
-        return userRepository.clearUserData()
-    }
-
     fun getActivityFeed(updateCached: Boolean, activityPerPage: Int, activitiesOffset: Int): Single<List<ActivityFeed>> {
         return userRepository.getActivityFeed(activityPerPage, activitiesOffset, updateCached)
     }
@@ -168,5 +166,29 @@ class MainInteractor @Inject constructor(
 
     fun getAppVersion(): Single<String> {
         return userRepository.getAppVersion()
+    }
+
+    fun checkAddInviteCodeIsPossible(dateInMillis: Long): Single<AddInvitationCase> {
+        return userRepository.getUser(true)
+            .map {
+                if (it.parentId.isEmpty()) {
+                    if (it.inviteAcceptExpirationMomentMillis < dateInMillis) {
+                        AddInvitationCase.TIME_IS_UP
+                    } else {
+                        AddInvitationCase.AVAILABLE
+                    }
+                } else {
+                    AddInvitationCase.ALREADY_APPLIED
+                }
+            }
+    }
+
+    fun applyInvitationCode(): Completable {
+        return userRepository.applyInvitationCode()
+    }
+
+    fun getInviteCode(): Single<String> {
+        return userRepository.getParentInviteCode()
+            .subscribeOn(Schedulers.io())
     }
 }

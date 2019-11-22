@@ -17,7 +17,6 @@ import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import java.util.Calendar
-import java.util.Date
 
 class ActivityFeedViewModel(
     private val interactor: MainInteractor,
@@ -38,6 +37,8 @@ class ActivityFeedViewModel(
     private var loading = false
     private var lastPageLoaded = false
 
+    private val activityFeedList = mutableListOf<Any>()
+
     fun refreshData(showLoading: Boolean, updateCached: Boolean) {
         if (showLoading) {
             preloader.showPreloader()
@@ -52,13 +53,17 @@ class ActivityFeedViewModel(
                 .doOnSuccess { activitiesOffset += ACTIVITIES_PER_PAGE }
                 .doFinally { if (!updateCached) refreshData(false, true) }
                 .subscribeOn(Schedulers.io())
-                .map {
-                    val feed = mutableListOf<Any>().apply {
+                .map { activitiesWithAnnouncement ->
+                    mutableListOf<Any>().apply {
                         add(ActivityHeader(resourceManager.getString(R.string.activity)))
-                        addAll(it)
+                        addAll(activitiesWithAnnouncement)
                     }
-                    addDatesToActivityFeed(feed)
                 }
+                .doOnSuccess {
+                    activityFeedList.clear()
+                    activityFeedList.addAll(it)
+                }
+                .map { addDatesToActivityFeed(it) }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     preloader.hidePreloader()
@@ -81,10 +86,14 @@ class ActivityFeedViewModel(
                 .doOnSubscribe { loading = true }
                 .subscribeOn(Schedulers.io())
                 .map { newActivities ->
-                    val activities = mutableListOf<Any>()
-                    activityFeedLiveData.value?.let { activities.addAll(it.filter { it !is ActivityDate }) }
-                    activities.addAll(newActivities)
-                    activities
+                    mutableListOf<Any>().apply {
+                        addAll(activityFeedList)
+                        addAll(newActivities)
+                    }
+                }
+                .doOnSuccess {
+                    activityFeedList.clear()
+                    activityFeedList.addAll(it)
                 }
                 .map { addDatesToActivityFeed(it) }
                 .observeOn(AndroidSchedulers.mainThread())
@@ -99,36 +108,54 @@ class ActivityFeedViewModel(
 
     private fun addDatesToActivityFeed(feed: List<Any>): List<Any> {
         val list = mutableListOf<Any>()
-        var lastDate: Date? = null
-        feed.forEach {
-            if (it is ActivityFeed) {
-                if (lastDate == null) {
-                    lastDate = it.issuedAt
-                    var dateStr = it.issuedAt.date2Day()
+        var lastDate = 0L
 
-                    if (dateStr == "0") {
-                        dateStr = resourceManager.getString(R.string.today)
-                    } else if (dateStr == "-1") {
-                        dateStr = resourceManager.getString(R.string.yesterday)
-                    }
-
+        feed.forEachIndexed { index, item ->
+            if (item is ActivityFeed) {
+                if (lastDate == 0L) {
+                    val dateStr = item.issuedAt.date2Day(resourceManager.getString(R.string.today), resourceManager.getString(R.string.yesterday))
                     list.add(ActivityDate(dateStr))
                 } else {
-                    if (differentDays(lastDate!!.time, it.issuedAt.time)) {
-                        var dateStr = it.issuedAt.date2Day()
-                        if (dateStr == "0") {
-                            dateStr = resourceManager.getString(R.string.today)
-                        } else if (dateStr == "-1") {
-                            dateStr = resourceManager.getString(R.string.yesterday)
-                        }
+                    if (differentDays(lastDate, item.issuedAt.time)) {
+                        val dateStr = item.issuedAt.date2Day(resourceManager.getString(R.string.today), resourceManager.getString(R.string.yesterday))
                         list.add(ActivityDate(dateStr))
                     }
-                    lastDate = it.issuedAt
                 }
+                lastDate = item.issuedAt.time
             }
-            list.add(it)
+
+            val activityFeedListItem = if (item is ActivityFeed) {
+                val previousItem = list.lastOrNull()
+                val nextItem = feed.getOrNull(index + 1)
+                val previousIsDate = previousItem != null && previousItem is ActivityDate
+                val nextItemDayChanged = nextItem == null || (differentDays((nextItem as ActivityFeed).issuedAt.time, lastDate))
+
+                if (previousIsDate) {
+                    if (nextItemDayChanged) {
+                        mapActivityFeedToActivityFeedItem(item, ActivityFeedItem.Type.THE_ONLY_EVENT_OF_THE_DAY)
+                    } else {
+                        mapActivityFeedToActivityFeedItem(item, ActivityFeedItem.Type.LAST_OF_THE_DAY)
+                    }
+                } else {
+                    if (nextItemDayChanged) {
+                        mapActivityFeedToActivityFeedItem(item, ActivityFeedItem.Type.FIRST_OF_THE_DAY)
+                    } else {
+                        mapActivityFeedToActivityFeedItem(item, ActivityFeedItem.Type.DURING_THE_DAY)
+                    }
+                }
+            } else {
+                item
+            }
+
+            list.add(activityFeedListItem)
         }
         return list
+    }
+
+    private fun mapActivityFeedToActivityFeedItem(activityFeed: ActivityFeed, listItemType: ActivityFeedItem.Type): ActivityFeedItem {
+        return with(activityFeed) {
+            ActivityFeedItem(type, title, description, votesString, issuedAt, iconDrawable, listItemType)
+        }
     }
 
     private fun differentDays(one: Long, two: Long): Boolean {

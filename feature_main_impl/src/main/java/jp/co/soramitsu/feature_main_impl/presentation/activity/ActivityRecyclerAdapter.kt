@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.util.ext.formatTime
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
 import jp.co.soramitsu.feature_main_impl.R
 
@@ -25,8 +24,15 @@ class ActivityRecyclerAdapter(
 ) : ListAdapter<Any, ActivityFeedViewHolder>(DiffCallback) {
 
     override fun getItemViewType(position: Int): Int {
-        return when (getItem(position)) {
-            is ActivityFeed -> R.layout.item_activity_feed
+        return when (val currentItem = getItem(position)) {
+            is ActivityFeedItem -> {
+                when (currentItem.listItemType) {
+                    ActivityFeedItem.Type.DURING_THE_DAY -> R.layout.item_activity_feed_during_the_day
+                    ActivityFeedItem.Type.FIRST_OF_THE_DAY -> R.layout.item_activity_feed_first_of_the_day
+                    ActivityFeedItem.Type.LAST_OF_THE_DAY -> R.layout.item_activity_feed_last_of_the_day
+                    ActivityFeedItem.Type.THE_ONLY_EVENT_OF_THE_DAY -> R.layout.item_activity_feed_the_only_of_the_day
+                }
+            }
             is ActivityFeedAnnouncement -> R.layout.item_activity_feed_announce
             is ActivityHeader -> R.layout.item_activity_feed_header
             is ActivityDate -> R.layout.item_activity_feed_date
@@ -36,8 +42,20 @@ class ActivityRecyclerAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ActivityFeedViewHolder {
         return when (viewType) {
-            R.layout.item_activity_feed -> {
-                val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed, parent, false)
+            R.layout.item_activity_feed_during_the_day -> {
+                val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed_during_the_day, parent, false)
+                ActivityFeedViewHolder.ActivityViewHolder(view)
+            }
+            R.layout.item_activity_feed_first_of_the_day -> {
+                val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed_first_of_the_day, parent, false)
+                ActivityFeedViewHolder.ActivityViewHolder(view)
+            }
+            R.layout.item_activity_feed_last_of_the_day -> {
+                val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed_last_of_the_day, parent, false)
+                ActivityFeedViewHolder.ActivityViewHolder(view)
+            }
+            R.layout.item_activity_feed_the_only_of_the_day -> {
+                val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed_the_only_of_the_day, parent, false)
                 ActivityFeedViewHolder.ActivityViewHolder(view)
             }
             R.layout.item_activity_feed_announce -> {
@@ -58,7 +76,7 @@ class ActivityRecyclerAdapter(
 
     override fun onBindViewHolder(holder: ActivityFeedViewHolder, position: Int) {
         when (holder) {
-            is ActivityFeedViewHolder.ActivityViewHolder -> holder.bind(getItem(position) as ActivityFeed)
+            is ActivityFeedViewHolder.ActivityViewHolder -> holder.bind(getItem(position) as ActivityFeedItem)
             is ActivityFeedViewHolder.ActivityAnnouncementViewHolder -> holder.bind(getItem(position) as ActivityFeedAnnouncement)
             is ActivityFeedViewHolder.ActivityHeaderViewHolder -> holder.bind(getItem(position) as ActivityHeader)
             is ActivityFeedViewHolder.ActivityDateViewHolder -> holder.bind(getItem(position) as ActivityDate)
@@ -69,7 +87,7 @@ class ActivityRecyclerAdapter(
 object DiffCallback : DiffUtil.ItemCallback<Any>() {
     override fun areItemsTheSame(oldItem: Any, newItem: Any): Boolean {
         return when {
-            oldItem is ActivityFeed && newItem is ActivityFeed -> false
+            oldItem is ActivityFeedItem && newItem is ActivityFeedItem -> false
             oldItem is ActivityFeedAnnouncement && newItem is ActivityFeedAnnouncement -> oldItem.message == newItem.message
             oldItem is ActivityHeader && newItem is ActivityHeader -> true
             oldItem is ActivityDate && newItem is ActivityDate -> oldItem.date == newItem.date
@@ -79,7 +97,7 @@ object DiffCallback : DiffUtil.ItemCallback<Any>() {
 
     override fun areContentsTheSame(oldItem: Any, newItem: Any): Boolean {
         return when {
-            oldItem is ActivityFeed && newItem is ActivityFeed -> false
+            oldItem is ActivityFeedItem && newItem is ActivityFeedItem -> false
             oldItem is ActivityFeedAnnouncement && newItem is ActivityFeedAnnouncement -> oldItem.message == newItem.message
             oldItem is ActivityHeader && newItem is ActivityHeader -> true
             oldItem is ActivityDate && newItem is ActivityDate -> oldItem.date == newItem.date
@@ -103,7 +121,7 @@ sealed class ActivityFeedViewHolder(itemView: View) : RecyclerView.ViewHolder(it
         private var plusIconImg: ImageView = itemView.findViewById(R.id.activity_icon_plus)
         private var heartIconImg: ImageView = itemView.findViewById(R.id.activity_icon_heart)
 
-        fun bind(activity: ActivityFeed) {
+        fun bind(activity: ActivityFeedItem) {
 
             typeTv.text = activity.type
             typeImg.setImageResource(activity.iconDrawable)

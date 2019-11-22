@@ -4,6 +4,7 @@
     <color name="circleBgGrey">#7f7f7f</color>
     <color name="darkGreyBlue">#24494e</color>
     <color name="grey">#797979</color>
+    <color name="lighterGrey">#DBDBDB</color>
     <color name="transparentGrey">#32797979</color>
     <color name="greyBlue">#899f9e</color>
     <color name="titleDarkGreyBlue">#035C5A</color>
@@ -27,4 +28,6 @@
     <color name="greyDivider">#8C999999</color>
     <color name="backgroundGrey">#f2f2f2</color>
     <color name="blackText">#333333</color>
+    <color name="qrCodeSecondColor">#f2f2f2</color>
+    <color name="activityDividerColor">#6b73a8a6</color>
 </resources>

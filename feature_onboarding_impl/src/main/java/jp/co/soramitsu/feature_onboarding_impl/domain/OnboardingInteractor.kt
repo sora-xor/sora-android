@@ -10,9 +10,7 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.util.Crypto
 import jp.co.soramitsu.common.util.OnboardingState
-import jp.co.soramitsu.common.util.mnemonic.MnemonicUtil
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.Country
@@ -37,25 +35,11 @@ class OnboardingInteractor @Inject constructor(
     }
 
     fun runRegisterFlow(): Single<AppVersion> {
-        return checkVersionIsSupported()
-            .flatMap { version -> registerUserDdo().andThen(Single.just(version)) }
-    }
-
-    private fun registerUserDdo(): Completable {
-        return didRepository.retrieveMnemonic()
-            .flatMapCompletable { cachedMnemonic ->
-                if (cachedMnemonic.isEmpty()) {
-                    Single.just(MnemonicUtil.generateMnemonic(Crypto.getSecureRandom(20)))
-                        .flatMapCompletable { mnemonic ->
-                            Single.just(MnemonicUtil.getBytesFromMnemonic(mnemonic))
-                                .flatMapCompletable {
-                                    didRepository.registerUserDdo(it)
-                                        .doOnComplete { didRepository.saveMnemonic(mnemonic) }
-                                }
-                        }
-                } else {
-                    Completable.fromAction { didRepository.restoreAuth() }
-                }
+        return userRepository.checkAppVersion()
+            .flatMap { version ->
+                didRepository.registerUserDdo()
+                    .andThen(userRepository.checkInviteCodeAvailable())
+                    .andThen(Single.just(version))
             }
     }
 
@@ -64,24 +48,10 @@ class OnboardingInteractor @Inject constructor(
     }
 
     fun runRecoverFlow(mnemonic: String): Completable {
-        return recoverAccount(mnemonic)
+        return didRepository.recoverAccount(mnemonic)
             .andThen(userRepository.getUser(true))
             .ignoreElement()
             .doOnComplete { userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED) }
-    }
-
-    private fun recoverAccount(mnemonic: String): Completable {
-        return Single.create<ByteArray> { emitter ->
-            val entropy = MnemonicUtil.getBytesFromMnemonic(mnemonic)
-            if (entropy == null) {
-                emitter.onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
-            }
-            emitter.onSuccess(entropy!!)
-        }.flatMapCompletable {
-            didRepository.retrieveUserDdo(it)
-        }.doOnComplete {
-            didRepository.saveMnemonic(mnemonic)
-        }
     }
 
     fun requestNewCode(): Single<Int> {

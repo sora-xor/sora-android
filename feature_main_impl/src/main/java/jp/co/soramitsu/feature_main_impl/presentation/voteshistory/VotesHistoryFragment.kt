@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
@@ -28,8 +29,11 @@ import kotlinx.android.synthetic.main.fragment_votes_history.preloaderView
 import kotlinx.android.synthetic.main.fragment_votes_history.swipeContainer
 import kotlinx.android.synthetic.main.fragment_votes_history.toolbar
 import kotlinx.android.synthetic.main.fragment_votes_history.votesHistoryRecyclerView
+import javax.inject.Inject
 
 class VotesHistoryFragment : BaseFragment<VotesHistoryViewModel>() {
+
+    @Inject lateinit var numbersFormatter: NumbersFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_votes_history, container, false)
@@ -87,7 +91,7 @@ class VotesHistoryFragment : BaseFragment<VotesHistoryViewModel>() {
         votesHistoryRecyclerView.show()
 
         if (votesHistoryRecyclerView.adapter == null) {
-            votesHistoryRecyclerView.adapter = VotesHistoryAdapter()
+            votesHistoryRecyclerView.adapter = VotesHistoryAdapter(numbersFormatter)
             votesHistoryRecyclerView.itemAnimator = null
         }
 

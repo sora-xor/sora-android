@@ -8,10 +8,11 @@ package jp.co.soramitsu.feature_account_impl.di
 import android.content.Context
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.PrefsUtil
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_network_api.NetworkApiCreator
-import javax.inject.Named
+import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 
 interface AccountFeatureDependencies {
 
@@ -27,7 +28,7 @@ interface AccountFeatureDependencies {
 
     fun appDatabase(): AppDatabase
 
-    @Named("DEFAULT_MARKET_URL") fun provideMarketUrl(): String
+    fun appLinksProvider(): AppLinksProvider
 
-    @Named("INVITE_LINK_URL") fun provideInviteLinkUrl(): String
+    fun deviceParams(): DeviceParamsProvider
 }

@@ -11,12 +11,18 @@
     <string name="not_enough_invitations">No invitations left</string>
     <string name="user_not_found">Your passphrase is invalid. Please, try another one.</string>
     <string name="user_values_not_found">User values with credentials not found</string>
-    <string name="invitation_code_not_found">Invitation code not found</string>
+    <string name="invitation_code_not_found">Code is not valid</string>
     <string name="application_form_not_found">Application form not found</string>
     <string name="project_not_found">Project not found</string>
     <string name="voting_is_not_allowed">Project is not opened for voting</string>
     <string name="votes_not_enough">You haven\'t got enough votes to proceed.</string>
     <string name="not_authorized">You are not authorized. Try reinstall app and sign in again.</string>
+    <string name="ambiguous_result">Ambiguous result</string>
+    <string name="wrong_user_status">Wrong user status</string>
+    <string name="inviter_registered_after_invitee">Provided invitation code cannot be applied because it is from the user who registered after you</string>
+    <string name="invitation_accepting_window_closed">Invitation accepting window closed</string>
+    <string name="invitation_already_accepted">Invitation already accepted</string>
+    <string name="self_invitation">You cannot use your invitation code for yourself</string>
 
     <string name="email_is_not_valid">Email is not valid</string>
     <string name="first_name_is_empty">First name shouldn\'t be empty</string>
@@ -115,7 +121,8 @@
         <item>Gallery</item>
     </string-array>
 
-    <string name="qr_share_message_template">My Sora network address to Receive </string>
+    <string name="qr_share_message_empty_template">My Sora network address to Receive XOR:</string>
+    <string name="qr_share_message_template">My Sora network address to Receive %1$s XOR:</string>
     <string name="withdrawal_description">Withdrawal to</string>
 
     <string name="sending_to_myself">You can\'t send XOR to yourself</string>

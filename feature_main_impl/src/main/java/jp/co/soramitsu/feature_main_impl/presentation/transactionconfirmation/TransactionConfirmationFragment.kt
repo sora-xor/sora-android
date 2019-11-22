@@ -21,7 +21,7 @@ import jp.co.soramitsu.account_information_list.list.models.Card
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.base.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.core_ui.presentation.list.AdapterUpdateListener
@@ -39,6 +39,7 @@ import jp.co.soramitsu.transaction_details.list.model.InformationFooter
 import kotlinx.android.synthetic.main.fragment_transaction_details.sidedButtonLayout
 import kotlinx.android.synthetic.main.fragment_transaction_details.toolbar
 import java.math.BigDecimal
+import javax.inject.Inject
 
 @SuppressLint("CheckResult")
 class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationViewModel>() {
@@ -98,6 +99,8 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
     private lateinit var nextButton: Button
 
     private lateinit var progressDialog: SoraProgressDialog
+
+    @Inject lateinit var numberFormatter: NumbersFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_transaction_confirmation, container, false)
@@ -196,7 +199,7 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
     private fun getBaseElements(): List<InformationItem> {
         val informItems = ArrayList<InformationItem>()
 
-        val body = "${Const.SORA_SYMBOL} ${DeciminalFormatter.formatBigDecimal(BigDecimal(arguments!!.getDouble(KEY_AMOUNT)))}"
+        val body = "${Const.SORA_SYMBOL} ${numberFormatter.formatBigDecimal(BigDecimal(arguments!!.getDouble(KEY_AMOUNT)))}"
 
         if (ethAddress.isNotEmpty()) {
             informItems.add(InformationItem(getString(R.string.amount), body, null))
@@ -204,9 +207,9 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
             informItems.add(InformationItem(getString(R.string.amount_to_send), body, null))
         }
 
-        informItems.add(InformationItem(getString(R.string.transaction_fee), "${Const.SORA_SYMBOL} ${DeciminalFormatter.format(arguments!!.getDouble(KEY_FEE))}", null))
+        informItems.add(InformationItem(getString(R.string.transaction_fee), "${Const.SORA_SYMBOL} ${numberFormatter.format(arguments!!.getDouble(KEY_FEE))}", null))
 
-        informItems.add(InformationItem(getString(R.string.total_amount), "${Const.SORA_SYMBOL} ${DeciminalFormatter.format(arguments!!.getDouble(KEY_FEE) + arguments!!.getDouble(KEY_AMOUNT))}", R.drawable.ic_minus))
+        informItems.add(InformationItem(getString(R.string.total_amount), "${Const.SORA_SYMBOL} ${numberFormatter.format(arguments!!.getDouble(KEY_FEE) + arguments!!.getDouble(KEY_AMOUNT))}", R.drawable.ic_minus))
 
         return informItems
     }

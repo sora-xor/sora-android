@@ -113,7 +113,6 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
         requestTimeTv.setOnClickListener { viewModel.requestNewCode() }
 
         nextBtn.setOnClickListener {
-            enableButton(false)
             viewModel.onVerify(codeEt.text.toString())
         }
 
@@ -132,21 +131,11 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
         codeEt.setOnEditorActionListener { _, actionId, _ ->
             when (actionId) {
                 EditorInfo.IME_ACTION_DONE -> {
-                    enableButton(false)
                     viewModel.onVerify(codeEt.text.toString())
                 }
             }
             false
         }
-    }
-
-    private fun enableButton(flag: Boolean) {
-        nextBtn.isClickable = flag
-        nextBtn.isEnabled = flag
-    }
-
-    private fun resetCode() {
-        codeEt.setText("")
     }
 
     override fun inject() {
@@ -163,7 +152,7 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
             .startSmsUserConsent(null)
             .addOnSuccessListener {
                 val intentFilter = IntentFilter(SmsRetriever.SMS_RETRIEVED_ACTION)
-                activity!!.registerReceiver(smsVerificationReceiver, intentFilter)
+                activity?.registerReceiver(smsVerificationReceiver, intentFilter)
             }
     }
 
@@ -180,6 +169,6 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
 
     override fun onPause() {
         super.onPause()
-        activity!!.unregisterReceiverIfNeeded(smsVerificationReceiver)
+        activity?.unregisterReceiverIfNeeded(smsVerificationReceiver)
     }
 }

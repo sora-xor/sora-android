@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.core_db.model
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
@@ -33,5 +34,6 @@ data class ProjectDetailsLocal(
     val isFavorite: Boolean,
     val isUnwatched: Boolean,
     val status: ProjectStatusLocal,
-    val statusUpdateTimeMillis: Long
+    val statusUpdateTimeMillis: Long,
+    @Embedded val discussionLink: DiscussionLinkLocal?
 )

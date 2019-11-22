@@ -21,6 +21,7 @@ import jp.co.soramitsu.common.base.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.isValidNameChar
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
@@ -32,6 +33,7 @@ import kotlinx.android.synthetic.main.fragment_personal_info.invCodeEt
 import kotlinx.android.synthetic.main.fragment_personal_info.lastNameEt
 import kotlinx.android.synthetic.main.fragment_personal_info.nextBtn
 import kotlinx.android.synthetic.main.fragment_personal_info.toolbar
+import kotlinx.android.synthetic.main.fragment_personal_info.emptyInvitationLinkTextView
 
 @SuppressLint("CheckResult")
 class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
@@ -116,6 +118,7 @@ class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
 
         observe(viewModel.inviteCodeLiveData, Observer {
             invCodeEt.setText(it)
+            emptyInvitationLinkTextView.gone()
         })
     }
 

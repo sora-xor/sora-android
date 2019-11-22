@@ -14,7 +14,7 @@
             android:screenOrientation="portrait"
             android:supportsRtl="true"
             android:clearTaskOnLaunch="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/OnboardingActivityTheme"
             android:windowSoftInputMode="adjustResize" />
 

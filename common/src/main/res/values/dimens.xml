@@ -1,38 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <dimen name="title_text_size">16sp</dimen>
+    <dimen name="dot_progress_view_dot_size_default">12dp</dimen>
+    <dimen name="dot_progress_view_dot_margin_default">12dp</dimen>
 
-  <!-- Pinlock View -->
-  <dimen name="default_button_size">60dp</dimen>
-  <dimen name="default_delete_button_size">32dp</dimen>
-  <dimen name="default_horizontal_spacing">32dp</dimen>
-  <dimen name="default_vertical_spacing">0dp</dimen>
+    <dimen name="x1_2">4dp</dimen>
+    <dimen name="x1">8dp</dimen>
+    <dimen name="x2">16dp</dimen>
+    <dimen name="x2_5">20dp</dimen>
+    <dimen name="x3">24dp</dimen>
+    <dimen name="x4">32dp</dimen>
+    <dimen name="x5">40dp</dimen>
+    <dimen name="x6">48dp</dimen>
+    <dimen name="x7">56dp</dimen>
+    <dimen name="x8">64dp</dimen>
+    <dimen name="x9">72dp</dimen>
+    <dimen name="x10">80dp</dimen>
+    <dimen name="x11">88dp</dimen>
 
-  <dimen name="default_dot_diameter">12dp</dimen>
-  <dimen name="default_dot_spacing">12dp</dimen>
+    <dimen name="tab_text_size">11sp</dimen>
+    <dimen name="actionbar_tab_text_size">7sp</dimen>
 
+    <dimen name="greyTextStyleSize">11sp</dimen>
+    <dimen name="subtitle_text_size">11sp</dimen>
 
-  <!-- Paddings -->
-  <dimen name="x1_2">4dp</dimen>
-  <dimen name="x1">8dp</dimen>
-  <dimen name="x2">16dp</dimen>
-  <dimen name="x2_5">20dp</dimen>
-  <dimen name="x3">24dp</dimen>
-  <dimen name="x4">32dp</dimen>
-  <dimen name="x5">40dp</dimen>
-  <dimen name="x6">48dp</dimen>
-  <dimen name="x7">56dp</dimen>
-  <dimen name="x8">64dp</dimen>
-  <dimen name="x9">72dp</dimen>
-  <dimen name="x10">80dp</dimen>
-  <dimen name="x11">88dp</dimen>
-
-  <dimen name="tab_text_size">11sp</dimen>
-  <dimen name="actionbar_tab_text_size">7sp</dimen>
-
-  <dimen name="greyTextStyleSize">11sp</dimen>
-  <dimen name="subtitle_text_size">11sp</dimen>
-
-  <dimen name="search_view_height">36dp</dimen>
+    <dimen name="search_view_height">36dp</dimen>
     <dimen name="shadow_view_height">3dp</dimen>
 </resources>

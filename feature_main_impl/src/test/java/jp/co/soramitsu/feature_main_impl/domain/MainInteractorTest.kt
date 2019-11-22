@@ -12,6 +12,7 @@ import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
+import jp.co.soramitsu.feature_account_api.domain.model.UserValues
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationRepository
 import jp.co.soramitsu.feature_project_api.domain.interfaces.ProjectRepository
@@ -88,7 +89,8 @@ class MainInteractorTest {
     }
 
     @Test fun `getUserInfo() calls userRepository repository getUser() function`() {
-        val user = User("id", "firstName", "lastName", "phone", "status", "parent", "RU")
+        val userValues = UserValues(0, 0f, "")
+        val user = User("id", "firstName", "lastName", "phone", "status", "parent", "RU", 0, userValues)
         given(userRepository.getUser(anyBoolean())).willReturn(Single.just(user))
 
         interactor.getUserInfo(false)

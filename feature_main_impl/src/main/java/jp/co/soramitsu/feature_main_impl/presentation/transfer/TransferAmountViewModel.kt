@@ -10,7 +10,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.WalletInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
@@ -20,7 +20,8 @@ import java.math.BigDecimal
 class TransferAmountViewModel(
     private val interactor: WalletInteractor,
     private val router: MainRouter,
-    private val progress: WithProgress
+    private val progress: WithProgress,
+    private val numbersFormatter: NumbersFormatter
 ) : BaseViewModel(), WithProgress by progress {
 
     val balanceLiveData = MutableLiveData<String>()
@@ -36,7 +37,7 @@ class TransferAmountViewModel(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ pair ->
-                    balanceLiveData.value = DeciminalFormatter.formatBigDecimal(pair.first)
+                    balanceLiveData.value = numbersFormatter.formatBigDecimal(pair.first)
                     feeMetaLiveData.value = pair.second
 
                     if (!updateCached) {

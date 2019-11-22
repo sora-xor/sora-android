@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_account_impl.data.mappers
 import android.content.Context
 import com.google.gson.JsonObject
 import jp.co.soramitsu.common.util.ActivityFeedTypes
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.core_db.model.ActivityFeedLocal
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_impl.R
@@ -28,7 +28,8 @@ fun mapActivityFeedToActivityFeedLocal(activityFeed: ActivityFeed): ActivityFeed
 }
 
 class ActivityGsonConverter @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val numbersFormatter: NumbersFormatter
 ) {
     fun convertActivityItems(activities: List<JsonObject>, projectDict: JsonObject, userDict: JsonObject, userDid: String): List<ActivityFeed> {
         return mutableListOf<ActivityFeed>().apply {
@@ -69,7 +70,7 @@ class ActivityGsonConverter @Inject constructor(
                 lastName = userData?.getAsJsonPrimitive("lastName")?.asString ?: lastName
 
                 return ActivityFeed(context.getString(ActivityFeedTypes.XOR_BETWEEN_USERS_TRANSFERRED.typeStringResource,
-                    DeciminalFormatter.formatBigDecimal(jsonActivity.getAsJsonPrimitive("amount").asBigDecimal)),
+                    numbersFormatter.formatBigDecimal(jsonActivity.getAsJsonPrimitive("amount").asBigDecimal)),
                     context.getString(ActivityFeedTypes.XOR_BETWEEN_USERS_TRANSFERRED.titleStringResource, firstName, lastName),
                     context.getString(
                         ActivityFeedTypes.XOR_BETWEEN_USERS_TRANSFERRED.descriptionStringResource,
@@ -85,7 +86,7 @@ class ActivityGsonConverter @Inject constructor(
                     context.getString(ActivityFeedTypes.VOTING_RIGHTS_CREDITED.typeStringResource),
                     context.getString(ActivityFeedTypes.VOTING_RIGHTS_CREDITED.titleStringResource),
                     "",
-                    DeciminalFormatter.formatInteger(jsonActivity.getAsJsonPrimitive("votingRights").asBigDecimal),
+                    numbersFormatter.formatInteger(jsonActivity.getAsJsonPrimitive("votingRights").asBigDecimal),
                     Date(jsonActivity.getAsJsonPrimitive("issuedAt")?.asString!!.toLong() * 1000L),
                     ActivityFeedTypes.VOTING_RIGHTS_CREDITED.iconDrawable
                 )
@@ -145,7 +146,7 @@ class ActivityGsonConverter @Inject constructor(
                     context.getString(ActivityFeedTypes.XOR_REWARD_CREDITED_FROM_PROJECT.titleStringResource, projectName),
                     context.getString(
                         ActivityFeedTypes.XOR_REWARD_CREDITED_FROM_PROJECT.descriptionStringResource,
-                        DeciminalFormatter.formatBigDecimal(jsonActivity.getAsJsonPrimitive("reward").asBigDecimal)
+                        numbersFormatter.formatBigDecimal(jsonActivity.getAsJsonPrimitive("reward").asBigDecimal)
                     ),
                     "",
                     Date(jsonActivity.getAsJsonPrimitive("issuedAt")?.asString!!.toLong() * 1000L),
@@ -173,7 +174,7 @@ class ActivityGsonConverter @Inject constructor(
                     context.getString(
                         ActivityFeedTypes.USER_VOTED_FOR_PROJECT.descriptionStringResource,
                         firstName,
-                        DeciminalFormatter.formatInteger(jsonActivity.getAsJsonPrimitive("givenVotes").asBigDecimal),
+                        numbersFormatter.formatInteger(jsonActivity.getAsJsonPrimitive("givenVotes").asBigDecimal),
                         projectName
                     ),
                     "",

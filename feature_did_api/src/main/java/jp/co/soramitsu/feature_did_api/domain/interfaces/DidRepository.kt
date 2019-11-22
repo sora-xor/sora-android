@@ -11,9 +11,11 @@ import java.security.KeyPair
 
 interface DidRepository {
 
-    fun registerUserDdo(entropy: ByteArray): Completable
+    fun registerUserDdo(): Completable
 
-    fun retrieveUserDdo(entropy: ByteArray): Completable
+    fun recoverAccount(mnemonic: String): Completable
+
+    fun retrieveUserDdo(mnemonic: String): Completable
 
     fun restoreAuth()
 

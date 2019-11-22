@@ -19,7 +19,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.makeramen.roundedimageview.RoundedImageView
 import com.squareup.picasso.Picasso
-import jp.co.soramitsu.common.util.DeciminalFormatter
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_impl.R
@@ -31,6 +31,7 @@ import java.math.BigDecimal
 
 class MainProjectsAdapter(
     private val context: Context,
+    private val numbersFormatter: NumbersFormatter,
     private val voteButtonClickListener: (Project) -> Unit,
     private val favButtonClickListener: (Project) -> Unit,
     private val itemViewClickListener: (Project) -> Unit
@@ -38,7 +39,7 @@ class MainProjectsAdapter(
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ProjectViewHolder {
         val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_project, viewGroup, false)
-        return ProjectViewHolder(context, view, voteButtonClickListener, favButtonClickListener, itemViewClickListener)
+        return ProjectViewHolder(context, numbersFormatter, view, voteButtonClickListener, favButtonClickListener, itemViewClickListener)
     }
 
     override fun onBindViewHolder(projectViewHolder: ProjectViewHolder, position: Int) {
@@ -48,6 +49,7 @@ class MainProjectsAdapter(
 
 class ProjectViewHolder(
     private val context: Context,
+    private val numbersFormatter: NumbersFormatter,
     itemView: View,
     private val voteButtonClickListener: (Project) -> Unit,
     private val favButtonClickListener: (Project) -> Unit,
@@ -118,7 +120,7 @@ class ProjectViewHolder(
             votesProgressBar.show()
 
             leftToFundTv.text = context.getString(R.string.founded_template, foundedPercent.toInt(),
-                DeciminalFormatter.formatInteger(BigDecimal.valueOf(project.fundingTarget)))
+                numbersFormatter.formatInteger(BigDecimal.valueOf(project.fundingTarget)))
             daysLeftTv.text = project.deadline.formatToOpenProjectDate(context.resources)
         } else {
             divider1.show()
@@ -141,17 +143,17 @@ class ProjectViewHolder(
 
             votesProgressBar.gone()
 
-            leftToFundTv.text = context.getString(R.string.votes_template, DeciminalFormatter.format(project.fundingCurrent.toDouble()))
+            leftToFundTv.text = context.getString(R.string.votes_template, numbersFormatter.format(project.fundingCurrent.toDouble()))
             daysLeftTv.text = project.statusUpdateTime.formatToClosedProjectDate(context.resources)
         }
 
         when (project.status) {
             ProjectStatus.COMPLETED -> {
-                voteTv.setText(R.string.succesfull_voting)
+                voteTv.setText(R.string.successful_voting)
                 voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_succ_voting), null, null, null)
             }
             ProjectStatus.FAILED -> {
-                voteTv.setText(R.string.unsuccesfull_voting)
+                voteTv.setText(R.string.unsuccessful_voting)
                 voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_failed), null, null, null)
             }
             ProjectStatus.OPEN -> {
@@ -159,7 +161,7 @@ class ProjectViewHolder(
                     voteTv.text = context.getString(R.string.vote)
                     voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_vote_shape), null, null, null)
                 } else {
-                    voteTv.text = DeciminalFormatter.formatInteger(project.votes)
+                    voteTv.text = numbersFormatter.formatInteger(project.votes)
                     voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_vote_filled), null, null, null)
                 }
             }

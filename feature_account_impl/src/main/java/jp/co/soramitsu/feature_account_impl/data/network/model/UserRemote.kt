@@ -15,5 +15,6 @@ data class UserRemote(
     @SerializedName("status") val status: String,
     @SerializedName("parentId") val parentId: String?,
     @SerializedName("country") val country: String?,
+    @SerializedName("inviteAcceptExpirationMoment") val inviteAcceptExpirationMomentSeconds: Long,
     @SerializedName("userValues") val userValues: UserValuesRemote
 )

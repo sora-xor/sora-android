@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:focusableInTouchMode="true"
-    android:descendantFocusability="blocksDescendants">
+    android:descendantFocusability="blocksDescendants"
+    android:focusableInTouchMode="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/projectView"
@@ -29,13 +29,6 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/projectDetailCenterGuideLine"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    app:layout_constraintGuide_percent="0.5" />
 
                 <ImageView
                     android:id="@+id/projectDetailHeaderImageView"
@@ -94,8 +87,6 @@
                     android:layout_marginEnd="@dimen/x2"
                     android:gravity="end"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@id/projectDetailCenterGuideLine"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView"
                     tools:text="Ended Jan 21, 2019" />
 
@@ -121,13 +112,13 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x2"
-                    android:layout_marginEnd="@dimen/x2"
-                    android:clickable="true"
+                    android:layout_marginEnd="@dimen/x1"
                     android:foreground="?selectableItemBackground"
                     app:cardBackgroundColor="@color/lightRed"
                     app:cardCornerRadius="@dimen/x3"
                     app:cardElevation="0dp"
-                    app:layout_constraintEnd_toEndOf="@id/projectDetailCenterGuideLine"
+                    app:layout_constraintEnd_toStartOf="@id/projectDetailAddToFavouritesButton"
+                    app:layout_constraintHorizontal_weight="3"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/projectDetailVotesProgressBar">
 
@@ -135,8 +126,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
-                        android:layout_marginTop="14dp"
-                        android:layout_marginBottom="13dp"
+                        android:layout_marginTop="@dimen/margin_padding_description"
+                        android:layout_marginBottom="@dimen/margin_padding_description"
                         android:gravity="center"
                         android:orientation="horizontal">
 
@@ -144,17 +135,21 @@
                             android:id="@+id/projectDetailsVoteButtonIcon"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="@dimen/x1" />
+                            android:layout_marginEnd="@dimen/x1"
+                            tools:src="@drawable/icon_vote_shape"
+                            tools:tint="@color/white" />
 
                         <TextView
                             android:id="@+id/projectVoteTv"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:ellipsize="end"
                             android:fontFamily="@font/sora_regular"
-                            android:padding="0dp"
+                            android:maxLines="1"
                             android:textAllCaps="false"
                             android:textColor="@color/white"
-                            android:textSize="12sp" />
+                            android:textSize="14sp"
+                            tools:text="Vote" />
 
                     </LinearLayout>
 
@@ -163,35 +158,36 @@
                 <LinearLayout
                     android:id="@+id/projectDetailAddToFavouritesButton"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="0dp"
                     android:layout_gravity="center"
-                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginStart="@dimen/x1"
                     android:layout_marginEnd="@dimen/x2"
-                    android:clickable="true"
-                    android:foreground="?selectableItemBackground"
+                    android:background="?selectableItemBackground"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:paddingTop="14dp"
-                    android:paddingBottom="13dp"
                     app:layout_constraintBottom_toBottomOf="@+id/projectDetailVoteButton"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/projectDetailCenterGuideLine"
+                    app:layout_constraintHorizontal_weight="2"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailVoteButton"
                     app:layout_constraintTop_toTopOf="@+id/projectDetailVoteButton">
 
                     <ImageView
                         android:id="@+id/favImg"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/x1" />
+                        android:layout_marginEnd="@dimen/x1"
+                        tools:src="@drawable/icon_fav_shape" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:ellipsize="end"
                         android:fontFamily="@font/sora_regular"
+                        android:maxLines="1"
                         android:padding="0dp"
                         android:text="@string/favourite"
                         android:textAppearance="@style/RedTextStyle"
-                        android:textSize="15sp" />
+                        android:textSize="14sp" />
 
                 </LinearLayout>
 
@@ -201,9 +197,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x3"
-                    android:drawableLeft="@drawable/icon_reward"
+                    android:drawableStart="@drawable/icon_reward"
                     android:drawablePadding="@dimen/x1"
-                    android:gravity="left"
                     android:textColor="@color/lightGrey"
                     android:textSize="13sp"
                     app:layout_constraintStart_toStartOf="parent"
@@ -215,7 +210,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="@dimen/x2"
-                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
                     android:background="@color/invitesDividerColor"
                     android:importantForAccessibility="no"
@@ -229,7 +224,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
-                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -238,10 +233,10 @@
 
                 <View
                     android:id="@+id/projectDetailSeparateLineView2"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="1dp"
                     android:layout_marginStart="@dimen/x2"
-                    android:layout_marginTop="@dimen/x2"
+                    android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
                     android:background="@color/invitesDividerColor"
                     android:importantForAccessibility="no"
@@ -250,17 +245,53 @@
                     app:layout_constraintTop_toBottomOf="@id/friendsFavoritesCountText" />
 
                 <TextView
+                    android:id="@+id/discussLinkTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?selectableItemBackground"
+                    android:drawableStart="@drawable/icon_discussion_link"
+                    android:drawablePadding="@dimen/x2"
+                    android:fontFamily="@font/sora_regular"
+                    android:gravity="center_vertical"
+                    android:paddingStart="@dimen/x2"
+                    android:paddingTop="@dimen/margin_padding_by_side"
+                    android:paddingEnd="@dimen/x2"
+                    android:paddingBottom="@dimen/margin_padding_by_side"
+                    android:textColor="@color/green"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView2"
+                    tools:text="Discuss on Reddit"
+                    tools:visibility="visible" />
+
+                <View
+                    android:id="@+id/projectDetailSeparateLineView3"
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x2"
+                    android:background="@color/invitesDividerColor"
+                    android:importantForAccessibility="no"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/discussLinkTextView"
+                    tools:visibility="visible" />
+
+                <TextView
                     android:id="@+id/projectDetailDescriptionTextView"
                     style="@style/LightBlackTextStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
-                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
                     android:autoLink="web"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView2"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView3"
                     tools:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit,Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.  " />
 
                 <TextView
@@ -278,7 +309,7 @@
                     app:layout_constraintTop_toBottomOf="@id/projectDetailDescriptionTextView" />
 
                 <View
-                    android:id="@+id/projectDetailSeparateLineView3"
+                    android:id="@+id/projectDetailSeparateLineView4"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="@dimen/x2"
@@ -296,11 +327,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
-                    android:layout_marginTop="@dimen/x3"
+                    android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
                     android:text="@string/gallery"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView3" />
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView4" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/projectDetailGalleryRecyclerView"
@@ -326,13 +357,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailGalleryRecyclerView" />
 
-                <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/projectDetailLeftGuideLine"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    app:layout_constraintGuide_percent="0.3" />
-
                 <TextView
                     android:id="@+id/projectDetailWebsiteTitleTextView"
                     style="@style/LightBlackTextStyle"
@@ -340,9 +364,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x4"
-                    android:layout_marginEnd="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x1"
                     android:text="@string/website"
-                    app:layout_constraintEnd_toStartOf="@id/projectDetailLeftGuideLine"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailContactsTextView" />
 
@@ -351,22 +374,20 @@
                     style="@style/RedTextStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginStart="@dimen/x1"
                     android:layout_marginTop="@dimen/x4"
                     android:layout_marginEnd="@dimen/x2"
-                    android:clickable="true"
                     android:gravity="end"
                     android:linksClickable="true"
                     android:singleLine="true"
                     android:textColorLink="@color/lightRed"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@id/projectDetailLeftGuideLine"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailWebsiteTitleTextView"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailContactsTextView"
                     tools:text="www.vincero.com/media.sdda" />
 
                 <View
-                    android:id="@+id/projectDetailSeparateLineView4"
+                    android:id="@+id/projectDetailSeparateLineView5"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="@dimen/x2"
@@ -385,29 +406,27 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x2"
-                    android:layout_marginEnd="@dimen/x2"
+                    android:layout_marginEnd="@dimen/x1"
                     android:layout_marginBottom="@dimen/x2"
                     android:text="@string/email"
-                    app:layout_constraintEnd_toStartOf="@id/projectDetailLeftGuideLine"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView4" />
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView5" />
 
                 <TextView
                     android:id="@+id/emailTv"
                     style="@style/RedTextStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
+                    android:layout_marginStart="@dimen/x1"
                     android:layout_marginTop="@dimen/x2"
                     android:layout_marginEnd="@dimen/x2"
-                    android:clickable="true"
                     android:gravity="end"
                     android:singleLine="true"
                     android:textColorLink="@color/lightRed"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@id/projectDetailLeftGuideLine"
-                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView4"
+                    app:layout_constraintStart_toEndOf="@id/projectDetailEmailTitleTextView"
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView5"
                     tools:text="info@vincero.com" />
 
                 <View

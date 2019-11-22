@@ -24,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.core_ui.presentation.list.BaseListAdapter
@@ -45,6 +46,7 @@ import kotlinx.android.synthetic.main.fragment_wallet.howItWorksCard
 import kotlinx.android.synthetic.main.fragment_wallet.pageContainer
 import kotlinx.android.synthetic.main.fragment_wallet.recent_events
 import kotlinx.android.synthetic.main.fragment_wallet.swipeLayout
+import javax.inject.Inject
 
 @SuppressLint("CheckResult")
 class WalletFragment : BaseFragment<WalletViewModel>() {
@@ -63,6 +65,8 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
     private lateinit var sectionAdapter: BaseListAdapter
 
     private var bottomSheetExpanded = false
+
+    @Inject lateinit var numbersFormatter: NumbersFormatter
 
     private val itemListener: (EventItem) -> Unit = {
         viewModel.eventClicked(it)
@@ -114,7 +118,7 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
         (activity as MainActivity).showBottomView()
 
         accountInformationCardCurrencyTextView.text = Const.SORA_SYMBOL
-        accountInformationCardBodyTextView.text = getString(R.string.sora_account)
+        accountInformationCardBodyTextView.text = getString(R.string.xor)
         accountInformationCardHeaderTextView.text = ""
         accountInformationCardRightBodyTextView.gone()
 
@@ -173,7 +177,7 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
                 section.state = Section.State.EMPTY
                 bottomSheetBehavior.isDraggable = false
             } else {
-                for (item in EventsConverter.fromTransactionVmToCard(transactions, context!!)) {
+                for (item in EventsConverter.fromTransactionVmToCard(transactions, context!!, numbersFormatter)) {
                     val section = EventSection(sectionAdapter.getAsyncDiffer(EventItem.diffCallback) as AsyncListDiffer<EventItem>)
                     section.addHeaderItem(EventHeader(item.key))
                     section.submitContentItems(item.value, itemListener)

@@ -58,7 +58,7 @@ class TutorialViewModel(
         )
     }
 
-    internal fun showTermsScreen() {
+    fun showTermsScreen() {
         router.showTermsScreen()
     }
 

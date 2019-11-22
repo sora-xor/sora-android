@@ -9,15 +9,19 @@ import io.reactivex.Completable
 import io.reactivex.Single
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.Country
+import jp.co.soramitsu.feature_account_api.domain.model.DeviceFingerPrint
 import jp.co.soramitsu.feature_account_api.domain.model.Invitations
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
@@ -29,10 +33,10 @@ import jp.co.soramitsu.feature_account_impl.data.mappers.mapAnnoucementRemoteToA
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapAnnouncementLocalToAnnouncement
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapAnnouncementToAnnouncementLocal
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapCountryDtoToCounty
+import jp.co.soramitsu.feature_account_impl.data.mappers.mapDeviceFingerPrintToFingerPrintRemote
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapInvitedDtoToInvitedUser
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapReputationRemoteToReputation
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapUserRemoteToUser
-import jp.co.soramitsu.feature_account_impl.data.mappers.mapUserValuesRemoteToUserValues
 import jp.co.soramitsu.feature_account_impl.data.network.AccountNetworkApi
 import jp.co.soramitsu.feature_account_impl.data.network.ActivityFeedNetworkApi
 import jp.co.soramitsu.feature_account_impl.data.network.NotificationNetworkApi
@@ -42,8 +46,8 @@ import jp.co.soramitsu.feature_account_impl.data.network.request.RegistrationReq
 import jp.co.soramitsu.feature_account_impl.data.network.request.SaveUserDataRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.TokenChangeRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.VerifyCodeRequest
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import javax.inject.Named
 
 class UserRepositoryImpl @Inject constructor(
     private val userDatasource: UserDatasource,
@@ -53,8 +57,8 @@ class UserRepositoryImpl @Inject constructor(
     private val appVersionProvider: AppVersionProvider,
     private val activityGsonConverter: ActivityGsonConverter,
     private val db: AppDatabase,
-    @Named("DEFAULT_MARKET_URL") private val defaultMarketUrl: String,
-    @Named("INVITE_LINK_URL") private val inviteLinkUrl: String
+    private val appLinksProvider: AppLinksProvider,
+    private val deviceParamsProvider: DeviceParamsProvider
 ) : UserRepository {
 
     override fun getAppVersion(): Single<String> {
@@ -137,25 +141,8 @@ class UserRepositoryImpl @Inject constructor(
 
     private fun getUserRemote(): Single<User> {
         return accountNetworkApi.getUser()
-            .doOnSuccess {
-                userDatasource.saveUser(mapUserRemoteToUser(it.user))
-                userDatasource.saveUserValues(mapUserValuesRemoteToUserValues(it.user.userValues))
-            }
             .map { mapUserRemoteToUser(it.user) }
-    }
-
-    override fun getUserValues(updateCached: Boolean): Single<Int> {
-        return if (updateCached) {
-            getUserValuesRemote()
-        } else {
-            Single.just(userDatasource.retrieveUserValues().invitations)
-        }
-    }
-
-    private fun getUserValuesRemote(): Single<Int> {
-        return accountNetworkApi.getUserValues()
-            .doOnSuccess { userDatasource.saveUserValues(mapUserValuesRemoteToUserValues(it.userValues)) }
-            .map { it.userValues.invitations }
+            .doOnSuccess { userDatasource.saveUser(it) }
     }
 
     override fun getInvitationLink(): Single<String> {
@@ -163,7 +150,7 @@ class UserRepositoryImpl @Inject constructor(
             .map { it.invitationCode }
             .flatMap { inviteCode ->
                 accountNetworkApi.sendCodeIsSent(inviteCode)
-                    .map { inviteLinkUrl + inviteCode }
+                    .map { appLinksProvider.inviteUrl + inviteCode }
             }
     }
 
@@ -291,7 +278,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override fun checkAppVersion(): Single<AppVersion> {
         return accountNetworkApi.checkVersionSupported(appVersionProvider.getVersionName())
-            .map { AppVersion(it.result, it.url ?: defaultMarketUrl) }
+            .map { AppVersion(it.result, it.url ?: appLinksProvider.defaultMarketUrl) }
     }
 
     override fun getAnnouncements(updateCached: Boolean): Single<List<ActivityFeedAnnouncement>> {
@@ -318,5 +305,36 @@ class UserRepositoryImpl @Inject constructor(
 
     override fun getParentInviteCode(): Single<String> {
         return Single.just(userDatasource.getParentInviteCode())
+    }
+
+    override fun checkInviteCodeAvailable(): Completable {
+        val offsetInHours = TimeUnit.HOURS.convert(deviceParamsProvider.timezone.rawOffset.toLong(), TimeUnit.MILLISECONDS)
+        val deviceFingerPrint = DeviceFingerPrint(deviceParamsProvider.model, deviceParamsProvider.osVersion, deviceParamsProvider.screenWidth, deviceParamsProvider.screenHeight,
+            deviceParamsProvider.language, deviceParamsProvider.country, offsetInHours.toInt())
+        return accountNetworkApi.checkInviteCodeAvailable(mapDeviceFingerPrintToFingerPrintRemote(deviceFingerPrint))
+            .map { it.invitationCode }
+            .onErrorResumeNext {
+                if (it is SoraException && SoraException.Kind.BUSINESS == it.kind) {
+                    if (ResponseCode.AMBIGUOUS_RESULT == it.errorResponseCode || ResponseCode.INVITATION_CODE_NOT_FOUND == it.errorResponseCode) {
+                        Single.just("")
+                    } else {
+                        Single.error(it)
+                    }
+                } else {
+                    Single.error(it)
+                }
+            }
+            .doOnSuccess { if (it.isNotEmpty()) userDatasource.saveParentInviteCode(it) }
+            .ignoreElement()
+    }
+
+    override fun enterInviteCode(inviteCode: String): Completable {
+        return accountNetworkApi.addInvitationCode(inviteCode)
+            .ignoreElement()
+    }
+
+    override fun applyInvitationCode(): Completable {
+        return getParentInviteCode()
+            .flatMapCompletable { enterInviteCode(it) }
     }
 }

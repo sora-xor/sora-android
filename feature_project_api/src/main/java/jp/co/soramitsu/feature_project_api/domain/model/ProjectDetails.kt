@@ -29,7 +29,8 @@ data class ProjectDetails(
     val isUnwatched: Boolean,
     val gallery: List<GalleryItem>,
     val status: ProjectStatus,
-    val statusUpdateTime: Date
+    val statusUpdateTime: Date,
+    val discussionLink: DiscussionLink?
 ) : BaseObservable() {
 
     fun getFundingPercent(): Int {

@@ -12,45 +12,38 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <jp.co.soramitsu.feature_main_impl.presentation.pincode.custom.IndicatorDots
-        android:id="@+id/indicator_dots"
+    <jp.co.soramitsu.feature_main_impl.presentation.pincode.DotsProgressView
+        android:id="@+id/dotsProgressView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginStart="@dimen/x1"
-        android:layout_marginTop="@dimen/x2"
+        android:layout_marginTop="@dimen/x2_5"
         android:layout_marginEnd="@dimen/x1"
         android:gravity="center_horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pin_code_title" />
+        app:layout_constraintTop_toBottomOf="@+id/pinCodeTitleTv" />
 
-    <jp.co.soramitsu.feature_main_impl.presentation.pincode.custom.PinLockView
-        android:id="@+id/pin_lock_view"
+    <jp.co.soramitsu.feature_main_impl.presentation.pincode.PinCodeView
+        android:id="@+id/pinCodeView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="36dp"
         android:padding="@dimen/x1"
-        app:keypadButtonSize="@dimen/x8"
-        app:keypadDeleteButtonColor="@color/lightRed"
-        app:keypadDeleteButtonPressedColor="@color/greyBlue"
-        app:keypadHorizontalSpacing="@dimen/x1"
-        app:keypadTextColor="@color/darkGreyBlue"
-        app:keypadTextSize="27sp"
-        app:keypadVerticalSpacing="@dimen/x1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/indicator_dots" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/pin_code_title"
+        android:id="@+id/pinCodeTitleTv"
         style="@style/PinCodeTitleStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x1"
         android:layout_marginEnd="@dimen/x1"
         android:text="@string/pincode_title"
-        app:layout_constraintBottom_toTopOf="@id/pin_lock_view"
+        app:layout_constraintBottom_toTopOf="@id/pinCodeView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar"

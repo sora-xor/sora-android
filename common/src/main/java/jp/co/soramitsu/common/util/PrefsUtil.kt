@@ -60,6 +60,14 @@ class PrefsUtil @Inject constructor(
         preferences.edit().putInt(field, value).apply()
     }
 
+    fun getLong(field: String, defaultValue: Long): Long {
+        return preferences.getLong(field, defaultValue)
+    }
+
+    fun putLong(field: String, value: Long) {
+        preferences.edit().putLong(field, value).apply()
+    }
+
     fun getFloat(field: String, defaultValue: Float): Float {
         return preferences.getFloat(field, defaultValue)
     }

@@ -21,6 +21,7 @@ import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.account_information_list.list.models.Card
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.argument
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -42,6 +43,7 @@ import jp.co.soramitsu.transaction_details.list.model.InformationFooter
 import kotlinx.android.synthetic.main.fragment_transaction_details.toolbar
 import kotlinx.android.synthetic.main.fragment_transaction_details.sidedButtonLayout
 import java.util.Date
+import javax.inject.Inject
 
 @SuppressLint("CheckResult")
 class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
@@ -110,6 +112,8 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
     private lateinit var description: String
     private var fee: Double = 0.0
     private var isFromList: Boolean = false
+
+    @Inject lateinit var numbersFormatter: NumbersFormatter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_transaction_details, container, false)
@@ -237,7 +241,7 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
             section.addFooterItem(InformationFooter(getString(R.string.description), transaction.description))
         }
 
-        section.submitContentItems(mapTransactionToInformationItemList(transaction, activity!!))
+        section.submitContentItems(mapTransactionToInformationItemList(transaction, activity!!, numbersFormatter))
         section.onExpandCollapseClicked()
         sectionAdapter.addSection("Information", section as Section<Nothing, Nothing, Nothing>)
 

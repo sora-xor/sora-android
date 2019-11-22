@@ -7,9 +7,13 @@ package jp.co.soramitsu.feature_main_impl.di
 
 import android.content.Context
 import jp.co.soramitsu.common.domain.HealthChecker
+import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.QrCodeDecoder
+import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationRepository
@@ -37,4 +41,12 @@ interface MainFeatureDependencies {
     fun pushHandler(): PushHandler
 
     fun healthChecker(): HealthChecker
+
+    fun qrCodeGenerator(): QrCodeGenerator
+
+    fun qrCodeDecoder(): QrCodeDecoder
+
+    fun deviceParamsProvider(): DeviceParamsProvider
+
+    fun invitationHandler(): InvitationHandler
 }

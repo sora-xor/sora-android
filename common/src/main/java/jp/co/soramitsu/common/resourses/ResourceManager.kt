@@ -10,4 +10,6 @@ import androidx.annotation.StringRes
 interface ResourceManager {
 
     fun getString(@StringRes resource: Int): String
+
+    fun getColor(res: Int): Int
 }
