@@ -28,6 +28,6 @@ fun mapUserRemoteToUser(userRemote: UserRemote): User {
 
 fun mapUserValuesRemoteToUserValues(userValuesDto: UserValuesRemote): UserValues {
     return with(userValuesDto) {
-        UserValues(invitations, tokens, userId)
+        UserValues(invitationCode, userId)
     }
 }

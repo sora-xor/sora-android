@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Languages -->
+    <string name="common_russian">Rusa</string>
+    <string name="common_english">Inglés</string>
+    <string name="common_spanish">Español</string>
+    <string name="common_bashkir">Bashkir</string>
+
+    <!-- Other common stuff -->
+    <string name="common_select_email_app_title">Seleccionar aplicación de correo electrónico</string>
+    <string name="common_sora_support_email">sora@soramitsu.co.jp</string>
+    <string name="common_network_unavailable">Conexión de red no disponible</string>
+    <string name="common_xor">XOR</string>
+    <string name="common_privacy_title">Política de privacidad</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_apply">Aplicar</string>
+    <string name="common_ok">Ok</string>
+    <string name="common_next">Siguiente</string>
+    <string name="common_and">y</string>
+    <string name="common_send">Enviar</string>
+    <string name="common_vote">Vota</string>
+    <string name="common_today">Hoy</string>
+    <string name="common_yesterday">Ayer</string>
+    <string name="common_try_another">Prueba otro</string>
+    <string name="common_skip">Omitir</string>
+    <string name="common_search">Buscar</string>
+    <string name="common_please_wait">Por favor espere</string>
+    <string name="common_verifying_auth">Verificando autorización…</string>
+    <string name="common_question_mark">\?</string>
+
+    <!-- Error -->
+    <string name="common_error_general_title">Error</string>
+    <string name="common_error_not_found_title">Recurso no disponible</string>
+    <string name="common_error_internal_error_title">Error interno</string>
+    <string name="common_error_phone_already_exists">Lo sentimos, este número de teléfono ya está en uso. Por favor, intente con otro.</string>
+    <string name="common_personal_info_first_name_hint">Primer nombre</string>
+    <string name="common_personal_info_last_name_hint">Apellido</string>
+    <string name="common_error_invitation_already_accepted">Ya has aplicado a otro código de invitación</string>
+    <string name="common_error_inviter_registered_after_invitee">El código de invitación proporcionado no se puede aplicar porque es del usuario que se registró después de usted</string>
+    <string name="common_error_self_invitation">No puedes usar tu código de invitación para ti mismo</string>
+    <string name="common_error_not_enough_invitations">Lo sentimos, pero no tienes invitaciones para compartir</string>
+    <string name="common_error_network">Por favor, verifique la conexión a Internet e intente nuevamente más tarde.</string>
+    <string name="common_error_general_message">Estamos trabajando para solucionar el problema. Por favor, inténtelo de nuevo más tarde.</string>
+    <string name="common_error_user_not_found">Tus palabras semillas son invalidas. Por favor intente otras</string>
+    <string name="common_error_invitation_code_not_found">El código de invitación no es válido.</string>
+    <string name="common_error_ambiguous_result">Resultados ambiguos</string>
+    <string name="common_error_invitation_accepting_window_closed">Ventana de aceptación de invitación cerrada</string>
+    <string name="common_error_mnemonic_length_error">Las palabras semillas deben ser 15 palabras</string>
+    <string name="common_error_mnemonic_is_not_valid">Tus palabras semillas son invalidas, Por favor, intenta otras</string>
+    <string name="common_error_search_string_error">El tamaño de búsqueda debe estar entre 3 y 64</string>
+    <string name="common_error_qr_decode_error">El Qr no puede ser decodificado</string>
+    <string name="common_error_invalid_query_format">Tu consulta es incorrecta. Inténtalo de nuevo.</string>
+    <string name="common_error_qr_user_not_found">Usuario con dicho QR no encontrado</string>
+    <string name="common_error_phone_already_registered">Número de teléfono ya utilizado durante el registro con este u otro usuario</string>
+    <string name="common_error_fee_rate_not_available">No se puede contactar al proveedor de retiros. Por favor, inténtelo de nuevo más tarde.</string>
+    <string name="common_error_sending_to_myself">No puedes enviarte XOR a ti mismo</string>
+    <string name="common_error_invalid_parameters">Parámetros inválidos</string>
+    <string name="common_error_invalid_parameters_body">Por favor, verifique la conexión a Internet e intente nuevamente más tarde.</string>
+    <string name="common_error_unauthorized_title">Autorización fallida</string>
+    <string name="common_error_unauthorized_body">Por favor, verifique la conexión a Internet e intente nuevamente más tarde.</string>
+    <string name="common_error_pincode_check_error">Codigo ingresado es incorrecto</string>
+    <string name="common_error_votes_not_enough">Lo sentimos, pero no tienes suficientes puntos para votar</string>
+    <string name="common_error_voting_is_not_allowed">Lo sentimos, pero el proyecto ya no puede recibir votos.</string>
+    <string name="common_error_votes_invalid_format">Lo sentimos, pero tu cantidad de votos no se puede interpretar. Por favor, intente votar de nuevo.</string>
+    <string name="common_error_project_not_found">Lo sentimos, pero el proyecto no se encuentra.</string>
+    <string name="common_error_wrong_user_status">No se puede continuar la operación porque el estado del usuario no es válido</string>
+    <string name="common_error_user_values_not_found">No se puede continuar la operación porque no se encuentran los datos de valores de usuario</string>
+    <string name="common_sms_code_expired">El código de verificación ha expirado. Por favor intente con otro.</string>
+    <string name="common_sms_code_not_correct">El código de verificación es incorrecto</string>
+    <string name="phone_verification_too_frequent_message">Solicitudes de código de verificación demasiado frecuentes. Por favor, inténtelo de nuevo más tarde.</string>
+
+    <!-- Terms -->
+    <string name="common_terms_title">Términos y Condiciones</string>
+
+    <!-- Personal info -->
+    <string name="common_personal_info_title">Informacion personal</string>
+    <string name="common_personal_info_last_name_is_empty">El apellido está vacío</string>
+    <string name="common_personal_info_first_name_is_empty">El nombre esta vacio</string>
+    <string name="common_personal_info_first_name_hyphen_error">El nombre no puede comenzar o terminar en guión o tener doble guión</string>
+    <string name="common_personal_info_last_name_hyphen_error">El apellido no puede comenzar o terminar en guión o tener doble guión</string>
+
+    <!-- Passphrase -->
+    <string name="common_passphrase_title">Palabras semillas</string>
+    <string name="common_passphrase_save_or_send">Guardar o enviar</string>
+    <string name="common_passphrase_save_mnemonic_title">Guarda o envia tus palabras semillas</string>
+    <string name="common_passphrase_header">Las palabras semillas son un tipo de clave</string>
+    <string name="common_passphrase_body">Se utilizan para recuperar el acceso a la cuenta. Escribelas, no podremos recuperar tu cuenta sin ellas!</string>
+    <string name="common_passphrase_your_passphrase">Tus palabras semillas</string>
+
+    <!-- Unsupported version -->
+    <string name="common_unsupported_version_title">Actualiza tu aplicación Sora</string>
+    <string name="common_unsupported_version_body">La aplicación Sora actualizada está disponible en Google Play. Incluye mejoras y correcciones de errores.</string>
+    <string name="common_unsupported_version_open_google_play">Abrir Google Play</string>
+
+    <string name="activity_user_registered_type">Amigo registrado</string>
+    <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_registered_description">Tu reputación aumentará!</string>
+    <string name="activity_voting_rights_credited_type_template">Distribución de votos</string>
+    <string name="activity_voting_rights_title_template">Votos diarios</string>
+    <string name="activity_invitation_credited_type_template">Invitaciones distribuidas</string>
+    <string name="activity_invitation_credited_title_template">Invitaciones acreditadas</string>
+    <string name="activity_project_funded_type_template">Proyecto ha sido completado!</string>
+    <string name="activity_project_funded_title_template">%s</string>
+    <string name="activity_project_funded_description_template">Recibirá información sobre la recompensa XOR pronto</string>
+    <string name="activity_project_created_type_template">Nuevo proyecto!</string>
+    <string name="activity_project_created_title_template">%s</string>
+    <string name="activity_project_created_description_template">%s</string>
+    <string name="activity_project_closed_title_template">%s</string>
+    <string name="activity_xor_reward_credited_from_project_type_template">Recompensa XOR por votar</string>
+    <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_rank_changed_type_template">Rango cambiado</string>
+    <string name="activity_project">Proyecto</string>
+    <string name="activity_user">Usuario</string>
+    <string name="activity_xor_between_users_transferred_type_template">XOR recibido</string>
+    <string name="activity_user_rank_changed_title_template" formatted="false">Tu rango ahora es %s de %s</string>
+    <string name="activity_project_closed_type_template">Proyecto a alcanzado la fecha límite!</string>
+    <string name="activity_voted_friend_added_type_template">Un amigo votó por el proyecto!</string>
+    <string name="activity_voted_friend_added_description_template" formatted="false">%s ha gastado %s votos para el  %s proyecto</string>
+</resources>

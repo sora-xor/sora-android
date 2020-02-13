@@ -12,6 +12,7 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.AddInvitationCase
@@ -19,7 +20,6 @@ import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationRepository
-import jp.co.soramitsu.feature_information_api.domain.model.Currency
 import jp.co.soramitsu.feature_information_api.domain.model.InformationContainer
 import jp.co.soramitsu.feature_project_api.domain.interfaces.ProjectRepository
 import jp.co.soramitsu.feature_project_api.domain.model.Project
@@ -73,32 +73,48 @@ class MainInteractor @Inject constructor(
         return projectRepository.getAllProjects()
     }
 
-    fun updateAllProjects(): Completable {
-        return projectRepository.updateAllProjects()
+    fun updateAllProjects(pageSize: Int): Single<Int> {
+        return projectRepository.fetchRemoteAllProjects(true, pageSize, 0)
+    }
+
+    fun loadMoreAllProjects(pageSize: Int, offset: Int): Single<Int> {
+        return projectRepository.fetchRemoteAllProjects(false, pageSize, offset)
     }
 
     fun getVotedProjects(): Observable<List<Project>> {
         return projectRepository.getVotedProjects()
     }
 
-    fun updateVotedProjects(): Completable {
-        return projectRepository.updateVotedProjects()
+    fun updateVotedProjects(pageSize: Int): Single<Int> {
+        return projectRepository.fetchRemoteVotedProjects(true, pageSize, 0)
+    }
+
+    fun loadMoreVotedProjects(pageSize: Int, offset: Int): Single<Int> {
+        return projectRepository.fetchRemoteVotedProjects(false, pageSize, offset)
     }
 
     fun getFavoriteProjects(): Observable<List<Project>> {
         return projectRepository.getFavoriteProjects()
     }
 
-    fun updateFavoriteProjects(): Completable {
-        return projectRepository.updateFavoriteProjects()
+    fun updateFavoriteProjects(pageSize: Int): Single<Int> {
+        return projectRepository.fetchRemoteFavoriteProjects(true, pageSize, 0)
+    }
+
+    fun loadMoreFavoriteProjects(pageSize: Int, offset: Int): Single<Int> {
+        return projectRepository.fetchRemoteFavoriteProjects(false, pageSize, offset)
     }
 
     fun getCompletedProjects(): Observable<List<Project>> {
         return projectRepository.getFinishedProjects()
     }
 
-    fun updateCompletedProjects(): Completable {
-        return projectRepository.updateFinishedProjects()
+    fun updateCompletedProjects(pageSize: Int): Single<Int> {
+        return projectRepository.fetchRemoteFinishedProjects(true, pageSize, 0)
+    }
+
+    fun loadMoreCompletedProjects(pageSize: Int, offset: Int): Single<Int> {
+        return projectRepository.fetchRemoteFinishedProjects(false, pageSize, offset)
     }
 
     fun voteForProject(projectId: String, voteNum: Long): Completable {
@@ -125,24 +141,8 @@ class MainInteractor @Inject constructor(
         return userRepository.saveUserInfo(firstName, lastName)
     }
 
-    fun getHelpContent(updateCached: Boolean): Single<List<InformationContainer>> {
-        return informationRepository.getHelpContent(updateCached)
-    }
-
     fun getReputationContent(updateCached: Boolean): Single<List<InformationContainer>> {
         return informationRepository.getReputationContent(updateCached)
-    }
-
-    fun getCurrencies(updateCached: Boolean): Single<List<Currency>> {
-        return informationRepository.getCurrencies(updateCached)
-    }
-
-    fun getCurrencySelected(): Single<Currency> {
-        return informationRepository.getSelectedCurrency()
-    }
-
-    fun setCurrencySelected(currency: Currency): Completable {
-        return informationRepository.saveSelectedCurrency(currency)
     }
 
     fun getVotesHistory(updateCached: Boolean, historyOffset: Int, votesPerPage: Int): Single<List<VotesHistory>> {
@@ -190,5 +190,19 @@ class MainInteractor @Inject constructor(
     fun getInviteCode(): Single<String> {
         return userRepository.getParentInviteCode()
             .subscribeOn(Schedulers.io())
+    }
+
+    fun getAvailableLanguagesWithSelected(): Single<Pair<List<Language>, String>> {
+        return userRepository.getAvailableLanguages()
+            .subscribeOn(Schedulers.io())
+    }
+
+    fun changeLanguage(language: String): Single<String> {
+        return userRepository.changeLanguage(language)
+            .subscribeOn(Schedulers.io())
+    }
+
+    fun getSelectedLanguage(): Single<Language> {
+        return userRepository.getSelectedLanguage()
     }
 }

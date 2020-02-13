@@ -8,8 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.main.di
 import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
-import jp.co.soramitsu.common.di.app.ScreenScope
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
+import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.AllProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.CompletedProjectsFragment
@@ -29,9 +28,6 @@ interface ProjectsComponent {
 
         @BindsInstance
         fun withFragment(fragment: Fragment): Builder
-
-        @BindsInstance
-        fun withRouter(router: MainRouter): Builder
 
         fun build(): ProjectsComponent
     }

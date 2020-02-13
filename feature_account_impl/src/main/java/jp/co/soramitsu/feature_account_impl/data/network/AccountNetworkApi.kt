@@ -15,7 +15,6 @@ import jp.co.soramitsu.feature_account_impl.data.network.request.VerifyCodeReque
 import jp.co.soramitsu.feature_account_impl.data.network.response.CheckInviteCodeAvailableResponse
 import jp.co.soramitsu.feature_account_impl.data.network.response.CheckVersionSupportResponse
 import jp.co.soramitsu.feature_account_impl.data.network.response.GetCountriesResponse
-import jp.co.soramitsu.feature_account_impl.data.network.response.GetInvitationResponse
 import jp.co.soramitsu.feature_account_impl.data.network.response.GetReputationResponse
 import jp.co.soramitsu.feature_account_impl.data.network.response.GetUserResponse
 import jp.co.soramitsu.feature_account_impl.data.network.response.InvitedUsersResponse
@@ -30,9 +29,6 @@ import retrofit2.http.Query
 
 interface AccountNetworkApi {
 
-    @GET("/account/v1/invitation")
-    fun getInvitationCode(): Single<GetInvitationResponse>
-
     @GET("/account/v1/user/invited")
     fun getInvitedUsers(): Single<InvitedUsersResponse>
 
@@ -44,9 +40,6 @@ interface AccountNetworkApi {
 
     @GET("/information/v1/information/country")
     fun getAllCountries(): Single<GetCountriesResponse>
-
-    @PUT("/account/v1/invitation/is_sent/{invitationCode}")
-    fun sendCodeIsSent(@Path("invitationCode") invitationCode: String): Single<BaseResponse>
 
     @POST("/account/v1/user/register")
     fun register(@Body registrationRequest: RegistrationRequest): Single<BaseResponse>

@@ -2,8 +2,6 @@ apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
 dependencies {
-    implementation kotlinDeps.values()
-    implementation gsonDeps.values()
-
-    implementation javaXInject.values()
+    implementation kotlinDep
+    implementation gsonDep
 }

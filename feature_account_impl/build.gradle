@@ -33,19 +33,28 @@ dependencies {
     implementation project(":feature_account_api")
     implementation project(":core_db")
 
-    implementation androidDeps.v4
+    implementation kotlinDep
 
-    implementation kotlinDeps.values()
+    implementation gsonDep
 
-    implementation gsonDeps.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation roomDep
+    implementation rxRoomDep
+    kapt roomKapt
 
-    implementation roomDependencies.values()
-    kapt kaptRoomDependencies.values()
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
 
-    implementation networkDeps.values()
+    implementation rxDep
 
-    implementation rxDeps.values()
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
+    testImplementation project(":test_shared")
 }

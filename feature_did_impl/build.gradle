@@ -31,15 +31,25 @@ dependencies {
     implementation project(':core_network_api')
     implementation project(":feature_did_api")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation networkDeps.values()
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
 
-    implementation soraDeps.values()
-    implementation birtDeps.values()
-    
-    implementation rxDeps.values()
+    implementation soraDep
+    implementation birtDep
+
+    implementation rxDep
+
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
+    testImplementation project(":test_shared")
 }

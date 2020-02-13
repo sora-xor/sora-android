@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.core_network_impl.di
 
-import android.content.Context
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.domain.HealthChecker
@@ -15,7 +14,6 @@ import jp.co.soramitsu.core_network_api.data.auth.AuthHolder
 import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 import jp.co.soramitsu.core_network_impl.BuildConfig
 import jp.co.soramitsu.core_network_impl.NetworkApiCreatorImpl
-import jp.co.soramitsu.core_network_impl.R
 import jp.co.soramitsu.core_network_impl.data.SoraCallAdapterFactory
 import jp.co.soramitsu.core_network_impl.data.auth.AuthHolderImpl
 import jp.co.soramitsu.core_network_impl.data.auth.DAuthRequestInterceptor
@@ -112,14 +110,8 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    fun provideSoraCallAdapter(networkErrorMessage: String, healthChecker: HealthChecker, resourceManager: ResourceManager): SoraCallAdapterFactory {
-        return SoraCallAdapterFactory(networkErrorMessage, healthChecker, resourceManager)
-    }
-
-    @Singleton
-    @Provides
-    fun provideErrorMessage(context: Context): String {
-        return context.getString(R.string.network_error)
+    fun provideSoraCallAdapter(healthChecker: HealthChecker, resourceManager: ResourceManager): SoraCallAdapterFactory {
+        return SoraCallAdapterFactory(healthChecker, resourceManager)
     }
 
     @Singleton

@@ -12,7 +12,7 @@ import androidx.appcompat.widget.Toolbar
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import kotlinx.android.synthetic.main.tool_bar.view.backImg
+import kotlinx.android.synthetic.main.tool_bar.view.homeImg
 import kotlinx.android.synthetic.main.tool_bar.view.shareImg
 import kotlinx.android.synthetic.main.tool_bar.view.titleTv
 import kotlinx.android.synthetic.main.tool_bar.view.votesTv
@@ -28,7 +28,7 @@ class SoraToolbar @JvmOverloads constructor(
     }
 
     fun setHomeButtonListener(listener: (View) -> Unit) {
-        backImg.setOnClickListener(listener)
+        homeImg.setOnClickListener(listener)
     }
 
     fun setShareButtonListener(listener: (View) -> Unit) {
@@ -52,11 +52,11 @@ class SoraToolbar @JvmOverloads constructor(
     }
 
     fun showHomeButton() {
-        backImg.show()
+        homeImg.show()
     }
 
     fun hideHomeButton() {
-        backImg.gone()
+        homeImg.gone()
     }
 
     fun showShareButton() {

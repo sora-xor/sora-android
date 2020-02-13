@@ -8,7 +8,7 @@ package jp.co.soramitsu.sora.splash.di
 import androidx.appcompat.app.AppCompatActivity
 import dagger.BindsInstance
 import dagger.Subcomponent
-import jp.co.soramitsu.common.di.app.ScreenScope
+import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
 import jp.co.soramitsu.sora.splash.presentation.SplashActivity
 

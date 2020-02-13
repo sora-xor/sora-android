@@ -5,17 +5,18 @@
 
 package jp.co.soramitsu.feature_information_impl.data.repository.datasource
 
-import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
-import jp.co.soramitsu.common.util.PrefsUtil
+import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationDatasource
 import jp.co.soramitsu.feature_information_api.domain.model.Currency
 import jp.co.soramitsu.feature_information_api.domain.model.InformationContainer
 import javax.inject.Inject
 
 class PrefsInformationDatasource @Inject constructor(
-    private val prefsUtl: PrefsUtil
+    private val preferences: Preferences,
+    private val serializer: Serializer
 ) : InformationDatasource {
 
     companion object {
@@ -25,20 +26,18 @@ class PrefsInformationDatasource @Inject constructor(
         private const val PREFS_REPUTATION = "reputation_content"
     }
 
-    private val gson = Gson()
-
     override fun saveInformationContent(content: List<InformationContainer>) {
-        prefsUtl.putString(PREFS_INFORMATION, gson.toJson(content))
+        preferences.putString(PREFS_INFORMATION, serializer.serialize(content))
     }
 
     override fun retrieveInformationContent(): List<InformationContainer>? {
-        val informationJson = prefsUtl.getString(PREFS_INFORMATION)
+        val informationJson = preferences.getString(PREFS_INFORMATION)
 
         return if (informationJson.isEmpty()) {
             null
         } else {
             try {
-                gson.fromJson<List<InformationContainer>>(informationJson, object : TypeToken<List<InformationContainer>>() {}.type)
+                serializer.deserialize<List<InformationContainer>>(informationJson, object : TypeToken<List<InformationContainer>>() {}.type)
             } catch (e: JsonSyntaxException) {
                 null
             }
@@ -46,17 +45,17 @@ class PrefsInformationDatasource @Inject constructor(
     }
 
     override fun saveReputation(content: List<InformationContainer>) {
-        prefsUtl.putString(PREFS_REPUTATION, gson.toJson(content))
+        preferences.putString(PREFS_REPUTATION, serializer.serialize(content))
     }
 
     override fun retrieveReputation(): List<InformationContainer>? {
-        val informationJson = prefsUtl.getString(PREFS_REPUTATION)
+        val informationJson = preferences.getString(PREFS_REPUTATION)
 
         return if (informationJson.isEmpty()) {
             null
         } else {
             try {
-                gson.fromJson<List<InformationContainer>>(informationJson, object : TypeToken<List<InformationContainer>>() {}.type)
+                serializer.deserialize<List<InformationContainer>>(informationJson, object : TypeToken<List<InformationContainer>>() {}.type)
             } catch (e: JsonSyntaxException) {
                 null
             }
@@ -64,31 +63,31 @@ class PrefsInformationDatasource @Inject constructor(
     }
 
     override fun saveSelectedCurrency(currency: Currency) {
-        prefsUtl.putString(PREFS_SELECTED_CURRENCY, gson.toJson(currency))
+        preferences.putString(PREFS_SELECTED_CURRENCY, serializer.serialize(currency))
     }
 
     override fun retrieveSelectedCurrency(): Currency {
-        val selectedCurrencyString = prefsUtl.getString(PREFS_SELECTED_CURRENCY)
+        val selectedCurrencyString = preferences.getString(PREFS_SELECTED_CURRENCY)
 
         return if (selectedCurrencyString.isEmpty()) {
             Currency("USD", "$", "US Dollars", 1f, true)
         } else {
-            gson.fromJson(prefsUtl.getString(selectedCurrencyString), Currency::class.java)
+            serializer.deserialize(selectedCurrencyString, Currency::class.java)!!
         }
     }
 
     override fun saveCurrencies(currencies: List<Currency>) {
-        prefsUtl.putString(PREFS_CURRENCY, gson.toJson(currencies))
+        preferences.putString(PREFS_CURRENCY, serializer.serialize(currencies))
     }
 
     override fun retrieveCurrencies(currency: Currency): List<Currency>? {
-        val currenciesJsonString = prefsUtl.getString(PREFS_CURRENCY)
+        val currenciesJsonString = preferences.getString(PREFS_CURRENCY)
 
         return if (currenciesJsonString.isEmpty()) {
             null
         } else {
             try {
-                gson.fromJson<List<Currency>>(currenciesJsonString, object : TypeToken<List<Currency>>() {}.type)
+                serializer.deserialize<List<Currency>>(currenciesJsonString, object : TypeToken<List<Currency>>() {}.type)
             } catch (e: JsonSyntaxException) {
                 null
             }

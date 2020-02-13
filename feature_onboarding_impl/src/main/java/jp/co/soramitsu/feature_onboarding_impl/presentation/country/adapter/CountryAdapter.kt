@@ -11,11 +11,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.feature_account_api.domain.model.Country
 import jp.co.soramitsu.feature_onboarding_impl.R
 import kotlinx.android.synthetic.main.item_country.view.countryNameTv
 
 class CountryAdapter(
+    private val debounceClickHandler: DebounceClickHandler,
     private val clickListener: (Country) -> Unit
 ) : ListAdapter<Country, CountryViewHolder>(DiffCallback) {
 
@@ -25,7 +28,7 @@ class CountryAdapter(
     }
 
     override fun onBindViewHolder(holder: CountryViewHolder, position: Int) {
-        holder.bind(getItem(position), clickListener)
+        holder.bind(getItem(position), debounceClickHandler, clickListener)
     }
 }
 
@@ -42,10 +45,12 @@ object DiffCallback : DiffUtil.ItemCallback<Country>() {
 
 class CountryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(country: Country, clickListener: (Country) -> Unit) {
+    fun bind(country: Country, debounceClickHandler: DebounceClickHandler, clickListener: (Country) -> Unit) {
         with(itemView) {
             countryNameTv.text = country.name
-            setOnClickListener { clickListener(country) }
+            setOnClickListener(DebounceClickListener(debounceClickHandler) {
+                clickListener(country)
+            })
         }
     }
 }

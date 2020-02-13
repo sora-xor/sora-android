@@ -11,87 +11,83 @@ enum class ResponseCode(val stringResource: Int) {
 
     OK(0),
 
-    USER_NOT_FOUND(R.string.user_not_found),
+    USER_NOT_FOUND(R.string.common_error_user_not_found),
 
-    DID_NOT_FOUND(R.string.user_not_found),
+    DID_NOT_FOUND(R.string.common_error_user_not_found),
 
-    MNEMONIC_LENGTH_ERROR(R.string.mnemonic_length_error),
+    MNEMONIC_LENGTH_ERROR(R.string.common_error_mnemonic_length_error),
 
-    MNEMONIC_IS_NOT_VALID(R.string.mnemonic_is_not_valid),
+    MNEMONIC_IS_NOT_VALID(R.string.common_error_mnemonic_is_not_valid),
 
-    USER_VALUES_NOT_FOUND(R.string.user_values_not_found),
+    USER_VALUES_NOT_FOUND(R.string.common_error_user_values_not_found),
 
-    APPLICATION_FORM_NOT_FOUND(R.string.application_form_not_found),
+    INVITATION_CODE_NOT_FOUND(R.string.common_error_invitation_code_not_found),
 
-    INVITATION_CODE_NOT_FOUND(R.string.invitation_code_not_found),
+    NOT_ENOUGH_INVITATIONS(R.string.common_error_not_enough_invitations),
 
-    NOT_ENOUGH_INVITATIONS(R.string.not_enough_invitations),
+    PROJECT_NOT_FOUND(R.string.common_error_project_not_found),
 
-    PROJECT_NOT_FOUND(R.string.project_not_found),
+    VOTING_NOT_ALLOWED(R.string.common_error_voting_is_not_allowed),
 
-    VOTING_NOT_ALLOWED(R.string.voting_is_not_allowed),
+    VOTES_NOT_ENOUGH(R.string.common_error_votes_not_enough),
 
-    VOTES_NOT_ENOUGH(R.string.votes_not_enough),
+    GENERAL_ERROR(R.string.common_error_general_message),
 
-    UNAUTHORIZED(R.string.not_authorized),
+    CUSTOMER_NOT_FOUND(R.string.common_error_general_message),
 
-    GENERAL_ERROR(R.string.general_error_message),
+    SMS_CODE_NOT_CORRECT(R.string.common_sms_code_not_correct),
 
-    CUSTOMER_NOT_FOUND(R.string.general_error_message),
+    SMS_CODE_NOT_FOUND(R.string.common_sms_code_not_correct),
 
-    SMS_CODE_NOT_CORRECT(R.string.sms_code_not_correct),
+    SMS_CODE_EXPIRED(R.string.common_sms_code_expired),
 
-    SMS_CODE_NOT_FOUND(R.string.sms_code_not_correct),
+    PHONE_ALREADY_EXIST(R.string.common_error_phone_already_exists),
 
-    SMS_CODE_EXPIRED(R.string.sms_code_expired),
+    NETWORK_ERROR(R.string.common_error_network),
 
-    PHONE_ALREADY_EXIST(R.string.phone_already_exists),
+    INCORRECT_QUERY_PARAMS(R.string.common_error_search_string_error),
 
-    NETWORK_ERROR(R.string.network_error),
+    USER_NOT_REGISTERED(R.string.common_error_user_not_found),
 
-    INCORRECT_QUERY_PARAMS(R.string.search_string_error),
+    IROHA_ERROR(R.string.common_error_general_message),
 
-    USER_NOT_REGISTERED(R.string.user_not_found),
+    UNSUPPORTED_QUERY(R.string.common_error_general_message),
 
-    IROHA_ERROR(R.string.general_error_message),
+    INVALID_QUERY_FORMAT(R.string.common_error_invalid_query_format),
 
-    UNSUPPORTED_QUERY(R.string.general_error_message),
-
-    INVALID_QUERY_FORMAT(R.string.invalid_query_format),
-
-    TOO_FREQUENT_REQUEST(0),
+    TOO_FREQUENT_REQUEST(R.string.phone_verification_too_frequent_message),
 
     SECTION_NOT_FOUND(0),
 
-    INCORRECT_VOTES_VALUE_FORMAT(R.string.something_went_wrong),
+    INCORRECT_VOTES_VALUE_FORMAT(R.string.common_error_votes_invalid_format),
 
-    BROKEN_TRANSACTION(R.string.general_error_message),
+    BROKEN_TRANSACTION(R.string.common_error_general_message),
 
-    QR_ERROR(R.string.qr_error),
+    QR_ERROR(R.string.common_error_qr_decode_error),
 
-    QR_USER_NOT_FOUND(R.string.qr_user_not_found),
+    QR_USER_NOT_FOUND(R.string.common_error_qr_user_not_found),
 
-    PHONE_ALREADY_REGISTERED(R.string.phone_already_registered),
+    PHONE_ALREADY_REGISTERED(R.string.common_error_phone_already_registered),
 
-    PHONE_ALREADY_VERIFIED(R.string.phone_already_registered),
+    PHONE_ALREADY_VERIFIED(R.string.common_error_phone_already_registered),
 
-    SENDING_TO_MYSELF(R.string.sending_to_myself),
+    SENDING_TO_MYSELF(R.string.common_error_sending_to_myself),
 
-    FEE_RATE_NOT_AVAILABLE(R.string.fee_rate_not_available),
+    FEE_RATE_NOT_AVAILABLE(R.string.common_error_fee_rate_not_available),
 
-    WRONG_PIN_CODE(R.string.pincode_check_error),
+    WRONG_PIN_CODE(R.string.common_error_pincode_check_error),
 
-    AMBIGUOUS_RESULT(R.string.ambiguous_result),
+    AMBIGUOUS_RESULT(R.string.common_error_ambiguous_result),
 
-    WRONG_USER_STATUS(R.string.wrong_user_status),
+    WRONG_USER_STATUS(R.string.common_error_wrong_user_status),
 
-    INVITER_REGISTERED_AFTER_INVITEE(R.string.inviter_registered_after_invitee),
+    INVITER_REGISTERED_AFTER_INVITEE(R.string.common_error_inviter_registered_after_invitee),
 
-    INVITATION_ACCEPTING_WINDOW_CLOSED(R.string.invitation_accepting_window_closed),
+    INVITATION_ACCEPTING_WINDOW_CLOSED(R.string.common_error_invitation_accepting_window_closed),
 
-    PARENT_ALREADY_EXISTS(R.string.invitation_already_accepted),
+    PARENT_ALREADY_EXISTS(R.string.common_error_invitation_already_accepted),
 
-    SELF_INVITATION(R.string.self_invitation);
+    SELF_INVITATION(R.string.common_error_self_invitation);
 
     companion object {
 

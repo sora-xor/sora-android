@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="10dp"
+    android:layout_marginTop="@dimen/x1"
+    android:layout_marginEnd="10dp"
+    android:layout_marginBottom="@dimen/x1"
+    android:background="@drawable/activity_feed_the_only_of_the_day_background"
+    android:elevation="2dp">
+
+    <include layout="@layout/item_activity_feed_content" />
+
+</FrameLayout>

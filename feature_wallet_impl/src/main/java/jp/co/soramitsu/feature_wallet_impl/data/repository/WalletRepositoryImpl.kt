@@ -5,11 +5,11 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
-import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import io.reactivex.Completable
 import io.reactivex.Single
 import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.ext.toHash
 import jp.co.soramitsu.core_db.AppDatabase
@@ -40,7 +40,8 @@ import javax.inject.Inject
 class WalletRepositoryImpl @Inject constructor(
     private val api: WalletNetworkApi,
     private val datasource: WalletDatasource,
-    private val db: AppDatabase
+    private val db: AppDatabase,
+    private val serializer: Serializer
 ) : WalletRepository {
 
     companion object {
@@ -85,10 +86,14 @@ class WalletRepositoryImpl @Inject constructor(
         keyPair: KeyPair
     ): Single<Pair<TransferXorRequest, String>> {
         return Single.fromCallable {
-            val tx = jp.co.soramitsu.iroha.java.Transaction.builder(myAccountId)
+            val txBuilder = jp.co.soramitsu.iroha.java.Transaction.builder(myAccountId)
                 .transferAsset(myAccountId, dstUserId, ASSET_ID, description, amount)
-                .subtractAssetQuantity(ASSET_ID, fee)
-                .setQuorum(2)
+
+            if (fee.isNotEmpty() && fee.toDouble() != 0.0) {
+                txBuilder.subtractAssetQuantity(ASSET_ID, fee)
+            }
+
+            val tx = txBuilder.setQuorum(2)
                 .sign(keyPair)
                 .build()
 
@@ -221,13 +226,13 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override fun getQrAmountString(accountId: String, amount: String): Single<String> {
-        return Single.just(Gson().toJson(QrDataRecord(accountId, if (amount.isEmpty()) null else amount)))
+        return Single.just(serializer.serialize(QrDataRecord(accountId, if (amount.isEmpty()) null else amount)))
     }
 
     override fun getQrDataFromString(content: String): Single<QrData> {
         return Single.create { emitter ->
             try {
-                val qrDataRecord = Gson().fromJson(content, QrDataRecord::class.java)
+                val qrDataRecord = serializer.deserialize(content, QrDataRecord::class.java)
 
                 if (qrDataRecord != null) {
                     emitter.onSuccess(mapQrDataRecordToQrData(qrDataRecord))

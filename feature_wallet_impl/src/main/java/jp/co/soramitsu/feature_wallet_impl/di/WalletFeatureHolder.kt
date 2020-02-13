@@ -10,12 +10,15 @@ import jp.co.soramitsu.core_db.di.DbApi
 import jp.co.soramitsu.core_di.holder.FeatureApiHolder
 import jp.co.soramitsu.core_di.holder.FeatureContainer
 import jp.co.soramitsu.core_network_api.di.NetworkApi
+import jp.co.soramitsu.feature_did_api.di.DidFeatureApi
+import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class WalletFeatureHolder @Inject constructor(
-    featureContainer: FeatureContainer
+    featureContainer: FeatureContainer,
+    private val walletRouter: WalletRouter
 ) : FeatureApiHolder(featureContainer) {
 
     override fun initializeDependencies(): Any {
@@ -23,9 +26,11 @@ class WalletFeatureHolder @Inject constructor(
             .commonApi(getFeature(CommonApi::class.java))
             .networkApi(getFeature(NetworkApi::class.java))
             .dbApi(getFeature(DbApi::class.java))
+            .didFeatureApi(getFeature(DidFeatureApi::class.java))
             .build()
         return DaggerWalletFeatureComponent.builder()
-            .walletFeatureDependencies(walletFeatureDependencies)
+            .withDependencies(walletFeatureDependencies)
+            .router(walletRouter)
             .build()
     }
 }

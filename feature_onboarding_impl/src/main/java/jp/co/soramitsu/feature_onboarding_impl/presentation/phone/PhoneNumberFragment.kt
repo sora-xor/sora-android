@@ -7,16 +7,17 @@ package jp.co.soramitsu.feature_onboarding_impl.presentation.phone
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.navigation.NavController
 import com.jakewharton.rxbinding2.widget.RxTextView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.core_di.holder.FeatureUtils
@@ -25,19 +26,25 @@ import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingActivity
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
+import kotlinx.android.synthetic.main.fragment_phone_number.descriptionText
+import kotlinx.android.synthetic.main.fragment_phone_number.nextBtn
 import kotlinx.android.synthetic.main.fragment_phone_number.phoneCodeEt
 import kotlinx.android.synthetic.main.fragment_phone_number.phoneEt
-import kotlinx.android.synthetic.main.fragment_phone_number.sided_button
 import kotlinx.android.synthetic.main.fragment_phone_number.toolbar
+import javax.inject.Inject
 
 @SuppressLint("CheckResult")
 class PhoneNumberFragment : BaseFragment<PhoneNumberViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var primaryButton: Button
 
     companion object {
         private const val KEY_COUNTRY_ISO = "country_iso"
         private const val KEY_PHONE_CODE = "phone_code"
+
+        private const val MAX_PHONE_LENGTH = 15
 
         @JvmStatic fun newInstance(navController: NavController, countryIso: String, phoneCode: String) {
             val bundle = Bundle().apply {
@@ -64,19 +71,17 @@ class PhoneNumberFragment : BaseFragment<PhoneNumberViewModel>() {
     override fun initViews() {
         (activity as OnboardingActivity).window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
-        toolbar.setTitle(getString(R.string.fragment_phone_number_title))
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
 
-        primaryButton = sided_button.findViewById(R.id.left_btn)
-        val sidedButtonDescription = sided_button.findViewById<TextView>(R.id.description_text)
-        sided_button.findViewById<ImageView>(R.id.description_image).visibility = View.GONE
-        sided_button.setBackgroundColor(resources.getColor(R.color.greyBackground))
+        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.onPhoneEntered(phoneCodeEt.text.toString(), phoneEt.text.toString())
+        })
 
-        primaryButton.setOnClickListener { viewModel.onPhoneEntered(phoneCodeEt.text.toString(), phoneEt.text.toString()) }
-        sidedButtonDescription.text = getString(R.string.phone_number_sms_code_will_be_sent)
+        descriptionText.text = getString(R.string.phone_number_sms_code_will_be_sent)
 
         val phoneCode = arguments!!.getString(KEY_PHONE_CODE)
         phoneCodeEt.setText(phoneCode)
+        phoneEt.filters = arrayOf(InputFilter.LengthFilter(MAX_PHONE_LENGTH - phoneCode.length))
 
         viewModel.setCountryIso(arguments!!.getString(KEY_COUNTRY_ISO, ""))
 

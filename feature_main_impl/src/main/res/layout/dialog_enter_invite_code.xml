@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/x2_5"
+    android:paddingTop="@dimen/x2"
+    android:paddingRight="@dimen/x2_5"
+    android:paddingBottom="@dimen/x2">
+
+    <EditText
+        android:id="@+id/invitationEt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/invite_enter_dialog_title_hint"
+        android:digits="@string/invitation_code_alphabet"
+        android:maxLength="16"
+        android:textSize="14sp"
+        android:inputType="text" />
+
+</LinearLayout>

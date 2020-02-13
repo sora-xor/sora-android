@@ -5,15 +5,16 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.about
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Event
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 
 class AboutViewModel(
     private val interactor: MainInteractor,
@@ -24,23 +25,26 @@ class AboutViewModel(
     val appVersionLiveData = MutableLiveData<String>()
     val openSendEmailEvent = MutableLiveData<Event<String>>()
 
+    private val _showBrowserLiveData = MutableLiveData<Event<String>>()
+    val showBrowserLiveData: LiveData<Event<String>> = _showBrowserLiveData
+
     fun backPressed() {
-        router.popBackStackFragment()
+        router.popBackStack()
     }
 
-    fun opensourceClick() {
-        router.showBrowser(resourceManager.getString(R.string.open_source_link))
+    fun openSourceClicked() {
+        _showBrowserLiveData.value = Event(resourceManager.getString(R.string.about_open_source_url))
     }
 
-    fun termsClick() {
-        router.showTermsFragment()
+    fun termsClicked() {
+        router.showTerms()
     }
 
-    fun privacyClick() {
+    fun privacyClicked() {
         router.showPrivacy()
     }
 
-    fun init() {
+    fun getAppVersion() {
         disposables.add(
             interactor.getAppVersion()
                 .subscribeOn(Schedulers.io())
@@ -54,6 +58,6 @@ class AboutViewModel(
     }
 
     fun contactsClicked() {
-        openSendEmailEvent.value = Event(resourceManager.getString(R.string.sora_support_email))
+        openSendEmailEvent.value = Event(resourceManager.getString(R.string.common_sora_support_email))
     }
 }

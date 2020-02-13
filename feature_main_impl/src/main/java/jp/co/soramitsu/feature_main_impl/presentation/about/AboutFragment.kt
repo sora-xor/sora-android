@@ -5,38 +5,33 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.about
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
-import androidx.navigation.NavController
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.presentation.view.SoraToolbar
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ext.createSendEmailIntent
+import jp.co.soramitsu.common.util.ext.showBrowser
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
-import kotlinx.android.synthetic.main.fragment_about.contacts_text
-import kotlinx.android.synthetic.main.fragment_about.open_source_text
-import kotlinx.android.synthetic.main.fragment_about.privacy_text
-import kotlinx.android.synthetic.main.fragment_about.terms_text
+import kotlinx.android.synthetic.main.fragment_about.contactUsTv
+import kotlinx.android.synthetic.main.fragment_about.privacyTv
+import kotlinx.android.synthetic.main.fragment_about.sourceCodeTv
+import kotlinx.android.synthetic.main.fragment_about.termsTv
 import kotlinx.android.synthetic.main.fragment_about.toolbar
-import kotlinx.android.synthetic.main.fragment_about.version_text
+import kotlinx.android.synthetic.main.fragment_about.versionTv
+import javax.inject.Inject
 
-@SuppressLint("CheckResult")
 class AboutFragment : BaseFragment<AboutViewModel>() {
 
-    companion object {
-        fun start(navController: NavController) {
-            navController.navigate(R.id.aboutFragment)
-        }
-    }
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_about, container, false)
@@ -46,40 +41,48 @@ class AboutFragment : BaseFragment<AboutViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .aboutComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        with(toolbar as SoraToolbar) {
-            setTitle(getString(R.string.about))
+        (activity as BottomBarController).hideBottomBar()
+
+        with(toolbar) {
             setHomeButtonListener { viewModel.backPressed() }
             showHomeButton()
         }
 
-        RxView.clicks(open_source_text)
-            .subscribe { viewModel.opensourceClick() }
+        sourceCodeTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.openSourceClicked()
+        })
 
-        RxView.clicks(terms_text)
-            .subscribe { viewModel.termsClick() }
+        termsTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.termsClicked()
+        })
 
-        RxView.clicks(privacy_text)
-            .subscribe { viewModel.privacyClick() }
+        privacyTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.privacyClicked()
+        })
 
-        RxView.clicks(contacts_text)
-            .subscribe { viewModel.contactsClicked() }
+        contactUsTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.contactsClicked()
+        })
     }
 
     override fun subscribe(viewModel: AboutViewModel) {
         observe(viewModel.appVersionLiveData, Observer {
-            version_text.text = it
+            versionTv.text = it
         })
 
         observe(viewModel.openSendEmailEvent, EventObserver {
-            activity!!.createSendEmailIntent(it, getString(R.string.send_email))
+            activity!!.createSendEmailIntent(it, getString(R.string.common_select_email_app_title))
         })
 
-        viewModel.init()
+        observe(viewModel.showBrowserLiveData, EventObserver {
+            showBrowser(it)
+        })
+
+        viewModel.getAppVersion()
     }
 }

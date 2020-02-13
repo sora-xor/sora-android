@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -27,10 +28,14 @@ import jp.co.soramitsu.feature_onboarding_impl.presentation.country.adapter.Coun
 import jp.co.soramitsu.feature_onboarding_impl.presentation.country.adapter.CountryItemDecoration
 import kotlinx.android.synthetic.main.fragment_select_country.countriesRecyclerView
 import kotlinx.android.synthetic.main.fragment_select_country.countrySearchView
+import kotlinx.android.synthetic.main.fragment_select_country.emptySearchResultPlaceholder
 import kotlinx.android.synthetic.main.fragment_select_country.preloader
 import kotlinx.android.synthetic.main.fragment_select_country.toolbar
+import javax.inject.Inject
 
 class SelectCountryFragment : BaseFragment<SelectCountryViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun inject() {
         FeatureUtils.getFeature<OnboardingFeatureComponent>(context!!, OnboardingFeatureApi::class.java)
@@ -48,13 +53,28 @@ class SelectCountryFragment : BaseFragment<SelectCountryViewModel>() {
     override fun initViews() {
         countrySearchView.setOnQueryTextListener(queryListener)
 
-        toolbar.setTitle(getString(R.string.select_country_title))
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
     }
 
     override fun subscribe(viewModel: SelectCountryViewModel) {
         observe(viewModel.countriesLiveData, Observer {
             showCountries(it)
+        })
+
+        observe(viewModel.countriesListVisibilitytLiveData, Observer {
+            if (it) {
+                countriesRecyclerView.show()
+            } else {
+                countriesRecyclerView.gone()
+            }
+        })
+
+        observe(viewModel.emptyPlaceholderVisibilitytLiveData, Observer {
+            if (it) {
+                emptySearchResultPlaceholder.show()
+            } else {
+                emptySearchResultPlaceholder.gone()
+            }
         })
 
         observe(viewModel.getPreloadVisibility(), Observer {
@@ -81,7 +101,7 @@ class SelectCountryFragment : BaseFragment<SelectCountryViewModel>() {
     private fun showCountries(countries: List<Country>) {
         if (countriesRecyclerView.adapter == null) {
             countriesRecyclerView.layoutManager = LinearLayoutManager(activity)
-            countriesRecyclerView.adapter = CountryAdapter { viewModel.countrySelected(it) }
+            countriesRecyclerView.adapter = CountryAdapter(debounceClickHandler) { viewModel.countrySelected(it) }
             val decorator = CountryItemDecoration(activity!!, ContextCompat.getDrawable(activity!!, R.drawable.divider_country_item)!!)
             countriesRecyclerView.addItemDecoration(decorator)
         }

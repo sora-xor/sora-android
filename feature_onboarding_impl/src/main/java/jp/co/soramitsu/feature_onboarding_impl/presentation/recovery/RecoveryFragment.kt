@@ -12,20 +12,24 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import androidx.lifecycle.Observer
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
 import kotlinx.android.synthetic.main.fragment_recovery.mnemonic_input
+import kotlinx.android.synthetic.main.fragment_recovery.nextBtn
 import kotlinx.android.synthetic.main.fragment_recovery.toolbar
+import javax.inject.Inject
 
 class RecoveryFragment : BaseFragment<RecoveryViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var progressDialog: SoraProgressDialog
 
@@ -36,7 +40,6 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>() {
     override fun initViews() {
         progressDialog = SoraProgressDialog(activity!!)
 
-        toolbar.setTitle(getString(R.string.passphrase))
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
 
         val imm = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -50,11 +53,9 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>() {
     }
 
     override fun subscribe(viewModel: RecoveryViewModel) {
-        val nxtButton = view!!.findViewById<Button>(R.id.left_btn)
-        nxtButton.text = getString(R.string.next)
-
-        RxView.clicks(nxtButton)
-            .subscribe { viewModel.btnNextClick(mnemonic_input.text.toString()) }
+        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.btnNextClick(mnemonic_input.text.toString())
+        })
 
         observe(viewModel.getProgressVisibility(), Observer {
             if (it) progressDialog.show() else progressDialog.dismiss()

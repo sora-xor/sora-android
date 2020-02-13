@@ -10,15 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebViewClient
-import androidx.navigation.NavController
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
-import jp.co.soramitsu.common.presentation.view.SoraToolbar
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_terms.toolbar
 import kotlinx.android.synthetic.main.fragment_terms.webView
 
@@ -26,10 +24,6 @@ class FaqFragment : BaseFragment<FaqViewModel>() {
 
     companion object {
         private const val SORA_FAQ_PAGE = "https://sora.org/faq"
-
-        fun start(navController: NavController) {
-            navController.navigate(R.id.privacyFragment)
-        }
     }
 
     private lateinit var progressDialog: SoraProgressDialog
@@ -39,12 +33,12 @@ class FaqFragment : BaseFragment<FaqViewModel>() {
     }
 
     override fun initViews() {
+        (activity as BottomBarController).hideBottomBar()
+
         progressDialog = SoraProgressDialog(activity!!)
 
-        with(toolbar as SoraToolbar) {
-            setTitle(getString(R.string.faq))
+        with(toolbar) {
             setHomeButtonListener { viewModel.onBackPressed() }
-            showHomeButton()
         }
 
         configureWebView()
@@ -68,7 +62,6 @@ class FaqFragment : BaseFragment<FaqViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .faqComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }

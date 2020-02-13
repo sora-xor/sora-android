@@ -18,19 +18,21 @@ import androidx.core.hardware.fingerprint.FingerprintManagerCompat
 import androidx.lifecycle.Observer
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
+import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintWrapper
+import jp.co.soramitsu.sora_ui.pinview.DotsProgressView
 import kotlinx.android.synthetic.main.fragment_pincode.dotsProgressView
 import kotlinx.android.synthetic.main.fragment_pincode.pinCodeTitleTv
 import kotlinx.android.synthetic.main.fragment_pincode.pinCodeView
-import kotlinx.android.synthetic.main.fragment_pincode.toolbar
 
 class PincodeFragment : BaseFragment<PinCodeViewModel>() {
 
@@ -46,13 +48,14 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .pinCodeComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .withMaxPinCodeLength(DotsProgressView.MAX_PROGRESS)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
+        (activity as BottomBarController).hideBottomBar()
+
         progressDialog = SoraProgressDialog(activity!!)
 
         fingerprintDialog = BottomSheetDialog(activity!!).apply {
@@ -61,9 +64,6 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
             setOnCancelListener { fingerprintWrapper.cancel() }
             findViewById<TextView>(R.id.btnCancel)?.setOnClickListener { fingerprintWrapper.cancel() }
         }
-
-        toolbar.setHomeButtonListener { viewModel.backPressed() }
-        toolbar.setTitle(getString(R.string.pincode))
 
         with(pinCodeView) {
             pinCodeListener = { viewModel.pinCodeNumberClicked(it) }
@@ -83,14 +83,6 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
             if (it) progressDialog.show() else progressDialog.dismiss()
         })
 
-        observe(viewModel.backButtonVisibilityLiveData, Observer {
-            if (it) {
-                toolbar.showHomeButton()
-            } else {
-                toolbar.hideHomeButton()
-            }
-        })
-
         observe(viewModel.startFingerprintScannerEventLiveData, EventObserver {
             fingerprintWrapper.startAuth()
         })
@@ -104,7 +96,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
         })
 
         observe(viewModel.wrongPinCodeEventLiveData, EventObserver {
-            Toast.makeText(activity, getString(R.string.pincode_check_error), Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, getString(R.string.common_error_pincode_check_error), Toast.LENGTH_LONG).show()
         })
 
         observe(viewModel.fingerPrintDialogVisibilityLiveData, Observer {
@@ -112,7 +104,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
         })
 
         observe(viewModel.fingerPrintAutFailedLiveData, EventObserver {
-            Toast.makeText(context, R.string.fingerprint_error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.pincode_fingerprint_error, Toast.LENGTH_SHORT).show()
         })
 
         observe(viewModel.fingerPrintErrorLiveData, EventObserver {
@@ -125,6 +117,14 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>() {
 
         observe(viewModel.deleteButtonVisibilityLiveData, Observer {
             pinCodeView.changeDeleteButtonVisibility(it)
+        })
+
+        observe(viewModel.closeAppLiveData, EventObserver {
+            (activity as MainActivity).closeApp()
+        })
+
+        observe(viewModel.checkInviteLiveData, EventObserver {
+            (activity as MainActivity).checkInviteAction()
         })
 
         val action = arguments!!.getSerializable(Const.PIN_CODE_ACTION) as PinCodeAction

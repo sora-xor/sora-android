@@ -52,6 +52,16 @@ class SplashActivity : AppCompatActivity(), SplashRouter {
         }, 2000)
     }
 
+    override fun showOnBoardingScreenViaInviteLink() {
+        val handler = Handler()
+        handler.postDelayed({
+            FeatureUtils.getFeature<OnboardingFeatureApi>(application, OnboardingFeatureApi::class.java)
+                .provideOnboardingStarter()
+                .startWithInviteLink(this)
+            finish()
+        }, 1000)
+    }
+
     override fun showMainScreen() {
         val handler = Handler()
         handler.postDelayed({
@@ -67,6 +77,7 @@ class SplashActivity : AppCompatActivity(), SplashRouter {
             FeatureUtils.getFeature<MainFeatureApi>(application, MainFeatureApi::class.java)
                 .provideMainStarter()
                 .startWithInvite(this)
+            finish()
         }, 1000)
     }
 }

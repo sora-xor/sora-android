@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.personaldataedit
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.text.InputFilter
 import android.view.LayoutInflater
@@ -14,7 +13,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.EventObserver
@@ -22,18 +23,19 @@ import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.isValidNameChar
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_personal_data_edit.firstNameEt
 import kotlinx.android.synthetic.main.fragment_personal_data_edit.lastNameEt
 import kotlinx.android.synthetic.main.fragment_personal_data_edit.nextBtn
 import kotlinx.android.synthetic.main.fragment_personal_data_edit.phoneNumberEt
 import kotlinx.android.synthetic.main.fragment_personal_data_edit.toolbar
+import javax.inject.Inject
 
-@SuppressLint("CheckResult")
 class PersonalDataEditFragment : BaseFragment<PersonalDataEditViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var progressDialog: SoraProgressDialog
 
@@ -47,22 +49,22 @@ class PersonalDataEditFragment : BaseFragment<PersonalDataEditViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .personalComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        toolbar.setTitle(getString(R.string.personal_info_title))
+        (activity as BottomBarController).hideBottomBar()
+
         toolbar.setHomeButtonListener { viewModel.backPressed() }
 
-        (activity as MainActivity).hideBottomView()
+        nextBtn.setText(R.string.common_save)
 
-        nextBtn.setText(R.string.save)
-
-        nextBtn.setOnClickListener {
-            viewModel.saveData(firstNameEt.text!!.toString(), lastNameEt.text!!.toString())
-        }
+        nextBtn.setOnClickListener(
+            DebounceClickListener(debounceClickHandler) {
+                viewModel.saveData(firstNameEt.text!!.toString(), lastNameEt.text!!.toString())
+            }
+        )
 
         val inputFilter = InputFilter { source, start, end, _, _, _ ->
 
@@ -88,19 +90,19 @@ class PersonalDataEditFragment : BaseFragment<PersonalDataEditViewModel>() {
         })
 
         observe(viewModel.emptyFirstNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.first_name_is_empty, Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity!!, R.string.common_personal_info_first_name_is_empty, Toast.LENGTH_SHORT).show()
         })
 
         observe(viewModel.incorrectFirstNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.first_name_hyphen_error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity!!, R.string.common_personal_info_first_name_hyphen_error, Toast.LENGTH_SHORT).show()
         })
 
         observe(viewModel.emptyLastNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.last_name_is_empty, Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity!!, R.string.common_personal_info_last_name_is_empty, Toast.LENGTH_SHORT).show()
         })
 
         observe(viewModel.incorrectLastNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.last_name_hyphen_error, Toast.LENGTH_SHORT).show()
+            Toast.makeText(activity!!, R.string.common_personal_info_last_name_hyphen_error, Toast.LENGTH_SHORT).show()
         })
 
         observe(viewModel.getProgressVisibility(), Observer {

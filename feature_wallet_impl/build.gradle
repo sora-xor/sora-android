@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
 apply from: '../tests.gradle'
 
 android {
@@ -27,24 +28,54 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(":common")
+    implementation project(":core_db")
     implementation project(":core_di")
     implementation project(':core_network_api')
     implementation project(":feature_wallet_api")
     implementation project(":feature_did_api")
-    implementation project(":core_db")
+    implementation project(":feature_main_api")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
 
-    implementation networkDeps.values()
+    implementation rxDep
+    implementation rxAndroidDep
 
-    implementation roomDependencies.values()
-    kapt kaptRoomDependencies.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation soraDeps.values()
-    implementation birtDeps.values()
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
 
-    implementation irohaDeps.values()
+    implementation lifecycleDep
+    kapt lifecycleKapt
+
+    implementation roomDep
+    implementation rxRoomDep
+    kapt roomKapt
+
+    implementation soraDep
+    implementation birtDep
+
+    implementation irohaDep
+
+    implementation rxBindingDep
+
+    implementation zXingCoreDep
+    implementation zXingEmbeddedDep
+
+    implementation rxPermissionsDep
+
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
+    testImplementation project(":test_shared")
 }

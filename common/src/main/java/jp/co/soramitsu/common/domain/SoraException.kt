@@ -35,31 +35,31 @@ class SoraException(
             val errorTitle: String
             when (responseCode) {
                 400 -> {
-                    errorTitle = resourceManager.getString(R.string.invalid_parameters_title)
-                    errorMsg = resourceManager.getString(R.string.invalid_parameters_body)
+                    errorTitle = resourceManager.getString(R.string.common_error_invalid_parameters)
+                    errorMsg = resourceManager.getString(R.string.common_error_invalid_parameters_body)
                 }
                 401 -> {
-                    errorTitle = resourceManager.getString(R.string.unauthorized_title)
-                    errorMsg = resourceManager.getString(R.string.unauthorized_body)
+                    errorTitle = resourceManager.getString(R.string.common_error_unauthorized_title)
+                    errorMsg = resourceManager.getString(R.string.common_error_unauthorized_body)
                 }
                 404 -> {
-                    errorTitle = resourceManager.getString(R.string.not_found_title)
-                    errorMsg = resourceManager.getString(R.string.not_found_body)
+                    errorTitle = resourceManager.getString(R.string.common_error_not_found_title)
+                    errorMsg = resourceManager.getString(R.string.common_error_general_message)
                 }
                 500 -> {
-                    errorTitle = resourceManager.getString(R.string.internal_error_title)
+                    errorTitle = resourceManager.getString(R.string.common_error_internal_error_title)
                     errorMsg = ""
                 }
                 else -> {
-                    errorTitle = resourceManager.getString(R.string.general_error_title)
-                    errorMsg = resourceManager.getString(R.string.general_error_message)
+                    errorTitle = resourceManager.getString(R.string.common_error_general_title)
+                    errorMsg = resourceManager.getString(R.string.common_error_general_message)
                 }
             }
             return SoraException(Kind.HTTP, errorMsg, errorTitle = errorTitle)
         }
 
-        fun networkError(message: String, exception: IOException): SoraException {
-            return SoraException(Kind.NETWORK, message, exception)
+        fun networkError(resourceManager: ResourceManager, exception: IOException): SoraException {
+            return SoraException(Kind.NETWORK, resourceManager.getString(R.string.common_error_network), exception)
         }
 
         fun unexpectedError(exception: Throwable): SoraException {

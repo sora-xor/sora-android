@@ -73,7 +73,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:text="@string/empty_activity_description"
+                android:text="@string/activity_empty_description"
                 android:textColor="@color/oceanBlue" />
 
         </LinearLayout>

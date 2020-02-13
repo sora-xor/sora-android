@@ -5,26 +5,26 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.ext.setValueIfNew
+import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerPrintListener
 import java.util.concurrent.TimeUnit
 
 class PinCodeViewModel(
     private val interactor: PinCodeInteractor,
-    private val router: MainRouter,
+    private val mainRouter: MainRouter,
     private val progress: WithProgress,
     private val maxPinCodeLength: Int
 ) : BaseViewModel(), WithProgress by progress, FingerPrintListener {
@@ -49,6 +49,12 @@ class PinCodeViewModel(
     val pinCodeProgressLiveData = MediatorLiveData<Int>()
     val deleteButtonVisibilityLiveData = MediatorLiveData<Boolean>()
 
+    private val _closeAppLiveData = MutableLiveData<Event<Unit>>()
+    val closeAppLiveData: LiveData<Event<Unit>> = _closeAppLiveData
+
+    private val _checkInviteLiveData = MutableLiveData<Event<Unit>>()
+    val checkInviteLiveData: LiveData<Event<Unit>> = _checkInviteLiveData
+
     init {
         pinCodeProgressLiveData.addSource(inputCodeLiveData) {
             pinCodeProgressLiveData.value = it.length
@@ -65,11 +71,11 @@ class PinCodeViewModel(
         action = pinCodeAction
         when (action) {
             PinCodeAction.CREATE_PIN_CODE -> {
-                toolbarTitleResLiveData.value = R.string.pincode_title
+                toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
                 backButtonVisibilityLiveData.value = false
             }
             PinCodeAction.OPEN_PASSPHRASE -> {
-                toolbarTitleResLiveData.value = R.string.pincode_title_check
+                toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
                 showFingerPrintEventLiveData.value = Event(Unit)
                 backButtonVisibilityLiveData.value = true
             }
@@ -78,11 +84,11 @@ class PinCodeViewModel(
                     interactor.isCodeSet()
                         .subscribe({
                             if (it) {
-                                toolbarTitleResLiveData.value = R.string.pincode_title_check
+                                toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
                                 showFingerPrintEventLiveData.value = Event(Unit)
                                 backButtonVisibilityLiveData.value = false
                             } else {
-                                toolbarTitleResLiveData.value = R.string.pincode_title
+                                toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
                                 backButtonVisibilityLiveData.value = false
                                 action = PinCodeAction.CREATE_PIN_CODE
                             }
@@ -93,7 +99,6 @@ class PinCodeViewModel(
                 )
             }
         }
-        router.hideBottomView()
     }
 
     fun pinCodeNumberClicked(pinCodeNumber: String) {
@@ -129,7 +134,7 @@ class PinCodeViewModel(
                         if (tempCode.isEmpty()) {
                             tempCode = pin
                             inputCodeLiveData.value = ""
-                            toolbarTitleResLiveData.value = R.string.pincode_title2
+                            toolbarTitleResLiveData.value = R.string.pincode_confirm_your_pin_code
                             backButtonVisibilityLiveData.value = true
                         } else {
                             pinCodeEnterComplete(pin)
@@ -149,7 +154,7 @@ class PinCodeViewModel(
         } else {
             tempCode = ""
             inputCodeLiveData.value = ""
-            toolbarTitleResLiveData.value = R.string.pincode_title
+            toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
             backButtonVisibilityLiveData.value = false
             onError(R.string.pincode_repeat_error)
         }
@@ -159,7 +164,8 @@ class PinCodeViewModel(
         disposables.add(
             interactor.savePin(code)
                 .subscribe({
-                    router.hidePinCode()
+                    mainRouter.popBackStack()
+                    _checkInviteLiveData.value = Event(Unit)
                 }, {
                     it.printStackTrace()
                 })
@@ -171,10 +177,10 @@ class PinCodeViewModel(
             interactor.checkPin(code)
                 .subscribe({
                     if (PinCodeAction.OPEN_PASSPHRASE == action) {
-                        router.hidePinCode()
-                        router.showPassphrase()
+                        mainRouter.popBackStack()
+                        mainRouter.showPassphrase()
                     } else {
-                        checkUser()
+                        mainRouter.showVerification()
                     }
                 }, {
                     it.printStackTrace()
@@ -184,58 +190,21 @@ class PinCodeViewModel(
         )
     }
 
-    private fun checkUser() {
-        disposables.add(
-            interactor.runCheckUserFlow()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { progress.showProgress() }
-                .subscribe({
-                    progress.hideProgress()
-                    if (it.supported) {
-                        router.hidePinCode()
-                    } else {
-                        router.showUnsupportedScreen(it.downloadUrl)
-                    }
-                }, {
-                    progress.hideProgress()
-                    if (it is SoraException && it.kind == SoraException.Kind.BUSINESS && ResponseCode.DID_NOT_FOUND == it.errorResponseCode) {
-                        resetUser()
-                    } else {
-                        onError(it)
-                    }
-                })
-        )
-    }
-
-    private fun resetUser() {
-        disposables.add(
-            interactor.resetUser()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    router.restartApp()
-                }, {
-                    onError(it)
-                })
-        )
-    }
-
     fun backPressed() {
         if (PinCodeAction.CREATE_PIN_CODE == action) {
             if (tempCode.isEmpty()) {
-                router.closeApp()
+                _closeAppLiveData.value = Event(Unit)
             } else {
                 tempCode = ""
                 inputCodeLiveData.value = ""
                 backButtonVisibilityLiveData.value = false
-                toolbarTitleResLiveData.value = R.string.pincode_title
+                toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
             }
         } else {
             if (PinCodeAction.TIMEOUT_CHECK == action) {
-                router.closeApp()
+                _closeAppLiveData.value = Event(Unit)
             } else {
-                router.hidePinCode()
+                mainRouter.popBackStack()
             }
         }
     }
@@ -248,10 +217,10 @@ class PinCodeViewModel(
 
     override fun onFingerPrintSuccess() {
         if (PinCodeAction.OPEN_PASSPHRASE == action) {
-            router.hidePinCode()
-            router.showPassphrase()
+            mainRouter.popBackStack()
+            mainRouter.showPassphrase()
         } else {
-            checkUser()
+            mainRouter.showVerification()
         }
     }
 

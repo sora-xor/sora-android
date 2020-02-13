@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_by_side"
         android:layout_marginTop="@dimen/x2"
-        android:text="@string/projects"
+        android:text="@string/projects_title"
         android:textColor="@color/titleDarkGreyBlue"
         android:textSize="23sp"
         app:layout_constraintStart_toStartOf="parent"

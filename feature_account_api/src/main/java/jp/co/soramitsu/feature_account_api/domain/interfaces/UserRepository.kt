@@ -7,6 +7,7 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import io.reactivex.Completable
 import io.reactivex.Single
+import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
@@ -18,8 +19,6 @@ import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserCreatingCase
 
 interface UserRepository {
-
-    fun getInvitationLink(): Single<String>
 
     fun getRegistrationState(): OnboardingState
 
@@ -70,4 +69,12 @@ interface UserRepository {
     fun enterInviteCode(inviteCode: String): Completable
 
     fun applyInvitationCode(): Completable
+
+    fun getAvailableLanguages(): Single<Pair<List<Language>, String>>
+
+    fun changeLanguage(language: String): Single<String>
+
+    fun getInvitationLink(): Single<String>
+
+    fun getSelectedLanguage(): Single<Language>
 }

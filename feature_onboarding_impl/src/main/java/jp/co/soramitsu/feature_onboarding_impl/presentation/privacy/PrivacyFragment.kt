@@ -12,8 +12,7 @@ import android.view.ViewGroup
 import android.webkit.WebViewClient
 import androidx.navigation.NavController
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
-import jp.co.soramitsu.common.presentation.view.SoraToolbar
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
@@ -40,8 +39,8 @@ class PrivacyFragment : BaseFragment<PrivacyViewModel>() {
     override fun initViews() {
         progressDialog = SoraProgressDialog(activity!!)
 
-        with(toolbar as SoraToolbar) {
-            setTitle(getString(R.string.privacy_fragment_title))
+        with(toolbar) {
+            setTitle(getString(R.string.common_privacy_title))
             setHomeButtonListener { viewModel.onBackPressed() }
             showHomeButton()
         }

@@ -49,4 +49,8 @@ interface UserDatasource {
     fun saveParentInviteCode(inviteCode: String)
 
     fun getParentInviteCode(): String
+
+    fun getCurrentLanguage(): String
+
+    fun changeLanguage(language: String)
 }

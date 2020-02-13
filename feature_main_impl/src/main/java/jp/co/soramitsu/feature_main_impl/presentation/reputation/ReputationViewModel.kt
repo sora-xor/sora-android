@@ -14,9 +14,9 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_information_api.domain.model.InformationContainer
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import java.math.BigDecimal
 import java.util.Calendar
 import java.util.TimeZone
@@ -69,7 +69,7 @@ class ReputationViewModel(
     }
 
     fun backButtonClick() {
-        router.popBackStackFragment()
+        router.popBackStack()
     }
 
     fun loadInformation(updateCached: Boolean) {

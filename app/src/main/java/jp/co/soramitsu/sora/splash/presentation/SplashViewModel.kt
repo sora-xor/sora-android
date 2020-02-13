@@ -46,10 +46,10 @@ class SplashViewModel(
 
     fun handleDeepLink(invitationCode: String) {
         val state = interactor.getRegistrationState()
+        interactor.saveInviteCode(invitationCode)
 
         if (OnboardingState.INITIAL == state || OnboardingState.PHONE_NUMBER_CONFIRMED == state) {
-            interactor.saveInviteCode(invitationCode)
-            router.showOnBoardingScreen(state)
+            router.showOnBoardingScreenViaInviteLink()
         } else {
             router.showMainScreenFromInviteLink()
         }

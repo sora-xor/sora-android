@@ -1,3 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">feature_wallet_impl</string>
+    <!-- Wallet -->
+    <string name="wallet_title">Wallet</string>
+    <string name="wallet_set_amount">Set amount</string>
+    <string name="wallet_sora_account">Sora account</string>
+    <string name="wallet_receive">Receive</string>
+    <string name="wallet_receive_xor">Receive XOR</string>
+    <string name="wallet_recipient">Recipient</string>
+    <string name="wallet_amount_error">Amount field should be filled</string>
+    <string name="wallet_amount_is_zero_error">Amount should be bigger than zero</string>
+    <string name="wallet_insufficient_balance">You haven\'t got enough XOR on your balance</string>
+    <string name="wallet_transaction_status">Status</string>
+    <string name="wallet_transaction_identifier">Identifier</string>
+    <string name="wallet_transaction_date">Date and time</string>
+    <string name="wallet_all_done">All done</string>
+    <string name="wallet_done">Done</string>
+    <string name="wallet_transaction_details">Transaction details</string>
+    <string name="wallet_sender">Sender</string>
+    <string name="wallet_send_to_eth_title">Send to ETH</string>
+    <string name="wallet_transaction_confirmation_title">Confirmation</string>
+    <string name="wallet_transaction_confirmation_header">Please check and confirm details</string>
+    <string name="wallet_funds_are_being_sent">Funds are being sent</string>
+    <string name="wallet_eth_address">Ethereum wallet address</string>
+    <string name="wallet_transaction_fee_template" formatted="false">Transaction fee %s %s</string>
+    <string name="wallet_transaction_fee">Transaction fee</string>
+    <string name="wallet_eth_hint">42 lowercase hex symbols starting with 0x</string>
+    <string name="wallet_total_amount_template" formatted="false">Total amount %s %.2f</string>
+    <string name="wallet_amount_to_send">Amount to send</string>
+    <string name="wallet_eth_address_error">Eth address should be 42 chars long and start with 0x</string>
+    <string name="wallet_xor_template">XOR — %s</string>
+    <string name="wallet_total_amount">Total amount</string>
+    <string name="wallet_send_back">Send back</string>
+    <string name="wallet_recent_events_title">Recent events</string>
+    <string name="wallet_share_qr_code">Share</string>
+    <string name="wallet_withdrawal_description">Withdrawal to</string>
+    <string name="wallet_description">Description</string>
+    <string name="wallet_empty_description">Incoming and outgoing\ntransactions will appear here</string>
+    <string name="wallet_qr_share_message_template" formatted="false">My Sora Network address to Receive %s %s:</string>
+    <string name="wallet_qr_share_message_empty_template">My Sora Network address to Receive %s:</string>
+    <string name="wallet_from">From</string>
+    <string name="wallet_to">To</string>
+    <string name="wallet_amount">Amount</string>
+    <string name="wallet_description_hint">Transfer description</string>
+    <string name="wallet_rejected">Rejected</string>
+    <string name="wallet_pending">Pending</string>
+    <string name="wallet_committed">Committed</string>
+
+    <!-- Contacts -->
+    <string name="contacts_scan_qr">Scan qr code</string>
+    <string name="contacts_qr_scan_canceled">Scan canceled</string>
+    <string name="contacts_send_to">Send</string>
+    <string name="contacts_search_hint">Phone number or account id</string>
+    <string name="contacts_qr_dialog_title">Scan QR from</string>
+    <string name="contacts_select_qr_from">Select QR image</string>
+    <string name="contacts_title">Contacts</string>
+    <string name="contacts_search_empty_state_title">No search results</string>
+    <string name="contacts_empty_state_title">Most important contacts will appear here</string>
+    <string-array name="contacts_scan_qr_variants">
+        <item>Camera</item>
+        <item>Gallery</item>
+    </string-array>
 </resources>

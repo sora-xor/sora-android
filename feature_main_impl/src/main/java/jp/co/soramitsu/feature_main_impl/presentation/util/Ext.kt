@@ -33,16 +33,16 @@ fun Date.formatToOpenProjectDate(resources: Resources): String {
                 if (diffInSeconds == 0L) {
                     ""
                 } else {
-                    resources.getQuantityString(R.plurals.project_date_second_plurals, diffInSeconds.toInt(), diffInSeconds)
+                    resources.getQuantityString(R.plurals.project_date_second_plurals, diffInSeconds.toInt(), diffInSeconds.toString())
                 }
             } else {
-                resources.getQuantityString(R.plurals.project_date_minute_plurals, diffInMinutes.toInt(), diffInMinutes)
+                resources.getQuantityString(R.plurals.project_date_minute_plurals, diffInMinutes.toInt(), diffInMinutes.toString())
             }
         } else {
-            resources.getQuantityString(R.plurals.project_date_hour_plurals, diffInHours.toInt(), diffInHours)
+            resources.getQuantityString(R.plurals.project_date_hour_plurals, diffInHours.toInt(), diffInHours.toString())
         }
     } else {
-        resources.getQuantityString(R.plurals.project_date_day_plurals, diffInDays.toInt(), diffInDays)
+        resources.getQuantityString(R.plurals.project_date_day_plurals, diffInDays.toInt(), diffInDays.toString())
     }
 }
 
@@ -53,12 +53,12 @@ fun Date.formatToClosedProjectDate(resources: Resources): String {
 
     return when (TimeUnit.MILLISECONDS.toDays(diffInMillis)) {
         0L -> {
-            val today = resources.getString(R.string.today)
-            resources.getString(R.string.ended_template, today)
+            val today = resources.getString(R.string.common_today)
+            resources.getString(R.string.project_ended_template, today)
         }
         1L -> {
-            val yesterday = resources.getString(R.string.yesterday)
-            resources.getString(R.string.ended_template, yesterday)
+            val yesterday = resources.getString(R.string.common_yesterday)
+            resources.getString(R.string.project_ended_template, yesterday)
         }
         else -> {
             val currentCalendar = Calendar.getInstance()
@@ -66,10 +66,10 @@ fun Date.formatToClosedProjectDate(resources: Resources): String {
             projectCalendar.timeInMillis = time
             if (currentCalendar.get(Calendar.YEAR) == projectCalendar.get(Calendar.YEAR)) {
                 val dateStr = MONTH_DAY_FORMAT.format(time)
-                resources.getString(R.string.ended_template, dateStr)
+                resources.getString(R.string.project_ended_template, dateStr)
             } else {
                 val dateStr = MONTH_DAY_YEAR_FORMAT.format(time)
-                resources.getString(R.string.ended_template, dateStr)
+                resources.getString(R.string.project_ended_template, dateStr)
             }
         }
     }

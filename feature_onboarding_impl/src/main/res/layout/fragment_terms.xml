@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />

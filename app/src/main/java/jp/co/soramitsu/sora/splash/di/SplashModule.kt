@@ -12,8 +12,8 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.di.app.ViewModelKey
-import jp.co.soramitsu.common.di.app.ViewModelModule
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
 import jp.co.soramitsu.sora.splash.presentation.SplashViewModel

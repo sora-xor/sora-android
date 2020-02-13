@@ -32,16 +32,27 @@ dependencies {
     implementation project(":feature_project_api")
     implementation project(":core_db")
 
-    implementation kotlinDeps.values()
-    implementation rxDeps.values()
+    implementation kotlinDep
+    implementation rxDep
 
-    implementation roomDependencies.values()
-    kapt kaptRoomDependencies.values()
+    implementation roomDep
+    implementation rxRoomDep
+    kapt roomKapt
 
-    implementation androidDeps.appCompat
+    implementation androidDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation networkDeps.values()
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
+
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
+    testImplementation project(":test_shared")
 }

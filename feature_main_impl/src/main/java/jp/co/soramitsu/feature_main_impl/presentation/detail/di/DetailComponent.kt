@@ -8,8 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.detail.di
 import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
-import jp.co.soramitsu.common.di.app.ScreenScope
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
+import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.feature_main_impl.presentation.detail.DetailFragment
 
 @Subcomponent(
@@ -28,9 +27,6 @@ interface DetailComponent {
 
         @BindsInstance
         fun withProjectId(projectId: String): Builder
-
-        @BindsInstance
-        fun withRouter(router: MainRouter): Builder
 
         fun build(): DetailComponent
     }

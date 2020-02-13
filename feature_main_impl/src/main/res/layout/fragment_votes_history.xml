@@ -10,23 +10,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <jp.co.soramitsu.common.presentation.view.SoraToolbar
+        <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="@string/votes_history_title" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/votesHistoryRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:visibility="gone"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
             tools:layout_editor_absoluteY="56dp"
-            android:visibility="gone"
-            tools:visibility="visible"
-            tools:listitem="@layout/votes_hitsory_item" />
+            tools:listitem="@layout/votes_hitsory_item"
+            tools:visibility="visible" />
 
         <LinearLayout
             android:id="@+id/emptyPlaceHolder"
@@ -35,9 +36,9 @@
             android:gravity="center_horizontal"
             android:orientation="vertical"
             android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar">
 
             <ImageView
@@ -52,7 +53,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:text="@string/empty_votehistory_description"
+                android:text="@string/votes_empty_history_description"
                 android:textColor="@color/oceanBlue" />
 
         </LinearLayout>
@@ -62,9 +63,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

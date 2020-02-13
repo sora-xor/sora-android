@@ -43,30 +43,35 @@ dependencies {
     implementation project(":feature_onboarding_api")
     implementation project(":feature_main_api")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation androidDeps.values()
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
 
-    implementation novaCryptoDeps.values()
-    implementation navigationDeps.values()
+    implementation novaCryptoDep
+    implementation navigationFragmentDep
+    implementation navigationUiDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation dexterDeps.values()
+    implementation rxBindingDep
 
-    implementation rxBindingDeps.values()
-    implementation capitalDeps.values()
+    implementation gsonDep
 
-    implementation gsonDeps.values()
+    implementation authApiPhoneDep
+    implementation authGmsDep
 
-    implementation authApiDeps.values()
+    implementation lifecycleDep
+    kapt lifecycleKapt
 
-    implementation lifecycleDeps.values()
-    kapt lifecycleKapt.values()
-
-    testImplementation unitTestsDeps.values()
-    testImplementation robolectricDeps.values()
-    testImplementation archTestDeps.values()
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
 }

@@ -5,45 +5,38 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.presentation.view.setMultipleOnClickListeners
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
+import kotlinx.android.synthetic.main.fragment_profile.howItWorksCard
+import kotlinx.android.synthetic.main.fragment_profile.phoneNumberTv
+import kotlinx.android.synthetic.main.fragment_profile.profileAboutTextView
+import kotlinx.android.synthetic.main.fragment_profile.profileDetailsTextView
+import kotlinx.android.synthetic.main.fragment_profile.profileLanguageTextView
 import kotlinx.android.synthetic.main.fragment_profile.profileMyReputationNumber
 import kotlinx.android.synthetic.main.fragment_profile.profileMyReputationTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileReputationArrow
-import kotlinx.android.synthetic.main.fragment_profile.profileVotesTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileVotesArrow
-import kotlinx.android.synthetic.main.fragment_profile.profileVotesNumber
-import kotlinx.android.synthetic.main.fragment_profile.profileDetailsTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileDetailsArrow
-import kotlinx.android.synthetic.main.fragment_profile.profileProfileCard
-import kotlinx.android.synthetic.main.fragment_profile.profilePassphraseTextView
-import kotlinx.android.synthetic.main.fragment_profile.profilePassphraseArrow
-import kotlinx.android.synthetic.main.fragment_profile.profileConversionTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileConversionArrow
-import kotlinx.android.synthetic.main.fragment_profile.profileAboutTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileAboutArrow
-import kotlinx.android.synthetic.main.fragment_profile.howItWorksCard
 import kotlinx.android.synthetic.main.fragment_profile.profileNameTv
-import kotlinx.android.synthetic.main.fragment_profile.phoneNumberTv
+import kotlinx.android.synthetic.main.fragment_profile.profilePassphraseTextView
+import kotlinx.android.synthetic.main.fragment_profile.profileProfileCard
 import kotlinx.android.synthetic.main.fragment_profile.profileVotesAmount
-import kotlinx.android.synthetic.main.fragment_profile.profileConversionName
+import kotlinx.android.synthetic.main.fragment_profile.profileVotesTextView
 import kotlinx.android.synthetic.main.fragment_profile.userReputationAmount
+import kotlinx.android.synthetic.main.fragment_profile.selectedLanguageText
+import javax.inject.Inject
 
-@SuppressLint("CheckResult")
 class ProfileFragment : BaseFragment<ProfileViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_profile, container, false)
@@ -52,41 +45,45 @@ class ProfileFragment : BaseFragment<ProfileViewModel>() {
     override fun inject() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .profileSubComponentBuilder()
-            .withRouter(activity as MainRouter)
             .withProfileFragment(this)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        (activity as MainActivity).showBottomView()
+        (activity as BottomBarController).showBottomBar()
 
-        setMultipleOnClickListeners(profileMyReputationTextView, profileReputationArrow, profileMyReputationNumber) {
+        profileMyReputationTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             viewModel.onReputationClick()
-        }
+        })
 
-        setMultipleOnClickListeners(profileVotesTextView, profileVotesArrow, profileVotesNumber) {
+        profileVotesTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             viewModel.onVotesClick()
-        }
+        })
 
-        setMultipleOnClickListeners(profileDetailsTextView, profileDetailsArrow, profileProfileCard) {
+        profileDetailsTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             viewModel.onEditProfileClicked()
-        }
+        })
 
-        setMultipleOnClickListeners(profilePassphraseTextView, profilePassphraseArrow) {
+        profileProfileCard.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.onEditProfileClicked()
+        })
+
+        profilePassphraseTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             viewModel.onPassphraseClick()
-        }
+        })
 
-        setMultipleOnClickListeners(profileConversionTextView, profileConversionArrow) {
-            viewModel.profileConversionClicked()
-        }
-
-        setMultipleOnClickListeners(profileAboutTextView, profileAboutArrow) {
+        profileAboutTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             viewModel.profileAboutClicked()
-        }
+        })
 
-        RxView.clicks(howItWorksCard)
-            .subscribe { viewModel.btnHelpClicked() }
+        profileLanguageTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.profileLanguageClicked()
+        })
+
+        howItWorksCard.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.btnHelpClicked()
+        })
     }
 
     override fun subscribe(viewModel: ProfileViewModel) {
@@ -96,12 +93,12 @@ class ProfileFragment : BaseFragment<ProfileViewModel>() {
             phoneNumberTv.text = user.phone
         })
 
-        observe(viewModel.votesLiveData, Observer { votes ->
-            profileVotesAmount.text = votes
+        observe(viewModel.selectedLanguageLiveData, Observer {
+            selectedLanguageText.text = it
         })
 
-        observe(viewModel.selectedCurrencyLiveData, Observer { currencySymbol ->
-            profileConversionName.text = currencySymbol
+        observe(viewModel.votesLiveData, Observer { votes ->
+            profileVotesAmount.text = votes
         })
 
         observe(viewModel.userReputationLiveData, Observer { reputation ->

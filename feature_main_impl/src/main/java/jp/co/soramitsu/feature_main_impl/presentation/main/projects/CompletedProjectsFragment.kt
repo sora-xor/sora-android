@@ -12,7 +12,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -20,7 +22,6 @@ import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.main.MainProjectsAdapter
 import jp.co.soramitsu.feature_main_impl.presentation.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_completed_projects.placeholder
@@ -40,18 +41,31 @@ class CompletedProjectsFragment : BaseFragment<MainViewModel>() {
 
     @Inject lateinit var numbersFormatter: NumbersFormatter
 
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_completed_projects, container, false)
     }
 
     override fun initViews() {
+        val scrollListener = object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                val totalItemCount = recyclerView.layoutManager?.itemCount
+                val lastVisiblePosition = (recyclerView.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+                if (lastVisiblePosition + 1 == totalItemCount) {
+                    viewModel.loadMoreCompletedProjects()
+                }
+            }
+        }
+
+        projects_recyclerview.addOnScrollListener(scrollListener)
     }
 
     override fun inject() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .projectsComponentBuilder()
             .withFragment(parentFragment!!)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
@@ -61,8 +75,8 @@ class CompletedProjectsFragment : BaseFragment<MainViewModel>() {
             if (projects_recyclerview.adapter == null) {
                 projects_recyclerview.layoutManager = LinearLayoutManager(activity!!)
                 projects_recyclerview.adapter = MainProjectsAdapter(
-                    activity!!,
                     numbersFormatter,
+                    debounceClickHandler,
                     { viewModel.voteClicked(it) },
                     { viewModel.projectsFavoriteClicked(it) },
                     { viewModel.projectClick(it) }

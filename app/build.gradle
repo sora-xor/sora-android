@@ -3,6 +3,8 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'io.fabric'
+apply plugin: 'com.google.firebase.appdistribution'
+apply from: '../tests.gradle'
 
 android {
     compileSdkVersion compileVersion
@@ -41,31 +43,28 @@ android {
             matchingFallbacks = ['debug']
             signingConfig signingConfigs.cidebug
         }
-        cifabricdebug {
+        cifirebasedebug {
 //            minifyEnabled true
 //            shrinkResources true
 //            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             initWith debug
             matchingFallbacks = ['debug']
-            versionNameSuffix '-fabric'
+            versionNameSuffix '-firebase'
             signingConfig signingConfigs.cidebug
-            //Init Fabric variables
-            if (System.getenv('CI_FABRIC_RELEASENOTES') == null) {
-                //throw new GradleException("Environment variable CI_FABRIC_RELEASENOTES is not defined!")
-                ext.betaDistributionReleaseNotes = ''
+            //Init firebase
+            def firebaseReleaseNotes = ''
+            def firebaseGroup = ''
+            if (System.getenv('CI_FIREBASE_RELEASENOTES') != null) {
+                firebaseReleaseNotes = System.env.CI_FIREBASE_RELEASENOTES
             }
-            else {
-                ext.betaDistributionReleaseNotes = System.env.CI_FABRIC_RELEASENOTES
+            if (System.getenv('CI_FIREBASE_GROUP') != null) {
+                firebaseGroup = System.env.CI_FIREBASE_GROUP
             }
-            if (System.getenv('CI_FABRIC_GROUP') == null) {
-                //throw new GradleException("Environment variable CI_FABRIC_GROUP is not defined!")
-                ext.betaDistributionGroupAliases = ''
+            firebaseAppDistribution {
+                releaseNotes = firebaseReleaseNotes
+                groups = firebaseGroup
+            }
 
-            }
-            else {
-                ext.betaDistributionGroupAliases = System.env.CI_FABRIC_GROUP
-            }
-            ext.betaDistributionNotifications = true
         }
     }
 
@@ -114,14 +113,14 @@ android {
 
         staging {
             applicationIdSuffix ".stage"
-            versionName "1.3.2"
+            versionName "1.5.0"
             resValue "string", "app_name", "Sora Staging"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/stg/join"
         }
 
         production {
-            versionName "1.3.2"
+            versionName "1.5.0"
             resValue "string", "app_name", "Sora"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/join"
@@ -157,62 +156,43 @@ dependencies {
     implementation project(":feature_wallet_api")
     implementation project(":feature_wallet_impl")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation loggerDeps.values()
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation navigationFragmentDep
+    implementation navigationUiDep
 
-    implementation lifecycleDeps.values()
-    kapt lifecycleKapt.values()
+    implementation loggerDep
 
-    implementation rxDeps.values()
-    implementation rxBindingDeps.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation firebaseDeps.values()
+    implementation lifecycleDep
+    kapt lifecycleKapt
 
-    implementation androidDeps.values()
+    implementation rxDep
 
-    implementation multidexDeps.values()
+    implementation firebaseCoreDep
+    implementation firebaseMessagingDep
 
-    implementation (crashlyticsDeps.values()) {
+    implementation multidexDep
+
+    implementation (crashlyticsDep) {
         transitive = true
     }
 
     // Tests
-    testImplementation "junit:junit:${versions.junit}"
-    testImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
-    androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.10.0'
-    androidTestAnnotationProcessor "com.google.dagger:dagger-compiler:${versions.dagger}"
-    androidTestImplementation 'com.github.fabioCollini.daggermock:daggermock:0.8.4'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test:rules:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-intents:3.1.0'
-    androidTestImplementation 'com.jakewharton.espresso:okhttp3-idling-resource:1.0.0'
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
+    testImplementation project(":test_shared")
 }
 
 apply plugin: 'com.google.gms.google-services'
-
-afterEvaluate {
-    initProperties()
-}
-
-def initProperties() {
-    //Init fabric.properties
-    def propertiesFile = file('fabric.properties')
-    if (!propertiesFile.exists()) {
-        if (System.getenv('CRASHLYTIC_APISECRET') == null) {
-            throw new GradleException("Environment variable CRASHLYTIC_APISECRET is not defined!")
-        }
-        if (System.getenv('CRASHLYTIC_APIKEY') == null) {
-            throw new GradleException("Environment variable CRASHLYTIC_APIKEY is not defined!")
-        }
-        def commentMessage = "This is autogenerated fabric property from system environment to prevent key to be committed to source control."
-        ant.propertyfile(file: "fabric.properties", comment: commentMessage) {
-            entry(key: "apiSecret", value: System.env.CRASHLYTIC_APISECRET)
-            entry(key: "apiKey", value: System.env.CRASHLYTIC_APIKEY)
-        }
-    }
-}

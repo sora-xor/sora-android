@@ -24,7 +24,7 @@
             android:paddingTop="@dimen/x2"
             android:paddingRight="@dimen/x2"
             android:paddingBottom="@dimen/x1"
-            android:text="@string/sora_announcement" />
+            android:text="@string/activity_sora_announcement" />
 
         <TextView
             android:id="@+id/announcementTv"

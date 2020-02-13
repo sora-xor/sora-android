@@ -48,6 +48,10 @@ class RecoveryViewModel(
         }
     }
 
+    fun backButtonClick() {
+        router.onBackButtonPressed()
+    }
+
     private fun splitToArray(mnemonic: String): Array<String> {
         return mnemonic.trim().split(" ").toTypedArray()
     }
@@ -59,9 +63,5 @@ class RecoveryViewModel(
             }
         }
         return true
-    }
-
-    fun backButtonClick() {
-        router.onBackButtonPressed()
     }
 }

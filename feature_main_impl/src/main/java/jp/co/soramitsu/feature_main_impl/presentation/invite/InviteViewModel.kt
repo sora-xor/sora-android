@@ -18,9 +18,9 @@ import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.InvitationInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 
 class InviteViewModel(
     private val interactor: InvitationInteractor,
@@ -34,9 +34,6 @@ class InviteViewModel(
 
     private val _hideSwipeRefreshEventLiveData = MutableLiveData<Event<Unit>>()
     val hideSwipeRefreshEventLiveData: LiveData<Event<Unit>> = _hideSwipeRefreshEventLiveData
-
-    private val _invitationsCountLiveData = MutableLiveData<Int>()
-    val invitationsCountLiveData: LiveData<Int> = _invitationsCountLiveData
 
     private val _enterInviteCodeButtonVisibilityLiveData = MutableLiveData<Boolean>()
     val enterInviteCodeButtonVisibilityLiveData: LiveData<Boolean> = _enterInviteCodeButtonVisibilityLiveData
@@ -93,8 +90,6 @@ class InviteViewModel(
                         startTimer(addInvitationTimeLeftMillis)
                     }
 
-                    _invitationsCountLiveData.value = user.values.invitations
-
                     val invitations = it.second
                     invitations.parentInvitations?.let { _parentUserLiveData.value = it }
                     _invitedUsersLiveData.value = invitations.acceptedInviteVms
@@ -127,24 +122,17 @@ class InviteViewModel(
     }
 
     fun sendInviteClick() {
-        _invitationsCountLiveData.value?.let {
-            if (it > 0) {
-                disposables.add(
-                    interactor.sendInviteCode()
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .compose(progressCompose())
-                        .subscribe({
-                            _shareCodeLiveData.value = it.first
-                            _invitationsCountLiveData.value = it.second
-                        }, {
-                            onError(it)
-                        })
-                )
-            } else {
-                onError(R.string.not_enough_invitations)
-            }
-        }
+        disposables.add(
+            interactor.getInviteLink()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .compose(progressCompose())
+                .subscribe({
+                    _shareCodeLiveData.value = it
+                }, {
+                    onError(it)
+                })
+        )
     }
 
     fun btnHelpClicked() {

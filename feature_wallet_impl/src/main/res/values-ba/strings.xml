@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Wallet -->
+    <string name="wallet_title">Янсыҡ</string>
+    <string name="wallet_set_amount">Сумманы индерегеҙ</string>
+    <string name="wallet_sora_account">Sora аккаунты</string>
+    <string name="wallet_receive">Алырға</string>
+    <string name="wallet_receive_xor">XOR алырға</string>
+    <string name="wallet_recipient">Алыусы</string>
+    <string name="wallet_amount_error">Сумма тултырылған булырға тейеш</string>
+    <string name="wallet_amount_is_zero_error">Сумма нулдән күберәк булырға тейеш</string>
+    <string name="wallet_insufficient_balance">Һеҙҙә етәрлек XOR юҡ</string>
+    <string name="wallet_transaction_status">Статус</string>
+    <string name="wallet_transaction_identifier">Идентификатор</string>
+    <string name="wallet_transaction_date">Көн һәм ваҡыт</string>
+    <string name="wallet_all_done">Барыһы ла әҙер</string>
+    <string name="wallet_done">Әҙер</string>
+    <string name="wallet_transaction_details">Транзакцияның деталдәре</string>
+    <string name="wallet_sender">Ебәреүсе</string>
+    <string name="wallet_send_to_eth_title">ETH-янсыҡҡа ебәрергә</string>
+    <string name="wallet_transaction_confirmation_title">Раҫлау</string>
+    <string name="wallet_transaction_confirmation_header">Зинһар, тикшерегеҙ һәм раҫлағыҙ</string>
+    <string name="wallet_funds_are_being_sent">Аҡса ебәрелә</string>
+    <string name="wallet_eth_address">Ethereum янсыҡтың адресы</string>
+    <string name="wallet_transaction_fee_template" formatted="false">Транзакцияның хаҡы %s %s</string>
+    <string name="wallet_transaction_fee">Транзакцияның хаҡы</string>
+    <string name="wallet_eth_hint">42 бәләкәй уналтылы символ, 0x менән башланған.</string>
+    <string name="wallet_total_amount_template" formatted="false">Дөйөм сумма %s %.2f</string>
+    <string name="wallet_amount_to_send">Ебәреү өсөн дөйөм сумма</string>
+    <string name="wallet_eth_address_error">Eth янсыҡтың адресы 42 символ оҙонлоғо һәм 0x менән башланырға тейеш</string>
+    <string name="wallet_xor_template">XOR — %s</string>
+    <string name="wallet_total_amount">Дөйөм сумма</string>
+    <string name="wallet_send_back">Кире ебәрергә</string>
+    <string name="wallet_recent_events_title">Һуңғы ваҡиғалар</string>
+    <string name="wallet_share_qr_code">Уртаҡлашыу</string>
+    <string name="wallet_withdrawal_description">Аҡсаны алырға</string>
+    <string name="wallet_description">Асыҡлама</string>
+    <string name="wallet_empty_description">Килгән һәм ебәрелгән транзакциялар бында күрһәтеләсәк</string>
+    <string name="wallet_qr_share_message_template" formatted="false">%s %s eбәреү өсөн минең Sora адрес:</string>
+    <string name="wallet_qr_share_message_empty_template">%s eбәреү өсөн минең Sora адрес:</string>
+    <string name="wallet_from">Бынан</string>
+    <string name="wallet_to">Тиклем</string>
+    <string name="wallet_amount">Сумма</string>
+    <string name="wallet_description_hint">Транзакцияға асыҡлама</string>
+    <string name="wallet_rejected">Кире ҡағылған</string>
+    <string name="wallet_pending">Барышта</string>
+    <string name="wallet_committed">Тамамланды</string>
+
+    <!-- Contacts -->
+    <string name="contacts_scan_qr">QR код уҡырға</string>
+    <string name="contacts_qr_scan_canceled">Уҡыу кире ҡағынды</string>
+    <string name="contacts_send_to">Ебәрергә</string>
+    <string name="contacts_search_hint">Телефон номеры йәки аккаунт идентификаторы</string>
+    <string name="contacts_qr_dialog_title">QR кодын уҡырға</string>
+    <string name="contacts_select_qr_from">QR һүрәтен һайлағыҙ</string>
+    <string name="contacts_title">Контакттар</string>
+    <string name="contacts_search_empty_state_title">Эҙләүгә һөҙөмтә юҡ</string>
+    <string name="contacts_empty_state_title">Бында мөһим булған контакттар күрһәтеләсәк</string>
+    <string-array name="contacts_scan_qr_variants">
+        <item>Камера</item>
+        <item>Галерея</item>
+    </string-array>
+</resources>

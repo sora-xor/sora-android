@@ -16,5 +16,6 @@ data class ActivityFeedLocal(
     val description: String,
     val votesString: String,
     val issuedAtMillis: Long,
-    val iconDrawable: Int
+    val iconDrawable: Int,
+    val votesRightDrawable: Int
 )

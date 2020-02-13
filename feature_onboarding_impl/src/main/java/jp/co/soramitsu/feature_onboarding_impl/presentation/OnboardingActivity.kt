@@ -15,7 +15,7 @@ import androidx.navigation.Navigation
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.core_di.holder.FeatureUtils
-import jp.co.soramitsu.feature_main_api.MainStarter
+import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
@@ -54,7 +54,7 @@ class OnboardingActivity : ToolbarActivity<OnboardingViewModel>(), OnboardingRou
     private lateinit var navController: NavController
 
     override fun layoutResource(): Int {
-        return R.layout.activity_layout
+        return R.layout.activity_onboarding
     }
 
     override fun inject() {

@@ -5,20 +5,22 @@
 
 package jp.co.soramitsu.feature_account_impl.di
 
-import android.content.Context
+import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.domain.AppVersionProvider
+import jp.co.soramitsu.common.domain.Serializer
+import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DeviceParamsProvider
-import jp.co.soramitsu.common.util.PrefsUtil
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_network_api.NetworkApiCreator
 import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 
 interface AccountFeatureDependencies {
 
-    fun context(): Context
+    fun encryptedPreferences(): EncryptedPreferences
 
-    fun prefsUtil(): PrefsUtil
+    fun preferences(): Preferences
 
     fun networkApiCreator(): NetworkApiCreator
 
@@ -31,4 +33,8 @@ interface AccountFeatureDependencies {
     fun appLinksProvider(): AppLinksProvider
 
     fun deviceParams(): DeviceParamsProvider
+
+    fun languagesHolder(): LanguagesHolder
+
+    fun serializer(): Serializer
 }

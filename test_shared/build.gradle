@@ -24,10 +24,11 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation rxDeps.values()
-    implementation rxAndroidDeps.values()
+    implementation rxDep
+    implementation rxAndroidDep
 
-    implementation unitTestsDeps.values()
+    implementation jUnitDep
+    implementation mockitoDep
 }

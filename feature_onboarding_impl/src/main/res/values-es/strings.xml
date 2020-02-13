@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Recovery screen -->
+    <string name="recovery_body_title">Ingresa tus palabras semillas</string>
+    <string name="recovery_passphrase">Restablecer acceso</string>
+    <string name="recovery_body_subtitle">Desafortunadamente no hay forma de acceder a su cuenta si ha olvidado su palabras semilla</string>
+
+    <!-- Tutorial screen -->
+    <string name="tutorial_sign_up">Regístrate</string>
+    <string name="tutorial_restore_account">Reestablece el acceso a tu cuenta</string>
+    <string name="tutorial_terms_and_conditions_1">He leído y acepto \n</string>
+    <string name="tutorial_terms_and_conditions_2">Términos y condiciones</string>
+    <string name="tutorial_privacy_policy">Política de privacidad</string>
+    <string name="tutorial_project_success_desc">Si el proyecto tiene éxito en la votación, entonces todos reciben su participacion</string>
+    <string name="tutorial_votes_desc">Los usuarios votan por los proyectos que deben ser financiados</string>
+    <string name="tutorial_projects_desc">Proyectos agregados a Sora por creadores y agregados a votación después del proceso de selección</string>
+
+    <!-- Personal info -->
+    <string name="personal_info_title">Registrate</string>
+    <string name="personal_info_invitation_is_invalid">Codigo de Invitacion es Invalido</string>
+    <string name="personal_info_invitation_description">👋 ¿Tienes un link de invitación? Simplemente tocalo para insertar el código o ingrese el código manualmente.</string>
+    <string name="personal_info_inv_code_hint">Codigo de Invitación (opcional)</string>
+
+    <!-- Verification -->
+    <string name="verification_resend_code">Reenviar codigo</string>
+    <string name="verification_title">Verificación del  numero teléfonico</string>
+    <string name="verification_enter_code_from_sms">Ingresa el codigo de mensaje de texto</string>
+    <string name="verification_request_new_code_time" formatted="false">Solicita un nuevo codigo en %s:%s</string>
+
+    <!-- Countries -->
+    <string name="countries_title">Selecciona tu pais</string>
+    <string name="countries_country_not_found">No hay países que coincidan con su consulta.</string>
+
+    <!-- Phone number -->
+    <string name="phone_number_title">Registrate</string>
+    <string name="phone_number_mobile">Numero de celular</string>
+    <string name="phone_number_sms_code_will_be_sent">Se enviará el código SMS \n a tu teléfono</string>
+</resources>

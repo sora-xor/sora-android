@@ -29,7 +29,7 @@ abstract class BaseFragment<T : BaseViewModel> : Fragment() {
 
         observe(viewModel.errorLiveData, EventObserver {
             AlertDialog.Builder(activity!!)
-                .setTitle(R.string.general_error_title)
+                .setTitle(R.string.common_error_general_title)
                 .setMessage(it)
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .show()
@@ -45,7 +45,7 @@ abstract class BaseFragment<T : BaseViewModel> : Fragment() {
 
         observe(viewModel.errorFromResourceLiveData, EventObserver {
             AlertDialog.Builder(activity!!)
-                .setTitle(R.string.general_error_title)
+                .setTitle(R.string.common_error_general_title)
                 .setMessage(it)
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .show()

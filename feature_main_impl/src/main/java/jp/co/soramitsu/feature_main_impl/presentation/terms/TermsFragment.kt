@@ -11,14 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebViewClient
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_terms.toolbar
 import kotlinx.android.synthetic.main.fragment_terms.webView
 
@@ -31,11 +30,11 @@ class TermsFragment : BaseFragment<TermsViewModel>() {
     }
 
     override fun initViews() {
-        progressDialog = SoraProgressDialog(activity!!)
-        toolbar.setTitle(getString(R.string.terms_title))
-        toolbar.setHomeButtonListener { viewModel.onBackPressed() }
+        (activity as BottomBarController).hideBottomBar()
 
-        (activity as MainActivity).hideBottomView()
+        progressDialog = SoraProgressDialog(activity!!)
+        toolbar.setTitle(getString(R.string.common_terms_title))
+        toolbar.setHomeButtonListener { viewModel.onBackPressed() }
 
         configureWebView()
     }
@@ -58,7 +57,6 @@ class TermsFragment : BaseFragment<TermsViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .termsComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }

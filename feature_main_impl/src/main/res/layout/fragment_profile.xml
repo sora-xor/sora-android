@@ -13,9 +13,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_by_side"
         android:layout_marginTop="@dimen/x2"
+        android:text="@string/profile_title"
         android:textColor="@color/titleDarkGreyBlue"
         android:textSize="23sp"
-        android:text="@string/profile_title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -27,16 +27,16 @@
         android:clickable="true"
         android:foreground="?selectableItemBackground"
         app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintTop_toTopOf="@+id/title"
         app:layout_constraintBottom_toBottomOf="@+id/title"
-        app:layout_constraintEnd_toEndOf="parent" >
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/title">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="@string/question_mark"
+            android:text="@string/common_question_mark"
             android:textColor="@color/lightRed"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -49,7 +49,6 @@
         android:layout_marginStart="@dimen/margin_padding_by_side"
         android:layout_marginTop="@dimen/x2"
         android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:clickable="true"
         android:foreground="?selectableItemBackground"
         app:cardCornerRadius="10dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -99,15 +98,14 @@
         style="@style/GreenBlueTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:clickable="true"
+        android:background="?selectableItemBackground"
         android:drawableStart="@drawable/icon_statistics"
         android:drawablePadding="@dimen/x1"
-        android:foreground="?selectableItemBackground"
         android:paddingStart="@dimen/margin_padding_by_side"
         android:paddingTop="@dimen/x2_5"
         android:paddingEnd="@dimen/margin_padding_by_side"
         android:paddingBottom="@dimen/x2_5"
-        android:text="@string/my_reputation"
+        android:text="@string/profile_my_reputation_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profileProfileCard" />
@@ -117,7 +115,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/x2"
-        android:clickable="true"
         android:foreground="?selectableItemBackground"
         android:visibility="gone"
         app:cardBackgroundColor="@color/oceanBlue"
@@ -132,8 +129,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginStart="@dimen/margin_padding_content"
-            android:layout_marginEnd="@dimen/margin_padding_content"
             android:layout_marginTop="@dimen/x1_2"
+            android:layout_marginEnd="@dimen/margin_padding_content"
             android:layout_marginBottom="@dimen/x1_2"
             android:drawableLeft="@drawable/icon_cup"
             android:drawablePadding="@dimen/x1"
@@ -142,6 +139,7 @@
             android:text="412.61234"
             android:textColor="@color/white"
             android:textSize="14sp" />
+
     </androidx.cardview.widget.CardView>
 
     <ImageView
@@ -172,15 +170,14 @@
         style="@style/GreenBlueTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:clickable="true"
+        android:background="?selectableItemBackground"
         android:drawableStart="@drawable/icon_vote_shape"
         android:drawablePadding="@dimen/x1"
-        android:foreground="?selectableItemBackground"
         android:paddingStart="@dimen/margin_padding_by_side"
         android:paddingTop="@dimen/profileListItemTopBottomPadding"
         android:paddingEnd="@dimen/margin_padding_by_side"
         android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/votes"
+        android:text="@string/profile_votes_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView" />
@@ -190,8 +187,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/x2"
-        android:clickable="true"
-        android:foreground="?selectableItemBackground"
         app:cardBackgroundColor="@color/oceanBlue"
         app:cardCornerRadius="@dimen/x2"
         app:layout_constraintBottom_toBottomOf="@+id/profileVotesTextView"
@@ -204,8 +199,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginStart="@dimen/margin_padding_content"
-            android:layout_marginEnd="@dimen/margin_padding_content"
             android:layout_marginTop="@dimen/x1_2"
+            android:layout_marginEnd="@dimen/margin_padding_content"
             android:layout_marginBottom="@dimen/x1_2"
             android:drawableStart="@drawable/icon_profile_vote"
             android:drawablePadding="@dimen/x1"
@@ -214,6 +209,7 @@
             android:textColor="@color/white"
             android:textSize="14sp"
             tools:text="30000000000000" />
+
     </androidx.cardview.widget.CardView>
 
     <ImageView
@@ -244,15 +240,14 @@
         style="@style/GreenBlueTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:clickable="true"
+        android:background="?selectableItemBackground"
         android:drawableStart="@drawable/icon_person"
         android:drawablePadding="@dimen/x1"
-        android:foreground="?selectableItemBackground"
         android:paddingStart="@dimen/margin_padding_by_side"
         android:paddingTop="@dimen/profileListItemTopBottomPadding"
         android:paddingEnd="@dimen/margin_padding_by_side"
         android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/personal_details"
+        android:text="@string/profile_change_personal_details"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView2" />
@@ -285,15 +280,14 @@
         style="@style/GreenBlueTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:clickable="true"
+        android:background="?selectableItemBackground"
         android:drawableStart="@drawable/icon_pass"
         android:drawablePadding="@dimen/x1"
-        android:foreground="?selectableItemBackground"
         android:paddingStart="@dimen/margin_padding_by_side"
         android:paddingTop="@dimen/profileListItemTopBottomPadding"
         android:paddingEnd="@dimen/margin_padding_by_side"
         android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/passphrase"
+        android:text="@string/profile_passphrase_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView3" />
@@ -322,92 +316,18 @@
         app:layout_constraintTop_toBottomOf="@id/profilePassphraseTextView" />
 
     <TextView
-        android:id="@+id/profileConversionTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:drawableStart="@drawable/icon_average"
-        android:drawablePadding="@dimen/x1"
-        android:foreground="?selectableItemBackground"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/profileListItemTopBottomPadding"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/conversion"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView4" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/profileConversionNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="29dp"
-        android:layout_marginEnd="@dimen/x2"
-        android:clickable="true"
-        android:foreground="?selectableItemBackground"
-        android:minWidth="@dimen/x4"
-        android:visibility="gone"
-        app:cardBackgroundColor="@color/oceanBlue"
-        app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintBottom_toBottomOf="@+id/profileConversionTextView"
-        app:layout_constraintEnd_toStartOf="@+id/profileReputationArrow"
-        app:layout_constraintTop_toTopOf="@+id/profileConversionTextView">
-
-        <TextView
-            android:id="@+id/profileConversionName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/x2"
-            android:layout_marginEnd="@dimen/x2"
-            android:fontFamily="@font/sora_regular"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            tools:text="$" />
-    </androidx.cardview.widget.CardView>
-
-    <ImageView
-        android:id="@+id/profileConversionArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:paddingEnd="@dimen/margin_padding_content"
-        android:src="@drawable/ic_chevron_right"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/profileConversionNumber"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/profileConversionNumber" />
-
-    <View
-        android:id="@+id/projectDetailSeparateLineView5"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:background="@color/profileDividerColor"
-        android:importantForAccessibility="no"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileConversionTextView" />
-
-    <TextView
         android:id="@+id/profileAboutTextView"
         style="@style/GreenBlueTextStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:clickable="true"
+        android:background="?selectableItemBackground"
         android:drawableStart="@drawable/icon_terms"
         android:drawablePadding="@dimen/x1"
-        android:foreground="?selectableItemBackground"
         android:paddingStart="@dimen/margin_padding_by_side"
         android:paddingTop="@dimen/profileListItemTopBottomPadding"
         android:paddingEnd="@dimen/margin_padding_by_side"
         android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/about"
+        android:text="@string/profile_about_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView5" />
@@ -424,5 +344,78 @@
         app:layout_constraintBottom_toBottomOf="@+id/profileAboutTextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView5" />
+
+    <View
+        android:id="@+id/projectDetailSeparateLineView5"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/margin_padding_by_side"
+        android:layout_marginEnd="@dimen/margin_padding_by_side"
+        android:background="@color/profileDividerColor"
+        android:importantForAccessibility="no"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/profileLanguageTextView" />
+
+    <TextView
+        android:id="@+id/profileLanguageTextView"
+        style="@style/GreenBlueTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableStart="@drawable/icon_language"
+        android:drawablePadding="@dimen/x1"
+        android:paddingStart="@dimen/margin_padding_by_side"
+        android:paddingTop="@dimen/profileListItemTopBottomPadding"
+        android:paddingEnd="@dimen/margin_padding_by_side"
+        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
+        android:text="@string/profile_language_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView4" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/profileSelectedLanguage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/x2"
+        android:foreground="?selectableItemBackground"
+        android:visibility="visible"
+        app:cardBackgroundColor="@color/oceanBlue"
+        app:cardCornerRadius="@dimen/x2"
+        app:layout_constraintBottom_toBottomOf="@+id/profileLanguageTextView"
+        app:layout_constraintEnd_toStartOf="@+id/profileLanguageArrow"
+        app:layout_constraintTop_toTopOf="@+id/profileLanguageTextView">
+
+        <TextView
+            android:id="@+id/selectedLanguageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/margin_padding_content"
+            android:layout_marginTop="@dimen/x1_2"
+            android:layout_marginEnd="@dimen/margin_padding_content"
+            android:layout_marginBottom="@dimen/x1_2"
+            android:fontFamily="@font/sora_regular"
+            android:gravity="center"
+            android:text="@string/common_english"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+    </androidx.cardview.widget.CardView>
+
+    <ImageView
+        android:id="@+id/profileLanguageArrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="@dimen/margin_padding_content"
+        android:layout_marginBottom="8dp"
+        android:paddingEnd="@dimen/margin_padding_content"
+        android:src="@drawable/ic_chevron_right"
+        app:layout_constraintBottom_toBottomOf="@+id/profileLanguageTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView4" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

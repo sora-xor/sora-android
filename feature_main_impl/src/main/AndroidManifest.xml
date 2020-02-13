@@ -15,17 +15,17 @@
             android:supportsRtl="true"
             android:clearTaskOnLaunch="true"
             android:launchMode="singleTask"
-            android:theme="@style/OnboardingActivityTheme"
+            android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".presentation.detail.gallery.GalleryActivity"
-            android:theme="@style/OnboardingActivityTheme" />
+            android:theme="@style/AppTheme" />
 
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
-            android:theme="@style/OnboardingActivityTheme"
+            android:theme="@style/AppTheme"
             tools:replace="android:theme,screenOrientation" />
 
     </application>

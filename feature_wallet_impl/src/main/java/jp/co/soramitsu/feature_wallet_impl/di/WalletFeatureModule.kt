@@ -9,10 +9,12 @@ import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.core_network_api.NetworkApiCreator
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_impl.data.network.WalletNetworkApi
 import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
+import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import javax.inject.Singleton
 
 @Module
@@ -31,4 +33,8 @@ class WalletFeatureModule {
     @Provides
     @Singleton
     fun provideWalletDatasource(prefsWalletDatasource: PrefsWalletDatasource): WalletDatasource = prefsWalletDatasource
+
+    @Provides
+    @Singleton
+    fun provideWalletInteractor(walletInteractor: WalletInteractorImpl): WalletInteractor = walletInteractor
 }

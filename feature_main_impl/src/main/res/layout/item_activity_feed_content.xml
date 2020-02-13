@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/x2">
+
+    <LinearLayout
+        android:id="@+id/typeView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/typeImg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:src="@drawable/icon_activity_project" />
+
+        <TextView
+            android:id="@+id/activity_type"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x1"
+            android:layout_marginEnd="@dimen/x1"
+            android:layout_weight="1"
+            android:textColor="@color/grey"
+            android:textSize="14sp"
+            tools:text="Project update" />
+
+        <TextView
+            android:id="@+id/activity_event_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/activity_project_name"
+        style="@style/DefaultTitleStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/x2"
+        android:layout_marginTop="@dimen/x2"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/activity_icon_plus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/typeView"
+        tools:text="Lofree Digit Calculator" />
+
+    <TextView
+        android:id="@+id/activity_description"
+        style="@style/LightBlackTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activity_project_name"
+        tools:text="We are glad to announce that the first batch of caluculators are sent to our backers!" />
+
+    <ImageView
+        android:id="@+id/activity_icon_plus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x1_2"
+        android:src="@drawable/plus"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/activity_description"
+        app:layout_constraintEnd_toStartOf="@id/activity_votes_count"
+        app:layout_constraintTop_toBottomOf="@+id/typeView" />
+
+    <TextView
+        android:id="@+id/activity_votes_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x1_2"
+        android:fontFamily="@font/sora_regular"
+        android:gravity="center_vertical"
+        android:textAlignment="center"
+        android:textColor="@color/lightBlack"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/activity_description"
+        app:layout_constraintEnd_toStartOf="@+id/activity_icon_heart"
+        app:layout_constraintTop_toBottomOf="@+id/typeView"
+        tools:text="200" />
+
+    <ImageView
+        android:id="@+id/activity_icon_heart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:src="@drawable/heart_shape"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/activity_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/typeView" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

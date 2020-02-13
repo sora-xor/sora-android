@@ -5,10 +5,11 @@
 
 package jp.co.soramitsu.feature_main_impl.di
 
-import android.content.Context
+import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -30,13 +31,13 @@ interface MainFeatureDependencies {
 
     fun walletRepository(): WalletRepository
 
-    fun context(): Context
-
     fun informationRepository(): InformationRepository
 
-    fun resourseManager(): ResourceManager
+    fun resourceManager(): ResourceManager
 
     fun numbersFormatter(): NumbersFormatter
+
+    fun dateTimeFormatter(): DateTimeFormatter
 
     fun pushHandler(): PushHandler
 
@@ -49,4 +50,6 @@ interface MainFeatureDependencies {
     fun deviceParamsProvider(): DeviceParamsProvider
 
     fun invitationHandler(): InvitationHandler
+
+    fun debounceClickHandler(): DebounceClickHandler
 }

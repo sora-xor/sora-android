@@ -30,12 +30,8 @@ class InvitationInteractor @Inject constructor(
         )
     }
 
-    fun sendInviteCode(): Single<Pair<String, Int>> {
+    fun getInviteLink(): Single<String> {
         return userRepository.getInvitationLink()
-            .flatMap { inviteLink ->
-                userRepository.getUser(true)
-                    .map { Pair(inviteLink, it.values.invitations) }
-            }
     }
 
     fun updateInvitationInfo(): Single<Invitations> {

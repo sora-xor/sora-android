@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/wallet_set_amount" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@android:color/white"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@+id/sidedButtonLayout"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <LinearLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/currency_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/accountBodySelectorTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/margin_padding_content_by_side"
+                    android:text="@string/wallet_sora_account"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/accountArrowSelectorImageView"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/accountArrowSelectorImageView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/margin_padding_content_by_side"
+                    android:src="@drawable/ic_down_arrow"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <View
+                android:id="@+id/currency_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_content_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_content_by_side"
+                android:background="@color/thickBorder" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/accountAmountTitleTextView"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/margin_padding_content_by_side"
+                    android:text="@string/wallet_amount"
+                    android:textColor="@color/subtitleGrey"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <jp.co.soramitsu.feature_wallet_impl.presentation.view.CurrencyEditText
+                    android:id="@+id/amountEt"
+                    style="@style/TextAppearance.Soramitsu.Header1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="@dimen/margin_padding_content_by_side"
+                    android:layout_marginRight="@dimen/margin_padding_content_by_side"
+                    android:layout_marginBottom="@dimen/margin_padding_content_by_side"
+                    android:background="@android:color/transparent"
+                    android:hint="0"
+                    android:inputType="numberDecimal"
+                    android:maxLength="13"
+                    android:maxLines="1"
+                    app:layout_constraintBottom_toBottomOf="@+id/keyboardImg"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/currencySymbolTv"
+                    app:layout_constraintTop_toTopOf="@+id/keyboardImg"
+                    tools:text="200 000" />
+
+                <TextView
+                    android:id="@+id/currencySymbolTv"
+                    style="@style/TextAppearance.Soramitsu.Header1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_padding_content_by_side"
+                    android:text="&amp;"
+                    app:layout_constraintBottom_toBottomOf="@+id/amountEt"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/amountEt" />
+
+                <ImageView
+                    android:id="@+id/keyboardImg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="@dimen/margin_padding_content_by_side"
+                    android:layout_marginRight="@dimen/margin_padding_content_by_side"
+                    android:clickable="true"
+                    android:padding="@dimen/x1_2"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/icon_open_keyboard"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="1.0"
+                    app:layout_constraintStart_toEndOf="@+id/amountEt"
+                    app:layout_constraintTop_toBottomOf="@+id/accountAmountTitleTextView" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <LinearLayout
+                android:id="@+id/transactionFeeWrapper"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/margin_padding_content_by_side"
+                android:layout_marginTop="@dimen/margin_padding_content_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_content_by_side"
+                android:layout_marginBottom="@dimen/margin_padding_description">
+
+                <TextView
+                    android:id="@+id/transactionFeeTextView"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/wallet_transaction_fee"
+                    android:textColor="@android:color/black"
+                    android:textSize="14sp" />
+
+                <ProgressBar
+                    android:id="@+id/preloader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/margin_padding_content_by_side"
+                android:layout_marginEnd="@dimen/margin_padding_content_by_side"
+                android:background="@color/thinBorder" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/margin_padding_content_by_side">
+
+                <TextView
+                    android:id="@+id/accountDescriptionTitleTextView"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_description"
+                    android:textColor="@color/subtitleGrey" />
+
+                <EditText
+                    android:id="@+id/descriptionEt"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/wallet_description_hint"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:maxLength="64"
+                    android:paddingTop="@dimen/margin_padding_content_by_side"
+                    android:paddingBottom="@dimen/margin_padding_content_by_side"
+                    tools:text="text" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/sidedButtonLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/greyBackground"
+        android:paddingTop="@dimen/margin_padding_content"
+        android:paddingBottom="@dimen/margin_padding_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/descriptionImg"
+            android:layout_width="@dimen/side_button_icon_size"
+            android:layout_height="@dimen/side_button_icon_size"
+            android:layout_marginStart="@dimen/margin_padding_by_side"
+            android:layout_marginTop="@dimen/margin_padding_by_side"
+            android:layout_marginBottom="@dimen/margin_padding_by_side"
+            android:src="@color/lightRed"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/descriptionTv"
+            android:layout_width="145dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_padding_by_side"
+            android:layout_marginEnd="@dimen/margin_padding_by_side"
+            android:lineSpacingExtra="5sp"
+            android:textColor="@android:color/black"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/nextBtn"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/descriptionImg"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Processing fee" />
+
+        <Button
+            android:id="@+id/nextBtn"
+            style="@style/Widget.Soramitsu.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_padding_by_side"
+            android:text="@string/common_next"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@+id/descriptionTv"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/descriptionTv" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

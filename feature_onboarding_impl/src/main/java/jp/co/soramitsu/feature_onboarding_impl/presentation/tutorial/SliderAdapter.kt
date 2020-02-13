@@ -24,9 +24,9 @@ class SliderAdapter : PagerAdapter() {
             R.drawable.tutorial_three
         )
         val DESC = listOf(
-            R.string.projects_desc,
-            R.string.votes_desc,
-            R.string.success_desc
+            R.string.tutorial_projects_desc,
+            R.string.tutorial_votes_desc,
+            R.string.tutorial_project_success_desc
         )
     }
 

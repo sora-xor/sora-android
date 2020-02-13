@@ -19,10 +19,9 @@ import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_reputation.dailyVotesText
 import kotlinx.android.synthetic.main.fragment_reputation.menuView
 import kotlinx.android.synthetic.main.fragment_reputation.reputationList
@@ -49,15 +48,14 @@ class ReputationFragment : BaseFragment<ReputationViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .reputationComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        toolbar.setTitle(getString(R.string.reputationScreenTitle))
+        (activity as BottomBarController).hideBottomBar()
+
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
-        (activity as MainActivity).hideBottomView()
     }
 
     override fun subscribe(viewModel: ReputationViewModel) {
@@ -94,7 +92,7 @@ class ReputationFragment : BaseFragment<ReputationViewModel>() {
             reputationRankTitle.show()
             val heartImage = ContextCompat.getDrawable(activity!!, R.drawable.icon_reputation_heart)
             dailyVotesText.setCompoundDrawablesWithIntrinsicBounds(heartImage, null, null, null)
-            reputationRankText.text = getString(R.string.rank_total_rank_template, reputation.rank, reputation.totalRank)
+            reputationRankText.text = getString(R.string.reputation_total_rank_template, reputation.rank.toString(), reputation.totalRank.toString())
             val reputationRankImage = ContextCompat.getDrawable(activity!!, R.drawable.icon_reputation)
             reputationRankIcon.setImageDrawable(reputationRankImage)
             menuView.show()
@@ -115,7 +113,7 @@ class ReputationFragment : BaseFragment<ReputationViewModel>() {
     }
 
     private fun showLastVotes(lastVotes: String) {
-        dailyVotesText.text = getString(R.string.last_votes_template, lastVotes)
+        dailyVotesText.text = getString(R.string.reputation_last_votes_template, lastVotes)
         if (lastVotes.isEmpty()) {
             dailyVotesText.gone()
             reputationWrapperSeparateLineView.gone()

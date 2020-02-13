@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Wallet -->
+    <string name="wallet_title">Billetera</string>
+    <string name="wallet_set_amount">Monto a enviar</string>
+    <string name="wallet_sora_account">Cuenta Sora</string>
+    <string name="wallet_receive">Recibir</string>
+    <string name="wallet_receive_xor">Recibe XOR</string>
+    <string name="wallet_recipient">Destinatario</string>
+    <string name="wallet_amount_error">El campo de cantidad debe llenarse</string>
+    <string name="wallet_amount_is_zero_error">La cantidad debe ser mayor a cero</string>
+    <string name="wallet_insufficient_balance">No tienes suficiente XOR en tu saldo</string>
+    <string name="wallet_transaction_status">Estado</string>
+    <string name="wallet_transaction_identifier">Identificador</string>
+    <string name="wallet_transaction_date">Fecha y hora</string>
+    <string name="wallet_all_done">Todo realizado</string>
+    <string name="wallet_done">Realizado</string>
+    <string name="wallet_transaction_details">Detalles de la transacción</string>
+    <string name="wallet_sender">Quien Envia</string>
+    <string name="wallet_send_to_eth_title">Enviar a ETH</string>
+    <string name="wallet_transaction_confirmation_title">Confirmación</string>
+    <string name="wallet_transaction_confirmation_header">Por favor verifique y confirme los detalles</string>
+    <string name="wallet_funds_are_being_sent">Se están enviando fondos</string>
+    <string name="wallet_eth_address">Dirección de billetera Ethereum</string>
+    <string name="wallet_transaction_fee_template" formatted="false">Tarifa de transacción %s %s</string>
+    <string name="wallet_transaction_fee">Tarifa de transacción</string>
+    <string name="wallet_eth_hint">42 símbolos hexadecimales en minúsculas que comienzan por 0x</string>
+    <string name="wallet_total_amount_template">Monto Total</string>
+    <string name="wallet_amount_to_send">Cantidad a enviar</string>
+    <string name="wallet_eth_address_error">La dirección de Eth debe tener 42 caracteres y comenzar con 0x</string>
+    <string name="wallet_xor_template">XOR — %s</string>
+    <string name="wallet_total_amount">Monto Total</string>
+    <string name="wallet_send_back">Enviar de vuelta</string>
+    <string name="wallet_recent_events_title">Eventos recientes</string>
+    <string name="wallet_share_qr_code">Compartir</string>
+    <string name="wallet_withdrawal_description">Retiro a</string>
+    <string name="wallet_description">Descripción de la transferencia</string>
+    <string name="wallet_empty_description">Transacciones entrantes y salientes\naparecerán aquí</string>
+    <string name="wallet_qr_share_message_template" formatted="false">Mi dirección de Sora Network para recibir %s %s:</string>
+    <string name="wallet_qr_share_message_empty_template">Mi dirección de Sora Network para recibir %s:</string>
+    <string name="wallet_from">Desde</string>
+    <string name="wallet_to">A quien deseas enviarle</string>
+    <string name="wallet_amount">Monto</string>
+    <string name="wallet_description_hint">Descripción de la transferencia</string>
+    <string name="wallet_rejected">Rechazado</string>
+    <string name="wallet_pending">Pendiente</string>
+    <string name="wallet_committed">Comprometido</string>
+
+    <!-- Contacts -->
+    <string name="contacts_scan_qr">Escanea codigo QR </string>
+    <string name="contacts_qr_scan_canceled">Escaneo cancelado</string>
+    <string name="contacts_send_to">Enviar</string>
+    <string name="contacts_search_hint">Numero telefonico o id de cuenta</string>
+    <string name="contacts_qr_dialog_title">Escanea codigo QR desde</string>
+    <string name="contacts_select_qr_from">Selecciona Codigo QR</string>
+    <string name="contacts_title">Contactos</string>
+    <string name="contacts_search_empty_state_title">No hay resultados de búsqueda</string>
+    <string name="contacts_empty_state_title">Los contactos más importantes aparecerán aquí</string>
+    <string-array name="contacts_scan_qr_variants">
+        <item>Cámara</item>
+        <item>Galería</item>
+    </string-array>
+</resources>

@@ -1,0 +1,119 @@
+<resources>
+    <!-- Languages -->
+    <string name="common_russian">Русский</string>
+    <string name="common_english">Английский</string>
+    <string name="common_spanish">Испанский</string>
+    <string name="common_bashkir">Башкирский</string>
+
+    <!-- Other common stuff -->
+    <string name="common_select_email_app_title">Выберите приложение для работы с почтой</string>
+    <string name="common_sora_support_email">sora@soramitsu.co.jp</string>
+    <string name="common_network_unavailable">Нет доступа к Интернету</string>
+    <string name="common_xor">XOR</string>
+    <string name="common_privacy_title">Политика конфиденциальности</string>
+    <string name="common_save">Сохранить</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="common_apply">Применить</string>
+    <string name="common_ok">Ок</string>
+    <string name="common_next">Далее</string>
+    <string name="common_and">и</string>
+    <string name="common_send">Отправить</string>
+    <string name="common_vote">Голосовать</string>
+    <string name="common_today">Сегодня</string>
+    <string name="common_yesterday">Вчера</string>
+    <string name="common_try_another">Попробовать ещё</string>
+    <string name="common_skip">Пропустить</string>
+    <string name="common_search">Поиск</string>
+    <string name="common_please_wait">Пожалуйста, подождите</string>
+    <string name="common_verifying_auth">Авторизация…</string>
+    <string name="common_question_mark">\?</string>
+
+    <!-- Error -->
+    <string name="common_error_general_title">Ошибка</string>
+    <string name="common_error_not_found_title">Ресурс недоступен</string>
+    <string name="common_error_internal_error_title">Внутренняя ошибка</string>
+    <string name="common_error_phone_already_exists">Извините, этот номер телефона уже используется. Пожалуйста, попробуйте другой.</string>
+    <string name="common_personal_info_first_name_hint">Имя</string>
+    <string name="common_personal_info_last_name_hint">Фамилия</string>
+    <string name="common_error_invitation_already_accepted">Вы уже приняли другое приглашение</string>
+    <string name="common_error_inviter_registered_after_invitee">Вы не можете использовать код приглашения пользователя, зарегистрированного позже вас</string>
+    <string name="common_error_self_invitation">Вы не можете использовать собственный код приглашения</string>
+    <string name="common_error_not_enough_invitations">Извините, но у Вас не осталось кодов приглашения</string>
+    <string name="common_error_network">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
+    <string name="common_error_general_message">Мы уже решаем эту проблему. Пожалуйста, попробуйте позже.</string>
+    <string name="common_error_user_not_found">Ваша парольная фраза недействительна. Пожалуйста, попробуйте другую.</string>
+    <string name="common_error_invitation_code_not_found">Код приглашения недействителен</string>
+    <string name="common_error_ambiguous_result">Неоднозначный результат</string>
+    <string name="common_error_invitation_accepting_window_closed">Время для ввода кода приглашения истекло</string>
+    <string name="common_error_mnemonic_length_error">Парольная фраза содержит 15 слов</string>
+    <string name="common_error_mnemonic_is_not_valid">Ваша парольная фраза недействительна. Пожалуйста, попробуйте другую.</string>
+    <string name="common_error_search_string_error">Длинна запроса должна быть от 3 до 64 символов</string>
+    <string name="common_error_qr_decode_error">QR не может быть распознан</string>
+    <string name="common_error_invalid_query_format">Ваш запрос некорректен. Попробуйте еще раз.</string>
+    <string name="common_error_qr_user_not_found">Пользователь с таким QR кодом не найден</string>
+    <string name="common_error_phone_already_registered">Номер телефона уже используется другим пользователем</string>
+    <string name="common_error_fee_rate_not_available">Не удается связаться с провайдером для вывода средств. Пожалуйста, попробуйте позже.</string>
+    <string name="common_error_sending_to_myself">Вы не можете отправить XOR самому себе</string>
+    <string name="common_error_invalid_parameters">Неверные параметры</string>
+    <string name="common_error_invalid_parameters_body">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
+    <string name="common_error_unauthorized_title">Ошибка авторизации</string>
+    <string name="common_error_unauthorized_body">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
+    <string name="common_error_pincode_check_error">Введен неверный код</string>
+    <string name="common_error_votes_not_enough">Недостаточно голосов</string>
+    <string name="common_error_voting_is_not_allowed">Извините, но проект больше не может получать голоса.</string>
+    <string name="common_error_votes_invalid_format">Извините, введено некорректное количество голосов. Пожалуйста, попробуйте проголосовать снова.</string>
+    <string name="common_error_project_not_found">Извините, проект не найден</string>
+    <string name="common_error_wrong_user_status">Не удается продолжить операцию, поскольку статус пользователя некорректен</string>
+    <string name="common_error_user_values_not_found">Не удается продолжить операцию, поскольку данные о пользователе не найдены</string>
+    <string name="common_sms_code_expired">Срок действия кода истек. Пожалуйста, попробуйте другой.</string>
+    <string name="common_sms_code_not_correct">Неверный код подтверждения</string>
+    <string name="phone_verification_too_frequent_message">Слишком частые запросы подтверждения. Пожалуйста, попробуйте позже.</string>
+
+    <!-- Terms -->
+    <string name="common_terms_title">Условия использования</string>
+
+    <!-- Personal info -->
+    <string name="common_personal_info_title">Личные данные</string>
+    <string name="common_personal_info_last_name_is_empty">Фамилия не указана</string>
+    <string name="common_personal_info_first_name_is_empty">Имя не указано</string>
+    <string name="common_personal_info_first_name_hyphen_error">Имя не может начинаться или заканчиваться дефисом, или содержать двойной дефис</string>
+    <string name="common_personal_info_last_name_hyphen_error">Фамилия не может начинаться или заканчиваться дефисом, или содержать двойной дефис</string>
+
+    <!-- Passphrase -->
+    <string name="common_passphrase_title">Парольная фраза</string>
+    <string name="common_passphrase_save_or_send">Сохранить или отправить</string>
+    <string name="common_passphrase_save_mnemonic_title">Сохранить или отправить парольную фразу</string>
+    <string name="common_passphrase_header">Парольная фраза – это\nвид пароля.</string>
+    <string name="common_passphrase_body">Она используется для восстановления доступа к аккаунту. В случае потери восстановить доступ будет невозможно!</string>
+    <string name="common_passphrase_your_passphrase">Ваша парольная фраза</string>
+
+    <!-- Unsupported version -->
+    <string name="common_unsupported_version_title">Обновите приложение Sora</string>
+    <string name="common_unsupported_version_body">Обновленное приложение Sora, с исправлениями и улучшениями, доступно в Google Play.</string>
+    <string name="common_unsupported_version_open_google_play">Открыть Google Play</string>
+
+    <string name="activity_user_registered_type">Регистрация друга</string>
+    <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_registered_description">Ваша репутация повысилась!</string>
+    <string name="activity_voting_rights_credited_type_template">Распределение голосов</string>
+    <string name="activity_voting_rights_title_template">Ежедневные голоса</string>
+    <string name="activity_invitation_credited_type_template">Распределение приглашений</string>
+    <string name="activity_invitation_credited_title_template">Приглашения добавлены</string>
+    <string name="activity_project_funded_type_template">Проект завершен!</string>
+    <string name="activity_project_funded_title_template">%s</string>
+    <string name="activity_project_funded_description_template">Информация о награде в XOR скоро станет доступна</string>
+    <string name="activity_project_created_type_template">Новый проект!</string>
+    <string name="activity_project_created_title_template">%s</string>
+    <string name="activity_project_created_description_template">%s</string>
+    <string name="activity_project_closed_title_template">%s</string>
+    <string name="activity_xor_reward_credited_from_project_type_template">Награда в XOR за активность</string>
+    <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_rank_changed_type_template">Изменение рейтинга</string>
+    <string name="activity_project">Проект</string>
+    <string name="activity_user">Пользователь</string>
+    <string name="activity_xor_between_users_transferred_type_template">XOR получены</string>
+    <string name="activity_user_rank_changed_title_template" formatted="false">Ваша позиция в рейтинге %s из %s</string>
+    <string name="activity_project_closed_type_template">Срок голосования за проект истек!</string>
+    <string name="activity_voted_friend_added_type_template">Ваш друг проголосовал!</string>
+    <string name="activity_voted_friend_added_description_template" formatted="false">%s отдал(а) %s голосов проекту %s</string>
+</resources>

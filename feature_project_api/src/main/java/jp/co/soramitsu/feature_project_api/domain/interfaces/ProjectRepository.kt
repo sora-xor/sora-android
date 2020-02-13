@@ -23,19 +23,19 @@ interface ProjectRepository {
 
     fun getAllProjects(): Observable<List<Project>>
 
-    fun updateAllProjects(): Completable
+    fun fetchRemoteAllProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int>
 
     fun getVotedProjects(): Observable<List<Project>>
 
-    fun updateVotedProjects(): Completable
+    fun fetchRemoteVotedProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int>
 
     fun getFavoriteProjects(): Observable<List<Project>>
 
-    fun updateFavoriteProjects(): Completable
+    fun fetchRemoteFavoriteProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int>
 
     fun getFinishedProjects(): Observable<List<Project>>
 
-    fun updateFinishedProjects(): Completable
+    fun fetchRemoteFinishedProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int>
 
     fun getVotesHistory(count: Int, offset: Int, updateCached: Boolean): Single<List<VotesHistory>>
 

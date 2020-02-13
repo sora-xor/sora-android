@@ -19,6 +19,7 @@ import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TimerWrapper
 import jp.co.soramitsu.common.util.ext.parseOtpCode
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
@@ -28,7 +29,8 @@ class VerificationViewModel(
     private val interactor: OnboardingInteractor,
     private val router: OnboardingRouter,
     private val progress: WithProgress,
-    private val timer: TimerWrapper
+    private val timer: TimerWrapper,
+    private val numbersFormatter: NumbersFormatter
 ) : BaseViewModel(), WithProgress by progress {
 
     companion object {
@@ -37,7 +39,7 @@ class VerificationViewModel(
         const val SMS_CONSENT_REQUEST = 2
     }
 
-    val timerLiveData = MutableLiveData<Pair<Int, Int>>()
+    val timerLiveData = MutableLiveData<Pair<String, String>>()
     val timerFinishedLiveData = MutableLiveData<Event<Unit>>()
 
     val smsCodeStartActivityForResult = MutableLiveData<Intent>()
@@ -107,8 +109,8 @@ class VerificationViewModel(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     val secondsLeft = (it / 1000).toInt()
-                    val minutes = secondsLeft / 60
-                    val seconds = secondsLeft % 60
+                    val minutes = numbersFormatter.formatIntegerToTwoDigits(secondsLeft / 60)
+                    val seconds = numbersFormatter.formatIntegerToTwoDigits(secondsLeft % 60)
                     timerLiveData.value = Pair(minutes, seconds)
                 }, {
                     it.printStackTrace()

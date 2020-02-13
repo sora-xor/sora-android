@@ -103,19 +103,9 @@
                             android:drawablePadding="@dimen/x2"
                             android:gravity="center_vertical"
                             android:padding="@dimen/x1"
-                            android:text="@string/send_invite"
+                            android:text="@string/invite_send_invite"
                             android:textColor="@color/lightRed"
                             android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/votesCount"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="@dimen/x1"
-                            android:layout_marginEnd="@dimen/x2"
-                            android:layout_marginBottom="@dimen/x1"
-                            android:textSize="14sp"
-                            tools:text="12" />
 
                     </LinearLayout>
 
@@ -141,7 +131,7 @@
                             android:drawablePadding="@dimen/x2"
                             android:gravity="center_vertical"
                             android:padding="@dimen/x1"
-                            android:text="@string/enter_invitation_code"
+                            android:text="@string/invite_enter_invitation_code"
                             android:textColor="@color/lightRed"
                             android:textSize="14sp" />
 
@@ -206,7 +196,7 @@
                 android:paddingTop="@dimen/x2"
                 android:paddingEnd="@dimen/margin_padding_by_side"
                 android:paddingBottom="@dimen/x2"
-                android:text="@string/accepted_invitations_title"
+                android:text="@string/invite_accepted_invitations_title"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -244,7 +234,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
-                    android:text="@string/empty_friends_description"
+                    android:text="@string/invite_empty_friends_description"
                     android:textColor="@color/oceanBlue" />
 
             </LinearLayout>

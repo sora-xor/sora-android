@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wallet -->
+    <string name="wallet_title">Кошелек</string>
+    <string name="wallet_set_amount">Введите сумму</string>
+    <string name="wallet_sora_account">Аккаунт Sora</string>
+    <string name="wallet_receive">Получить</string>
+    <string name="wallet_receive_xor">Получить XOR</string>
+    <string name="wallet_recipient">Получатель</string>
+    <string name="wallet_amount_error">Поле суммы должно быть заполнено</string>
+    <string name="wallet_amount_is_zero_error">Сумма должна быть больше нуля</string>
+    <string name="wallet_insufficient_balance">Недостаточно XOR на балансе</string>
+    <string name="wallet_transaction_status">Статус</string>
+    <string name="wallet_transaction_identifier">Идентификатор</string>
+    <string name="wallet_transaction_date">Дата и время</string>
+    <string name="wallet_all_done">Все готово</string>
+    <string name="wallet_done">Готово</string>
+    <string name="wallet_transaction_details">Детали транзакции</string>
+    <string name="wallet_sender">Отправитель</string>
+    <string name="wallet_send_to_eth_title">Отправить на ETH-кошелек</string>
+    <string name="wallet_transaction_confirmation_title">Подтверждение</string>
+    <string name="wallet_transaction_confirmation_header">Пожалуйста, проверьте и подтвердите детали</string>
+    <string name="wallet_funds_are_being_sent">Средства отправляются</string>
+    <string name="wallet_eth_address">Адрес кошелька Ethereum</string>
+    <string name="wallet_transaction_fee_template" formatted="false">Комиссия за транзакцию %s %s</string>
+    <string name="wallet_transaction_fee">Комиссия за транзакцию</string>
+    <string name="wallet_eth_hint">42 строчных шестнадцатеричных символа, начинающихся с 0x</string>
+    <string name="wallet_total_amount_template" formatted="false">Общая сумма %s %.2f</string>
+    <string name="wallet_amount_to_send">Отправляемая сумма</string>
+    <string name="wallet_eth_address_error">Адрес Eth кошелька должен быть длиной 42 символа и начинаться с 0x</string>
+    <string name="wallet_xor_template">XOR — %s</string>
+    <string name="wallet_total_amount">Общая сумма</string>
+    <string name="wallet_send_back">Отправить обратно</string>
+    <string name="wallet_recent_events_title">Недавние события</string>
+    <string name="wallet_share_qr_code">Поделиться</string>
+    <string name="wallet_withdrawal_description">Вывод средств в</string>
+    <string name="wallet_description">Описание</string>
+    <string name="wallet_empty_description">Входящие и исходящие \nтранзакции будут отображаться здесь</string>
+    <string name="wallet_qr_share_message_template" formatted="false">Мой адрес в Sora для получения %s %s:</string>
+    <string name="wallet_qr_share_message_empty_template">Мой адрес в Sora для получения %s:</string>
+    <string name="wallet_from">От кого</string>
+    <string name="wallet_to">Кому</string>
+    <string name="wallet_amount">Сумма</string>
+    <string name="wallet_description_hint">Описание транзакции</string>
+    <string name="wallet_rejected">Отклонено</string>
+    <string name="wallet_pending">В процессе</string>
+    <string name="wallet_committed">Успешно</string>
+
+    <!-- Contacts -->
+    <string name="contacts_scan_qr">Сканировать QR код</string>
+    <string name="contacts_qr_scan_canceled">Сканирование отменено</string>
+    <string name="contacts_send_to">Отправить</string>
+    <string name="contacts_search_hint">Номер телефона или аккаунт</string>
+    <string name="contacts_qr_dialog_title">Сканировать QR-код из</string>
+    <string name="contacts_select_qr_from">Выбрать QR код</string>
+    <string name="contacts_title">Контакты</string>
+    <string name="contacts_search_empty_state_title">Нет результатов</string>
+    <string name="contacts_empty_state_title">Важные контакты будут отображаться здесь</string>
+    <string-array name="contacts_scan_qr_variants">
+        <item>Камера</item>
+        <item>Галерея</item>
+    </string-array>
+</resources>

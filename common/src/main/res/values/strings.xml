@@ -1,138 +1,126 @@
 <resources>
-    <!-- Errors -->
-    <string name="sora_ok">Ok</string>
-    <string name="personal_info_title">Personal information</string>
-    <string name="passphrase_title">Passphrase</string>
-    <string name="general_error_title">Error occurred</string>
-    <string name="general_error_message">General error occurred. Please try again later.</string>
-    <string name="sms_code_not_correct">You entered wrong code. Please try again.</string>
-    <string name="sms_code_expired">This code has expired. Please try another one.</string>
-    <string name="save_or_send">Save or send</string>
-    <string name="not_enough_invitations">No invitations left</string>
-    <string name="user_not_found">Your passphrase is invalid. Please, try another one.</string>
-    <string name="user_values_not_found">User values with credentials not found</string>
-    <string name="invitation_code_not_found">Code is not valid</string>
-    <string name="application_form_not_found">Application form not found</string>
-    <string name="project_not_found">Project not found</string>
-    <string name="voting_is_not_allowed">Project is not opened for voting</string>
-    <string name="votes_not_enough">You haven\'t got enough votes to proceed.</string>
-    <string name="not_authorized">You are not authorized. Try reinstall app and sign in again.</string>
-    <string name="ambiguous_result">Ambiguous result</string>
-    <string name="wrong_user_status">Wrong user status</string>
-    <string name="inviter_registered_after_invitee">Provided invitation code cannot be applied because it is from the user who registered after you</string>
-    <string name="invitation_accepting_window_closed">Invitation accepting window closed</string>
-    <string name="invitation_already_accepted">Invitation already accepted</string>
-    <string name="self_invitation">You cannot use your invitation code for yourself</string>
+    <!-- No translatable -->
+    <string name="common_russian_native" translatable="false">Русский</string>
+    <string name="common_english_native" translatable="false">English</string>
+    <string name="common_spanish_native" translatable="false">Español</string>
+    <string name="common_bashkir_native" translatable="false">Башҡортостан</string>
+    <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
 
-    <string name="email_is_not_valid">Email is not valid</string>
-    <string name="first_name_is_empty">First name shouldn\'t be empty</string>
-    <string name="last_name_is_empty">Last name shouldn\'t be empty</string>
-    <string name="first_name_hyphen_error">First name can\'t start or end on hyphen or have double hyphen</string>
-    <string name="last_name_hyphen_error">Last name can\'t start or end on hyphen or have double hyphen</string>
+    <!-- Languages -->
+    <string name="common_russian">Russian</string>
+    <string name="common_english">English</string>
+    <string name="common_spanish">Spanish</string>
+    <string name="common_bashkir">Bashkir</string>
 
-    <string name="share_title">Share</string>
-    <string name="share_subject">You were invited to Sora Passport</string>
-    <string name="code_copied">Your code has been copied to clipboard</string>
-    <string name="mnemonic_length_error">Mnemonic must contain 15 words</string>
-    <string name="mnemonic_is_not_valid">Your mnemonic is not valid. Please try again.</string>
+    <!-- Other common stuff -->
+    <string name="common_select_email_app_title">Select email app</string>
+    <string name="common_sora_support_email">sora@soramitsu.co.jp</string>
+    <string name="common_network_unavailable">Network connection unavailable</string>
+    <string name="common_xor">XOR</string>
+    <string name="common_privacy_title">Privacy policy</string>
+    <string name="common_save">Save</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_apply">Apply</string>
+    <string name="common_ok">Ok</string>
+    <string name="common_next">Next</string>
+    <string name="common_and">and</string>
+    <string name="common_send">Send</string>
+    <string name="common_vote">Vote</string>
+    <string name="common_today">Today</string>
+    <string name="common_yesterday">Yesterday</string>
+    <string name="common_try_another">Try another</string>
+    <string name="common_skip">Skip</string>
+    <string name="common_search">Search</string>
+    <string name="common_please_wait">Please wait</string>
+    <string name="common_verifying_auth">Verifying authorization…</string>
+    <string name="common_question_mark">\?</string>
 
-    <string name="tabs_all">All</string>
-    <string name="tabs_voted">Voted</string>
-    <string name="tabs_favourites">Favourites</string>
-    <string name="tabs_complete">Completed</string>
+    <!-- Error -->
+    <string name="common_error_general_title">Error</string>
+    <string name="common_error_not_found_title">Resource unavailable</string>
+    <string name="common_error_internal_error_title">Internal error</string>
+    <string name="common_error_phone_already_exists">Sorry, this phone number is already in use. Please, try another one.</string>
+    <string name="common_personal_info_first_name_hint">First name</string>
+    <string name="common_personal_info_last_name_hint">Last name</string>
+    <string name="common_error_invitation_already_accepted">You have already applied another invitation code</string>
+    <string name="common_error_inviter_registered_after_invitee">Provided invitation code cannot be applied because it is from the user who registered after you</string>
+    <string name="common_error_self_invitation">You cannot use your invitation code for yourself</string>
+    <string name="common_error_not_enough_invitations">Sorry, but you don\'t have any invitations to share</string>
+    <string name="common_error_network">Please, check internet connection and try again later.</string>
+    <string name="common_error_general_message">We are working hard to fix the problem. Please, try again later.</string>
+    <string name="common_error_user_not_found">Your passphrase is invalid. Please, try another one.</string>
+    <string name="common_error_invitation_code_not_found">Invitation code is invalid</string>
+    <string name="common_error_ambiguous_result">Ambiguous result</string>
+    <string name="common_error_invitation_accepting_window_closed">Invitation accepting window closed</string>
+    <string name="common_error_mnemonic_length_error">Passphrase must contain 15 words</string>
+    <string name="common_error_mnemonic_is_not_valid">Your passphrase is invalid. Please, try another one.</string>
+    <string name="common_error_search_string_error">Search size must be between 3 and 64</string>
+    <string name="common_error_qr_decode_error">Qr can\'t be decoded</string>
+    <string name="common_error_invalid_query_format">Your query is wrong. Please try again.</string>
+    <string name="common_error_qr_user_not_found">User with such QR not found</string>
+    <string name="common_error_phone_already_registered">Phone number already used during registration with this or another user</string>
+    <string name="common_error_fee_rate_not_available">Can\'t contact withdrawal provider. Please, try again later.</string>
+    <string name="common_error_sending_to_myself">You can\'t send XOR to yourself</string>
+    <string name="common_error_invalid_parameters">Invalid Parameters</string>
+    <string name="common_error_invalid_parameters_body">Please, check internet connection and try again later.</string>
+    <string name="common_error_unauthorized_title">Authorization Failed</string>
+    <string name="common_error_unauthorized_body">Please, check internet connection and try again later.</string>
+    <string name="common_error_pincode_check_error">Entered code is wrong</string>
+    <string name="common_error_votes_not_enough">Sorry, but you don\'t have enough points to vote.</string>
+    <string name="common_error_voting_is_not_allowed">Sorry, but the project can\'t receive votes anymore.</string>
+    <string name="common_error_votes_invalid_format">Sorry, but your amount of votes can\'t be interpreted. Please, try to vote again.</string>
+    <string name="common_error_project_not_found">Sorry, but the project is not found.</string>
+    <string name="common_error_wrong_user_status">Can\'t continue operation because user\'s status is invalid</string>
+    <string name="common_error_user_values_not_found">Can\'t continue operation because user values data is not found</string>
+    <string name="common_sms_code_expired">Verification code has been expired. Please try another one.</string>
+    <string name="common_sms_code_not_correct">Verification code is incorrect</string>
+    <string name="phone_verification_too_frequent_message">Too frequent verification code requests. Please, try again later.</string>
 
-    <string name="user_registered_type_template">Friend Registered</string>
-    <string name="user_registered_title_template">%1$s %2$s</string>
-    <string name="user_registered_description_template">Your reputation will be increased!</string>
+    <!-- Terms -->
+    <string name="common_terms_title">Terms and conditions</string>
 
-    <string name="xor_between_users_transferred_type_template">%1$s XOR Received</string>
-    <string name="xor_between_users_transferred_title_template">From %1$s %2$s</string>
-    <string name="xor_between_users_transferred_description_template">"%1$s"</string>
+    <!-- Personal info -->
+    <string name="common_personal_info_title">Personal information</string>
+    <string name="common_personal_info_last_name_is_empty">Last name is empty</string>
+    <string name="common_personal_info_first_name_is_empty">First name is empty</string>
+    <string name="common_personal_info_first_name_hyphen_error">First name can\'t start or end on hyphen or have double hyphen</string>
+    <string name="common_personal_info_last_name_hyphen_error">Last name can\'t start or end on hyphen or have double hyphen</string>
 
-    <string name="voting_rights_credited_type_template">Votes distribution</string>
-    <string name="voting_rights_title_template">Daily votes</string>
+    <!-- Passphrase -->
+    <string name="common_passphrase_title">Passphrase</string>
+    <string name="common_passphrase_save_or_send">Save or send</string>
+    <string name="common_passphrase_save_mnemonic_title">Save or send passphrase</string>
+    <string name="common_passphrase_header">Passphrase is\na type of password.</string>
+    <string name="common_passphrase_body">It is used to recover access to account. Write in down, we will not be able to recover your account without it!</string>
+    <string name="common_passphrase_your_passphrase">Your passphrase</string>
 
-    <string name="user_reputation_changed_type_template">Reputation changed</string>
-    <string name="user_reputation_changed_title_template">Your reputation now is %1$s</string>
+    <!-- Unsupported version -->
+    <string name="common_unsupported_version_title">Update your Sora App</string>
+    <string name="common_unsupported_version_body">Updated Sora Application is available in Google Play. It includes improvements and bug fixes.</string>
+    <string name="common_unsupported_version_open_google_play">Open Google Play</string>
 
-    <string name="invitation_credited_type_template">Invitations distribution</string>
-    <string name="invitation_credited_title_template">You have received %1$s invitations</string>
-
-    <string name="project_funded_type_template">Project has been completed!</string>
-    <string name="project_funded_title_template">%1$s</string>
-    <string name="project_funded_description_template">You will receive information about XOR reward soon</string>
-
-    <string name="project_created_type_template">New project!</string>
-    <string name="project_created_title_template">%1$s</string>
-    <string name="project_created_description_template">%1$s</string>
-
-    <string name="project_closed_type_template">Project reached deadline</string>
-    <string name="project_closed_title_template">%1$s</string>
-
-    <string name="xor_reward_credited_from_project_type_template">XOR Reward for voting</string>
-    <string name="xor_reward_credited_from_project_title_template">%1$s</string>
-    <string name="xor_reward_credited_from_project_description_template">You have received %1$s XOR for successful voting!</string>
-
-    <string name="voted_friend_added_type_template">Friend voted for project</string>
-    <string name="voted_friend_added_title_template">%1$s %2$s</string>
-    <string name="voted_friend_added_description_template">%1$s has spent %2$s votes for %3$s project</string>
-
-    <string name="user_rank_changed_type_template">Rank changed</string>
-    <string name="user_rank_changed_title_template">Your rank now is %1$s (of %2$s)</string>
-    <string name="phone_already_exists">User with this phone number already exists</string>
-    <string name="network_error">Some network problems. Please try again later.</string>
-    <string name="favourite">Favourite</string>
-    <string name="terms_title">Terms and conditions</string>
-    <string name="privacy_fragment_title">Privacy policy</string>
-    <string name="save_mnemonic_title">Save or send passphrase</string>
-    <string name="search_string_error">Search size must be between 3 and 32</string>
-    <string name="qr_error">Qr can\'t be decoded</string>
-    <string name="invalid_query_format">Your query is wrong. Please try again.</string>
-    <string name="something_went_wrong">Something went wrong. Please try again.</string>
-
-    <string name="search_hint_default">Search</string>
-    <string name="qr_user_not_found">User with such QR not found</string>
-    <string name="phone_already_registered">Phone number already used during registration with this or another user</string>
-
-    <string name="fragment_mnemonic_header">Passphrase is\na type of password.</string>
-    <string name="fragment_mnemonic_body">It is used to recover access to account. Write in down, we will not be able
-        to recover your account without it!</string>
-    <string name="fragment_mnemonic_your_passphrase">Your passphrase</string>
-
-    <string name="fragment_unsupported_version_title">Update your Sora App</string>
-    <string name="fragment_unsupported_version_body">Updated Sora Application is available in Google Play. It includes improvements and bug fixes.</string>
-    <string name="fragment_unsupported_version_open_google_play">Open Google Play</string>
-
-    <string name="project">Project</string>
-    <string name="user">User</string>
-
-    <string name="loading">Loading..</string>
-
-    <string name="personal_first_name_hint">First name</string>
-    <string name="personal_last_name_hint">Last name</string>
-    <string name="fee_rate_not_available">Can\'t contact withdrawal provider. Please, try again later.</string>
-
-    <string name="qr_dialog_title">Scan QR from</string>
-    <string name="select_qr">Select QR image</string>
-
-
-    <string-array name="qr_dialog_array">
-        <item>Camera</item>
-        <item>Gallery</item>
-    </string-array>
-
-    <string name="qr_share_message_empty_template">My Sora network address to Receive XOR:</string>
-    <string name="qr_share_message_template">My Sora network address to Receive %1$s XOR:</string>
-    <string name="withdrawal_description">Withdrawal to</string>
-
-    <string name="sending_to_myself">You can\'t send XOR to yourself</string>
-    <string name="invalid_parameters_title">Invalid Parameters</string>
-    <string name="invalid_parameters_body">Please, check internet connection and try again later.</string>
-    <string name="unauthorized_title">Authorization Failed</string>
-    <string name="unauthorized_body">Please, check internet connection and try again later.</string>
-    <string name="not_found_title">Resource unavailable</string>
-    <string name="not_found_body">We are working hard to fix the problem. Please, try again later.</string>
-    <string name="internal_error_title">Internal error</string>
-    <string name="pincode_check_error">Entered code is wrong</string>
-
+    <string name="activity_user_registered_type">Friend Registered</string>
+    <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_registered_description">Your reputation will be increased!</string>
+    <string name="activity_voting_rights_credited_type_template">Votes distribution</string>
+    <string name="activity_voting_rights_title_template">Daily votes</string>
+    <string name="activity_invitation_credited_type_template">Invitations distribution</string>
+    <string name="activity_invitation_credited_title_template">Invitations credited</string>
+    <string name="activity_project_funded_type_template">Project has been completed!</string>
+    <string name="activity_project_funded_title_template">%s</string>
+    <string name="activity_project_funded_description_template">You will receive information about XOR reward soon</string>
+    <string name="activity_project_created_type_template">New project!</string>
+    <string name="activity_project_created_title_template">%s</string>
+    <string name="activity_project_created_description_template">%s</string>
+    <string name="activity_project_closed_title_template">%s</string>
+    <string name="activity_xor_reward_credited_from_project_type_template">XOR Reward for voting</string>
+    <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_rank_changed_type_template">Rank changed</string>
+    <string name="activity_project">Project</string>
+    <string name="activity_user">User</string>
+    <string name="activity_xor_between_users_transferred_type_template">XOR Received</string>
+    <string name="activity_user_rank_changed_title_template" formatted="false">Your rank now is %s out of %s</string>
+    <string name="activity_project_closed_type_template">Project reached deadline!</string>
+    <string name="activity_voted_friend_added_type_template">Friend voted for project!</string>
+    <string name="activity_voted_friend_added_description_template" formatted="false">%s has spent %s votes for %s project</string>
 </resources>

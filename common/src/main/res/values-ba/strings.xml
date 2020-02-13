@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Languages -->
+    <string name="common_russian">Рус</string>
+    <string name="common_english">Инглиз</string>
+    <string name="common_spanish">Испан</string>
+    <string name="common_bashkir">Башҡортостан</string>
+
+    <!-- Other common stuff -->
+    <string name="common_select_email_app_title">Email һайлағыҙ</string>
+    <string name="common_sora_support_email">sora@soramitsu.co.jp</string>
+    <string name="common_network_unavailable">Селтәр юҡ</string>
+    <string name="common_xor">XOR</string>
+    <string name="common_privacy_title">Хосусил сәйәсәте </string>
+    <string name="common_save">Һаҡларға</string>
+    <string name="common_cancel">Кире ҡағыу</string>
+    <string name="common_apply">Яйлаштырырға</string>
+    <string name="common_ok">Ок</string>
+    <string name="common_next">Киләһе</string>
+    <string name="common_and">һәм</string>
+    <string name="common_send">Ебәрергә</string>
+    <string name="common_vote">Тауыш биреү</string>
+    <string name="common_today">Бөгөн</string>
+    <string name="common_yesterday">Кисә</string>
+    <string name="common_try_another">Башҡа ҡулланып ҡарағыҙ</string>
+    <string name="common_skip">Үткэрергә</string>
+    <string name="common_search">Эҙләү</string>
+    <string name="common_please_wait">Зинһар көтөгөҙ</string>
+    <string name="common_verifying_auth">Авторизация…</string>
+    <string name="common_question_mark">\?</string>
+
+    <!-- Error -->
+    <string name="common_error_general_title">Хата</string>
+    <string name="common_error_not_found_title">Ресурс етә алмаҫлыҡ</string>
+    <string name="common_error_internal_error_title">Эске хата</string>
+    <string name="common_error_phone_already_exists">Ғәфү итегеҙ, был телефон номеры ҡулланыла. Зинһар, икенсене ҡулланып ҡарағыҙ.</string>
+    <string name="common_personal_info_first_name_hint">Исем</string>
+    <string name="common_personal_info_last_name_hint">Фамилия</string>
+    <string name="common_error_invitation_already_accepted">Һеҙ икенсе саҡырыу кодын индерҙегеҙ</string>
+    <string name="common_error_inviter_registered_after_invitee">Саҡырыу кодын ҡуллана алмайһығыҙ сөнки ул һеҙҙән һуң теркәлгән файҙаланыусынан</string>
+    <string name="common_error_self_invitation">Саҡырыу кодын үҙегеҙ өсөн ҡуллана алмайһығыҙ</string>
+    <string name="common_error_not_enough_invitations">Ғәфү итегеҙ, саҡарыуығыҙ бөткән</string>
+    <string name="common_error_network">Зинһар, интернет селтәрен тикшерегеҙ һәм һуңыраҡ ҡабатлап ҡарағыҙ.</string>
+    <string name="common_error_general_message">Йүнәтеү өҫтөнән эшләйбеҙ. Һуңыраҡ ҡабатлап ҡарағыҙ.</string>
+    <string name="common_error_user_not_found">Һеҙҙең серһуҙе яраҡһыҙ. Зинһар, икенсене ҡулланып ҡарағыҙ.</string>
+    <string name="common_error_invitation_code_not_found">Саҡырыу коды яраҡһыҙ</string>
+    <string name="common_error_ambiguous_result">Ҡаршылыҡлы һөҙөмтә</string>
+    <string name="common_error_invitation_accepting_window_closed">Код индереү ваҡыты үтте</string>
+    <string name="common_error_mnemonic_length_error">Серһүҙе 15 һүҙҙән торорға тейеш.</string>
+    <string name="common_error_mnemonic_is_not_valid">Һеҙҙең серһуҙе яраҡһыҙ. Зинһар, икенсене ҡулланып ҡарағыҙ.</string>
+    <string name="common_error_search_string_error">Һорау 3 һәм 64 араһында оҙонлоғо булырға тейеш</string>
+    <string name="common_error_qr_decode_error">QR уҡырға мөмкин түгел</string>
+    <string name="common_error_invalid_query_format">Һеҙҙең һорау яңылыш. Яңынан ҡабатлап ҡарағыҙ.</string>
+    <string name="common_error_qr_user_not_found">Бындай QR код файҙаланыусы табылманған</string>
+    <string name="common_error_phone_already_registered">Был телефон номеры икенсе файҙалыныусы менән теркәләнде</string>
+    <string name="common_error_fee_rate_not_available">Аҡсаны алыу өсөн тәьмин итеүсе менән бәйләнеш юҡ. Һуңыраҡ ҡабатлап ҡарағыҙ.</string>
+    <string name="common_error_sending_to_myself">Һеҙ XORҙы уҙегеҙгә ебәрә алмайһығыҙ</string>
+    <string name="common_error_invalid_parameters">Яңылыш параметрҙар</string>
+    <string name="common_error_invalid_parameters_body">Зинһар, интернет селтәрен тикшерегеҙ һәм һуңыраҡ ҡабатлап ҡарағыҙ.</string>
+    <string name="common_error_unauthorized_title">Авторизация хатаһы</string>
+    <string name="common_error_unauthorized_body">Зинһар, интернет селтәрен тикшерегеҙ һәм һуңыраҡ ҡабатлап ҡарағыҙ.</string>
+    <string name="common_error_pincode_check_error">Яңылыш код индерелгән</string>
+    <string name="common_error_votes_not_enough">Ғәфү итегеҙ, етерлек тауышығыҙ юҡ</string>
+    <string name="common_error_voting_is_not_allowed">Ғәфу итегеҙ, проект тауыш ала алмай.</string>
+    <string name="common_error_votes_invalid_format">Ғәфү итегеҙ, яраҡһыҙ тауыш индерелгән. Зинһар, тауышты яңынан биреп ҡарағыҙ.</string>
+    <string name="common_error_project_not_found">Ғәфу итегеҙ, проект табылмаған.</string>
+    <string name="common_error_wrong_user_status">Барыш дауам ителә алмай сөнки ҡулланыусының статусы яраҡһыҙ</string>
+    <string name="common_error_user_values_not_found">Барыш дауам ителә алмай сөнки ҡулланыусы мәғлүмәте табылманы</string>
+    <string name="common_sms_code_expired">Тикшереү коды иҫкергән. Икенсене ҡулланып ҡарағыҙ.</string>
+    <string name="common_sms_code_not_correct">Яңылыш тикшереү коды</string>
+    <string name="phone_verification_too_frequent_message">Тикшереү коды бик йыш һоранған. Һуңыраҡ ҡабатлап ҡарағыҙ.</string>
+
+    <!-- Terms -->
+    <string name="common_terms_title">Ҡағиҙәләр һәм шарттар</string>
+
+    <!-- Personal info -->
+    <string name="common_personal_info_title">Шәхси мәғлүмәт</string>
+    <string name="common_personal_info_last_name_is_empty">Фамилия буш</string>
+    <string name="common_personal_info_first_name_is_empty">Исем буш</string>
+    <string name="common_personal_info_first_name_hyphen_error">Исем дефис йә ике дефис менән башлана йәки тамамлана алмай</string>
+    <string name="common_personal_info_last_name_hyphen_error">Фамилия дефис йә ике дефис менән башлана йәки тамамлана алмай</string>
+
+    <!-- Passphrase -->
+    <string name="common_passphrase_title">Серһүҙ</string>
+    <string name="common_passphrase_save_or_send">Һаҡларға йәки ебәрергә</string>
+    <string name="common_passphrase_save_mnemonic_title">Серһүҙҙе һаҡларға йәки ебәрергә</string>
+    <string name="common_passphrase_header">Серһүҙ паролден төрө.</string>
+    <string name="common_passphrase_body">Ул аккаунтҡа инеү өсөн ҡулланыла. Юғалтыу осоронда һеҙ аккаунтҡа инеү ҡайтара алмайығыҙ!</string>
+    <string name="common_passphrase_your_passphrase">Һеҙҙең серһүҙегеҙ</string>
+
+    <!-- Unsupported version -->
+    <string name="common_unsupported_version_title">Sora ҡушымтаһын яңыртырға</string>
+    <string name="common_unsupported_version_body">Google Playҙа яңы яҡшыртылған Sora ҡушымтаһы бар.</string>
+    <string name="common_unsupported_version_open_google_play">Google Play асырға</string>
+
+    <string name="activity_user_registered_type">Дуҫығыҙ теркәлгән</string>
+    <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_registered_description">Һеҙҙең абруйығыҙ артасаҡ!</string>
+    <string name="activity_voting_rights_credited_type_template">Саҡырыу таратыу</string>
+    <string name="activity_voting_rights_title_template">Көнлө тауыштар</string>
+    <string name="activity_invitation_credited_type_template">Саҡырыу таратыу</string>
+    <string name="activity_invitation_credited_title_template">Саҡырыуҙар иҫәпләнде</string>
+    <string name="activity_project_funded_type_template">Проект тамамланған!</string>
+    <string name="activity_project_funded_title_template">%s</string>
+    <string name="activity_project_funded_description_template">XOR бүләге тураһында мәғлүмәт тиҙҙән буласаҡ</string>
+    <string name="activity_project_created_type_template">Яңы проект!</string>
+    <string name="activity_project_created_title_template">%s</string>
+    <string name="activity_project_created_description_template">%s</string>
+    <string name="activity_project_closed_title_template">%s</string>
+    <string name="activity_xor_reward_credited_from_project_type_template">Тауыш биргән өсөн XOR бүләк</string>
+    <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
+    <string name="activity_user_rank_changed_type_template">Абруй үҙгәрелгән</string>
+    <string name="activity_project">Проект</string>
+    <string name="activity_user">Файҙаланыусы</string>
+    <string name="activity_xor_between_users_transferred_type_template">XOR алынған</string>
+    <string name="activity_user_rank_changed_title_template" formatted="false">Һеҙҙең абруйығыҙ хәҙер %s урында %s</string>
+    <string name="activity_project_closed_type_template">Проектын ваҡыты үткән</string>
+    <string name="activity_voted_friend_added_type_template">Дуҫығыҙ проект өсөн тауыш биргән</string>
+    <string name="activity_voted_friend_added_description_template" formatted="false">%s %s тауыш %s проектҡа тотонған</string>
+</resources>

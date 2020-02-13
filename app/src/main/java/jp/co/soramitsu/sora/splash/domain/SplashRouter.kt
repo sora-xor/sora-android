@@ -11,6 +11,8 @@ interface SplashRouter {
 
     fun showOnBoardingScreen(onBoardingState: OnboardingState)
 
+    fun showOnBoardingScreenViaInviteLink()
+
     fun showMainScreen()
 
     fun showMainScreenFromInviteLink()

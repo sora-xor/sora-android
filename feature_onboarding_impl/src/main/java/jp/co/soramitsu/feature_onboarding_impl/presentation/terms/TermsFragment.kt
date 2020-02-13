@@ -11,7 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebViewClient
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
@@ -32,7 +32,7 @@ class TermsFragment : BaseFragment<TermsViewModel>() {
     override fun initViews() {
         progressDialog = SoraProgressDialog(activity!!)
 
-        toolbar.setTitle(getString(R.string.terms_title))
+        toolbar.setTitle(getString(R.string.common_terms_title))
         toolbar.setHomeButtonListener { viewModel.onBackPressed() }
 
         configureWebView()

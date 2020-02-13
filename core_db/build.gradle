@@ -29,11 +29,12 @@ dependencies {
     implementation project(":common")
     implementation project(":core_di")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation roomDependencies.values()
-    kapt kaptRoomDependencies.values()
+    implementation roomDep
+    implementation rxRoomDep
+    kapt roomKapt
 }

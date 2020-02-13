@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import jp.co.soramitsu.common.date.DateFormatter
+import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
@@ -14,14 +14,15 @@ import javax.inject.Inject
 import kotlin.math.abs
 
 class TimeSectionInteractor @Inject constructor(
-    private val resourceManager: ResourceManager
+    private val resourceManager: ResourceManager,
+    private val dateTimeFormatter: DateTimeFormatter
 ) {
 
     fun insertDateSections(list: List<VotesHistoryItem>): List<VotesHistoryItem> {
         var lastDate: String? = null
         val queue = mutableListOf<VotesHistoryItem>()
-        val today = resourceManager.getString(R.string.today)
-        val yesterday = resourceManager.getString(R.string.yesterday)
+        val today = resourceManager.getString(R.string.common_today)
+        val yesterday = resourceManager.getString(R.string.common_yesterday)
         list.forEach { model ->
             if (getTimeRemaining(model.timestamp!!.time) == 0) {
 
@@ -50,7 +51,7 @@ class TimeSectionInteractor @Inject constructor(
                     }
                 }
             } else {
-                val date = DateFormatter.format(model.timestamp, DateFormatter.DD_MMMM)
+                val date = dateTimeFormatter.formatDate(model.timestamp, DateTimeFormatter.DD_MMMM)
 
                 if (queue.any { it.header == date }) {
                     queue.add(model)

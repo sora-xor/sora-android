@@ -37,35 +37,42 @@ dependencies {
 
     implementation project(':core_di')
     implementation project(':core_network_api')
+    api project(':uikit')
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation androidDeps.values()
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
 
-    implementation irohaDeps.values()
+    implementation irohaDep
 
-    implementation soraDeps.values()
-    implementation novaCryptoDeps.values()
+    implementation soraDep
+    implementation novaCryptoDep
 
-    implementation loggerDeps.values()
+    implementation loggerDep
 
-    implementation shimmerDeps.values()
+    implementation shimmerDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation navigationDeps.values()
+    implementation navigationFragmentDep
+    implementation navigationUiDep
 
-    implementation(crashlyticsDeps.values()) {
+    implementation(crashlyticsDep) {
         transitive = true
     }
 
-    implementation capitalDeps.values()
+    implementation zXingCoreDep
+    implementation zXingEmbeddedDep
 
-    implementation zXingDeps.values()
-
-    testImplementation unitTestsDeps.values()
-    testImplementation robolectricDeps.values()
-    testImplementation archTestDeps.values()
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
 }

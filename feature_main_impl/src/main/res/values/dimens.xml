@@ -5,5 +5,5 @@
   <dimen name="reputationRankPlaceholderTextSize">13sp</dimen>
   <dimen name="projectDetailsTextSize">11sp</dimen>
   <dimen name="activityFeedItemBorderRadius">6dp</dimen>
-  <dimen name="pin_code_view_spacing">8dp</dimen>
+  <dimen name="round_corner_radius">10dp</dimen>
 </resources>

@@ -46,41 +46,47 @@ dependencies {
     implementation project(":core_network_api")
     implementation project(":feature_onboarding_api")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation androidDeps.values()
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
 
-    implementation navigationDeps.values()
+    implementation navigationFragmentDep
+    implementation navigationUiDep
 
-    implementation shimmerDeps.values()
+    implementation shimmerDep
 
-    implementation roundedImageViewDeps.values()
+    implementation roundedImageViewDep
 
-    implementation picassoDeps.values()
+    implementation picassoDep
 
-    implementation gsonDeps.values()
+    implementation gsonDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation lifecycleDeps.values()
-    kapt lifecycleKapt.values()
+    implementation lifecycleDep
+    kapt lifecycleKapt
 
-    implementation phoenixDeps.values()
+    implementation phoenixDep
 
-    implementation rxBindingDeps.values()
+    implementation rxBindingDep
 
-    implementation capitalDeps.values()
+    implementation soraDep
+    implementation birtDep
 
-    implementation soraDeps.values()
-    implementation birtDeps.values()
+    implementation zXingCoreDep
+    implementation zXingEmbeddedDep
 
-    implementation zXingDeps.values()
+    implementation rxPermissionsDep
 
-    implementation rxPermissionsDeps.values()
-
-    testImplementation unitTestsDeps.values()
-    testImplementation robolectricDeps.values()
-    testImplementation archTestDeps.values()
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
 }

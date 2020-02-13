@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Project -->
+    <string name="projects_title">Проекты Sora</string>
+    <string name="project_founded_template" formatted="false">%s%% голосов из %s</string>
+    <string name="project_votes_template">%s голосов</string>
+    <string name="project_ended_template">Завершился %s</string>
+    <string name="project_spent_format">Вы отдали %s голосов</string>
+    <string name="empty_voted_project_description">Проекты, за которые вы проголосовали,\nпоявятся здесь</string>
+    <string name="empty_completed_project_description">Здесь будут отображаться проекты\nс завершенным голосованием</string>
+    <string name="project_contacts">Контакты и информация</string>
+    <string name="project_discussion_template">Обсудить на %s</string>
+    <string name="project_requires_votes_format">Проект требует только %s голосов 🚀</string>
+    <string name="project_votes_k_template">%sK</string>
+    <plurals name="project_friends_template">
+        <item quantity="zero">%s друзей проголосовали</item>
+        <item quantity="one">%s друг проголосовал</item>
+        <item quantity="few">%s друга проголосовали</item>
+        <item quantity="many">%s друзей проголосовали</item>
+        <item quantity="other">%s друзей проголосовали</item>
+    </plurals>
+    <plurals name="project_details_favorites_format">
+        <item quantity="zero">%s понравилось</item>
+        <item quantity="one">%s понравилось</item>
+        <item quantity="few">%s понравилось</item>
+        <item quantity="many">%s понравилось</item>
+        <item quantity="other">%s понравилось</item>
+    </plurals>
+    <string name="project_successful_voting">Успешное голосование</string>
+    <string name="project_unsuccessful_voting">Неудачное голосование</string>
+    <string name="project_no_video_app_installed_error">Нет установленного приложения для просмотра видео</string>
+    <string name="project_user_have_not_enough_votes_message">Недостаточно голосов 😔</string>
+    <string name="project_you_can_vote_at_least_1_point">Вы можете отдать минимум 1 голос 😜</string>
+    <string name="project_add_to_favourite">Избранное</string>
+    <string name="project_mark_new">Новый</string>
+    <string name="project_completed">Завершенные</string>
+    <string name="project_all">Все</string>
+    <string name="project_voted">Мои голоса</string>
+    <string name="project_favourites">Избранные</string>
+    <string name="project_email">E-mail</string>
+    <string name="project_website">Веб-сайт</string>
+    <string name="project_gallery">Галерея</string>
+    <plurals name="project_date_day_plurals">
+        <item quantity="zero">осталось %s дней</item>
+        <item quantity="one">остался %s день</item>
+        <item quantity="few">осталось %s дня</item>
+        <item quantity="many">осталось %s дней</item>
+        <item quantity="other">осталось %s дней</item>
+    </plurals>
+    <plurals name="project_date_hour_plurals">
+        <item quantity="zero">осталось %s часов</item>
+        <item quantity="one">остался %s час</item>
+        <item quantity="few">осталось %s часа</item>
+        <item quantity="many">осталось %s часов</item>
+        <item quantity="other">осталось %s часов</item>
+    </plurals>
+    <plurals name="project_date_minute_plurals">
+        <item quantity="zero">осталось %s минут</item>
+        <item quantity="one">осталась %s минута</item>
+        <item quantity="few">осталось %s минуты</item>
+        <item quantity="many">осталось %s минут</item>
+        <item quantity="other">осталось %s минут</item>
+    </plurals>
+    <plurals name="project_date_second_plurals">
+        <item quantity="zero">осталось %s секунд</item>
+        <item quantity="one">осталась %s секунда</item>
+        <item quantity="few">осталось %s секунды</item>
+        <item quantity="many">осталось %s секунд</item>
+        <item quantity="other">осталось %s секунд</item>
+    </plurals>
+    <string name="project_vote_dialog_title">Сколько голосов</string>
+    <string name="empty_all_project_description">Ждем добавления новых \n проектов</string>
+    <string name="empty_favorite_project_description">Добавьте проекты в избранное и \nони появятся здесь</string>
+
+    <!-- Invite -->
+    <string name="invite_fragment_title">Друзья</string>
+    <string name="invite_accepted_invitations_title">Принятые приглашения</string>
+    <string name="invite_parent_invitation_template" formatted="false">Вы были приглашены %s %s</string>
+    <string name="invite_code_sharing_title">Поделитесь своим кодом приглашения</string>
+    <string name="invite_send_invite">Пригласить</string>
+    <string name="invite_enter_error_already_applied">Вы уже применили другой код приглашения</string>
+    <string name="invite_enter_dialog_title_hint">8 знаков – букв или цифр</string>
+    <string name="invite_enter_invitation_code">Введите код приглашения</string>
+    <string name="invite_title">Приглашайте друзей и получайте больше голосов!</string>
+    <string name="invite_enter_code_description">Вас пригласили в Sora? Нажмите на кнопку выше и введите код приглашения.</string>
+    <string name="invite_code_applied_title">Поздравляем!</string>
+    <string name="invite_code_applied_body">Код успешно применен</string>
+    <string name="invite_enter_confirmation_body_mask">Хотите применить код приглашения %s ?</string>
+    <string name="invite_enter_error_time_is_up">Время возможности ввода кода приглашения истекло</string>
+    <string name="invite_empty_friends_description">Статус Ваших приглашений \nбудет отображаться здесь</string>
+    <string name="invite_link_format">Присоединяйтесь к Sora по ссылке:\n%s</string>
+
+    <!-- Activity -->
+    <string name="activity">Активность</string>
+    <string name="activity_sora_announcement">Объявления SORA</string>
+    <string name="activity_empty_description">Обновления и уведомления, например,\nо начислении награды или о принятых приглашениях,\nбудут отображаться здесь</string>
+
+    <!-- Votes -->
+    <string name="votes_history_title">История голосов</string>
+    <string name="votes_empty_history_description">Здесь будет отображены изменения в балансе Ваших голосов</string>
+
+    <!-- Reputation -->
+    <string name="reputation_title">Репутация</string>
+    <string name="reputation_screen_what_is_reputation">Что такое репутация?</string>
+    <string name="reputation_screen_how_to_level_up">Как повысить репутацию?</string>
+    <string name="reputation_screen_your_current_reputation">Ваша репутация</string>
+    <string name="reputation_vote_regularly">Голосуйте регулярно</string>
+    <string name="reputation_total_rank_template" formatted="false">%s из %s</string>
+    <string name="reputation_last_votes_template">%s голосов получено в прошлый раз</string>
+    <string name="reputation_timer_format">Ваша репутация\nобновится через %s</string>
+    <string name="reputation_soon">Ваша репутация скоро обновится</string>
+
+    <!-- Profile -->
+    <string name="profile_change_personal_details">Изменить личные данные</string>
+    <string name="profile_votes_title">Голоса</string>
+    <string name="profile_my_reputation_title">Моя репутация</string>
+    <string name="profile_passphrase_title">Посмотреть парольную фразу</string>
+    <string name="profile_title">Профиль</string>
+    <string name="profile_about_title">О приложении</string>
+    <string name="profile_language_title">Язык</string>
+
+    <!-- About -->
+    <string name="about_software">Приложение</string>
+    <string name="about_version">Версия</string>
+    <string name="about_source_code">Исходный код</string>
+    <string name="about_contact_us">Свяжитесь с нами</string>
+    <string name="about_legal">Юридическая информация</string>
+    <string name="about_title">О приложении</string>
+    <string name="about_open_source_url">https://github.com/sora-xor/Sora-Android</string>
+    <string name="about_privacy">Политика конфиденциальности</string>
+    <string name="about_terms">Условия использования</string>
+
+    <!-- FAQ -->
+    <string name="faq_title">FAQ</string>
+
+    <!-- Bottom bar -->
+    <string name="tabbar_activity_title">Активность</string>
+    <string name="tabbar_projects_title">Проекты</string>
+    <string name="tabbar_wallet_title">Кошелек</string>
+    <string name="tabbar_profile_title">Профиль</string>
+    <string name="tabbar_friends_title">Друзья</string>
+
+    <!-- Language -->
+    <string name="language_title">Выберите язык</string>
+
+    <!-- Pincode -->
+    <string name="pincode_confirm_your_pin_code">Подтвердите свой PIN-код</string>
+    <string name="pincode_set_your_pin_code">Установите свой PIN-код</string>
+    <string name="pincode_enter_pin_code">Введите PIN-код</string>
+    <string name="pincode_repeat_error">Ошибка подтверждения PIN-кода</string>
+    <string name="pincode_fingerprint_error">Вы не авторизованы. Попробуйте другой палец.</string>
+    <string name="pincode_touch_fingerprint_scanner">Коснитесь сканера отпечатков пальцев</string>
+</resources>

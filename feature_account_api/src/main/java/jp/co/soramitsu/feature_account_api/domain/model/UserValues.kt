@@ -6,7 +6,6 @@
 package jp.co.soramitsu.feature_account_api.domain.model
 
 data class UserValues(
-    val invitations: Int,
-    val tokens: Float,
+    val invitationCode: String,
     val userId: String
 )

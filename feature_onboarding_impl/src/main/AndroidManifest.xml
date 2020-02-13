@@ -11,7 +11,7 @@
         <activity
             android:name=".presentation.OnboardingActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/OnboardingActivityTheme"
+            android:theme="@style/AppTheme"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize" />
 

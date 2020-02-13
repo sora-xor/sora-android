@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation
 import androidx.appcompat.app.AppCompatActivity
 import dagger.BindsInstance
 import dagger.Subcomponent
-import jp.co.soramitsu.common.di.app.ScreenScope
+import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 
 @Subcomponent(
     modules = [

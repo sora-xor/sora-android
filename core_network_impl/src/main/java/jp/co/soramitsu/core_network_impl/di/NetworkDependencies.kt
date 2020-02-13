@@ -5,14 +5,11 @@
 
 package jp.co.soramitsu.core_network_impl.di
 
-import android.content.Context
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DidProvider
 
 interface NetworkDependencies {
-
-    fun context(): Context
 
     fun healthChecker(): HealthChecker
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/dialog_wrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,34 +13,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingTop="@dimen/x3"
-        android:paddingBottom="@dimen/x3">
+        android:paddingTop="@dimen/x2"
+        android:paddingBottom="@dimen/x2">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Header4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
             android:paddingStart="@dimen/x3"
-            android:paddingEnd="@dimen/x3">
-
-            <TextView
-                android:id="@+id/titleTv"
-                style="@style/DialogTitleStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/how_many_votes" />
-
-            <ImageView
-                android:id="@+id/closeBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x1"
-                android:padding="@dimen/x1"
-                app:srcCompat="@drawable/icon_close" />
-
-        </LinearLayout>
+            android:paddingEnd="@dimen/x3"
+            android:text="@string/project_vote_dialog_title" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -73,7 +57,8 @@
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@+id/voteImg"
                 app:layout_constraintStart_toEndOf="@+id/voteImg"
-                app:layout_constraintTop_toTopOf="@+id/voteImg" />
+                app:layout_constraintTop_toTopOf="@+id/voteImg"
+                tools:text="1" />
 
         </LinearLayout>
 
@@ -82,9 +67,9 @@
             style="@style/ThickSeekBar"
             android:layout_width="match_parent"
             android:layout_height="@dimen/x3"
+            android:layout_marginTop="@dimen/x2"
             android:paddingStart="@dimen/x3"
             android:paddingEnd="@dimen/x3"
-            android:layout_marginTop="@dimen/x2"
             android:progressBackgroundTint="@color/seekbarColor"
             android:progressTint="@color/lightRed"
             android:thumb="@drawable/thumb" />
@@ -93,55 +78,63 @@
             android:id="@+id/messageTv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x2"
             android:layout_marginStart="@dimen/x3"
+            android:layout_marginTop="@dimen/x2"
             android:layout_marginEnd="@dimen/x3"
             android:visibility="invisible" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/greyDivider"
             android:layout_marginTop="@dimen/x2"
-            android:layout_marginBottom="@dimen/x2" />
+            android:layout_marginBottom="@dimen/x2"
+            android:background="@color/greyDivider" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/x3"
-            android:layout_marginTop="@dimen/x2"
-            android:layout_marginEnd="@dimen/x3">
+            android:paddingStart="@dimen/x2"
+            android:paddingEnd="@dimen/x2">
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/voteBtn"
-                style="@style/FilledButton"
+                style="@style/Widget.Soramitsu.Button"
                 android:layout_width="0dp"
-                android:layout_height="45dp"
-                android:text="@string/vote"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginEnd="@dimen/x1"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/common_vote"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/cancelBtn"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <com.google.android.material.button.MaterialButton
+            <Button
                 android:id="@+id/cancelBtn"
-                style="@style/OutlinedButton"
+                style="@style/Widget.Soramitsu.Button.OutlinedButton"
                 android:layout_width="0dp"
-                android:layout_height="45dp"
-                android:layout_marginStart="8dp"
-                android:text="@string/cancel"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginEnd="@dimen/x1"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/common_cancel"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/keyboardImg"
                 app:layout_constraintStart_toEndOf="@+id/voteBtn"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView
                 android:id="@+id/keyboardImg"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x3"
+                android:layout_marginEnd="@dimen/x1_2"
                 android:scaleType="centerInside"
                 android:src="@drawable/icon_open_keyboard"
-                app:layout_constraintBottom_toBottomOf="@+id/cancelBtn"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/cancelBtn"
                 app:layout_constraintTop_toTopOf="parent" />

@@ -13,12 +13,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.delegate.WithPreloaderImpl
-import jp.co.soramitsu.common.di.app.ViewModelKey
-import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.main.MainViewModel
 
 @Module(

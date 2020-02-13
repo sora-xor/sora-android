@@ -5,11 +5,12 @@
 
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
-import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.OnboardingState
-import jp.co.soramitsu.common.util.PrefsUtil
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
@@ -18,17 +19,17 @@ import jp.co.soramitsu.feature_account_api.domain.model.UserValues
 import javax.inject.Inject
 
 class PrefsUserDatasource @Inject constructor(
-    private val prefsUtl: PrefsUtil
+    private val preferences: Preferences,
+    private val encryptedPreferences: EncryptedPreferences,
+    private val serializer: Serializer
 ) : UserDatasource {
 
     companion object {
         private const val PREFS_PIN_CODE = "user_pin_code"
         private const val PREFS_REGISTRATION_STATE = "registration_state"
         private const val PREFS_PARENT_INVITATION = "parent_invitation"
-        private const val PREFS_TOKENS = "prefs_tokens"
-        private const val PREFS_INVITATIONS = "prefs_invitations"
 
-        private const val KEY_USER_UD = "key_user_id"
+        private const val KEY_USER_ID = "key_user_id"
         private const val KEY_FIRST_NAME = "key_first_name"
         private const val KEY_LAST_NAME = "key_last_name"
         private const val KEY_PHONE = "key_phone"
@@ -36,62 +37,60 @@ class PrefsUserDatasource @Inject constructor(
         private const val KEY_INVITE_ACCEPT_MOMENT = "key_invite_accept_moment"
         private const val KEY_PARENT_ID = "key_parent_id"
         private const val KEY_STATUS = "key_status"
-        private const val KEY_INVITE_CODE = "invite_code"
+        private const val KEY_PARENT_INVITE_CODE = "invite_code"
+        private const val KEY_USER_INVITE_CODE = "user_invite_code"
     }
 
-    private val gson = Gson()
-
     override fun savePin(pin: String) {
-        prefsUtl.putEncryptedString(PREFS_PIN_CODE, pin)
+        encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
     }
 
     override fun retrievePin(): String {
-        return prefsUtl.getDecryptedString(PREFS_PIN_CODE)
+        return encryptedPreferences.getDecryptedString(PREFS_PIN_CODE)
     }
 
     override fun savePushToken(notificationToken: String) {
-        prefsUtl.putEncryptedString(Const.DEVICE_TOKEN, notificationToken)
+        encryptedPreferences.putEncryptedString(Const.DEVICE_TOKEN, notificationToken)
     }
 
     override fun retrievePushToken(): String {
-        return prefsUtl.getDecryptedString(Const.DEVICE_TOKEN)
+        return encryptedPreferences.getDecryptedString(Const.DEVICE_TOKEN)
     }
 
     override fun saveIsPushTokenUpdateNeeded(updateNeeded: Boolean) {
-        prefsUtl.putBoolean(Const.IS_PUSH_UPDATE_NEEDED, updateNeeded)
+        preferences.putBoolean(Const.IS_PUSH_UPDATE_NEEDED, updateNeeded)
     }
 
     override fun isPushTokenUpdateNeeded(): Boolean {
-        return prefsUtl.getBoolean(Const.IS_PUSH_UPDATE_NEEDED, false)
+        return preferences.getBoolean(Const.IS_PUSH_UPDATE_NEEDED, false)
     }
 
     override fun saveUser(user: User) {
-        prefsUtl.putString(KEY_USER_UD, user.id)
-        prefsUtl.putString(KEY_FIRST_NAME, user.firstName)
-        prefsUtl.putString(KEY_LAST_NAME, user.lastName)
-        prefsUtl.putString(KEY_PARENT_ID, user.parentId)
-        prefsUtl.putString(KEY_PHONE, user.phone)
-        prefsUtl.putString(KEY_STATUS, user.status)
-        prefsUtl.putString(KEY_COUNTRY, user.country)
-        prefsUtl.putLong(KEY_INVITE_ACCEPT_MOMENT, user.inviteAcceptExpirationMomentMillis)
-        prefsUtl.putString(KEY_USER_UD, user.values.userId)
-        prefsUtl.putFloat(PREFS_TOKENS, user.values.tokens)
-        prefsUtl.putInt(PREFS_INVITATIONS, user.values.invitations)
+        preferences.putString(KEY_USER_ID, user.id)
+        preferences.putString(KEY_FIRST_NAME, user.firstName)
+        preferences.putString(KEY_LAST_NAME, user.lastName)
+        preferences.putString(KEY_PARENT_ID, user.parentId)
+        preferences.putString(KEY_PHONE, user.phone)
+        preferences.putString(KEY_STATUS, user.status)
+        preferences.putString(KEY_COUNTRY, user.country)
+        preferences.putLong(KEY_INVITE_ACCEPT_MOMENT, user.inviteAcceptExpirationMomentMillis)
+        preferences.putString(KEY_USER_ID, user.values.userId)
+        preferences.putString(KEY_USER_INVITE_CODE, user.values.invitationCode)
     }
 
     override fun retrieveUser(): User? {
-        return if (prefsUtl.getString(KEY_USER_UD).isEmpty()) {
+        return if (preferences.getString(KEY_USER_ID).isEmpty()) {
             null
         } else {
             User(
-                prefsUtl.getString(KEY_USER_UD),
-                prefsUtl.getString(KEY_FIRST_NAME),
-                prefsUtl.getString(KEY_LAST_NAME),
-                prefsUtl.getString(KEY_PHONE),
-                prefsUtl.getString(KEY_STATUS),
-                prefsUtl.getString(KEY_PARENT_ID),
-                prefsUtl.getString(KEY_COUNTRY),
-                prefsUtl.getLong(KEY_INVITE_ACCEPT_MOMENT, 0),
+                preferences.getString(KEY_USER_ID),
+                preferences.getString(KEY_FIRST_NAME),
+                preferences.getString(KEY_LAST_NAME),
+                preferences.getString(KEY_PHONE),
+                preferences.getString(KEY_STATUS),
+                preferences.getString(KEY_PARENT_ID),
+                preferences.getString(KEY_COUNTRY),
+                preferences.getLong(KEY_INVITE_ACCEPT_MOMENT, 0),
                 retrieveUserValues()
             )
         }
@@ -99,19 +98,17 @@ class PrefsUserDatasource @Inject constructor(
 
     private fun retrieveUserValues(): UserValues {
         return UserValues(
-            prefsUtl.getInt(PREFS_INVITATIONS, 0),
-            prefsUtl.getFloat(PREFS_TOKENS, 0f),
-            prefsUtl.getString(KEY_USER_UD)
+            preferences.getString(KEY_USER_INVITE_CODE),
+            preferences.getString(KEY_USER_ID)
         )
     }
 
     override fun saveRegistrationState(onboardingState: OnboardingState) {
-        prefsUtl.putString(PREFS_REGISTRATION_STATE, onboardingState.toString())
+        preferences.putString(PREFS_REGISTRATION_STATE, onboardingState.toString())
     }
 
     override fun retrieveRegistratrionState(): OnboardingState {
-        val registrationStateString = prefsUtl.getString(PREFS_REGISTRATION_STATE)
-
+        val registrationStateString = preferences.getString(PREFS_REGISTRATION_STATE)
         return if (registrationStateString.isEmpty()) {
             OnboardingState.INITIAL
         } else {
@@ -120,56 +117,63 @@ class PrefsUserDatasource @Inject constructor(
     }
 
     override fun clearUserData() {
-        prefsUtl.clearAll()
+        preferences.clearAll()
     }
 
     override fun saveInvitationParent(parentInfo: InvitedUser) {
-        prefsUtl.putEncryptedString(PREFS_PARENT_INVITATION, gson.toJson(parentInfo))
+        encryptedPreferences.putEncryptedString(PREFS_PARENT_INVITATION, serializer.serialize(parentInfo))
     }
 
     override fun retrieveInvitationParent(): InvitedUser? {
-        val parentInfoString = prefsUtl.getDecryptedString(PREFS_PARENT_INVITATION)
-
+        val parentInfoString = encryptedPreferences.getDecryptedString(PREFS_PARENT_INVITATION)
         return if (parentInfoString.isEmpty()) {
             null
         } else {
-            gson.fromJson(parentInfoString, InvitedUser::class.java)
+            serializer.deserialize(parentInfoString, InvitedUser::class.java)
         }
     }
 
     override fun saveUserReputation(reputationDto: Reputation) {
-        prefsUtl.putInt(Const.USER_REPUTATION_RANK, reputationDto.rank)
-        prefsUtl.putFloat(Const.USER_REPUTATION, reputationDto.reputation)
-        prefsUtl.putInt(Const.USER_REPUTATION_TOTAL_RANK, reputationDto.totalRank)
+        preferences.putInt(Const.USER_REPUTATION_RANK, reputationDto.rank)
+        preferences.putFloat(Const.USER_REPUTATION, reputationDto.reputation)
+        preferences.putInt(Const.USER_REPUTATION_TOTAL_RANK, reputationDto.totalRank)
     }
 
     override fun retrieveUserReputation(): Reputation {
         return Reputation(
-            prefsUtl.getInt(Const.USER_REPUTATION_RANK, 0),
-            prefsUtl.getFloat(Const.USER_REPUTATION, 0f),
-            prefsUtl.getInt(Const.USER_REPUTATION_TOTAL_RANK, 0)
+            preferences.getInt(Const.USER_REPUTATION_RANK, 0),
+            preferences.getFloat(Const.USER_REPUTATION, 0f),
+            preferences.getInt(Const.USER_REPUTATION_TOTAL_RANK, 0)
         )
     }
 
     override fun saveInvitedUsers(invitedUsers: Array<InvitedUser>) {
-        prefsUtl.putString(Const.INVITED_USERS, gson.toJson(invitedUsers))
+        preferences.putString(Const.INVITED_USERS, serializer.serialize(invitedUsers))
     }
 
     override fun retrieveInvitedUsers(): Array<InvitedUser>? {
-        val invitedUsersJson = prefsUtl.getString(Const.INVITED_USERS)
+        val invitedUsersJson = preferences.getString(Const.INVITED_USERS)
 
         return if (invitedUsersJson.isEmpty()) {
             null
         } else {
-            gson.fromJson<Array<InvitedUser>>(invitedUsersJson, object : TypeToken<Array<InvitedUser>>() {}.type)
+            serializer.deserialize<Array<InvitedUser>>(invitedUsersJson, object : TypeToken<Array<InvitedUser>>() {}.type)
         }
     }
 
     override fun saveParentInviteCode(inviteCode: String) {
-        prefsUtl.putString(KEY_INVITE_CODE, inviteCode)
+        preferences.putString(KEY_PARENT_INVITE_CODE, inviteCode)
     }
 
     override fun getParentInviteCode(): String {
-        return prefsUtl.getString(KEY_INVITE_CODE)
+        return preferences.getString(KEY_PARENT_INVITE_CODE)
+    }
+
+    override fun getCurrentLanguage(): String {
+        return preferences.getCurrentLanguage()
+    }
+
+    override fun changeLanguage(language: String) {
+        preferences.saveCurrentLanguage(language)
     }
 }

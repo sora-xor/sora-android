@@ -6,11 +6,12 @@
     android:background="@android:color/white"
     android:orientation="vertical">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/phone_number_title" />
 
     <LinearLayout
         android:id="@+id/phoneView"
@@ -41,7 +42,6 @@
             android:digits="0123456789"
             android:fontFamily="@font/sora_extrabold"
             android:inputType="phone"
-            android:maxLength="13"
             android:textSize="30sp" />
 
         <Space
@@ -99,13 +99,36 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/space2" />
 
-    <include
-        android:id="@+id/sided_button"
-        layout="@layout/sided_button"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@color/greyBackground"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/x2_5"
+        android:paddingTop="12dp"
+        android:paddingEnd="@dimen/x2_5"
+        android:paddingBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/descriptionText"
+            style="@style/DefaultTextStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/nextBtn"
+            style="@style/Widget.Soramitsu.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/common_next"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

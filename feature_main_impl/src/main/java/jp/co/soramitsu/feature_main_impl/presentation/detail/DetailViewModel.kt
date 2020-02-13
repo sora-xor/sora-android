@@ -6,37 +6,121 @@
 package jp.co.soramitsu.feature_main_impl.presentation.detail
 
 import android.app.Activity
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.detail.gallery.GalleryActivity
 import jp.co.soramitsu.feature_project_api.domain.model.GalleryItem
 import jp.co.soramitsu.feature_project_api.domain.model.GalleryItemType
 import jp.co.soramitsu.feature_project_api.domain.model.ProjectDetails
-import java.net.URL
+import java.math.BigDecimal
+import java.util.concurrent.TimeUnit
 
 class DetailViewModel(
     private val interactor: MainInteractor,
     private val preloader: WithPreloader,
     private val router: MainRouter,
     private val projectId: String,
-    private val numbersFormatter: NumbersFormatter
+    private val numbersFormatter: NumbersFormatter,
+    private val resourceManager: ResourceManager
 ) : BaseViewModel(), WithPreloader by preloader {
 
+    companion object {
+        private const val PROJECT_CHANGE_FAV_DELAY = 500L
+    }
+
     val projectDetailsLiveData = MutableLiveData<ProjectDetails>()
-    val votesLiveData = MutableLiveData<Pair<Int, String>>()
     val playVideoLiveData = MutableLiveData<Event<String>>()
     val sendEmailEvent = MutableLiveData<Event<String>>()
-    val showVoteProjectLiveData = MutableLiveData<Event<Int>>()
-    val showVoteUserLiveData = MutableLiveData<Event<Int>>()
+
+    private val _showVoteUserLiveData = MutableLiveData<Event<Int>>()
+    val showVoteUserLiveData: LiveData<Event<Int>> = _showVoteUserLiveData
+
+    private val _showVoteProjectLiveData = MutableLiveData<Event<Int>>()
+    val showVoteProjectLiveData: LiveData<Event<Int>> = _showVoteProjectLiveData
+
+    private val _friendsVotedLiveData = MediatorLiveData<String>()
+    val friendsVotedLiveData: LiveData<String> = _friendsVotedLiveData
+
+    private val _favoritesCountLiveData = MediatorLiveData<String>()
+    val favoritesLiveData: LiveData<String> = _favoritesCountLiveData
+
+    private val _votesAndFavoritesVisibility = MediatorLiveData<Boolean>()
+    val votesAndFavoritesVisibility: LiveData<Boolean> = _votesAndFavoritesVisibility
+
+    private val _projectDescriptionLiveData = MediatorLiveData<String>()
+    val projectDescriptionLiveData: LiveData<String> = _projectDescriptionLiveData
+
+    private val _galleryLiveData = MediatorLiveData<List<GalleryItem>>()
+    val galleryLiveData: LiveData<List<GalleryItem>> = _galleryLiveData
+
+    private val _votesFormattedLiveData = MediatorLiveData<String>()
+    val votesFormattedLiveData: LiveData<String> = _votesFormattedLiveData
+
+    private val _showBrowserLiveData = MutableLiveData<Event<String>>()
+    val showBrowserLiveData: LiveData<Event<String>> = _showBrowserLiveData
+
+    private val votesLiveData = MutableLiveData<BigDecimal>()
 
     init {
+        _friendsVotedLiveData.addSource(projectDetailsLiveData) { project ->
+            val friendsVotedStr = if (project.votedFriendsCount == 0) {
+                ""
+            } else {
+                val quantityString = resourceManager.getQuantityString(R.plurals.project_friends_template, project.votedFriendsCount)
+                quantityString.format(project.votedFriendsCount.toString())
+            }
+
+            _friendsVotedLiveData.value = friendsVotedStr
+        }
+
+        _favoritesCountLiveData.addSource(projectDetailsLiveData) { project ->
+            val favoritesCountStr = if (project.favoriteCount == 0) {
+                ""
+            } else {
+                val quantityString = resourceManager.getQuantityString(R.plurals.project_details_favorites_format, project.favoriteCount)
+                quantityString.format(project.favoriteCount.toString())
+            }
+
+            _favoritesCountLiveData.value = favoritesCountStr
+        }
+
+        _projectDescriptionLiveData.addSource(projectDetailsLiveData) {
+            _projectDescriptionLiveData.value = if (it.detailedDescription.isEmpty()) {
+                it.description
+            } else {
+                it.detailedDescription
+            }
+        }
+
+        _votesAndFavoritesVisibility.addSource(projectDetailsLiveData) {
+            _votesAndFavoritesVisibility.value = it.favoriteCount != 0 || it.votedFriendsCount != 0
+        }
+
+        _galleryLiveData.addSource(projectDetailsLiveData) {
+            _galleryLiveData.value = it.gallery
+        }
+
+        _votesFormattedLiveData.addSource(votesLiveData) {
+            val votes = numbersFormatter.formatInteger(it)
+            _votesFormattedLiveData.value = if (votes.length > 4) {
+                resourceManager.getString(R.string.project_votes_k_template).format(votes.substring(0, votes.length - 3).trim())
+            } else {
+                votes
+            }
+        }
+
         disposables.add(
             interactor.getProjectById(projectId)
                 .subscribeOn(Schedulers.io())
@@ -63,12 +147,8 @@ class DetailViewModel(
         )
     }
 
-    fun onActivityCreated() {
-        router.hideBottomView()
-    }
-
     fun backPressed() {
-        router.popBackStackFragment()
+        router.popBackStack()
     }
 
     fun getVotes(updateCached: Boolean) {
@@ -76,8 +156,9 @@ class DetailViewModel(
             interactor.getVotes(updateCached)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ votes ->
-                    votesLiveData.value = Pair(votes.toInt(), numbersFormatter.formatInteger(votes))
+                .subscribe({
+                    if (!updateCached) getVotes(true)
+                    votesLiveData.value = it
                 }, {
                     logException(it)
                 })
@@ -87,6 +168,7 @@ class DetailViewModel(
     private fun removeProjectFromFavorites() {
         disposables.add(
             interactor.removeProjectFromFavorites(projectId)
+                .andThen(Completable.timer(PROJECT_CHANGE_FAV_DELAY, TimeUnit.MILLISECONDS))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -100,6 +182,7 @@ class DetailViewModel(
     private fun addProjectToFavorites() {
         disposables.add(
             interactor.addProjectToFavorites(projectId)
+                .andThen(Completable.timer(PROJECT_CHANGE_FAV_DELAY, TimeUnit.MILLISECONDS))
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -124,9 +207,9 @@ class DetailViewModel(
         )
     }
 
-    fun websiteClicked(projectLink: URL?) {
-        if (projectLink != null) {
-            router.showBrowser(projectLink)
+    fun websiteClicked() {
+        projectDetailsLiveData.value?.projectLink?.let {
+            _showBrowserLiveData.value = Event(it.toString())
         }
     }
 
@@ -148,12 +231,12 @@ class DetailViewModel(
 
     fun voteClicked() {
         projectDetailsLiveData.value?.let { project ->
-            votesLiveData.value?.let { pair ->
+            votesLiveData.value?.let { votes ->
                 val votesLeft = (project.fundingTarget - project.fundingCurrent).toInt()
-                if (pair.first.toLong() < votesLeft) {
-                    showVoteUserLiveData.value = Event(pair.first)
+                if (votes.toInt() < votesLeft) {
+                    _showVoteUserLiveData.value = Event(votes.toInt())
                 } else {
-                    showVoteProjectLiveData.value = Event(votesLeft)
+                    _showVoteProjectLiveData.value = Event(votesLeft)
                 }
             }
         }
@@ -170,12 +253,12 @@ class DetailViewModel(
     }
 
     fun votesClicked() {
-        router.showVotesScreen()
+        router.showVotesHistory()
     }
 
     fun discussionLinkClicked() {
         projectDetailsLiveData.value?.discussionLink?.link?.let {
-            router.showBrowser(it)
+            _showBrowserLiveData.value = Event(it)
         }
     }
 }

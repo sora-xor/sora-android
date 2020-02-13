@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -24,12 +25,23 @@ class PersonalInfoViewModel(
 
     private var countryIso = ""
 
-    val invitationNotValidEventLiveData = MutableLiveData<Event<Unit>>()
-    val firstNameIsEmptyEventLiveData = MutableLiveData<Event<Unit>>()
-    val firstNameIsNotValidEventLiveData = MutableLiveData<Event<Unit>>()
-    val lastNameIsEmptyEventLiveData = MutableLiveData<Event<Unit>>()
-    val lastNameIsNotValidEventLiveData = MutableLiveData<Event<Unit>>()
-    val inviteCodeLiveData = MutableLiveData<String>()
+    private val _invitationNotValidEventLiveData = MutableLiveData<Event<Unit>>()
+    val invitationNotValidEventLiveData: LiveData<Event<Unit>> = _invitationNotValidEventLiveData
+
+    private val _firstNameIsEmptyEventLiveData = MutableLiveData<Event<Unit>>()
+    val firstNameIsEmptyEventLiveData: LiveData<Event<Unit>> = _firstNameIsEmptyEventLiveData
+
+    private val _firstNameIsNotValidEventLiveData = MutableLiveData<Event<Unit>>()
+    val firstNameIsNotValidEventLiveData: LiveData<Event<Unit>> = _firstNameIsNotValidEventLiveData
+
+    private val _lastNameIsEmptyEventLiveData = MutableLiveData<Event<Unit>>()
+    val lastNameIsEmptyEventLiveData: LiveData<Event<Unit>> = _lastNameIsEmptyEventLiveData
+
+    private val _lastNameIsNotValidEventLiveData = MutableLiveData<Event<Unit>>()
+    val lastNameIsNotValidEventLiveData: LiveData<Event<Unit>> = _lastNameIsNotValidEventLiveData
+
+    private val _inviteCodeLiveData = MutableLiveData<String>()
+    val inviteCodeLiveData: LiveData<String> = _inviteCodeLiveData
 
     init {
         disposables.add(
@@ -37,7 +49,7 @@ class PersonalInfoViewModel(
                 .flatMapSingle { interactor.getParentInviteCode() }
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    inviteCodeLiveData.value = it
+                    _inviteCodeLiveData.value = it
                 }, {
                     it.printStackTrace()
                 })
@@ -47,7 +59,7 @@ class PersonalInfoViewModel(
             interactor.getParentInviteCode()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (it.isNotEmpty()) inviteCodeLiveData.value = it
+                    if (it.isNotEmpty()) _inviteCodeLiveData.value = it
                 }, {
                     it.printStackTrace()
                 })
@@ -66,7 +78,7 @@ class PersonalInfoViewModel(
                     if (it) {
                         router.showMnemonic()
                     } else {
-                        invitationNotValidEventLiveData.value = Event(Unit)
+                        _invitationNotValidEventLiveData.value = Event(Unit)
                     }
                 }, {
                     hideProgress()
@@ -77,29 +89,6 @@ class PersonalInfoViewModel(
 
     fun backButtonClick() {
         router.onBackButtonPressed()
-    }
-
-    private fun checkFieldsValidation(firstName: String, lastName: String): Boolean {
-        if (firstName.isEmpty()) {
-            firstNameIsEmptyEventLiveData.value = Event(Unit)
-            return false
-        }
-
-        if (firstName.last().toString() == "-" || firstName.first().toString() == "-" || firstName.contains("--")) {
-            firstNameIsNotValidEventLiveData.value = Event(Unit)
-            return false
-        }
-
-        if (lastName.isEmpty()) {
-            lastNameIsEmptyEventLiveData.value = Event(Unit)
-            return false
-        }
-
-        if (lastName.last().toString() == "-" || lastName.first().toString() == "-" || lastName.contains("--")) {
-            lastNameIsNotValidEventLiveData.value = Event(Unit)
-            return false
-        }
-        return true
     }
 
     fun continueWithoutInvitationCodePressed(firstName: String, lastName: String) {
@@ -114,7 +103,7 @@ class PersonalInfoViewModel(
                     if (it) {
                         router.showMnemonic()
                     } else {
-                        invitationNotValidEventLiveData.value = Event(Unit)
+                        _invitationNotValidEventLiveData.value = Event(Unit)
                     }
                 }, {
                     hideProgress()
@@ -125,5 +114,28 @@ class PersonalInfoViewModel(
 
     fun setCountryIso(iso: String) {
         countryIso = iso
+    }
+
+    private fun checkFieldsValidation(firstName: String, lastName: String): Boolean {
+        if (firstName.isEmpty()) {
+            _firstNameIsEmptyEventLiveData.value = Event(Unit)
+            return false
+        }
+
+        if (firstName.last().toString() == "-" || firstName.first().toString() == "-" || firstName.contains("--")) {
+            _firstNameIsNotValidEventLiveData.value = Event(Unit)
+            return false
+        }
+
+        if (lastName.isEmpty()) {
+            _lastNameIsEmptyEventLiveData.value = Event(Unit)
+            return false
+        }
+
+        if (lastName.last().toString() == "-" || lastName.first().toString() == "-" || lastName.contains("--")) {
+            _lastNameIsNotValidEventLiveData.value = Event(Unit)
+            return false
+        }
+        return true
     }
 }

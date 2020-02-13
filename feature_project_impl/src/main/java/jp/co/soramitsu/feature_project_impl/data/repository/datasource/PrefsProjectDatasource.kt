@@ -5,12 +5,12 @@
 
 package jp.co.soramitsu.feature_project_impl.data.repository.datasource
 
-import jp.co.soramitsu.common.util.PrefsUtil
+import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.feature_project_api.domain.interfaces.ProjectDatasource
 import javax.inject.Inject
 
 class PrefsProjectDatasource @Inject constructor(
-    private val prefsUtl: PrefsUtil
+    private val preferences: Preferences
 ) : ProjectDatasource {
 
     companion object {
@@ -19,18 +19,18 @@ class PrefsProjectDatasource @Inject constructor(
     }
 
     override fun saveVotes(votes: String) {
-        prefsUtl.putString(KEY_VOTES, votes)
+        preferences.putString(KEY_VOTES, votes)
     }
 
     override fun retrieveVotes(): String {
-        return prefsUtl.getString(KEY_VOTES)
+        return preferences.getString(KEY_VOTES)
     }
 
     override fun saveLastReceivedVotes(toString: String) {
-        prefsUtl.putString(KEY_LAST_VOTES, toString)
+        preferences.putString(KEY_LAST_VOTES, toString)
     }
 
     override fun retrieveLastReceivedVotes(): String {
-        return prefsUtl.getString(KEY_LAST_VOTES)
+        return preferences.getString(KEY_LAST_VOTES)
     }
 }

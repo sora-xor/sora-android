@@ -5,14 +5,10 @@
 
 package jp.co.soramitsu.feature_project_impl.data.mappers
 
-import jp.co.soramitsu.core_db.model.GalleryItemLocal
-import jp.co.soramitsu.core_db.model.GalleryItemTypeLocal
 import jp.co.soramitsu.core_db.model.ProjectDetailsLocal
 import jp.co.soramitsu.core_db.model.ProjectDetailsWithGalleryLocal
 import jp.co.soramitsu.core_db.model.ProjectLocal
 import jp.co.soramitsu.core_db.model.ProjectStatusLocal
-import jp.co.soramitsu.feature_project_api.domain.model.GalleryItem
-import jp.co.soramitsu.feature_project_api.domain.model.GalleryItemType
 import jp.co.soramitsu.feature_project_api.domain.model.Project
 import jp.co.soramitsu.feature_project_api.domain.model.ProjectDetails
 import jp.co.soramitsu.feature_project_api.domain.model.ProjectStatus
@@ -83,32 +79,6 @@ fun mapProjectDetailsToProjectDetailsLocal(project: ProjectDetails): ProjectDeta
         ProjectDetailsLocal(id, image, projectLink, name, email, description, detailedDescription, deadline.time,
             fundingCurrent, fundingTarget, votedFriendsCount, favoriteCount, votes, isFavorite, isUnwatched,
             mapProjectStatusToProjectStatusLocal(status), statusUpdateTime.time, if (discussionLink == null) null else mapDiscussionLinkToDiscussionLinkLocal(discussionLink!!))
-    }
-}
-
-fun mapGalleryTypeLocalToGalleryType(galleryItemTypeLocal: GalleryItemTypeLocal): GalleryItemType {
-    return when (galleryItemTypeLocal) {
-        GalleryItemTypeLocal.VIDEO -> GalleryItemType.VIDEO
-        GalleryItemTypeLocal.IMAGE -> GalleryItemType.IMAGE
-    }
-}
-
-fun mapGalleryTypeToGalleryTypeLocal(galleryType: GalleryItemType): GalleryItemTypeLocal {
-    return when (galleryType) {
-        GalleryItemType.VIDEO -> GalleryItemTypeLocal.VIDEO
-        GalleryItemType.IMAGE -> GalleryItemTypeLocal.IMAGE
-    }
-}
-
-fun mapGalleryLocalToGallery(galleryLocal: GalleryItemLocal): GalleryItem {
-    return with(galleryLocal) {
-        GalleryItem(mapGalleryTypeLocalToGalleryType(type), url, preview, duration)
-    }
-}
-
-fun mapGalleryToGalleryLocal(galleryItem: GalleryItem, projectId: String): GalleryItemLocal {
-    return with(galleryItem) {
-        GalleryItemLocal(0, projectId, mapGalleryTypeToGalleryTypeLocal(type), url, preview, duration)
     }
 }
 

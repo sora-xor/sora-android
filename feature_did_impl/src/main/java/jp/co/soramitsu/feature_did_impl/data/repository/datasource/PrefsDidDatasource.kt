@@ -6,18 +6,20 @@
 package jp.co.soramitsu.feature_did_impl.data.repository.datasource
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import jp.co.soramitsu.common.util.PrefsUtil
-import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
+import com.fasterxml.jackson.databind.ObjectMapper
+import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.feature_did_api.domain.interfaces.DidDatasource
 import jp.co.soramitsu.sora.sdk.did.model.dto.DDO
-import jp.co.soramitsu.sora.sdk.json.JsonUtil
 import org.spongycastle.util.encoders.Hex
 import java.io.IOException
 import java.security.KeyPair
 import javax.inject.Inject
 
 class PrefsDidDatasource @Inject constructor(
-    private val prefsUtl: PrefsUtil
+    private val encryptedPreferences: EncryptedPreferences,
+    private val cryptoAssistant: CryptoAssistant,
+    private val mapper: ObjectMapper
 ) : DidDatasource {
 
     companion object {
@@ -27,34 +29,32 @@ class PrefsDidDatasource @Inject constructor(
         private const val PREFS_MNEMONIC = "prefs_mnemonic"
     }
 
-    private val mapper = JsonUtil.buildMapper()
-
     override fun saveKeys(keyPair: KeyPair) {
-        prefsUtl.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.private.encoded))
-        prefsUtl.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.public.encoded))
+        encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.private.encoded))
+        encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.public.encoded))
     }
 
     override fun retrieveKeys(): KeyPair? {
-        val privateKeyBytes = Hex.decode(prefsUtl.getDecryptedString(PREFS_PRIVATE_KEY))
-        val publicKeyBytes = Hex.decode(prefsUtl.getDecryptedString(PREFS_PUBLIC_KEY))
+        val privateKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PRIVATE_KEY))
+        val publicKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PUBLIC_KEY))
 
-        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Ed25519Sha3.keyPairFromBytes(privateKeyBytes, publicKeyBytes)
+        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else cryptoAssistant.getKeypairFromBytes(privateKeyBytes, publicKeyBytes)
     }
 
     override fun saveDdo(ddo: DDO) {
-        prefsUtl.putEncryptedString(PREFS_DDO, ddoToJson(ddo))
+        encryptedPreferences.putEncryptedString(PREFS_DDO, ddoToJson(ddo))
     }
 
     override fun retrieveDdo(): DDO? {
-        return jsonToDdo(prefsUtl.getDecryptedString(PREFS_DDO))
+        return jsonToDdo(encryptedPreferences.getDecryptedString(PREFS_DDO))
     }
 
     override fun saveMnemonic(mnemonic: String) {
-        prefsUtl.putEncryptedString(PREFS_MNEMONIC, mnemonic)
+        encryptedPreferences.putEncryptedString(PREFS_MNEMONIC, mnemonic)
     }
 
     override fun retrieveMnemonic(): String {
-        return prefsUtl.getDecryptedString(PREFS_MNEMONIC)
+        return encryptedPreferences.getDecryptedString(PREFS_MNEMONIC)
     }
 
     private fun ddoToJson(ddo: DDO): String {

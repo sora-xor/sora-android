@@ -9,6 +9,8 @@ import android.app.Application
 import android.content.Context
 import dagger.Binds
 import dagger.Module
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.resourses.ResourceManagerImpl
 import jp.co.soramitsu.sora.SoraApp
 import javax.inject.Singleton
 
@@ -17,9 +19,13 @@ interface AppModule {
 
     @Singleton
     @Binds
-    fun provideApplication(application: SoraApp): Application
+    fun bindApplication(application: SoraApp): Application
 
     @Singleton
     @Binds
-    fun provideContext(application: SoraApp): Context
+    fun bindContext(application: SoraApp): Context
+
+    @Singleton
+    @Binds
+    fun bindResourceManager(resourceManager: ResourceManagerImpl): ResourceManager
 }

@@ -5,10 +5,11 @@
     android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:title="@string/verification_title"
         app:layout_constraintTop_toTopOf="parent" />
 
     <View
@@ -96,10 +97,10 @@
 
         <Button
             android:id="@+id/nextBtn"
-            style="@style/FilledButton"
+            style="@style/Widget.Soramitsu.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/next"
+            android:text="@string/common_next"
             android:textSize="14sp" />
 
     </LinearLayout>

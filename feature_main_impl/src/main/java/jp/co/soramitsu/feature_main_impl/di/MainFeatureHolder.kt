@@ -12,6 +12,7 @@ import jp.co.soramitsu.core_network_api.di.NetworkApi
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_did_api.di.DidFeatureApi
 import jp.co.soramitsu.feature_information_api.di.InformationFeatureApi
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_project_api.di.ProjectFeatureApi
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import javax.inject.Inject
@@ -19,21 +20,23 @@ import javax.inject.Singleton
 
 @Singleton
 class MainFeatureHolder @Inject constructor(
-    featureContainer: FeatureContainer
+    featureContainer: FeatureContainer,
+    private val mainRouter: MainRouter
 ) : FeatureApiHolder(featureContainer) {
 
     override fun initializeDependencies(): Any {
         val mainFeatureDependencies = DaggerMainFeatureComponent_MainFeatureDependenciesComponent.builder()
-            .accountFeatureApi(getFeature<AccountFeatureApi>(AccountFeatureApi::class.java))
-            .walletFeatureApi(getFeature<WalletFeatureApi>(WalletFeatureApi::class.java))
-            .commonApi(getFeature<CommonApi>(CommonApi::class.java))
-            .informationFeatureApi(getFeature<InformationFeatureApi>(InformationFeatureApi::class.java))
-            .didFeatureApi(getFeature<DidFeatureApi>(DidFeatureApi::class.java))
-            .projectFeatureApi(getFeature<ProjectFeatureApi>(ProjectFeatureApi::class.java))
-            .networkApi(getFeature<NetworkApi>(NetworkApi::class.java))
+            .accountFeatureApi(getFeature(AccountFeatureApi::class.java))
+            .walletFeatureApi(getFeature(WalletFeatureApi::class.java))
+            .commonApi(getFeature(CommonApi::class.java))
+            .informationFeatureApi(getFeature(InformationFeatureApi::class.java))
+            .didFeatureApi(getFeature(DidFeatureApi::class.java))
+            .projectFeatureApi(getFeature(ProjectFeatureApi::class.java))
+            .networkApi(getFeature(NetworkApi::class.java))
             .build()
         return DaggerMainFeatureComponent.builder()
-            .mainFeatureDependencies(mainFeatureDependencies)
+            .withDependencies(mainFeatureDependencies)
+            .navigator(mainRouter)
             .build()
     }
 }

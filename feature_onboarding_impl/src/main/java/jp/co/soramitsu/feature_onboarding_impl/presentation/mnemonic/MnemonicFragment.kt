@@ -5,15 +5,15 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.jakewharton.rxbinding2.view.RxView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -27,40 +27,14 @@ import kotlinx.android.synthetic.main.fragment_mnemonic.nextBtn
 import kotlinx.android.synthetic.main.fragment_mnemonic.passphraseTv
 import kotlinx.android.synthetic.main.fragment_mnemonic.preloaderView
 import kotlinx.android.synthetic.main.fragment_mnemonic.toolbar
+import javax.inject.Inject
 
-@SuppressLint("CheckResult")
 class MnemonicFragment : BaseFragment<MnemonicViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_mnemonic, container, false)
-    }
-
-    override fun initViews() {
-        toolbar.setTitle(getString(R.string.passphrase_title))
-        toolbar.hideHomeButton()
-    }
-
-    override fun subscribe(viewModel: MnemonicViewModel) {
-        RxView.clicks(nextBtn)
-            .subscribe { viewModel.btnNextClicked() }
-
-        RxView.clicks(btnShare)
-            .subscribe {
-                ShareUtil.openShareDialog(
-                    (activity as AppCompatActivity?)!!, getString(R.string.save_mnemonic_title),
-                    passphraseTv.text.toString()
-                )
-            }
-
-        observe(viewModel.mnemonicLiveData, Observer {
-            passphraseTv.text = it
-        })
-
-        observe(viewModel.getPreloadVisibility(), Observer {
-            if (it) preloaderView.show() else preloaderView.gone()
-        })
-
-        viewModel.getPassphrase()
     }
 
     override fun inject() {
@@ -70,5 +44,32 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>() {
             .withRouter(activity as OnboardingRouter)
             .build()
             .inject(this)
+    }
+
+    override fun initViews() {
+        toolbar.hideHomeButton()
+
+        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.btnNextClicked()
+        })
+
+        btnShare.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            ShareUtil.openShareDialog(
+                (activity as AppCompatActivity?)!!, getString(R.string.common_passphrase_save_mnemonic_title),
+                passphraseTv.text.toString()
+            )
+        })
+    }
+
+    override fun subscribe(viewModel: MnemonicViewModel) {
+        observe(viewModel.mnemonicLiveData, Observer {
+            passphraseTv.text = it
+        })
+
+        observe(viewModel.getPreloadVisibility(), Observer {
+            if (it) preloaderView.show() else preloaderView.gone()
+        })
+
+        viewModel.getPassphrase()
     }
 }

@@ -48,7 +48,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/new_project"
+                    android:text="@string/project_mark_new"
                     android:textColor="@android:color/white"
                     android:textSize="13sp" />
 
@@ -64,7 +64,7 @@
             <TextView
                 android:id="@+id/name"
                 style="@style/DefaultTitleStyle"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
                 android:layout_marginTop="@dimen/x2"
@@ -142,7 +142,7 @@
                 android:drawableStart="@drawable/icon_vote_shape"
                 android:drawablePadding="@dimen/x1"
                 android:padding="@dimen/x2"
-                android:text="@string/vote"
+                android:text="@string/common_vote"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/divider1" />
 

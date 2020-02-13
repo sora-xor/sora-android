@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -19,7 +20,8 @@ class MnemonicViewModel(
     private val preloader: WithPreloader
 ) : BaseViewModel(), WithPreloader by preloader {
 
-    val mnemonicLiveData = MutableLiveData<String>()
+    private val _mnemonicLiveData = MutableLiveData<String>()
+    val mnemonicLiveData: LiveData<String> = _mnemonicLiveData
 
     fun btnNextClicked() {
         router.showMainScreen()
@@ -32,7 +34,7 @@ class MnemonicViewModel(
                 .observeOn(AndroidSchedulers.mainThread())
                 .compose(preloadCompose())
                 .subscribe({
-                    mnemonicLiveData.value = it
+                    _mnemonicLiveData.value = it
                 }, {
                     it.printStackTrace()
                 })

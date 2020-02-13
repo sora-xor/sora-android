@@ -28,11 +28,11 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/tutorialSignUpButton"
-        style="@style/FilledButton"
+        style="@style/Widget.Soramitsu.Button"
         android:layout_width="184dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/x1"
-        android:text="@string/sign_up" />
+        android:text="@string/tutorial_sign_up" />
 
     <Space
         android:layout_width="wrap_content"
@@ -43,7 +43,7 @@
         style="@style/RedTextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/restore_account" />
+        android:text="@string/tutorial_restore_account" />
 
     <TextView
         android:id="@+id/tutorialTerms"
@@ -52,6 +52,6 @@
         android:layout_margin="@dimen/x2"
         android:gravity="center"
         android:textSize="12sp"
-        tools:text="@string/tutorial_terms" />
+        tools:text="@string/tutorial_terms_and_conditions_1" />
 
 </LinearLayout>

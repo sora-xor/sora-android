@@ -1,62 +1,37 @@
 <resources>
-    <string name="app_name">feature_onboarding_impl</string>
+    <!-- Recovery screen -->
+    <string name="recovery_body_title">Enter your passphrase</string>
+    <string name="recovery_body_subtitle">Unfortunately there is no way to access your account if you forgot your passphrase.</string>
+    <string name="recovery_passphrase">Restore access</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="enter_code_manually">Enter code manually</string>
-    <string name="restore_account">Restore your account access</string>
-    <string name="first_name">First name</string>
-    <string name="last_name">Last name</string>
-    <string name="email">E-mail</string>
-    <string name="phone">Phone</string>
-    <string name="next">Next</string>
-    <string name="hint_invitation_code">aB1x321q</string>
+    <!-- Tutorial screen -->
+    <string name="tutorial_sign_up">Sign up</string>
+    <string name="tutorial_restore_account">Restore your account access</string>
+    <string name="tutorial_terms_and_conditions_1">I have read and agreed to\n</string>
+    <string name="tutorial_terms_and_conditions_2">Terms and Conditions</string>
+    <string name="tutorial_privacy_policy">Privacy Policy</string>
+    <string name="tutorial_project_success_desc">If project succeeds in voting then everybody gets their share</string>
+    <string name="tutorial_votes_desc">Users vote for the projects deciding which project should be funded</string>
+    <string name="tutorial_projects_desc">Projects added to Sora by producers and added to voting after selection process</string>
 
-    <string name="copy_to_clipboard">Copy to clipboard</string>
-    <string name="initial_title">Let\'s get started</string>
-    <string name="initial_subtitle">You need an invitation to use Sora.
-You can get one from your friends who already use Sora or you can</string>
-    <string name="initial_subtitle_link">Apply on our website</string>
-    <string name="initial_already_have_code">Already have a code?</string>
-    <string name="recovery_title">Enter your passphrase</string>
-    <string name="recovery_subtitle">Unfortunately there is no way to access your account if you forgot your passphrase.</string>
-    <string name="passphrase">Passphrase</string>
-    <string name="phone_is_not_valid">Phone is not valid</string>
+    <!-- Personal info -->
+    <string name="personal_info_title">Sign up</string>
+    <string name="personal_info_invitation_is_invalid">Invitation code is invalid</string>
+    <string name="personal_info_invitation_description">👋Got an invitation link? Just tap on it to apply code, or enter code manually.</string>
+    <string name="personal_info_inv_code_hint">Invitation code (optional)</string>
 
-    <string name="last_name_is_empty">Last name is empty</string>
-    <string name="sign_up">Sign-up</string>
-
-    <string name="registration_verification_code_title">Enter the code from the SMS</string>
-    <string name="registration_verification_respond_code">Resend code</string>
-
-    <string name="success">Success</string>
-    <string name="success_desc">If project succeeds in voting everybody get their share</string>
-    <string name="votes">Votes</string>
-    <string name="votes_desc">Users vote for the projects deciding which project should be funded</string>
-    <string name="projects">Projects</string>
-    <string name="projects_desc">Projects added to Sora by producers and added to voting after selection process</string>
-    <string name="verification_code_title">Phone verification</string>
-    <string name="invitation_fragment_title">Invitation code</string>
-    <string name="tutorial_terms">I have read and agreed to\n</string>
-    <string name="tutorial_terms_2">Terms and Conditions</string>
-
-    <string name="select_country_title">Select your country</string>
-    <string name="fragment_phone_number_title">Sign up</string>
-    <string name="phone_number_mobile">Mobile phone number</string>
-    <string name="phone_number_sms_code_will_be_sent">SMS code will be sent to your phone</string>
-    <string name="phone_number_alternative_sign_up">Alternative sign-up</string>
-
-    <string name="fragment_verification_title">Sign up</string>
+    <!-- Verification -->
+    <string name="verification_resend_code">Resend code</string>
+    <string name="verification_title">Phone verification</string>
     <string name="verification_enter_code_from_sms">Enter code from SMS</string>
-    <string name="verification_request_new_code_time">Request new code in %02d:%02d</string>
+    <string name="verification_request_new_code_time" formatted="false">Request new code in %s:%s</string>
 
-    <string name="fragment_personal_info_title">Sign up</string>
-    <string name="fragment_personal_inv_code_hint">Invitation code (optional)</string>
+    <!-- Countries -->
+    <string name="countries_title">Select your country</string>
+    <string name="countries_country_not_found">No countries matching your query</string>
 
-    <string name="fragment_personal_invitation_is_invalid">Invitation code is invalid</string>
-    <string name="fragment_personal_invitation_skip">Skip</string>
-    <string name="fragment_personal_invitation_try_another">Try another</string>
-    <string name="and">and</string>
-    <string name="tutorial_terms_3">Privacy Policy</string>
-    <string name="empty_invitation_link_text">👋Got an invitation link? Just tap on it to apply code, or enter 8 length code manually.</string>
+    <!-- Phone number -->
+    <string name="phone_number_title">Sign up</string>
+    <string name="phone_number_mobile">Mobile phone number</string>
+    <string name="phone_number_sms_code_will_be_sent">SMS code will be sent\nto your phone</string>
 </resources>

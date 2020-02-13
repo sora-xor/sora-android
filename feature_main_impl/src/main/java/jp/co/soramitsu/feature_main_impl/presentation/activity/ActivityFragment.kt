@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.activity
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,22 +13,24 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_activity.activityRecycler
 import kotlinx.android.synthetic.main.fragment_activity.emptyPlaceHolder
 import kotlinx.android.synthetic.main.fragment_activity.projectsRecyclerviewPlaceholder
 import kotlinx.android.synthetic.main.fragment_activity.swipeLayout
 import kotlinx.android.synthetic.main.fragment_activity.toolbarView
+import javax.inject.Inject
 
-@SuppressLint("CheckResult")
 class ActivityFragment : BaseFragment<ActivityFeedViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_activity, container, false)
@@ -39,13 +40,12 @@ class ActivityFragment : BaseFragment<ActivityFeedViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .activityFeedComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        (activity as MainActivity).showBottomView()
+        (activity as BottomBarController).showBottomBar()
 
         val scrollListener = object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -103,7 +103,7 @@ class ActivityFragment : BaseFragment<ActivityFeedViewModel>() {
 
         if (activityRecycler.adapter == null) {
             activityRecycler.run {
-                adapter = ActivityRecyclerAdapter { viewModel.btnHelpClicked() }
+                adapter = ActivityRecyclerAdapter(debounceClickHandler) { viewModel.btnHelpClicked() }
                 setHasFixedSize(true)
                 activityRecycler.itemAnimator = null
             }

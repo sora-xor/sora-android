@@ -13,5 +13,6 @@ data class ActivityFeed(
     val description: String,
     val votesString: String,
     val issuedAt: Date,
-    val iconDrawable: Int
+    val iconDrawable: Int,
+    val voteIconDrawable: Int = -1
 )

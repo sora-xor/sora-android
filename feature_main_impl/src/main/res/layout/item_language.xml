@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/x1">
+
+    <TextView
+        android:id="@+id/languageNameTv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/margin_padding_by_side"
+        android:paddingEnd="@dimen/margin_padding_by_side"
+        android:textColor="@color/lightBlack"
+        android:textSize="15sp"
+        tools:text="Английский" />
+
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/x1_2" />
+
+    <TextView
+        android:id="@+id/languageNativeNameTv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/margin_padding_by_side"
+        android:paddingEnd="@dimen/margin_padding_by_side"
+        android:textColor="@color/grey"
+        tools:text="English" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/x1"
+        android:layout_marginStart="@dimen/margin_padding_by_side"
+        android:layout_marginEnd="@dimen/margin_padding_by_side"
+        android:background="@color/indicatorDot" />
+
+</LinearLayout>

@@ -13,10 +13,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.delegate.WithProgressImpl
-import jp.co.soramitsu.common.di.app.ViewModelKey
-import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TimerWrapper
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
 import jp.co.soramitsu.feature_onboarding_impl.presentation.verification.VerificationViewModel
@@ -31,8 +32,8 @@ class VerificationModule {
     @Provides
     @IntoMap
     @ViewModelKey(VerificationViewModel::class)
-    fun provideViewModel(interactor: OnboardingInteractor, router: OnboardingRouter, progress: WithProgress, timerWrapper: TimerWrapper): ViewModel {
-        return VerificationViewModel(interactor, router, progress, timerWrapper)
+    fun provideViewModel(interactor: OnboardingInteractor, router: OnboardingRouter, progress: WithProgress, timerWrapper: TimerWrapper, numbersFormatter: NumbersFormatter): ViewModel {
+        return VerificationViewModel(interactor, router, progress, timerWrapper, numbersFormatter)
     }
 
     @Provides

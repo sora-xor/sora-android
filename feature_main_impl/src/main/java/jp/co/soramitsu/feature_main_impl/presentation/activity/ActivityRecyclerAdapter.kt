@@ -13,13 +13,15 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import jp.co.soramitsu.common.util.ext.formatTime
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
 import jp.co.soramitsu.feature_main_impl.R
 
 class ActivityRecyclerAdapter(
+    private val debounceClickHandler: DebounceClickHandler,
     private val helpClickListener: () -> Unit
 ) : ListAdapter<Any, ActivityFeedViewHolder>(DiffCallback) {
 
@@ -64,7 +66,7 @@ class ActivityRecyclerAdapter(
             }
             R.layout.item_activity_feed_header -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed_header, parent, false)
-                ActivityFeedViewHolder.ActivityHeaderViewHolder(view, helpClickListener)
+                ActivityFeedViewHolder.ActivityHeaderViewHolder(view)
             }
             R.layout.item_activity_feed_date -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.item_activity_feed_date, parent, false)
@@ -78,7 +80,7 @@ class ActivityRecyclerAdapter(
         when (holder) {
             is ActivityFeedViewHolder.ActivityViewHolder -> holder.bind(getItem(position) as ActivityFeedItem)
             is ActivityFeedViewHolder.ActivityAnnouncementViewHolder -> holder.bind(getItem(position) as ActivityFeedAnnouncement)
-            is ActivityFeedViewHolder.ActivityHeaderViewHolder -> holder.bind(getItem(position) as ActivityHeader)
+            is ActivityFeedViewHolder.ActivityHeaderViewHolder -> holder.bind(getItem(position) as ActivityHeader, debounceClickHandler, helpClickListener)
             is ActivityFeedViewHolder.ActivityDateViewHolder -> holder.bind(getItem(position) as ActivityDate)
         }
     }
@@ -138,18 +140,22 @@ sealed class ActivityFeedViewHolder(itemView: View) : RecyclerView.ViewHolder(it
 
             if (activity.votesString.isEmpty()) {
                 votesTv.gone()
-                heartIconImg.gone()
                 plusIconImg.gone()
             } else {
                 votesTv.show()
-                heartIconImg.show()
                 plusIconImg.show()
+            }
+
+            if (activity.votesRightDrawable == -1) {
+                heartIconImg.gone()
+            } else {
+                heartIconImg.show()
+                heartIconImg.setImageResource(activity.votesRightDrawable)
             }
 
             votesTv.text = activity.votesString
             plusIconImg.setImageResource(R.drawable.plus)
-
-            eventDateTv.text = activity.issuedAt.formatTime()
+            eventDateTv.text = activity.issuedAtString
         }
     }
 
@@ -165,16 +171,17 @@ sealed class ActivityFeedViewHolder(itemView: View) : RecyclerView.ViewHolder(it
     }
 
     class ActivityHeaderViewHolder(
-        itemView: View,
-        private val helpClickListener: () -> Unit
+        itemView: View
     ) : ActivityFeedViewHolder(itemView) {
 
         private val titleTv: TextView = itemView.findViewById(R.id.titleTv)
         private val helpView: View = itemView.findViewById(R.id.howItWorksCard)
 
-        fun bind(header: ActivityHeader) {
+        fun bind(header: ActivityHeader, debounceClickHandler: DebounceClickHandler, helpClickListener: () -> Unit) {
             titleTv.text = header.headerText
-            helpView.setOnClickListener { helpClickListener() }
+            helpView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+                helpClickListener()
+            })
         }
     }
 

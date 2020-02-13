@@ -12,8 +12,8 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.feature_account_api.domain.model.User
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 
 class PersonalDataEditViewModel(
     private val interactor: MainInteractor,
@@ -42,7 +42,7 @@ class PersonalDataEditViewModel(
     }
 
     fun backPressed() {
-        router.popBackStackFragment()
+        router.popBackStack()
     }
 
     fun saveData(firstName: String, lastName: String) {
@@ -73,7 +73,7 @@ class PersonalDataEditViewModel(
                 .doOnSubscribe { showProgress() }
                 .subscribe({
                     hideProgress()
-                    router.popBackStackFragment()
+                    router.popBackStack()
                 }, {
                     hideProgress()
                     onError(it)

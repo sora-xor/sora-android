@@ -11,26 +11,28 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.NavController
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import kotlinx.android.synthetic.main.fragment_unsupported_version.googlePlayBtn
+import javax.inject.Inject
 
 class UnsupportedVersionFragment : BaseFragment<UnsupportedVersionViewModel>() {
 
     companion object {
         private const val KEY_APP_URL = "app_url"
 
-        @JvmStatic fun newInstance(appUrl: String, navController: NavController) {
-            val bundle = Bundle().apply {
-                putString(KEY_APP_URL, appUrl)
-            }
-            navController.navigate(R.id.unsupportedVersionFragment, bundle)
+        fun createBundle(appUrl: String): Bundle {
+            return Bundle().apply { putString(KEY_APP_URL, appUrl) }
         }
     }
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_unsupported_version, container, false)
@@ -45,8 +47,14 @@ class UnsupportedVersionFragment : BaseFragment<UnsupportedVersionViewModel>() {
     }
 
     override fun initViews() {
+        (activity as BottomBarController).hideBottomBar()
+
         val appUrl = arguments!!.getString(KEY_APP_URL, "")
-        googlePlayBtn.setOnClickListener { openGooglePlay(appUrl) }
+        googlePlayBtn.setOnClickListener(
+            DebounceClickListener(debounceClickHandler) {
+                openGooglePlay(appUrl)
+            }
+        )
     }
 
     override fun subscribe(viewModel: UnsupportedVersionViewModel) {

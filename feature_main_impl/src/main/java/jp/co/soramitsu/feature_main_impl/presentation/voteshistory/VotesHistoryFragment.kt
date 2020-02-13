@@ -18,10 +18,9 @@ import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.recycler.VotesHistoryAdapter
 import kotlinx.android.synthetic.main.fragment_votes_history.emptyPlaceHolder
@@ -43,15 +42,14 @@ class VotesHistoryFragment : BaseFragment<VotesHistoryViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .votesHistoryComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        toolbar.setTitle(getString(R.string.votesHistoryScreenTitle))
+        (activity as BottomBarController).hideBottomBar()
+
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
-        (activity as MainActivity).hideBottomView()
 
         val scrollListener = object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {

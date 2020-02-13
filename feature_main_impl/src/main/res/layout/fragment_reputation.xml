@@ -11,11 +11,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <jp.co.soramitsu.common.presentation.view.SoraToolbar
+        <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:title="@string/reputation_title" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/reputationScreenLeftGuidline"
@@ -35,14 +36,14 @@
             android:id="@+id/reputationWrapper"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:background="@color/greyBackground"
-            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingStart="@dimen/x2_5"
-            android:paddingEnd="@dimen/x2_5"
             android:paddingTop="@dimen/x4"
+            android:paddingEnd="@dimen/x2_5"
             android:paddingBottom="@dimen/x4"
-            android:gravity="center_vertical">
+            app:layout_constraintTop_toBottomOf="@id/toolbar">
 
             <ImageView
                 android:id="@+id/reputationRankIcon"
@@ -68,7 +69,7 @@
 
                 <TextView
                     android:id="@+id/reputationRankText"
-                    style="@style/TextAppearance.Capital.Header2"
+                    style="@style/TextAppearance.Soramitsu.Header2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/x1"
@@ -105,7 +106,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x3"
             android:fontFamily="@font/sora_semibold"
-            android:text="@string/reputation_screen_what_is_reputation"
             android:textColor="@color/black"
             android:textSize="15sp"
             app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"
@@ -142,7 +142,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x2"
             android:fontFamily="@font/sora_semibold"
-            android:text="@string/reputation_screen_how_to_level_up"
             android:textColor="@color/black"
             android:textSize="15sp"
             app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"

@@ -12,7 +12,6 @@ class Const private constructor() {
     }
 
     companion object {
-        const val ONBOARDING_STATE = "onboarding_state"
         const val SORA_TERMS_PAGE = "https://sora.org/terms"
         const val SORA_PRIVACY_PAGE = "https://sora.org/privacy"
         const val XOR_ASSET_ID = "xor#sora"
@@ -20,7 +19,6 @@ class Const private constructor() {
         const val PIN_CODE_ACTION = "pin_code_action"
         const val IS_PUSH_UPDATE_NEEDED = "is_push_update_needed"
         const val DEVICE_TOKEN = "device_token"
-        const val PROJECT_ID = "project_id"
 
         const val INVITED_USERS = "prefs_invited_users"
 

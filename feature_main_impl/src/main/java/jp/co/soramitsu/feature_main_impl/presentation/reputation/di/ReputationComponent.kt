@@ -8,8 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.reputation.di
 import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
-import jp.co.soramitsu.common.di.app.ScreenScope
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
+import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.feature_main_impl.presentation.reputation.ReputationFragment
 
 @Subcomponent(
@@ -25,9 +24,6 @@ interface ReputationComponent {
 
         @BindsInstance
         fun withFragment(fragment: Fragment): Builder
-
-        @BindsInstance
-        fun withRouter(router: MainRouter): Builder
 
         fun build(): ReputationComponent
     }

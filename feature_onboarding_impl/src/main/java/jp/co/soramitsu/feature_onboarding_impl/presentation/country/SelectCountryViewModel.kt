@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.country
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -20,7 +21,15 @@ class SelectCountryViewModel(
     private val preloader: WithPreloader
 ) : BaseViewModel(), WithPreloader by preloader {
 
-    val countriesLiveData = MutableLiveData<List<Country>>()
+    private val _countriesLiveData = MutableLiveData<List<Country>>()
+    val countriesLiveData: LiveData<List<Country>> = _countriesLiveData
+
+    private val _countriesListVisibilitytLiveData = MutableLiveData<Boolean>()
+    val countriesListVisibilitytLiveData: LiveData<Boolean> = _countriesListVisibilitytLiveData
+
+    private val _emptyPlaceholderVisibilitytLiveData = MutableLiveData<Boolean>()
+    val emptyPlaceholderVisibilitytLiveData: LiveData<Boolean> = _emptyPlaceholderVisibilitytLiveData
+
     private val countries = mutableListOf<Country>()
     private var searchFilter = ""
 
@@ -38,7 +47,8 @@ class SelectCountryViewModel(
                     hidePreloader()
                     countries.clear()
                     countries.addAll(it)
-                    countriesLiveData.value = filterCountries(countries, searchFilter)
+
+                    showFilteredCountries(searchFilter)
                 }, {
                     hidePreloader()
                     logException(it)
@@ -48,7 +58,16 @@ class SelectCountryViewModel(
 
     fun searchCountries(filter: String) {
         searchFilter = filter
-        countriesLiveData.value = filterCountries(countries, searchFilter)
+
+        showFilteredCountries(filter)
+    }
+
+    private fun showFilteredCountries(filter: String) {
+        val countries = filterCountries(countries, filter)
+
+        _countriesListVisibilitytLiveData.value = countries.isNotEmpty()
+        _emptyPlaceholderVisibilitytLiveData.value = countries.isEmpty()
+        _countriesLiveData.value = countries
     }
 
     private fun filterCountries(countries: List<Country>, filter: String): List<Country> {

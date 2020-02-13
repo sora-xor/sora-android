@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +18,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.makeramen.roundedimageview.RoundedImageView
 import com.squareup.picasso.Picasso
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -30,8 +31,8 @@ import jp.co.soramitsu.feature_project_api.domain.model.ProjectStatus
 import java.math.BigDecimal
 
 class MainProjectsAdapter(
-    private val context: Context,
     private val numbersFormatter: NumbersFormatter,
+    private val debounceClickHandler: DebounceClickHandler,
     private val voteButtonClickListener: (Project) -> Unit,
     private val favButtonClickListener: (Project) -> Unit,
     private val itemViewClickListener: (Project) -> Unit
@@ -39,22 +40,15 @@ class MainProjectsAdapter(
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): ProjectViewHolder {
         val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_project, viewGroup, false)
-        return ProjectViewHolder(context, numbersFormatter, view, voteButtonClickListener, favButtonClickListener, itemViewClickListener)
+        return ProjectViewHolder(view)
     }
 
     override fun onBindViewHolder(projectViewHolder: ProjectViewHolder, position: Int) {
-        projectViewHolder.bind(getItem(position))
+        projectViewHolder.bind(getItem(position), numbersFormatter, debounceClickHandler, voteButtonClickListener, favButtonClickListener, itemViewClickListener)
     }
 }
 
-class ProjectViewHolder(
-    private val context: Context,
-    private val numbersFormatter: NumbersFormatter,
-    itemView: View,
-    private val voteButtonClickListener: (Project) -> Unit,
-    private val favButtonClickListener: (Project) -> Unit,
-    private val itemViewClickListener: (Project) -> Unit
-) : RecyclerView.ViewHolder(itemView) {
+class ProjectViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     private val root: CardView = itemView.findViewById(R.id.item_wrapper)
     private val cardNew: CardView = itemView.findViewById(R.id.card_new)
@@ -71,7 +65,14 @@ class ProjectViewHolder(
     private val rewardTv: TextView = itemView.findViewById(R.id.reward)
     private val friendsVotedTv: TextView = itemView.findViewById(R.id.friends_voted)
 
-    fun bind(project: Project) {
+    fun bind(
+        project: Project,
+        numbersFormatter: NumbersFormatter,
+        debounceClickHandler: DebounceClickHandler,
+        voteButtonClickListener: (Project) -> Unit,
+        favButtonClickListener: (Project) -> Unit,
+        itemViewClickListener: (Project) -> Unit
+    ) {
         Picasso.get().load(project.image.toString()).fit().centerCrop().into(imageView)
 
         nameTv.text = project.name
@@ -79,21 +80,25 @@ class ProjectViewHolder(
 
         if (project.isUnwatched) cardNew.show() else cardNew.gone()
 
-        val foundedPercent = project.getFundingPercent().toDouble()
+        val foundedPercent = project.getFundingPercent().toString()
 
         favoriteTv.text = if (project.favoriteCount == 0) "" else project.favoriteCount.toString()
 
-        val favoriteIconDrawable = context.resources.getDrawable(if (project.isFavorite) R.drawable.icon_fav_filled else R.drawable.icon_fav_shape)
+        val favoriteIconDrawable = itemView.resources.getDrawable(if (project.isFavorite) R.drawable.icon_fav_filled else R.drawable.icon_fav_shape)
 
         votesProgressBar.progress = foundedPercent.toInt()
 
         favoriteTv.setCompoundDrawablesWithIntrinsicBounds(null, null, favoriteIconDrawable, null)
 
-        root.setOnClickListener { itemViewClickListener(project) }
+        root.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            itemViewClickListener(project)
+        })
 
-        voteTv.setOnClickListener { voteButtonClickListener(project) }
+        voteTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            voteButtonClickListener(project)
+        })
 
-        val scaleAnimation = AnimationUtils.loadAnimation(context, R.anim.scale_animation)
+        val scaleAnimation = AnimationUtils.loadAnimation(itemView.context, R.anim.scale_animation)
 
         if (ProjectStatus.OPEN == project.status) {
             divider1.gone()
@@ -103,25 +108,26 @@ class ProjectViewHolder(
                 friendsVotedTv.gone()
             } else {
                 friendsVotedTv.show()
-                friendsVotedTv.text = context.getString(
-                    R.string.friends_template,
-                    project.votedFriendsCount.toString(),
-                    context.resources.getQuantityString(R.plurals.friends, project.votedFriendsCount)
+                friendsVotedTv.text = itemView.context.resources.getQuantityString(
+                    R.plurals.project_friends_template,
+                    project.votedFriendsCount,
+                    project.votedFriendsCount
+
                 )
             }
 
             rewardTv.gone()
 
             voteTv.isClickable = true
-            val typeFace = ResourcesCompat.getFont(context, R.font.sora_semibold)
-            voteTv.setTextColor(context.resources.getColor(R.color.lightRed))
+            val typeFace = ResourcesCompat.getFont(itemView.context, R.font.sora_semibold)
+            voteTv.setTextColor(itemView.context.resources.getColor(R.color.lightRed))
             voteTv.typeface = typeFace
 
             votesProgressBar.show()
 
-            leftToFundTv.text = context.getString(R.string.founded_template, foundedPercent.toInt(),
+            leftToFundTv.text = itemView.context.getString(R.string.project_founded_template, foundedPercent,
                 numbersFormatter.formatInteger(BigDecimal.valueOf(project.fundingTarget)))
-            daysLeftTv.text = project.deadline.formatToOpenProjectDate(context.resources)
+            daysLeftTv.text = project.deadline.formatToOpenProjectDate(itemView.context.resources)
         } else {
             divider1.show()
             divider2.gone()
@@ -131,46 +137,46 @@ class ProjectViewHolder(
             if (project.votes == BigDecimal.ZERO) {
                 rewardTv.gone()
             } else {
-                rewardTv.text = context.getString(R.string.spent, project.votes.toString())
+                rewardTv.text = itemView.context.getString(R.string.project_spent_format, project.votes.toString())
                 rewardTv.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
                 rewardTv.show()
             }
 
             voteTv.isClickable = false
-            val typeFace = ResourcesCompat.getFont(context, R.font.sora_regular)
-            voteTv.setTextColor(context.resources.getColor(R.color.darkGreyBlue))
+            val typeFace = ResourcesCompat.getFont(itemView.context, R.font.sora_regular)
+            voteTv.setTextColor(itemView.resources.getColor(R.color.darkGreyBlue))
             voteTv.typeface = typeFace
 
             votesProgressBar.gone()
 
-            leftToFundTv.text = context.getString(R.string.votes_template, numbersFormatter.format(project.fundingCurrent.toDouble()))
-            daysLeftTv.text = project.statusUpdateTime.formatToClosedProjectDate(context.resources)
+            leftToFundTv.text = itemView.context.getString(R.string.project_votes_template, numbersFormatter.format(project.fundingCurrent.toDouble()))
+            daysLeftTv.text = project.statusUpdateTime.formatToClosedProjectDate(itemView.context.resources)
         }
 
         when (project.status) {
             ProjectStatus.COMPLETED -> {
-                voteTv.setText(R.string.successful_voting)
-                voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_succ_voting), null, null, null)
+                voteTv.setText(R.string.project_successful_voting)
+                voteTv.setCompoundDrawablesWithIntrinsicBounds(itemView.context.getDrawable(R.drawable.icon_succ_voting), null, null, null)
             }
             ProjectStatus.FAILED -> {
-                voteTv.setText(R.string.unsuccessful_voting)
-                voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_failed), null, null, null)
+                voteTv.setText(R.string.project_unsuccessful_voting)
+                voteTv.setCompoundDrawablesWithIntrinsicBounds(itemView.context.getDrawable(R.drawable.icon_failed), null, null, null)
             }
             ProjectStatus.OPEN -> {
                 if (project.votes.toInt() == 0) {
-                    voteTv.text = context.getString(R.string.vote)
-                    voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_vote_shape), null, null, null)
+                    voteTv.text = itemView.context.getString(R.string.common_vote)
+                    voteTv.setCompoundDrawablesWithIntrinsicBounds(itemView.context.getDrawable(R.drawable.icon_vote_shape), null, null, null)
                 } else {
                     voteTv.text = numbersFormatter.formatInteger(project.votes)
-                    voteTv.setCompoundDrawablesWithIntrinsicBounds(context.getDrawable(R.drawable.icon_vote_filled), null, null, null)
+                    voteTv.setCompoundDrawablesWithIntrinsicBounds(itemView.context.getDrawable(R.drawable.icon_vote_filled), null, null, null)
                 }
             }
         }
 
-        favoriteTv.setOnClickListener {
+        favoriteTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             favButtonClickListener(project)
             favoriteTv.startAnimation(scaleAnimation)
-        }
+        })
     }
 }
 

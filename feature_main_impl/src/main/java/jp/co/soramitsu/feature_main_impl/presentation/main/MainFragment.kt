@@ -5,22 +5,23 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.AllProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.CompletedProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.FavoriteProjectsFragment
@@ -31,9 +32,11 @@ import kotlinx.android.synthetic.main.fragment_main.projectsTab
 import kotlinx.android.synthetic.main.fragment_main.viewPager
 import kotlinx.android.synthetic.main.fragment_main.votesCard
 import kotlinx.android.synthetic.main.fragment_main.votesText
+import javax.inject.Inject
 
-@SuppressLint("CheckResult")
 class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListener {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     private var keyboardHelper: KeyboardHelper? = null
 
@@ -47,24 +50,25 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .projectsComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }
 
     override fun initViews() {
-        howItWorksCard.setOnClickListener { viewModel.btnHelpClicked() }
+        (activity as BottomBarController).showBottomBar()
+
+        howItWorksCard.setOnClickListener(DebounceClickListener(debounceClickHandler) { viewModel.btnHelpClicked() })
 
         val adapter = ProjectsViewPagerAdapter(childFragmentManager).apply {
-            addPage(getString(R.string.tabs_all), AllProjectsFragment.newInstance())
-            addPage(getString(R.string.tabs_voted), VotedProjectsFragment.newInstance())
-            addPage(getString(R.string.tabs_favourites), FavoriteProjectsFragment.newInstance())
-            addPage(getString(R.string.tabs_complete), CompletedProjectsFragment.newInstance())
+            addPage(getString(R.string.project_all), AllProjectsFragment.newInstance())
+            addPage(getString(R.string.project_voted), VotedProjectsFragment.newInstance())
+            addPage(getString(R.string.project_favourites), FavoriteProjectsFragment.newInstance())
+            addPage(getString(R.string.project_completed), CompletedProjectsFragment.newInstance())
         }
         viewPager.adapter = adapter
         projectsTab.setupWithViewPager(viewPager)
 
-        votesCard.setOnClickListener { viewModel.votesClick() }
+        votesCard.setOnClickListener(DebounceClickListener(debounceClickHandler) { viewModel.votesClick() })
     }
 
     override fun subscribe(viewModel: MainViewModel) {
@@ -84,7 +88,8 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
                     } else {
                         openSoftKeyboard(it)
                     }
-                }
+                },
+                debounceClickHandler
             )
             voteDialog!!.show()
         })
@@ -101,7 +106,8 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
                     } else {
                         openSoftKeyboard(it)
                     }
-                }
+                },
+                debounceClickHandler
             )
             voteDialog!!.show()
         })

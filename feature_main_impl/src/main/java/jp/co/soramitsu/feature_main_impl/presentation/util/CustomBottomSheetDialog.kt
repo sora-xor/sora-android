@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.util
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.text.Editable
 import android.text.TextWatcher
@@ -14,24 +13,25 @@ import android.view.WindowManager.LayoutParams
 import android.widget.EditText
 import android.widget.SeekBar
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ext.hide
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_impl.R
 import kotlinx.android.synthetic.main.vote_bottom_dialog.cancelBtn
-import kotlinx.android.synthetic.main.vote_bottom_dialog.closeBtn
 import kotlinx.android.synthetic.main.vote_bottom_dialog.keyboardImg
 import kotlinx.android.synthetic.main.vote_bottom_dialog.messageTv
 import kotlinx.android.synthetic.main.vote_bottom_dialog.voteBtn
 import kotlinx.android.synthetic.main.vote_bottom_dialog.votesEt
 import kotlinx.android.synthetic.main.vote_bottom_dialog.votesSb
 
-@SuppressLint("CheckResult")
 class CustomBottomSheetDialog(
     context: Activity,
     private val maxVoteType: MaxVoteType,
     private val maxVotesNeeded: Int,
     private val voteClickListener: (Long) -> Unit,
-    private val keyboardClickListener: (EditText) -> Unit
+    private val keyboardClickListener: (EditText) -> Unit,
+    private val debounceClickHandler: DebounceClickHandler
 ) : BottomSheetDialog(context, R.style.BottomSheetDialog) {
 
     enum class MaxVoteType {
@@ -43,6 +43,7 @@ class CustomBottomSheetDialog(
         setContentView(LayoutInflater.from(context).inflate(R.layout.vote_bottom_dialog, null))
 
         votesEt.tag = 0
+        votesSb.max = maxVotesNeeded
 
         votesEt.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(afterChangeEvent: Editable?) {
@@ -79,24 +80,29 @@ class CustomBottomSheetDialog(
             }
         })
 
-        closeBtn.setOnClickListener { dismiss() }
-        cancelBtn.setOnClickListener { dismiss() }
+        cancelBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            dismiss()
+        })
 
         window!!.setSoftInputMode(LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
-        voteBtn.setOnClickListener {
-            dismiss()
-            voteClickListener(votesEt.text.toString().toLong())
-        }
+        voteBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            if (votesEt.text.toString().isNotBlank()) {
+                dismiss()
+                voteClickListener(votesEt.text.toString().toLong())
+            }
+        })
 
-        keyboardImg.setOnClickListener { keyboardClickListener(votesEt) }
+        keyboardImg.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            keyboardClickListener(votesEt)
+        })
 
-        votesSb.max = maxVotesNeeded
+        votesSb.progress = 1
     }
 
     private fun votesChanged(votesCount: Int) {
         if (votesCount == 0) {
-            messageTv.text = context.getString(R.string.you_can_vote_at_least_1_point)
+            messageTv.text = context.getString(R.string.project_you_can_vote_at_least_1_point)
             messageTv.show()
             voteBtn.alpha = 0.5f
             voteBtn.isEnabled = false
@@ -109,11 +115,11 @@ class CustomBottomSheetDialog(
                 votesEt.setText(maxVotesNeeded.toString())
                 votesEt.setSelection(votesEt.length())
 
-                messageTv.text = context.getString(R.string.project_requires_votes_format, maxVotesNeeded)
+                messageTv.text = context.getString(R.string.project_requires_votes_format, maxVotesNeeded.toString())
                 voteBtn.isEnabled = true
                 voteBtn.alpha = 1f
             } else {
-                messageTv.text = context.getString(R.string.user_have_not_enough_votes_message)
+                messageTv.text = context.getString(R.string.project_user_have_not_enough_votes_message)
                 voteBtn.isEnabled = false
                 voteBtn.alpha = 0.5f
             }

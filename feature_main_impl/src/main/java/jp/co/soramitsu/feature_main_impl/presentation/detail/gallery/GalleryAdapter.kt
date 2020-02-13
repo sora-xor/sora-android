@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_impl.R
@@ -23,25 +25,25 @@ import kotlinx.android.synthetic.main.gallery_item.view.galleryItemImageView
 import kotlinx.android.synthetic.main.gallery_item.view.playImg
 
 class GalleryAdapter(
+    private val debounceClickHandler: DebounceClickHandler,
     private val itemClickedListener: (GalleryItem, View, Int) -> Unit
 ) : ListAdapter<GalleryItem, GalleryViewHolder>(DiffCallback) {
 
     override fun onBindViewHolder(holder: GalleryViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), debounceClickHandler, itemClickedListener)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GalleryViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.gallery_item, parent, false)
-        return GalleryViewHolder(view, itemClickedListener)
+        return GalleryViewHolder(view)
     }
 }
 
 class GalleryViewHolder(
-    view: View,
-    private val itemClickedListener: (GalleryItem, View, Int) -> Unit
+    view: View
 ) : RecyclerView.ViewHolder(view) {
 
-    fun bind(item: GalleryItem) {
+    fun bind(item: GalleryItem, debounceClickHandler: DebounceClickHandler, itemClickedListener: (GalleryItem, View, Int) -> Unit) {
         with(itemView) {
 
             if (GalleryItemType.VIDEO == item.type) {
@@ -71,7 +73,9 @@ class GalleryViewHolder(
                 durationView.gone()
             }
 
-            setOnClickListener { itemClickedListener(item, galleryItemImageView, adapterPosition) }
+            setOnClickListener(DebounceClickListener(debounceClickHandler) {
+                itemClickedListener(item, galleryItemImageView, adapterPosition)
+            })
         }
     }
 }

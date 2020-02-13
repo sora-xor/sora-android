@@ -1,26 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/x1"
+    app:cardCornerRadius="@dimen/x2" >
 
-    <androidx.cardview.widget.CardView
+    <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="@dimen/x2">
+        android:indeterminate="true"
+        android:layout_margin="@dimen/x2"
+        style="@style/Widget.Soramitsu.ProgressBar" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="@dimen/x3">
-
-            <ProgressBar
-                android:layout_width="58dp"
-                android:layout_height="58dp"
-                android:indeterminate="true"
-                android:indeterminateTint="@color/lightRed"
-                android:indeterminateTintMode="src_atop" />
-
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
-
-</layout>
+</androidx.cardview.widget.CardView>

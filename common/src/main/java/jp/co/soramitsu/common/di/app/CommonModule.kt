@@ -6,21 +6,30 @@
 package jp.co.soramitsu.common.di.app
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Build
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.data.AppVersionProviderImpl
+import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.data.GsonSerializerImpl
+import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
+import jp.co.soramitsu.common.domain.Serializer
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.resourses.ResourceManagerImpl
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.DidProvider
+import jp.co.soramitsu.common.util.EncryptionUtil
 import jp.co.soramitsu.common.util.MnemonicProvider
 import jp.co.soramitsu.common.util.QrCodeDecoder
 import jp.co.soramitsu.common.util.QrCodeGenerator
@@ -32,12 +41,10 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
 
+const val SHARED_PREFERENCES_FILE = "sora_prefs"
+
 @Module
 class CommonModule {
-
-    @Singleton
-    @Provides
-    fun provideResourceManager(resourceManager: ResourceManagerImpl): ResourceManager = resourceManager
 
     @Singleton
     @Provides
@@ -100,4 +107,40 @@ class CommonModule {
     @Provides
     @Singleton
     fun provideInvitationHandler(): InvitationHandler = InvitationHandler()
+
+    @Provides
+    @Singleton
+    fun provideDebounceClickHandler(): DebounceClickHandler = DebounceClickHandler()
+
+    @Provides
+    @Singleton
+    fun provideSerializer(): Serializer = GsonSerializerImpl(Gson())
+
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferences(prefs: SharedPreferences): Preferences {
+        return Preferences(prefs)
+    }
+
+    @Provides
+    @Singleton
+    fun provideEncryptedPreferences(preferences: Preferences, encryptionUtil: EncryptionUtil): EncryptedPreferences {
+        return EncryptedPreferences(preferences, encryptionUtil)
+    }
+
+    @Provides
+    fun provideLocale(contextManager: ContextManager): Locale {
+        return contextManager.getLocale()
+    }
+
+    @Provides
+    fun provideDateTimeFormatter(locale: Locale): DateTimeFormatter {
+        return DateTimeFormatter(locale)
+    }
 }

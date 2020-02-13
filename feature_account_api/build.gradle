@@ -32,11 +32,11 @@ dependencies {
     implementation project(":common")
     implementation project(":core_network_api")
 
-    implementation androidDeps.appCompat
+    implementation androidDep
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation rxDeps.values()
+    implementation rxDep
 
-    implementation gsonDeps.values()
+    implementation gsonDep
 }

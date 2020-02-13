@@ -1,39 +1,34 @@
-<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/toolbar"
     android:layout_width="match_parent"
-    android:layout_height="56dp"
-    android:background="@android:color/white"
-    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+    android:layout_height="?android:attr/actionBarSize"
     app:contentInsetLeft="0dp"
     app:contentInsetStart="0dp"
-    app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+    tools:parentTag="androidx.appcompat.widget.Toolbar">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="@android:color/white">
 
         <ImageView
-            android:id="@+id/backImg"
+            android:id="@+id/homeImg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?selectableItemBackground"
+            android:background="?selectableItemBackground"
             android:padding="@dimen/x2"
+            android:tint="?colorAccent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/back_arrow" />
+            app:srcCompat="@drawable/ic_arrow_back" />
 
         <TextView
             android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Header3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:fontFamily="@font/sora_bold"
-            android:textColor="@color/black"
-            android:textSize="19sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -42,33 +37,32 @@
 
         <TextView
             android:id="@+id/votesTv"
+            style="@style/TextAppearance.Soramitsu.Body2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="@dimen/x2"
-            android:layout_marginBottom="8dp"
-            android:gravity="center"
             android:drawableStart="@drawable/icon_vote_filled"
-            android:drawablePadding="@dimen/x1"
+            android:drawablePadding="@dimen/x1_2"
+            android:textColor="@color/green"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:visibility="gone"
-            tools:text="200" />
+            tools:text="200"
+            tools:visibility="visible" />
 
         <ImageView
             android:id="@+id/shareImg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?selectableItemBackground"
+            android:background="?selectableItemBackground"
             android:padding="@dimen/x2"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_share" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-</androidx.appcompat.widget.Toolbar>
+</merge>

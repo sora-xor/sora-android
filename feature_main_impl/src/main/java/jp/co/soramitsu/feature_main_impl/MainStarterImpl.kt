@@ -6,7 +6,7 @@
 package jp.co.soramitsu.feature_main_impl
 
 import android.content.Context
-import jp.co.soramitsu.feature_main_api.MainStarter
+import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import javax.inject.Inject
 

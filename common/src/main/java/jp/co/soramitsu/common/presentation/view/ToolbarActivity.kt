@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.common.presentation.view
 
+import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -12,13 +13,21 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.di.app.CommonApi
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.core_di.holder.FeatureUtils
 import javax.inject.Inject
 
 abstract class ToolbarActivity<T : BaseViewModel> : AppCompatActivity() {
 
     @Inject protected open lateinit var viewModel: T
+
+    override fun attachBaseContext(base: Context) {
+        val commonApi = FeatureUtils.getFeature<Any>(base.applicationContext, CommonApi::class.java) as CommonApi
+        val contextManager = commonApi.contextManager()
+        super.attachBaseContext(contextManager.setLocale(base))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,9 +45,9 @@ abstract class ToolbarActivity<T : BaseViewModel> : AppCompatActivity() {
 
         viewModel.errorLiveData.observe(this, EventObserver {
             AlertDialog.Builder(this)
-                .setTitle(R.string.general_error_title)
+                .setTitle(R.string.common_error_general_title)
                 .setMessage(it)
-                .setPositiveButton(R.string.sora_ok) { _, _ -> }
+                .setPositiveButton(R.string.common_ok) { _, _ -> }
                 .show()
         })
 
@@ -46,15 +55,15 @@ abstract class ToolbarActivity<T : BaseViewModel> : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setTitle(it.first)
                 .setMessage(it.second)
-                .setPositiveButton(R.string.sora_ok) { _, _ -> }
+                .setPositiveButton(R.string.common_ok) { _, _ -> }
                 .show()
         })
 
         viewModel.errorFromResourceLiveData.observe(this, EventObserver {
             AlertDialog.Builder(this)
-                .setTitle(R.string.general_error_title)
+                .setTitle(R.string.common_error_general_title)
                 .setMessage(it)
-                .setPositiveButton(R.string.sora_ok) { _, _ -> }
+                .setPositiveButton(R.string.common_ok) { _, _ -> }
                 .show()
         })
     }

@@ -13,12 +13,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.delegate.WithProgressImpl
-import jp.co.soramitsu.common.di.app.ViewModelKey
-import jp.co.soramitsu.common.di.app.ViewModelModule
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.util.DeviceParamsProvider
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
+import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 
 @Module(

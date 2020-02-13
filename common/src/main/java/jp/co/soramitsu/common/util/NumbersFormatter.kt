@@ -17,6 +17,7 @@ class NumbersFormatter @Inject constructor() {
 
     companion object {
         private const val DECIMAL_PATTERN = "###,###.##"
+        private const val TWO_DIGITS_PATTERN = "00"
     }
 
     fun format(num: Double): String {
@@ -38,11 +39,17 @@ class NumbersFormatter @Inject constructor() {
         val formatter = DecimalFormat(DECIMAL_PATTERN)
         val decimalFormatSymbols = formatter.decimalFormatSymbols
         decimalFormatSymbols.groupingSeparator = ' '
+        decimalFormatSymbols.decimalSeparator = '.'
         formatter.decimalFormatSymbols = decimalFormatSymbols
         return formatter.format(num)
     }
 
     fun formatInteger(num: BigDecimal): String {
         return formatBigDecimal(num.setScale(0, RoundingMode.FLOOR))
+    }
+
+    fun formatIntegerToTwoDigits(num: Int): String {
+        val formatter = DecimalFormat(TWO_DIGITS_PATTERN)
+        return formatter.format(num)
     }
 }

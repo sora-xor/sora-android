@@ -5,10 +5,11 @@
     android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:title="@string/countries_title"
         app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
@@ -26,7 +27,7 @@
             android:layout_marginTop="@dimen/x1"
             android:layout_marginRight="@dimen/x2"
             android:layout_marginBottom="@dimen/x2"
-            app:queryHint="@string/search_hint_default" />
+            app:queryHint="@string/common_search" />
 
     </FrameLayout>
 
@@ -45,6 +46,34 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/shadowView" />
+
+    <LinearLayout
+        android:id="@+id/emptySearchResultPlaceholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/shadowView"
+        app:layout_constraintVertical_bias="0.45">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/margin_padding_description"
+            android:src="@drawable/empty_search_icon" />
+
+        <TextView
+            style="@style/TextAppearance.Soramitsu.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/countries_country_not_found"
+            android:textColor="@color/informationTextColor" />
+
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/preloader"

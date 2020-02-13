@@ -12,13 +12,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.NavController
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import kotlinx.android.synthetic.main.fragment_unsupported_version.googlePlayBtn
+import javax.inject.Inject
 
 class UnsupportedVersionFragment : jp.co.soramitsu.common.base.BaseFragment<UnsupportedVersionViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     companion object {
         private const val KEY_APP_URL = "app_url"
@@ -45,7 +50,9 @@ class UnsupportedVersionFragment : jp.co.soramitsu.common.base.BaseFragment<Unsu
 
     override fun initViews() {
         val appUrl = arguments!!.getString(KEY_APP_URL, "")
-        googlePlayBtn.setOnClickListener { openGooglePlay(appUrl) }
+        googlePlayBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            openGooglePlay(appUrl)
+        })
     }
 
     override fun subscribe(viewModel: UnsupportedVersionViewModel) {

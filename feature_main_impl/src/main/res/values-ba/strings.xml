@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Project -->
+    <string name="projects_title">Sora проектары</string>
+    <string name="project_founded_template" formatted="false">%s%% %s тауыштың өлөшө</string>
+    <string name="project_votes_template">%s тауыш</string>
+    <string name="project_ended_template">%s тамамланды</string>
+    <string name="project_spent_format">Һеҙ %s тауыш тотондоғоҙ</string>
+    <string name="empty_voted_project_description">Тауыш биргән өсөн проектар бында күрһәтелер</string>
+    <string name="empty_completed_project_description">Тауыш биреү тамамланған проектар бында күрһәтелер</string>
+    <string name="project_contacts">Контакттар һәм мәғлүмәт</string>
+    <string name="project_discussion_template">%s фекер алышырға</string>
+    <string name="project_requires_votes_format">Проект %s тауыш талап итә 🚀</string>
+    <string name="project_votes_k_template">%sМ</string>
+    <plurals name="project_friends_template">
+        <item quantity="zero">%s дуҫ тауыш биргән</item>
+        <item quantity="one">%s дуҫ тауыш биргән</item>
+        <item quantity="two">%s дуҫ тауыш биргән</item>
+        <item quantity="few">%s дуҫ тауыш биргән</item>
+        <item quantity="many">%s дуҫ тауыш биргән</item>
+        <item quantity="other">%s дуҫ тауыш биргән</item>
+    </plurals>
+    <plurals name="project_details_favorites_format">
+        <item quantity="zero">%s оҡшаны</item>
+        <item quantity="one">%s оҡшаны</item>
+        <item quantity="two">%s оҡшаны</item>
+        <item quantity="few">%s оҡшаны</item>
+        <item quantity="many">%s оҡшаны</item>
+        <item quantity="other">%s оҡшаны</item>
+    </plurals>
+    <string name="project_successful_voting">Уңышлы тауыш биреү</string>
+    <string name="project_unsuccessful_voting">Уңышһыҙ тауыш биреү</string>
+    <string name="project_no_video_app_installed_error">Видео ҡушымтаһы ҡуйылмаған</string>
+    <string name="project_user_have_not_enough_votes_message">Етерлек тауышығыҙ юҡ 😔</string>
+    <string name="project_you_can_vote_at_least_1_point">Һеҙ кәм тигәндә 1 тауыш бирә алаһығыҙ 😜</string>
+    <string name="project_add_to_favourite">Яратҡан</string>
+    <string name="project_mark_new">Яңы</string>
+    <string name="project_completed">Тамамланған</string>
+    <string name="project_all">Бөтә</string>
+    <string name="project_voted">Тауыш бирелгән</string>
+    <string name="project_favourites">Һаҡланмалар</string>
+    <string name="project_email">E-mail</string>
+    <string name="project_website">Веб-сайт</string>
+    <string name="project_gallery">Галерея</string>
+    <plurals name="project_date_day_plurals">
+        <item quantity="zero">%s көн ҡалды</item>
+        <item quantity="one">%s көн ҡалды</item>
+        <item quantity="two">%s көн ҡалды</item>
+        <item quantity="few">%s көн ҡалды</item>
+        <item quantity="many">%s көн ҡалды</item>
+        <item quantity="other">%s көн ҡалды</item>
+    </plurals>
+    <plurals name="project_date_hour_plurals">
+        <item quantity="zero">%s сәғәт ҡалды</item>
+        <item quantity="one">%s сәғәт ҡалды</item>
+        <item quantity="two">%s сәғәт ҡалды</item>
+        <item quantity="few">%s сәғәт ҡалды</item>
+        <item quantity="many">%s сәғәт ҡалды</item>
+        <item quantity="other">%s сәғәт ҡалды</item>
+    </plurals>
+    <plurals name="project_date_minute_plurals">
+        <item quantity="zero">%s минут ҡалды</item>
+        <item quantity="one">%s минут ҡалды</item>
+        <item quantity="two">%s минут ҡалды</item>
+        <item quantity="few">%s минут ҡалды</item>
+        <item quantity="many">%s минут ҡалды</item>
+        <item quantity="other">%s минут ҡалды</item>
+    </plurals>
+    <plurals name="project_date_second_plurals">
+        <item quantity="zero">%s секунд ҡалды</item>
+        <item quantity="one">%s секунд ҡалды</item>
+        <item quantity="two">%s секунд ҡалды</item>
+        <item quantity="few">%s секунд ҡалды</item>
+        <item quantity="many">%s секунд ҡалды</item>
+        <item quantity="other">%s секунд ҡалды</item>
+    </plurals>
+    <string name="project_vote_dialog_title">Нисә тауыш</string>
+    <string name="empty_all_project_description">Яңы проекттар килеүен көтәбеҙ</string>
+    <string name="empty_favorite_project_description">Проектарҙы һаҡланмаларға өҫтәгеҙ һәм улар бында күрһәтелер</string>
+
+    <!-- Invite -->
+    <string name="invite_fragment_title">Дуҫтар</string>
+    <string name="invite_accepted_invitations_title">Ҡабул ителгән саҡырыуҙар</string>
+    <string name="invite_parent_invitation_template" formatted="false">%s %s һеҙҙе саҡырҙы</string>
+    <string name="invite_code_sharing_title">Саҡырыу коды менән уртаҡлашырға</string>
+    <string name="invite_send_invite">Саҡырыу ебәрергә</string>
+    <string name="invite_enter_error_already_applied">Һеҙ икенсе саҡырыу кодын индерҙегеҙ</string>
+    <string name="invite_enter_dialog_title_hint">8 хәреф йәки һанлы символ</string>
+    <string name="invite_enter_invitation_code">Саҡырыу кодын индерегеҙ</string>
+    <string name="invite_title">Дуҫтарыңды саҡыр һәм көндә күберәк тауыш ал!</string>
+    <string name="invite_enter_code_description">Һеҙҙе Soraға саҡырҙылар? Юғары кнопкаға баҫығыҙ һәм кодты индерегеҙ.</string>
+    <string name="invite_code_applied_title">Ҡотлайбыҙ!</string>
+    <string name="invite_code_applied_body">Код уңышлы ҡулланылған</string>
+    <string name="invite_enter_confirmation_body_mask">%s саҡырыу кодын индерергә теләйһегеҙ?</string>
+    <string name="invite_enter_error_time_is_up">Саҡырыу коды индереү ваҡыты үткән</string>
+    <string name="invite_empty_friends_description">Саҡырыу статусы бында күрһәләтәсәк</string>
+    <string name="invite_link_format">Soraға ҡушылырға түбән һылтанманы файҙаланығыҙ: \n%s</string>
+
+    <!-- Activity -->
+    <string name="activity">Әүҙемлек</string>
+    <string name="activity_sora_announcement">SORA иғландар</string>
+    <string name="activity_empty_description">Бүләктәр, ҡабул ителгән саҡырыуҙар һымаҡ хәбәрҙәр бында күрһәтеләсәк</string>
+
+    <!-- Votes -->
+    <string name="votes_history_title">Тауыш тарихы</string>
+    <string name="votes_empty_history_description">Тауыш үҙгәреү тарихын бында курәсәкһегеҙ</string>
+
+    <!-- Reputation -->
+    <string name="reputation_title">Абруй</string>
+    <string name="reputation_screen_what_is_reputation">Абруй нимә ул?</string>
+    <string name="reputation_screen_how_to_level_up">Абруйҙы нисек күтәрергә?</string>
+    <string name="reputation_screen_your_current_reputation">Һеҙҙең абруйығыҙ</string>
+    <string name="reputation_vote_regularly">Тауышты даимилыҡ менән бирегеҙ</string>
+    <string name="reputation_total_rank_template" formatted="false">%s%s өлөшө</string>
+    <string name="reputation_last_votes_template">Һуңғы тапҡыр %s тауыш алынған</string>
+    <string name="reputation_timer_format">Һеҙҙең абруйығыҙ\n%s ваҡыттан уҙгәрәсәк</string>
+    <string name="reputation_soon">Һеҙҙең абруйығыҙ тиҙҙән яңыртасаҡ</string>
+
+    <!-- Profile -->
+    <string name="profile_change_personal_details">Шәхси мәғлүмәтте үҙгәртеү</string>
+    <string name="profile_votes_title">Тауыштар</string>
+    <string name="profile_my_reputation_title">Минең абруйым</string>
+    <string name="profile_passphrase_title">Серһүҙҙе ҡарарға</string>
+    <string name="profile_title">Профиль</string>
+    <string name="profile_about_title">Тураһында</string>
+    <string name="profile_language_title">Тел</string>
+
+    <!-- About -->
+    <string name="about_software">Ҡушымта</string>
+    <string name="about_version">Версия</string>
+    <string name="about_source_code">Сығанаҡ код</string>
+    <string name="about_contact_us">Бәйләнеш</string>
+    <string name="about_legal">Хоҡуҡ мәғлүмәт</string>
+    <string name="about_title">Тураһында</string>
+    <string name="about_open_source_url">https://github.com/sora-xor/Sora-Android</string>
+    <string name="about_privacy">Хосусил сәйәсәте</string>
+    <string name="about_terms">Ҡағиҙәләр һәм шарттар</string>
+
+    <!-- FAQ -->
+    <string name="faq_title">Йыш бирелгән һорауҙар</string>
+
+    <!-- Bottom bar -->
+    <string name="tabbar_activity_title">Әүҙемлек</string>
+    <string name="tabbar_projects_title">Проекттар</string>
+    <string name="tabbar_wallet_title">Янсыҡ</string>
+    <string name="tabbar_profile_title">Профиль</string>
+    <string name="tabbar_friends_title">Дуҫтар</string>
+
+    <!-- Languages -->
+    <string name="language_title">Телде һайлағыҙ</string>
+
+    <!-- Pincode -->
+    <string name="pincode_confirm_your_pin_code">Пин кодты раҫлаһыҙ</string>
+    <string name="pincode_set_your_pin_code">Пин кодты индерегеҙ</string>
+    <string name="pincode_enter_pin_code">Пин кодты индерегеҙ</string>
+    <string name="pincode_repeat_error">PIN-код ҡабатлау һатаһы</string>
+    <string name="pincode_fingerprint_error">Һеҙ . Башҡа бармаҡты тейеп ҡарағыҙ.</string>
+    <string name="pincode_touch_fingerprint_scanner">Бармаҡ эҙҙәре сенсор сканерын тейегеҙ</string>
+
+
+
+
+
+
+
+</resources>

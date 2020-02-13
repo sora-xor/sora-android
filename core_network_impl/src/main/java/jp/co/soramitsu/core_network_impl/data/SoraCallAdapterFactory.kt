@@ -21,7 +21,6 @@ import java.lang.reflect.Type
 
 @Suppress("UNCHECKED_CAST")
 class SoraCallAdapterFactory(
-    private val connectionErrorMessage: String,
     private val healthChecker: HealthChecker,
     private val resourceManager: ResourceManager
 ) : CallAdapter.Factory() {
@@ -73,7 +72,7 @@ class SoraCallAdapterFactory(
                     throwable.response().errorBody()?.close()
                     SoraException.httpError(errorCode, resourceManager)
                 }
-                is IOException -> SoraException.networkError(connectionErrorMessage, throwable)
+                is IOException -> SoraException.networkError(resourceManager, throwable)
                 else -> SoraException.unexpectedError(throwable)
             }
         }

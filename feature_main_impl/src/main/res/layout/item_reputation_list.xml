@@ -25,7 +25,6 @@
         android:layout_marginStart="8dp"
         android:fontFamily="@font/sora_regular"
         android:gravity="center"
-        android:text="@string/vote_regularly"
         android:textColor="@color/black"
         android:textSize="14sp"
         app:layout_constraintEnd_toStartOf="@id/reputationScreenRightGuidline"

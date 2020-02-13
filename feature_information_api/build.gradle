@@ -25,16 +25,11 @@ dependencies {
     implementation project(":common")
     implementation project(":core_network_api")
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation androidDeps.appCompat
+    implementation androidDep
 
-    implementation gsonDeps.values()
+    implementation gsonDep
 
-    implementation rxDeps.values()
-
-
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    implementation rxDep
 }

@@ -10,6 +10,8 @@ import io.reactivex.Single
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.resourses.Language
+import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.OnboardingState
@@ -58,7 +60,8 @@ class UserRepositoryImpl @Inject constructor(
     private val activityGsonConverter: ActivityGsonConverter,
     private val db: AppDatabase,
     private val appLinksProvider: AppLinksProvider,
-    private val deviceParamsProvider: DeviceParamsProvider
+    private val deviceParamsProvider: DeviceParamsProvider,
+    private val languagesHolder: LanguagesHolder
 ) : UserRepository {
 
     override fun getAppVersion(): Single<String> {
@@ -146,12 +149,8 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override fun getInvitationLink(): Single<String> {
-        return accountNetworkApi.getInvitationCode()
-            .map { it.invitationCode }
-            .flatMap { inviteCode ->
-                accountNetworkApi.sendCodeIsSent(inviteCode)
-                    .map { appLinksProvider.inviteUrl + inviteCode }
-            }
+        return getUser(false)
+            .map { appLinksProvider.inviteUrl + it.values.invitationCode }
     }
 
     override fun getUserReputation(updateCached: Boolean): Single<Reputation> {
@@ -336,5 +335,26 @@ class UserRepositoryImpl @Inject constructor(
     override fun applyInvitationCode(): Completable {
         return getParentInviteCode()
             .flatMapCompletable { enterInviteCode(it) }
+    }
+
+    override fun getAvailableLanguages(): Single<Pair<List<Language>, String>> {
+        return Single.just(languagesHolder.getLanguages())
+            .map { languages ->
+                val currentLanguage = userDatasource.getCurrentLanguage()
+                Pair(languages, currentLanguage)
+            }
+    }
+
+    override fun changeLanguage(language: String): Single<String> {
+        return Single.fromCallable { userDatasource.changeLanguage(language) }
+            .map { language }
+    }
+
+    override fun getSelectedLanguage(): Single<Language> {
+        return Single.just(languagesHolder.getLanguages())
+            .map { languages ->
+                val currentLanguage = userDatasource.getCurrentLanguage()
+                languages.first { it.iso == currentLanguage }
+            }
     }
 }

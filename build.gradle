@@ -3,13 +3,9 @@ buildscript {
     ext.versions = [
             kotlin            : '1.3.11',
             androidSupport    : '28.0.0-alpha3',
-            javaAnnotations   : '1.3.1',
             dagger            : '2.17',
-            javaxInject       : '1',
             rxJava2           : '2.2.7',
             rxBinding         : '2.1.1',
-            supportTestRunner : '1.0.2',
-            espresso          : '3.0.2',
             retrofit          : '2.4.0',
             soraSdk           : '0.3.10',
             logger            : '2.2.0',
@@ -28,7 +24,6 @@ buildscript {
             zXingEmbedded     : '3.5.0@aar',
             birt              : '2.9.0',
             phoenix           : '2.0.0',
-            dexter            : '5.0.0',
             navigation        : '2.0.0-rc02',
             roundedImage      : '2.3.0',
             picasso           : '2.71828',
@@ -47,184 +42,82 @@ buildscript {
     ]
 
     ext {
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 14)
-        appVersionName = '1.4.0'
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 15)
+        appVersionName = '1.5.0'
 
         compileVersion = 28
         minVersion = 21
         targetVersion = 28
 
-        kotlinDeps = [
-                kotlin: "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
-        ]
+        kotlinDep = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
+        androidDep = "androidx.appcompat:appcompat:$versions.support"
+        materialDep = "com.google.android.material:material:$versions.support"
+        cardViewDep = "androidx.cardview:cardview:$versions.support"
+        constraintDep = "androidx.constraintlayout:constraintlayout:$versions.constraint"
 
-        loggerDeps = [
-                logger: "com.orhanobut:logger:$versions.logger"
-        ]
+        loggerDep = "com.orhanobut:logger:$versions.logger"
 
-        daggerDeps = [
-                dagger: "com.google.dagger:dagger:$versions.dagger"
-        ]
+        daggerDep = "com.google.dagger:dagger:$versions.dagger"
+        daggerKapt = "com.google.dagger:dagger-compiler:$versions.dagger"
 
-        daggerKapt = [
-                dagger: "com.google.dagger:dagger-compiler:$versions.dagger"
-        ]
+        lifecycleDep = "androidx.lifecycle:lifecycle-extensions:$versions.archComponents"
+        lifecycleKapt = "androidx.lifecycle:lifecycle-compiler:$versions.archComponents"
 
-        javaXInject = [
-                inject : "javax.inject:javax.inject:$versions.javaxInject"
-        ]
+        roomDep = "androidx.room:room-runtime:$versions.room"
+        rxRoomDep = "androidx.room:room-rxjava2:$versions.room"
 
-        lifecycleDeps = [
-                lifecycleExt: "androidx.lifecycle:lifecycle-extensions:$versions.archComponents",
-        ]
+        roomKapt = "androidx.room:room-compiler:$versions.room"
 
-        lifecycleKapt = [
-                compiler: "androidx.lifecycle:lifecycle-compiler:$versions.archComponents"
-        ]
+        rxDep = "io.reactivex.rxjava2:rxjava:$versions.rxJava2"
+        rxAndroidDep = "io.reactivex.rxjava2:rxandroid:$versions.rxAndroid"
 
-        roomDependencies = [
-                room      : "androidx.room:room-runtime:$versions.room",
-                rxJavaRoom: "androidx.room:room-rxjava2:$versions.room"
-        ]
+        irohaDep = "com.github.hyperledger.iroha-java:client:$versions.iroha"
+        soraDep = "com.github.soramitsu:sora-sdk:$versions.soraSdk"
 
-        kaptRoomDependencies = [
-                roomKapt: "androidx.room:room-compiler:$versions.room"
-        ]
+        gsonDep = "com.google.code.gson:gson:$versions.gson"
 
-        rxDeps = [
-                rxJava2: "io.reactivex.rxjava2:rxjava:$versions.rxJava2"
-        ]
+        rxBindingDep = "com.jakewharton.rxbinding2:rxbinding:$versions.rxBinding"
 
-        rxAndroidDeps = [
-                rxAndroid: "io.reactivex.rxjava2:rxandroid:$versions.rxAndroid"
-        ]
+        firebaseCoreDep = "com.google.firebase:firebase-core:$versions.firebaseCore"
+        firebaseMessagingDep = "com.google.firebase:firebase-messaging:$versions.firebaseMessaging"
 
-        rxBindingDeps = [
-                rxBinding   : "com.jakewharton.rxbinding2:rxbinding:$versions.rxBinding",
-                v4          : "com.jakewharton.rxbinding2:rxbinding-support-v4:$versions.rxBinding",
-                appCompat   : "com.jakewharton.rxbinding2:rxbinding-appcompat-v7:$versions.rxBinding",
-                design      : "com.jakewharton.rxbinding2:rxbinding-design:$versions.rxBinding",
-                recyclerView: "com.jakewharton.rxbinding2:rxbinding-recyclerview-v7:$versions.rxBinding"
-        ]
+        multidexDep = "androidx.multidex:multidex:$versions.multidex"
 
-        firebaseDeps = [
-                core     : "com.google.firebase:firebase-core:$versions.firebaseCore",
-                messaging: "com.google.firebase:firebase-messaging:$versions.firebaseMessaging"
-        ]
+        crashlyticsDep = "com.crashlytics.sdk.android:crashlytics:2.10.1"
 
-        androidDeps = [
-                appCompat : "androidx.appcompat:appcompat:$versions.support",
-                v4        : "androidx.legacy:legacy-support-v4:$versions.support",
-                constraint: "androidx.constraintlayout:constraintlayout:$versions.constraint",
-                material  : "com.google.android.material:material:$versions.support",
-                cardView  : "androidx.cardview:cardview:$versions.support",
-                vector    : "androidx.vectordrawable:vectordrawable:$versions.support"
-        ]
+        shimmerDep = "com.facebook.shimmer:shimmer:$versions.shimmer"
 
-        multidexDeps = [
-                multidex: "androidx.multidex:multidex:$versions.multidex"
-        ]
+        novaCryptoDep = "io.github.novacrypto:BIP39:$versions.novaCrypto"
 
-        crashlyticsDeps = [
-                fabric: "com.crashlytics.sdk.android:crashlytics:2.9.8@aar"
-        ]
+        navigationFragmentDep = "androidx.navigation:navigation-fragment:$versions.navigationFragment"
+        navigationUiDep = "androidx.navigation:navigation-ui:$versions.navigationFragment"
 
-        irohaDeps = [
-                iroha: "com.github.hyperledger.iroha-java:client:$versions.iroha"
-        ]
+        zXingCoreDep = "com.google.zxing:core:$versions.zXing"
+        zXingEmbeddedDep = "com.journeyapps:zxing-android-embedded:$versions.zXingEmbedded"
 
-        soraDeps = [
-                sora: "com.github.soramitsu:sora-sdk:$versions.soraSdk"
-        ]
+        retrofitDep = "com.squareup.retrofit2:retrofit:$versions.retrofit"
+        gsonConvertedDep = "com.squareup.retrofit2:converter-gson:$versions.retrofit"
+        rxCallAdapterDep = "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
 
-        shimmerDeps = [
-                shimmer: "com.facebook.shimmer:shimmer:$versions.shimmer"
-        ]
+        birtDep = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:$versions.birt"
 
-        novaCryptoDeps = [
-                novaCrypto: "io.github.novacrypto:BIP39:$versions.novaCrypto"
-        ]
+        phoenixDep = "com.jakewharton:process-phoenix:$versions.phoenix"
 
-        navigationDeps = [
-                fragment: "androidx.navigation:navigation-fragment:$versions.navigationFragment",
-                ui      : "androidx.navigation:navigation-ui:$versions.navigationFragment"
-        ]
+        roundedImageViewDep = "com.makeramen:roundedimageview:$versions.roundedImage"
 
-        capitalDeps = [
-                informationCard   : "jp.co.soramitsu.capital_android:account-information-card:$versions.capital@aar",
-                informationList   : "jp.co.soramitsu.capital_android:account-information-list:$versions.capital@aar",
-                accountSelector   : "jp.co.soramitsu.capital_android:account-selector-item:$versions.capital@aar",
-                buttonFullWidth   : "jp.co.soramitsu.capital_android:button-full-width:$versions.capital@aar",
-                ui                : "jp.co.soramitsu.capital_android:capital-ui:$versions.capital@aar",
-                contactEntry      : "jp.co.soramitsu.capital_android:contact-entry:$versions.capital@aar",
-                contactEntryList  : "jp.co.soramitsu.capital_android:contact-entry-list:$versions.capital@aar",
-                coreUi            : "jp.co.soramitsu.capital_android:core-ui:$versions.capital@aar",
-                doubleButton      : "jp.co.soramitsu.capital_android:double-button:$versions.capital@aar",
-                filter            : "jp.co.soramitsu.capital_android:filter:$versions.capital@aar",
-                information       : "jp.co.soramitsu.capital_android:information-element:$versions.capital@aar",
-                operationButton   : "jp.co.soramitsu.capital_android:operation-button:$versions.capital@aar",
-                recentEvents      : "jp.co.soramitsu.capital_android:recent-events:$versions.capital@aar",
-                transactionDetails: "jp.co.soramitsu.capital_android:transaction-details:$versions.capital@aar"
-        ]
+        picassoDep = "com.squareup.picasso:picasso:$versions.picasso"
 
-        zXingDeps = [
-                core    : "com.google.zxing:core:$versions.zXing",
-                embedded: "com.journeyapps:zxing-android-embedded:$versions.zXingEmbedded"
-        ]
+        rxPermissionsDep = "com.github.tbruyelle:rxpermissions:$versions.rxPermissions"
 
-        gsonDeps = [
-                gson: "com.google.code.gson:gson:$versions.gson"
-        ]
+        authApiPhoneDep = "com.google.android.gms:play-services-auth-api-phone:$versions.googleAuthApiPhone"
+        authGmsDep = "com.google.android.gms:play-services-auth:$versions.googleAuthApi"
 
-        networkDeps = [
-                retrofit     : "com.squareup.retrofit2:retrofit:$versions.retrofit",
-                gsonConverter: "com.squareup.retrofit2:converter-gson:$versions.retrofit",
-                rxCallAdapter: "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
-        ]
-
-        birtDeps = [
-                birt: "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:$versions.birt"
-        ]
-
-        phoenixDeps = [
-                phoenix: "com.jakewharton:process-phoenix:$versions.phoenix"
-        ]
-
-        dexterDeps = [
-                dexter: "com.karumi:dexter:$versions.dexter"
-        ]
-
-        roundedImageViewDeps = [
-                imageView: "com.makeramen:roundedimageview:$versions.roundedImage"
-        ]
-
-        picassoDeps = [
-                picasso: "com.squareup.picasso:picasso:$versions.picasso"
-        ]
-
-        rxPermissionsDeps = [
-                rxPermissions: "com.github.tbruyelle:rxpermissions:$versions.rxPermissions"
-        ]
-
-        unitTestsDeps = [
-                jUnit  : "junit:junit:$versions.jUnit",
-                mockito: "org.mockito:mockito-inline:$versions.mockito"
-        ]
-
-        robolectricDeps = [
-                robolectric: "org.robolectric:robolectric:$versions.robolectric",
-                multidex   : "org.robolectric:shadows-multidex:$versions.robolectric"
-        ]
-
-        archTestDeps = [
-                core    : "androidx.arch.core:core-testing:$versions.archCoreTest",
-                fragment: "androidx.fragment:fragment-testing:$versions.archFragmentTest"
-        ]
-
-        authApiDeps = [
-                authApiPhone: "com.google.android.gms:play-services-auth-api-phone:$versions.googleAuthApiPhone",
-                auth        : "com.google.android.gms:play-services-auth:$versions.googleAuthApi"
-        ]
+        jUnitDep = "junit:junit:$versions.jUnit"
+        mockitoDep = "org.mockito:mockito-inline:$versions.mockito"
+        robolectricDep = "org.robolectric:robolectric:$versions.robolectric"
+        robolectricMultidexDep = "org.robolectric:shadows-multidex:$versions.robolectric"
+        archCoreTestDep =  "androidx.arch.core:core-testing:$versions.archCoreTest"
+        archFragmentTestDep = "androidx.fragment:fragment-testing:$versions.archFragmentTest"
     }
 
     repositories {
@@ -237,6 +130,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.4.2'
         classpath 'com.google.gms:google-services:4.2.0'
         classpath 'io.fabric.tools:gradle:1.+'
+        classpath 'com.google.firebase:firebase-appdistribution-gradle:1.3.1'
     }
 }
 

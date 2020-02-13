@@ -10,26 +10,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebViewClient
-import androidx.navigation.NavController
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
-import jp.co.soramitsu.common.presentation.view.SoraToolbar
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
+import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import kotlinx.android.synthetic.main.fragment_terms.toolbar
 import kotlinx.android.synthetic.main.fragment_terms.webView
 
 class PrivacyFragment : BaseFragment<PrivacyViewModel>() {
-
-    companion object {
-        fun start(navController: NavController) {
-            navController.navigate(R.id.privacyFragment)
-        }
-    }
 
     private lateinit var progressDialog: SoraProgressDialog
 
@@ -38,10 +30,12 @@ class PrivacyFragment : BaseFragment<PrivacyViewModel>() {
     }
 
     override fun initViews() {
+        (activity as BottomBarController).hideBottomBar()
+
         progressDialog = SoraProgressDialog(activity!!)
 
-        with(toolbar as SoraToolbar) {
-            setTitle(getString(R.string.privacy_fragment_title))
+        with(toolbar) {
+            setTitle(getString(R.string.common_privacy_title))
             setHomeButtonListener { viewModel.onBackPressed() }
             showHomeButton()
         }
@@ -67,7 +61,6 @@ class PrivacyFragment : BaseFragment<PrivacyViewModel>() {
         FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
             .privacyComponentBuilder()
             .withFragment(this)
-            .withRouter(activity as MainRouter)
             .build()
             .inject(this)
     }

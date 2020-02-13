@@ -21,7 +21,9 @@ import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.base.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ext.unregisterReceiverIfNeeded
 import jp.co.soramitsu.core_di.holder.FeatureUtils
@@ -33,8 +35,11 @@ import kotlinx.android.synthetic.main.fragment_verification.codeEt
 import kotlinx.android.synthetic.main.fragment_verification.nextBtn
 import kotlinx.android.synthetic.main.fragment_verification.requestTimeTv
 import kotlinx.android.synthetic.main.fragment_verification.toolbar
+import javax.inject.Inject
 
 class VerificationFragment : BaseFragment<VerificationViewModel>() {
+
+    @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
     companion object {
         private const val KEY_BLOCKING_TIME = "blocking_time"
@@ -61,7 +66,6 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
 
     override fun onResume() {
         super.onResume()
-        toolbar.setTitle(getString(R.string.verification_code_title))
         toolbar.setHomeButtonListener { viewModel.backPressed() }
     }
 
@@ -87,7 +91,7 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
         observe(viewModel.timerFinishedLiveData, EventObserver {
             requestTimeTv.isEnabled = true
             requestTimeTv.setTextColor(ContextCompat.getColor(activity!!, R.color.lightRed))
-            requestTimeTv.text = getString(R.string.registration_verification_respond_code)
+            requestTimeTv.text = getString(R.string.verification_resend_code)
         })
 
         observe(viewModel.smsCodeStartActivityForResult, Observer {
@@ -110,11 +114,13 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
     }
 
     private fun initListeners() {
-        requestTimeTv.setOnClickListener { viewModel.requestNewCode() }
+        requestTimeTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+            viewModel.requestNewCode()
+        })
 
-        nextBtn.setOnClickListener {
+        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
             viewModel.onVerify(codeEt.text.toString())
-        }
+        })
 
         codeEt.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {

@@ -7,7 +7,7 @@ package jp.co.soramitsu.feature_onboarding_impl.di
 
 import dagger.Component
 import jp.co.soramitsu.common.di.app.CommonApi
-import jp.co.soramitsu.common.di.app.FeatureScope
+import jp.co.soramitsu.core_di.holder.scope.FeatureScope
 import jp.co.soramitsu.core_network_api.di.NetworkApi
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_did_api.di.DidFeatureApi

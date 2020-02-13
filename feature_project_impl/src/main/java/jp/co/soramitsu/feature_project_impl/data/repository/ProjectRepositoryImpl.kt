@@ -67,16 +67,19 @@ class ProjectRepositoryImpl @Inject constructor(
             .map { it.map { mapProjectLocalToProject(it) }.sortedByDescending { it.statusUpdateTime } }
     }
 
-    override fun updateAllProjects(): Completable {
-        return api.getAllProjects(50, 0)
+    override fun fetchRemoteAllProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int> {
+        return api.getAllProjects(pageSize, offset)
             .map { it.projects.map { mapProjectRemoteToProject(it) } }
             .doOnSuccess {
                 db.runInTransaction {
-                    db.projectDao().clearProjectsByStatus(ProjectStatusLocal.OPEN)
-                    db.runInTransaction { it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) } }
+                    if (refreshing) {
+                        db.projectDao().clearProjectsByStatus(ProjectStatusLocal.OPEN)
+                    }
+                    it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) }
                 }
+            }.map {
+                it.size
             }
-            .ignoreElement()
     }
 
     override fun getVotedProjects(): Observable<List<Project>> {
@@ -84,16 +87,18 @@ class ProjectRepositoryImpl @Inject constructor(
             .map { it.map { mapProjectLocalToProject(it) }.sortedByDescending { it.statusUpdateTime } }
     }
 
-    override fun updateVotedProjects(): Completable {
-        return api.getVotedProjects(50, 0)
+    override fun fetchRemoteVotedProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int> {
+        return api.getVotedProjects(pageSize, offset)
             .map { it.projects.map { mapProjectRemoteToProject(it) } }
             .doOnSuccess {
                 db.runInTransaction {
-                    db.projectDao().clearVotedProjects()
-                    db.runInTransaction { it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) } }
+                    if (refreshing) {
+                        db.projectDao().clearVotedProjects()
+                    }
+                    it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) }
                 }
             }
-            .ignoreElement()
+            .map { it.size }
     }
 
     override fun getFavoriteProjects(): Observable<List<Project>> {
@@ -101,16 +106,18 @@ class ProjectRepositoryImpl @Inject constructor(
             .map { it.map { mapProjectLocalToProject(it) }.sortedByDescending { it.statusUpdateTime } }
     }
 
-    override fun updateFavoriteProjects(): Completable {
-        return api.getFavoriteProjects(50, 0)
+    override fun fetchRemoteFavoriteProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int> {
+        return api.getFavoriteProjects(pageSize, offset)
             .map { it.projects.map { mapProjectRemoteToProject(it) } }
             .doOnSuccess {
                 db.runInTransaction {
-                    db.projectDao().clearFavoritesProjects()
-                    db.runInTransaction { it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) } }
+                    if (refreshing) {
+                        db.projectDao().clearFavoritesProjects()
+                    }
+                    it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) }
                 }
             }
-            .ignoreElement()
+            .map { it.size }
     }
 
     override fun getFinishedProjects(): Observable<List<Project>> {
@@ -118,16 +125,18 @@ class ProjectRepositoryImpl @Inject constructor(
             .map { it.map { mapProjectLocalToProject(it) }.sortedByDescending { it.statusUpdateTime } }
     }
 
-    override fun updateFinishedProjects(): Completable {
-        return api.getFinishedProjects(50, 0)
+    override fun fetchRemoteFinishedProjects(refreshing: Boolean, pageSize: Int, offset: Int): Single<Int> {
+        return api.getFinishedProjects(pageSize, offset)
             .map { it.projects.map { mapProjectRemoteToProject(it) } }
             .doOnSuccess {
                 db.runInTransaction {
-                    db.projectDao().clearProjectsByStatuses(ProjectStatusLocal.COMPLETED, ProjectStatusLocal.FAILED)
-                    db.runInTransaction { it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) } }
+                    if (refreshing) {
+                        db.projectDao().clearProjectsByStatuses(ProjectStatusLocal.COMPLETED, ProjectStatusLocal.FAILED)
+                    }
+                    it.forEach { db.projectDao().insert(mapProjectToProjectLocal(it)) }
                 }
             }
-            .ignoreElement()
+            .map { it.size }
     }
 
     override fun getProjectById(projectId: String): Observable<ProjectDetails> {
@@ -191,8 +200,10 @@ class ProjectRepositoryImpl @Inject constructor(
     override fun addProjectToFavorites(projectId: String): Completable {
         return api.toggleFavoriteProject(projectId)
             .doOnSuccess {
-                db.projectDao().addProjectToFavorites(projectId)
-                db.projectDetailsDao().addProjectToFavorites(projectId)
+                db.runInTransaction {
+                    db.projectDao().addProjectToFavorites(projectId)
+                    db.projectDetailsDao().addProjectToFavorites(projectId)
+                }
             }
             .ignoreElement()
     }
@@ -200,8 +211,10 @@ class ProjectRepositoryImpl @Inject constructor(
     override fun removeProjectFromFavorites(projectId: String): Completable {
         return api.toggleFavoriteProject(projectId)
             .doOnSuccess {
-                db.projectDao().removeProjectFromFavorites(projectId)
-                db.projectDetailsDao().removeProjectFromFavorites(projectId)
+                db.runInTransaction {
+                    db.projectDao().removeProjectFromFavorites(projectId)
+                    db.projectDetailsDao().removeProjectFromFavorites(projectId)
+                }
             }
             .ignoreElement()
     }

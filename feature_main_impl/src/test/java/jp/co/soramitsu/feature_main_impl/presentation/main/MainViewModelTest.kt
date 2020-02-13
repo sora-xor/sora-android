@@ -14,8 +14,8 @@ import io.reactivex.Single
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_project_api.domain.model.Project
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
@@ -49,6 +49,8 @@ class MainViewModelTest {
 
     @Mock private lateinit var formattedVotesObserver: Observer<String>
     @Mock private lateinit var showVoteDialogObserver: Observer<Event<Int>>
+
+    private val projectPageSize = 50
 
     private lateinit var mainViewModel: MainViewModel
 
@@ -121,14 +123,13 @@ class MainViewModelTest {
 
         mainViewModel.projectClick(project)
 
-        verify(router).showProjectDetailed(projectId)
+        verify(router).showProjectDetails(projectId)
     }
 
     @Test fun `onActivityCreated calls bottomView and check firebase token`() {
         given(interactor.updatePushTokenIfNeeded()).willReturn(Completable.complete())
         mainViewModel.onActivityCreated()
 
-        verify(router).showBottomView()
         verify(interactor).updatePushTokenIfNeeded()
     }
 
@@ -167,38 +168,70 @@ class MainViewModelTest {
     @Test fun `click on votes calls router showVotesScreen() function`() {
         mainViewModel.votesClick()
 
-        verify(router).showVotesScreen()
+        verify(router).showVotesHistory()
     }
 
     @Test fun `check update all projects calls interactor updateAllProjects() function`() {
-        given(interactor.updateAllProjects()).willReturn(Completable.complete())
+        given(interactor.updateAllProjects(projectPageSize)).willReturn(Single.just(3))
 
         mainViewModel.updateAllProjects()
 
-        verify(interactor).updateAllProjects()
+        verify(interactor).updateAllProjects(projectPageSize)
+    }
+
+    @Test fun `check load more all projects calls interactor fetchRemoteAllProjects() function`() {
+        given(interactor.loadMoreAllProjects(projectPageSize, 0)).willReturn(Single.just(3))
+
+        mainViewModel.loadMoreAllProjects()
+
+        verify(interactor).loadMoreAllProjects(projectPageSize, 0)
     }
 
     @Test fun `check update favorite projects calls interactor updateFavoriteProjects() function`() {
-        given(interactor.updateFavoriteProjects()).willReturn(Completable.complete())
+        given(interactor.updateFavoriteProjects(projectPageSize)).willReturn(Single.just(3))
 
         mainViewModel.updateFavoriteProjects()
 
-        verify(interactor).updateFavoriteProjects()
+        verify(interactor).updateFavoriteProjects(projectPageSize)
+    }
+
+    @Test fun `check load more favorite projects calls interactor fetchRemoteFavoriteProjects() function`() {
+        given(interactor.loadMoreFavoriteProjects(projectPageSize, 0)).willReturn(Single.just(3))
+
+        mainViewModel.loadMoreFavoriteProjects()
+
+        verify(interactor).loadMoreFavoriteProjects(projectPageSize, 0)
     }
 
     @Test fun `check update voted projects calls interactor updateVotedProjects() function`() {
-        given(interactor.updateVotedProjects()).willReturn(Completable.complete())
+        given(interactor.updateVotedProjects(projectPageSize)).willReturn(Single.just(3))
 
         mainViewModel.updateVotedProjects()
 
-        verify(interactor).updateVotedProjects()
+        verify(interactor).updateVotedProjects(projectPageSize)
+    }
+
+    @Test fun `check load more voted projects calls interactor fetchRemoteVotedProjects() function`() {
+        given(interactor.loadMoreVotedProjects(projectPageSize, 0)).willReturn(Single.just(3))
+
+        mainViewModel.loadMoreVotedProjects()
+
+        verify(interactor).loadMoreVotedProjects(projectPageSize, 0)
     }
 
     @Test fun `check update completed projects calls interactor updateCompletedProjects() function`() {
-        given(interactor.updateCompletedProjects()).willReturn(Completable.complete())
+        given(interactor.updateCompletedProjects(projectPageSize)).willReturn(Single.just(3))
 
         mainViewModel.updateCompletedProjects()
 
-        verify(interactor).updateCompletedProjects()
+        verify(interactor).updateCompletedProjects(projectPageSize)
+    }
+
+    @Test fun `check load more completed projects calls interactor fetchRemoteCompletedProjects() function`() {
+        given(interactor.loadMoreCompletedProjects(projectPageSize, 0)).willReturn(Single.just(3))
+
+        mainViewModel.loadMoreCompletedProjects()
+
+        verify(interactor).loadMoreCompletedProjects(projectPageSize, 0)
     }
 }

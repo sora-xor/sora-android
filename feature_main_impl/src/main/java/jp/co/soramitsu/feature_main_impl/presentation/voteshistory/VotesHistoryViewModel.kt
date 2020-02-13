@@ -10,9 +10,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.TimeSectionInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.mappers.VotesHistoryMapper
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
 
@@ -82,6 +82,6 @@ class VotesHistoryViewModel(
     }
 
     fun backButtonClick() {
-        router.popBackStackFragment()
+        router.popBackStack()
     }
 }

@@ -70,23 +70,21 @@ dependencies {
     implementation project(':feature_did_api')
     implementation project(':feature_account_api')
 
-    implementation kotlinDeps.values()
+    implementation kotlinDep
 
-    implementation androidDeps.appCompat
+    implementation androidDep
 
-    implementation loggerDeps.values()
+    implementation loggerDep
 
-    implementation daggerDeps.values()
-    kapt daggerKapt.values()
+    implementation daggerDep
+    kapt daggerKapt
 
-    implementation networkDeps.values()
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
 
-    implementation soraDeps.values()
-    implementation birtDeps.values()
+    implementation soraDep
+    implementation birtDep
 
-    implementation gsonDeps.values()
-
-    testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    implementation gsonDep
 }

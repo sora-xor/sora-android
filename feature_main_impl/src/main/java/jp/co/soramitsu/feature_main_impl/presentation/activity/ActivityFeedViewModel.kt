@@ -8,21 +8,22 @@ package jp.co.soramitsu.feature_main_impl.presentation.activity
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.ext.date2Day
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.MainRouter
 import java.util.Calendar
 
 class ActivityFeedViewModel(
     private val interactor: MainInteractor,
     private val router: MainRouter,
     private val preloader: WithPreloader,
-    private val resourceManager: ResourceManager
+    private val resourceManager: ResourceManager,
+    private val dateTimeFormatter: DateTimeFormatter
 ) : BaseViewModel(), WithPreloader by preloader {
 
     companion object {
@@ -113,11 +114,11 @@ class ActivityFeedViewModel(
         feed.forEachIndexed { index, item ->
             if (item is ActivityFeed) {
                 if (lastDate == 0L) {
-                    val dateStr = item.issuedAt.date2Day(resourceManager.getString(R.string.today), resourceManager.getString(R.string.yesterday))
+                    val dateStr = dateTimeFormatter.date2Day(item.issuedAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
                     list.add(ActivityDate(dateStr))
                 } else {
                     if (differentDays(lastDate, item.issuedAt.time)) {
-                        val dateStr = item.issuedAt.date2Day(resourceManager.getString(R.string.today), resourceManager.getString(R.string.yesterday))
+                        val dateStr = dateTimeFormatter.date2Day(item.issuedAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
                         list.add(ActivityDate(dateStr))
                     }
                 }
@@ -154,7 +155,16 @@ class ActivityFeedViewModel(
 
     private fun mapActivityFeedToActivityFeedItem(activityFeed: ActivityFeed, listItemType: ActivityFeedItem.Type): ActivityFeedItem {
         return with(activityFeed) {
-            ActivityFeedItem(type, title, description, votesString, issuedAt, iconDrawable, listItemType)
+            ActivityFeedItem(
+                type,
+                title,
+                description,
+                votesString,
+                dateTimeFormatter.formatTime(issuedAt),
+                iconDrawable,
+                listItemType,
+                voteIconDrawable
+            )
         }
     }
 

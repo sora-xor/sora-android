@@ -41,11 +41,12 @@
                 <TextView
                     android:id="@+id/projectDetailTitleTextView"
                     style="@style/TitleStyle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
-                    android:layout_marginTop="@dimen/x3"
                     android:layout_marginEnd="@dimen/x2"
+                    android:layout_marginTop="@dimen/x3"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailHeaderImageView"
                     tools:text="Vincero" />
@@ -185,14 +186,14 @@
                         android:fontFamily="@font/sora_regular"
                         android:maxLines="1"
                         android:padding="0dp"
-                        android:text="@string/favourite"
+                        android:text="@string/project_add_to_favourite"
                         android:textAppearance="@style/RedTextStyle"
                         android:textSize="14sp" />
 
                 </LinearLayout>
 
                 <TextView
-                    android:id="@+id/reward"
+                    android:id="@+id/rewardTv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/x2"
@@ -216,20 +217,36 @@
                     android:importantForAccessibility="no"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/reward" />
+                    app:layout_constraintTop_toBottomOf="@id/rewardTv" />
 
-                <TextView
-                    android:id="@+id/friendsFavoritesCountText"
-                    style="@style/GreyTextStyle"
+                <LinearLayout
+                    android:id="@+id/votesAndFavoritesView"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView0"
-                    tools:text="20 friends count  20 favourites" />
+                    app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView0">
+
+                    <TextView
+                        android:id="@+id/friendsVotedTv"
+                        style="@style/GreyTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        tools:text="20 friends voted" />
+
+                    <TextView
+                        android:id="@+id/favoritesCountTv"
+                        style="@style/GreyTextStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="20 favourites" />
+
+                </LinearLayout>
 
                 <View
                     android:id="@+id/projectDetailSeparateLineView2"
@@ -242,7 +259,7 @@
                     android:importantForAccessibility="no"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/friendsFavoritesCountText" />
+                    app:layout_constraintTop_toBottomOf="@id/votesAndFavoritesView" />
 
                 <TextView
                     android:id="@+id/discussLinkTextView"
@@ -281,7 +298,7 @@
                     tools:visibility="visible" />
 
                 <TextView
-                    android:id="@+id/projectDetailDescriptionTextView"
+                    android:id="@+id/descriptionTv"
                     style="@style/LightBlackTextStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -302,11 +319,10 @@
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x2"
                     android:layout_marginEnd="@dimen/x2"
-                    android:text="@string/show_more"
                     android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/projectDetailDescriptionTextView" />
+                    app:layout_constraintTop_toBottomOf="@id/descriptionTv" />
 
                 <View
                     android:id="@+id/projectDetailSeparateLineView4"
@@ -329,7 +345,7 @@
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/margin_padding_by_side"
                     android:layout_marginEnd="@dimen/x2"
-                    android:text="@string/gallery"
+                    android:text="@string/project_gallery"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView4" />
 
@@ -353,7 +369,7 @@
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x3"
                     android:layout_marginEnd="@dimen/x2"
-                    android:text="@string/contacts"
+                    android:text="@string/project_contacts"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailGalleryRecyclerView" />
 
@@ -365,7 +381,7 @@
                     android:layout_marginStart="@dimen/x2"
                     android:layout_marginTop="@dimen/x4"
                     android:layout_marginEnd="@dimen/x1"
-                    android:text="@string/website"
+                    android:text="@string/project_website"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailContactsTextView" />
 
@@ -408,7 +424,7 @@
                     android:layout_marginTop="@dimen/x2"
                     android:layout_marginEnd="@dimen/x1"
                     android:layout_marginBottom="@dimen/x2"
-                    android:text="@string/email"
+                    android:text="@string/project_email"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailSeparateLineView5" />
 

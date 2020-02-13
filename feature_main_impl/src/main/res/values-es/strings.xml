@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <!-- Project -->
+    <string name="projects_title">Proyectos Sora</string>
+    <string name="project_founded_template" formatted="false">%s %% votos de %s</string>
+    <string name="project_votes_template">%s votos</string>
+    <string name="project_ended_template">Finalizado %s</string>
+    <string name="project_spent_format">Has gastado %s votos</string>
+    <string name="empty_voted_project_description">Vote por los proyectos y ellos \n aparecerán aquí</string>
+    <string name="empty_completed_project_description">Cuando se complete la votación, usted \n encontrará los proyectos aquí</string>
+    <string name="project_contacts">Contactos e información</string>
+    <string name="project_discussion_template">Discutir en %s</string>
+    <string name="project_requires_votes_format">El proyecto requiere solo %s votos 🚀</string>
+    <string name="project_votes_k_template">%sK</string>
+    <plurals name="project_friends_template">
+        <item quantity="one">%s amigo voto</item>
+        <item quantity="other">%s amigos votaron</item>
+    </plurals>
+    <plurals name="project_details_favorites_format">
+        <item quantity="one">%s favorito</item>
+        <item quantity="other">%s favoritos</item>
+    </plurals>
+    <string name="project_successful_voting">Votación exitosa</string>
+    <string name="project_unsuccessful_voting">Voto sin éxito</string>
+    <string name="project_no_video_app_installed_error">No hay una aplicación de video instalada</string>
+    <string name="project_user_have_not_enough_votes_message">No tienes votos suficientes 😔</string>
+    <string name="project_you_can_vote_at_least_1_point">Puedes votar con al menos 1 punto 😜</string>
+    <string name="project_add_to_favourite">Favorito</string>
+    <string name="project_mark_new">Nuevo</string>
+    <string name="project_completed">Completado</string>
+    <string name="project_all">Todos</string>
+    <string name="project_voted">Votado</string>
+    <string name="project_favourites">Favoritos</string>
+    <string name="project_email">E-mail</string>
+    <string name="project_website">Website</string>
+    <string name="project_gallery">Galería</string>
+    <plurals name="project_date_day_plurals">
+        <item quantity="one">%s dia restante</item>
+        <item quantity="other">%s dias restantes</item>
+    </plurals>
+    <plurals name="project_date_hour_plurals">
+        <item quantity="one">%s hora restante</item>
+        <item quantity="other">%s horas restantes</item>
+    </plurals>
+    <plurals name="project_date_minute_plurals">
+        <item quantity="one">%s minuto restante</item>
+        <item quantity="other">%s minutos restantes</item>
+    </plurals>
+    <plurals name="project_date_second_plurals">
+        <item quantity="one">%s segundo restante</item>
+        <item quantity="other">%s segundos restantes</item>
+    </plurals>
+    <string name="project_vote_dialog_title">Cuantos votos</string>
+    <string name="empty_all_project_description">Estamos esperando nuevos \n proyectos por llegar</string>
+    <string name="empty_favorite_project_description">Agregar proyectos a favoritos y \n aparecerán aquí</string>
+
+    <!-- Invite -->
+    <string name="invite_fragment_title">Amigos</string>
+    <string name="invite_accepted_invitations_title">Invitaciones aceptadas</string>
+    <string name="invite_parent_invitation_template" formatted="false">Fuiste invitado por %s %s</string>
+    <string name="invite_code_sharing_title">Comparte tu código de invitación</string>
+    <string name="invite_send_invite">Enviar invitación</string>
+    <string name="invite_enter_error_already_applied">Ya has ingresado otro código de invitación</string>
+    <string name="invite_enter_dialog_title_hint">8 caracteres alfanuméricos</string>
+    <string name="invite_enter_invitation_code">Ingresa el código de invitación</string>
+    <string name="invite_title">Invita a tus amigos para obtener más votos diariamente!</string>
+    <string name="invite_enter_code_description">Has sido invitado a Sora? Toque el botón de arriba e ingrese el código.</string>
+    <string name="invite_code_applied_title">Felicitaciones!</string>
+    <string name="invite_code_applied_body">Código aplicado con éxito</string>
+    <string name="invite_enter_confirmation_body_mask">¿Desea aplicar el código de invitación %s ?</string>
+    <string name="invite_enter_error_time_is_up">Se acabó el tiempo para aplicar el código de invitación</string>
+    <string name="invite_empty_friends_description">Estado de tus invitaciones \n se mostrará aquí</string>
+    <string name="invite_link_format">Únase a Sora usando el enlace a continuación: \n %s</string>
+
+    <!-- Activity -->
+    <string name="activity">Actividad</string>
+    <string name="activity_sora_announcement">Anuncio de SORA</string>
+    <string name="activity_empty_description">Actualizaciones y notificaciones de recompensas recibidas\ne invitaciones aceptadas aparecerán aquí</string>
+
+    <!-- Votes -->
+    <string name="votes_history_title">Historia de votacion</string>
+    <string name="votes_empty_history_description">Siempre que cambies tus votos\n, verás el\n historial de eso aquí</string>
+
+    <!-- Reputation -->
+    <string name="reputation_title">Reputación</string>
+    <string name="reputation_screen_what_is_reputation">¿Qué es la reputación?</string>
+    <string name="reputation_screen_how_to_level_up">¿Cómo subir de nivel un rango?</string>
+    <string name="reputation_screen_your_current_reputation">Tu rango de reputación</string>
+    <string name="reputation_vote_regularly">Vota regularmente</string>
+    <string name="reputation_total_rank_template" formatted="false">%s de %s</string>
+    <string name="reputation_last_votes_template">%s votos recibidos la última vez</string>
+    <string name="reputation_timer_format">Tu reputación \n se actualizará en %s</string>
+    <string name="reputation_soon">Tu reputación se actualizará pronto</string>
+
+    <!-- Profile -->
+    <string name="profile_change_personal_details">Cambiar datos personales</string>
+    <string name="profile_votes_title">Votos</string>
+    <string name="profile_my_reputation_title">Mi reputación</string>
+    <string name="profile_passphrase_title">Ver palabras semillas</string>
+    <string name="profile_title">Perfil</string>
+    <string name="profile_about_title">Acerca de</string>
+    <string name="profile_language_title">Idioma</string>
+
+    <!-- About -->
+    <string name="about_software">Software</string>
+    <string name="about_version">Versión</string>
+    <string name="about_source_code">Código fuente</string>
+    <string name="about_contact_us">Contáctanos</string>
+    <string name="about_legal">Legal</string>
+    <string name="about_title">Acerca de</string>
+    <string name="about_open_source_url">https://github.com/sora-xor/Sora-Android</string>
+    <string name="about_privacy">Política de privacidad</string>
+    <string name="about_terms">Términos y Condiciones</string>
+
+    <!-- FAQ -->
+    <string name="faq_title">Preguntas Frecuentes</string>
+
+    <!-- Bottom bar -->
+    <string name="tabbar_activity_title">Actividad</string>
+    <string name="tabbar_projects_title">Proyectos</string>
+    <string name="tabbar_wallet_title">Billetera</string>
+    <string name="tabbar_profile_title">Perfil</string>
+    <string name="tabbar_friends_title">Amigos</string>
+
+    <!-- Languages -->
+    <string name="language_title">Seleccione el idioma</string>
+
+    <!-- Pincode -->
+    <string name="pincode_enter_pin_code">Ingrese el código pin</string>
+    <string name="pincode_repeat_error">Error de repetición del código PIN</string>
+    <string name="pincode_fingerprint_error">Usted no está autorizado. Intenta con otro dedo.</string>
+    <string name="pincode_touch_fingerprint_scanner">Toca el escáner de huella digital</string>
+    <string name="pincode_confirm_your_pin_code">Confirme tu código PIN</string>
+    <string name="pincode_set_your_pin_code">Establece tu código PIN</string>
+</resources>
