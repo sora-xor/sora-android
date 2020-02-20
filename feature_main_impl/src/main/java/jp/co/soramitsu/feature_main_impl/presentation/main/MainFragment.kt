@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.lifecycle.Observer
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
@@ -67,6 +68,12 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
         }
         viewPager.adapter = adapter
         projectsTab.setupWithViewPager(viewPager)
+
+        for (i in 0 until projectsTab.tabCount) {
+            val tabView = LayoutInflater.from(activity).inflate(R.layout.item_project_tab, null) as TextView
+            tabView.text = adapter.getPageTitle(i)
+            projectsTab.getTabAt(i)?.customView = tabView
+        }
 
         votesCard.setOnClickListener(DebounceClickListener(debounceClickHandler) { viewModel.votesClick() })
     }
