@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.common.util
 
 open class SingletonHolder<out T, in A, in B>(creator: (A, B) -> T) {
