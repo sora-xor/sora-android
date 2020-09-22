@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="true"
+    app:cardCornerRadius="@dimen/x1"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/x2"
+        android:paddingBottom="@dimen/x2">
+
+        <TextView
+            android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Header3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_padding_by_side"
+            android:layout_marginEnd="@dimen/margin_padding_by_side"
+            android:layout_marginBottom="@dimen/margin_padding_by_side"
+            android:drawableStart="@drawable/ic_warning_26"
+            android:drawablePadding="@dimen/margin_padding_content"
+            android:fontFamily="@font/sora_bold"
+            android:gravity="center_vertical"
+            android:text="@string/error_ethereum_account_title"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/subtitleTv"
+            style="@style/TextAppearance.Soramitsu.Header3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_padding_by_side"
+            android:layout_marginEnd="@dimen/margin_padding_by_side"
+            android:layout_marginBottom="@dimen/x2"
+            android:fontFamily="@font/sora_regular"
+            android:gravity="center_vertical"
+            android:text="@string/error_ethereum_account_subtitle"
+            android:textColor="@color/black"
+            android:textSize="15sp" />
+
+
+        <Button
+            android:id="@+id/goToEthereumBtn"
+            style="@style/Widget.Soramitsu.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_padding_content_by_side"
+            android:layout_marginEnd="@dimen/margin_padding_content_by_side"
+            android:text="@string/common_ok"
+            android:textSize="14sp"
+            app:strokeColor="@color/uikit_lightRed" />
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

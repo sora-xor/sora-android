@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jp.co.soramitsu.feature_wallet_impl.presentation.wallet.view.AssetView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/soraAssetView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/x1_2"
+    android:layout_marginBottom="@dimen/x1_2"
+    android:elevation="@dimen/x2"
+    app:cardCornerRadius="10dp" />

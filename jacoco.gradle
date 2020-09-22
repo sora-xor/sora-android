@@ -78,6 +78,8 @@ afterEvaluate {
                           '**/androidx/databinding/library/baseAdapters/*.*',
                           '**/*Activity.*',
                           '**/*Fragment.*',
+                          '**/di/**',
+                          '**/view/**',
         ]
 
         javaClasses << fileTree(dir: "$buildDir/intermediates/javac/debug", excludes: fileFilter)

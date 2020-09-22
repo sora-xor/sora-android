@@ -2,8 +2,9 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'io.fabric'
+apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.appdistribution'
+apply plugin: 'com.google.firebase.crashlytics'
 apply from: '../tests.gradle'
 
 android {
@@ -97,30 +98,26 @@ android {
     productFlavors {
         develop {
             applicationIdSuffix ".develop"
-            versionName "1.0"
             resValue "string", "app_name", "Sora Develop"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/dev/join"
         }
 
         tst {
-            applicationIdSuffix ".test"
-            versionName "1.0"
-            resValue "string", "app_name", "Sora Test"
+            applicationIdSuffix ".communitytesting"
+            resValue "string", "app_name", "Soralution"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/tst/join"
         }
 
         staging {
             applicationIdSuffix ".stage"
-            versionName "1.5.0"
             resValue "string", "app_name", "Sora Staging"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/stg/join"
         }
 
         production {
-            versionName "1.5.0"
             resValue "string", "app_name", "Sora"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/join"
@@ -139,22 +136,24 @@ dependencies {
     implementation project(":core_di")
     implementation project(":common")
     implementation project(':core_db')
-    implementation project(':core_network_api')
-    implementation project(':core_network_impl')
     implementation project(":feature_onboarding_api")
     implementation project(":feature_onboarding_impl")
     implementation project(":feature_main_api")
     implementation project(":feature_main_impl")
     implementation project(":feature_account_api")
     implementation project(":feature_account_impl")
-    implementation project(":feature_did_api")
-    implementation project(":feature_did_impl")
+    implementation project(':feature_ethereum_api')
+    implementation project(':feature_ethereum_impl')
     implementation project(":feature_information_api")
     implementation project(":feature_information_impl")
-    implementation project(":feature_project_api")
-    implementation project(":feature_project_impl")
+    implementation project(":feature_votable_api")
+    implementation project(":feature_votable_impl")
     implementation project(":feature_wallet_api")
     implementation project(":feature_wallet_impl")
+    implementation project(":feature_notification_api")
+    implementation project(":feature_notification_impl")
+    implementation project(":feature_sse_api")
+    implementation project(":feature_sse_impl")
 
     implementation kotlinDep
 
@@ -178,8 +177,24 @@ dependencies {
 
     implementation firebaseCoreDep
     implementation firebaseMessagingDep
+    implementation crashlyticsDep
+    implementation googleAnalyticsDep
 
     implementation multidexDep
+
+    implementation irohaDep
+
+    implementation soraDep
+    implementation novaCryptoDep
+
+    implementation shimmerDep
+
+    implementation zXingCoreDep
+    implementation zXingEmbeddedDep
+
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
 
     implementation (crashlyticsDep) {
         transitive = true

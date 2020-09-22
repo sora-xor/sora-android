@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.invite
 
 import androidx.lifecycle.LiveData
@@ -108,7 +103,7 @@ class InviteViewModel(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 val timeColor = if (it < 60 * 60 * 1000) {
-                    resourceManager.getColor(R.color.lightRed)
+                    resourceManager.getColor(R.color.uikit_lightRed)
                 } else {
                     resourceManager.getColor(R.color.grey)
                 }

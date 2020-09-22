@@ -2,7 +2,7 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/item_wrapper"
+    android:id="@+id/itemContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/x1"
@@ -28,14 +28,14 @@
             app:riv_corner_radius_top_right="@dimen/x1" />
 
         <androidx.cardview.widget.CardView
-            android:id="@+id/card_new"
+            android:id="@+id/cardNew"
             android:layout_width="54dp"
             android:layout_height="30dp"
             android:layout_gravity="end"
             android:layout_marginTop="153dp"
             android:layout_marginEnd="@dimen/x2"
             android:foreground="?selectableItemBackground"
-            app:cardBackgroundColor="@color/lightRed"
+            app:cardBackgroundColor="@color/uikit_lightRed"
             app:cardCornerRadius="14dp">
 
             <LinearLayout
@@ -78,7 +78,7 @@
                 tools:text="Decentralized Digital Repository" />
 
             <TextView
-                android:id="@+id/descriptionTv"
+                android:id="@+id/description"
                 style="@style/LightBlackTextStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
                 tools:text="D3 enables financial institutions to work with crypto assets safely and compliantly via decentralized ecosystem of trusted " />
 
             <ProgressBar
-                android:id="@+id/progressbar_votes"
+                android:id="@+id/progressbarVotes"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -100,14 +100,14 @@
                 android:layout_marginEnd="@dimen/x2"
                 android:max="100"
                 android:progress="0"
-                android:progressTint="@color/lightRed"
+                android:progressTint="@color/uikit_lightRed"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.218"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/leftToFundTv" />
+                app:layout_constraintTop_toBottomOf="@+id/leftToFund" />
 
             <TextView
-                android:id="@+id/leftToFundTv"
+                android:id="@+id/leftToFund"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
@@ -116,11 +116,11 @@
                 android:textColor="@color/tabsTitleColor"
                 android:textSize="@dimen/projectDetailsTextSize"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/descriptionTv"
+                app:layout_constraintTop_toBottomOf="@+id/description"
                 tools:text="80% funded of 3,405,043" />
 
             <TextView
-                android:id="@+id/days_left"
+                android:id="@+id/daysLeft"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
@@ -131,11 +131,11 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/descriptionTv"
+                app:layout_constraintTop_toBottomOf="@+id/description"
                 tools:text="30 days left" />
 
             <TextView
-                android:id="@+id/voteTv"
+                android:id="@+id/vote"
                 style="@style/VoteButtonTextStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -147,18 +147,18 @@
                 app:layout_constraintTop_toBottomOf="@+id/divider1" />
 
             <TextView
-                android:id="@+id/friends_voted"
+                android:id="@+id/friendsVoted"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
                 android:layout_marginTop="@dimen/x2"
                 android:textColor="@color/tabsTitleColor"
                 android:textSize="13sp"
-                app:layout_constraintStart_toEndOf="@+id/voteTv"
+                app:layout_constraintStart_toEndOf="@+id/vote"
                 app:layout_constraintTop_toBottomOf="@+id/divider1" />
 
             <TextView
-                android:id="@+id/favoriteTv"
+                android:id="@+id/favorite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:drawableEnd="@drawable/icon_fav_shape"
@@ -180,7 +180,7 @@
                 android:visibility="gone"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/progressbar_votes" />
+                app:layout_constraintTop_toBottomOf="@+id/progressbarVotes" />
 
             <View
                 android:id="@+id/divider2"
@@ -189,7 +189,7 @@
                 android:background="@color/transparentGrey"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/voteTv" />
+                app:layout_constraintTop_toBottomOf="@+id/vote" />
 
             <TextView
                 android:id="@+id/reward"

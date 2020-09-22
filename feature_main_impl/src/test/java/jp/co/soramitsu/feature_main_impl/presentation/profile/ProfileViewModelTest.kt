@@ -1,15 +1,12 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
-import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_account_api.domain.model.Language
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserValues
@@ -67,7 +64,8 @@ class ProfileViewModelTest {
     @Before
     fun setUp() {
         given(interactor.getUserInfo(true)).willReturn(Single.just(user))
-        given(interactor.getVotes(true)).willReturn(Single.just(votesCount))
+        given(interactor.observeVotes()).willReturn(Observable.just(BigDecimal.TEN))
+        given(interactor.syncVotes()).willReturn(Completable.complete())
         given(interactor.getUserReputation(true)).willReturn(Single.just(reputation))
         given(interactor.getSelectedLanguage()).willReturn(Single.just(language))
         given(numbersFormatter.formatInteger(anyNonNull())).willReturn(votesCount.toString())

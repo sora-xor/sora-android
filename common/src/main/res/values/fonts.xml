@@ -65,7 +65,7 @@
 
     <style name="VoteButtonTextStyle">
         <item name="android:fontFamily">@font/sora_semibold</item>
-        <item name="android:textColor">@color/lightRed</item>
+        <item name="android:textColor">@color/uikit_lightRed</item>
         <item name="android:textSize">14sp</item>
     </style>
 
@@ -96,7 +96,7 @@
     </style>
 
     <style name="RedTextStyle">
-        <item name="android:textColor">@color/lightRed</item>
+        <item name="android:textColor">@color/uikit_lightRed</item>
         <item name="fontFamily">@font/sora_regular</item>
     </style>
 

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic
 
 import android.os.Bundle
@@ -12,12 +7,13 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
@@ -32,6 +28,8 @@ import javax.inject.Inject
 class MnemonicFragment : BaseFragment<MnemonicViewModel>() {
 
     @Inject lateinit var debounceClickHandler: DebounceClickHandler
+
+    private lateinit var screenshotBlockHelper: ScreenshotBlockHelper
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_mnemonic, container, false)
@@ -59,6 +57,8 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>() {
                 passphraseTv.text.toString()
             )
         })
+
+        screenshotBlockHelper = ScreenshotBlockHelper(activity!!)
     }
 
     override fun subscribe(viewModel: MnemonicViewModel) {
@@ -71,5 +71,15 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>() {
         })
 
         viewModel.getPassphrase()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        screenshotBlockHelper.disableScreenshoting()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        screenshotBlockHelper.enableScreenshoting()
     }
 }

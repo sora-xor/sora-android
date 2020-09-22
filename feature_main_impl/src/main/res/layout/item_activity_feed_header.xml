@@ -48,7 +48,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:text="\?"
-            android:textColor="@color/lightRed"
+            android:textColor="@color/uikit_lightRed"
             android:textSize="14sp"
             android:textStyle="bold" />
 

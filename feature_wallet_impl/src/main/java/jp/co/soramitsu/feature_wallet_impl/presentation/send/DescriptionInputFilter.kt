@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import android.text.InputFilter
@@ -19,7 +14,6 @@ class DescriptionInputFilter(
         val keep = calculateMaxLength(expected) - (dest.length - (dend - dstart))
 
         val rekeep = plusMaxLength(dest.toString(), source.toString(), start)
-
         return if (keep <= 0 && rekeep <= 0) {
             ""
         } else if (keep >= end - start) {
@@ -28,7 +22,7 @@ class DescriptionInputFilter(
             if (dest.isEmpty() && rekeep <= 0) {
                 source.subSequence(start, start + keep)
             } else if (rekeep <= 0) {
-                source.subSequence(start, start + (source.length - 1))
+                source.substring(start, start + (source.length - 1))
             } else {
                 source.subSequence(start, start + rekeep)
             }
@@ -39,7 +33,7 @@ class DescriptionInputFilter(
         var keep = source.length
         val maxByte = maxByteSize - getByteLength(expected)
 
-        while (getByteLength(source.subSequence(start, start + keep).toString()) > maxByte) {
+        while (getByteLength(source.subSequence(start, start + keep).toString()) > maxByte && keep > 0) {
             keep--
         }
         return keep

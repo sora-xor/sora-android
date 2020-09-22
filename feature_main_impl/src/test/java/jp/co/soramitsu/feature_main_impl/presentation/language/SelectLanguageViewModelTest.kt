@@ -1,14 +1,9 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.language
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.reactivex.Single
-import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.feature_account_api.domain.model.Language
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor

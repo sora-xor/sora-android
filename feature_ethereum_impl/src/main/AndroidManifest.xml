@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="jp.co.soramitsu.feature_ethereum_impl">
+
+    <application>
+
+        <service android:name=".presentation.EthereumService" />
+        <service android:name=".presentation.polling.EthereumStatusPollingService" />
+
+    </application>
+</manifest>

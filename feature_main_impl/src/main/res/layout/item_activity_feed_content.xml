@@ -49,6 +49,9 @@
         android:layout_marginEnd="@dimen/x2"
         android:layout_marginTop="@dimen/x2"
         android:textStyle="bold"
+        android:includeFontPadding="false"
+        android:paddingTop="@dimen/x1_4"
+        android:paddingBottom="@dimen/x1_4"
         app:layout_constraintEnd_toStartOf="@+id/activity_icon_plus"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/typeView"
@@ -70,40 +73,37 @@
         android:id="@+id/activity_icon_plus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/x2"
         android:layout_marginEnd="@dimen/x1_2"
         android:src="@drawable/plus"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/activity_description"
+        app:layout_constraintBottom_toBottomOf="@+id/activity_votes_count"
         app:layout_constraintEnd_toStartOf="@id/activity_votes_count"
-        app:layout_constraintTop_toBottomOf="@+id/typeView" />
+        app:layout_constraintTop_toTopOf="@+id/activity_votes_count" />
 
     <TextView
         android:id="@+id/activity_votes_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/x2"
         android:layout_marginEnd="@dimen/x1_2"
-        android:fontFamily="@font/sora_regular"
-        android:gravity="center_vertical"
-        android:textAlignment="center"
+        android:fontFamily="@font/sora_semibold"
         android:textColor="@color/lightBlack"
-        android:textStyle="bold"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/activity_description"
+        android:includeFontPadding="false"
+        android:paddingTop="@dimen/x1_4"
+        android:paddingBottom="@dimen/x1_4"
+        app:layout_constraintBottom_toBottomOf="@+id/activity_project_name"
         app:layout_constraintEnd_toStartOf="@+id/activity_icon_heart"
-        app:layout_constraintTop_toBottomOf="@+id/typeView"
+        app:layout_constraintTop_toTopOf="@+id/activity_project_name"
         tools:text="200" />
 
     <ImageView
         android:id="@+id/activity_icon_heart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/x2"
         android:src="@drawable/heart_shape"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@+id/activity_description"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/typeView" />
+        app:layout_constraintBottom_toBottomOf="@+id/activity_votes_count"
+        app:layout_constraintTop_toTopOf="@+id/activity_votes_count" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

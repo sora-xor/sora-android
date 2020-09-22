@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="asset_view_eth_background_color">#F5F7F8</color>
+    <color name="asset_view_progress_tint_color">#53565A</color>
+
+</resources>

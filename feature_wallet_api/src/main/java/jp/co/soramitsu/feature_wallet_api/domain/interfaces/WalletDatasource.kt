@@ -1,10 +1,6 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
+import io.reactivex.Observable
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
@@ -21,5 +17,9 @@ interface WalletDatasource {
 
     fun saveTransferMeta(transferMeta: TransferMeta)
 
-    fun retrieveTransferMeta(): TransferMeta?
+    fun observeTransferMeta(): Observable<TransferMeta>
+
+    fun saveWithdrawMeta(transferMeta: TransferMeta)
+
+    fun observeWithdrawMeta(): Observable<TransferMeta>
 }

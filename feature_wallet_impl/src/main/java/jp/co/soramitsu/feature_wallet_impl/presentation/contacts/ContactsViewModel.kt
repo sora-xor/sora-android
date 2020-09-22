@@ -1,11 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
 import android.net.Uri
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -13,13 +9,17 @@ import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Event
-import jp.co.soramitsu.common.util.QrCodeDecoder
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactListItem
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactMenuItem
+import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.EthListItem
+import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
+import jp.co.soramitsu.feature_wallet_impl.presentation.util.EthereumAddressValidator
 import java.math.BigDecimal
 
 class ContactsViewModel(
@@ -27,7 +27,9 @@ class ContactsViewModel(
     private val router: WalletRouter,
     private val preloader: WithPreloader,
     private val qrCodeDecoder: QrCodeDecoder,
-    private val resourceManager: ResourceManager
+    private val resourceManager: ResourceManager,
+    private val ethereumAddressValidator: EthereumAddressValidator,
+    private val ethereumInteractor: EthereumInteractor
 ) : BaseViewModel(), WithPreloader by preloader {
 
     val contactsLiveData = MutableLiveData<List<Any>>()
@@ -36,6 +38,23 @@ class ContactsViewModel(
     val initiateScannerLiveData = MutableLiveData<Event<Unit>>()
     val initiateGalleryChooserLiveData = MutableLiveData<Event<Unit>>()
     val showChooserEvent = MutableLiveData<Event<Unit>>()
+    private val ethereumAddressLiveData = MutableLiveData<String>()
+
+    private val _qrErrorLiveData = MutableLiveData<Event<Int>>()
+    val qrErrorLiveData: LiveData<Event<Int>> = _qrErrorLiveData
+
+    init {
+        disposables.add(
+            ethereumInteractor.getAddress()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    ethereumAddressLiveData.value = it
+                }, {
+                    logException(it)
+                })
+        )
+    }
 
     fun backButtonPressed() {
         router.popBackStackFragment()
@@ -47,7 +66,7 @@ class ContactsViewModel(
                 .subscribeOn(Schedulers.io())
                 .map { accounts ->
                     mutableListOf<Any>().apply {
-                        add(ContactMenuItem(R.drawable.ic_scan, R.string.contacts_scan_qr, ContactMenuItem.Type.SCAN_QR_CODE))
+//                        add(ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH)) // временно убран
                         add(ContactHeader(resourceManager.getString(R.string.contacts_title)))
                         addAll(accounts.map { ContactListItem(it) })
                     }
@@ -61,7 +80,7 @@ class ContactsViewModel(
                 }
                 .subscribe({
                     contactsLiveData.value = it
-                    emptyContactsVisibilityLiveData.value = it.size == 2
+                    emptyContactsVisibilityLiveData.value = it.size == 1
                 }, {
                     logException(it)
                 })
@@ -69,12 +88,33 @@ class ContactsViewModel(
     }
 
     fun search(contents: String) {
+//        if (ethereumAddressValidator.isAddressValid(contents)) {
+//            proccessEthAddress(contents) // Eth адреса временно отключены
+//        } else {
+//            searchUser(contents)
+//        }
+        searchUser(contents)
+    }
+
+    private fun proccessEthAddress(contents: String) {
+        val list = mutableListOf<Any>().apply {
+            add(ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH))
+            add(ContactHeader(resourceManager.getString(R.string.contacts_search_results)))
+            add(EthListItem(contents))
+        }
+        emptySearchResultVisibilityLiveData.value = false
+        emptyContactsVisibilityLiveData.value = false
+        emptySearchResultVisibilityLiveData.value = false
+        contactsLiveData.value = list
+    }
+
+    private fun searchUser(userRequest: String) {
         disposables.add(
-            interactor.findOtherUsersAccounts(contents)
+            interactor.findOtherUsersAccounts(userRequest)
                 .subscribeOn(Schedulers.io())
                 .map { accounts ->
                     mutableListOf<Any>().apply {
-                        add(ContactMenuItem(R.drawable.ic_scan, R.string.contacts_scan_qr, ContactMenuItem.Type.SCAN_QR_CODE))
+//                        add(ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH))
                         add(ContactHeader(resourceManager.getString(R.string.contacts_title)))
                         addAll(accounts.map { ContactListItem(it) })
                     }
@@ -89,7 +129,7 @@ class ContactsViewModel(
                 .doFinally { preloader.hidePreloader() }
                 .subscribe({
                     contactsLiveData.value = it
-                    emptySearchResultVisibilityLiveData.value = it.size == 2
+                    emptySearchResultVisibilityLiveData.value = it.size == 1
                 }, {
                     onError(it)
                 })
@@ -112,16 +152,24 @@ class ContactsViewModel(
                     val accountToTransfer = pair.second
 
                     with(accountToTransfer) {
-                        router.showTransferAmount(accountId, "$firstName $lastName", amountToTransfer)
+                        router.showXorTransferAmount(accountId, "$firstName $lastName", amountToTransfer)
                     }
                 }, {
-                    onError(it)
+                    if (it is QrException) {
+                        when (it.kind) {
+                            QrException.Kind.USER_NOT_FOUND -> _qrErrorLiveData.value = Event(R.string.invoice_scan_error_user_not_found)
+                            QrException.Kind.SENDING_TO_MYSELF -> _qrErrorLiveData.value = Event(R.string.invoice_scan_error_match)
+                            QrException.Kind.DECODE_ERROR -> _qrErrorLiveData.value = Event(R.string.invoice_scan_error_no_info)
+                        }
+                    } else {
+                        onError(it)
+                    }
                 })
         )
     }
 
     fun contactClicked(accountId: String, fullName: String) {
-        router.showTransferAmount(accountId, fullName, BigDecimal.ZERO)
+        router.showXorTransferAmount(accountId, fullName, BigDecimal.ZERO)
     }
 
     fun openCamera() {
@@ -147,7 +195,27 @@ class ContactsViewModel(
 
     fun menuItemClicked(it: ContactMenuItem) {
         when (it.type) {
-            ContactMenuItem.Type.SCAN_QR_CODE -> showChooserEvent.value = Event(Unit)
+            ContactMenuItem.Type.XOR_TO_MY_ETH -> showXORtoErcTransfer()
+        }
+    }
+
+    private fun showXORtoErcTransfer() {
+        ethereumAddressLiveData.value?.let {
+            router.showXorWithdrawToErc(it, BigDecimal.ZERO)
+        }
+    }
+
+    fun qrMenuItemClicked() {
+        showChooserEvent.value = Event(Unit)
+    }
+
+    fun ethItemClicked(item: EthListItem) {
+        ethereumAddressLiveData.value?.let {
+            if (it == item.ethereumAddress) {
+                router.showXorWithdrawToErc(it, BigDecimal.ZERO)
+            } else {
+                router.showXorERCTransferAmount(item.ethereumAddress, BigDecimal.ZERO)
+            }
         }
     }
 }

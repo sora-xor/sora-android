@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.voteshistory
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -12,7 +7,7 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.TimeSectionInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
-import jp.co.soramitsu.feature_project_api.domain.model.VotesHistory
+import jp.co.soramitsu.feature_votable_api.domain.model.VotesHistory
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertEquals

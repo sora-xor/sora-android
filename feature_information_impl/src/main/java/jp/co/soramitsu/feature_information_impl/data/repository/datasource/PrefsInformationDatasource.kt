@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_information_impl.data.repository.datasource
 
 import com.google.gson.JsonSyntaxException
@@ -72,7 +67,7 @@ class PrefsInformationDatasource @Inject constructor(
         return if (selectedCurrencyString.isEmpty()) {
             Currency("USD", "$", "US Dollars", 1f, true)
         } else {
-            serializer.deserialize(selectedCurrencyString, Currency::class.java)!!
+            serializer.deserialize(selectedCurrencyString, Currency::class.java)
         }
     }
 

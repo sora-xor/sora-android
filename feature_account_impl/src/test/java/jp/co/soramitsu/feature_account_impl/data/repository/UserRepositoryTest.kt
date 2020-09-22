@@ -1,38 +1,33 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.gson.JsonObject
 import io.reactivex.Single
+import jp.co.soramitsu.common.data.network.dto.StatusDto
+import jp.co.soramitsu.common.data.network.response.BaseResponse
+import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
-import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.util.Const.Companion.PROJECT_DID
 import jp.co.soramitsu.common.util.DeviceParamsProvider
-import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ActivityFeedDao
 import jp.co.soramitsu.core_db.dao.AnnouncementDao
 import jp.co.soramitsu.core_db.dao.GalleryDao
 import jp.co.soramitsu.core_db.dao.ProjectDao
 import jp.co.soramitsu.core_db.dao.ProjectDetailsDao
-import jp.co.soramitsu.core_db.dao.TransactionDao
+import jp.co.soramitsu.core_db.dao.ReferendumDao
+import jp.co.soramitsu.core_db.dao.TransferTransactionDao
 import jp.co.soramitsu.core_db.dao.VotesHistoryDao
 import jp.co.soramitsu.core_db.model.ActivityFeedLocal
 import jp.co.soramitsu.core_db.model.AnnouncementLocal
-import jp.co.soramitsu.core_network_api.data.dto.StatusDto
-import jp.co.soramitsu.core_network_api.data.response.BaseResponse
-import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.Invitations
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
+import jp.co.soramitsu.feature_account_api.domain.model.Language
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserCreatingCase
@@ -41,7 +36,6 @@ import jp.co.soramitsu.feature_account_impl.R
 import jp.co.soramitsu.feature_account_impl.data.mappers.ActivityGsonConverter
 import jp.co.soramitsu.feature_account_impl.data.network.AccountNetworkApi
 import jp.co.soramitsu.feature_account_impl.data.network.ActivityFeedNetworkApi
-import jp.co.soramitsu.feature_account_impl.data.network.NotificationNetworkApi
 import jp.co.soramitsu.feature_account_impl.data.network.model.AnnouncementRemote
 import jp.co.soramitsu.feature_account_impl.data.network.model.DeviceFingerPrintRemote
 import jp.co.soramitsu.feature_account_impl.data.network.model.InvitedRemote
@@ -51,7 +45,6 @@ import jp.co.soramitsu.feature_account_impl.data.network.model.UserValuesRemote
 import jp.co.soramitsu.feature_account_impl.data.network.request.CreateUserRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.RegistrationRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.SaveUserDataRequest
-import jp.co.soramitsu.feature_account_impl.data.network.request.TokenChangeRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.VerifyCodeRequest
 import jp.co.soramitsu.feature_account_impl.data.network.response.AnnouncementResponse
 import jp.co.soramitsu.feature_account_impl.data.network.response.CheckInviteCodeAvailableResponse
@@ -87,7 +80,6 @@ class UserRepositoryTest {
 
     @Mock private lateinit var userDatasource: UserDatasource
     @Mock private lateinit var accountNetworkApi: AccountNetworkApi
-    @Mock private lateinit var notificationNetworkApi: NotificationNetworkApi
     @Mock private lateinit var activityFeedNetworkApi: ActivityFeedNetworkApi
     @Mock private lateinit var appVersionProvider: AppVersionProvider
     @Mock private lateinit var activityGsonConverter: ActivityGsonConverter
@@ -98,7 +90,8 @@ class UserRepositoryTest {
     @Mock private lateinit var galleryDao: GalleryDao
     @Mock private lateinit var projectDetailsDao: ProjectDetailsDao
     @Mock private lateinit var votesHistoryDao: VotesHistoryDao
-    @Mock private lateinit var transactionDao: TransactionDao
+    @Mock private lateinit var referendumDao: ReferendumDao
+    @Mock private lateinit var transactionDao: TransferTransactionDao
     @Mock private lateinit var appLinkProvider: AppLinksProvider
     @Mock private lateinit var deviceParamsProvider: DeviceParamsProvider
     @Mock private lateinit var languagesHolder: LanguagesHolder
@@ -109,7 +102,6 @@ class UserRepositoryTest {
         userRepository = UserRepositoryImpl(
             userDatasource,
             accountNetworkApi,
-            notificationNetworkApi,
             activityFeedNetworkApi,
             appVersionProvider,
             activityGsonConverter,
@@ -144,38 +136,6 @@ class UserRepositoryTest {
         given(userDatasource.retrievePin()).willReturn(pin)
 
         assertEquals(pin, userRepository.retrievePin())
-    }
-
-    @Test fun `update push token if needed called with updateNeeded false`() {
-        val isPushTokenUpdateNeeded = false
-        given(userDatasource.isPushTokenUpdateNeeded()).willReturn(isPushTokenUpdateNeeded)
-
-        userRepository.updatePushTokenIfNeeded()
-            .test()
-            .assertNoErrors()
-            .assertComplete()
-
-        verify(userDatasource, times(0)).retrievePushToken()
-    }
-
-    @Test fun `update push token if needed called`() {
-        val isPushTokenUpdateNeeded = true
-        val token = "token"
-        val tokenChangeRequest = TokenChangeRequest(token, null)
-        given(userDatasource.isPushTokenUpdateNeeded()).willReturn(isPushTokenUpdateNeeded)
-        given(userDatasource.retrievePushToken()).willReturn(token)
-        given(notificationNetworkApi.changeToken(tokenChangeRequest)).willReturn(Single.just(BaseResponse(StatusDto("Ok", ""))))
-        given(notificationNetworkApi.setPermissions(PROJECT_DID)).willReturn(Single.just(BaseResponse(StatusDto("Ok", ""))))
-
-        userRepository.updatePushTokenIfNeeded()
-            .test()
-            .assertNoErrors()
-            .assertComplete()
-
-        verify(userDatasource).isPushTokenUpdateNeeded()
-        verify(userDatasource).retrievePushToken()
-        verify(notificationNetworkApi).changeToken(tokenChangeRequest)
-        verify(notificationNetworkApi).setPermissions(PROJECT_DID)
     }
 
     @Test fun `get invited users called update cached false`() {
@@ -458,15 +418,6 @@ class UserRepositoryTest {
             .assertComplete()
     }
 
-    @Test fun `save device token called`() {
-        val token = "deviceToken"
-
-        userRepository.saveDeviceToken(token)
-
-        verify(userDatasource).saveIsPushTokenUpdateNeeded(true)
-        verify(userDatasource).savePushToken(token)
-    }
-
     @Test fun `verify sms code called`() {
         val code = "1234"
 
@@ -524,6 +475,7 @@ class UserRepositoryTest {
         given(db.galleryDao()).willReturn(galleryDao)
         given(db.transactionDao()).willReturn(transactionDao)
         given(db.votesHistoryDao()).willReturn(votesHistoryDao)
+        given(db.referendumDao()).willReturn(referendumDao)
 
         userRepository.clearUserData()
             .test()

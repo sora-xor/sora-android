@@ -1,12 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.splash.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.util.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
 import jp.co.soramitsu.test_shared.RxSchedulersRule
@@ -63,39 +58,5 @@ class SplashViewModelTest {
         splashViewModel.nextScreen()
 
         verify(router).showOnBoardingScreen(state)
-    }
-
-    @Test fun `nextScreen with PERSONAL_DATA_ENTERED`() {
-        val state = OnboardingState.PERSONAL_DATA_ENTERED
-
-        given(interactor.getRegistrationState()).willReturn(state)
-
-        splashViewModel.nextScreen()
-
-        verify(interactor).saveRegistrationState(OnboardingState.INITIAL)
-        verify(router).showOnBoardingScreen(state)
-    }
-
-    @Test fun `nextScreen with SMS_REQUESTED`() {
-        val state = OnboardingState.SMS_REQUESTED
-
-        given(interactor.getRegistrationState()).willReturn(state)
-
-        splashViewModel.nextScreen()
-
-        verify(interactor).saveRegistrationState(OnboardingState.INITIAL)
-        verify(router).showOnBoardingScreen(state)
-    }
-
-    @Test fun `nextScreen with PIN_CODE_SET`() {
-        val state = OnboardingState.PIN_CODE_SET
-
-        given(interactor.getRegistrationState()).willReturn(state)
-
-        splashViewModel.nextScreen()
-
-        verify(interactor).saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-        verify(interactor).restoreAuth()
-        verify(router).showMainScreen()
     }
 }

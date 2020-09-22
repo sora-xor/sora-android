@@ -1,63 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <!-- Wallet -->
-    <string name="wallet_title">Янсыҡ</string>
-    <string name="wallet_set_amount">Сумманы индерегеҙ</string>
-    <string name="wallet_sora_account">Sora аккаунты</string>
-    <string name="wallet_receive">Алырға</string>
-    <string name="wallet_receive_xor">XOR алырға</string>
-    <string name="wallet_recipient">Алыусы</string>
-    <string name="wallet_amount_error">Сумма тултырылған булырға тейеш</string>
-    <string name="wallet_amount_is_zero_error">Сумма нулдән күберәк булырға тейеш</string>
-    <string name="wallet_insufficient_balance">Һеҙҙә етәрлек XOR юҡ</string>
-    <string name="wallet_transaction_status">Статус</string>
-    <string name="wallet_transaction_identifier">Идентификатор</string>
-    <string name="wallet_transaction_date">Көн һәм ваҡыт</string>
-    <string name="wallet_all_done">Барыһы ла әҙер</string>
-    <string name="wallet_done">Әҙер</string>
-    <string name="wallet_transaction_details">Транзакцияның деталдәре</string>
-    <string name="wallet_sender">Ебәреүсе</string>
-    <string name="wallet_send_to_eth_title">ETH-янсыҡҡа ебәрергә</string>
-    <string name="wallet_transaction_confirmation_title">Раҫлау</string>
-    <string name="wallet_transaction_confirmation_header">Зинһар, тикшерегеҙ һәм раҫлағыҙ</string>
-    <string name="wallet_funds_are_being_sent">Аҡса ебәрелә</string>
-    <string name="wallet_eth_address">Ethereum янсыҡтың адресы</string>
-    <string name="wallet_transaction_fee_template" formatted="false">Транзакцияның хаҡы %s %s</string>
-    <string name="wallet_transaction_fee">Транзакцияның хаҡы</string>
-    <string name="wallet_eth_hint">42 бәләкәй уналтылы символ, 0x менән башланған.</string>
-    <string name="wallet_total_amount_template" formatted="false">Дөйөм сумма %s %.2f</string>
-    <string name="wallet_amount_to_send">Ебәреү өсөн дөйөм сумма</string>
-    <string name="wallet_eth_address_error">Eth янсыҡтың адресы 42 символ оҙонлоғо һәм 0x менән башланырға тейеш</string>
-    <string name="wallet_xor_template">XOR — %s</string>
-    <string name="wallet_total_amount">Дөйөм сумма</string>
-    <string name="wallet_send_back">Кире ебәрергә</string>
-    <string name="wallet_recent_events_title">Һуңғы ваҡиғалар</string>
-    <string name="wallet_share_qr_code">Уртаҡлашыу</string>
-    <string name="wallet_withdrawal_description">Аҡсаны алырға</string>
-    <string name="wallet_description">Асыҡлама</string>
-    <string name="wallet_empty_description">Килгән һәм ебәрелгән транзакциялар бында күрһәтеләсәк</string>
-    <string name="wallet_qr_share_message_template" formatted="false">%s %s eбәреү өсөн минең Sora адрес:</string>
-    <string name="wallet_qr_share_message_empty_template">%s eбәреү өсөн минең Sora адрес:</string>
-    <string name="wallet_from">Бынан</string>
-    <string name="wallet_to">Тиклем</string>
-    <string name="wallet_amount">Сумма</string>
-    <string name="wallet_description_hint">Транзакцияға асыҡлама</string>
-    <string name="wallet_rejected">Кире ҡағылған</string>
-    <string name="wallet_pending">Барышта</string>
-    <string name="wallet_committed">Тамамланды</string>
-
-    <!-- Contacts -->
-    <string name="contacts_scan_qr">QR код уҡырға</string>
-    <string name="contacts_qr_scan_canceled">Уҡыу кире ҡағынды</string>
-    <string name="contacts_send_to">Ебәрергә</string>
-    <string name="contacts_search_hint">Телефон номеры йәки аккаунт идентификаторы</string>
-    <string name="contacts_qr_dialog_title">QR кодын уҡырға</string>
-    <string name="contacts_select_qr_from">QR һүрәтен һайлағыҙ</string>
-    <string name="contacts_title">Контакттар</string>
-    <string name="contacts_search_empty_state_title">Эҙләүгә һөҙөмтә юҡ</string>
-    <string name="contacts_empty_state_title">Бында мөһим булған контакттар күрһәтеләсәк</string>
-    <string-array name="contacts_scan_qr_variants">
-        <item>Камера</item>
-        <item>Галерея</item>
-    </string-array>
+  <string name="common_today">Бөгөн</string>
+  <string name="common_yesterday">Кисә</string>
+  <string name="common_input_validator_max_hint">Иң күбендә %s билдә</string>
+  <string name="common_send">Ебәрергә</string>
+  <string name="common_receive">Алырға</string>
+  <string name="common_next">Киләһе</string>
+  <string name="common_description">Асыҡлама</string>
+  <string name="common_description_optional">Асыҡлама (мәжбури түгел)</string>
+  <string name="common_done">Әҙер</string>
+  <string name="amount_error_no_funds">Ғәфү итегеҙ, кәрәккән сумманы ебәреү өсөн етерлек аҡса юҡ</string>
+  <string name="amount_fee">Транзакцияның хаҡы %s</string>
+  <string name="amount_title">Сумма</string>
+  <string name="amount_send">Ебәреү өсөн дөйөм сумма</string>
+  <string name="amount_total">Дөйөм сумма</string>
+  <string name="confirmation_title">Раҫлау</string>
+  <string name="confirmation_hint">Зинһар, деталдәрҙе тикшерегеҙ һәм раҫлағыҙ</string>
+  <string name="status_title">Статус</string>
+  <string name="status_pending">Барышта</string>
+  <string name="status_rejected">Кире ҡағылған</string>
+  <string name="status_success">Уңышлы</string>
+  <string name="transaction_details">Транзакцияның деталдәре</string>
+  <string name="transaction_sender">Ебәреүсе</string>
+  <string name="transaction_recipient">Алыусы</string>
+  <string name="transaction_send_back">Кире ебәрергә</string>
+  <string name="transaction_id">Идентификатор</string>
+  <string name="transaction_date">Көн һәм ваҡыт</string>
+  <string name="transaction_done">Барыһы ла әҙер</string>
+  <string name="transaction_pending_description">Аҡса ебәрелә</string>
+  <string name="contacts_title">Контакттар</string>
+  <string name="contacts_search_results">Эҙләү һөҙөмтәһе</string>
+  <string name="contacts_scan">QR код уҡырға</string>
+  <string name="filter_from">Бынан</string>
+  <string name="filter_to">Тиклем</string>
+  <string name="history_title">Һуңғы ваҡиғалар</string>
+  <string name="invoice_scan_error_no_info">QR уҡырға мөмкин түгел</string>
+  <string name="invoice_scan_error_match">Һеҙ уҙегеҙгә ебәрә алмайһығыҙ</string>
+  <string name="withdraw_error_too_poor">Ғәфү итегеҙ, кәрәккән сумманы ебәреү өсөн етерлек аҡса юҡ</string>
+  <string name="amount_module_title">Сумманы индерегеҙ</string>
+  <string name="contacts_module_title">Алыусыны һайлағыҙ</string>
+  <string name="amount_default_fee">Транзакцияның хаҡы</string>
+  <string name="transaction_sender_id">Идентификатор отправителя</string>
+  <string name="common_options_title">Hайлағыҙ</string>
+  <string name="common_copy">Копировать</string>
+  <string name="invoice_scan_camera">Камера</string>
+  <string name="invoice_scan_gallery">Галерея</string>
+  <string name="common_copied">Скопировано в буфер обмена</string>
+  <string name="common_cancel">Кире ҡағыу</string>
+  <string name="transaction_recipient_id">Идентификатор получателя</string>
+  <string name="transaction_send_again">Отправить</string>
+  <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
+  <string name="confirmation_title_v1">Транзакцияның хаҡы</string>
+  <string name="transaction_details_v1">Транзакцияның Деталдәре</string>
+  <string name="common_hide">Скрыть</string>
+  <string name="asset_settings_title">Аккаунты</string>
+  <string name="asset_add">Добавить аккаунт</string>
 </resources>

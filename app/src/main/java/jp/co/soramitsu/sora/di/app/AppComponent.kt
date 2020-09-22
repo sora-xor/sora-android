@@ -1,14 +1,18 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.di.app
 
 import dagger.BindsInstance
 import dagger.Component
+import jp.co.soramitsu.common.data.network.NetworkApi
+import jp.co.soramitsu.common.di.api.CommonApi
+import jp.co.soramitsu.common.di.api.DidFeatureApi
+import jp.co.soramitsu.common.di.modules.CommonModule
+import jp.co.soramitsu.common.di.modules.NetworkModule
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.sora.SoraApp
+import jp.co.soramitsu.sora.di.app.modules.AppModule
+import jp.co.soramitsu.sora.di.app.modules.ComponentHolderModule
+import jp.co.soramitsu.sora.di.app.modules.FeatureManagerModule
+import jp.co.soramitsu.sora.di.app.modules.NavigationModule
 import javax.inject.Singleton
 
 @Component(
@@ -16,11 +20,13 @@ import javax.inject.Singleton
         AppModule::class,
         NavigationModule::class,
         ComponentHolderModule::class,
-        FeatureManagerModule::class
+        FeatureManagerModule::class,
+        CommonModule::class,
+        NetworkModule::class
     ]
 )
 @Singleton
-interface AppComponent {
+interface AppComponent : CommonApi, NetworkApi, DidFeatureApi {
 
     @Component.Builder
     interface Builder {

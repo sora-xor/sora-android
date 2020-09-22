@@ -1,14 +1,11 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.presentation.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.crashlytics.android.Crashlytics
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.Event
 
@@ -25,23 +22,31 @@ open class BaseViewModel : ViewModel() {
         if (throwable is SoraException) {
             when (throwable.kind) {
                 SoraException.Kind.BUSINESS -> {
-                    errorFromResourceLiveData.value = Event(throwable.errorResponseCode!!.stringResource)
+                    throwable.errorResponseCode?.stringResource?.let {
+                        errorFromResourceLiveData.value = Event(it)
+                    }
                 }
                 SoraException.Kind.HTTP -> {
-                    alertDialogLiveData.value = Event(Pair(throwable.errorTitle, throwable.message!!))
+                    throwable.message?.let {
+                        alertDialogLiveData.value = Event(Pair(throwable.errorTitle, it))
+                    }
                 }
                 SoraException.Kind.NETWORK -> {
-                    errorLiveData.value = Event(throwable.message!!)
+                    throwable.message?.let {
+                        errorLiveData.value = Event(it)
+                    }
                 }
                 SoraException.Kind.UNEXPECTED -> {
-                    errorFromResourceLiveData.value = Event(throwable.errorResponseCode!!.stringResource)
+                    throwable.errorResponseCode?.stringResource?.let {
+                        errorFromResourceLiveData.value = Event(it)
+                    }
                 }
             }
         }
     }
 
     fun logException(throwable: Throwable) {
-        Crashlytics.logException(throwable)
+        FirebaseCrashlytics.getInstance().recordException(throwable)
         throwable.printStackTrace()
     }
 
@@ -52,5 +57,9 @@ open class BaseViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         if (!disposables.isDisposed) disposables.dispose()
+    }
+
+    protected fun <T> Observable<T>.subscribeWithDefaultError(onNext: (T) -> Unit): Disposable {
+        return subscribe(onNext, ::onError)
     }
 }

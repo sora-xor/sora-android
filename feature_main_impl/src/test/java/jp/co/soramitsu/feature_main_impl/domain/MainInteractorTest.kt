@@ -1,14 +1,10 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.domain
 
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
@@ -16,14 +12,16 @@ import jp.co.soramitsu.feature_account_api.domain.model.AddInvitationCase
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserValues
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationRepository
 import jp.co.soramitsu.feature_information_api.domain.model.InformationContainer
 import jp.co.soramitsu.feature_main_impl.R
-import jp.co.soramitsu.feature_project_api.domain.interfaces.ProjectRepository
-import jp.co.soramitsu.feature_project_api.domain.model.Project
-import jp.co.soramitsu.feature_project_api.domain.model.ProjectDetails
-import jp.co.soramitsu.feature_project_api.domain.model.VotesHistory
+import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
+import jp.co.soramitsu.feature_votable_api.domain.interfaces.ProjectRepository
+import jp.co.soramitsu.feature_votable_api.domain.interfaces.ReferendumRepository
+import jp.co.soramitsu.feature_votable_api.domain.interfaces.VotesDataSource
+import jp.co.soramitsu.feature_votable_api.domain.model.VotesHistory
+import jp.co.soramitsu.feature_votable_api.domain.model.project.Project
+import jp.co.soramitsu.feature_votable_api.domain.model.project.ProjectDetails
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
@@ -43,21 +41,34 @@ import java.util.Date
 @RunWith(MockitoJUnitRunner::class)
 class MainInteractorTest {
 
-    @Rule @JvmField var schedulersRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    var schedulersRule = RxSchedulersRule()
 
-    @Mock private lateinit var userRepository: UserRepository
-    @Mock private lateinit var projectRepository: ProjectRepository
-    @Mock private lateinit var didRepository: DidRepository
-    @Mock private lateinit var informationRepository: InformationRepository
+    @Mock
+    private lateinit var userRepository: UserRepository
+    @Mock
+    private lateinit var notificationRepository: NotificationRepository
+    @Mock
+    private lateinit var projectRepository: ProjectRepository
+    @Mock
+    private lateinit var didRepository: DidRepository
+    @Mock
+    private lateinit var informationRepository: InformationRepository
+    @Mock
+    private lateinit var referendumRepository: ReferendumRepository
+    @Mock
+    private lateinit var votesDataSource: VotesDataSource
 
     private lateinit var interactor: MainInteractor
-    private val projectPageSize = 50
 
-    @Before fun setUp() {
-        interactor = MainInteractor(userRepository, projectRepository, didRepository, informationRepository)
+    @Before
+    fun setUp() {
+        interactor = MainInteractor(userRepository, projectRepository, referendumRepository, votesDataSource, didRepository, informationRepository, notificationRepository)
     }
 
-    @Test fun `getReputationWithLastVotes() calls project repository getLastVotesFromCache() and getUserReputation()`() {
+    @Test
+    fun `getReputationWithLastVotes() calls project repository getLastVotesFromCache() and getUserReputation()`() {
         val lastVotes = BigDecimal(1000.0)
         val userReputation = Reputation(0, 0f, 0)
         given(projectRepository.getLastVotesFromCache()).willReturn(Single.just(lastVotes))
@@ -73,7 +84,8 @@ class MainInteractorTest {
         verify(projectRepository).getLastVotesFromCache()
     }
 
-    @Test fun `getMnemonic() function returns not empty mnemonic`() {
+    @Test
+    fun `getMnemonic() function returns not empty mnemonic`() {
         val mnemonic = "test mnemonic"
         given(didRepository.retrieveMnemonic()).willReturn(Single.just(mnemonic))
 
@@ -86,7 +98,8 @@ class MainInteractorTest {
         verify(didRepository).retrieveMnemonic()
     }
 
-    @Test fun `getMnemonic() function returns empty mnemonic`() {
+    @Test
+    fun `getMnemonic() function returns empty mnemonic`() {
         val mnemonic = ""
         given(didRepository.retrieveMnemonic()).willReturn(Single.just(mnemonic))
 
@@ -97,7 +110,8 @@ class MainInteractorTest {
         verify(didRepository).retrieveMnemonic()
     }
 
-    @Test fun `getUserInfo() calls userRepository repository getUser() function`() {
+    @Test
+    fun `getUserInfo() calls userRepository repository getUser() function`() {
         val userValues = UserValues("invitationLink", "id")
         val user = User("id", "firstName", "lastName", "phone", "status", "parent", "RU", 0, userValues)
         given(userRepository.getUser(anyBoolean())).willReturn(Single.just(user))
@@ -111,7 +125,8 @@ class MainInteractorTest {
         verify(userRepository).getUser(false)
     }
 
-    @Test fun `getUserReputation() calls userRepository repository getUserReputation() function`() {
+    @Test
+    fun `getUserReputation() calls userRepository repository getUserReputation() function`() {
         val reputation = Reputation(0, 0f, 0)
         given(userRepository.getUserReputation(anyBoolean())).willReturn(Single.just(reputation))
 
@@ -124,11 +139,12 @@ class MainInteractorTest {
         verify(userRepository).getUserReputation(false)
     }
 
-    @Test fun `updateProject() calls projectRepository repository updateProject() function`() {
+    @Test
+    fun `updateProject() calls projectRepository repository updateProject() function`() {
         val projectId = "test project id"
         given(projectRepository.updateProject(anyString())).willReturn(Completable.complete())
 
-        interactor.updateProject(projectId)
+        interactor.syncProject(projectId)
             .test()
             .assertNoErrors()
             .assertComplete()
@@ -136,12 +152,13 @@ class MainInteractorTest {
         verify(projectRepository).updateProject(projectId)
     }
 
-    @Test fun `getProjectById() calls projectRepository repository getProjectById() function`() {
+    @Test
+    fun `getProjectById() calls projectRepository repository getProjectById() function`() {
         val projectId = "test project id"
         val projectDetails = mock(ProjectDetails::class.java)
         given(projectRepository.getProjectById(anyString())).willReturn(Observable.just(projectDetails))
 
-        interactor.getProjectById(projectId)
+        interactor.observeProject(projectId)
             .test()
             .assertNoErrors()
             .assertComplete()
@@ -150,165 +167,134 @@ class MainInteractorTest {
         verify(projectRepository).getProjectById(projectId)
     }
 
-    @Test fun `getAllProjects() calls projectRepository repository getAllProjects() function`() {
+    @Test
+    fun `getAllProjects() calls projectRepository repository getAllProjects() function`() {
         val project = mock(Project::class.java)
         val projects = mutableListOf<Project>().apply { add(project) }
-        given(projectRepository.getAllProjects()).willReturn(Observable.just(projects))
+        given(projectRepository.observeOpenedProjects()).willReturn(Observable.just(projects))
+        given(referendumRepository.observeOpenedReferendums()).willReturn(Observable.just(emptyList()))
 
-        interactor.getAllProjects()
+        interactor.observeOpenVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
             .assertValue(projects)
 
-        verify(projectRepository).getAllProjects()
+        verify(projectRepository).observeOpenedProjects()
     }
 
-    @Test fun `updateAllProjects() calls projectRepository repository updateAllProjects() function`() {
-        given(projectRepository.fetchRemoteAllProjects(true, projectPageSize, 0)).willReturn(Single.just(3))
+    @Test
+    fun `updateAllProjects() calls projectRepository repository updateAllProjects() function`() {
+        given(projectRepository.syncOpenedProjects(true)).willReturn(Single.just(3))
+        given(referendumRepository.syncOpenedReferendums()).willReturn(Completable.complete())
 
-
-        interactor.updateAllProjects(projectPageSize)
+        interactor.syncOpenVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
 
-        verify(projectRepository).fetchRemoteAllProjects(true, projectPageSize, 0)
+        verify(projectRepository).syncOpenedProjects(true)
     }
-
-    @Test fun `fetchRemoteAllProjects() calls projectRepository repository fetchRemoteAllProjects() function`() {
-        given(projectRepository.fetchRemoteAllProjects(false, projectPageSize, 1)).willReturn(Single.just(3))
-
-
-        interactor.loadMoreAllProjects(projectPageSize, 1)
-            .test()
-            .assertResult(3)
-
-        verify(projectRepository).fetchRemoteAllProjects(false, projectPageSize, 1)
-    }
-
-    @Test fun `getVotedProjects() calls projectRepository repository getVotedProjects() function`() {
+    
+    @Test
+    fun `getVotedProjects() calls projectRepository repository getVotedProjects() function`() {
         val project = mock(Project::class.java)
         val projects = mutableListOf<Project>().apply { add(project) }
-        given(projectRepository.getVotedProjects()).willReturn(Observable.just(projects))
+        given(projectRepository.observeVotedProjects()).willReturn(Observable.just(projects))
+        given(referendumRepository.observeVotedReferendums()).willReturn(Observable.just(emptyList()))
 
-        interactor.getVotedProjects()
+        interactor.observeVotedVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
             .assertValue(projects)
 
-        verify(projectRepository).getVotedProjects()
+        verify(projectRepository).observeVotedProjects()
     }
 
-    @Test fun `updateVotedProjects() calls projectRepository repository updateVotedProjects() function`() {
-        given(projectRepository.fetchRemoteVotedProjects(true, projectPageSize, 0)).willReturn(Single.just(3))
+    @Test
+    fun `updateVotedProjects() calls projectRepository repository updateVotedProjects() function`() {
+        given(projectRepository.syncVotedProjects(true)).willReturn(Single.just(3))
+        given(referendumRepository.syncVotedReferendums()).willReturn(Completable.complete())
 
-        interactor.updateVotedProjects(projectPageSize)
+        interactor.syncVotedVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
-            .assertValue(3)
 
-        verify(projectRepository).fetchRemoteVotedProjects(true, projectPageSize, 0)
+        verify(projectRepository).syncVotedProjects(true)
     }
 
-    @Test fun `fetchRemoteVotedProjects() calls projectRepository repository fetchRemoteVotedProjects() function`() {
-        given(projectRepository.fetchRemoteVotedProjects(false, projectPageSize, 1)).willReturn(Single.just(3))
-
-
-        interactor.loadMoreVotedProjects(projectPageSize, 1)
-            .test()
-            .assertResult(3)
-
-        verify(projectRepository).fetchRemoteVotedProjects(false, projectPageSize, 1)
-    }
-
-    @Test fun `getFavoriteProjects() calls projectRepository repository getFavoriteProjects() function`() {
+    @Test
+    fun `getFavoriteProjects() calls projectRepository repository getFavoriteProjects() function`() {
         val project = mock(Project::class.java)
         val projects = mutableListOf<Project>().apply { add(project) }
-        given(projectRepository.getFavoriteProjects()).willReturn(Observable.just(projects))
+        given(projectRepository.observeFavouriteProjects()).willReturn(Observable.just(projects))
 
-        interactor.getFavoriteProjects()
+        interactor.observeFavoriteVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
             .assertValue(projects)
 
-        verify(projectRepository).getFavoriteProjects()
+        verify(projectRepository).observeFavouriteProjects()
     }
 
-    @Test fun `updateFavoriteProjects() calls projectRepository repository updateFavoriteProjects() function`() {
-        given(projectRepository.fetchRemoteFavoriteProjects(true, projectPageSize, 0)).willReturn(Single.just(3))
+    @Test
+    fun `updateFavoriteProjects() calls projectRepository repository updateFavoriteProjects() function`() {
+        given(projectRepository.syncFavoriteProjects(true)).willReturn(Single.just(3))
 
-        interactor.updateFavoriteProjects(projectPageSize)
+        interactor.syncFavoriteVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
 
-        verify(projectRepository).fetchRemoteFavoriteProjects(true, projectPageSize, 0)
+        verify(projectRepository).syncFavoriteProjects(true)
     }
 
-    @Test fun `fetchRemoteFavoriteProjects() calls projectRepository repository fetchRemoteFavoriteProjects() function`() {
-        given(projectRepository.fetchRemoteFavoriteProjects(false, projectPageSize, 1)).willReturn(Single.just(3))
-
-
-        interactor.loadMoreFavoriteProjects(projectPageSize, 1)
-            .test()
-            .assertResult(3)
-
-        verify(projectRepository).fetchRemoteFavoriteProjects(false, projectPageSize, 1)
-    }
-
-    @Test fun `getCompletedProjects() calls projectRepository repository getFinishedProjects() function`() {
+    @Test
+    fun `getCompletedProjects() calls projectRepository repository getFinishedProjects() function`() {
         val project = mock(Project::class.java)
         val projects = mutableListOf<Project>().apply { add(project) }
-        given(projectRepository.getFinishedProjects()).willReturn(Observable.just(projects))
+        given(projectRepository.observeFinishedProjects()).willReturn(Observable.just(projects))
+        given(referendumRepository.observeFinishedReferendums()).willReturn(Observable.just(emptyList()))
 
-        interactor.getCompletedProjects()
+        interactor.observeFinishedVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
             .assertValue(projects)
 
-        verify(projectRepository).getFinishedProjects()
+        verify(projectRepository).observeFinishedProjects()
     }
 
-    @Test fun `updateCompletedProjects() calls projectRepository repository updateFinishedProjects() function`() {
-        given(projectRepository.fetchRemoteFinishedProjects(true, projectPageSize, 0)).willReturn(Single.just(3))
+    @Test
+    fun `updateCompletedProjects() calls projectRepository repository updateFinishedProjects() function`() {
+        given(projectRepository.syncFinishedProjects(true)).willReturn(Single.just(3))
+        given(referendumRepository.syncFinishedReferendums()).willReturn(Completable.complete())
 
-        interactor.updateCompletedProjects(projectPageSize)
+        interactor.syncCompletedVotables()
             .test()
             .assertNoErrors()
             .assertComplete()
-            .assertValue(3)
 
-        verify(projectRepository).fetchRemoteFinishedProjects(true, projectPageSize, 0)
+        verify(projectRepository).syncFinishedProjects(true)
     }
 
-    @Test fun `fetchRemoteCompletedProjects() calls projectRepository repository fetchRemoteCompletedProjects() function`() {
-        given(projectRepository.fetchRemoteFinishedProjects(false, projectPageSize, 1)).willReturn(Single.just(3))
-
-
-        interactor.loadMoreCompletedProjects(projectPageSize, 1)
-            .test()
-            .assertResult(3)
-
-        verify(projectRepository).fetchRemoteFinishedProjects(false, projectPageSize, 1)
-    }
-
-    @Test fun `updatePushTokenIfNeeded() calls userRepository updatePushTokenIfNeeded`() {
-        given(userRepository.updatePushTokenIfNeeded()).willReturn(Completable.complete())
+    @Test
+    fun `updatePushTokenIfNeeded() calls userRepository updatePushTokenIfNeeded`() {
+        given(notificationRepository.updatePushTokenIfNeeded()).willReturn(Completable.complete())
 
         interactor.updatePushTokenIfNeeded()
             .test()
             .assertNoErrors()
             .assertComplete()
 
-        verify(userRepository).updatePushTokenIfNeeded()
+        verify(notificationRepository).updatePushTokenIfNeeded()
     }
 
-    @Test fun `addProjectToFavorites() calls projectRepository addProjectToFavorites`() {
+    @Test
+    fun `addProjectToFavorites() calls projectRepository addProjectToFavorites`() {
         val projectId = "test project id"
         given(projectRepository.addProjectToFavorites(projectId)).willReturn(Completable.complete())
 
@@ -320,7 +306,8 @@ class MainInteractorTest {
         verify(projectRepository).addProjectToFavorites(projectId)
     }
 
-    @Test fun `removeProjectFromFavorites() calls projectRepository removeProjectFromFavorites`() {
+    @Test
+    fun `removeProjectFromFavorites() calls projectRepository removeProjectFromFavorites`() {
         val projectId = "test project id"
         given(projectRepository.removeProjectFromFavorites(projectId)).willReturn(Completable.complete())
 
@@ -332,7 +319,8 @@ class MainInteractorTest {
         verify(projectRepository).removeProjectFromFavorites(projectId)
     }
 
-    @Test fun `saveUserInfo() calls userRepository saveUserInfo`() {
+    @Test
+    fun `saveUserInfo() calls userRepository saveUserInfo`() {
         val firstName = "FirstName"
         val lastName = "LastName"
         given(userRepository.saveUserInfo(firstName, lastName)).willReturn(Completable.complete())
@@ -345,7 +333,8 @@ class MainInteractorTest {
         verify(userRepository).saveUserInfo(firstName, lastName)
     }
 
-    @Test fun `getReputationContent() calls informationRepository getReputationContent`() {
+    @Test
+    fun `getReputationContent() calls informationRepository getReputationContent`() {
         val expectedResult = mutableListOf(InformationContainer("title", "description"))
         given(informationRepository.getReputationContent(anyBoolean())).willReturn(Single.just(expectedResult))
 
@@ -356,7 +345,8 @@ class MainInteractorTest {
         verify(informationRepository).getReputationContent(true)
     }
 
-    @Test fun `getInviteCode() calls userRepository getParentInviteCode()`() {
+    @Test
+    fun `getInviteCode() calls userRepository getParentInviteCode()`() {
         val expectedResult = "parentInviteCode"
         given(userRepository.getParentInviteCode()).willReturn(Single.just(expectedResult))
 
@@ -367,7 +357,8 @@ class MainInteractorTest {
         verify(userRepository).getParentInviteCode()
     }
 
-    @Test fun `applyInvitationCode() calls userRepository applyInvitationCode()`() {
+    @Test
+    fun `applyInvitationCode() calls userRepository applyInvitationCode()`() {
         given(userRepository.applyInvitationCode()).willReturn(Completable.complete())
 
         interactor.applyInvitationCode()
@@ -378,7 +369,8 @@ class MainInteractorTest {
         verify(userRepository).applyInvitationCode()
     }
 
-    @Test fun `checkAddInviteCodeIsPossible() calls userRepository getUser() and map to AddInvitationCase ALREADY_APPLIED`() {
+    @Test
+    fun `checkAddInviteCodeIsPossible() calls userRepository getUser() and map to AddInvitationCase ALREADY_APPLIED`() {
         val user = User(
             "id",
             "firstName",
@@ -402,7 +394,8 @@ class MainInteractorTest {
         verify(userRepository).getUser(true)
     }
 
-    @Test fun `checkAddInviteCodeIsPossible() calls userRepository getUser() and map to AddInvitationCase TIME_IS_UP`() {
+    @Test
+    fun `checkAddInviteCodeIsPossible() calls userRepository getUser() and map to AddInvitationCase TIME_IS_UP`() {
         val user = User(
             "id",
             "firstName",
@@ -426,7 +419,8 @@ class MainInteractorTest {
         verify(userRepository).getUser(true)
     }
 
-    @Test fun `checkAddInviteCodeIsPossible() calls userRepository getUser() and map to AddInvitationCase AVAILABLE`() {
+    @Test
+    fun `checkAddInviteCodeIsPossible() calls userRepository getUser() and map to AddInvitationCase AVAILABLE`() {
         val user = User(
             "id",
             "firstName",
@@ -450,7 +444,8 @@ class MainInteractorTest {
         verify(userRepository).getUser(true)
     }
 
-    @Test fun `getAppVersion() calls userRepository getAppVersion()`() {
+    @Test
+    fun `getAppVersion() calls userRepository getAppVersion()`() {
         val expectedResult = "version"
         given(userRepository.getAppVersion()).willReturn(Single.just(expectedResult))
 
@@ -461,14 +456,15 @@ class MainInteractorTest {
         verify(userRepository).getAppVersion()
     }
 
-    @Test fun `getActivityFeedWithAnnouncement() calls userRepository getActivityFeed() and getAnnouncements()`() {
+    @Test
+    fun `getActivityFeedWithAnnouncement() calls userRepository getActivityFeed() and getAnnouncements()`() {
         val listActivityFeed = mutableListOf(ActivityFeed(
             "type",
             "title",
             "description",
             "voteString",
             Date(1000),
-            R.drawable.icon_checked,
+            R.drawable.icon_activity_heart_shape,
             R.drawable.heart_shape
         ))
         val listActivityFeedAnnouncement = mutableListOf(ActivityFeedAnnouncement(
@@ -490,14 +486,15 @@ class MainInteractorTest {
         verify(userRepository).getAnnouncements(true)
     }
 
-    @Test fun `getActivityFeed() calls userRepository getActivityFeed()`() {
+    @Test
+    fun `getActivityFeed() calls userRepository getActivityFeed()`() {
         val expectedResult = mutableListOf(ActivityFeed(
             "type",
             "title",
             "description",
             "voteString",
             Date(1000),
-            R.drawable.icon_checked,
+            R.drawable.icon_activity_heart_shape,
             R.drawable.heart_shape
         ))
         given(userRepository.getActivityFeed(anyInt(), anyInt(), anyBoolean())).willReturn(Single.just(expectedResult))
@@ -509,7 +506,8 @@ class MainInteractorTest {
         verify(userRepository).getActivityFeed(3, 3, true)
     }
 
-    @Test fun `getVotesHistory() calls projectRepository getVotesHistory()`() {
+    @Test
+    fun `getVotesHistory() calls projectRepository getVotesHistory()`() {
         val expectedResult = mutableListOf(VotesHistory(
             "message",
             "1234",
@@ -524,18 +522,19 @@ class MainInteractorTest {
         verify(projectRepository).getVotesHistory(3, 3, true)
     }
 
-    @Test fun `getVotes() calls projectRepository getVotes()`() {
-        val expectedResult = BigDecimal.TEN
-        given(projectRepository.getVotes(anyBoolean())).willReturn(Single.just(expectedResult))
+    @Test
+    fun `getVotes() calls votesDataSource getVotes()`() {
+        given(votesDataSource.syncVotes()).willReturn(Completable.complete())
 
-        interactor.getVotes(true)
+        interactor.syncVotes()
             .test()
-            .assertResult(expectedResult)
+            .assertComplete()
 
-        verify(projectRepository).getVotes(true)
+        verify(votesDataSource).syncVotes()
     }
 
-    @Test fun `voteForProject() calls projectRepository voteForProject()`() {
+    @Test
+    fun `voteForProject() calls projectRepository voteForProject()`() {
         val projectId = "projectId"
         val votesCount = 100.toLong()
         given(projectRepository.voteForProject(projectId, votesCount)).willReturn(Completable.complete())

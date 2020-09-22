@@ -1,22 +1,14 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.repository
 
 import io.reactivex.Completable
 import io.reactivex.Single
+import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.DeviceParamsProvider
-import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_network_api.domain.model.AppLinksProvider
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
@@ -25,6 +17,8 @@ import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.Country
 import jp.co.soramitsu.feature_account_api.domain.model.DeviceFingerPrint
 import jp.co.soramitsu.feature_account_api.domain.model.Invitations
+import jp.co.soramitsu.feature_account_api.domain.model.Language
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserCreatingCase
@@ -41,12 +35,9 @@ import jp.co.soramitsu.feature_account_impl.data.mappers.mapReputationRemoteToRe
 import jp.co.soramitsu.feature_account_impl.data.mappers.mapUserRemoteToUser
 import jp.co.soramitsu.feature_account_impl.data.network.AccountNetworkApi
 import jp.co.soramitsu.feature_account_impl.data.network.ActivityFeedNetworkApi
-import jp.co.soramitsu.feature_account_impl.data.network.NotificationNetworkApi
 import jp.co.soramitsu.feature_account_impl.data.network.request.CreateUserRequest
-import jp.co.soramitsu.feature_account_impl.data.network.request.PushRegistrationRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.RegistrationRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.SaveUserDataRequest
-import jp.co.soramitsu.feature_account_impl.data.network.request.TokenChangeRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.VerifyCodeRequest
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -54,7 +45,6 @@ import javax.inject.Inject
 class UserRepositoryImpl @Inject constructor(
     private val userDatasource: UserDatasource,
     private val accountNetworkApi: AccountNetworkApi,
-    private val notificationNetworkApi: NotificationNetworkApi,
     private val activityFeedNetworkApi: ActivityFeedNetworkApi,
     private val appVersionProvider: AppVersionProvider,
     private val activityGsonConverter: ActivityGsonConverter,
@@ -74,32 +64,6 @@ class UserRepositoryImpl @Inject constructor(
 
     override fun retrievePin(): String {
         return userDatasource.retrievePin()
-    }
-
-    override fun updatePushTokenIfNeeded(): Completable {
-        return Single.just(userDatasource.isPushTokenUpdateNeeded())
-            .flatMapCompletable { updateNeeded ->
-                if (updateNeeded) {
-                    Single.just(userDatasource.retrievePushToken())
-                        .flatMapCompletable { token ->
-                            notificationNetworkApi.changeToken(TokenChangeRequest(token, null))
-                                .doOnSuccess { userDatasource.saveIsPushTokenUpdateNeeded(false) }
-                                .flatMap { notificationNetworkApi.setPermissions(Const.PROJECT_DID) }
-                                .onErrorResumeNext {
-                                    if (it.message == ResponseCode.CUSTOMER_NOT_FOUND.toString()) {
-                                        userDatasource.saveIsPushTokenUpdateNeeded(false)
-                                        val tokens = mutableListOf<String>().apply { add(token) }
-                                        notificationNetworkApi.registerToken(PushRegistrationRequest(tokens, listOf(*Const.PROJECT_DID)))
-                                    } else {
-                                        Single.error(it)
-                                    }
-                                }
-                                .ignoreElement()
-                        }
-                } else {
-                    Completable.complete()
-                }
-            }
     }
 
     override fun getInvitedUsers(updateCached: Boolean): Single<Invitations> {
@@ -202,11 +166,6 @@ class UserRepositoryImpl @Inject constructor(
             .ignoreElement()
     }
 
-    override fun saveDeviceToken(notificationToken: String) {
-        userDatasource.savePushToken(notificationToken)
-        userDatasource.saveIsPushTokenUpdateNeeded(true)
-    }
-
     override fun verifySMSCode(code: String): Completable {
         return accountNetworkApi.verifySMSCode(VerifyCodeRequest(code))
             .doOnSuccess { userDatasource.saveRegistrationState(OnboardingState.PHONE_NUMBER_CONFIRMED) }
@@ -244,6 +203,7 @@ class UserRepositoryImpl @Inject constructor(
             db.announcementDao().clearTable()
             db.galleryDao().clearTable()
             db.projectDao().clearTable()
+            db.referendumDao().clearTable()
             db.projectDetailsDao().clearTable()
             db.transactionDao().clearTable()
             db.votesHistoryDao().clearTable()

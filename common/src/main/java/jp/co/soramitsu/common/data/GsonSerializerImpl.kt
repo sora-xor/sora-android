@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.data
 
 import com.google.gson.Gson
@@ -17,7 +12,7 @@ class GsonSerializerImpl(
         return gson.toJson(input)
     }
 
-    override fun <T> deserialize(input: String, classOfT: Class<T>): T? {
+    override fun <T> deserialize(input: String, classOfT: Class<T>): T {
         return gson.fromJson<T>(input, classOfT)
     }
 

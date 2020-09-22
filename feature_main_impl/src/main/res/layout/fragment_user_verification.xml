@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/x3"
         android:fontFamily="@font/sora_bold"
-        android:text="@string/common_verifying_auth"
+        android:text="@string/startup_verification_title"
         android:textColor="@color/black"
         android:textSize="@dimen/text_size_h2"
         app:layout_constraintEnd_toEndOf="parent"

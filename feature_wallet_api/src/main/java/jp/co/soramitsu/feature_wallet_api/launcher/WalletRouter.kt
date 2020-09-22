@@ -1,63 +1,38 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_api.launcher
 
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import java.math.BigDecimal
 import java.util.Date
 
 interface WalletRouter {
 
-    fun showTransferTransactionDetails(
-        recipientId: String,
-        recipientFullName: String,
-        transactionId: String,
-        amount: Double,
-        status: String,
-        dateTime: Date,
-        type: Transaction.Type,
-        description: String,
-        fee: Double,
-        totalAmount: Double
-    )
-
-    fun showWithdrawTransactionDetails(
-        recipientId: String,
-        recipientFullName: String,
-        amount: Double,
-        status: String,
-        dateTime: Date,
-        type: Transaction.Type,
-        description: String,
-        fee: Double,
-        totalAmount: Double
-    )
-
     fun showTransactionDetailsFromList(
-        recipientId: String,
+        myAccountId: String,
+        peerId: String,
         recipientFullName: String,
-        transactionId: String,
-        amount: Double,
+        ethTransactionId: String,
+        soranetTransactionId: String,
+        amount: BigDecimal,
         status: String,
+        assetId: String,
         dateTime: Date,
         type: Transaction.Type,
         description: String,
-        fee: Double,
-        totalAmount: Double
+        minerFee: BigDecimal,
+        transactionFee: BigDecimal,
+        totalAmount: BigDecimal
     )
 
-    fun showTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
+    fun showXorTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
+
+    fun showXorERCTransferAmount(address: String, amount: BigDecimal)
 
     fun returnToWalletFragment()
 
     fun popBackStackFragment()
 
-    fun showTransactionConfirmation(recipientId: String, fullName: String, amount: Double, description: String, fee: Double)
-
-    fun showTransactionConfirmationViaEth(amount: Double, ethAddress: String, notaryAddress: String, feeAddress: String, fee: Double)
+    fun showTransactionConfirmation(peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, description: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType)
 
     fun showContacts()
 
@@ -65,5 +40,7 @@ interface WalletRouter {
 
     fun showFaq()
 
-    fun showWithdrawalAmountViaEth(balance: String)
+    fun showAssetSettings()
+
+    fun showXorWithdrawToErc(etherAddress: String, amount: BigDecimal)
 }

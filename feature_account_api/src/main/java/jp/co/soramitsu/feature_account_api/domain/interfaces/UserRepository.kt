@@ -1,19 +1,14 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import io.reactivex.Completable
 import io.reactivex.Single
-import jp.co.soramitsu.common.resourses.Language
-import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeedAnnouncement
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.Country
 import jp.co.soramitsu.feature_account_api.domain.model.Invitations
+import jp.co.soramitsu.feature_account_api.domain.model.Language
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserCreatingCase
@@ -35,10 +30,6 @@ interface UserRepository {
     fun getActivityFeed(count: Int, offset: Int, updateCached: Boolean): Single<List<ActivityFeed>>
 
     fun getUserReputation(updateCached: Boolean): Single<Reputation>
-
-    fun updatePushTokenIfNeeded(): Completable
-
-    fun saveDeviceToken(notificationToken: String)
 
     fun saveUserInfo(firstName: String, lastName: String): Completable
 

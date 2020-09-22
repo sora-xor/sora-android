@@ -1,22 +1,16 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.domain
 
-import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
+import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
-import jp.co.soramitsu.feature_wallet_api.domain.model.FeeType
 import jp.co.soramitsu.feature_wallet_api.domain.model.QrData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithdrawalMeta
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -25,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 import java.security.KeyPair
@@ -35,7 +30,8 @@ class WalletInteractorTest {
     @Rule @JvmField var schedulersRule = RxSchedulersRule()
 
     @Mock private lateinit var walletRepository: WalletRepository
-    @Mock private lateinit var didRepository: DidRepository
+    @Mock private lateinit var ethRepository: EthereumRepository
+    @Mock private lateinit var accountSettings: AccountSettings
 
     @Mock private lateinit var keyPair: KeyPair
 
@@ -45,15 +41,15 @@ class WalletInteractorTest {
     private val account = Account("fullName", "lastName", "accountId1@sora")
     private val account2 = Account("fullName", "lastName", "accountId2@sora")
     private val query = "query"
+    private val myAddress = "myAddress"
     private val balance = BigDecimal.TEN
 
     @Before fun setUp() {
-        given(didRepository.getAccountId()).willReturn(Single.just(accountId))
-        given(didRepository.retrieveKeypair()).willReturn(Single.just(keyPair))
+        given(accountSettings.getAccountId()).willReturn(Single.just(accountId))
+        given(accountSettings.getKeyPair()).willReturn(Single.just(keyPair))
         given(walletRepository.findAccount(query)).willReturn(Single.just(mutableListOf(account)))
-        given(walletRepository.getWalletBalance(true, accountId, keyPair)).willReturn(Single.just(balance))
 
-        interactor = WalletInteractorImpl(walletRepository, didRepository)
+        interactor = WalletInteractorImpl(walletRepository, ethRepository, accountSettings)
     }
 
     @Test fun `get account id called`() {
@@ -62,27 +58,43 @@ class WalletInteractorTest {
             .assertValue(accountId)
     }
 
-    @Test fun `get balance called`() {
-        interactor.getBalance(true)
-            .test()
-            .assertValue(balance)
-    }
-
     @Test fun `get transaction history called`() {
-        val transactionCount = 50
-        val transaction = Transaction("transactionid", Transaction.Status.PENDING, "assetId", "details", "peername", 10.0, 10000, "peerid", "reason", Transaction.Type.REWARD, 1.0)
-        val transaction2 = Transaction("transactionid2", Transaction.Status.PENDING, "assetId", "details", "peername", 10.0, 10000, "peerid", "reason", Transaction.Type.REWARD, 1.0)
+        val transaction = Transaction("", "transactionid", Transaction.Status.PENDING, "assetId", "myAddress", "details", "peername", BigDecimal.TEN, 10000, "peerid", "reason", Transaction.Type.REWARD, BigDecimal.ZERO, BigDecimal.ONE)
+        val mnemonic = "mnemonic"
+        val ethereumCredentials = mock(EthereumCredentials::class.java)
 
-        given(walletRepository.getTransactions(true, 0, transactionCount)).willReturn(Single.just(mutableListOf(transaction)))
-        given(walletRepository.getTransactions(true, 1, transactionCount)).willReturn(Single.just(mutableListOf(transaction2)))
+        given(walletRepository.getTransactions(myAddress, myAddress)).willReturn(Observable.just(mutableListOf(transaction)))
+        given(accountSettings.getAccountId()).willReturn(Single.just(myAddress))
+        given(accountSettings.mnemonic()).willReturn(Single.just(mnemonic))
+        given(ethRepository.getEthCredentials(mnemonic)).willReturn(Single.just(ethereumCredentials))
+        given(ethRepository.getEthWalletAddress(ethereumCredentials)).willReturn(Single.just(myAddress))
 
-        interactor.getTransactionHistory(true, false)
+        interactor.getTransactions()
             .test()
             .assertResult(mutableListOf(transaction))
+    }
 
-        interactor.getTransactionHistory(true, true)
+    @Test fun `update transactions called`() {
+        val pageSize = 8
+
+        given(accountSettings.getAccountId()).willReturn(Single.just(accountId))
+        given(walletRepository.fetchRemoteTransactions(pageSize, 0, accountId)).willReturn(Single.just(pageSize))
+
+        interactor.updateTransactions(pageSize)
             .test()
-            .assertResult(mutableListOf(transaction2))
+            .assertResult(pageSize)
+    }
+
+    @Test fun `load more transactions called`() {
+        val pageSize = 8
+        val offset = 3
+
+        given(accountSettings.getAccountId()).willReturn(Single.just(accountId))
+        given(walletRepository.fetchRemoteTransactions(pageSize, offset, accountId)).willReturn(Single.just(pageSize))
+
+        interactor.loadMoreTransactions(pageSize, offset)
+            .test()
+            .assertResult(pageSize)
     }
 
     @Test fun `find other user accounts called`() {
@@ -118,12 +130,13 @@ class WalletInteractorTest {
         val description = "10"
         val fee = "10"
         val txHash = "abcdefgh"
+        val expected = Pair(txHash, accountId)
 
         given(walletRepository.transfer(amount, accountId, accountId, description, fee, keyPair)).willReturn(Single.just(txHash))
 
         interactor.transferAmount(amount, accountId, description, fee)
             .test()
-            .assertResult(txHash)
+            .assertResult(expected)
     }
 
     @Test fun `get contacts called`() {
@@ -132,40 +145,6 @@ class WalletInteractorTest {
         interactor.getContacts(true)
             .test()
             .assertResult(mutableListOf(account))
-    }
-
-    @Test fun `withdraw flow called`() {
-        val amount = "10"
-        val notaryAddress = "0xnotaryaddr"
-        val ethAddress = "0xethaddr"
-        val feeAddress = "0xfeeaddr"
-        val fee = "10"
-        given(walletRepository.withdrawEth(amount, accountId, notaryAddress, ethAddress, feeAddress, fee, keyPair)).willReturn(Completable.complete())
-
-        interactor.withdrawFlow(amount, ethAddress, notaryAddress, feeAddress, fee)
-            .test()
-            .assertComplete()
-            .assertNoErrors()
-    }
-
-    @Test fun `get balance and withdrawal meta called`() {
-        val withdrawalMeta = WithdrawalMeta("providerAccountId", "feeAccountId", 1.0, FeeType.FIXED)
-
-        given(walletRepository.getWithdrawalMeta()).willReturn(Single.just(withdrawalMeta))
-
-        interactor.getBalanceAndWithdrawalMeta()
-            .test()
-            .assertResult(Pair(balance, withdrawalMeta))
-    }
-
-    @Test fun `get balance and transfer meta called`() {
-        val transferMeta = TransferMeta(1.0, FeeType.FIXED)
-
-        given(walletRepository.getTransferMeta(true)).willReturn(Single.just(transferMeta))
-
-        interactor.getBalanceAndTransferMeta(true)
-            .test()
-            .assertResult(Pair(balance, transferMeta))
     }
 
     @Test fun `process qr called`() {
@@ -189,7 +168,7 @@ class WalletInteractorTest {
 
         interactor.processQr(content)
             .test()
-            .assertErrorMessage(ResponseCode.QR_USER_NOT_FOUND.toString())
+            .assertError { it is QrException && it.kind == QrException.Kind.USER_NOT_FOUND }
     }
 
     @Test fun `process qr called with users qr data`() {
@@ -201,6 +180,6 @@ class WalletInteractorTest {
 
         interactor.processQr(content)
             .test()
-            .assertErrorMessage(ResponseCode.SENDING_TO_MYSELF.toString())
+            .assertError { it is QrException && it.kind == QrException.Kind.SENDING_TO_MYSELF }
     }
 }

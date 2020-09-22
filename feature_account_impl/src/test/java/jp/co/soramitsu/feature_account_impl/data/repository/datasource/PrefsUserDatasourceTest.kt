@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -10,10 +5,8 @@ import com.google.gson.reflect.TypeToken
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.domain.Serializer
-import jp.co.soramitsu.common.util.Const.Companion.DEVICE_TOKEN
-import jp.co.soramitsu.common.util.Const.Companion.IS_PUSH_UPDATE_NEEDED
-import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserValues
@@ -51,9 +44,9 @@ class PrefsUserDatasourceTest {
     @Test fun `save pin calls prefsutil putEncryptedString for PREFS_PIN_CODE`() {
         val pin = "1234"
         val pincodeKey = "user_pin_code"
-        
+
         prefsUserDatasource.savePin(pin)
-        
+
         verify(encryptedPreferences).putEncryptedString(pincodeKey, pin)
     }
 
@@ -63,34 +56,6 @@ class PrefsUserDatasourceTest {
         prefsUserDatasource.retrievePin()
 
         verify(encryptedPreferences).getDecryptedString(pincodeKey)
-    }
-
-    @Test fun `save pushToken calls prefsutil putEncryptedString for DEVICE_TOKEN`() {
-        val notificationToken = "1234"
-
-        prefsUserDatasource.savePushToken(notificationToken)
-
-        verify(encryptedPreferences).putEncryptedString(DEVICE_TOKEN, notificationToken)
-    }
-
-    @Test fun `retrieve pushToken calls prefsutil getDecryptedString for DEVICE_TOKEN`() {
-        prefsUserDatasource.retrievePushToken()
-
-        verify(encryptedPreferences).getDecryptedString(DEVICE_TOKEN)
-    }
-
-    @Test fun `save IsPushTokenUpdateNeeded calls prefsutil putBoolean for IS_PUSH_UPDATE_NEEDED`() {
-        val isUpdateNeeded = true
-
-        prefsUserDatasource.saveIsPushTokenUpdateNeeded(isUpdateNeeded)
-
-        verify(preferences).putBoolean(IS_PUSH_UPDATE_NEEDED, isUpdateNeeded)
-    }
-
-    @Test fun `retrieve IsPushTokenUpdateNeeded calls prefsutil getBoolean for DEVICE_TOKEN`() {
-        prefsUserDatasource.isPushTokenUpdateNeeded()
-
-        verify(preferences).getBoolean(IS_PUSH_UPDATE_NEEDED)
     }
 
     @Test fun `save User called`() {

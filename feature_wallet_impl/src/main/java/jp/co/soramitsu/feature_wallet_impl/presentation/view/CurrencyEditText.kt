@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.view
 
 import android.content.Context
@@ -19,6 +14,10 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
     private val doubleZero = "00"
     private var decimalSymbol = '.'
     private var groupingSymbol = ' '
+
+    val integerPartLength: Int = 7
+    val decimalPartLength: Int = 2
+
     private val textWatcherListener = object : TextWatcher {
 
         var lastEdited = ""
@@ -47,7 +46,14 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
 
             val newAmountComponents = newAmount.split(decimalSymbol)
 
-            if (newAmountComponents.size > 2 || newAmountComponents.size == 2 && newAmountComponents[1].length > 2) {
+            if (newAmountComponents.isNotEmpty() && newAmountComponents[0].replace(" ", "").length > integerPartLength && !newAmount.endsWith(decimalSymbol)) {
+                setText(lastEdited)
+                setSelection(getSelection(start, count, 0))
+                addTextChangedListener(this)
+                return
+            }
+
+            if (newAmountComponents.size > 2 || newAmountComponents.size == 2 && newAmountComponents[1].length > decimalPartLength) {
                 setText(lastEdited)
                 setSelection(getSelection(start, count, 0))
                 addTextChangedListener(this)
@@ -76,7 +82,7 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
         private fun format(
             amountString: String
         ): String {
-            val formatter = DecimalFormat("###,###.##")
+            val formatter = DecimalFormat()
             val decimalFormatSymbols = formatter.decimalFormatSymbols
             decimalFormatSymbols.groupingSeparator = groupingSymbol
             decimalFormatSymbols.decimalSeparator = decimalSymbol

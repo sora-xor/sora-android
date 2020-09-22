@@ -1,10 +1,6 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.personaldataedit
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -26,6 +22,9 @@ class PersonalDataEditViewModel(
     val incorrectFirstNameLiveData = MutableLiveData<Event<Unit>>()
     val emptyLastNameLiveData = MutableLiveData<Event<Unit>>()
     val incorrectLastNameLiveData = MutableLiveData<Event<Unit>>()
+
+    private val _nextButtonEnableLiveData = MutableLiveData<Boolean>()
+    val nextButtonEnableLiveData: LiveData<Boolean> = _nextButtonEnableLiveData
 
     fun getUserData(updateCached: Boolean) {
         disposables.add(
@@ -79,5 +78,9 @@ class PersonalDataEditViewModel(
                     onError(it)
                 })
         )
+    }
+
+    fun firstNameAndLastNameChanged(firstName: String, lastName: String) {
+        _nextButtonEnableLiveData.value = firstName.isNotEmpty() && lastName.isNotEmpty()
     }
 }

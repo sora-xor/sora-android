@@ -1,34 +1,37 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.reactivex.Observable
 import io.reactivex.Single
+import jp.co.soramitsu.common.data.network.dto.StatusDto
+import jp.co.soramitsu.common.data.network.response.BaseResponse
+import jp.co.soramitsu.common.domain.AppLinksProvider
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.dao.TransactionDao
-import jp.co.soramitsu.core_db.model.TransactionLocal
-import jp.co.soramitsu.core_network_api.data.dto.StatusDto
+import jp.co.soramitsu.core_db.dao.DepositTransactionDao
+import jp.co.soramitsu.core_db.dao.TransferTransactionDao
+import jp.co.soramitsu.core_db.dao.WithdrawTransactionDao
+import jp.co.soramitsu.core_db.model.TransferTransactionLocal
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.FeeType
 import jp.co.soramitsu.feature_wallet_api.domain.model.QrData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithdrawalMeta
+import jp.co.soramitsu.feature_wallet_impl.data.mappers.AssetLocalToAssetMapper
+import jp.co.soramitsu.feature_wallet_impl.data.mappers.AssetToAssetLocalMapper
+import jp.co.soramitsu.feature_wallet_impl.data.network.TransactionFactory
 import jp.co.soramitsu.feature_wallet_impl.data.network.WalletNetworkApi
 import jp.co.soramitsu.feature_wallet_impl.data.network.model.AccountRemote
 import jp.co.soramitsu.feature_wallet_impl.data.network.model.TransactionRemote
+import jp.co.soramitsu.feature_wallet_impl.data.network.request.IrohaRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.response.GetTransactionHistoryResponse
 import jp.co.soramitsu.feature_wallet_impl.data.network.response.GetTransferMetaResponse
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.GetWithdrawalMetaResponse
 import jp.co.soramitsu.feature_wallet_impl.data.network.response.UserFindResponse
 import jp.co.soramitsu.feature_wallet_impl.data.qr.QrDataRecord
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -51,109 +54,164 @@ class WalletRepositoryTest {
     @Mock private lateinit var api: WalletNetworkApi
     @Mock private lateinit var datasource: PrefsWalletDatasource
     @Mock private lateinit var db: AppDatabase
-    @Mock private lateinit var transactionDao: TransactionDao
+    @Mock private lateinit var transactionDao: TransferTransactionDao
+    @Mock private lateinit var withdrawTransactionDao: WithdrawTransactionDao
+    @Mock private lateinit var depositTransactionDao: DepositTransactionDao
     @Mock private lateinit var serializer: Serializer
+    @Mock private lateinit var appLinksProvider: AppLinksProvider
+    @Mock private lateinit var transactionFactory: TransactionFactory
+    @Mock private lateinit var assetHolder: AssetHolder
+    @Mock private lateinit var assetLocalToAssetMapper: AssetLocalToAssetMapper
+    @Mock private lateinit var assetToAssetLocalMapper: AssetToAssetLocalMapper
 
     private lateinit var walletRepository: WalletRepositoryImpl
     private val emptyJson = "{}"
+    private val assetId = "xor#sora"
+    private val myAddress = "myaddress"
 
     @Before fun setUp() {
-        walletRepository = WalletRepositoryImpl(api, datasource, db, serializer)
+        walletRepository = WalletRepositoryImpl(api, datasource, db, serializer, appLinksProvider, transactionFactory, assetHolder,
+            assetLocalToAssetMapper, assetToAssetLocalMapper)
     }
 
     @Test fun `get transactions called`() {
         val transactionsLocal = mutableListOf(
-            TransactionLocal(
+            TransferTransactionLocal(
                 "transactionId",
-                TransactionLocal.Status.COMMITTED,
-                "assetId",
+                TransferTransactionLocal.Status.COMMITTED,
+                AssetHolder.SORA_XOR.id,
                 "details",
+                "myAddress",
                 "peerName",
-                10.0,
+                BigDecimal.TEN,
                 1000,
                 "peerId",
                 "reason",
-                TransactionLocal.Type.REWARD,
-                1.0
+                TransferTransactionLocal.Type.OUTGOING,
+                BigDecimal.TEN
+            ),
+            TransferTransactionLocal(
+                "transactionId",
+                TransferTransactionLocal.Status.COMMITTED,
+                AssetHolder.SORA_XOR_ERC_20.id,
+                "details",
+                "myAddress",
+                "peerName",
+                BigDecimal.TEN,
+                1000,
+                "peerId",
+                "reason",
+                TransferTransactionLocal.Type.OUTGOING,
+                BigDecimal.TEN
             )
         )
         val transactions = mutableListOf(
             Transaction(
+                "",
                 "transactionId",
                 Transaction.Status.COMMITTED,
-                "assetId",
+                AssetHolder.SORA_XOR.id,
+                "myAddress",
                 "details",
                 "peerName",
-                10.0,
+                BigDecimal.TEN,
                 1000,
                 "peerId",
                 "reason",
-                Transaction.Type.REWARD,
-                1.0
+                Transaction.Type.OUTGOING,
+                BigDecimal.ZERO,
+                BigDecimal.TEN
+            ),
+            Transaction(
+                "transactionId",
+                "",
+                Transaction.Status.COMMITTED,
+                AssetHolder.SORA_XOR_ERC_20.id,
+                "myAddress",
+                "details",
+                "peerName",
+                BigDecimal.TEN,
+                1000,
+                "peerId",
+                "reason",
+                Transaction.Type.OUTGOING,
+                BigDecimal.TEN,
+                BigDecimal.ZERO
             )
         )
         given(db.transactionDao()).willReturn(transactionDao)
-        given(transactionDao.getTransactions()).willReturn(Single.just(transactionsLocal))
+        given(db.withdrawTransactionDao()).willReturn(withdrawTransactionDao)
+        given(db.depositTransactionDao()).willReturn(depositTransactionDao)
+        given(transactionDao.getTransactions()).willReturn(Observable.just(transactionsLocal))
 
-        walletRepository.getTransactions(false, 0, 3)
+        walletRepository.getTransactions(myAddress, myAddress)
             .test()
             .assertResult(transactions)
     }
 
-    @Test fun `get transactions called if update cached`() {
-        val transactionsLocal = mutableListOf(
-            TransactionLocal(
-                "transactionId",
-                TransactionLocal.Status.COMMITTED,
-                "assetId",
-                "details",
-                "peerName",
-                10.0,
-                1000,
-                "peerId",
-                "reason",
-                TransactionLocal.Type.REWARD,
-                1.0
-            )
-        )
-        val transactionsRemote = mutableListOf(
-            TransactionRemote(
-                "transactionId",
-                TransactionRemote.Status.COMMITTED,
-                "assetId",
-                "details",
-                "peerName",
-                10.0,
-                1000,
-                "peerId",
-                "reason",
-                TransactionRemote.Type.REWARD,
-                1.0
-            )
-        )
-        val transactions = mutableListOf(
-            Transaction(
-                "transactionId",
-                Transaction.Status.COMMITTED,
-                "assetId",
-                "details",
-                "peerName",
-                10.0,
-                1000,
-                "peerId",
-                "reason",
-                Transaction.Type.REWARD,
-                1.0
-            )
-        )
-        given(db.transactionDao()).willReturn(transactionDao)
-        given(api.getTransactions(0, 3)).willReturn(Single.just(GetTransactionHistoryResponse(StatusDto("Ok", ""), transactionsRemote)))
+    @Test fun `fetch remote transactions called`() {
+//        val pageSize = 8
+//        val offset = 0
+//
+//        val transactionsRemote = mutableListOf(
+//            TransactionRemote(
+//                "transactionId",
+//                TransactionRemote.Status.COMMITTED,
+//                "assetId",
+//                "details",
+//                "peerName",
+//                BigDecimal.TEN,
+//                1000,
+//                "peerId",
+//                "reason",
+//                TransactionRemote.Type.REWARD,
+//                BigDecimal.ONE
+//            )
+//        )
+//
+//        val transactions = mutableListOf(
+//            Transaction(
+//                "",
+//                "transactionId",
+//                Transaction.Status.COMMITTED,
+//                "assetId",
+//                "myAddress",
+//                "details",
+//                BigDecimal.TEN,
+//                1000,
+//                "peerId",
+//                "reason",
+//                Transaction.Type.REWARD,
+//                BigDecimal.ONE
+//            )
+//        )
+//        given(api.getTransactions(offset, pageSize)).willReturn(Single.just(GetTransactionHistoryResponse(StatusDto("Ok", ""), transactionsRemote)))
+//
+//        walletRepository.fetchRemoteTransactions(pageSize, offset)
+//            .test()
+//            .assertResult(transactions.size)
+//
+//        verify(db).runInTransaction(anyNonNull())
+    }
 
-        walletRepository.getTransactions(true, 0, 3)
+    @Test fun `transfer called`() {
+        val amount = "1"
+        val myAccountId = "accountId"
+        val dstUserId = "dstUserId"
+        val description = "description"
+        val fee = "1"
+        val keyPair = mock(KeyPair::class.java)
+        val result = mock(Pair::class.java)
+        val irohaRequest = mock(IrohaRequest::class.java)
+        val txHash = "txHash"
+        given(transactionFactory.buildTransferWithFeeTransaction(amount, myAccountId, dstUserId, description, fee, keyPair)).willReturn(Single.just(result as Pair<IrohaRequest, String>))
+        given(result.first).willReturn(irohaRequest)
+        given(result.second).willReturn(txHash)
+        given(api.transferXor(irohaRequest)).willReturn(Single.just(BaseResponse(StatusDto("200", "Ok"))))
+
+        walletRepository.transfer(amount, myAccountId, dstUserId, description, fee, keyPair)
             .test()
-            .assertResult(transactions)
-
-        verify(transactionDao).insert(transactionsLocal)
+            .assertResult(txHash)
     }
 
     @Test fun `find account called`() {
@@ -187,54 +245,6 @@ class WalletRepositoryTest {
         verify(datasource).saveContacts(accounts)
     }
 
-    @Test fun `get last transaction details called`() {
-        val transactionsRemote = mutableListOf(
-            TransactionRemote(
-                "transactionId",
-                TransactionRemote.Status.COMMITTED,
-                "assetId",
-                "details",
-                "peerName",
-                10.0,
-                1000,
-                "peerId",
-                "reason",
-                TransactionRemote.Type.REWARD,
-                1.0
-            )
-        )
-        val transactions = mutableListOf(
-            Transaction(
-                "transactionId",
-                Transaction.Status.COMMITTED,
-                "assetId",
-                "details",
-                "peerName",
-                10.0,
-                1000,
-                "peerId",
-                "reason",
-                Transaction.Type.REWARD,
-                1.0
-            )
-        )
-        given(api.getTransactions(0, 1)).willReturn(Single.just(GetTransactionHistoryResponse(StatusDto("Ok", ""), transactionsRemote)))
-
-        walletRepository.getLastTransactionDetails()
-            .test()
-            .assertResult(transactions.first())
-    }
-
-    @Test fun `get wallet balance called`() {
-        val keyPair = mock(KeyPair::class.java)
-        val assets = arrayOf(Asset(BigDecimal.TEN, "xor#sora"))
-        given(datasource.retrieveBalance()).willReturn(assets)
-
-        walletRepository.getWalletBalance(false, "", keyPair)
-            .test()
-            .assertResult(assets[0].balance)
-    }
-
     @Test fun `get qr amount string called`() {
         val accountId = "accountId"
         val amount = "100"
@@ -265,43 +275,39 @@ class WalletRepositoryTest {
             .assertResult(qrData)
     }
 
-    @Test fun `get withdrawal meta called`() {
-        val assetId = "xor#sora"
-        val eth = "ETH"
-        val providerAccountId = "providerAccountId"
-        val feeAccountId = "feeAccountId"
-        val feeRate = "1.0"
-        val feeType = FeeType.FIXED
-        val withdrawalMeta = WithdrawalMeta(providerAccountId, feeAccountId, feeRate.toDouble(), feeType)
-        given(api.getWithdrawalMeta(assetId, eth)).willReturn(Single.just(GetWithdrawalMetaResponse(StatusDto("Ok", ""), providerAccountId, feeAccountId, feeRate, feeType)))
-
-        walletRepository.getWithdrawalMeta()
-            .test()
-            .assertResult(withdrawalMeta)
-    }
-
     @Test fun `get transfer meta called`() {
         val feeRate = "1.0"
         val feeType = FeeType.FIXED
         val transferMeta = TransferMeta(feeRate.toDouble(), feeType)
-        given(datasource.retrieveTransferMeta()).willReturn(transferMeta)
+        given(datasource.observeTransferMeta()).willReturn(Observable.just(transferMeta))
 
-        walletRepository.getTransferMeta(false)
+        walletRepository.getTransferMeta()
             .test()
             .assertResult(transferMeta)
     }
 
     @Test fun `get transfer meta called with update cached`() {
-        val assetId = "xor#sora"
         val feeRate = 1.0
         val feeType = FeeType.FIXED
         val transferMeta = TransferMeta(feeRate, feeType)
         given(api.getTransferMeta(assetId)).willReturn(Single.just(GetTransferMetaResponse(StatusDto("Ok", ""), feeRate, feeType)))
 
-        walletRepository.getTransferMeta(true)
+        walletRepository.updateTransferMeta()
             .test()
-            .assertResult(transferMeta)
+            .assertComplete()
 
         verify(datasource).saveTransferMeta(transferMeta)
+    }
+
+    @Test fun `get block chain explorer url called`() {
+        val txHash = "txHash"
+        val blockExplorerUrl = "url"
+        given(appLinksProvider.blockChainExplorerUrl).willReturn(blockExplorerUrl)
+
+        walletRepository.getBlockChainExplorerUrl(txHash)
+            .test()
+            .assertResult(blockExplorerUrl + txHash)
+
+        verify(appLinksProvider).blockChainExplorerUrl
     }
 }

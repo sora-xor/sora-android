@@ -1,35 +1,36 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.PushHandler
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
+import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import jp.co.soramitsu.test_shared.eqNonNull
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.ArgumentMatchers.anyDouble
+import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -43,77 +44,84 @@ class WalletViewModelTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
+
     @Rule
     @JvmField
     val rxSchedulerRule = RxSchedulersRule()
 
-    @Mock
-    private lateinit var interactor: WalletInteractor
-    @Mock
-    private lateinit var router: WalletRouter
-    @Mock
-    private lateinit var numbersFormatter: NumbersFormatter
-    @Mock
-    private lateinit var resourceManager: ResourceManager
-    @Mock
-    private lateinit var dateTimeFormatter: DateTimeFormatter
-    @Mock
-    private lateinit var pushHandler: PushHandler
+    @Mock private lateinit var ethInteractor: EthereumInteractor
+    @Mock private lateinit var interactor: WalletInteractor
+    @Mock private lateinit var router: WalletRouter
+    @Mock private lateinit var numbersFormatter: NumbersFormatter
+    @Mock private lateinit var resourceManager: ResourceManager
+    @Mock private lateinit var transactionMappers: TransactionMappers
+    @Mock private lateinit var pushHandler: PushHandler
+    @Mock private lateinit var clipboardManager: ClipboardManager
 
     private lateinit var walletViewModel: WalletViewModel
-    private val balanceAmount = BigDecimal.TEN
+
+    private val assetXor = Asset(AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR.assetFirstName, AssetHolder.SORA_XOR.assetLastName,
+        true, false, 1, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.SORA_XOR.id, BigDecimal.TEN))
+
+    private val assetXorErc = Asset(AssetHolder.SORA_XOR_ERC_20.id, AssetHolder.SORA_XOR_ERC_20.assetFirstName, AssetHolder.SORA_XOR_ERC_20.assetLastName,
+        true, false, 2, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.SORA_XOR_ERC_20.id, BigDecimal.TEN))
+
+    private val assetEth = Asset(AssetHolder.ETHER_ETH.id, AssetHolder.ETHER_ETH.assetFirstName, AssetHolder.ETHER_ETH.assetLastName,
+        false, false, 0, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.ETHER_ETH.id, BigDecimal.TEN))
+
     private val transactions = mutableListOf(Transaction(
+        "",
         "transactionId",
         Transaction.Status.COMMITTED,
         "assetId",
+        "myAddress",
         "details",
-        "peerName",
-        1.0,
+        "peername lastname",
+        BigDecimal.ONE,
         1000,
         "peerId",
         "reason",
         Transaction.Type.INCOMING,
-        0.5)
+        BigDecimal.ZERO,
+        BigDecimal(0.5))
     )
+
+    val transactionsWithHeaders = mutableListOf(
+        EventHeader("today"),
+        SoraTransaction(
+            "transactionId",
+            true,
+            0,
+            "PL",
+            "peername lastname",
+            "peerId",
+            "01 Jan 1970 00:00",
+            "${Const.SORA_SYMBOL} 10.12"
+        )
+    )
+
+    private val assets = mutableListOf(assetXor, assetXorErc, assetEth)
+    private val ethAddress = "ethAddress"
 
     @Before
     fun setUp() {
         given(pushHandler.observeNewPushes()).willReturn(Observable.just("push"))
-        given(resourceManager.getString(R.string.common_today)).willReturn("today")
-        given(resourceManager.getString(R.string.common_yesterday)).willReturn("yesterday")
-        given(resourceManager.getString(R.string.wallet_from)).willReturn("From")
-        given(numbersFormatter.formatBigDecimal(balanceAmount)).willReturn("10")
-        given(numbersFormatter.format(anyDouble())).willReturn("10.12")
-        given(interactor.getBalance(anyBoolean())).willReturn(Single.just(balanceAmount))
-        given(interactor.getTransactionHistory(anyBoolean(), anyBoolean())).willReturn(Single.just(transactions))
-        given(dateTimeFormatter.date2Day(anyNonNull(), eqNonNull("today"), eqNonNull("yesterday"))).willReturn("01 Jan 1970")
-
-        walletViewModel = WalletViewModel(interactor, router, numbersFormatter, dateTimeFormatter, resourceManager, pushHandler)
+        given(interactor.updateTransactions(50)).willReturn(Single.just(49))
+        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("10.12")
+        given(transactionMappers.mapTransactionToSoraTransactionWithHeaders(anyNonNull(), anyNonNull(), anyNonNull())).willReturn(transactionsWithHeaders)
+        given(interactor.getTransactions()).willReturn(Observable.just(transactions))
+        given(ethInteractor.getAddress()).willReturn(Single.just("ethAddress"))
+        given(interactor.getAccountId()).willReturn(Single.just(""))
+        given(interactor.getAssets()).willReturn(Observable.just(assets))
+        given(interactor.updateAssets()).willReturn(Completable.complete())
+        walletViewModel = WalletViewModel(ethInteractor, interactor, router, numbersFormatter, resourceManager, clipboardManager, transactionMappers, pushHandler)
     }
 
     @Test
     fun `init`() {
-        val transactionsWithHeaders = mutableListOf(
-            EventHeader("01 Jan 1970"),
-            SoraTransaction(
-                "Committed",
-                "transact",
-                Date(transactions[0].timestamp * 1000L),
-                "peerId",
-                "From peerName",
-                "peerName",
-                1.0,
-                "${Const.SORA_SYMBOL} 10.12",
-                Transaction.Type.INCOMING,
-                "details",
-                0.5,
-                1.5
 
-            )
-        )
-        assertEquals(transactionsWithHeaders, walletViewModel.transactionsLiveData.value)
-        assertEquals(numbersFormatter.formatBigDecimal(balanceAmount), walletViewModel.balanceLiveData.value)
-        assertEquals(Unit, walletViewModel.hideSwipeProgressLiveData.value?.peekContent())
+
+        assertEquals(transactionsWithHeaders, walletViewModel.transactionsModelLiveData.value)
     }
 
     @Test
@@ -139,34 +147,35 @@ class WalletViewModelTest {
 
     @Test
     fun `event clicked`() {
-        val date = Date()
+        val tx = transactions.first()
         val soraTransaction = SoraTransaction(
-            "Opened",
-            "transactionId",
-            date,
-            "recipientId",
-            "recipientWithPrefix",
-            "recipient",
-            100.0,
-            "100.00",
-            Transaction.Type.INCOMING,
-            "description",
-            1.0,
-            101.0
+                "transactionId",
+                true,
+                0,
+                "PL",
+                "peername lastname",
+                "details",
+                "peerId",
+                "20"
         )
         walletViewModel.eventClicked(soraTransaction)
+        val date = Date(tx.timestampInMillis)
 
         verify(router).showTransactionDetailsFromList(
-            soraTransaction.recipientId,
-            soraTransaction.recipient,
-            soraTransaction.transactionId,
-            soraTransaction.amount,
-            soraTransaction.status,
-            soraTransaction.dateTime,
-            soraTransaction.type,
+            "myAddress",
+            tx.peerId!!,
+            tx.peerName,
+            tx.ethTxHash,
+            tx.soranetTxHash,
+            tx.amount,
+            "Committed",
+            tx.assetId!!,
+            date,
+            tx.type,
             soraTransaction.description,
-            soraTransaction.fee,
-            soraTransaction.totalAmount
+            tx.ethFee,
+            tx.soranetFee,
+            tx.amount + tx.ethFee + tx.soranetFee
         )
     }
 }

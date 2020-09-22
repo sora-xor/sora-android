@@ -12,8 +12,10 @@
         android:layout_width="18dp"
         android:layout_height="18dp"
         android:layout_weight="0"
+        android:includeFontPadding="false"
         android:background="@drawable/red_circle_textview_bg"
         android:gravity="center"
+        android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="8sp"
         tools:text="2" />

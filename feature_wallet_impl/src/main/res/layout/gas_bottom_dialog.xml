@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="true"
+    app:cardCornerRadius="@dimen/x1"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/margin_padding_by_side"
+        android:paddingEnd="@dimen/margin_padding_by_side"
+        android:paddingTop="@dimen/x2"
+        android:paddingBottom="@dimen/x2">
+
+        <TextView
+            android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Header4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/x2"
+            android:textColor="@color/black"
+            android:fontFamily="@font/sora_bold"
+            android:text="@string/transaction_miner_fee_title" />
+
+        <LinearLayout
+            android:id="@+id/minerFeeWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/x3" >
+
+            <TextView
+                android:id="@+id/minerFeeSubtitle"
+                style="@style/TextAppearance.Soramitsu.Body1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:lineSpacingExtra="5sp"
+                android:fontFamily="@font/sora_semibold"
+                android:textColor="@color/black"
+                android:text="@string/transaction_total"  />
+
+            <TextView
+                android:id="@+id/minerFeeTv"
+                style="@style/TextAppearance.Soramitsu.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:fontFamily="@font/soramitsu_semibold"
+                android:lineSpacingExtra="5sp"
+                android:textSize="@dimen/text_size_b2"
+                android:textColor="@color/black"
+                tools:text="100" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/estimatedTimeText"
+            style="@style/TextAppearance.Soramitsu.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/soramitsu_semibold"
+            android:lineSpacingExtra="5sp"
+            android:layout_marginBottom="@dimen/x2"
+            android:text="Estimated transaction time ~ 1 min 44 sec" />
+
+        <View
+            android:layout_width="match_parent"
+            android:background="@color/thinBorder"
+            android:layout_height="1dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/gasRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/item_gas"
+            tools:itemCount="3"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_marginBottom="@dimen/x2"
+            android:background="@color/thinBorder"
+            android:layout_height="1dp" />
+
+        <Switch
+            android:id="@+id/advancedSettingsSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:layout_marginBottom="@dimen/x4"
+            android:checked="false"
+            android:fontFamily="@font/sora_regular"
+            android:text="@string/common_advanced_settings"
+            android:textColor="@color/informationTextColor"
+            android:thumb="@drawable/ic_switch_thumb"
+            android:track="@drawable/red_switch_track_selector" />
+
+        <TextView
+            android:id="@+id/gasPriceTitle"
+            style="@style/TextAppearance.Soramitsu.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/x3"
+            android:fontFamily="@font/sora_semibold"
+            android:textColor="@color/black"
+            android:text="@string/transaction_fee_gasprice"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/gasPriceWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/x2"
+            android:gravity="center"
+            android:visibility="gone" >
+
+            <EditText
+                android:id="@+id/gasPriceInput"
+                style="@style/TextAppearance.Soramitsu.Header2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:lineSpacingExtra="5sp"
+                android:background="@null"
+                android:inputType="number"
+                android:maxLength="10"
+                android:hint="@string/transaction_fee_gas_hint"
+                android:fontFamily="@font/sora_semibold"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/gasPriceSetRecommended"
+                style="@style/TextAppearance.Soramitsu.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:fontFamily="@font/soramitsu_semibold"
+                android:text="@string/transaction_fee_set_recommended"
+                android:textColor="@color/uikit_lightRed" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/gasPriceErrorText"
+            style="@style/TextAppearance.Soramitsu.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="@dimen/x1_2"
+            android:includeFontPadding="false"
+            android:layout_marginBottom="@dimen/x2"
+            android:drawableStart="@drawable/ic_warning_16"
+            android:text="@string/common_error_price_is_to_low"
+            android:visibility="gone"
+            android:textColor="@color/uikit_lightRed" />
+
+        <View
+            android:id="@+id/gasPriceDivider"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="@dimen/x2"
+            android:background="@color/thinBorder"
+            android:layout_height="1dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/gasLimitTitle"
+            style="@style/TextAppearance.Soramitsu.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/x3"
+            android:fontFamily="@font/sora_semibold"
+            android:textColor="@color/black"
+            android:text="@string/transaction_fee_gaslimit"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/gasLimitWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/x2"
+            android:gravity="center"
+            android:visibility="gone" >
+
+            <EditText
+                android:id="@+id/gasLimitInput"
+                style="@style/TextAppearance.Soramitsu.Header2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:lineSpacingExtra="5sp"
+                android:background="@null"
+                android:inputType="number"
+                android:maxLength="10"
+                android:hint="@string/transaction_fee_gas_hint"
+                android:fontFamily="@font/sora_semibold"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/gasLimitSetRecommended"
+                style="@style/TextAppearance.Soramitsu.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0"
+                android:fontFamily="@font/soramitsu_semibold"
+                android:text="@string/transaction_fee_set_recommended"
+                android:textColor="@color/uikit_lightRed" />
+
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/gasLimitSeekBar"
+            style="@style/ThickSeekBar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x3"
+            android:layout_marginBottom="@dimen/x2"
+            android:progressBackgroundTint="@color/seekbarColor"
+            android:progressTint="@color/uikit_lightRed"
+            android:thumb="@drawable/ic_seekbar_thumb_red"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/gasLimitErrorText"
+            style="@style/TextAppearance.Soramitsu.Body2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawablePadding="@dimen/x1_2"
+            android:includeFontPadding="false"
+            android:drawableStart="@drawable/ic_warning_16"
+            android:text="@string/common_error_gas_limit_low"
+            android:visibility="gone"
+            android:textColor="@color/uikit_lightRed" />
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

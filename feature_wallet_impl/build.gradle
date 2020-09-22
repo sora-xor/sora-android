@@ -22,6 +22,30 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        tst {
+            dimension 'default'
+        }
+
+        staging {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+androidExtensions {
+    experimental = true
 }
 
 dependencies {
@@ -30,10 +54,8 @@ dependencies {
     implementation project(":common")
     implementation project(":core_db")
     implementation project(":core_di")
-    implementation project(':core_network_api')
     implementation project(":feature_wallet_api")
-    implementation project(":feature_did_api")
-    implementation project(":feature_main_api")
+    implementation project(":feature_ethereum_api")
 
     implementation kotlinDep
 
@@ -41,6 +63,7 @@ dependencies {
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
+    implementation swipelayoutDep
 
     implementation rxDep
     implementation rxAndroidDep

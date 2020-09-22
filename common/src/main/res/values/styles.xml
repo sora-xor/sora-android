@@ -3,12 +3,13 @@
     <style name="AppTheme" parent="Theme.Soramitsu.Default">
         <item name="searchViewHeight">@dimen/search_view_height</item>
         <item name="colorSecondary">@color/secondaryGreen</item>
-        <item name="colorControlNormal">@color/lightRed</item>
+        <item name="colorControlNormal">@color/uikit_lightRed</item>
     </style>
 
     <style name="BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog">
         <item name="bottomSheetStyle">@style/bottomSheetStyleWrapper</item>
         <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
     <style name="bottomSheetStyleWrapper" parent="Widget.MaterialComponents.BottomSheet.Modal">
@@ -25,7 +26,14 @@
         <item name="android:theme">@style/AppTheme.SearchView</item>
         <item name="iconifiedByDefault">false</item>
         <item name="queryBackground">@android:color/transparent</item>
-        <item name="android:background">@drawable/background_rounded_grey</item>
+        <item name="android:background">@drawable/background_rounded18_grey</item>
     </style>
 
+    <style name="ThickSeekBar" parent="@android:style/Widget.SeekBar">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:progressDrawable">@android:drawable/progress_horizontal</item>
+        <item name="android:indeterminateDrawable">@android:drawable/progress_horizontal</item>
+        <item name="android:minHeight">@dimen/x1</item>
+        <item name="android:maxHeight">@dimen/x1</item>
+    </style>
 </resources>

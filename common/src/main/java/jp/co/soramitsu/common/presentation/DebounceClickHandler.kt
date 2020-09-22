@@ -1,14 +1,9 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.presentation
 
 class DebounceClickHandler {
 
     companion object {
-        private const val MINIMUM_CLICK_PERIOD_MILLIS = 300L
+        private const val MINIMUM_CLICK_PERIOD_MILLIS = 600L
     }
 
     private var lastClickedTime = 0L

@@ -13,7 +13,7 @@
         android:id="@+id/mainFragment"
         android:enabled="true"
         android:icon="@drawable/ic_menu_projects"
-        android:title="@string/tabbar_projects_title"
+        android:title="@string/tabbar_votables_title"
         app:showAsAction="ifRoom" />
 
     <item

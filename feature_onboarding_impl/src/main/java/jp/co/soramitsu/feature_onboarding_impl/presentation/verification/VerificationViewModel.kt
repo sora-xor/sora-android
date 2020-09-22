@@ -1,13 +1,9 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.verification
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import com.google.android.gms.common.api.CommonStatusCodes
@@ -46,6 +42,9 @@ class VerificationViewModel(
     val smsCodeAutofillLiveData = MutableLiveData<String>()
 
     val resetCodeLiveData = MutableLiveData<Event<Unit>>()
+
+    private val _nextButtonEnableLiveData = MutableLiveData<Boolean>()
+    val nextButtonEnableLiveData: LiveData<Boolean> = _nextButtonEnableLiveData
 
     private var countryIso = ""
 
@@ -96,7 +95,10 @@ class VerificationViewModel(
     }
 
     fun codeEntered(code: String) {
-        if (code.length == SMS_CODE_LENGTH) {
+        if (code.length < SMS_CODE_LENGTH) {
+            _nextButtonEnableLiveData.value = false
+        } else {
+            _nextButtonEnableLiveData.value = true
             onVerify(code)
         }
     }

@@ -1,25 +1,22 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.di
 
 import dagger.BindsInstance
 import dagger.Component
-import jp.co.soramitsu.common.di.app.CommonApi
+import jp.co.soramitsu.common.data.network.NetworkApi
+import jp.co.soramitsu.common.di.api.CommonApi
+import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.core_db.di.DbApi
-import jp.co.soramitsu.core_network_api.di.NetworkApi
-import jp.co.soramitsu.feature_did_api.di.DidFeatureApi
+import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.di.AssetSettingsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.di.TransactionConfirmationComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.di.ContactsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.di.TransactionDetailsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.di.ReceiveComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.di.TransferAmountComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.di.WalletComponent
-import jp.co.soramitsu.feature_wallet_impl.presentation.withdraw.di.WithdrawalAmountComponent
 import javax.inject.Singleton
 
 @Singleton
@@ -41,11 +38,11 @@ interface WalletFeatureComponent : WalletFeatureApi {
 
     fun transferAmountComponentBuilder(): TransferAmountComponent.Builder
 
-    fun withdrawalAmountComponentBuilder(): WithdrawalAmountComponent.Builder
-
     fun walletSubComponentBuilder(): WalletComponent.Builder
 
     fun contactsComponentBuilder(): ContactsComponent.Builder
+
+    fun assetSettingsComponentBuilder(): AssetSettingsComponent.Builder
 
     @Component.Builder
     interface Builder {
@@ -55,6 +52,9 @@ interface WalletFeatureComponent : WalletFeatureApi {
         @BindsInstance
         fun router(walletRouter: WalletRouter): Builder
 
+        @BindsInstance
+        fun withAccountSettings(accountSettings: AccountSettings): Builder
+
         fun withDependencies(deps: WalletFeatureDependencies): Builder
     }
 
@@ -63,7 +63,8 @@ interface WalletFeatureComponent : WalletFeatureApi {
             CommonApi::class,
             NetworkApi::class,
             DbApi::class,
-            DidFeatureApi::class
+            DidFeatureApi::class,
+            EthereumFeatureApi::class
         ]
     )
     interface WalletFeatureDependenciesComponent : WalletFeatureDependencies

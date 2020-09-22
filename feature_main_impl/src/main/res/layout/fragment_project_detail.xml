@@ -115,7 +115,7 @@
                     android:layout_marginTop="@dimen/x2"
                     android:layout_marginEnd="@dimen/x1"
                     android:foreground="?selectableItemBackground"
-                    app:cardBackgroundColor="@color/lightRed"
+                    app:cardBackgroundColor="@color/uikit_lightRed"
                     app:cardCornerRadius="@dimen/x3"
                     app:cardElevation="0dp"
                     app:layout_constraintEnd_toStartOf="@id/projectDetailAddToFavouritesButton"
@@ -146,6 +146,9 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:fontFamily="@font/sora_regular"
+                            android:includeFontPadding="false"
+                            android:paddingBottom="@dimen/x1_4"
+                            android:paddingTop="@dimen/x1_4"
                             android:maxLines="1"
                             android:textAllCaps="false"
                             android:textColor="@color/white"
@@ -186,6 +189,9 @@
                         android:fontFamily="@font/sora_regular"
                         android:maxLines="1"
                         android:padding="0dp"
+                        android:includeFontPadding="false"
+                        android:paddingBottom="@dimen/x1_4"
+                        android:paddingTop="@dimen/x1_4"
                         android:text="@string/project_add_to_favourite"
                         android:textAppearance="@style/RedTextStyle"
                         android:textSize="14sp" />
@@ -298,7 +304,7 @@
                     tools:visibility="visible" />
 
                 <TextView
-                    android:id="@+id/descriptionTv"
+                    android:id="@+id/description"
                     style="@style/LightBlackTextStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -322,7 +328,7 @@
                     android:visibility="gone"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/descriptionTv" />
+                    app:layout_constraintTop_toBottomOf="@id/description" />
 
                 <View
                     android:id="@+id/projectDetailSeparateLineView4"
@@ -396,7 +402,7 @@
                     android:gravity="end"
                     android:linksClickable="true"
                     android:singleLine="true"
-                    android:textColorLink="@color/lightRed"
+                    android:textColorLink="@color/uikit_lightRed"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/projectDetailWebsiteTitleTextView"
                     app:layout_constraintTop_toBottomOf="@id/projectDetailContactsTextView"
@@ -438,7 +444,7 @@
                     android:layout_marginEnd="@dimen/x2"
                     android:gravity="end"
                     android:singleLine="true"
-                    android:textColorLink="@color/lightRed"
+                    android:textColorLink="@color/uikit_lightRed"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="1.0"
                     app:layout_constraintStart_toEndOf="@id/projectDetailEmailTitleTextView"

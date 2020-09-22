@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/wallet_send_to_eth_title" />
+        app:title="@string/amount_default_fee" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -54,7 +54,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="5sp"
-                    android:text="@string/wallet_transaction_fee"
+                    android:text="@string/amount_default_fee"
                     android:textColor="@android:color/black"
                     android:textSize="14sp" />
 
@@ -84,7 +84,7 @@
                     style="@style/TextAppearance.Soramitsu.Body1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/wallet_eth_address"
+                    android:text="@string/status_pending"
                     android:textColor="@color/subtitleGrey" />
 
                 <EditText
@@ -94,7 +94,7 @@
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
                     android:digits="0123456789abcdefABCDEFx"
-                    android:hint="@string/wallet_eth_hint"
+                    android:hint="@string/wallet_transfer_note_hint"
                     android:imeOptions="actionDone"
                     android:inputType="text"
                     android:lines="2"

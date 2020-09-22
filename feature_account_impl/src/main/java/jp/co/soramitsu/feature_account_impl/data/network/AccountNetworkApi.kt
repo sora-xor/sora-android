@@ -1,12 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.network
 
 import io.reactivex.Single
-import jp.co.soramitsu.core_network_api.data.response.BaseResponse
+import jp.co.soramitsu.common.data.network.response.BaseResponse
 import jp.co.soramitsu.feature_account_impl.data.network.model.DeviceFingerPrintRemote
 import jp.co.soramitsu.feature_account_impl.data.network.request.CreateUserRequest
 import jp.co.soramitsu.feature_account_impl.data.network.request.RegistrationRequest

@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_by_side"
         android:layout_marginTop="@dimen/x2"
-        android:text="@string/projects_title"
+        android:text="@string/tabbar_votables_title"
         android:textColor="@color/titleDarkGreyBlue"
         android:textSize="23sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -64,7 +64,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:text="\?"
-            android:textColor="@color/lightRed"
+            android:textColor="@color/uikit_lightRed"
             android:textSize="14sp"
             android:textStyle="bold" />
 

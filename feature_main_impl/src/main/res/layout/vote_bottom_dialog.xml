@@ -46,13 +46,15 @@
                 android:id="@+id/votesEt"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
+                android:layout_marginStart="@dimen/x1"
                 android:background="@null"
                 android:inputType="number"
                 android:maxLength="10"
                 android:minWidth="250dp"
                 android:padding="0dp"
                 android:textColor="@color/lightBlack"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
                 android:textSize="40sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@+id/voteImg"
@@ -71,8 +73,8 @@
             android:paddingStart="@dimen/x3"
             android:paddingEnd="@dimen/x3"
             android:progressBackgroundTint="@color/seekbarColor"
-            android:progressTint="@color/lightRed"
-            android:thumb="@drawable/thumb" />
+            android:progressTint="@color/uikit_lightRed"
+            android:thumb="@drawable/ic_seekbar_thumb_red" />
 
         <TextView
             android:id="@+id/messageTv"
@@ -96,20 +98,72 @@
             android:paddingStart="@dimen/x2"
             android:paddingEnd="@dimen/x2">
 
-            <Button
-                android:id="@+id/voteBtn"
-                style="@style/Widget.Soramitsu.Button"
+            <LinearLayout
+                android:id="@+id/voteSubmitWrapper"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x1"
                 android:layout_marginEnd="@dimen/x1"
-                android:paddingStart="0dp"
-                android:paddingEnd="0dp"
-                android:text="@string/common_vote"
+                android:orientation="horizontal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/cancelBtn"
+                app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/voteSubmitButtonImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_rectangle_red"
+                    android:paddingTop="@dimen/uikit_button_vertical_padding"
+                    android:paddingBottom="@dimen/uikit_button_vertical_padding"
+                    android:src="@drawable/ic_thumb_down_16"
+                    android:tint="@color/white"
+                    android:visibility="visible" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/voteSubmitContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_rectangle_red"
+                    android:paddingTop="@dimen/uikit_button_vertical_padding"
+                    android:paddingBottom="@dimen/uikit_button_vertical_padding"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/voteSubmitIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginEnd="8dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/voteSubmitText"
+                        app:layout_constraintEnd_toStartOf="@+id/voteSubmitText"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintHorizontal_chainStyle="packed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@+id/voteSubmitText"
+                        tools:src="@drawable/ic_thumb_down_16" />
+
+                    <TextView
+                        android:id="@+id/voteSubmitText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:fontFamily="?uikit_fontBold"
+                        android:includeFontPadding="false"
+                        android:textColor="@color/white"
+                        android:textSize="?attr/uikit_textSizeB1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.5"
+                        app:layout_constraintStart_toEndOf="@+id/voteSubmitIcon"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_bias="0.437"
+                        app:layout_goneMarginStart="0dp"
+                        tools:text="Vote" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
 
             <Button
                 android:id="@+id/cancelBtn"
@@ -118,12 +172,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x1"
                 android:layout_marginEnd="@dimen/x1"
+                android:includeFontPadding="false"
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp"
                 android:text="@string/common_cancel"
+                android:visibility="visible"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/keyboardImg"
-                app:layout_constraintStart_toEndOf="@+id/voteBtn"
+                app:layout_constraintStart_toEndOf="@+id/voteSubmitWrapper"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageView

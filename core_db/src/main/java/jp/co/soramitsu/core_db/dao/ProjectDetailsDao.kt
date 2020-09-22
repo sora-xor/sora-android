@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.core_db.dao
 
 import androidx.room.Dao
@@ -13,12 +8,12 @@ import androidx.room.TypeConverters
 import io.reactivex.Observable
 import jp.co.soramitsu.core_db.converters.ProjectStatusConverter
 import jp.co.soramitsu.core_db.converters.ProjectUrlConverter
-import jp.co.soramitsu.core_db.converters.ProjectVotesConverter
+import jp.co.soramitsu.core_db.converters.BigDecimalConverter
 import jp.co.soramitsu.core_db.model.ProjectDetailsLocal
 import jp.co.soramitsu.core_db.model.ProjectDetailsWithGalleryLocal
 
 @Dao
-@TypeConverters(ProjectStatusConverter::class, ProjectUrlConverter::class, ProjectVotesConverter::class)
+@TypeConverters(ProjectStatusConverter::class, ProjectUrlConverter::class, BigDecimalConverter::class)
 abstract class ProjectDetailsDao {
 
     @Query("DELETE FROM project_details")

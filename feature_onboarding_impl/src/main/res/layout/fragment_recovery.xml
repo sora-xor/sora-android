@@ -75,10 +75,11 @@
                 android:layout_height="match_parent"
                 android:background="@null"
                 android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ "
+                android:maxLength="150"
                 android:focusable="true"
                 android:gravity="top"
                 android:imeOptions="actionDone"
-                android:inputType="textVisiblePassword"
+                android:inputType="textMultiLine|textVisiblePassword"
                 android:lineSpacingExtra="4dp"
                 android:minHeight="68dp"
                 android:textSize="15sp" />

@@ -1,13 +1,8 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_information_impl.di
 
 import dagger.Module
 import dagger.Provides
-import jp.co.soramitsu.core_network_api.NetworkApiCreator
+import jp.co.soramitsu.common.data.network.NetworkApiCreator
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationDatasource
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationRepository
 import jp.co.soramitsu.feature_information_impl.data.network.InformationNetworkApi

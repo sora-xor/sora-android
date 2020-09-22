@@ -1,12 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.voteshistory.mappers
 
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
-import jp.co.soramitsu.feature_project_api.domain.model.VotesHistory
+import jp.co.soramitsu.feature_votable_api.domain.model.VotesHistory
 import java.math.BigDecimal
 import java.util.ArrayList
 import java.util.Date

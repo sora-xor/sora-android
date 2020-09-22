@@ -1,24 +1,21 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.di
 
 import dagger.BindsInstance
 import dagger.Component
-import jp.co.soramitsu.common.di.app.CommonApi
+import jp.co.soramitsu.common.data.network.NetworkApi
+import jp.co.soramitsu.common.di.api.CommonApi
+import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.core_di.holder.scope.FeatureScope
-import jp.co.soramitsu.core_network_api.di.NetworkApi
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
-import jp.co.soramitsu.feature_did_api.di.DidFeatureApi
+import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_information_api.di.InformationFeatureApi
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.MainComponent
 import jp.co.soramitsu.feature_main_impl.presentation.about.di.AboutComponent
 import jp.co.soramitsu.feature_main_impl.presentation.activity.di.ActivityFeedComponent
-import jp.co.soramitsu.feature_main_impl.presentation.detail.di.DetailComponent
+import jp.co.soramitsu.feature_main_impl.presentation.detail.project.di.DetailProjectComponent
+import jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.di.DetailReferendumComponent
 import jp.co.soramitsu.feature_main_impl.presentation.faq.di.FaqComponent
 import jp.co.soramitsu.feature_main_impl.presentation.invite.di.InviteComponent
 import jp.co.soramitsu.feature_main_impl.presentation.language.di.SelectLanguageComponent
@@ -33,7 +30,9 @@ import jp.co.soramitsu.feature_main_impl.presentation.terms.di.TermsComponent
 import jp.co.soramitsu.feature_main_impl.presentation.userverification.di.UserVerificationComponent
 import jp.co.soramitsu.feature_main_impl.presentation.version.di.UnsupportedVersionComponent
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.di.VotesHistoryComponent
-import jp.co.soramitsu.feature_project_api.di.ProjectFeatureApi
+import jp.co.soramitsu.feature_notification_api.di.NotificationFeatureApi
+import jp.co.soramitsu.feature_sse_api.di.EventFeatureApi
+import jp.co.soramitsu.feature_votable_api.di.VotableFeatureApi
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 
 @Component(
@@ -55,7 +54,9 @@ interface MainFeatureComponent : MainFeatureApi {
 
     fun projectsComponentBuilder(): ProjectsComponent.Builder
 
-    fun detailComponentBuilder(): DetailComponent.Builder
+    fun detailProjectComponentBuilder(): DetailProjectComponent.Builder
+
+    fun detailReferendumComponentBuilder(): DetailReferendumComponent.Builder
 
     fun votesHistoryComponentBuilder(): VotesHistoryComponent.Builder
 
@@ -97,12 +98,15 @@ interface MainFeatureComponent : MainFeatureApi {
     @Component(
         dependencies = [
             AccountFeatureApi::class,
-            ProjectFeatureApi::class,
+            NotificationFeatureApi::class,
+            VotableFeatureApi::class,
             DidFeatureApi::class,
+            EthereumFeatureApi::class,
             WalletFeatureApi::class,
             CommonApi::class,
             InformationFeatureApi::class,
-            NetworkApi::class
+            NetworkApi::class,
+            EventFeatureApi::class
         ]
     )
     interface MainFeatureDependenciesComponent : MainFeatureDependencies

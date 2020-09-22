@@ -21,6 +21,26 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        tst {
+            dimension 'default'
+        }
+
+        staging {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
 }
 
 dependencies {
@@ -28,8 +48,6 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_di")
-    implementation project(':core_network_api')
-    implementation project(':feature_did_api')
     implementation project(":feature_account_api")
     implementation project(":core_db")
 
