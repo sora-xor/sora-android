@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:orientation="horizontal"
+    tools:parentTag="android.widget.LinearLayout">
+
+    <CheckBox
+        android:id="@+id/displayedCb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:button="@drawable/asset_check_selector"
+        android:checked="false"
+        android:layout_margin="@dimen/x2" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="@dimen/x2"
+        android:layout_marginTop="@dimen/x1_2"
+        android:layout_marginBottom="@dimen/x1_2"
+        android:layout_marginEnd="@dimen/x2_5"
+        app:cardCornerRadius="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/assetIconView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                tools:background="@color/uikit_lightRed">
+
+                <ImageView
+                    android:id="@+id/iconImg"
+                    style="@style/TextAppearance.Soramitsu.Header2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="@dimen/x2"
+                    android:gravity="center"
+                    android:textColor="@android:color/white"
+                    tools:src="@drawable/ic_xor_transparent_24" />
+
+            </FrameLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/white"
+                    android:orientation="vertical"
+                    android:padding="@dimen/x2"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/balanceTv"
+                        style="@style/TextAppearance.Soramitsu.Header2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:includeFontPadding="false"
+                        tools:text="200,000" />
+
+                    <Space
+                        android:layout_width="wrap_content"
+                        android:layout_height="10dp" />
+
+                    <LinearLayout
+                        android:id="@+id/normalStateView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/assetFirstNameTv"
+                            style="@style/TextAppearance.Soramitsu.Body1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/x1"
+                            tools:text="XOR" />
+
+                        <TextView
+                            android:id="@+id/assetLastNameTv"
+                            style="@style/TextAppearance.Soramitsu.Body1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/subtitleGrey"
+                            tools:text="Sora" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/associatingStateView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <TextView
+                            style="@style/TextAppearance.Soramitsu.Body1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/asset_state_associating"
+                            android:textColor="@color/subtitleGrey" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/errorStateView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <TextView
+                            style="@style/TextAppearance.Soramitsu.Body1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:drawableStart="@drawable/ic_error_red_18"
+                            android:drawablePadding="6dp"
+                            android:text="@string/asset_state_error"
+                            android:textColor="@color/subtitleGrey" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/dragImg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_drag_handle_grey_24"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</merge>

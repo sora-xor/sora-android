@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.service
 
 import android.annotation.TargetApi
@@ -18,10 +13,10 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.PushHandler
-import jp.co.soramitsu.core_di.holder.FeatureUtils
-import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
+import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
 import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.di.app_feature.AppFeatureComponent
 import java.util.Random
@@ -31,7 +26,7 @@ const val ADMIN_CHANNEL_ID = "admin_channel"
 
 class PushNotificationService : FirebaseMessagingService() {
 
-    @Inject lateinit var userRepository: UserRepository
+    @Inject lateinit var notificationRepository: NotificationRepository
     @Inject lateinit var pushHandler: PushHandler
 
     override fun onCreate() {
@@ -76,7 +71,7 @@ class PushNotificationService : FirebaseMessagingService() {
     }
 
     override fun onNewToken(s: String?) {
-        s?.let { userRepository.saveDeviceToken(it) }
+        s?.let { notificationRepository.saveDeviceToken(it) }
         super.onNewToken(s)
     }
 

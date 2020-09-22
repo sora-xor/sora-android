@@ -1,16 +1,11 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.splash.presentation
 
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
-import jp.co.soramitsu.common.util.OnboardingState
-import jp.co.soramitsu.core_di.holder.FeatureUtils
+import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.sora.di.app_feature.AppFeatureComponent

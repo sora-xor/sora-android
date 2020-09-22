@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.util
 
 class Const private constructor() {
@@ -28,6 +23,8 @@ class Const private constructor() {
         const val USER_REPUTATION_TOTAL_RANK = "prefs_user_reputation_total_rank"
 
         const val NAME_MAX_LENGTH = 30
+
+        const val NO_ICON_RESOURCE = 0
 
         val SORA_SYMBOL: CharSequence = "\ue000"
         val PROJECT_DID = arrayOf("did:sora:passport")

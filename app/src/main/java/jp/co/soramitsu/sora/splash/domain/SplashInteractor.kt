@@ -1,13 +1,8 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.splash.domain
 
-import jp.co.soramitsu.common.util.OnboardingState
+import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import javax.inject.Inject
 
 class SplashInteractor @Inject constructor(

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.country
 
 import android.os.Bundle
@@ -14,11 +9,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_account_api.domain.model.Country
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R

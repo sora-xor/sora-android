@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation
 
 import android.content.ComponentCallbacks2
@@ -18,20 +13,23 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.EventObserver
-import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.core_di.holder.FeatureUtils
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_ethereum_api.EthServiceStarter
+import jp.co.soramitsu.feature_ethereum_api.EthStatusPollingServiceStarter
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
+import jp.co.soramitsu.feature_sse_api.EventsObservingStarter
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import kotlinx.android.synthetic.main.activity_main.badConnectionView
 import kotlinx.android.synthetic.main.activity_main.bottomNavigationView
 import java.util.Date
@@ -72,6 +70,9 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
     }
 
     @Inject lateinit var mainRouter: MainRouter
+    @Inject lateinit var eventsObservingStarter: EventsObservingStarter
+    @Inject lateinit var ethServiceStarter: EthServiceStarter
+    @Inject lateinit var ethStatusPollingServiceStarter: EthStatusPollingServiceStarter
 
     private var timeInBackground: Date? = null
 
@@ -87,6 +88,18 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
             .withActivity(this)
             .build()
             .inject(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        eventsObservingStarter.startObserver()
+        ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        eventsObservingStarter.stopObserver()
+        ethStatusPollingServiceStarter.stopEthStatusPollingServiceService()
     }
 
     override fun initViews() {
@@ -195,6 +208,10 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         if (ACTION_INVITE == intent.action) {
             viewModel.startedWithInviteAction()
         }
+    }
+
+    fun startEthService() {
+        ethServiceStarter.startEthService()
     }
 
     override fun showBottomBar() {

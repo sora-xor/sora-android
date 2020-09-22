@@ -31,8 +31,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/informationItemBody"
         app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/ic_plus"
-        tools:text="400" />
+        tools:src="@drawable/ic_plus"  />
 
     <TextView
         android:id="@+id/informationItemBody"

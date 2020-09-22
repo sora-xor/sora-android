@@ -32,14 +32,33 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:id="@+id/moreView"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginEnd="@dimen/margin_padding_by_side"-->
+<!--                android:foreground="?selectableItemBackground"-->
+<!--                app:cardCornerRadius="@dimen/x2"-->
+<!--                app:contentPadding="4dp"-->
+<!--                app:layout_constraintBottom_toBottomOf="@+id/title"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="@+id/title">-->
+
+<!--                <ImageView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:src="@drawable/ic_more_horizontal_red_24" />-->
+
+<!--            </androidx.cardview.widget.CardView>-->
+
             <androidx.cardview.widget.CardView
                 android:id="@+id/howItWorksCard"
                 android:layout_width="29dp"
                 android:layout_height="29dp"
                 android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:clickable="true"
                 android:foreground="?selectableItemBackground"
                 app:cardCornerRadius="@dimen/x2"
+                android:visibility="visible"
                 app:layout_constraintBottom_toBottomOf="@+id/title"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/title">
@@ -50,85 +69,32 @@
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:text="@string/common_question_mark"
-                    android:textColor="@color/lightRed"
+                    android:textColor="@color/uikit_lightRed"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
             </androidx.cardview.widget.CardView>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/card"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/assetsRv"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@drawable/rounded_card_view"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:paddingStart="@dimen/margin_padding_by_side"
+                android:paddingTop="@dimen/x2"
+                android:paddingEnd="@dimen/margin_padding_by_side"
+                android:paddingBottom="@dimen/x2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/title">
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/currencyView"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_rounded_red"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.15">
-
-                    <TextView
-                        android:id="@+id/currencyTv"
-                        style="@style/TextAppearance.Soramitsu.Header2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:textColor="@android:color/white"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintVertical_bias="0.25"
-                        tools:text="&amp;" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <TextView
-                    android:id="@+id/balanceTv"
-                    style="@style/TextAppearance.Soramitsu.Header2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_content_by_side"
-                    android:layout_marginTop="@dimen/margin_padding_by_side"
-                    app:layout_constraintBottom_toTopOf="@id/accountTv"
-                    app:layout_constraintStart_toEndOf="@id/currencyView"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:text="200,000" />
-
-                <TextView
-                    android:id="@+id/accountTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_content_by_side"
-                    android:layout_marginTop="@dimen/margin_padding_content"
-                    android:layout_marginBottom="@dimen/margin_padding_by_side"
-                    android:text="@string/common_xor"
-                    android:textColor="@color/subtitleGrey"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/currencyView"
-                    app:layout_constraintTop_toBottomOf="@id/balanceTv"
-                    tools:text="Main card" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                app:layout_constraintTop_toBottomOf="@+id/title"
+                tools:itemCount="2"
+                tools:listitem="@layout/item_asset" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/doubleButtons"
                 android:layout_width="match_parent"
                 android:layout_height="45dp"
                 android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x1"
                 android:layout_marginEnd="@dimen/margin_padding_by_side"
                 android:layout_marginBottom="@dimen/x1_2"
                 app:cardCornerRadius="@dimen/button_corner_radius"
@@ -136,7 +102,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/card"
+                app:layout_constraintTop_toBottomOf="@+id/assetsRv"
                 app:layout_constraintVertical_bias="0.0">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -147,15 +113,15 @@
                     <TextView
                         android:id="@+id/sendTv"
                         style="@style/TextAppearance.Soramitsu.Header4"
-                        android:textColor="@color/lightRed"
-                        android:textSize="14sp"
-                        android:gravity="center_horizontal"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:background="@drawable/left_rounded_textview"
+                        android:gravity="center_horizontal"
                         android:padding="@dimen/margin_padding_content"
                         android:text="@string/common_send"
                         android:textAllCaps="false"
+                        android:textColor="@color/uikit_lightRed"
+                        android:textSize="14sp"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@id/middleDivider"
                         app:layout_constraintStart_toStartOf="parent"
@@ -180,7 +146,7 @@
                         android:background="@drawable/right_rounded_textview"
                         android:gravity="center_horizontal"
                         android:padding="@dimen/margin_padding_content"
-                        android:text="@string/wallet_receive"
+                        android:text="@string/common_receive"
                         android:textAllCaps="false"
                         android:textColor="@color/secondaryGreen"
                         android:textSize="14sp"
@@ -206,46 +172,31 @@
             android:orientation="vertical"
             app:behavior_hideable="false"
             app:behavior_peekHeight="80dp"
-            app:layout_behavior="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.bottomsheet.LockBottomSheetBehavior">
+            app:layout_behavior="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior">
 
-            <LinearLayout
-                android:id="@+id/recentEventsTitle"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/titleTv"
+                style="@style/TextAppearance.Soramitsu.Header4"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:orientation="horizontal"
+                android:layout_marginStart="@dimen/margin_padding_by_side"
                 android:paddingTop="@dimen/margin_padding_by_side"
                 android:paddingBottom="@dimen/margin_padding_content"
-                app:layout_constraintEnd_toEndOf="parent"
+                android:text="@string/history_title"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <TextView
-                    style="@style/TextAppearance.Soramitsu.Header4"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:text="@string/wallet_recent_events_title" />
-
-            </LinearLayout>
+                app:layout_constraintTop_toTopOf="parent" />
 
             <LinearLayout
                 android:id="@+id/placeholder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:layout_marginStart="18dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="18dp"
-                android:layout_marginBottom="8dp"
+                android:layout_margin="@dimen/x2"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
                 android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.3">
+                app:layout_constraintTop_toBottomOf="@id/titleTv">
 
                 <ImageView
                     android:id="@+id/placeholder_image"
@@ -270,13 +221,12 @@
                 android:id="@+id/eventRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
                 android:layout_marginBottom="@dimen/margin_padding_by_side"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/recentEventsTitle" />
+                app:layout_constraintTop_toBottomOf="@+id/titleTv" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

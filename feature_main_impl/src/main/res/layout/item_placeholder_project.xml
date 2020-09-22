@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/item_wrapper"
+    android:id="@+id/itemContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/x1"
@@ -59,7 +59,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/name" />
 
             <View
-                android:id="@+id/progressbar_votes"
+                android:id="@+id/progressbarVotes"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
                 android:layout_height="4dp"
@@ -83,7 +83,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/description" />
 
             <View
-                android:id="@+id/days_left"
+                android:id="@+id/daysLeft"
                 android:layout_width="76dp"
                 android:layout_height="18dp"
                 android:layout_marginStart="@dimen/x2"
@@ -106,7 +106,7 @@
                 app:layout_constraintTop_toBottomOf="@+id/left_to_found" />
 
             <View
-                android:id="@+id/friends_voted"
+                android:id="@+id/friendsVoted"
                 android:layout_width="98dp"
                 android:layout_height="18dp"
                 android:layout_marginStart="@dimen/x2"
@@ -123,7 +123,7 @@
                 android:layout_marginEnd="@dimen/x2"
                 android:background="@color/grey"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/days_left" />
+                app:layout_constraintTop_toBottomOf="@+id/daysLeft" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
 import android.Manifest
@@ -13,7 +8,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,15 +15,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.zxing.integration.android.IntentIntegrator
 import com.tbruyelle.rxpermissions2.RxPermissions
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.presentation.ChooserDialog
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.core_di.holder.FeatureUtils
-import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactsAdapter
@@ -61,11 +56,20 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
     override fun initViews() {
         (activity as BottomBarController).hideBottomBar()
 
-        toolbar.setHomeButtonListener {
-            if (keyboardHelper?.isKeyboardShowing == true) {
-                hideSoftKeyboard(activity)
-            } else {
-                viewModel.backButtonPressed()
+        with(toolbar) {
+            inflateMenu(R.menu.contacts_fragment_menu)
+
+            setOnMenuItemClickListener {
+                viewModel.qrMenuItemClicked()
+                true
+            }
+
+            setHomeButtonListener {
+                if (keyboardHelper?.isKeyboardShowing == true) {
+                    hideSoftKeyboard(activity)
+                } else {
+                    viewModel.backButtonPressed()
+                }
             }
         }
 
@@ -85,7 +89,8 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
                 contactsRecyclerView.adapter = ContactsAdapter(
                     debounceClickHandler,
                     { viewModel.contactClicked(it.accountId, "${it.firstName} ${it.lastName}") },
-                    { viewModel.menuItemClicked(it) }
+                    { viewModel.menuItemClicked(it) },
+                    { viewModel.ethItemClicked(it) }
                 )
             }
 
@@ -105,8 +110,9 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
         observe(viewModel.showChooserEvent, EventObserver {
             ChooserDialog(
                 activity!!,
-                R.string.contacts_qr_dialog_title,
-                R.array.contacts_scan_qr_variants,
+                R.string.contacts_scan,
+                getString(R.string.invoice_scan_camera),
+                getString(R.string.invoice_scan_gallery),
                 { viewModel.openCamera() },
                 { viewModel.openGallery() }
             ).show()
@@ -139,12 +145,16 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
                 preloaderView.gone()
             }
         })
+
+        observe(viewModel.qrErrorLiveData, EventObserver {
+            showErrorFromResponse(it)
+        })
     }
 
     private fun configureClicks() {
         integrator = IntentIntegrator.forSupportFragment(this).apply {
             setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
-            setPrompt(getString(R.string.contacts_scan_qr))
+            setPrompt(getString(R.string.contacts_scan))
             setBeepEnabled(false)
         }
 
@@ -172,9 +182,7 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
         if (result != null) {
-            if (result.contents == null) {
-                Toast.makeText(activity, R.string.contacts_qr_scan_canceled, Toast.LENGTH_LONG).show()
-            } else {
+            if (result.contents != null) {
                 viewModel.qrResultProcess(result.contents)
             }
         } else {
@@ -210,6 +218,6 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
             action = Intent.ACTION_GET_CONTENT
         }
 
-        startActivityForResult(Intent.createChooser(intent, getString(R.string.contacts_select_qr_from)), PICK_IMAGE_REQUEST)
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.common_options_title)), PICK_IMAGE_REQUEST)
     }
 }

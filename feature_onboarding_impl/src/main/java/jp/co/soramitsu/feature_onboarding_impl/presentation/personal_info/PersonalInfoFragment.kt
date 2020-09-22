@@ -1,13 +1,10 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info
 
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputFilter
 import android.text.Spanned
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,15 +13,17 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.ext.disable
+import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.isValidNameChar
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
@@ -69,6 +68,7 @@ class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
     }
 
     override fun initViews() {
+        nextBtn.disable()
         progressDialog = SoraProgressDialog(activity!!)
 
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
@@ -82,6 +82,20 @@ class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
                 invCodeEt.text.toString().trim()
             )
         })
+
+        val textWatcher = object : TextWatcher {
+
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.firstNameAndLastNameChanged(firstNameEt.text.toString(), lastNameEt.text.toString())
+            }
+        }
+
+        firstNameEt.addTextChangedListener(textWatcher)
+        lastNameEt.addTextChangedListener(textWatcher)
     }
 
     private fun setFirstAndLastNameInputFilters() {
@@ -130,6 +144,14 @@ class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
         observe(viewModel.inviteCodeLiveData, Observer {
             invCodeEt.setText(it)
             emptyInvitationLinkTextView.gone()
+        })
+
+        observe(viewModel.nextButtonEnableLiveData, Observer {
+            if (it) {
+                nextBtn.enable()
+            } else {
+                nextBtn.disable()
+            }
         })
     }
 

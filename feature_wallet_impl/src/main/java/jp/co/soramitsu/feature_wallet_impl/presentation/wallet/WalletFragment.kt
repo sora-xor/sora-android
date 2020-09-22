@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import android.os.Bundle
@@ -10,29 +5,35 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
-import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.core_di.holder.FeatureUtils
-import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
+import jp.co.soramitsu.feature_ethereum_api.EthServiceStarter
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.bottomsheet.EventItemDecoration
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.bottomsheet.LockBottomSheetBehavior
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.bottomsheet.RecentEventsAdapter
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.asset.AssetAdapter
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.eth.EthAssetActionsBottomSheet
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.RecentEventsAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
-import kotlinx.android.synthetic.main.fragment_wallet.balanceTv
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.xor.XorAssetActionsBottomSheet
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.xor.XorBalanceBottomSheet
+import kotlinx.android.synthetic.main.fragment_wallet.assetsRv
 import kotlinx.android.synthetic.main.fragment_wallet.contentContainer
-import kotlinx.android.synthetic.main.fragment_wallet.currencyTv
 import kotlinx.android.synthetic.main.fragment_wallet.eventRecyclerView
 import kotlinx.android.synthetic.main.fragment_wallet.howItWorksCard
+// import kotlinx.android.synthetic.main.fragment_wallet.moreView
 import kotlinx.android.synthetic.main.fragment_wallet.pageContainer
 import kotlinx.android.synthetic.main.fragment_wallet.placeholder
 import kotlinx.android.synthetic.main.fragment_wallet.receiveTv
@@ -43,7 +44,11 @@ import javax.inject.Inject
 
 class WalletFragment : BaseFragment<WalletViewModel>() {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
+
+    @Inject
+    lateinit var ethServiceStarter: EthServiceStarter
 
     private lateinit var bottomSheetBehavior: LockBottomSheetBehavior<View>
 
@@ -67,8 +72,6 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
 
     override fun initViews() {
         (activity as BottomBarController).showBottomBar()
-
-        currencyTv.text = Const.SORA_SYMBOL
 
         sendTv.setOnClickListener(
             DebounceClickListener(debounceClickHandler) {
@@ -100,30 +103,57 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
         })
 
         swipeLayout.setOnRefreshListener {
-            viewModel.getBalance(true)
-            viewModel.getTransactionHistory(true)
+            viewModel.refreshAssets()
+            viewModel.updateTransactions()
         }
-
-        pageContainer.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                pageContainer.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                bottomSheetBehavior.peekHeight = pageContainer.measuredHeight - contentContainer.measuredHeight
-            }
-        })
 
         if (bottomSheetExpanded) swipeLayout.isEnabled = false
 
         eventRecyclerView.layoutManager = LinearLayoutManager(activity!!)
         eventRecyclerView.adapter = RecentEventsAdapter(debounceClickHandler, itemListener)
-        eventRecyclerView.addItemDecoration(EventItemDecoration(context!!))
+
+        val scrollListener = object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                val totalItemCount = recyclerView.layoutManager?.itemCount
+                val lastVisiblePosition = (recyclerView.layoutManager as LinearLayoutManager).findLastVisibleItemPosition()
+                if (lastVisiblePosition + 1 == totalItemCount) {
+                    viewModel.loadMoreEvents()
+                }
+            }
+        }
+
+        eventRecyclerView.addOnScrollListener(scrollListener)
+
+//        moreView.setOnClickListener {
+//            viewModel.assetSettingsClicked()
+//        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        pageContainer.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        pageContainer.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
+    }
+
+    private val layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+        bottomSheetBehavior.peekHeight = pageContainer.measuredHeight - contentContainer.measuredHeight
     }
 
     override fun subscribe(viewModel: WalletViewModel) {
-        observe(viewModel.balanceLiveData, Observer {
-            balanceTv.text = it
+        observe(viewModel.assetsLiveData, Observer {
+            if (assetsRv.adapter == null) {
+                assetsRv.layoutManager = LinearLayoutManager(activity!!)
+                assetsRv.adapter = AssetAdapter { viewModel.assetClicked(it) }
+            }
+            (assetsRv.adapter as AssetAdapter).submitList(it)
         })
 
-        observe(viewModel.transactionsLiveData, Observer { transactions ->
+        observe(viewModel.transactionsModelLiveData, Observer { transactions ->
             (eventRecyclerView.adapter as RecentEventsAdapter).submitList(transactions)
             if (transactions.isEmpty()) {
                 placeholder.show()
@@ -140,7 +170,53 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
             swipeLayout.isRefreshing = false
         })
 
-        viewModel.getBalance(false)
-        viewModel.getTransactionHistory(false)
+        observe(viewModel.showEthBottomSheetEvent, EventObserver {
+            openEthAddressInfo(it, viewModel)
+        })
+
+        observe(viewModel.showXorAddressBottomSheetEvent, EventObserver {
+            openXorAddressesInfo()
+        })
+
+        observe(viewModel.showXorBalancesBottomSheetEvent, EventObserver {
+            openXorBalancesInfo(it)
+        })
+
+        observe(viewModel.copiedAddressEvent, EventObserver {
+            Toast.makeText(activity!!, R.string.common_copied, Toast.LENGTH_SHORT).show()
+        })
+
+        observe(viewModel.retryEthRegisterEvent, EventObserver {
+            ethServiceStarter.startForRetry()
+        })
+
+        viewModel.refreshAssets()
+        viewModel.updateTransactions()
+    }
+
+    private fun openXorBalancesInfo(balances: XorBalances) {
+        val bottomSheet = XorBalanceBottomSheet(requireActivity(), balances.sora, balances.eth)
+
+        bottomSheet.show()
+    }
+
+    private fun openXorAddressesInfo() {
+        val bottomSheet = XorAssetActionsBottomSheet(requireActivity(), { assetId ->
+            viewModel.copyAssetAddressClicked(assetId)
+        }, {
+            viewModel.viewXorBalanceClicked()
+        })
+
+        bottomSheet.show()
+    }
+
+    private fun openEthAddressInfo(params: Pair<String, Boolean>, viewModel: WalletViewModel) {
+        val bottomSheet = EthAssetActionsBottomSheet(requireActivity(), params.first, params.second, {
+            viewModel.copyEthClicked()
+        }, {
+            viewModel.retryEthRegisterClicked()
+        })
+
+        bottomSheet.show()
     }
 }

@@ -21,13 +21,25 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
-    }
 
-    dataBinding {
-        enabled = true
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        tst {
+            dimension 'default'
+        }
+
+        staging {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
     }
 }
 
@@ -36,9 +48,8 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_di")
-    implementation project(":core_network_api")
     implementation project(":feature_account_api")
-    implementation project(":feature_did_api")
+    implementation project(':feature_ethereum_api')
     implementation project(":feature_wallet_api")
     implementation project(":feature_onboarding_api")
     implementation project(":feature_main_api")

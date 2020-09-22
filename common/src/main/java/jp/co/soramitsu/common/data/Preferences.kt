@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.data
 
 import android.content.SharedPreferences
@@ -22,8 +17,14 @@ class Preferences(
             .apply()
     }
 
+    fun contains(key: String) = preferences.contains(key)
+
     fun getString(field: String): String {
         return preferences.getString(field, "") ?: ""
+    }
+
+    fun getNullableString(field: String): String? {
+        return preferences.getString(field, null)
     }
 
     @JvmOverloads fun getBoolean(field: String, defaultValue: Boolean = false): Boolean {

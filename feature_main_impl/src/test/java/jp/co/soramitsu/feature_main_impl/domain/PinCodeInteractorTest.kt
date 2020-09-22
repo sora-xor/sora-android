@@ -1,19 +1,16 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.domain
 
 import io.reactivex.Completable
 import io.reactivex.Single
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserValues
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Before
@@ -25,6 +22,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import java.math.BigInteger
 
 @RunWith(MockitoJUnitRunner::class)
 class PinCodeInteractorTest {
@@ -33,6 +31,7 @@ class PinCodeInteractorTest {
 
     @Mock private lateinit var userRepository: UserRepository
     @Mock private lateinit var didRepository: DidRepository
+    @Mock private lateinit var ethereumRepository: EthereumRepository
 
     private lateinit var interactor: PinCodeInteractor
     private val pin = "1234"
@@ -50,7 +49,7 @@ class PinCodeInteractorTest {
 
     @Before fun setUp() {
         given(userRepository.retrievePin()).willReturn(pin)
-        interactor = PinCodeInteractor(userRepository, didRepository)
+        interactor = PinCodeInteractor(userRepository, didRepository, ethereumRepository)
     }
 
     @Test fun `save pin called`() {
@@ -108,10 +107,12 @@ class PinCodeInteractorTest {
 
     @Test fun `run check user flow called false`() {
         val appVersion = AppVersion(true, "https://downloadLink")
+        val ethereumCredentials = EthereumCredentials(BigInteger.ONE)
         given(userRepository.checkAppVersion()).willReturn(Single.just(appVersion))
         given(userRepository.getUser(anyBoolean())).willReturn(Single.just(user))
         given(didRepository.retrieveMnemonic()).willReturn(Single.just("mnemonic"))
         given(didRepository.retrieveUserDdo(anyNonNull())).willReturn(Completable.complete())
+        given(ethereumRepository.getEthCredentials(anyNonNull())).willReturn(Single.just(ethereumCredentials))
 
         interactor.runCheckUserFlow()
             .test()
@@ -121,5 +122,6 @@ class PinCodeInteractorTest {
         verify(didRepository).retrieveMnemonic()
         verify(didRepository).retrieveUserDdo(anyNonNull())
         verify(userRepository).getUser(anyBoolean())
+        verify(ethereumRepository).getEthCredentials("mnemonic")
     }
 }

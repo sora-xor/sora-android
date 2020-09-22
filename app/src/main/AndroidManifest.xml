@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="false"
@@ -51,10 +52,6 @@
         </service>
 
         <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value=""/>
-
-        <meta-data
             android:name="com.onesignal.NotificationAccentColor.DEFAULT"
             android:value="FF00FF00"/>
 
@@ -71,6 +68,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
     </application>
 
 </manifest>

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.util
 
 import org.junit.Assert.assertEquals
@@ -14,13 +9,37 @@ class NumbersFormatterTest {
 
     private val formatWithGroupingDelimeter = "1 000 000.27"
     private val formatAsInteger = "1 000 000"
-    private val formatWithUpRounding = "1 000 000.28"
+    private val formatWithRounding = "1 000 000.27"
 
     lateinit var numbersFormatter: NumbersFormatter
 
     @Before
     fun setUp() {
         numbersFormatter = NumbersFormatter()
+    }
+
+    @Test
+    fun `should hide decimals for zero`() {
+        val precision = 9
+
+        val toFormat = BigDecimal(0)
+
+        val expected = "0"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `should format with arbitrary precision`() {
+        val precision = 9
+
+        val toFormat = BigDecimal(1_000_000.12345678912)
+
+        val expected = "1 000 000.123456789"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
+
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -38,7 +57,7 @@ class NumbersFormatterTest {
     @Test
     fun `format longer double round up string`() {
         val actual = numbersFormatter.format(1000000.276)
-        assertEquals(formatWithUpRounding, actual)
+        assertEquals(formatWithRounding, actual)
     }
 
     @Test
@@ -50,7 +69,7 @@ class NumbersFormatterTest {
     @Test
     fun `format long round up bigdecimal`() {
         val actual = numbersFormatter.formatBigDecimal(BigDecimal(1000000.276))
-        assertEquals(formatWithUpRounding, actual)
+        assertEquals(formatWithRounding, actual)
     }
 
     @Test

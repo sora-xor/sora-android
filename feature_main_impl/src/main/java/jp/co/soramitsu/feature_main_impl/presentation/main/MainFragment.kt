@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
 import android.os.Bundle
@@ -12,22 +7,25 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.lifecycle.Observer
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
-import jp.co.soramitsu.core_di.holder.FeatureUtils
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.AllProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.CompletedProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.FavoriteProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.VotedProjectsFragment
-import jp.co.soramitsu.feature_main_impl.presentation.util.CustomBottomSheetDialog
+import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog
+import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog.MaxVoteType
+import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog.VotableType
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import kotlinx.android.synthetic.main.fragment_main.howItWorksCard
 import kotlinx.android.synthetic.main.fragment_main.projectsTab
 import kotlinx.android.synthetic.main.fragment_main.viewPager
@@ -39,11 +37,17 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
 
     @Inject lateinit var debounceClickHandler: DebounceClickHandler
 
+    @Inject lateinit var numbersFormatter: NumbersFormatter
+
     private var keyboardHelper: KeyboardHelper? = null
 
-    private var voteDialog: CustomBottomSheetDialog? = null
+    private var voteDialog: VoteBottomSheetDialog? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_main, container, false)
     }
 
@@ -70,7 +74,8 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
         projectsTab.setupWithViewPager(viewPager)
 
         for (i in 0 until projectsTab.tabCount) {
-            val tabView = LayoutInflater.from(activity).inflate(R.layout.item_project_tab, null) as TextView
+            val tabView =
+                LayoutInflater.from(activity).inflate(R.layout.item_project_tab, null) as TextView
             tabView.text = adapter.getPageTitle(i)
             projectsTab.getTabAt(i)?.customView = tabView
         }
@@ -83,44 +88,58 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
             votesText.text = it
         })
 
-        observe(viewModel.showVoteProjectLiveData, EventObserver {
-            voteDialog = CustomBottomSheetDialog(
-                activity!!,
-                CustomBottomSheetDialog.MaxVoteType.PROJECT_NEED,
-                it,
-                { viewModel.voteForProject(it) },
-                {
-                    if (keyboardHelper!!.isKeyboardShowing) {
-                        hideSoftKeyboard(activity)
-                    } else {
-                        openSoftKeyboard(it)
-                    }
-                },
-                debounceClickHandler
+        observe(viewModel.showVoteProjectLiveData, EventObserver { maxAllowedVotes ->
+            openVotingSheet(
+                maxAllowedVotes,
+                VotableType.Project(MaxVoteType.VOTABLE_NEED),
+                viewModel::voteForProject
             )
-            voteDialog!!.show()
         })
 
-        observe(viewModel.showVoteUserLiveData, EventObserver {
-            voteDialog = CustomBottomSheetDialog(
-                activity!!,
-                CustomBottomSheetDialog.MaxVoteType.USER_CAN_GIVE,
-                it,
-                { viewModel.voteForProject(it) },
-                {
-                    if (keyboardHelper!!.isKeyboardShowing) {
-                        hideSoftKeyboard(activity)
-                    } else {
-                        openSoftKeyboard(it)
-                    }
-                },
-                debounceClickHandler
+        observe(viewModel.showVoteUserLiveData, EventObserver { maxAllowedVotes ->
+            openVotingSheet(
+                maxAllowedVotes,
+                VotableType.Project(MaxVoteType.USER_CAN_GIVE),
+                viewModel::voteForProject
             )
-            voteDialog!!.show()
+        })
+
+        observe(viewModel.showVoteForReferendumLiveData, EventObserver { maxAllowedVotes ->
+            openVotingSheet(maxAllowedVotes, VotableType.Referendum(true)) {
+                viewModel.voteOnReferendum(it, true)
+            }
+        })
+
+        observe(viewModel.showVoteAgainstReferendumLiveData, EventObserver { maxAllowedVotes ->
+            openVotingSheet(maxAllowedVotes, VotableType.Referendum(false)) {
+                viewModel.voteOnReferendum(it, false)
+            }
         })
 
         viewModel.onActivityCreated()
-        viewModel.loadVotes(false)
+    }
+
+    private fun openVotingSheet(
+        maxAllowedVotes: Int,
+        votableType: VotableType,
+        whenDone: (Long) -> Unit
+    ) {
+        voteDialog = VoteBottomSheetDialog(
+            activity!!,
+            votableType,
+            maxAllowedVotes,
+            { whenDone.invoke(it) },
+            {
+                if (keyboardHelper!!.isKeyboardShowing) {
+                    hideSoftKeyboard(activity)
+                } else {
+                    openSoftKeyboard(it)
+                }
+            },
+            numbersFormatter,
+            debounceClickHandler
+        )
+        voteDialog!!.show()
     }
 
     override fun onResume() {

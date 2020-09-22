@@ -2,6 +2,7 @@ apply from: '../jacoco.gradle'
 
 afterEvaluate {
     task runModuleTests {
+
         Task runTestsTask
         if (project.tasks.findByName('testDevelopDebugUnitTest')) {
             runTestsTask = project.tasks.findByName('testDevelopDebugUnitTest')

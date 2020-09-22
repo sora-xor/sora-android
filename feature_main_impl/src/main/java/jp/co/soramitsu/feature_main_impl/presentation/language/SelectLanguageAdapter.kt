@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.language
 
 import android.view.LayoutInflater
@@ -47,8 +42,8 @@ class LanguageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             })
 
             if (language.isSelected) {
-                languageNameTv.setTextColor(ContextCompat.getColor(context, R.color.lightRed))
-                languageNameTv.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.icon_checked, 0)
+                languageNameTv.setTextColor(ContextCompat.getColor(context, R.color.uikit_lightRed))
+                languageNameTv.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_checkmark, 0)
             } else {
                 languageNameTv.setTextColor(ContextCompat.getColor(context, R.color.lightBlack))
                 languageNameTv.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)

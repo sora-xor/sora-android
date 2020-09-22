@@ -1,22 +1,22 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_api.domain.model
 
+import java.math.BigDecimal
+
 data class Transaction(
-    val transactionId: String,
+    val ethTxHash: String,
+    val soranetTxHash: String,
     val status: Status,
     val assetId: String?,
+    val myAddress: String,
     val details: String,
     val peerName: String,
-    val amount: Double,
+    val amount: BigDecimal,
     val timestamp: Long,
     val peerId: String?,
     val reason: String?,
     val type: Type,
-    val fee: Double
+    val ethFee: BigDecimal,
+    val soranetFee: BigDecimal
 ) {
     enum class Status {
         PENDING,
@@ -28,6 +28,10 @@ data class Transaction(
         INCOMING,
         OUTGOING,
         WITHDRAW,
+        DEPOSIT,
         REWARD
     }
+
+    val timestampInMillis: Long
+        get() = timestamp * 1000L
 }

@@ -23,13 +23,29 @@ android {
         }
     }
 
-    dataBinding {
-        enabled = true
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        tst {
+            dimension 'default'
+        }
+
+        staging {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
     }
-    compileOptions {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
-    }
+}
+
+androidExtensions {
+    experimental = true
 }
 
 dependencies {
@@ -39,12 +55,13 @@ dependencies {
     implementation project(":common")
     implementation project(":feature_main_api")
     implementation project(":feature_account_api")
-    implementation project(":feature_project_api")
+    implementation project(":feature_notification_api")
+    implementation project(":feature_votable_api")
     implementation project(":feature_information_api")
-    implementation project(":feature_did_api")
+    implementation project(':feature_ethereum_api')
     implementation project(":feature_wallet_api")
-    implementation project(":core_network_api")
     implementation project(":feature_onboarding_api")
+    implementation project(":feature_sse_api")
 
     implementation kotlinDep
 
@@ -52,6 +69,8 @@ dependencies {
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
+    implementation swipelayoutDep
+    implementation biometricDep
 
     implementation navigationFragmentDep
     implementation navigationUiDep

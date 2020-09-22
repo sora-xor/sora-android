@@ -1,17 +1,9 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.reactivex.Completable
 import io.reactivex.Single
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.interfaces.WithProgress
-import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
@@ -373,7 +365,7 @@ class PinCodeViewModelTest {
     @Test fun `fingerprint scanner success leads to passphrase screen on OPEN_PASSPHRASE action`() {
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
 
-        pinCodeViewModel.onFingerPrintSuccess()
+        pinCodeViewModel.onAuthenticationSucceeded()
 
         verify(mainRouter).showPassphrase()
 
@@ -384,25 +376,16 @@ class PinCodeViewModelTest {
         given(interactor.isCodeSet()).willReturn(Single.just(true))
 
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
-        pinCodeViewModel.onFingerPrintSuccess()
+        pinCodeViewModel.onAuthenticationSucceeded()
 
         verify(mainRouter).showVerification()
     }
 
     @Test fun `onAuthFailed() set fingerPrintAutFailedLiveData value`() {
-        pinCodeViewModel.onAuthFailed()
+        pinCodeViewModel.onAuthenticationFailed()
 
         pinCodeViewModel.fingerPrintAutFailedLiveData.observeForever {
             assertNotNull(it)
-        }
-    }
-
-    @Test fun `onAuthenticationHelp() set fingerPrintErrorLiveData value`() {
-        val message = "test message"
-        pinCodeViewModel.onAuthenticationHelp(message)
-
-        pinCodeViewModel.fingerPrintAutFailedLiveData.observeForever {
-            assertEquals(message, it)
         }
     }
 
@@ -413,25 +396,5 @@ class PinCodeViewModelTest {
         pinCodeViewModel.fingerPrintAutFailedLiveData.observeForever {
             assertEquals(message, it)
         }
-    }
-
-    @Test fun `showFingerPrintDialog() set showFingerPrintDialogLiveData value`() {
-        pinCodeViewModel.showFingerPrintDialog()
-
-        pinCodeViewModel.fingerPrintDialogVisibilityLiveData.observeForever {
-            assertTrue(it)
-        }
-
-        assertTrue(pinCodeViewModel.fingerPrintDialogVisibilityLiveData.value!!)
-    }
-
-    @Test fun `hideFingerPrintDialog() set hideFingerPrintDialogLiveData value`() {
-        pinCodeViewModel.hideFingerPrintDialog()
-
-        pinCodeViewModel.fingerPrintDialogVisibilityLiveData.observeForever {
-            assertFalse(it)
-        }
-
-        assertFalse(pinCodeViewModel.fingerPrintDialogVisibilityLiveData.value!!)
     }
 }

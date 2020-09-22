@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.di
 
 import androidx.fragment.app.Fragment
@@ -10,6 +5,8 @@ import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
+import java.math.BigDecimal
 import javax.inject.Named
 
 @Subcomponent(
@@ -27,28 +24,28 @@ interface TransactionConfirmationComponent {
         fun withFragment(fragment: Fragment): Builder
 
         @BindsInstance
-        fun withAmount(@Named("amount") amount: Double): Builder
+        fun withPartialAmount(@Named("partialAmount") partialAmount: BigDecimal): Builder
 
         @BindsInstance
-        fun withFee(@Named("fee") fee: Double): Builder
+        fun withAmount(@Named("amount") amount: BigDecimal): Builder
+
+        @BindsInstance
+        fun withMinerFee(@Named("minerFee") fee: BigDecimal): Builder
+
+        @BindsInstance
+        fun withTransactionFee(@Named("transactionFee") fee: BigDecimal): Builder
 
         @BindsInstance
         fun withDescription(@Named("description") description: String): Builder
 
         @BindsInstance
-        fun withEthAddress(@Named("ethAddress") ethAddress: String): Builder
+        fun withPeerFullName(@Named("peerFullName") fullName: String): Builder
 
         @BindsInstance
-        fun withRecipientFullName(@Named("recipientFullName") fullName: String): Builder
+        fun withPeerId(@Named("peerId") peerId: String): Builder
 
         @BindsInstance
-        fun withRecipientId(@Named("recipientId") recipientId: String): Builder
-
-        @BindsInstance
-        fun withNotaryAddress(@Named("notaryAddress") notaryAddress: String): Builder
-
-        @BindsInstance
-        fun withFeeAddress(@Named("feeAddress") feeAddress: String): Builder
+        fun withTransferType(transferType: TransferType): Builder
 
         fun build(): TransactionConfirmationComponent
     }

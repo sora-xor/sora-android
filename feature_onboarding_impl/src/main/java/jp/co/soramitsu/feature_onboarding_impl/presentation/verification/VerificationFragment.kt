@@ -1,10 +1,6 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.verification
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -21,12 +17,14 @@ import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import com.google.android.gms.auth.api.phone.SmsRetriever
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.common.util.ext.disable
+import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.unregisterReceiverIfNeeded
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
@@ -69,8 +67,10 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
         toolbar.setHomeButtonListener { viewModel.backPressed() }
     }
 
+    @SuppressLint("CheckResult")
     override fun initViews() {
         progressDialog = SoraProgressDialog(activity!!)
+        nextBtn.disable()
     }
 
     override fun subscribe(viewModel: VerificationViewModel) {
@@ -90,7 +90,7 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
 
         observe(viewModel.timerFinishedLiveData, EventObserver {
             requestTimeTv.isEnabled = true
-            requestTimeTv.setTextColor(ContextCompat.getColor(activity!!, R.color.lightRed))
+            requestTimeTv.setTextColor(ContextCompat.getColor(activity!!, R.color.uikit_lightRed))
             requestTimeTv.text = getString(R.string.verification_resend_code)
         })
 
@@ -104,6 +104,14 @@ class VerificationFragment : BaseFragment<VerificationViewModel>() {
 
         observe(viewModel.resetCodeLiveData, EventObserver {
             codeEt.setText("")
+        })
+
+        observe(viewModel.nextButtonEnableLiveData, Observer {
+            if (it) {
+                nextBtn.enable()
+            } else {
+                nextBtn.disable()
+            }
         })
 
         viewModel.setCountryIso(arguments!!.getString(KEY_COUNTRY_ISO, ""))

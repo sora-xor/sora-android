@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -11,12 +6,14 @@ import io.reactivex.Completable
 import io.reactivex.CompletableTransformer
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_project_api.domain.model.Project
+import jp.co.soramitsu.feature_votable_api.domain.model.project.Project
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertNotNull
@@ -50,15 +47,17 @@ class MainViewModelTest {
     @Mock private lateinit var formattedVotesObserver: Observer<String>
     @Mock private lateinit var showVoteDialogObserver: Observer<Event<Int>>
 
-    private val projectPageSize = 50
-
     private lateinit var mainViewModel: MainViewModel
 
+    private val votesSubject = BehaviorSubject.createDefault(BigDecimal.ZERO)
+
     @Before fun setUp() {
-        given(interactor.getFavoriteProjects()).willReturn(Observable.just(emptyList()))
-        given(interactor.getCompletedProjects()).willReturn(Observable.just(emptyList()))
-        given(interactor.getVotedProjects()).willReturn(Observable.just(emptyList()))
-        given(interactor.getAllProjects()).willReturn(Observable.just(emptyList()))
+        given(interactor.observeFavoriteVotables()).willReturn(Observable.just(emptyList()))
+        given(interactor.observeFinishedVotables()).willReturn(Observable.just(emptyList()))
+        given(interactor.observeVotedVotables()).willReturn(Observable.just(emptyList()))
+        given(interactor.observeOpenVotables()).willReturn(Observable.just(emptyList()))
+        given(interactor.observeVotes()).willReturn(votesSubject)
+
 
         given(preloader.preloadCompletableCompose()).willReturn(CompletableTransformer { upstream -> upstream })
 
@@ -75,13 +74,16 @@ class MainViewModelTest {
     @Test fun `calling loadVotes function fill votesLiveData and then format it`() {
         val votes = BigDecimal(5000.0)
         val formattedVotes = "5000"
-        given(interactor.getVotes(anyBoolean())).willReturn(Single.just(votes))
+
+        given(interactor.syncVotes()).willReturn(Completable.complete())
+
         given(numbersFormatter.formatInteger(votes)).willReturn(formattedVotes)
         mainViewModel.votesFormattedLiveData.observeForever(formattedVotesObserver)
 
-        mainViewModel.loadVotes(true)
+        mainViewModel.syncVotes()
+        votesSubject.onNext(votes)
 
-        verify(interactor).getVotes(true)
+        verify(interactor).syncVotes()
         verify(formattedVotesObserver).onChanged(eq(formattedVotes))
     }
 
@@ -94,20 +96,22 @@ class MainViewModelTest {
         val projectId = "test project id"
         val selectedProject = mock(Project::class.java)
 
-        given(interactor.getVotes(anyBoolean())).willReturn(Single.just(votes))
+        given(interactor.syncVotes()).willReturn(Completable.complete())
         given(numbersFormatter.formatInteger(votes)).willReturn(formattedVotes)
         mainViewModel.votesFormattedLiveData.observeForever(formattedVotesObserver)
 
-        mainViewModel.loadVotes(true)
+        mainViewModel.syncVotes()
+        votesSubject.onNext(votes)
 
         given(selectedProject.id).willReturn(projectId)
         given(interactor.voteForProject(anyString(), anyLong())).willReturn(Completable.complete())
         mainViewModel.showVoteProjectLiveData.observeForever(showVoteDialogObserver)
 
-        mainViewModel.voteClicked(selectedProject)
+        mainViewModel.voteForProjectClicked(selectedProject)
 
         given(numbersFormatter.formatInteger(votesLeft)).willReturn(votesLeftStr)
         mainViewModel.voteForProject(votesToVote)
+        votesSubject.onNext(votes - votesToVote.toBigDecimal())
 
         verify(showVoteDialogObserver).onChanged(anyNonNull())
         verify(interactor).voteForProject(anyString(), eq(votesToVote))
@@ -121,7 +125,7 @@ class MainViewModelTest {
 
         given(project.id).willReturn(projectId)
 
-        mainViewModel.projectClick(project)
+        mainViewModel.projectClicked(project)
 
         verify(router).showProjectDetails(projectId)
     }
@@ -172,66 +176,37 @@ class MainViewModelTest {
     }
 
     @Test fun `check update all projects calls interactor updateAllProjects() function`() {
-        given(interactor.updateAllProjects(projectPageSize)).willReturn(Single.just(3))
+        given(interactor.syncOpenVotables()).willReturn(Completable.complete())
 
-        mainViewModel.updateAllProjects()
+        mainViewModel.syncOpenedVotables()
 
-        verify(interactor).updateAllProjects(projectPageSize)
+        verify(interactor).syncOpenVotables()
     }
-
-    @Test fun `check load more all projects calls interactor fetchRemoteAllProjects() function`() {
-        given(interactor.loadMoreAllProjects(projectPageSize, 0)).willReturn(Single.just(3))
-
-        mainViewModel.loadMoreAllProjects()
-
-        verify(interactor).loadMoreAllProjects(projectPageSize, 0)
-    }
+    
 
     @Test fun `check update favorite projects calls interactor updateFavoriteProjects() function`() {
-        given(interactor.updateFavoriteProjects(projectPageSize)).willReturn(Single.just(3))
+        given(interactor.syncFavoriteVotables()).willReturn(Completable.complete())
 
-        mainViewModel.updateFavoriteProjects()
+        mainViewModel.syncFavoriteVotables()
 
-        verify(interactor).updateFavoriteProjects(projectPageSize)
+        verify(interactor).syncFavoriteVotables()
     }
 
-    @Test fun `check load more favorite projects calls interactor fetchRemoteFavoriteProjects() function`() {
-        given(interactor.loadMoreFavoriteProjects(projectPageSize, 0)).willReturn(Single.just(3))
-
-        mainViewModel.loadMoreFavoriteProjects()
-
-        verify(interactor).loadMoreFavoriteProjects(projectPageSize, 0)
-    }
 
     @Test fun `check update voted projects calls interactor updateVotedProjects() function`() {
-        given(interactor.updateVotedProjects(projectPageSize)).willReturn(Single.just(3))
+        given(interactor.syncVotedVotables()).willReturn(Completable.complete())
 
-        mainViewModel.updateVotedProjects()
+        mainViewModel.syncVotedVotables()
 
-        verify(interactor).updateVotedProjects(projectPageSize)
+        verify(interactor).syncVotedVotables()
     }
 
-    @Test fun `check load more voted projects calls interactor fetchRemoteVotedProjects() function`() {
-        given(interactor.loadMoreVotedProjects(projectPageSize, 0)).willReturn(Single.just(3))
-
-        mainViewModel.loadMoreVotedProjects()
-
-        verify(interactor).loadMoreVotedProjects(projectPageSize, 0)
-    }
 
     @Test fun `check update completed projects calls interactor updateCompletedProjects() function`() {
-        given(interactor.updateCompletedProjects(projectPageSize)).willReturn(Single.just(3))
+        given(interactor.syncCompletedVotables()).willReturn(Completable.complete())
 
-        mainViewModel.updateCompletedProjects()
+        mainViewModel.syncCompletedVotables()
 
-        verify(interactor).updateCompletedProjects(projectPageSize)
-    }
-
-    @Test fun `check load more completed projects calls interactor fetchRemoteCompletedProjects() function`() {
-        given(interactor.loadMoreCompletedProjects(projectPageSize, 0)).willReturn(Single.just(3))
-
-        mainViewModel.loadMoreCompletedProjects()
-
-        verify(interactor).loadMoreCompletedProjects(projectPageSize, 0)
+        verify(interactor).syncCompletedVotables()
     }
 }

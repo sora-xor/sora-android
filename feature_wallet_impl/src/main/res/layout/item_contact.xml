@@ -19,8 +19,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        android:visibility="visible"
         tools:text="SL" />
 
+    <ImageView
+        android:id="@+id/contactIconImageView"
+        android:layout_width="@dimen/user_icon_size"
+        android:layout_height="@dimen/user_icon_size"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:src="@drawable/ic_xor_red_16"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="invisible" />
 
     <TextView
         android:id="@+id/contactNameTextView"
@@ -31,6 +43,8 @@
         android:layout_marginTop="@dimen/margin_padding_description"
         android:layout_marginEnd="@dimen/margin_padding_content_by_side"
         android:layout_marginBottom="@dimen/margin_padding_description"
+        android:singleLine="true"
+        android:ellipsize="middle"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/contactRightArrowImageView"
         app:layout_constraintStart_toEndOf="@id/contactIconTextView"
@@ -57,4 +71,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,22 +1,18 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.faq
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebViewClient
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import kotlinx.android.synthetic.main.fragment_terms.toolbar
 import kotlinx.android.synthetic.main.fragment_terms.webView
 
@@ -46,7 +42,9 @@ class FaqFragment : BaseFragment<FaqViewModel>() {
 
     override fun subscribe(viewModel: FaqViewModel) {}
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView() {
+        webView.settings.javaScriptEnabled = true
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                 super.onPageFinished(view, url)

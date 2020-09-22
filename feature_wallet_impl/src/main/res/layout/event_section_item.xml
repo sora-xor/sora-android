@@ -1,46 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootEvent"
-    android:background="?selectableItemBackground"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="@dimen/margin_padding_by_side"
-    android:paddingBottom="@dimen/margin_padding_by_side"
+    android:background="?selectableItemBackground"
     android:gravity="center_vertical"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:paddingTop="@dimen/margin_padding_list_element"
+    android:paddingBottom="@dimen/margin_padding_list_element"
+    android:paddingStart="@dimen/margin_padding_by_side"
+    android:paddingEnd="@dimen/margin_padding_by_side">
 
     <TextView
-        android:id="@+id/eventItemDescriptionTextView"
-        style="@style/TextAppearance.Soramitsu.Body1"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        app:autoSizeTextType="uniform"
+        android:id="@+id/eventPeerInitialsTextView"
+        android:layout_width="@dimen/side_button_icon_size"
+        android:layout_height="@dimen/side_button_icon_size"
+        android:layout_gravity="center"
+        android:background="@drawable/circle_background_stroked"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/eventItemStatusImageView"
-        tools:text="John Smith" />
+        tools:text="SL" />
 
     <ImageView
-        android:id="@+id/eventItemStatusImageView"
+        android:id="@+id/eventStatusIconImageView"
+        android:layout_width="@dimen/side_button_icon_size"
+        android:layout_height="@dimen/side_button_icon_size"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:src="@drawable/ic_error_30"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_padding_list_element"
+        android:gravity="center_vertical"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/eventItemTitleTextView"
+            style="@style/TextAppearance.Soramitsu.Body1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:includeFontPadding="false"
+            app:layout_constraintEnd_toStartOf="@id/eventItemAmountTextView"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="John Smith" />
+
+        <TextView
+            android:id="@+id/eventItemDescriptionTextView"
+            style="@style/TextAppearance.Soramitsu.Body1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:singleLine="true"
+            android:textColor="@color/grey"
+            android:textSize="@dimen/text_size_b3"
+            android:visibility="visible"
+            android:includeFontPadding="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/eventItemDateTextView"
+            app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
+            app:layout_constraintTop_toBottomOf="@id/eventItemTitleTextView"
+            tools:text="John Smith" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/eventItemAmountTextView"
-        tools:src="@drawable/ic_plus" />
+        android:layout_weight="0"
+        android:layout_marginStart="@dimen/margin_padding_list_element"
+        android:gravity="center_vertical|end"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/eventItemAmountTextView"
-        style="@style/TextAppearance.Soramitsu.Body1"
-        android:gravity="end"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="$500" />
+        <TextView
+            android:id="@+id/eventItemAmountTextView"
+            style="@style/TextAppearance.Soramitsu.Body1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:includeFontPadding="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/eventItemTitleTextView"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="$ 100" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/eventItemDateTextView"
+            style="@style/TextAppearance.Soramitsu.Body1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:singleLine="true"
+            android:textColor="@color/grey"
+            android:textSize="@dimen/text_size_b3"
+            android:includeFontPadding="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/eventItemAmountTextView"
+            tools:text="10/09/2020 10:09:07" />
+    </LinearLayout>
+
+</LinearLayout>

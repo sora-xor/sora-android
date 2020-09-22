@@ -1,16 +1,12 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.di
 
 import dagger.Component
-import jp.co.soramitsu.common.di.app.CommonApi
+import jp.co.soramitsu.common.data.network.NetworkApi
+import jp.co.soramitsu.common.di.api.CommonApi
+import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.core_di.holder.scope.FeatureScope
-import jp.co.soramitsu.core_network_api.di.NetworkApi
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
-import jp.co.soramitsu.feature_did_api.di.DidFeatureApi
+import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingComponent
@@ -63,6 +59,7 @@ interface OnboardingFeatureComponent : OnboardingFeatureApi {
         dependencies = [
             AccountFeatureApi::class,
             DidFeatureApi::class,
+            EthereumFeatureApi::class,
             MainFeatureApi::class,
             WalletFeatureApi::class,
             NetworkApi::class,

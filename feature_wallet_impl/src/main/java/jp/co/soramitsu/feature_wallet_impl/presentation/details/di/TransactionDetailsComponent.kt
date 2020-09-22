@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.details.di
 
 import androidx.fragment.app.Fragment
@@ -10,7 +5,9 @@ import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment
+import java.math.BigDecimal
 import javax.inject.Named
 
 @Subcomponent(
@@ -28,19 +25,25 @@ interface TransactionDetailsComponent {
         fun withFragment(fragment: Fragment): Builder
 
         @BindsInstance
-        fun withRecipientId(@Named("recipientId") recipientId: String): Builder
+        fun withMyAccountId(@Named("myAccountId") myAccountId: String): Builder
 
         @BindsInstance
-        fun withRecipientFullName(@Named("recipientFullName") recipientFullName: String): Builder
+        fun withPeerId(@Named("peerId") peerId: String): Builder
 
         @BindsInstance
-        fun withTransactionId(@Named("transactionId") transactionId: String): Builder
+        fun withPeerFullName(@Named("peerFullName") peerFullName: String): Builder
+
+        @BindsInstance
+        fun withSoranetTransactionId(@Named("soranetTransactionId") transactionId: String): Builder
+
+        @BindsInstance
+        fun withethTransactionId(@Named("ethTransactionId") transactionId: String): Builder
 
         @BindsInstance
         fun withStatus(@Named("status") status: String): Builder
 
         @BindsInstance
-        fun withIsFromList(@Named("isFromList") isFromList: Boolean): Builder
+        fun withAssetId(@Named("assetId") assetId: String): Builder
 
         @BindsInstance
         fun withTransactionType(transcationType: Transaction.Type): Builder
@@ -49,16 +52,22 @@ interface TransactionDetailsComponent {
         fun withDate(date: Long): Builder
 
         @BindsInstance
-        fun withAmount(@Named("amount") amount: Double): Builder
+        fun withAmount(@Named("amount") amount: BigDecimal): Builder
 
         @BindsInstance
-        fun withTotalAmount(@Named("totalAmount") totalAmount: Double): Builder
+        fun withTotalAmount(@Named("totalAmount") totalAmount: BigDecimal): Builder
 
         @BindsInstance
-        fun withFee(@Named("fee") totalAmount: Double): Builder
+        fun withTransactionFee(@Named("transactionFee") fee: BigDecimal): Builder
+
+        @BindsInstance
+        fun withMinerFee(@Named("minerFee") fee: BigDecimal): Builder
 
         @BindsInstance
         fun withDescription(@Named("description") description: String): Builder
+
+        @BindsInstance
+        fun withTransferType(@Named("transferType") transferType: TransferType): Builder
 
         fun build(): TransactionDetailsComponent
     }

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.mappers
 
 import com.google.gson.Gson
@@ -16,6 +11,7 @@ import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
@@ -159,7 +155,7 @@ class ActivityGsonConverterTest {
             )
 
         given(numbersFormatter.formatInteger(anyNonNull())).willReturn("1")
-        given(numbersFormatter.formatBigDecimal(anyNonNull())).willReturn("1")
+        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("1")
 
         assertEquals(activities, activityGsonConverter.convertActivityItems(eventsJsonList, projectJson, usersJson, "did:sora:45802d5bd158878b292c"))
     }

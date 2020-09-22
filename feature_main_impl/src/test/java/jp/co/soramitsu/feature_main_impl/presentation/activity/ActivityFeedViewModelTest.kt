@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.activity
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -58,8 +53,8 @@ class ActivityFeedViewModelTest {
 
         given(resourceManager.getString(R.string.common_yesterday)).willReturn("Yesterday")
 
-        given(dateTimeFormatter.date2Day(anyNonNull(), anyString(), anyString())).willReturn("Today")
-        given(dateTimeFormatter.formatTime(anyNonNull())).willReturn(todayTime)
+        given(dateTimeFormatter.dateToDayWithoutCurrentYear(anyNonNull(), anyString(), anyString())).willReturn("Today")
+        given(dateTimeFormatter.formatTimeWithoutSeconds(anyNonNull())).willReturn(todayTime)
 
         activityFeedViewModel = ActivityFeedViewModel(interactor, router, preloader, resourceManager, dateTimeFormatter)
     }

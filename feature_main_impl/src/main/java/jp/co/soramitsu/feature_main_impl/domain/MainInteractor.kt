@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.domain
 
 import io.reactivex.Completable
@@ -12,27 +7,34 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.resourses.Language
+import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.ActivityFeed
 import jp.co.soramitsu.feature_account_api.domain.model.AddInvitationCase
+import jp.co.soramitsu.feature_account_api.domain.model.Language
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
 import jp.co.soramitsu.feature_information_api.domain.interfaces.InformationRepository
 import jp.co.soramitsu.feature_information_api.domain.model.InformationContainer
-import jp.co.soramitsu.feature_project_api.domain.interfaces.ProjectRepository
-import jp.co.soramitsu.feature_project_api.domain.model.Project
-import jp.co.soramitsu.feature_project_api.domain.model.ProjectDetails
-import jp.co.soramitsu.feature_project_api.domain.model.VotesHistory
+import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
+import jp.co.soramitsu.feature_votable_api.domain.interfaces.ProjectRepository
+import jp.co.soramitsu.feature_votable_api.domain.interfaces.ReferendumRepository
+import jp.co.soramitsu.feature_votable_api.domain.interfaces.VotesDataSource
+import jp.co.soramitsu.feature_votable_api.domain.model.Votable
+import jp.co.soramitsu.feature_votable_api.domain.model.VotesHistory
+import jp.co.soramitsu.feature_votable_api.domain.model.project.ProjectDetails
+import jp.co.soramitsu.feature_votable_api.domain.model.referendum.Referendum
 import java.math.BigDecimal
 import javax.inject.Inject
 
 class MainInteractor @Inject constructor(
     private val userRepository: UserRepository,
     private val projectRepository: ProjectRepository,
+    private val referendumRepository: ReferendumRepository,
+    private val votesDataSource: VotesDataSource,
     private val didRepository: DidRepository,
-    private val informationRepository: InformationRepository
+    private val informationRepository: InformationRepository,
+    private val notificationRepository: NotificationRepository
 ) {
 
     fun getMnemonic(): Single<String> {
@@ -56,77 +58,102 @@ class MainInteractor @Inject constructor(
 
     fun getReputationWithLastVotes(updateCached: Boolean): Single<Pair<Reputation, BigDecimal>> {
         return userRepository.getUserReputation(updateCached)
-            .zipWith(projectRepository.getLastVotesFromCache(), BiFunction { reputation, lastVotes ->
-                Pair(reputation, lastVotes)
-            })
+            .zipWith(
+                projectRepository.getLastVotesFromCache(),
+                BiFunction { reputation, lastVotes ->
+                    Pair(reputation, lastVotes)
+                })
     }
 
-    fun updateProject(projectId: String): Completable {
+    fun syncProject(projectId: String): Completable {
         return projectRepository.updateProject(projectId)
     }
 
-    fun getProjectById(projectId: String): Observable<ProjectDetails> {
+    fun syncReferendum(referendumId: String): Completable {
+        return referendumRepository.syncReferendum(referendumId)
+    }
+
+    fun observeProject(projectId: String): Observable<ProjectDetails> {
         return projectRepository.getProjectById(projectId)
     }
 
-    fun getAllProjects(): Observable<List<Project>> {
-        return projectRepository.getAllProjects()
+    fun observeReferendum(referendumId: String): Observable<Referendum> {
+        return referendumRepository.observeReferendum(referendumId)
     }
 
-    fun updateAllProjects(pageSize: Int): Single<Int> {
-        return projectRepository.fetchRemoteAllProjects(true, pageSize, 0)
+    fun observeOpenVotables(): Observable<List<Votable>> {
+        return mergeVotables(
+            projectRepository.observeOpenedProjects(),
+            referendumRepository.observeOpenedReferendums()
+        ).map {
+            it.sortedBy { it.deadline }
+        }
     }
 
-    fun loadMoreAllProjects(pageSize: Int, offset: Int): Single<Int> {
-        return projectRepository.fetchRemoteAllProjects(false, pageSize, offset)
+    fun syncOpenVotables(): Completable {
+        return Completable.mergeArray(
+            referendumRepository.syncOpenedReferendums(),
+            projectRepository.syncOpenedProjects(true).ignoreElement()
+        )
     }
 
-    fun getVotedProjects(): Observable<List<Project>> {
-        return projectRepository.getVotedProjects()
+    fun observeVotedVotables(): Observable<List<Votable>> {
+        return mergeVotables(
+            projectRepository.observeVotedProjects(),
+            referendumRepository.observeVotedReferendums()
+        )
     }
 
-    fun updateVotedProjects(pageSize: Int): Single<Int> {
-        return projectRepository.fetchRemoteVotedProjects(true, pageSize, 0)
+    fun syncVotedVotables(): Completable {
+        return Completable.mergeArray(
+            referendumRepository.syncVotedReferendums(),
+            projectRepository.syncVotedProjects(true).ignoreElement()
+        )
     }
 
-    fun loadMoreVotedProjects(pageSize: Int, offset: Int): Single<Int> {
-        return projectRepository.fetchRemoteVotedProjects(false, pageSize, offset)
+    fun observeFavoriteVotables(): Observable<List<Votable>> {
+        return projectRepository.observeFavouriteProjects().map { it as List<Votable> }
     }
 
-    fun getFavoriteProjects(): Observable<List<Project>> {
-        return projectRepository.getFavoriteProjects()
+    fun syncFavoriteVotables(): Completable {
+        return projectRepository.syncFavoriteProjects(true)
+            .ignoreElement()
     }
 
-    fun updateFavoriteProjects(pageSize: Int): Single<Int> {
-        return projectRepository.fetchRemoteFavoriteProjects(true, pageSize, 0)
+    fun observeFinishedVotables(): Observable<List<Votable>> {
+        return mergeVotables(
+            referendumRepository.observeFinishedReferendums(),
+            projectRepository.observeFinishedProjects()
+        ).map {
+            it.sortedByDescending { it.statusUpdateTime }
+        }
     }
 
-    fun loadMoreFavoriteProjects(pageSize: Int, offset: Int): Single<Int> {
-        return projectRepository.fetchRemoteFavoriteProjects(false, pageSize, offset)
-    }
-
-    fun getCompletedProjects(): Observable<List<Project>> {
-        return projectRepository.getFinishedProjects()
-    }
-
-    fun updateCompletedProjects(pageSize: Int): Single<Int> {
-        return projectRepository.fetchRemoteFinishedProjects(true, pageSize, 0)
-    }
-
-    fun loadMoreCompletedProjects(pageSize: Int, offset: Int): Single<Int> {
-        return projectRepository.fetchRemoteFinishedProjects(false, pageSize, offset)
+    fun syncCompletedVotables(): Completable {
+        return Completable.mergeArray(
+            referendumRepository.syncFinishedReferendums(),
+            projectRepository.syncFinishedProjects(true).ignoreElement()
+        )
     }
 
     fun voteForProject(projectId: String, voteNum: Long): Completable {
         return projectRepository.voteForProject(projectId, voteNum)
     }
 
-    fun getVotes(updateCached: Boolean): Single<BigDecimal> {
-        return projectRepository.getVotes(updateCached)
+    fun voteForReferendum(referendumId: String, votes: Long): Completable {
+        return referendumRepository.voteForReferendum(referendumId, votes)
+    }
+
+    fun voteAgainstReferendum(referendumId: String, votes: Long): Completable {
+        return referendumRepository.voteAgainstReferendum(referendumId, votes)
+    }
+
+    fun syncVotes(): Completable {
+        return votesDataSource.syncVotes()
     }
 
     fun updatePushTokenIfNeeded(): Completable {
-        return userRepository.updatePushTokenIfNeeded()
+        return notificationRepository.updatePushTokenIfNeeded()
     }
 
     fun addProjectToFavorites(projectId: String): Completable {
@@ -145,15 +172,27 @@ class MainInteractor @Inject constructor(
         return informationRepository.getReputationContent(updateCached)
     }
 
-    fun getVotesHistory(updateCached: Boolean, historyOffset: Int, votesPerPage: Int): Single<List<VotesHistory>> {
+    fun getVotesHistory(
+        updateCached: Boolean,
+        historyOffset: Int,
+        votesPerPage: Int
+    ): Single<List<VotesHistory>> {
         return projectRepository.getVotesHistory(votesPerPage, historyOffset, updateCached)
     }
 
-    fun getActivityFeed(updateCached: Boolean, activityPerPage: Int, activitiesOffset: Int): Single<List<ActivityFeed>> {
+    fun getActivityFeed(
+        updateCached: Boolean,
+        activityPerPage: Int,
+        activitiesOffset: Int
+    ): Single<List<ActivityFeed>> {
         return userRepository.getActivityFeed(activityPerPage, activitiesOffset, updateCached)
     }
 
-    fun getActivityFeedWithAnnouncement(updateCached: Boolean, activityPerPage: Int, activitiesOffset: Int): Single<List<Any>> {
+    fun getActivityFeedWithAnnouncement(
+        updateCached: Boolean,
+        activityPerPage: Int,
+        activitiesOffset: Int
+    ): Single<List<Any>> {
         return userRepository.getActivityFeed(activityPerPage, activitiesOffset, updateCached)
             .zipWith(userRepository.getAnnouncements(updateCached),
                 BiFunction { activityFeed, announcement ->
@@ -205,4 +244,15 @@ class MainInteractor @Inject constructor(
     fun getSelectedLanguage(): Single<Language> {
         return userRepository.getSelectedLanguage()
     }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun mergeVotables(vararg sources: Observable<out List<Votable>>): Observable<List<Votable>> {
+        return Observable.combineLatest(sources) { combined ->
+            combined.map { it as List<Votable> }
+                .flatten()
+        }
+    }
+
+    fun observeVotes(): Observable<BigDecimal> = votesDataSource.observeVotes()
+        .map(::BigDecimal)
 }

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.invite
 
 import android.os.Bundle
@@ -15,6 +10,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
@@ -22,12 +18,11 @@ import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_main_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import kotlinx.android.synthetic.main.fragment_invite.acceptedInvitesRecyclerview
 import kotlinx.android.synthetic.main.fragment_invite.addInvitationTv
 import kotlinx.android.synthetic.main.fragment_invite.addInvitationView

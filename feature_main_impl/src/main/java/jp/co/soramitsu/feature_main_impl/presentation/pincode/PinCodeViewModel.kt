@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.lifecycle.LiveData
@@ -19,7 +14,6 @@ import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerPrintListener
 import java.util.concurrent.TimeUnit
 
 class PinCodeViewModel(
@@ -27,7 +21,7 @@ class PinCodeViewModel(
     private val mainRouter: MainRouter,
     private val progress: WithProgress,
     private val maxPinCodeLength: Int
-) : BaseViewModel(), WithProgress by progress, FingerPrintListener {
+) : BaseViewModel(), WithProgress by progress {
 
     companion object {
         private const val COMPLETE_PIN_CODE_DELAY: Long = 12
@@ -54,6 +48,9 @@ class PinCodeViewModel(
 
     private val _checkInviteLiveData = MutableLiveData<Event<Unit>>()
     val checkInviteLiveData: LiveData<Event<Unit>> = _checkInviteLiveData
+
+    private val _ethServiceEvent = MutableLiveData<Event<Unit>>()
+    val ethServiceEvent: LiveData<Event<Unit>> = _ethServiceEvent
 
     init {
         pinCodeProgressLiveData.addSource(inputCodeLiveData) {
@@ -164,6 +161,7 @@ class PinCodeViewModel(
         disposables.add(
             interactor.savePin(code)
                 .subscribe({
+                    _ethServiceEvent.value = Event(Unit)
                     mainRouter.popBackStack()
                     _checkInviteLiveData.value = Event(Unit)
                 }, {
@@ -180,6 +178,7 @@ class PinCodeViewModel(
                         mainRouter.popBackStack()
                         mainRouter.showPassphrase()
                     } else {
+                        _ethServiceEvent.value = Event(Unit)
                         mainRouter.showVerification()
                     }
                 }, {
@@ -215,32 +214,21 @@ class PinCodeViewModel(
         }
     }
 
-    override fun onFingerPrintSuccess() {
+    fun onAuthenticationError(errString: String) {
+        fingerPrintErrorLiveData.value = Event(errString)
+    }
+
+    fun onAuthenticationSucceeded() {
         if (PinCodeAction.OPEN_PASSPHRASE == action) {
             mainRouter.popBackStack()
             mainRouter.showPassphrase()
         } else {
+            _ethServiceEvent.value = Event(Unit)
             mainRouter.showVerification()
         }
     }
 
-    override fun onAuthFailed() {
+    fun onAuthenticationFailed() {
         fingerPrintAutFailedLiveData.value = Event(Unit)
-    }
-
-    override fun onAuthenticationHelp(message: String) {
-        fingerPrintErrorLiveData.value = Event(message)
-    }
-
-    override fun onAuthenticationError(message: String) {
-        fingerPrintErrorLiveData.value = Event(message)
-    }
-
-    override fun showFingerPrintDialog() {
-        fingerPrintDialogVisibilityLiveData.value = true
-    }
-
-    override fun hideFingerPrintDialog() {
-        fingerPrintDialogVisibilityLiveData.value = false
     }
 }

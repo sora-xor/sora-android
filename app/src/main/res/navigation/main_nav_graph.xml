@@ -43,9 +43,14 @@
 
     <fragment
         android:id="@+id/projectDetailFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.DetailFragment"
-        android:label="fragment_detail"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.project.DetailProjectFragment"
+        android:label="fragment_detail_project"
         tools:layout="@layout/fragment_project_detail" />
+
+    <fragment android:id="@+id/referendumDetailFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment"
+        android:label="fragment_detail_referendum"
+        tools:layout="@layout/fragment_referendum_detail" />
 
     <fragment
         android:id="@+id/personalDataEditFragment"
@@ -108,12 +113,6 @@
         tools:layout="@layout/fragment_transfer_amount" />
 
     <fragment
-        android:id="@+id/withdrawalAmountFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.withdraw.WithdrawalAmountFragment"
-        android:label="fragment_withdrawal_amount"
-        tools:layout="@layout/fragment_withdrawal_amount" />
-
-    <fragment
         android:id="@+id/transactionDetails"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment"
         android:label="fragment_transaction_details"
@@ -147,6 +146,12 @@
         android:id="@+id/aboutFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.about.AboutFragment"
         android:label="fragment_about"
+        tools:layout="@layout/fragment_about" />
+
+    <fragment
+        android:id="@+id/assetSettingsFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.AssetSettingsFragment"
+        android:label="fragment_asset_settings"
         tools:layout="@layout/fragment_about" />
 
 </navigation>

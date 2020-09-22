@@ -1,26 +1,22 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.phone
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputFilter
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.Button
+import androidx.lifecycle.Observer
 import androidx.navigation.NavController
-import com.jakewharton.rxbinding2.widget.RxTextView
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.enable
-import jp.co.soramitsu.core_di.holder.FeatureUtils
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
@@ -37,8 +33,6 @@ import javax.inject.Inject
 class PhoneNumberFragment : BaseFragment<PhoneNumberViewModel>() {
 
     @Inject lateinit var debounceClickHandler: DebounceClickHandler
-
-    private lateinit var primaryButton: Button
 
     companion object {
         private const val KEY_COUNTRY_ISO = "country_iso"
@@ -69,6 +63,8 @@ class PhoneNumberFragment : BaseFragment<PhoneNumberViewModel>() {
     }
 
     override fun initViews() {
+        nextBtn.disable()
+
         (activity as OnboardingActivity).window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         toolbar.setHomeButtonListener { viewModel.backButtonClick() }
@@ -85,16 +81,27 @@ class PhoneNumberFragment : BaseFragment<PhoneNumberViewModel>() {
 
         viewModel.setCountryIso(arguments!!.getString(KEY_COUNTRY_ISO, ""))
 
-        RxTextView.textChanges(phoneEt)
-            .subscribe {
-                if (it.isEmpty()) {
-                    primaryButton.disable()
-                } else {
-                    primaryButton.enable()
-                }
+        val textWatcher = object : TextWatcher {
+
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.onPhoneChanged(s!!)
             }
+        }
+
+        phoneEt.addTextChangedListener(textWatcher)
     }
 
     override fun subscribe(viewModel: PhoneNumberViewModel) {
+        observe(viewModel.nextButtonEnableLiveData, Observer {
+            if (it) {
+                nextBtn.enable()
+            } else {
+                nextBtn.disable()
+            }
+        })
     }
 }

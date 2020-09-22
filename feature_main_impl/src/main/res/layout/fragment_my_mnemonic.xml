@@ -130,7 +130,7 @@
         android:paddingTop="@dimen/x1"
         android:paddingBottom="@dimen/x1"
         android:text="@string/common_passphrase_save_or_send"
-        android:textColor="@color/lightRed"
+        android:textColor="@color/uikit_lightRed"
         android:textSize="17sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

@@ -1,60 +1,122 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.domain
 
 import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
+import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
+import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
+import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithdrawalMeta
 import java.math.BigDecimal
-import javax.inject.Inject
 
-class WalletInteractorImpl @Inject constructor(
+class WalletInteractorImpl(
     private val walletRepository: WalletRepository,
-    private val didRepository: DidRepository
+    private val ethRepository: EthereumRepository,
+    private val accountSettings: AccountSettings
 ) : WalletInteractor {
 
-    companion object {
-        private const val TRANSACTION_COUNT = 50
+    override fun getAssets(): Observable<List<Asset>> {
+        return Observable.combineLatest(
+            walletRepository.getAssets().subscribeOn(Schedulers.io()),
+            ethRepository.observeEthRegisterState().subscribeOn(Schedulers.io()),
+            BiFunction<List<Asset>, EthRegisterState.State, List<Asset>> { assets, ethRegisterState ->
+                val soraAsset = assets[0]
+
+                val ethAssetState = when (ethRegisterState) {
+                    EthRegisterState.State.NONE -> Asset.State.ASSOCIATING
+                    EthRegisterState.State.IN_PROGRESS -> Asset.State.ASSOCIATING
+                    EthRegisterState.State.REGISTERED -> Asset.State.NORMAL
+                    EthRegisterState.State.FAILED -> Asset.State.ERROR
+                }
+                val ethAsset = assets[1].copy(state = ethAssetState)
+                val xorErc20Asset = assets[2].copy(state = ethAssetState)
+
+                mutableListOf<Asset>().apply {
+                    add(soraAsset)
+//                    add(ethAsset) // временно убран
+                    add(xorErc20Asset)
+                }
+            }
+        )
     }
 
-    private var transactionHistoryOffset = 0
+    override fun updateAssets(): Completable {
+        return walletRepository.updateAssets(accountSettings)
+            .andThen(
+                accountSettings.mnemonic()
+                    .flatMap { ethRepository.getEthCredentials(it) }
+                    .flatMap { ethCredentials ->
+                        ethRepository.getEthWalletAddress(ethCredentials)
+                            .flatMap { ethWalletAddress ->
+                                ethRepository.getXorTokenAddress(ethCredentials)
+                                    .map { Triple(ethCredentials, ethWalletAddress, it) }
+                            }
+                    }
+                    .flatMapCompletable { ethRepository.updateXorErc20AndEthBalance(it.first, it.second, it.third) }
+
+            )
+    }
 
     override fun getAccountId(): Single<String> {
-        return didRepository.getAccountId()
+        return accountSettings.getAccountId()
     }
 
-    override fun getBalance(updateCached: Boolean): Single<BigDecimal> {
-        return didRepository.retrieveKeypair()
-            .flatMap { keyPair ->
-                didRepository.getAccountId()
-                    .flatMap { accountId -> walletRepository.getWalletBalance(updateCached, accountId, keyPair) }
+    override fun getBalance(assetId: String): Observable<AssetBalance> {
+        return walletRepository.getBalance(assetId)
+    }
+
+    override fun getXorAndXorErcBalanceAmount(): Observable<BigDecimal> {
+        return walletRepository.getBalance(AssetHolder.SORA_XOR.id)
+            .flatMap { xorBalance ->
+                walletRepository.getBalance(AssetHolder.SORA_XOR_ERC_20.id)
+                    .map { mutableListOf(xorBalance, it) }
+            }
+            .map {
+                it.fold<AssetBalance, BigDecimal>(BigDecimal.ZERO) { amount, assetBalance ->
+                    amount + assetBalance.balance
+                }
             }
     }
 
-    override fun getTransactionHistory(updateCached: Boolean, adding: Boolean): Single<List<Transaction>> {
-        if (!adding) {
-            transactionHistoryOffset = 0
-        }
-        return walletRepository.getTransactions(updateCached, transactionHistoryOffset, TRANSACTION_COUNT)
-            .doOnSuccess { transactionHistoryOffset += it.size }
-            .subscribeOn(Schedulers.io())
+    override fun getTransactions(): Observable<List<Transaction>> {
+        return accountSettings.getAccountId()
+            .flatMap { accountId ->
+                accountSettings.mnemonic()
+                    .flatMap {
+                        ethRepository.getEthCredentials(it)
+                            .flatMap {
+                                ethRepository.getEthWalletAddress(it)
+                                    .map { Pair(accountId, it) }
+                            }
+                    }
+            }
+            .flatMapObservable { walletRepository.getTransactions(it.first, it.second) }
+    }
+
+    override fun updateTransactions(pageSize: Int): Single<Int> {
+        return accountSettings.getAccountId()
+            .flatMap {
+                walletRepository.fetchRemoteTransactions(pageSize, 0, it)
+            }
+    }
+
+    override fun loadMoreTransactions(pageSize: Int, offset: Int): Single<Int> {
+        return accountSettings.getAccountId()
+            .flatMap { walletRepository.fetchRemoteTransactions(pageSize, offset, it) }
     }
 
     override fun findOtherUsersAccounts(search: String): Single<List<Account>> {
-        return didRepository.getAccountId()
+        return accountSettings.getAccountId()
             .flatMap { userAccountId ->
                 walletRepository.findAccount(search)
                     .map { it.filter { !areAccountsSame(userAccountId, it.accountId) } }
@@ -70,18 +132,17 @@ class WalletInteractorImpl @Inject constructor(
     }
 
     override fun getQrCodeAmountString(amount: String): Single<String> {
-        return didRepository.getAccountId()
+        return accountSettings.getAccountId()
             .flatMap { accountId -> walletRepository.getQrAmountString(accountId, amount) }
             .subscribeOn(Schedulers.io())
     }
 
-    override fun transferAmount(amount: String, accountId: String, description: String, fee: String): Single<String> {
-        return didRepository.getAccountId()
+    override fun transferAmount(amount: String, accountId: String, description: String, fee: String): Single<Pair<String, String>> {
+        return accountSettings.getAccountId()
             .flatMap { myAccountId ->
-                didRepository.retrieveKeypair()
-                    .flatMap { keyPair ->
-                        walletRepository.transfer(amount, myAccountId, accountId, description, fee, keyPair)
-                    }
+                accountSettings.getKeyPair()
+                    .flatMap { keyPair -> walletRepository.transfer(amount, myAccountId, accountId, description, fee, keyPair) }
+                    .map { Pair(it, myAccountId) }
             }
     }
 
@@ -89,26 +150,20 @@ class WalletInteractorImpl @Inject constructor(
         return walletRepository.getContacts(updateCached)
     }
 
-    override fun withdrawFlow(amount: String, ethAddress: String, notaryAddress: String, feeAddress: String, feeAmount: String): Completable {
-        return didRepository.getAccountId()
-            .flatMapCompletable { accountId ->
-                didRepository.retrieveKeypair()
-                    .flatMapCompletable { keyPair ->
-                        walletRepository.withdrawEth(amount, accountId, notaryAddress, ethAddress, feeAddress, feeAmount, keyPair)
-                    }
-            }
+    override fun getTransferMeta(): Observable<TransferMeta> {
+        return walletRepository.getTransferMeta()
     }
 
-    override fun getBalanceAndWithdrawalMeta(): Single<Pair<BigDecimal, WithdrawalMeta>> {
-        return getBalance(true)
-            .zipWith(walletRepository.getWithdrawalMeta(),
-                BiFunction { balance, withdrawalMeta -> Pair(balance, withdrawalMeta) })
+    override fun getWithdrawMeta(): Observable<TransferMeta> {
+        return walletRepository.getWithdrawMeta()
     }
 
-    override fun getBalanceAndTransferMeta(updateCached: Boolean): Single<Pair<BigDecimal, TransferMeta>> {
-        return getBalance(updateCached)
-            .zipWith(walletRepository.getTransferMeta(updateCached),
-                BiFunction { balance, transferMeta -> Pair(balance, transferMeta) })
+    override fun updateTransferMeta(): Completable {
+        return walletRepository.updateTransferMeta()
+    }
+
+    override fun updateWithdrawMeta(): Completable {
+        return walletRepository.updateWithdrawMeta()
     }
 
     override fun processQr(contents: String): Single<Pair<BigDecimal, Account>> {
@@ -117,7 +172,7 @@ class WalletInteractorImpl @Inject constructor(
                 walletRepository.findAccount(qr.accountId)
                     .map {
                         if (it.isEmpty()) {
-                            throw SoraException.businessError(ResponseCode.QR_USER_NOT_FOUND)
+                            throw QrException.userNotFoundError()
                         } else {
                             it.first()
                         }
@@ -126,7 +181,7 @@ class WalletInteractorImpl @Inject constructor(
                         checkAccountIsMine(account)
                             .map { isMine ->
                                 if (isMine) {
-                                    throw SoraException.businessError(ResponseCode.SENDING_TO_MYSELF)
+                                    throw QrException.sendingToMyselfError()
                                 } else {
                                     account
                                 }
@@ -146,7 +201,43 @@ class WalletInteractorImpl @Inject constructor(
     }
 
     private fun checkAccountIsMine(account: Account): Single<Boolean> {
-        return didRepository.getAccountId()
+        return accountSettings.getAccountId()
             .map { areAccountsSame(account.accountId, it) }
+    }
+
+    override fun getBlockChainExplorerUrl(transactionHash: String): Single<String> {
+        return walletRepository.getBlockChainExplorerUrl(transactionHash)
+    }
+
+    override fun getEtherscanExplorerUrl(transactionHash: String): Single<String> {
+        return ethRepository.getBlockChainExplorerUrl(transactionHash)
+    }
+
+    override fun calculateDefaultMinerFeeInEthWithdraw(): Single<BigDecimal> {
+        return calculateDefaultMinerFeeInEth(true)
+    }
+
+    override fun calculateDefaultMinerFeeInEthTransfer(): Single<BigDecimal> {
+        return calculateDefaultMinerFeeInEth(false)
+    }
+
+    private fun calculateDefaultMinerFeeInEth(isWithdrawal: Boolean): Single<BigDecimal> {
+        return if (isWithdrawal) {
+            ethRepository.calculateXorErc20WithdrawFee()
+        } else {
+            ethRepository.calculateXorErc20TransferFee()
+        }
+    }
+
+    override fun hideAssets(assetIds: List<String>): Completable {
+        return walletRepository.hideAssets(assetIds)
+    }
+
+    override fun displayAssets(assetIds: List<String>): Completable {
+        return walletRepository.displayAssets(assetIds)
+    }
+
+    override fun updateAssetPositions(assetPositions: Map<String, Int>): Completable {
+        return walletRepository.updateAssetPositions(assetPositions)
     }
 }

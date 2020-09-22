@@ -1,12 +1,12 @@
 # General
 -keepattributes SourceFile,LineNumberTable,*Annotation*,EnclosingMethod,Signature,Exceptions,InnerClasses
 
-#Fabric
+#Firebase Crashlytics
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
 -keep,includedescriptorclasses public class * extends java.lang.Exception
--keep,includedescriptorclasses class com.crashlytics.** { *; }
--dontwarn com.crashlytics.**
+-keep,includedescriptorclasses class com.google.firebase.crashlytics.** { *; }
+-dontwarn com.google.firebase.crashlytics.**
 
 # Animal Sniffer compileOnly dependency to ensure APIs are compatible with older versions of Java.
 -dontwarn org.codehaus.mojo.animal_sniffer.*

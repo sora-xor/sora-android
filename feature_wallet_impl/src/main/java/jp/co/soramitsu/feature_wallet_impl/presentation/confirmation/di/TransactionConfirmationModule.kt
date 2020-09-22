@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.di
 
 import androidx.fragment.app.Fragment
@@ -18,11 +13,15 @@ import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
+import java.math.BigDecimal
 import javax.inject.Named
 
 @Module(
@@ -46,22 +45,24 @@ class TransactionConfirmationModule {
     @IntoMap
     @ViewModelKey(TransactionConfirmationViewModel::class)
     fun provideViewModel(
-        interactor: WalletInteractor,
+        walletInteractor: WalletInteractor,
+        ethereumInteractor: EthereumInteractor,
         router: WalletRouter,
         progress: WithProgress,
         resourceManager: ResourceManager,
         numbersFormatter: NumbersFormatter,
-        @Named("amount") amount: Double,
-        @Named("fee") fee: Double,
+        textFormatter: TextFormatter,
+        @Named("partialAmount") partialAmount: BigDecimal,
+        @Named("amount") amount: BigDecimal,
+        @Named("minerFee") minerFee: BigDecimal,
+        @Named("transactionFee") transactionFee: BigDecimal,
         @Named("description") description: String,
-        @Named("ethAddress") ethAddress: String,
-        @Named("recipientFullName") recipientFullName: String,
-        @Named("recipientId") recipientId: String,
-        @Named("notaryAddress") notaryAddress: String,
-        @Named("feeAddress") feeAddress: String
+        @Named("peerFullName") peerFullName: String,
+        @Named("peerId") peerId: String,
+        transferType: TransferType
     ): ViewModel {
-        return TransactionConfirmationViewModel(interactor, router, progress, resourceManager,
-            numbersFormatter, amount, fee, description, ethAddress, recipientFullName, recipientId, notaryAddress, feeAddress)
+        return TransactionConfirmationViewModel(walletInteractor, ethereumInteractor, router, progress, resourceManager,
+            numbersFormatter, textFormatter, partialAmount, amount, minerFee, transactionFee, description, peerFullName, peerId, transferType)
     }
 
     @Provides

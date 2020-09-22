@@ -4,13 +4,13 @@
     <color name="circleBgGrey">#7f7f7f</color>
     <color name="darkGreyBlue">#24494e</color>
     <color name="grey">#797979</color>
+    <color name="strokeGrey">#9B9B9B</color>
     <color name="lighterGrey">#DBDBDB</color>
     <color name="transparentGrey">#32797979</color>
     <color name="greyBlue">#899f9e</color>
     <color name="titleDarkGreyBlue">#035C5A</color>
     <color name="indicatorDot">#c4d4d3</color>
     <color name="lightBlack">#2c2c2c</color>
-    <color name="lightRed">#d0021b</color>
     <color name="greyBackground">#f2f7f7</color>
     <color name="inviteListBackground">#631c504e</color>
     <color name="invitesDividerColor">#e1e1e1</color>
@@ -18,7 +18,7 @@
     <color name="cardBackground">#408ab3b1</color>
     <color name="seekbarColor">#f0f7f7</color>
     <color name="oceanBlue">#73a8a6</color>
-    <color name="black">#000000</color>
+    <color name="black">#2D2926</color>
     <color name="white">#f5f5f5</color>
     <color name="lightGrey">#799292</color>
     <color name="green">#1c504e</color>

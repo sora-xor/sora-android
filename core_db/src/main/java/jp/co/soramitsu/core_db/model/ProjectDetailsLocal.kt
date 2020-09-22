@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.core_db.model
 
 import androidx.room.Embedded
@@ -11,12 +6,12 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import jp.co.soramitsu.core_db.converters.ProjectStatusConverter
 import jp.co.soramitsu.core_db.converters.ProjectUrlConverter
-import jp.co.soramitsu.core_db.converters.ProjectVotesConverter
+import jp.co.soramitsu.core_db.converters.BigDecimalConverter
 import java.math.BigDecimal
 import java.net.URL
 
 @Entity(tableName = "project_details")
-@TypeConverters(ProjectStatusConverter::class, ProjectUrlConverter::class, ProjectVotesConverter::class)
+@TypeConverters(ProjectStatusConverter::class, ProjectUrlConverter::class, BigDecimalConverter::class)
 data class ProjectDetailsLocal(
     @PrimaryKey val id: String,
     val image: URL,
@@ -26,7 +21,7 @@ data class ProjectDetailsLocal(
     val description: String,
     val detailedDescription: String,
     val deadlineMillis: Long,
-    val fundingCurrent: Long,
+    val fundingCurrent: Double,
     val fundingTarget: Long,
     val votedFriendsCount: Int,
     val favoriteCount: Int,

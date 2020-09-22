@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="AssetView">
+        <attr name="assetIcon" format="integer" />
+        <attr name="assetBalanceText" format="string" />
+        <attr name="assetName" format="string" />
+        <attr name="assetIconViewBackgroundColor" format="color" />
+        <attr name="assetBlockChainName" format="string" />
+    </declare-styleable>
+    <declare-styleable name="AssetSettingsToolbar">
+        <attr name="leftActionText" format="string" />
+        <attr name="rightActionText" format="string" />
+        <attr name="titleText" format="string" />
+    </declare-styleable>
+</resources>

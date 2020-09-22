@@ -12,7 +12,7 @@
         android:textColor="@color/subtitleGrey"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_padding_content_by_side"
-        android:text="@string/wallet_amount"
+        android:text="@string/amount_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

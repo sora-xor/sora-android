@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
 import androidx.lifecycle.MediatorLiveData
@@ -14,9 +9,14 @@ import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.setValueIfEmpty
+import jp.co.soramitsu.common.util.ext.subscribeToError
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_project_api.domain.model.Project
+import jp.co.soramitsu.feature_votable_api.domain.model.Votable
+import jp.co.soramitsu.feature_votable_api.domain.model.project.Project
+import jp.co.soramitsu.feature_votable_api.domain.model.referendum.Referendum
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 
@@ -28,36 +28,28 @@ class MainViewModel(
 ) : BaseViewModel(), WithPreloader by preloader {
 
     companion object {
-        private const val PROJECTS_PER_PAGE = 50
         private const val PROJECT_CHANGE_FAV_DELAY = 500L
     }
 
-    private var allProjectsOffset = 0
-    private var allProjectsLoading = false
-    private var allProjectsLastPageLoaded = false
-
-    private var completedProjectsOffset = 0
-    private var completedProjectsLoading = false
-    private var completedProjectsLastPageLoaded = false
-
-    private var favoriteProjectsOffset = 0
-    private var favoriteProjectsLoading = false
-    private var favoriteProjectsLastPageLoaded = false
-
-    private var votedProjectsOffset = 0
-    private var votedProjectsLoading = false
-    private var votedProjectsLastPageLoaded = false
-
     val votesFormattedLiveData = MediatorLiveData<String>()
-    val allProjectsLiveData = MutableLiveData<List<Project>>()
-    val favoriteProjectsLiveData = MutableLiveData<List<Project>>()
-    val votedProjectsLiveData = MutableLiveData<List<Project>>()
-    val completedProjectsLiveData = MutableLiveData<List<Project>>()
+
+    val allProjectsLiveData = MutableLiveData<List<Votable>>()
+    val allProjectsResyncEvent = MutableLiveData<Event<Unit>>()
+    val favoriteProjectsLiveData = MutableLiveData<List<Votable>>()
+    val favoriteProjectsResyncEvent = MutableLiveData<Event<Unit>>()
+    val votedProjectsLiveData = MutableLiveData<List<Votable>>()
+    val votedProjectsResyncEvent = MutableLiveData<Event<Unit>>()
+    val completedProjectsLiveData = MutableLiveData<List<Votable>>()
+    val completedProjectsResyncEvent = MutableLiveData<Event<Unit>>()
+
     val showVoteProjectLiveData = MutableLiveData<Event<Int>>()
     val showVoteUserLiveData = MutableLiveData<Event<Int>>()
 
+    val showVoteForReferendumLiveData = MutableLiveData<Event<Int>>()
+    val showVoteAgainstReferendumLiveData = MutableLiveData<Event<Int>>()
+
     private val votesLiveData = MutableLiveData<BigDecimal>()
-    private val selectedProjectLiveData = MutableLiveData<Project>()
+    private var selectedVotable: Votable? = null
 
     private val favProjectsHandlingSet = HashSet<String>()
 
@@ -67,7 +59,16 @@ class MainViewModel(
         }
 
         disposables.add(
-            interactor.getFavoriteProjects()
+            interactor.observeVotes()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    votesLiveData.value = it
+                }, ::onError)
+        )
+
+        disposables.add(
+            interactor.observeFavoriteVotables()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -78,7 +79,7 @@ class MainViewModel(
         )
 
         disposables.addAll(
-            interactor.getCompletedProjects()
+            interactor.observeFinishedVotables()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -89,7 +90,7 @@ class MainViewModel(
         )
 
         disposables.addAll(
-            interactor.getVotedProjects()
+            interactor.observeVotedVotables()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -100,7 +101,7 @@ class MainViewModel(
         )
 
         disposables.addAll(
-            interactor.getAllProjects()
+            interactor.observeOpenVotables()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
@@ -111,40 +112,45 @@ class MainViewModel(
         )
     }
 
-    fun loadVotes(updateCached: Boolean) {
+    fun syncVotes() {
         disposables.add(
-            interactor.getVotes(updateCached)
+            interactor.syncVotes()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    votesLiveData.value = it
-                    if (!updateCached) loadVotes(true)
-                }, {
-                    it.printStackTrace()
-                })
+                .subscribeToError(::onError)
         )
     }
 
     fun voteForProject(votesNumber: Long) {
-        selectedProjectLiveData.value?.let {
-            disposables.add(
-                interactor.voteForProject(it.id, votesNumber)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .compose(preloadCompletableCompose())
-                    .subscribe({
-                        votesLiveData.value?.let {
-                            val currentVotes = it.toLong() - votesNumber
-                            votesLiveData.value = currentVotes.toBigDecimal()
-                        }
-                    }, {
-                        onError(it)
-                    })
-            )
-        }
+        val selectedProject = selectedVotable as? Project ?: return
+
+        disposables.add(
+            interactor.voteForProject(selectedProject.id, votesNumber)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .compose(preloadCompletableCompose())
+                .subscribeToError(::onError)
+        )
     }
 
-    fun projectClick(projectVm: Project) {
+    fun voteOnReferendum(votes: Long, toSupport: Boolean) {
+        val selectedReferendum = selectedVotable as? Referendum ?: return
+
+        val action = if (toSupport) {
+            interactor.voteForReferendum(selectedReferendum.id, votes)
+        } else {
+            interactor.voteAgainstReferendum(selectedReferendum.id, votes)
+        }
+
+        disposables.add(
+            action.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .compose(preloadCompletableCompose())
+                .subscribeToError(::onError)
+        )
+    }
+
+    fun projectClicked(projectVm: Project) {
         router.showProjectDetails(projectVm.id)
     }
 
@@ -168,6 +174,111 @@ class MainViewModel(
         }
     }
 
+    fun btnHelpClicked() {
+        router.showFaq()
+    }
+
+    fun votesClick() {
+        router.showVotesHistory()
+    }
+
+    fun voteForProjectClicked(project: Project) {
+        selectedVotable = project
+
+        votesLiveData.value?.let { userVotes ->
+            if (hasEnoughVotes(userVotes)) {
+                showProjectVoteDialog(project, userVotes)
+            } else {
+                onError(R.string.votes_zero_error_message)
+            }
+        }
+    }
+
+    private fun showProjectVoteDialog(project: Project, userVotes: BigDecimal) {
+        val votesLeft = project.getVotesLeft()
+        if (userVotes.toInt() < votesLeft) {
+            showVoteUserLiveData.value = Event(userVotes.toInt())
+        } else {
+            showVoteProjectLiveData.value = Event(votesLeft)
+        }
+    }
+
+    fun voteOnReferendumClicked(referendum: Referendum, toSupport: Boolean) {
+        selectedVotable = referendum
+
+        votesLiveData.value?.let {
+            if (hasEnoughVotes(it)) {
+                showReferendumVoteDialog(toSupport, it.toInt())
+            } else {
+                onError(R.string.votes_zero_error_message)
+            }
+        }
+    }
+
+    private fun showReferendumVoteDialog(toSupport: Boolean, userVotes: Int) {
+        if (toSupport) {
+            showVoteForReferendumLiveData.value = Event(userVotes)
+        } else {
+            showVoteAgainstReferendumLiveData.value = Event(userVotes)
+        }
+    }
+
+    fun referendumClicked(referendum: Referendum) {
+        router.showReferendumDetails(referendum.id)
+    }
+
+    fun syncOpenedVotables() {
+        disposables.addAll(
+            interactor.syncOpenVotables()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    allProjectsResyncEvent.setValueIfEmpty(Event(Unit))
+                }, {
+                    logException(it)
+                })
+        )
+    }
+
+    fun syncFavoriteVotables() {
+        disposables.addAll(
+            interactor.syncFavoriteVotables()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    favoriteProjectsResyncEvent.setValueIfEmpty(Event(Unit))
+                }, {
+                    logException(it)
+                })
+        )
+    }
+
+    fun syncVotedVotables() {
+        disposables.addAll(
+            interactor.syncVotedVotables()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    votedProjectsResyncEvent.setValueIfEmpty(Event(Unit))
+                }, {
+                    logException(it)
+                })
+        )
+    }
+
+    fun syncCompletedVotables() {
+        disposables.addAll(
+            interactor.syncCompletedVotables()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    completedProjectsResyncEvent.setValueIfEmpty(Event(Unit))
+                }, {
+                    logException(it)
+                })
+        )
+    }
+
     private fun addProjectToFavorites(project: Project) {
         if (favProjectsHandlingSet.contains(project.id)) {
             return
@@ -186,6 +297,8 @@ class MainViewModel(
                 })
         )
     }
+
+    private fun hasEnoughVotes(votes: BigDecimal) = votes >= BigDecimal.ONE
 
     private fun removeProjectFromFavorites(project: Project) {
         if (favProjectsHandlingSet.contains(project.id)) {
@@ -206,179 +319,12 @@ class MainViewModel(
         )
     }
 
-    fun btnHelpClicked() {
-        router.showFaq()
-    }
-
-    fun votesClick() {
-        router.showVotesHistory()
-    }
-
-    fun voteClicked(project: Project) {
-        selectedProjectLiveData.value = project
-        votesLiveData.value?.let { userVotes ->
-            val votesLeft = (project.fundingTarget - project.fundingCurrent).toInt()
-            if (userVotes.toInt() < votesLeft) {
-                showVoteUserLiveData.value = Event(userVotes.toInt())
-            } else {
-                showVoteProjectLiveData.value = Event(votesLeft)
-            }
-        }
-    }
-
-    fun updateAllProjects() {
-        allProjectsOffset = 0
-        allProjectsLastPageLoaded = false
-
-        disposables.addAll(
-            interactor.updateAllProjects(PROJECTS_PER_PAGE)
-                .doOnSuccess { allProjectsOffset += 1 }
+    fun onDeadline(id: String) {
+        disposables.add(
+            interactor.syncReferendum(id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ elementsCount ->
-                    if (elementsCount < PROJECTS_PER_PAGE) {
-                        allProjectsLastPageLoaded = true
-                    }
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun updateFavoriteProjects() {
-        favoriteProjectsOffset = 0
-        favoriteProjectsLastPageLoaded = false
-
-        disposables.addAll(
-            interactor.updateFavoriteProjects(PROJECTS_PER_PAGE)
-                .doOnSuccess { favoriteProjectsOffset += 1 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ elementsCount ->
-                    if (elementsCount < PROJECTS_PER_PAGE) {
-                        favoriteProjectsLastPageLoaded = true
-                    }
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun updateVotedProjects() {
-        votedProjectsOffset = 0
-        votedProjectsLastPageLoaded = false
-
-        disposables.addAll(
-            interactor.updateVotedProjects(PROJECTS_PER_PAGE)
-                .doOnSuccess { votedProjectsOffset += 1 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ elementsCount ->
-                    if (elementsCount < PROJECTS_PER_PAGE) {
-                        votedProjectsLastPageLoaded = true
-                    }
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun updateCompletedProjects() {
-        completedProjectsOffset = 0
-        completedProjectsLastPageLoaded = false
-
-        disposables.addAll(
-            interactor.updateCompletedProjects(PROJECTS_PER_PAGE)
-                .doOnSuccess { completedProjectsOffset += 1 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    if (completedProjectsLiveData.value!!.size < PROJECTS_PER_PAGE) {
-                        completedProjectsLastPageLoaded = true
-                    }
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun loadMoreAllProjects() {
-        if (allProjectsLoading || allProjectsLastPageLoaded) return
-
-        disposables.addAll(
-            interactor.loadMoreAllProjects(PROJECTS_PER_PAGE, allProjectsOffset)
-                .doOnSuccess { elementsCount ->
-                    allProjectsOffset += 1
-                    allProjectsLastPageLoaded = elementsCount < PROJECTS_PER_PAGE
-                }
-                .doOnSubscribe { allProjectsLoading = true }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    allProjectsLoading = false
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun loadMoreCompletedProjects() {
-        if (completedProjectsLoading || completedProjectsLastPageLoaded) return
-
-        disposables.addAll(
-            interactor.loadMoreCompletedProjects(PROJECTS_PER_PAGE, completedProjectsOffset)
-                .doOnSuccess { elementsCount ->
-                    completedProjectsOffset += 1
-                    completedProjectsLastPageLoaded = elementsCount < PROJECTS_PER_PAGE
-                }
-                .doOnSubscribe { completedProjectsLoading = true }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    completedProjectsLoading = false
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun loadMoreFavoriteProjects() {
-        if (favoriteProjectsLoading || favoriteProjectsLastPageLoaded) return
-
-        disposables.addAll(
-            interactor.loadMoreFavoriteProjects(PROJECTS_PER_PAGE, favoriteProjectsOffset)
-                .doOnSuccess { elementsCount ->
-                    favoriteProjectsOffset += 1
-                    favoriteProjectsLastPageLoaded = elementsCount < PROJECTS_PER_PAGE
-                }
-                .doOnSubscribe { favoriteProjectsLoading = true }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    favoriteProjectsLoading = false
-                }, {
-                    logException(it)
-                })
-        )
-    }
-
-    fun loadMoreVotedProjects() {
-        if (votedProjectsLoading || votedProjectsLastPageLoaded) return
-
-        disposables.addAll(
-            interactor.loadMoreVotedProjects(PROJECTS_PER_PAGE, votedProjectsOffset)
-                .doOnSuccess { elementsCount ->
-                    votedProjectsOffset += 1
-                    votedProjectsLastPageLoaded = elementsCount < PROJECTS_PER_PAGE
-                }
-                .doOnSubscribe { votedProjectsLoading = true }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    votedProjectsLoading = false
-                }, {
-                    logException(it)
-                })
+                .subscribe()
         )
     }
 }

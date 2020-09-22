@@ -1,1 +1,5 @@
-include ':app', ':common', ':feature_onboarding_api', ':feature_onboarding_impl', ':core_network_api', ':core_network_impl', ':feature_main_api', ':feature_main_impl', ':feature_account_api', ':feature_account_impl', ':feature_did_api', ':feature_did_impl', ':feature_project_api', ':feature_project_impl', ':feature_information_api', ':feature_information_impl', ':feature_wallet_api', ':feature_wallet_impl', ':core_di', ':test_shared', ':core_db', ':uikit'
+include ':app', ':common', ':feature_onboarding_api', ':feature_onboarding_impl', ':feature_main_api', ':feature_main_impl', ':feature_account_api', ':feature_account_impl', ':feature_votable_api', ':feature_votable_impl', ':feature_information_api', ':feature_information_impl', ':feature_wallet_api', ':feature_wallet_impl', ':core_di', ':test_shared', ':core_db', ':uikit', ':feature_ethereum_api', ':feature_ethereum_impl'
+include ':feature_notification_api'
+include ':feature_notification_impl'
+include ':feature_sse_api'
+include ':feature_sse_impl'

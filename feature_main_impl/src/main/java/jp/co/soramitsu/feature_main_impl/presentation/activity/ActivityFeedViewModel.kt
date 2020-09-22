@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.activity
 
 import androidx.lifecycle.MutableLiveData
@@ -114,11 +109,11 @@ class ActivityFeedViewModel(
         feed.forEachIndexed { index, item ->
             if (item is ActivityFeed) {
                 if (lastDate == 0L) {
-                    val dateStr = dateTimeFormatter.date2Day(item.issuedAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
+                    val dateStr = dateTimeFormatter.dateToDayWithoutCurrentYear(item.issuedAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
                     list.add(ActivityDate(dateStr))
                 } else {
                     if (differentDays(lastDate, item.issuedAt.time)) {
-                        val dateStr = dateTimeFormatter.date2Day(item.issuedAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
+                        val dateStr = dateTimeFormatter.dateToDayWithoutCurrentYear(item.issuedAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
                         list.add(ActivityDate(dateStr))
                     }
                 }
@@ -160,7 +155,7 @@ class ActivityFeedViewModel(
                 title,
                 description,
                 votesString,
-                dateTimeFormatter.formatTime(issuedAt),
+                dateTimeFormatter.formatTimeWithoutSeconds(issuedAt),
                 iconDrawable,
                 listItemType,
                 voteIconDrawable

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.navigation
 
 import android.os.Bundle
@@ -11,14 +6,15 @@ import androidx.navigation.NavOptions
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_main_impl.presentation.detail.DetailFragment
+import jp.co.soramitsu.feature_main_impl.presentation.detail.project.DetailProjectFragment
+import jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment
 import jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
-import jp.co.soramitsu.feature_wallet_impl.presentation.withdraw.WithdrawalAmountFragment
 import jp.co.soramitsu.sora.R
 import java.math.BigDecimal
 import java.util.Date
@@ -58,7 +54,11 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showProjectDetails(projectId: String) {
-        navController?.navigate(R.id.projectDetailFragment, DetailFragment.createBundle(projectId))
+        navController?.navigate(R.id.projectDetailFragment, DetailProjectFragment.createBundle(projectId))
+    }
+
+    override fun showReferendumDetails(referendumId: String) {
+        navController?.navigate(R.id.referendumDetailFragment, DetailReferendumFragment.createBundle(referendumId))
     }
 
     override fun showReputation() {
@@ -77,6 +77,10 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.faqFragment)
     }
 
+    override fun showAssetSettings() {
+        navController?.navigate(R.id.assetSettingsFragment)
+    }
+
     override fun showVotesHistory() {
         navController?.navigate(R.id.votesFragment)
     }
@@ -89,16 +93,20 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.receiveFragment)
     }
 
-    override fun showTransferAmount(recipientId: String, fullName: String, amount: BigDecimal) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundle(recipientId, fullName, amount))
+    override fun showXorTransferAmount(recipientId: String, fullName: String, amount: BigDecimal) {
+        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForXorTransfer(recipientId, fullName, amount))
     }
 
-    override fun showTransactionConfirmation(recipientId: String, fullName: String, amount: Double, description: String, fee: Double) {
-        navController?.navigate(R.id.transactionConfirmation, TransactionConfirmationFragment.createBundle(recipientId, fullName, amount, description, fee))
+    override fun showXorERCTransferAmount(address: String, amount: BigDecimal) {
+        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForXorErcTransfer(address, "", amount))
     }
 
-    override fun showTransactionConfirmationViaEth(amount: Double, ethAddress: String, notaryAddress: String, feeAddress: String, fee: Double) {
-        navController?.navigate(R.id.transactionConfirmation, TransactionConfirmationFragment.createBundleEth(amount, ethAddress, notaryAddress, feeAddress, fee))
+    override fun showXorWithdrawToErc(etherAddress: String, amount: BigDecimal) {
+        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForWithdraw(etherAddress, "", amount))
+    }
+
+    override fun showTransactionConfirmation(peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, description: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType) {
+        navController?.navigate(R.id.transactionConfirmation, TransactionConfirmationFragment.createBundle(peerId, fullName, partialAmount, amount, description, minerFee, transactionFee, transferType))
     }
 
     override fun showUnsupportedScreen(appUrl: String) {
@@ -117,10 +125,6 @@ class Navigator : MainRouter, WalletRouter {
         navController?.popBackStack(R.id.walletFragment, false)
     }
 
-    override fun showWithdrawalAmountViaEth(balance: String) {
-        navController?.navigate(R.id.withdrawalAmountFragment, WithdrawalAmountFragment.createBundle(balance))
-    }
-
     override fun showVerification() {
         navController?.navigate(R.id.userVerificationFragment, null, NavOptions.Builder().setPopUpTo(R.id.mainFragment, false).build())
     }
@@ -134,55 +138,23 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showTransactionDetailsFromList(
-        recipientId: String,
+        myAccountId: String,
+        peerId: String,
         recipientFullName: String,
-        transactionId: String,
-        amount: Double,
+        ethTransactionId: String,
+        soranetTransactionId: String,
+        amount: BigDecimal,
         status: String,
+        assetId: String,
         dateTime: Date,
         type: Transaction.Type,
         description: String,
-        fee: Double,
-        totalAmount: Double
+        minerFee: BigDecimal,
+        transactionFee: BigDecimal,
+        totalAmount: BigDecimal
     ) {
-        val bundle = TransactionDetailsFragment.createBundleFromList(
-            recipientId, recipientFullName, transactionId, amount, status, dateTime, type, description, fee, totalAmount
-        )
-        navController?.navigate(R.id.transactionDetails, bundle)
-    }
-
-    override fun showTransferTransactionDetails(
-        recipientId: String,
-        recipientFullName: String,
-        transactionId: String,
-        amount: Double,
-        status: String,
-        dateTime: Date,
-        type: Transaction.Type,
-        description: String,
-        fee: Double,
-        totalAmount: Double
-    ) {
-        val bundle = TransactionDetailsFragment.createBundleForTransfer(
-            recipientId, recipientFullName, transactionId, amount, status, dateTime, type, description, fee, totalAmount
-        )
-        navController?.navigate(R.id.transactionDetails, bundle)
-    }
-
-    override fun showWithdrawTransactionDetails(
-        recipientId: String,
-        recipientFullName: String,
-        amount: Double,
-        status: String,
-        dateTime: Date,
-        type: Transaction.Type,
-        description: String,
-        fee: Double,
-        totalAmount: Double
-    ) {
-        val bundle = TransactionDetailsFragment.createBundleForWithdraw(
-            recipientId, recipientFullName, amount, status, dateTime, type, description, fee, totalAmount
-        )
+        val bundle = TransactionDetailsFragment.createBundleFromList(myAccountId, peerId, recipientFullName,
+            ethTransactionId, soranetTransactionId, amount, status, assetId, dateTime, type, description, minerFee, transactionFee, totalAmount)
         navController?.navigate(R.id.transactionDetails, bundle)
     }
 

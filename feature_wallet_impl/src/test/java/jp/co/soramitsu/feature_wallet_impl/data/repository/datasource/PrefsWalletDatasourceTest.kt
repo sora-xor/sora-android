@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.data.repository.datasource
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -10,7 +5,6 @@ import com.google.gson.reflect.TypeToken
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.FeeType
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
 import jp.co.soramitsu.test_shared.RxSchedulersRule
@@ -25,7 +19,6 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
-import java.math.BigDecimal
 
 @RunWith(MockitoJUnitRunner::class)
 class PrefsWalletDatasourceTest {
@@ -40,26 +33,9 @@ class PrefsWalletDatasourceTest {
     private val emptyJson = "{}"
 
     @Before fun setUp() {
+        given(preferences.getDouble("key_transfer_meta_rate", -1.0)).willReturn(-1.0)
+        given(preferences.getDouble("key_withdraw_meta_rate", -1.0)).willReturn(-1.0)
         prefsWalletDatasource = PrefsWalletDatasource(preferences, serializer)
-    }
-
-    @Test fun `save balance called`() {
-        val keyBalance = "key_balance"
-        val assets = arrayOf(Asset(BigDecimal.TEN, "xor#sora"))
-        given(serializer.serialize(assets)).willReturn(emptyJson)
-
-        prefsWalletDatasource.saveBalance(assets)
-
-        verify(preferences).putString(keyBalance, emptyJson)
-    }
-
-    @Test fun `retrieve balance called`() {
-        val keyBalance = "key_balance"
-        val assets = arrayOf(Asset(BigDecimal.TEN, "xor#sora"))
-        given(preferences.getString(keyBalance)).willReturn(emptyJson)
-        given(serializer.deserialize<Array<Asset>>(emptyJson, object : TypeToken<Array<Asset>>() {}.type)).willReturn(assets)
-
-        assertEquals(assets, prefsWalletDatasource.retrieveBalance())
     }
 
     @Test fun `retrieve balance called if no cached`() {
@@ -104,22 +80,5 @@ class PrefsWalletDatasourceTest {
 
         verify(preferences).putDouble(keyTransferMetaFeeRate, transferMeta.feeRate)
         verify(preferences).putString(keyTransferMetaFeeType, transferMeta.feeType.toString())
-    }
-
-    @Test fun `retrieve transfer meta called`() {
-        val keyTransferMetaFeeRate = "key_transfer_meta_rate"
-        val keyTransferMetaFeeType = "key_transfer_meta_type"
-        val transferMeta = TransferMeta(2.0, FeeType.FIXED)
-        given(preferences.getDouble(keyTransferMetaFeeRate, -1.0)).willReturn(transferMeta.feeRate)
-        given(preferences.getString(keyTransferMetaFeeType)).willReturn(transferMeta.feeType.toString())
-
-        assertEquals(transferMeta, prefsWalletDatasource.retrieveTransferMeta())
-    }
-
-    @Test fun `retrieve transfer meta called if no cached`() {
-        val keyTransferMetaFeeRate = "key_transfer_meta_rate"
-        given(preferences.getDouble(keyTransferMetaFeeRate, -1.0)).willReturn(-1.0)
-
-        assertNull(prefsWalletDatasource.retrieveTransferMeta())
     }
 }

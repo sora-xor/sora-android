@@ -37,7 +37,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:text="@string/common_question_mark"
-            android:textColor="@color/lightRed"
+            android:textColor="@color/uikit_lightRed"
             android:textSize="14sp"
             android:textStyle="bold" />
     </androidx.cardview.widget.CardView>
@@ -136,6 +136,9 @@
             android:drawablePadding="@dimen/x1"
             android:fontFamily="@font/sora_regular"
             android:gravity="center"
+            android:paddingBottom="@dimen/x1_4"
+            android:paddingTop="@dimen/x1_4"
+            android:includeFontPadding="false"
             android:text="412.61234"
             android:textColor="@color/white"
             android:textSize="14sp" />
@@ -204,8 +207,11 @@
             android:layout_marginBottom="@dimen/x1_2"
             android:drawableStart="@drawable/icon_profile_vote"
             android:drawablePadding="@dimen/x1"
+            android:paddingBottom="@dimen/x1_4"
+            android:paddingTop="@dimen/x1_4"
             android:fontFamily="@font/sora_regular"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:textColor="@color/white"
             android:textSize="14sp"
             tools:text="30000000000000" />
@@ -391,15 +397,18 @@
             android:id="@+id/selectedLanguageText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAlignment="center"
             android:layout_gravity="center"
             android:layout_marginStart="@dimen/margin_padding_content"
             android:layout_marginTop="@dimen/x1_2"
             android:layout_marginEnd="@dimen/margin_padding_content"
             android:layout_marginBottom="@dimen/x1_2"
             android:fontFamily="@font/sora_regular"
+            android:paddingBottom="@dimen/x1_4"
+            android:paddingTop="@dimen/x1_4"
             android:gravity="center"
+            android:includeFontPadding="false"
             android:text="@string/common_english"
+            android:textAlignment="center"
             android:textColor="@color/white"
             android:textSize="14sp" />
 

@@ -1,21 +1,18 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.domain
 
 import io.reactivex.Completable
 import io.reactivex.Single
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.util.OnboardingState
+import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.AppVersion
 import jp.co.soramitsu.feature_account_api.domain.model.Country
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserCreatingCase
-import jp.co.soramitsu.feature_did_api.domain.interfaces.DidRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Before
@@ -27,10 +24,12 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.verifyZeroInteractions
 import org.mockito.junit.MockitoJUnitRunner
+import java.math.BigInteger
 
 @RunWith(MockitoJUnitRunner::class)
 class OnboardingInteractorTests {
@@ -39,11 +38,14 @@ class OnboardingInteractorTests {
 
     @Mock private lateinit var userRepository: UserRepository
     @Mock private lateinit var didRepository: DidRepository
+    @Mock private lateinit var ethereumRepository: EthereumRepository
 
     private lateinit var interactor: OnboardingInteractor
+    val ethereumCredentials = EthereumCredentials(BigInteger.ONE)
 
     @Before fun setUp() {
-        interactor = OnboardingInteractor(userRepository, didRepository)
+        given(ethereumRepository.getEthCredentials(anyString())).willReturn(Single.just(ethereumCredentials))
+        interactor = OnboardingInteractor(userRepository, didRepository, ethereumRepository)
     }
 
     @Test fun `getMnemonic() returns mnemonic from did repository`() {
@@ -79,15 +81,18 @@ class OnboardingInteractorTests {
 
         given(userRepository.checkAppVersion()).willReturn(Single.just(appVersion))
         given(didRepository.registerUserDdo()).willReturn(Completable.complete())
+        given(didRepository.retrieveMnemonic()).willReturn(Single.just(""), Single.just("mnemonic"))
         given(userRepository.checkInviteCodeAvailable()).willReturn(Completable.complete())
 
-        interactor.runRegisterFlow().test()
+        interactor.runRegisterFlow()
+            .test()
             .assertValue(appVersion)
             .assertComplete()
             .assertNoErrors()
 
         verify(userRepository).checkAppVersion()
         verify(didRepository).registerUserDdo()
+        verify(didRepository, times(2)).retrieveMnemonic()
         verify(userRepository).checkInviteCodeAvailable()
         verifyNoMoreInteractions(userRepository, didRepository)
     }
@@ -108,13 +113,16 @@ class OnboardingInteractorTests {
 
     @Test fun `runRecoverFlow() calls recoverAccount from did repo and getUser() from user repo`() {
         given(didRepository.recoverAccount(anyString())).willReturn(Completable.complete())
+        given(didRepository.retrieveMnemonic()).willReturn(Single.just("mnemonic"))
         given(userRepository.getUser(anyBoolean())).willReturn(Single.just(mock(User::class.java)))
 
-        interactor.runRecoverFlow("").test()
+        interactor.runRecoverFlow("")
+            .test()
             .assertNoErrors()
             .assertComplete()
 
         verify(didRepository).recoverAccount(anyString())
+        verify(didRepository).retrieveMnemonic()
         verify(userRepository).getUser(anyBoolean())
         verify(userRepository).saveRegistrationState(anyNonNull())
         verifyNoMoreInteractions(didRepository, userRepository)

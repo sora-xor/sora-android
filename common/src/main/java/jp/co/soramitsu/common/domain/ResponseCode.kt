@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.domain
 
 import jp.co.soramitsu.common.R
@@ -63,15 +58,9 @@ enum class ResponseCode(val stringResource: Int) {
 
     BROKEN_TRANSACTION(R.string.common_error_general_message),
 
-    QR_ERROR(R.string.common_error_qr_decode_error),
-
-    QR_USER_NOT_FOUND(R.string.common_error_qr_user_not_found),
-
     PHONE_ALREADY_REGISTERED(R.string.common_error_phone_already_registered),
 
     PHONE_ALREADY_VERIFIED(R.string.common_error_phone_already_registered),
-
-    SENDING_TO_MYSELF(R.string.common_error_sending_to_myself),
 
     FEE_RATE_NOT_AVAILABLE(R.string.common_error_fee_rate_not_available),
 
@@ -87,7 +76,9 @@ enum class ResponseCode(val stringResource: Int) {
 
     PARENT_ALREADY_EXISTS(R.string.common_error_invitation_already_accepted),
 
-    SELF_INVITATION(R.string.common_error_self_invitation);
+    SELF_INVITATION(R.string.common_error_self_invitation),
+
+    BOUND_ETH_ADDRESS_NOT_FOUND(0);
 
     companion object {
 

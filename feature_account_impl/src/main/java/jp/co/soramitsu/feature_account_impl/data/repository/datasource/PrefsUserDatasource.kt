@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import com.google.gson.reflect.TypeToken
@@ -10,9 +5,9 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.InvitedUser
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_api.domain.model.Reputation
 import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_account_api.domain.model.UserValues
@@ -47,22 +42,6 @@ class PrefsUserDatasource @Inject constructor(
 
     override fun retrievePin(): String {
         return encryptedPreferences.getDecryptedString(PREFS_PIN_CODE)
-    }
-
-    override fun savePushToken(notificationToken: String) {
-        encryptedPreferences.putEncryptedString(Const.DEVICE_TOKEN, notificationToken)
-    }
-
-    override fun retrievePushToken(): String {
-        return encryptedPreferences.getDecryptedString(Const.DEVICE_TOKEN)
-    }
-
-    override fun saveIsPushTokenUpdateNeeded(updateNeeded: Boolean) {
-        preferences.putBoolean(Const.IS_PUSH_UPDATE_NEEDED, updateNeeded)
-    }
-
-    override fun isPushTokenUpdateNeeded(): Boolean {
-        return preferences.getBoolean(Const.IS_PUSH_UPDATE_NEEDED, false)
     }
 
     override fun saveUser(user: User) {

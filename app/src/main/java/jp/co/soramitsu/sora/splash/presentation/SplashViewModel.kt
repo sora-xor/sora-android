@@ -1,12 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.splash.presentation
 
 import androidx.lifecycle.ViewModel
-import jp.co.soramitsu.common.util.OnboardingState
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
 
@@ -27,19 +22,6 @@ class SplashViewModel(
             }
             OnboardingState.INITIAL -> {
                 router.showOnBoardingScreen(state)
-            }
-            OnboardingState.PERSONAL_DATA_ENTERED -> {
-                interactor.saveRegistrationState(OnboardingState.INITIAL)
-                router.showOnBoardingScreen(state)
-            }
-            OnboardingState.SMS_REQUESTED -> {
-                interactor.saveRegistrationState(OnboardingState.INITIAL)
-                router.showOnBoardingScreen(state)
-            }
-            OnboardingState.PIN_CODE_SET -> {
-                interactor.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-                interactor.restoreAuth()
-                router.showMainScreen()
             }
         }
     }

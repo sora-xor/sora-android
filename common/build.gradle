@@ -23,12 +23,52 @@ android {
         }
     }
 
-    dataBinding {
-        enabled = true
-    }
-    compileOptions {
-        sourceCompatibility = '1.8'
-        targetCompatibility = '1.8'
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            buildConfigField "String", "HOST_URL", "\"https://s1.dev.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/dev/join/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.dev.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://ropsten.etherscan.io/tx/\""
+            dimension 'default'
+        }
+
+        tst {
+            buildConfigField "String", "HOST_URL", "\"https://s1.tst.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.tst.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/tst/join/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.tst.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://ropsten.etherscan.io/tx/\""
+            dimension 'default'
+        }
+
+        staging {
+            buildConfigField "String", "HOST_URL", "\"https://s4.stg1.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.stg1.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/stg/join/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s4.stg1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://ropsten.etherscan.io/tx/\""
+            dimension 'default'
+        }
+
+        production {
+            buildConfigField "String", "HOST_URL", "\"https://s1.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://etherscan.io/tx/\""
+            dimension 'default'
+        }
     }
 }
 
@@ -36,7 +76,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(':core_di')
-    implementation project(':core_network_api')
+    implementation project(':feature_account_api')
+    implementation project(':feature_wallet_api')
     api project(':uikit')
 
     implementation kotlinDep
@@ -51,6 +92,9 @@ dependencies {
     implementation soraDep
     implementation novaCryptoDep
 
+    implementation lifecycleDep
+    kapt lifecycleKapt
+
     implementation loggerDep
 
     implementation shimmerDep
@@ -60,6 +104,10 @@ dependencies {
 
     implementation navigationFragmentDep
     implementation navigationUiDep
+
+    implementation retrofitDep
+    implementation gsonConvertedDep
+    implementation rxCallAdapterDep
 
     implementation(crashlyticsDep) {
         transitive = true

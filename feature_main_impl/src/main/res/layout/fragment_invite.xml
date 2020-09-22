@@ -50,7 +50,7 @@
                         android:layout_gravity="center"
                         android:gravity="center"
                         android:text="\?"
-                        android:textColor="@color/lightRed"
+                        android:textColor="@color/uikit_lightRed"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -104,7 +104,7 @@
                             android:gravity="center_vertical"
                             android:padding="@dimen/x1"
                             android:text="@string/invite_send_invite"
-                            android:textColor="@color/lightRed"
+                            android:textColor="@color/uikit_lightRed"
                             android:textSize="14sp" />
 
                     </LinearLayout>
@@ -132,7 +132,7 @@
                             android:gravity="center_vertical"
                             android:padding="@dimen/x1"
                             android:text="@string/invite_enter_invitation_code"
-                            android:textColor="@color/lightRed"
+                            android:textColor="@color/uikit_lightRed"
                             android:textSize="14sp" />
 
                         <TextView

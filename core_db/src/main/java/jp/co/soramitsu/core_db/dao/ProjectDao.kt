@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.core_db.dao
 
 import androidx.room.Dao
@@ -11,15 +6,18 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.TypeConverters
 import io.reactivex.Observable
-import io.reactivex.Single
+import jp.co.soramitsu.core_db.converters.BigDecimalConverter
 import jp.co.soramitsu.core_db.converters.ProjectStatusConverter
 import jp.co.soramitsu.core_db.converters.ProjectUrlConverter
-import jp.co.soramitsu.core_db.converters.ProjectVotesConverter
 import jp.co.soramitsu.core_db.model.ProjectLocal
 import jp.co.soramitsu.core_db.model.ProjectStatusLocal
 
 @Dao
-@TypeConverters(ProjectStatusConverter::class, ProjectUrlConverter::class, ProjectVotesConverter::class)
+@TypeConverters(
+    ProjectStatusConverter::class,
+    ProjectUrlConverter::class,
+    BigDecimalConverter::class
+)
 abstract class ProjectDao {
 
     @Query("DELETE FROM projects")
@@ -34,20 +32,17 @@ abstract class ProjectDao {
     @Query("SELECT * FROM projects WHERE id = :projectId")
     abstract fun getProjectById(projectId: String): ProjectLocal
 
-    @Query("SELECT * FROM projects")
-    abstract fun getProjects(): Single<List<ProjectLocal>>
-
     @Query("SELECT * FROM projects WHERE isFavorite = 1")
     abstract fun getFavoriteProjects(): Observable<List<ProjectLocal>>
-
-    @Query("SELECT * FROM projects")
-    abstract fun getAllProjects(): List<ProjectLocal>
 
     @Query("SELECT * FROM projects WHERE status = :status")
     abstract fun getProjectsByStatus(status: ProjectStatusLocal): Observable<List<ProjectLocal>>
 
     @Query("SELECT * FROM projects WHERE status = :status OR status = :secondStatus")
-    abstract fun getProjectsByStatuses(status: ProjectStatusLocal, secondStatus: ProjectStatusLocal): Observable<List<ProjectLocal>>
+    abstract fun getProjectsByStatuses(
+        status: ProjectStatusLocal,
+        secondStatus: ProjectStatusLocal
+    ): Observable<List<ProjectLocal>>
 
     @Query("SELECT * FROM projects WHERE votes > 0")
     abstract fun getVotedProjects(): Observable<List<ProjectLocal>>
@@ -71,7 +66,10 @@ abstract class ProjectDao {
     abstract fun clearFavoritesProjects()
 
     @Query("DELETE FROM projects WHERE status = :status OR status = :secondStatus")
-    abstract fun clearProjectsByStatuses(status: ProjectStatusLocal, secondStatus: ProjectStatusLocal)
+    abstract fun clearProjectsByStatuses(
+        status: ProjectStatusLocal,
+        secondStatus: ProjectStatusLocal
+    )
 
     @Query("UPDATE projects SET status = :projectStatusLocal WHERE id = :projectId")
     abstract fun updateProjectStatus(projectId: String, projectStatusLocal: ProjectStatusLocal)

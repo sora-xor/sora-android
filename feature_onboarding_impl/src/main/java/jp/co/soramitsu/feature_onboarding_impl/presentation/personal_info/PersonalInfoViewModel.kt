@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info
 
 import androidx.lifecycle.LiveData
@@ -39,6 +34,9 @@ class PersonalInfoViewModel(
 
     private val _lastNameIsNotValidEventLiveData = MutableLiveData<Event<Unit>>()
     val lastNameIsNotValidEventLiveData: LiveData<Event<Unit>> = _lastNameIsNotValidEventLiveData
+
+    private val _nextButtonEnableLiveData = MutableLiveData<Boolean>()
+    val nextButtonEnableLiveData: LiveData<Boolean> = _nextButtonEnableLiveData
 
     private val _inviteCodeLiveData = MutableLiveData<String>()
     val inviteCodeLiveData: LiveData<String> = _inviteCodeLiveData
@@ -137,5 +135,9 @@ class PersonalInfoViewModel(
             return false
         }
         return true
+    }
+
+    fun firstNameAndLastNameChanged(firstName: String, lastName: String) {
+        _nextButtonEnableLiveData.value = firstName.isNotEmpty() && lastName.isNotEmpty()
     }
 }
