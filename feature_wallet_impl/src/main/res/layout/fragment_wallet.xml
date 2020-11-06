@@ -32,46 +32,22 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-<!--            <androidx.cardview.widget.CardView-->
-<!--                android:id="@+id/moreView"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginEnd="@dimen/margin_padding_by_side"-->
-<!--                android:foreground="?selectableItemBackground"-->
-<!--                app:cardCornerRadius="@dimen/x2"-->
-<!--                app:contentPadding="4dp"-->
-<!--                app:layout_constraintBottom_toBottomOf="@+id/title"-->
-<!--                app:layout_constraintEnd_toEndOf="parent"-->
-<!--                app:layout_constraintTop_toTopOf="@+id/title">-->
-
-<!--                <ImageView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:src="@drawable/ic_more_horizontal_red_24" />-->
-
-<!--            </androidx.cardview.widget.CardView>-->
-
             <androidx.cardview.widget.CardView
-                android:id="@+id/howItWorksCard"
-                android:layout_width="29dp"
-                android:layout_height="29dp"
+                android:id="@+id/moreView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/margin_padding_by_side"
                 android:foreground="?selectableItemBackground"
                 app:cardCornerRadius="@dimen/x2"
-                android:visibility="visible"
+                app:contentPadding="4dp"
                 app:layout_constraintBottom_toBottomOf="@+id/title"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/title">
 
-                <TextView
+                <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:text="@string/common_question_mark"
-                    android:textColor="@color/uikit_lightRed"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:src="@drawable/ic_more_horizontal_red_24" />
 
             </androidx.cardview.widget.CardView>
 

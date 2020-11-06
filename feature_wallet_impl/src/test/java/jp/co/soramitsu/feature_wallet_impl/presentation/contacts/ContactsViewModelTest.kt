@@ -59,7 +59,7 @@ class ContactsViewModelTest {
     private val amount = "1000"
     private val accounts = mutableListOf(account)
     private val expected = mutableListOf(
-//        ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH),
+        ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH),
         ContactHeader("Contacts"),
         ContactListItem(account, true)
     )
@@ -101,7 +101,7 @@ class ContactsViewModelTest {
 
         contactsViewModel.decodeTextFromBitmapQr(uri)
 
-        verify(router).showXorTransferAmount(accountId, "$firstName $lastName", BigDecimal.ZERO)
+        verify(router).showValTransferAmount(accountId, "$firstName $lastName", BigDecimal.ZERO)
     }
 
     @Test fun `fetch contacts`() {

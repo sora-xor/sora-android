@@ -31,7 +31,7 @@ interface WalletNetworkApi {
     fun getTransactions(@Query("offset") offset: Int, @Query("count") count: Int): Single<GetTransactionHistoryResponse>
 
     @POST("/wallet/v1/transaction")
-    fun transferXor(@Body request: IrohaRequest): Single<BaseResponse>
+    fun transferVal(@Body request: IrohaRequest): Single<BaseResponse>
 
     @GET("/wallet/v1/user/find")
     fun findUser(@Query("search") search: String): Single<UserFindResponse>

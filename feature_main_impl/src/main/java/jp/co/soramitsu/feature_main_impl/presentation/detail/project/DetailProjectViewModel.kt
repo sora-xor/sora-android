@@ -138,9 +138,11 @@ class DetailProjectViewModel(
                     logException(it)
                 })
         )
+
+        syncVotes()
     }
 
-    fun syncVotes() {
+    private fun syncVotes() {
         disposables.add(
             interactor.syncVotes()
                 .subscribeOn(Schedulers.io())

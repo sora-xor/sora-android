@@ -11,13 +11,14 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.domain.AssetHolder.Companion.ETHER_ETH
-import jp.co.soramitsu.common.domain.AssetHolder.Companion.SORA_XOR
+import jp.co.soramitsu.common.domain.AssetHolder.Companion.SORA_VAL
+import jp.co.soramitsu.common.domain.AssetHolder.Companion.SORA_VAL_ERC_20
 import jp.co.soramitsu.common.domain.AssetHolder.Companion.SORA_XOR_ERC_20
+import jp.co.soramitsu.common.domain.AssetHolder.Companion.SORA_XOR
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
@@ -31,9 +32,7 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.AssetModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
 import java.util.Date
 
-class XorBalances(val sora: String?, val eth: String?)
-
-private val BALANCE_FORMAT = "${Const.SORA_SYMBOL} %s"
+class ValBalances(val sora: String?, val eth: String?)
 
 class WalletViewModel(
     private val ethInteractor: EthereumInteractor,
@@ -70,8 +69,8 @@ class WalletViewModel(
     private val _showXorAddressBottomSheetEvent = MutableLiveData<Event<Unit>>()
     val showXorAddressBottomSheetEvent: LiveData<Event<Unit>> = _showXorAddressBottomSheetEvent
 
-    private val _showXorBalancesBottomSheetEvent = MutableLiveData<Event<XorBalances>>()
-    val showXorBalancesBottomSheetEvent: LiveData<Event<XorBalances>> = _showXorBalancesBottomSheetEvent
+    private val _showXorBalancesBottomSheetEvent = MutableLiveData<Event<ValBalances>>()
+    val showXorBalancesBottomSheetEvent: LiveData<Event<ValBalances>> = _showXorBalancesBottomSheetEvent
 
     private val _copiedAddressEvent = MutableLiveData<Event<Unit>>()
     val copiedAddressEvent: LiveData<Event<Unit>> = _copiedAddressEvent
@@ -167,7 +166,6 @@ class WalletViewModel(
         transactions?.firstOrNull { isSameId(it, eventItem) }?.apply {
             val statusString = status.toString().substring(0, 1).toUpperCase() + status.toString().substring(1).toLowerCase()
             val date = Date(timestampInMillis)
-
             router.showTransactionDetailsFromList(myAddress, peerId ?: "", peerName, ethTxHash, soranetTxHash, amount, statusString,
                 assetId ?: "", date, type, details, ethFee, soranetFee, amount + soranetFee + ethFee)
         }
@@ -180,7 +178,7 @@ class WalletViewModel(
     fun assetClicked(asset: AssetModel) {
         when (asset.id) {
             ETHER_ETH.id -> setEthBottomSheetEventIfPossible()
-            SORA_XOR.id -> setXorBottomSheetEventIfPossible()
+            SORA_VAL.id -> setXorBottomSheetEventIfPossible()
         }
     }
 
@@ -197,14 +195,14 @@ class WalletViewModel(
     }
 
     fun viewXorBalanceClicked() {
-        val xorSora = allAssets?.findAsset(SORA_XOR.id)
-        val xorEth = allAssets?.findAsset(SORA_XOR_ERC_20.id)
+        val xorSora = allAssets?.findAsset(SORA_VAL.id)
+        val xorEth = allAssets?.findAsset(SORA_VAL_ERC_20.id)
 
         if (xorEth != null && xorSora != null) {
             val formattedSora = formatAssetBalance(xorSora)
             val formattedEth = formatAssetBalance(xorEth)
 
-            _showXorBalancesBottomSheetEvent.value = Event(XorBalances(formattedSora, formattedEth))
+            _showXorBalancesBottomSheetEvent.value = Event(ValBalances(formattedSora, formattedEth))
         }
     }
 
@@ -228,7 +226,7 @@ class WalletViewModel(
     private fun loadTransactions(): Disposable {
         return interactor.getTransactions()
             .doOnNext { transactions = it }
-            .map { transactionMappers.mapTransactionToSoraTransactionWithHeaders(it, assetAddresses[SORA_XOR.id]!!, assetAddresses[SORA_XOR_ERC_20.id]!!) }
+            .map { transactionMappers.mapTransactionToSoraTransactionWithHeaders(it, assetAddresses[SORA_VAL.id]!!, assetAddresses[SORA_VAL_ERC_20.id]!!) }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -257,7 +255,7 @@ class WalletViewModel(
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
                 assetAddresses[ETHER_ETH.id] = it
-                assetAddresses[SORA_XOR_ERC_20.id] = it
+                assetAddresses[SORA_VAL_ERC_20.id] = it
             }, {
                 it.printStackTrace()
             })
@@ -268,15 +266,15 @@ class WalletViewModel(
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
-                assetAddresses[SORA_XOR.id] = it
+                assetAddresses[SORA_VAL.id] = it
             }, {
                 it.printStackTrace()
             })
     }
 
     private fun setXorBottomSheetEventIfPossible() {
-        val soraAddress = assetAddresses[SORA_XOR.id]
-        val ethAddress = assetAddresses[SORA_XOR_ERC_20.id]
+        val soraAddress = assetAddresses[SORA_VAL.id]
+        val ethAddress = assetAddresses[SORA_VAL_ERC_20.id]
 
         if (soraAddress != null && ethAddress != null) {
             _showXorAddressBottomSheetEvent.value = Event(Unit)
@@ -297,75 +295,84 @@ class WalletViewModel(
         val balance = asset.assetBalance?.balance ?: return null
 
         val formattedAmount = numbersFormatter.formatBigDecimal(balance, asset.roundingPrecision)
+        val assetName = when (asset.id) {
+            SORA_VAL.id, SORA_VAL_ERC_20.id -> {
+                resourceManager.getString(R.string.val_token)
+            }
+            SORA_XOR.id, SORA_XOR_ERC_20.id -> {
+                resourceManager.getString(R.string.xor)
+            }
+            else -> resourceManager.getString(R.string.val_token)
+        }
 
-        return BALANCE_FORMAT.format(formattedAmount)
+        return "$formattedAmount $assetName"
     }
 
     private fun List<Asset>.findAsset(id: String) = firstOrNull { id == it.id }
 
     private fun mapAssetToAssetModel(assets: List<Asset>): List<AssetModel> {
-        val soraAsset = assets.first { SORA_XOR.id == it.id }
-        val xorErc20Asset = assets.first { SORA_XOR_ERC_20.id == it.id }
+        val valAsset = assets.first { SORA_VAL.id == it.id }
+        val valErc20Asset = assets.first { SORA_VAL_ERC_20.id == it.id }
 
-        val soraAssetState = when (soraAsset.state) {
+        val valAssetState = when (valAsset.state) {
             Asset.State.NORMAL -> AssetModel.State.NORMAL
             Asset.State.ASSOCIATING -> AssetModel.State.ASSOCIATING
             Asset.State.ERROR -> AssetModel.State.ERROR
             Asset.State.UNKNOWN -> AssetModel.State.NORMAL
         }
 
-        val soraAssetBalance = soraAsset.assetBalance?.balance
-        val xorErc20AssetBalance = xorErc20Asset.assetBalance?.balance
+        val valAssetBalance = valAsset.assetBalance?.balance
+        val valErc20AssetBalance = valErc20Asset.assetBalance?.balance
 
-        val totalXorBalance = if (soraAssetBalance == null) {
-            xorErc20AssetBalance
+        val totalValBalance = if (valAssetBalance == null) {
+            valErc20AssetBalance
         } else {
-            if (xorErc20AssetBalance == null) {
-                soraAssetBalance
+            if (valErc20AssetBalance == null) {
+                valAssetBalance
             } else {
-                soraAssetBalance + xorErc20AssetBalance
+                valAssetBalance + valErc20AssetBalance
             }
         }
 
-        val totalXorBalanceFormatted = totalXorBalance?.let {
-            numbersFormatter.formatBigDecimal(it, soraAsset.roundingPrecision)
+        val totalXorBalanceFormatted = totalValBalance?.let {
+            numbersFormatter.formatBigDecimal(it, valAsset.roundingPrecision)
         }
 
-        val soraAssetIconResource = R.drawable.ic_xor_transparent_24
-        val soraAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
+        val valAssetIconResource = R.drawable.ic_val_red_24
+        val valAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
 
-//        val ethAsset = assets.first { ETHER_ETH.id == it.id }
-//
-//        val ethAssetState = when (ethAsset.state) {
-//            Asset.State.NORMAL -> AssetModel.State.NORMAL
-//            Asset.State.ASSOCIATING -> AssetModel.State.ASSOCIATING
-//            Asset.State.ERROR -> AssetModel.State.ERROR
-//            Asset.State.UNKNOWN -> AssetModel.State.NORMAL
-//        }
-//
-//        val ethAssetIconResource = R.drawable.ic_eth_grey_24
-//        val ethAssetIconBackground = resourceManager.getColor(R.color.asset_view_eth_background_color)
-//        val ethAssetBalance = ethAsset.assetBalance?.balance?.let {
-//            numbersFormatter.formatBigDecimal(it, ethAsset.roundingPrecision)
-//        }
+        val ethAsset = assets.first { ETHER_ETH.id == it.id }
+
+        val ethAssetState = when (ethAsset.state) {
+            Asset.State.NORMAL -> AssetModel.State.NORMAL
+            Asset.State.ASSOCIATING -> AssetModel.State.ASSOCIATING
+            Asset.State.ERROR -> AssetModel.State.ERROR
+            Asset.State.UNKNOWN -> AssetModel.State.NORMAL
+        }
+
+        val ethAssetIconResource = R.drawable.ic_eth_24
+        val ethAssetIconBackground = resourceManager.getColor(R.color.asset_view_eth_background_color)
+        val ethAssetBalance = ethAsset.assetBalance?.balance?.let {
+            numbersFormatter.formatBigDecimal(it, ethAsset.roundingPrecision)
+        }
 
         val displayingAssets = mutableListOf<AssetModel>().apply {
-            val model = with(soraAsset) {
-                AssetModel(id, assetFirstName, assetLastName, soraAssetIconResource, soraAssetIconBackground,
-                    totalXorBalanceFormatted, soraAssetState, roundingPrecision, position)
+            val model = with(valAsset) {
+                AssetModel(id, assetFirstName, assetLastName, valAssetIconResource, valAssetIconBackground,
+                    totalXorBalanceFormatted, valAssetState, roundingPrecision, position)
             }
 
             add(model)
         }
 
-//        if (ethAsset.displayAsset) {
-//            val model = with(ethAsset) {
-//                AssetModel(id, assetFirstName, assetLastName, ethAssetIconResource, ethAssetIconBackground,
-//                    ethAssetBalance, ethAssetState, roundingPrecision, position)
-//            }
-//
-//            displayingAssets.add(model)
-//        }
+        if (ethAsset.displayAsset) {
+            val model = with(ethAsset) {
+                AssetModel(id, assetFirstName, assetLastName, ethAssetIconResource, ethAssetIconBackground,
+                    ethAssetBalance, ethAssetState, roundingPrecision, position)
+            }
+
+            displayingAssets.add(model)
+        }
 
         return displayingAssets
             .sortedBy { it.position }

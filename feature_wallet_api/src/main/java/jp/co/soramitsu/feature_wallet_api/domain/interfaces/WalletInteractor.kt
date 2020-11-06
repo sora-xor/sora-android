@@ -25,7 +25,7 @@ interface WalletInteractor {
 
     fun getBalance(assetId: String): Observable<AssetBalance>
 
-    fun getXorAndXorErcBalanceAmount(): Observable<BigDecimal>
+    fun getValAndValErcBalanceAmount(): Observable<BigDecimal>
 
     fun getTransactions(): Observable<List<Transaction>>
 

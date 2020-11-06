@@ -37,7 +37,7 @@ interface MainRouter {
 
     fun showVotesHistory()
 
-    fun showXorTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
+    fun showValTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
 
     fun showUnsupportedScreen(appUrl: String)
 

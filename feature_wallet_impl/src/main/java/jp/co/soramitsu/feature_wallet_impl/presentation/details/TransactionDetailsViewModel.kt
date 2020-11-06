@@ -14,11 +14,11 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.util.ext.isErc20Address
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -28,6 +28,7 @@ import java.util.Date
 
 class TransactionDetailsViewModel(
     private val walletInteractor: WalletInteractor,
+    private val ethereumInteractor: EthereumInteractor,
     private val router: WalletRouter,
     private val resourceManager: ResourceManager,
     private val numbersFormatter: NumbersFormatter,
@@ -151,14 +152,36 @@ class TransactionDetailsViewModel(
     private val _openBlockChainExplorerEvent = MutableLiveData<Event<String>>()
     val openBlockChainExplorerEvent: LiveData<Event<String>> = _openBlockChainExplorerEvent
 
+    private val ethAddress = MutableLiveData<String>()
+
     init {
+        disposables.add(
+            ethereumInteractor.getAddress()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ ethAddress.value = it }, {})
+        )
+
         _titleLiveData.value = resourceManager.getString(R.string.transaction_details)
         _homeBtnVisibilityLiveData.value = true
 
-        if (assetId == AssetHolder.SORA_XOR_ERC_20.id) {
+        val assetName = when (assetId) {
+            AssetHolder.SORA_VAL.id, AssetHolder.SORA_VAL_ERC_20.id -> {
+                resourceManager.getString(R.string.val_token)
+            }
+            AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR_ERC_20.id -> {
+                resourceManager.getString(R.string.xor)
+            }
+            AssetHolder.ETHER_ETH.id -> {
+                resourceManager.getString(R.string.transaction_eth_sign)
+            }
+            else -> resourceManager.getString(R.string.val_token)
+        }
+
+        if (assetId == AssetHolder.SORA_VAL_ERC_20.id) {
             _buttonDescriptionLiveData.value = peerId
             _buttonDescriptionEllipsizeMiddleLiveData.value = true
-            _buttonDescriptionIconLiveData.value = R.drawable.ic_eth_gray_30
+            _buttonDescriptionIconLiveData.value = R.drawable.ic_eth_30
         }
 
         when (transactionType) {
@@ -166,8 +189,8 @@ class TransactionDetailsViewModel(
                 _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_back)
                 _fromLiveData.value = peerId
                 _toLiveData.value = myAccountId
-                _fromIconLiveData.value = R.drawable.ic_xor_red_20
-                _toIconLiveData.value = R.drawable.ic_xor_red_20
+                _fromIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_red_20 else R.drawable.ic_xor_red_20
+                _toIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_red_20 else R.drawable.ic_xor_red_20
                 _tranasctionFeeVisibilityLiveData.value = false
                 _minerFeeVisibilityLiveData.value = false
                 _totalAmountVisibilityLiveData.value = false
@@ -175,7 +198,7 @@ class TransactionDetailsViewModel(
 
                 if (peerId == peerFullName.trim()) {
                     _buttonDescriptionEllipsizeMiddleLiveData.value = true
-                    _buttonDescriptionIconLiveData.value = R.drawable.ic_xor_red_24
+                    _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_red_20 else R.drawable.ic_xor_red_20
                 } else {
                     _buttonDescriptionEllipsizeMiddleLiveData.value = false
                     _buttonDescriptionTextIconLiveData.value = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
@@ -183,14 +206,26 @@ class TransactionDetailsViewModel(
             }
 
             Transaction.Type.OUTGOING -> {
-                if (assetId == AssetHolder.SORA_XOR.id) {
-                    _fromIconLiveData.value = R.drawable.ic_xor_red_20
-                    _toIconLiveData.value = R.drawable.ic_xor_red_20
-                }
+                when (assetId) {
+                    AssetHolder.SORA_XOR.id -> {
+                        _fromIconLiveData.value = R.drawable.ic_xor_red_20
+                        _toIconLiveData.value = R.drawable.ic_xor_red_20
+                    }
 
-                if (assetId == AssetHolder.SORA_XOR_ERC_20.id) {
-                    _fromIconLiveData.value = R.drawable.ic_xor_grey_20
-                    _toIconLiveData.value = R.drawable.ic_xor_grey_20
+                    AssetHolder.SORA_XOR_ERC_20.id -> {
+                        _fromIconLiveData.value = R.drawable.ic_xor_black_20
+                        _toIconLiveData.value = R.drawable.ic_xor_black_20
+                    }
+
+                    AssetHolder.SORA_VAL.id -> {
+                        _fromIconLiveData.value = R.drawable.ic_val_red_20
+                        _toIconLiveData.value = R.drawable.ic_val_red_20
+                    }
+
+                    AssetHolder.SORA_VAL_ERC_20.id -> {
+                        _fromIconLiveData.value = R.drawable.ic_val_black_20
+                        _toIconLiveData.value = R.drawable.ic_val_black_20
+                    }
                 }
 
                 _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_again)
@@ -205,9 +240,11 @@ class TransactionDetailsViewModel(
                     _buttonDescriptionEllipsizeMiddleLiveData.value = true
                     val icon = when (assetId) {
                         AssetHolder.SORA_XOR.id -> R.drawable.ic_xor_red_24
-                        AssetHolder.SORA_XOR_ERC_20.id -> R.drawable.ic_xor_grey_24
-                        AssetHolder.ETHER_ETH.id -> R.drawable.ic_eth_grey_24
-                        else -> R.drawable.ic_xor_red_24
+                        AssetHolder.SORA_XOR_ERC_20.id -> R.drawable.ic_xor_black_24
+                        AssetHolder.SORA_VAL.id -> R.drawable.ic_val_red_24
+                        AssetHolder.SORA_VAL_ERC_20.id -> R.drawable.ic_val_black_24
+                        AssetHolder.ETHER_ETH.id -> R.drawable.ic_eth_24
+                        else -> R.drawable.ic_val_red_24
                     }
                     _buttonDescriptionIconLiveData.value = icon
                 } else {
@@ -218,16 +255,28 @@ class TransactionDetailsViewModel(
 
             Transaction.Type.WITHDRAW -> {
                 if (ethTransactionId.isEmpty()) {
-                    _fromIconLiveData.value = R.drawable.ic_xor_red_20
+                    _fromIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
+                        R.drawable.ic_xor_red_20
+                    } else {
+                        R.drawable.ic_val_red_20
+                    }
                 } else {
                     _fromIconLiveData.value = R.drawable.ic_double_token_24
                 }
 
                 _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_again)
                 _buttonDescriptionLiveData.value = peerFullName
-                _buttonDescriptionIconLiveData.value = R.drawable.ic_xor_grey_24
+                _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
+                    R.drawable.ic_xor_black_24
+                } else {
+                    R.drawable.ic_val_black_24
+                }
                 _buttonDescriptionEllipsizeMiddleLiveData.value = true
-                _toIconLiveData.value = R.drawable.ic_xor_grey_20
+                _toIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
+                    R.drawable.ic_xor_black_20
+                } else {
+                    R.drawable.ic_val_black_20
+                }
                 _toLiveData.value = peerId
                 _fromLiveData.value = myAccountId
                 _tranasctionFeeVisibilityLiveData.value = transactionFee != BigDecimal.ZERO
@@ -236,8 +285,16 @@ class TransactionDetailsViewModel(
             }
 
             Transaction.Type.DEPOSIT -> {
-                _fromIconLiveData.value = R.drawable.ic_xor_grey_20
-                _toIconLiveData.value = R.drawable.ic_xor_red_20
+                _fromIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
+                    R.drawable.ic_xor_black_24
+                } else {
+                    R.drawable.ic_val_black_24
+                }
+                _toIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
+                    R.drawable.ic_xor_black_24
+                } else {
+                    R.drawable.ic_val_black_24
+                }
                 _toLiveData.value = peerId
                 _fromLiveData.value = myAccountId
                 _tranasctionFeeVisibilityLiveData.value = transactionFee != BigDecimal.ZERO
@@ -277,28 +334,38 @@ class TransactionDetailsViewModel(
         val dateTime = Date(date)
         _dateLiveData.value = "${dateTimeFormatter.formatDate(dateTime, DateTimeFormatter.DD_MMM_YYYY)}, ${dateTimeFormatter.formatTimeWithSeconds(dateTime)}"
 
-        _amountLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount)}"
-        _tranasctionFeeLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(transactionFee)}"
+        _amountLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} $assetName"
+        _tranasctionFeeLiveData.value = "${numbersFormatter.formatBigDecimal(transactionFee)} $assetName"
         _minerFeeLiveData.value = "$minerFee ${resourceManager.getString(R.string.transaction_eth_sign)}"
 
-        _totalAmountLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(totalAmount)}"
+        _totalAmountLiveData.value = "${numbersFormatter.formatBigDecimal(totalAmount)} $assetName"
 
         _transactionDescriptionLiveData.value = transactionDescription
 
         _transactionDescriptionVisibilityLiveData.value = transactionDescription.isNotEmpty()
+
+        if (assetId != AssetHolder.SORA_VAL_ERC_20.id && assetId != AssetHolder.SORA_VAL.id) {
+            _buttonVisibilityLiveData.value = false
+        }
     }
 
     fun btnNextClicked() {
         when (assetId) {
-            AssetHolder.SORA_XOR.id -> {
-                router.showXorTransferAmount(peerId, peerFullName, BigDecimal.ZERO)
+            AssetHolder.SORA_VAL.id -> {
+                router.showValTransferAmount(peerId, peerFullName, BigDecimal.ZERO)
             }
 
-            AssetHolder.SORA_XOR_ERC_20.id -> {
+            AssetHolder.SORA_VAL_ERC_20.id -> {
                 if (transactionType == Transaction.Type.WITHDRAW) {
-                    router.showXorWithdrawToErc(peerId, BigDecimal.ZERO)
+                    ethAddress.value?.let { ethAddress ->
+                        if (peerId == ethAddress) {
+                            router.showValWithdrawToErc(peerId, BigDecimal.ZERO)
+                        } else {
+                            router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
+                        }
+                    }
                 } else {
-                    router.showXorERCTransferAmount(peerId, BigDecimal.ZERO)
+                    router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
                 }
             }
         }

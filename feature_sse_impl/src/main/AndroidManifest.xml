@@ -2,8 +2,6 @@
     package="jp.co.soramitsu.feature_sse_impl" >
 
     <application>
-
         <service android:name=".presentation.EventService"/>
-
     </application>
 </manifest>

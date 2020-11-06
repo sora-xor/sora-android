@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">Resurs nije dostupan</string>
   <string name="common_error_internal_error_title">Interna pogreška</string>
   <string name="projects_title">Projekti Sore</string>
-  <string name="project_founded_template" formatted="false">%s %% glasova od %s</string>
+  <string name="project_founded_template" formatted="false">%s%% glasova od %s</string>
   <string name="project_votes_template">%s glasova</string>
   <string name="project_ended_template">Završeno %s</string>
   <string name="project_spent_format">Potrošili ste %s glasova</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Pristupni izraz je\nvrsta lozinke.</string>
   <string name="common_passphrase_body">Koristi se za oporavak pristupa računu. Zapišite, nećemo moći oporaviti vaš račun bez njega!</string>
   <string name="common_passphrase_your_passphrase">Vaša lozinka</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Ažurirajte aplikaciju Sora</string>
   <string name="common_unsupported_version_body">Ažurirana aplikacija Sora dostupna je na Google Playu. Ona uključuje poboljšanja i ispravke pogrešaka.</string>
   <string name="common_unsupported_version_open_google_play">Otvorite Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Provjerite internetsku vezu i pokušajte ponovno kasnije.</string>
   <string name="common_error_pincode_check_error">Uneseni kod nije ispravan</string>
   <string name="activity_user_registered_type">Prijatelj je registriran</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Vaša reputacija će biti povećana!</string>
   <string name="activity_voting_rights_credited_type_template">Raspodjela glasova</string>
   <string name="activity_voting_rights_title_template">Dnevni glasovi</string>
   <string name="activity_invitation_credited_type_template">Distribucija pozivnica</string>
   <string name="activity_invitation_credited_title_template">Pozivnice su dodijeljene</string>
   <string name="activity_project_funded_type_template">Projekt je završen!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Uskoro ćete dobiti informacije o XOR nagradi</string>
   <string name="activity_project_created_type_template">Novi projekt!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">XOR nagrada za glasovanje</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Rang je promijenjen</string>
   <string name="activity_project">Projekt</string>
   <string name="activity_user">Korisnik</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Već ste primijenili drugi pozivni kôd</string>
   <string name="invite_enter_dialog_title_hint">8 alfanumeričkih znakova</string>
   <string name="invite_enter_invitation_code">Unesite pozivni kôd</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="one">%s prijatelj je glasao</item>
     <item quantity="few">%s prijatelja je glasalo</item>
@@ -244,7 +236,6 @@
   <string name="countries_country_not_found">Nema zemalja koje odgovaraju vašem upitu</string>
   <string name="phone_number_title">Registracija</string>
   <string name="phone_number_mobile">Broj mobitela</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Molimo pričekajte</string>
   <string name="common_open_explorer">Prikaži u Blockchain Exploreru</string>
   <string name="common_error_phone_already_exists">Nažalost, ovaj se telefonski broj već koristi. Pokušajte s drugim.</string>
@@ -253,7 +244,7 @@
   <string name="common_spanish">Španjolski</string>
   <string name="common_bashkir">Baškirski</string>
   <string name="biometric_dialog_title">Potvrdi</string>
-  <string name="contacts_search_hint_v1">ID računa, telefonski broj</string>
+  <string name="contacts_search_hint_v1">ID računa, telefonski broj, adresa</string>
   <string name="wallet_xor_to_my_eth">XOR na moj Ethereum račun</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -300,7 +291,6 @@
   <string name="limit_dialog_available_limit">Dostupno za prijenos</string>
   <string name="limit_dialog_reset">Ponovo postavljanje limita za</string>
   <string name="limit_dialog_set_amount">Postavite iznos na</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] na XOR ERC20 [Ethereum]</string>
   <string name="common_hour">Sat</string>
   <string name="common_japanese">Japanski</string>
   <string name="common_chinese">Kineski</string>
@@ -346,4 +336,14 @@
   <string name="common_thai">Tajlandski</string>
   <string name="common_estonian">estonski</string>
   <string name="common_arab">Arapski</string>
+  <string name="activity_project_funded_description_template_val">Uskoro ćete dobiti informacije o VAL nagradi</string>
+  <string name="wallet_val_to_my_eth">VAL na moj Ethereum račun</string>
+  <string name="copy_val_title">Kopirajte adresu novčanika Sora (VAL)</string>
+  <string name="val_balance_title">VAL Token na različitim mrežama</string>
+  <string name="activity_val_between_users_transferred_type_template">Primljeno VAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">VAL nagrada za glasovanje</string>
+  <string name="wallet_receive_val">Primanje VAL</string>
+  <string name="view_balance_val">Pogledajte dodjelu tokena Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Most Ethereum nije aktivan.</string>
+  <string name="transaction_bridge_info">Informacije o mostu Ethereum</string>
 </resources>

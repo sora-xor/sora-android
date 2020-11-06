@@ -9,7 +9,7 @@
     tools:layout_height="wrap_content">
 
     <LinearLayout
-        android:id="@+id/copyXorAddress"
+        android:id="@+id/copyValAddress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
@@ -32,7 +32,7 @@
             android:layout_marginStart="@dimen/x3"
             android:drawablePadding="@dimen/x3"
             android:includeFontPadding="false"
-            android:text="@string/copy_xor_title"
+            android:text="@string/copy_val_title"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:orientation="horizontal"
-        android:visibility="gone"
+        android:visibility="visible"
         android:paddingStart="@dimen/x3"
         android:paddingTop="@dimen/x2"
         android:paddingEnd="@dimen/x3"
@@ -75,7 +75,7 @@
         android:layout_height="wrap_content"
         android:background="?attr/selectableItemBackground"
         android:orientation="horizontal"
-        android:visibility="gone"
+        android:visibility="visible"
         android:paddingStart="@dimen/x3"
         android:paddingTop="@dimen/x2"
         android:paddingEnd="@dimen/x3"
@@ -94,7 +94,7 @@
             android:layout_marginStart="@dimen/x3"
             android:drawablePadding="@dimen/x3"
             android:includeFontPadding="false"
-            android:text="@string/view_balance"
+            android:text="@string/view_balance_val"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

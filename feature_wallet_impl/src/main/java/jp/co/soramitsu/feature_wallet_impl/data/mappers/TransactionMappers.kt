@@ -86,12 +86,12 @@ fun mapTransactionTypeRemoteToTransactionTypeLocal(typeRemote: TransactionRemote
 fun mapTransactionLocalToTransaction(transactionLocal: TransferTransactionLocal): Transaction {
     return with(transactionLocal) {
         Transaction(
-            if (assetId == AssetHolder.SORA_XOR_ERC_20.id) {
+            if (assetId == AssetHolder.SORA_XOR_ERC_20.id || assetId == AssetHolder.SORA_VAL_ERC_20.id) {
                 txHash
             } else {
                 ""
             },
-            if (assetId == AssetHolder.SORA_XOR.id) {
+            if (assetId == AssetHolder.SORA_XOR.id || assetId == AssetHolder.SORA_VAL.id) {
                 txHash
             } else {
                 ""
@@ -106,12 +106,12 @@ fun mapTransactionLocalToTransaction(transactionLocal: TransferTransactionLocal)
             peerId,
             reason,
             mapTransactionTypeLocalToTransactionType(type),
-            if (assetId == AssetHolder.SORA_XOR_ERC_20.id) {
+            if (assetId == AssetHolder.SORA_XOR_ERC_20.id || assetId == AssetHolder.SORA_VAL_ERC_20.id) {
                 fee
             } else {
                 BigDecimal.ZERO
             },
-            if (assetId == AssetHolder.SORA_XOR.id) {
+            if (assetId == AssetHolder.SORA_XOR.id || assetId == AssetHolder.SORA_VAL.id) {
                 fee
             } else {
                 BigDecimal.ZERO
@@ -144,7 +144,7 @@ fun mapWithdrawTransactionLocalToTransaction(transactionLocal: WithdrawTransacti
             transactionLocal.transferTxHash,
             intentTxHash,
             mapWithdrawTransactionStatusLocalToTransactionStatus(status, transferAmount != BigDecimal.ZERO),
-            AssetHolder.SORA_XOR_ERC_20.id,
+            AssetHolder.SORA_VAL_ERC_20.id,
             if (transferPeerId.isNullOrEmpty()) {
                 myAccountId
             } else {
@@ -247,7 +247,7 @@ fun mapDepositTransactionLocalToTransaction(transactionLocal: DepositTransaction
             transactionLocal.depositTxHash,
             transactionLocal.transferTxHash,
             mapDepositTransactionLocalStatusToTransactionStatus(status),
-            AssetHolder.SORA_XOR_ERC_20.id,
+            AssetHolder.SORA_VAL_ERC_20.id,
             myEthAddress,
             details,
             peerName,

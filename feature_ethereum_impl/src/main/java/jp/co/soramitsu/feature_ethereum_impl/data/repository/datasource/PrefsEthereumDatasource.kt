@@ -24,7 +24,7 @@ class PrefsEthereumDatasource @Inject constructor(
         private const val PREFS_ETH_PRIVATE = "prefs_eth_private_key"
         private const val PREFS_ETH_REGISTER_TRANSACTION_HASH = "prefs_eth_register_transaction_hash"
         private const val PREFS_ETH_REGISTER_STATE = "prefs_eth_register_state"
-        private const val PREFS_XOR_ADDRESS = "prefs_xor_address"
+        private const val PREFS_VAL_ADDRESS = "prefs_val_address"
     }
 
     private val ethRegisterStateSubject = BehaviorSubject.create<EthRegisterState.State>()
@@ -34,12 +34,12 @@ class PrefsEthereumDatasource @Inject constructor(
         ethRegisterStateSubject.onNext(currentEthRegisterState.state)
     }
 
-    override fun retrieveXORAddress(): String {
-        return preferences.getString(PREFS_XOR_ADDRESS)
+    override fun retrieveVALAddress(): String {
+        return preferences.getString(PREFS_VAL_ADDRESS)
     }
 
-    override fun saveXORAddress(address: String) {
-        preferences.putString(PREFS_XOR_ADDRESS, address)
+    override fun saveVALAddress(address: String) {
+        preferences.putString(PREFS_VAL_ADDRESS, address)
     }
 
     override fun saveEthereumCredentials(ethereumCredentials: EthereumCredentials) {

@@ -11,6 +11,6 @@ data class ContactMenuItem(
     val type: Type
 ) {
     enum class Type {
-        XOR_TO_MY_ETH
+        VAL_TO_MY_ETH
     }
 }

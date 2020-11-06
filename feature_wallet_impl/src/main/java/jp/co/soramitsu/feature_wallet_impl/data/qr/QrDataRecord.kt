@@ -11,5 +11,5 @@ import jp.co.soramitsu.common.util.Const
 data class QrDataRecord(
     @SerializedName("accountId") val accountId: String,
     @SerializedName("amount") val amount: String?,
-    @SerializedName("assetId") val assetId: String? = Const.XOR_ASSET_ID
+    @SerializedName("assetId") val assetId: String? = Const.VAL_ASSET_ID
 )

@@ -82,7 +82,9 @@ class AssetSettingsFragment : BaseFragment<AssetSettingsViewModel>() {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
                 val from = viewHolder.adapterPosition
                 val to = target.adapterPosition
-                viewModel.assetPositionChanged(from, to)
+                if (from != 0 && to != 0) {
+                    viewModel.assetPositionChanged(from, to)
+                }
                 return false
             }
 

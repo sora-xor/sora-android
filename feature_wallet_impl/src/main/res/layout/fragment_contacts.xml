@@ -36,7 +36,7 @@
             android:layout_marginTop="@dimen/x1"
             android:layout_marginRight="@dimen/x2"
             android:layout_marginBottom="@dimen/x2"
-            app:queryHint="@string/contacts_search_hint" />
+            app:queryHint="@string/contacts_search_hint_v1" />
 
     </FrameLayout>
 

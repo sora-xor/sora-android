@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_sse_impl.domain
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.disposables.Disposable
@@ -50,10 +51,9 @@ class EventObserver(
                     else -> Completable.complete()
                 }
             }
+            .doOnError { FirebaseCrashlytics.getInstance().recordException(it) }
             .subscribe({
-            }, {
-                it.printStackTrace()
-            })
+            }, { })
     }
 
     private fun handleEthRegistrationStartedEvent(event: EthRegistrationStartedEvent): Completable {
@@ -112,12 +112,19 @@ class EventObserver(
                         didRepository.retrieveMnemonic()
                             .flatMapCompletable {
                                 ethereumRepository.getEthCredentials(it)
-                                    .flatMap { ethCredentials -> ethereumRepository.getXorTokenAddress(ethCredentials).map { Pair(ethCredentials, it) } }
+                                    .flatMap { ethCredentials -> ethereumRepository.getValTokenAddress(ethCredentials).map { Pair(ethCredentials, it) } }
                                     .flatMapCompletable { pair ->
                                         didRepository.getAccountId()
-                                            .flatMap { ethereumRepository.confirmWithdraw(pair.first, tx.withdrawAmount, tx.intentTxHash, it, tx.gasPrice, tx.gasLimit, pair.second) }
-                                            .flatMapCompletable { walletRepository.updateWithdrawTransactionConfirmHash(event.operationId, it) }
-                                            .andThen(walletRepository.updateWithdrawTransactionStatus(event.operationId, WithdrawTransaction.Status.CONFIRM_PENDING))
+                                            .flatMap { accountId ->
+                                                ethereumRepository.confirmWithdraw(pair.first, tx.withdrawAmount, tx.intentTxHash, accountId, tx.gasPrice, tx.gasLimit, pair.second)
+                                            }
+                                            .flatMapCompletable { walletRepository.updateWithdrawTransactionStatus(event.operationId, WithdrawTransaction.Status.CONFIRM_PENDING)
+                                                .andThen(walletRepository.updateWithdrawTransactionConfirmHash(event.operationId, it))
+                                            }
+                                            .onErrorResumeNext {
+                                                FirebaseCrashlytics.getInstance().recordException(it)
+                                                walletRepository.updateWithdrawTransactionStatus(event.operationId, WithdrawTransaction.Status.CONFIRM_FAILED)
+                                            }
                                     }
                             }
                     } else {

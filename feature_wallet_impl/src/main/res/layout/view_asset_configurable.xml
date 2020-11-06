@@ -44,7 +44,7 @@
                     android:layout_margin="@dimen/x2"
                     android:gravity="center"
                     android:textColor="@android:color/white"
-                    tools:src="@drawable/ic_xor_transparent_24" />
+                    tools:src="@drawable/ic_val_red_24" />
 
             </FrameLayout>
 
@@ -87,7 +87,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/x1"
-                            tools:text="XOR" />
+                            tools:text="VAL" />
 
                         <TextView
                             android:id="@+id/assetLastNameTv"

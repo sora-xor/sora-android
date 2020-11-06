@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
-import jp.co.soramitsu.common.util.Const.Companion.NO_ICON_RESOURCE
 import jp.co.soramitsu.common.util.ext.gone
-import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
@@ -25,7 +23,6 @@ import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.event_section_header.eventItemDayTextView
 import kotlinx.android.synthetic.main.event_section_item.rootEvent
 import kotlinx.android.synthetic.main.event_section_item.eventStatusIconImageView
-import kotlinx.android.synthetic.main.event_section_item.eventPeerInitialsTextView
 import kotlinx.android.synthetic.main.event_section_item.eventItemTitleTextView
 import kotlinx.android.synthetic.main.event_section_item.eventItemDescriptionTextView
 import kotlinx.android.synthetic.main.event_section_item.eventItemAmountTextView
@@ -113,18 +110,8 @@ sealed class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
                 eventItemAmountTextView.text = amountText
             }
 
-            if (hasIcon(soraTransaction)) {
-                eventStatusIconImageView.setImageResource(soraTransaction.statusIconResource)
-                eventStatusIconImageView.show()
-                eventPeerInitialsTextView.gone()
-            } else {
-                eventPeerInitialsTextView.text = soraTransaction.initials
-                eventPeerInitialsTextView.show()
-                eventStatusIconImageView.gone()
-            }
+            eventStatusIconImageView.setImageResource(soraTransaction.statusIconResource)
         }
-
-        private fun hasIcon(soraTransaction: SoraTransaction) = soraTransaction.statusIconResource != NO_ICON_RESOURCE
     }
 
     class EventHeaderViewHolder(override val containerView: View?) : EventViewHolder(containerView!!), LayoutContainer {

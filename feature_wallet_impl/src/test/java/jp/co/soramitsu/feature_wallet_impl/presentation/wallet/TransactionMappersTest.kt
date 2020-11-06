@@ -57,12 +57,12 @@ class TransactionMappersTest {
         SoraTransaction(
             "transactionId",
             true,
-            0,
+            R.drawable.ic_val_red_30,
             "PL",
             "peerName lastname",
             "details",
             "01 Jan 1970 00:00",
-            "${Const.SORA_SYMBOL} 10.12"
+            "10.12 VAL"
         )
     )
 
@@ -73,6 +73,7 @@ class TransactionMappersTest {
     @Test fun `map transactions to SoraTransactions with headers`() {
         given(resourceManager.getString(R.string.common_today)).willReturn("today")
         given(resourceManager.getString(R.string.common_yesterday)).willReturn("yesterday")
+        given(resourceManager.getString(R.string.val_token)).willReturn("VAL")
         given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("10.12")
         given(dateTimeFormatter.formatDate(Date(transactions.first().timestampInMillis), DateTimeFormatter.DD_MMM_YYYY_HH_MM_SS)).willReturn("01 Jan 1970 00:00")
         given(dateTimeFormatter.dateToDayWithoutCurrentYear(Date(transactions.first().timestampInMillis), "today", "yesterday")).willReturn("today")

@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -35,8 +36,7 @@ import jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_sse_api.EventsObservingStarter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.activity_main.badConnectionView
-import kotlinx.android.synthetic.main.activity_main.bottomNavigationView
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.Date
 import javax.inject.Inject
 
@@ -50,6 +50,7 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
         private const val ANIM_DURATION = 150L
+        private const val SERVICE_START_DELAY = 500L
 
         fun start(context: Context) {
             val intent = Intent(context, MainActivity::class.java).apply {
@@ -95,14 +96,8 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
             .inject(this)
     }
 
-    override fun onStart() {
-        super.onStart()
-        eventsObservingStarter.startObserver()
-        ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
-    }
-
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
         eventsObservingStarter.stopObserver()
         ethStatusPollingServiceStarter.stopEthStatusPollingServiceService()
     }
@@ -253,6 +248,11 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         }
         timeInBackground = null
         super.onResume()
+
+        Handler().postDelayed({
+            eventsObservingStarter.startObserver()
+            ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
+        }, SERVICE_START_DELAY)
     }
 
     private fun idleTimePassedFrom(timeInBackground: Date): Boolean {

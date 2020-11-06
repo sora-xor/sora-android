@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">利用不可能なリソース</string>
   <string name="common_error_internal_error_title">内部エラー</string>
   <string name="projects_title">Sora プロジェクト</string>
-  <string name="project_founded_template" formatted="false">%s %%の投票%s</string>
+  <string name="project_founded_template" formatted="false">%s%%の投票%s</string>
   <string name="project_votes_template">%s投票数</string>
   <string name="project_ended_template">終了しました%s</string>
   <string name="project_spent_format">%s回の投票を行いました</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">パスフレーズはパスワードの１種です</string>
   <string name="common_passphrase_body">アカウントを復元する際に使います。下記に記入してください。これが無いと、アカウントを復元することができません。</string>
   <string name="common_passphrase_your_passphrase">あなたのパスフレーズ</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Sora アプリをアップロード</string>
   <string name="common_unsupported_version_body">更新されたSoraアプリケーションはGoogle Playで入手できます。改善とバグ修正が含まれています。</string>
   <string name="common_unsupported_version_open_google_play">Google Playを開く</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">インターネット接続を確認して、後でもう一度やり直してください。</string>
   <string name="common_error_pincode_check_error">入力したコードが間違っています</string>
   <string name="activity_user_registered_type">友人が登録しました</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">あなたの評判は高まります！</string>
   <string name="activity_voting_rights_credited_type_template">投票の配布する</string>
   <string name="activity_voting_rights_title_template">毎日の投票</string>
   <string name="activity_invitation_credited_type_template">招待権の配布</string>
   <string name="activity_invitation_credited_title_template">招待された招待状</string>
   <string name="activity_project_funded_type_template">プロジェクトが完了しました！</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">まもなくXOR報酬についての情報が通知されます</string>
   <string name="activity_project_created_type_template">新しいプロジェクト!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">投票によるXOR報酬</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">ランキングの変動</string>
   <string name="activity_project">プロジェクト</string>
   <string name="activity_user">ユーザー</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">別の招待コードをすでに適用しています</string>
   <string name="invite_enter_dialog_title_hint">8文字の英数字</string>
   <string name="invite_enter_invitation_code">招待コードを入力する</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">投票した友達%s人</item>
   </plurals>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">入力した国名は存在しません</string>
   <string name="phone_number_title">サインアップ</string>
   <string name="phone_number_mobile">携帯電話番号</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">お待ちください</string>
   <string name="common_open_explorer">View in Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">この電話番号は既に使用されています。別のものを試してください。</string>
@@ -241,7 +232,7 @@
   <string name="common_spanish">スペイン語</string>
   <string name="common_bashkir">バシキール語</string>
   <string name="biometric_dialog_title">認証する</string>
-  <string name="contacts_search_hint_v1">アカウントID、電話番号</string>
+  <string name="contacts_search_hint_v1">第一に携帯電話番号の認証が必要です</string>
   <string name="wallet_xor_to_my_eth">XOR からマイ イーテリアム アカウント</string>
   <string name="wallet_ethereum">イーサリアム</string>
   <string name="wallet_soranet">ソラネット</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">転送可能</string>
   <string name="limit_dialog_reset">リセットの制限</string>
   <string name="limit_dialog_set_amount">金額を</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet]からXOR ERC20 [Ethereum]</string>
   <string name="common_hour">時間</string>
   <string name="common_japanese">日本人</string>
   <string name="common_chinese">中国人</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">タイ人</string>
   <string name="common_estonian">エストニア語</string>
   <string name="common_arab">アラブ</string>
+  <string name="activity_project_funded_description_template_val">まもなくVAL報酬についての情報が通知されます</string>
+  <string name="wallet_val_to_my_eth">VAL からマイ イーテリアム アカウント</string>
+  <string name="copy_val_title">Sora（VAL）ウォレットアドレスのコピー</string>
+  <string name="val_balance_title">異なるネットワーク上のVALトークン</string>
+  <string name="activity_val_between_users_transferred_type_template">受け取ったVAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">投票によるVAL報酬</string>
+  <string name="wallet_receive_val">VALを受け取る</string>
+  <string name="view_balance_val">Sora（VAL）トークン割り当ての表示</string>
+  <string name="transaction_bridge_not_active_error">イーサリアムブリッジがアクティブではありません。</string>
+  <string name="transaction_bridge_info">イーサリアムブリッジ情報</string>
 </resources>

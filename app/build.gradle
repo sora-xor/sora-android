@@ -101,6 +101,8 @@ android {
             resValue "string", "app_name", "Sora Develop"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/dev/join"
+            manifestPlaceholders.appIcon = "@mipmap/ic_launcher"
+            manifestPlaceholders.roundedIcon = "@mipmap/ic_launcher_rounded"
         }
 
         tst {
@@ -108,6 +110,8 @@ android {
             resValue "string", "app_name", "Soralution"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/tst/join"
+            manifestPlaceholders.appIcon = "@mipmap/ic_soralution_launcher"
+            manifestPlaceholders.roundedIcon = "@mipmap/ic_soralution_launcher_rounded"
         }
 
         staging {
@@ -115,12 +119,16 @@ android {
             resValue "string", "app_name", "Sora Staging"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/stg/join"
+            manifestPlaceholders.appIcon = "@mipmap/ic_launcher"
+            manifestPlaceholders.roundedIcon = "@mipmap/ic_launcher_rounded"
         }
 
         production {
             resValue "string", "app_name", "Sora"
             dimension 'default'
             manifestPlaceholders.pathPrefix = "/join"
+            manifestPlaceholders.appIcon = "@mipmap/ic_launcher"
+            manifestPlaceholders.roundedIcon = "@mipmap/ic_launcher_rounded"
         }
     }
 

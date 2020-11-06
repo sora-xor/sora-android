@@ -13,19 +13,6 @@
     android:paddingStart="@dimen/margin_padding_by_side"
     android:paddingEnd="@dimen/margin_padding_by_side">
 
-    <TextView
-        android:id="@+id/eventPeerInitialsTextView"
-        android:layout_width="@dimen/side_button_icon_size"
-        android:layout_height="@dimen/side_button_icon_size"
-        android:layout_gravity="center"
-        android:background="@drawable/circle_background_stroked"
-        android:gravity="center"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="SL" />
-
     <ImageView
         android:id="@+id/eventStatusIconImageView"
         android:layout_width="@dimen/side_button_icon_size"

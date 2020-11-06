@@ -13,7 +13,6 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
@@ -86,98 +85,98 @@ class TransactionConfirmationViewModel(
         }
 
         disposables.add(
-            walletInteractor.getXorAndXorErcBalanceAmount()
+            walletInteractor.getValAndValErcBalanceAmount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    _balanceFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(it)}"
+                    _balanceFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(it)} ${resourceManager.getString(R.string.val_token)}"
                 }, {
                     it.printStackTrace()
                 })
         )
 
         when (transferType) {
-            TransferType.XOR_TRANSFER -> {
-                _amountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount)}"
+            TransferType.VAL_TRANSFER -> {
+                _amountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} ${resourceManager.getString(R.string.val_token)}"
 
                 if (transactionFee != BigDecimal.ZERO) {
-                    _transactionFeeFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(transactionFee)}"
+                    _transactionFeeFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(transactionFee)} ${resourceManager.getString(R.string.val_token)}"
                 }
 
-                _totalAmountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount + transactionFee)}"
+                _totalAmountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount + transactionFee)} ${resourceManager.getString(R.string.val_token)}"
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
 
                 if (peerId == peerFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_xor_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_red_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
 
                 _recipientNameLiveData.value = peerFullName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
-                _inputTokenIconLiveData.value = R.drawable.ic_xor_red_24
-                _inputTokenNameLiveData.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastNameLiveData.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenIconLiveData.value = R.drawable.ic_val_red_24
+                _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
 
-            TransferType.XORERC_TRANSFER -> {
-                _amountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount)}"
+            TransferType.VALERC_TRANSFER -> {
+                _amountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} ${resourceManager.getString(R.string.val_token)}"
                 _minerFeeFormattedLiveData.value = "$minerFee ${resourceManager.getString(R.string.transaction_eth_sign)}"
-                _totalAmountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount + transactionFee)}"
-                _recipientIconLiveData.value = R.drawable.ic_xor_grey_24
+                _totalAmountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount + transactionFee)} ${resourceManager.getString(R.string.val_token)}"
+                _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = peerId
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
-                _inputTokenIconLiveData.value = R.drawable.ic_xor_grey_24
-                _inputTokenNameLiveData.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastNameLiveData.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenIconLiveData.value = R.drawable.ic_val_black_24
+                _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
 
-            TransferType.XOR_WITHDRAW -> {
-                _amountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount)}"
+            TransferType.VAL_WITHDRAW -> {
+                _amountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} ${resourceManager.getString(R.string.val_token)}"
 
                 if (transactionFee != BigDecimal.ZERO) {
-                    _transactionFeeFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(transactionFee)}"
+                    _transactionFeeFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(transactionFee)} ${resourceManager.getString(R.string.val_token)}"
                 }
 
                 _minerFeeFormattedLiveData.value = "$minerFee ${resourceManager.getString(R.string.transaction_eth_sign)}"
-                _totalAmountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount + transactionFee)}"
-                _recipientIconLiveData.value = R.drawable.ic_xor_grey_24
+                _totalAmountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount + transactionFee)} ${resourceManager.getString(R.string.val_token)}"
+                _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = peerId
                 _outputTitle.value = resourceManager.getString(R.string.wallet_withdraw)
-                _inputTokenIconLiveData.value = R.drawable.ic_xor_red_24
-                _inputTokenNameLiveData.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastNameLiveData.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenIconLiveData.value = R.drawable.ic_val_red_24
+                _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
 
-            TransferType.XORXORERC_TO_XORERC -> {
-                _amountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount)}"
+            TransferType.VALVALERC_TO_VALERC -> {
+                _amountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} ${resourceManager.getString(R.string.val_token)}"
                 _minerFeeFormattedLiveData.value = "$minerFee ${resourceManager.getString(R.string.transaction_eth_sign)}"
 
                 if (transactionFee != BigDecimal.ZERO) {
-                    _transactionFeeFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(transactionFee)}"
+                    _transactionFeeFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(transactionFee)} ${resourceManager.getString(R.string.val_token)}"
                 }
 
-                _totalAmountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount + transactionFee)}"
-                _recipientIconLiveData.value = R.drawable.ic_xor_grey_24
+                _totalAmountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount + transactionFee)} ${resourceManager.getString(R.string.val_token)}"
+                _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = peerId
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
                 _inputTokenIconLiveData.value = R.drawable.ic_double_token_24
-                _inputTokenNameLiveData.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastNameLiveData.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
 
-            TransferType.XORXORERC_TO_XOR -> {
-                _amountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount)}"
+            TransferType.VALVALERC_TO_VAL -> {
+                _amountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} ${resourceManager.getString(R.string.val_token)}"
 
                 if (transactionFee != BigDecimal.ZERO) {
-                    _transactionFeeFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(transactionFee)}"
+                    _transactionFeeFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(transactionFee)} ${resourceManager.getString(R.string.val_token)}"
                 }
 
-                _totalAmountFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(amount + transactionFee)}"
+                _totalAmountFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(amount + transactionFee)} ${resourceManager.getString(R.string.val_token)}"
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
 
                 if (peerId == peerFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_xor_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
@@ -186,8 +185,8 @@ class TransactionConfirmationViewModel(
                 _recipientNameLiveData.value = peerFullName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
                 _inputTokenIconLiveData.value = R.drawable.ic_double_token_24
-                _inputTokenNameLiveData.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastNameLiveData.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
         }
     }
@@ -198,11 +197,11 @@ class TransactionConfirmationViewModel(
 
     fun nextClicked() {
         when (transferType) {
-            TransferType.XOR_TRANSFER -> soraNetTransferToRecipient()
-            TransferType.XORERC_TRANSFER -> xorErcTransferToRecipient()
-            TransferType.XOR_WITHDRAW -> withdraw()
-            TransferType.XORXORERC_TO_XORERC -> combinedXorErcTransferToRecipient()
-            TransferType.XORXORERC_TO_XOR -> combinedXorTransferToRecipient()
+            TransferType.VAL_TRANSFER -> soraNetTransferToRecipient()
+            TransferType.VALERC_TRANSFER -> valErcTransferToRecipient()
+            TransferType.VAL_WITHDRAW -> withdraw()
+            TransferType.VALVALERC_TO_VALERC -> combinedValErcTransferToRecipient()
+            TransferType.VALVALERC_TO_VAL -> combinedValTransferToRecipient()
         }
     }
 
@@ -221,9 +220,9 @@ class TransactionConfirmationViewModel(
         )
     }
 
-    private fun xorErcTransferToRecipient() {
+    private fun valErcTransferToRecipient() {
         disposables.add(
-            ethereumInteractor.transferXorERC20(peerId, amount)
+            ethereumInteractor.transferValERC20(peerId, amount)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { showProgress() }
@@ -251,9 +250,9 @@ class TransactionConfirmationViewModel(
         )
     }
 
-    private fun combinedXorErcTransferToRecipient() {
+    private fun combinedValErcTransferToRecipient() {
         disposables.add(
-            ethereumInteractor.startCombinedXorErcTransfer(partialAmount, amount, peerId, transactionFee.toString())
+            ethereumInteractor.startCombinedValErcTransfer(partialAmount, amount, peerId, transactionFee.toString())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { showProgress() }
@@ -266,9 +265,9 @@ class TransactionConfirmationViewModel(
         )
     }
 
-    private fun combinedXorTransferToRecipient() {
+    private fun combinedValTransferToRecipient() {
         disposables.add(
-            ethereumInteractor.startCombinedXorTransfer(partialAmount, amount, peerId, peerFullName, transactionFee, description)
+            ethereumInteractor.startCombinedValTransfer(partialAmount, amount, peerId, peerFullName, transactionFee, description)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { showProgress() }

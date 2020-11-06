@@ -97,10 +97,6 @@ class EventRepositoryImpl @Inject constructor(
         }
 
         override fun onMessage(sse: ServerSentEvent, id: String, eventType: ServerSentEvent.Type?, data: String) {
-            if (id.isNotEmpty()) {
-                eventDatasource.saveLastEventId(id)
-            }
-
             when (eventType) {
                 ServerSentEvent.Type.EVENT -> {
                     val event = parseEvent(data)
@@ -110,6 +106,10 @@ class EventRepositoryImpl @Inject constructor(
                 }
                 else -> {
                 }
+            }
+
+            if (id.isNotEmpty()) {
+                eventDatasource.saveLastEventId(id)
             }
         }
 

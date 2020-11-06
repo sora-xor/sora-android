@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Lösenfras är \nett typ av lösenord.</string>
   <string name="common_passphrase_body">Används för att återställa åtkomst till ditt konto. Skriv ned och spara, vi kan inte återställa ditt konto utan det!</string>
   <string name="common_passphrase_your_passphrase">Din lösenfras</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Uppdatera din Sora-app</string>
   <string name="common_unsupported_version_body">Uppdatering för Sora-applikationen är tillgänglig i Google Play. Den innehåller förbättringar och buggfixar.</string>
   <string name="common_unsupported_version_open_google_play">Öppna Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Kontrollera internetanslutningen och försök igen senare.</string>
   <string name="common_error_pincode_check_error">Angivna koden är fel</string>
   <string name="activity_user_registered_type">Vän registrerad</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Ditt renommé kommer att öka!</string>
   <string name="activity_voting_rights_credited_type_template">Röstfördelning</string>
   <string name="activity_voting_rights_title_template">Dagliga omröstningar</string>
   <string name="activity_invitation_credited_type_template">Inbjudnings fördelning</string>
   <string name="activity_invitation_credited_title_template">Krediterade inbjudningar</string>
   <string name="activity_project_funded_type_template">Projektet har slutförts!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Du kommer snart att få information om XOR-belöning</string>
   <string name="activity_project_created_type_template">Nytt projekt!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">XOR belöning för röstning</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Ranking ändrad</string>
   <string name="activity_project">Projekt</string>
   <string name="activity_user">Användare</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Du har redan använt en inbjudningskod</string>
   <string name="invite_enter_dialog_title_hint">8 alfanumeriska tecken</string>
   <string name="invite_enter_invitation_code">Ange inbjudningskod</string>
-  <string name="project_votes_k_template">%s K</string>
   <plurals name="project_friends_template">
     <item quantity="one">vän röstade</item>
     <item quantity="other">vänner röstade</item>
@@ -165,12 +157,12 @@
   <string name="project_website">Webbplats</string>
   <string name="project_gallery">Galleri</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">dag kvar</item>
-    <item quantity="other">dagar kvat</item>
+    <item quantity="one">%s dag kvar</item>
+    <item quantity="other">%s dagar kvat</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">timme kvar</item>
-    <item quantity="other">timmar kvar</item>
+    <item quantity="one">%s timme kvar</item>
+    <item quantity="other">%s timmar kvar</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="one">%s minut kvar</item>
@@ -238,7 +230,6 @@
   <string name="countries_country_not_found">Inga länder matchar din sökning</string>
   <string name="phone_number_title">Registrear</string>
   <string name="phone_number_mobile">Mobiltelefonnummer</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Vänligen vänta</string>
   <string name="common_open_explorer">Visa i Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Tyvärr, detta telefonnumret används redan. Vänligen prova ett annat.</string>
@@ -247,7 +238,7 @@
   <string name="common_spanish">Spanska</string>
   <string name="common_bashkir">Basjkiriska</string>
   <string name="biometric_dialog_title">Autentisera</string>
-  <string name="contacts_search_hint_v1">Konto-ID, telefonnummer</string>
+  <string name="contacts_search_hint_v1">Användar ID, telefonnummer, adress</string>
   <string name="wallet_xor_to_my_eth">XOR till Mitt Ethereum-konto</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -294,7 +285,6 @@
   <string name="limit_dialog_available_limit">Tillgänglig för överföring</string>
   <string name="limit_dialog_reset">Begränsa återställning i</string>
   <string name="limit_dialog_set_amount">Ange belopp till</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] till XOR ERC20 [Ethereum]</string>
   <string name="common_hour">timme</string>
   <string name="common_japanese">Japanska</string>
   <string name="common_chinese">Kinesiska</string>
@@ -339,4 +329,14 @@
   <string name="common_thai">Thai</string>
   <string name="common_estonian">Estniska</string>
   <string name="common_arab">Arabiska</string>
+  <string name="activity_project_funded_description_template_val">Du kommer snart att få information om VAL-belöning</string>
+  <string name="wallet_val_to_my_eth">VAL till Mitt Ethereum-konto</string>
+  <string name="copy_val_title">Kopiera Sora (VAL) plånbokadress</string>
+  <string name="val_balance_title">VAL-token i olika nätverk</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL togs emot</string>
+  <string name="activity_val_reward_credited_from_project_type_template">VAL belöning för röstning</string>
+  <string name="wallet_receive_val">Ta emot VAL</string>
+  <string name="view_balance_val">Visa Sora (VAL) tokenallokering</string>
+  <string name="transaction_bridge_not_active_error">Ethereum-bron är inte aktiv.</string>
+  <string name="transaction_bridge_info">Info om Ethereum bridge</string>
 </resources>

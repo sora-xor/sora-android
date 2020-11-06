@@ -54,7 +54,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/margin_padding_by_side"
                     android:layout_marginTop="@dimen/x2"
-                    android:drawableStart="@drawable/ic_xor_red_24"
+                    android:drawableStart="@drawable/ic_val_red_24"
                     android:drawablePadding="@dimen/x1"
                     android:fontFamily="@font/soramitsu_semibold"
                     android:gravity="center_vertical"
@@ -73,11 +73,13 @@
                     android:layout_marginEnd="@dimen/margin_padding_by_side"
                     android:fontFamily="@font/sora_semibold"
                     android:textColor="@color/circleBgGrey"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
                     app:layout_constraintBottom_toBottomOf="@id/inputAccountName"
                     app:layout_constraintHorizontal_bias="1.0"
                     app:layout_constraintStart_toEndOf="@id/inputAccountName"
                     app:layout_constraintTop_toTopOf="@id/inputAccountName"
-                    tools:text="XOR" />
+                    tools:text="VAL" />
 
                 <TextView
                     android:id="@+id/inputAccountInfo"
@@ -262,12 +264,30 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/errorTextView"
+                style="@style/TextAppearance.Soramitsu.Body1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:lineSpacingExtra="5sp"
+                android:drawablePadding="@dimen/x1"
+                android:drawableStart="@drawable/ic_error_16"
+                android:drawableEnd="@drawable/ic_red_arrow_right_20"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:padding="@dimen/margin_padding_by_side"
+                android:background="?selectableItemBackground"
+                android:text="@string/transaction_bridge_not_active_error"
+                android:visibility="gone"
+                android:textColor="@color/black" />
+
+            <TextView
                 android:id="@+id/minerFeeTitle"
                 style="@style/TextAppearance.Soramitsu.Body1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x2"
+                android:layout_marginTop="@dimen/x1"
                 android:layout_marginEnd="@dimen/margin_padding_by_side"
                 android:drawableStart="@drawable/ic_note_grey_16"
                 android:drawablePadding="@dimen/x1"

@@ -137,7 +137,7 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
 
         fun bind(contactEthListItem: EthListItem, debounceClickHandler: DebounceClickHandler, itemViewClickListener: (EthListItem) -> Unit) {
             nameTv.text = contactEthListItem.ethereumAddress
-            iconTv.setImageResource(R.drawable.ic_eth_grey_16)
+            iconTv.setImageResource(R.drawable.ic_eth_16)
 
             root.setOnClickListener(DebounceClickListener(debounceClickHandler) {
                 itemViewClickListener(contactEthListItem)

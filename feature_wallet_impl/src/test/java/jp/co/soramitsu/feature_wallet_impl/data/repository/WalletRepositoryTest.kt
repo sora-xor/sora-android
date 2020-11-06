@@ -71,7 +71,7 @@ class WalletRepositoryTest {
 
     private lateinit var walletRepository: WalletRepositoryImpl
     private val emptyJson = "{}"
-    private val assetId = "xor#sora"
+    private val assetId = "val#sora"
     private val myAddress = "myaddress"
 
     @Before fun setUp() {
@@ -212,7 +212,7 @@ class WalletRepositoryTest {
         given(transactionFactory.buildTransferWithFeeTransaction(amount, myAccountId, dstUserId, description, fee, keyPair)).willReturn(Single.just(result as Pair<IrohaRequest, String>))
         given(result.first).willReturn(irohaRequest)
         given(result.second).willReturn(txHash)
-        given(api.transferXor(irohaRequest)).willReturn(Single.just(BaseResponse(StatusDto("200", "Ok"))))
+        given(api.transferVal(irohaRequest)).willReturn(Single.just(BaseResponse(StatusDto("200", "Ok"))))
 
         walletRepository.transfer(amount, myAccountId, dstUserId, description, fee, keyPair)
             .test()

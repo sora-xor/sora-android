@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">المصدر غير متوفر</string>
   <string name="common_error_internal_error_title">خطأ داخلي</string>
   <string name="projects_title">مشاريع Sora</string>
-  <string name="project_founded_template" formatted="false">%s %%من الاصوات%s</string>
+  <string name="project_founded_template" formatted="false">%s%%من الاصوات%s</string>
   <string name="project_votes_template">%s الأصوات</string>
   <string name="project_ended_template">تم الانتهاء %s</string>
   <string name="project_spent_format">لقد أنفقت %s الأصوات</string>
@@ -21,7 +21,7 @@
   <string name="pincode_set_your_pin_code">تعيين رمز التعريف السري</string>
   <string name="invite_title">قم بدعوة الأصدقاء للحصول على المزيد من الأصوات يوميًا!</string>
   <string name="invite_enter_code_description">هل تلقيت دعوتك إلى Sora؟ اضغط على الزر أعلاه وأدخل الرمز.</string>
-  <string name="invite_votes_left_template">اليسار</string>
+  <string name="invite_votes_left_template">%sاليسار</string>
   <string name="invite_code_applied_title">تهانينا!</string>
   <string name="invite_code_applied_body">تم تفعيل الرمز بنجاح</string>
   <string name="invite_enter_confirmation_body_mask">هل تريد تفعيل رمز الدعوة %s؟</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">كلمة المرور هي \n عبارة عن قن سري.</string>
   <string name="common_passphrase_body">يتم استخدامها لاستعادة الدخول إلى الحساب. لذا المرجو حفظها ، لاننا نتمكن من استعادة حسابك بدونها!</string>
   <string name="common_passphrase_your_passphrase">كلمة المرور</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">تحديث تطبيق Sora الخاص بك</string>
   <string name="common_unsupported_version_body">تطبيق Sora المحدث متاح في Google Play. يتوفر على التحسينات و تم فيه إصلاح الثغرات.</string>
   <string name="common_unsupported_version_open_google_play">افتح Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">الرجاء التحقق من اتصال الإنترنت وإعادة المحاولة لاحقًا.</string>
   <string name="common_error_pincode_check_error">الرمز الذي تم إدخاله غير صحيح</string>
   <string name="activity_user_registered_type">تم تسجيل صديق</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">ستتم ترقية سمعتك!</string>
   <string name="activity_voting_rights_credited_type_template">توزيع الأصوات</string>
   <string name="activity_voting_rights_title_template">الأصوات اليومية</string>
   <string name="activity_invitation_credited_type_template">توزيع الدعوات</string>
   <string name="activity_invitation_credited_title_template">تمت إضافة الدعوات</string>
   <string name="activity_project_funded_type_template">تم الانتهاء من المشروع!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">ستتلقى معلومات حول مكافأة XOR قريبًا</string>
   <string name="activity_project_created_type_template">مشروع جديد!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">مكافأة XOR للتصويت</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">تم تغيير الرتبة</string>
   <string name="activity_project">المشروع</string>
   <string name="activity_user">المستخدم</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">لقد قمت بالفعل بتفعيل رمز دعوة آخر</string>
   <string name="invite_enter_dialog_title_hint">8 أحرف أبجدية رقمية</string>
   <string name="invite_enter_invitation_code">أدخل رمز الدعوة</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="zero">صفر</item>
     <item quantity="one">واحد</item>
@@ -173,36 +165,36 @@
   <string name="project_website">الموقع الإلكتروني</string>
   <string name="project_gallery">معرض الصور</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">آخر</item>
+    <item quantity="zero">%s صفر</item>
+    <item quantity="one">%s واحد</item>
+    <item quantity="two">%s اثنان</item>
+    <item quantity="few">%s قليل</item>
+    <item quantity="many">%s كثير</item>
+    <item quantity="other">%s آخر</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">آخر</item>
+    <item quantity="zero">%s صفر</item>
+    <item quantity="one">%s واحد</item>
+    <item quantity="two">%s اثنان</item>
+    <item quantity="few">%s قليل</item>
+    <item quantity="many">%s كثير</item>
+    <item quantity="other">%s آخر</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">آخر</item>
+    <item quantity="zero">%s صفر</item>
+    <item quantity="one">%s واحد</item>
+    <item quantity="two">%s اثنان</item>
+    <item quantity="few">%s قليل</item>
+    <item quantity="many">%s كثير</item>
+    <item quantity="other">%s آخر</item>
   </plurals>
   <plurals name="project_date_second_plurals">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">آخر</item>
+    <item quantity="zero">%s صفر</item>
+    <item quantity="one">%s واحد</item>
+    <item quantity="two">%s اثنان</item>
+    <item quantity="few">%s قليل</item>
+    <item quantity="many">%s كثير</item>
+    <item quantity="other">%s آخر</item>
   </plurals>
   <string name="activity">النشاط</string>
   <string name="activity_sora_announcement">إعلان SORA</string>
@@ -262,7 +254,6 @@
   <string name="countries_country_not_found">لا توجد دول تطابق الطلب الخاص بك</string>
   <string name="phone_number_title">التسجيل</string>
   <string name="phone_number_mobile">رقم الهاتف المحمول</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">الرجاء الانتظار</string>
   <string name="common_open_explorer">عرض في مستكشف البلوكشين</string>
   <string name="common_error_phone_already_exists">عذرًا ، رقم الهاتف هذا قيد الاستخدام بالفعل. من فضلك ، جرب واحدا أخر.</string>
@@ -271,7 +262,7 @@
   <string name="common_spanish">الإسبانية</string>
   <string name="common_bashkir">بشكير</string>
   <string name="biometric_dialog_title">المصادقة</string>
-  <string name="contacts_search_hint_v1">معرف الحساب ورقم الهاتف</string>
+  <string name="contacts_search_hint_v1">تعريف الحساب، رقم الهاتف، العنوان</string>
   <string name="wallet_xor_to_my_eth">XOR إلى حساب الإيثريوم الخاص بي</string>
   <string name="wallet_ethereum">الإيثيريوم</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -318,7 +309,6 @@
   <string name="limit_dialog_available_limit">متاح للتحويل</string>
   <string name="limit_dialog_reset">إعادة تعيين الحد في</string>
   <string name="limit_dialog_set_amount">تحديد المبلغ</string>
-  <string name="limit_dialog_subtitle">XOR من [منصة صورا] إلى XOR ERC20 [على منصة الايثيريوم]</string>
   <string name="common_hour">الساعة</string>
   <string name="common_japanese">اليابانية</string>
   <string name="common_chinese">الصينية</string>
@@ -339,12 +329,12 @@
   <string name="referendum_unsupport_title">لا</string>
   <string name="referendum_ended_title">انتهى</string>
   <plurals name="referendum_date_day_plurals_value">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">اخر</item>
+    <item quantity="zero">%d صفر</item>
+    <item quantity="one">%d واحد</item>
+    <item quantity="two">%d اثنان</item>
+    <item quantity="few">%d قليل</item>
+    <item quantity="many">%d كثير</item>
+    <item quantity="other">%d اخر</item>
   </plurals>
   <string name="referendum_finishing_soon">ستنتهي قريبا</string>
   <string name="referendum_total_votes">مجموع الأصوات</string>
@@ -367,4 +357,14 @@
   <string name="common_thai">التايلاندية</string>
   <string name="common_estonian">الإستونية</string>
   <string name="common_arab">عرب</string>
+  <string name="activity_project_funded_description_template_val">ستتلقى معلومات حول مكافأة VAL قريبًا</string>
+  <string name="wallet_val_to_my_eth">VAL إلى حساب الإيثريوم الخاص بي</string>
+  <string name="copy_val_title">انسخ عنوان محفظة Sora (VAL)</string>
+  <string name="val_balance_title">VAL Token على شبكات مختلفة</string>
+  <string name="activity_val_between_users_transferred_type_template">تم استلام VAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">مكافأة VAL للتصويت</string>
+  <string name="wallet_receive_val">استلام VAL</string>
+  <string name="view_balance_val">عرض تخصيص الرمز المميز Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">حساب الايثيريوم غير مرتبط</string>
+  <string name="transaction_bridge_info">معلومات جسر Ethereum</string>
 </resources>

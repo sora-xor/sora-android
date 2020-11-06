@@ -33,7 +33,7 @@ import jp.co.soramitsu.core_db.model.VotesHistoryLocal
 import jp.co.soramitsu.core_db.model.WithdrawTransactionLocal
 
 @Database(
-    version = 33,
+    version = 35,
     entities = [
         ActivityFeedLocal::class,
         AnnouncementLocal::class,

@@ -29,9 +29,9 @@ interface WalletRouter {
         totalAmount: BigDecimal
     )
 
-    fun showXorTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
+    fun showValTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
 
-    fun showXorERCTransferAmount(address: String, amount: BigDecimal)
+    fun showValERCTransferAmount(address: String, amount: BigDecimal)
 
     fun returnToWalletFragment()
 
@@ -47,5 +47,5 @@ interface WalletRouter {
 
     fun showAssetSettings()
 
-    fun showXorWithdrawToErc(etherAddress: String, amount: BigDecimal)
+    fun showValWithdrawToErc(etherAddress: String, amount: BigDecimal)
 }

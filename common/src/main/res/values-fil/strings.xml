@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Ang Passphrase ay \n isang uri ng password.</string>
   <string name="common_passphrase_body">Ginagamit ito upang mabawi ang pag-access sa account. Isulat ito, hindi namin mababawi ang iyong account nang wala ito!</string>
   <string name="common_passphrase_your_passphrase">Ang iyong passphrase</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">I-update ang iyong Sora App</string>
   <string name="common_unsupported_version_body">Ang Na-Update na aplikasyon ng Sora ay makukuha sa Google Play. Kasama dito ang mga pagpapabuti at pag-aayos ng bug.</string>
   <string name="common_unsupported_version_open_google_play">Buksan ang Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Mangyaring, suriin ang koneksyon sa internet at subukang muli mamaya.</string>
   <string name="common_error_pincode_check_error">Mali ang na I-enter na code</string>
   <string name="activity_user_registered_type">Kaibigang Nakarehistro</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Ang iyong reputasyon ay madadagdagan!</string>
   <string name="activity_voting_rights_credited_type_template">Pamamahagi ng Mga Botohan</string>
   <string name="activity_voting_rights_title_template">Araw-araw na mga boto</string>
   <string name="activity_invitation_credited_type_template">Pamamahagi ng mga imbitasyon</string>
   <string name="activity_invitation_credited_title_template">Nakredit na ng mga imbitasyon</string>
   <string name="activity_project_funded_type_template">Ang proyekto ay nakumpleto na!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Makakatanggap ka ng impormasyon tungkol sa gantimpalang XOR sa lalong madaling panahon</string>
   <string name="activity_project_created_type_template">Bagong proyekto!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">Gantimpalang XOR para sa pagboto</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Nagbago ang ranggo</string>
   <string name="activity_project">Proyekto</string>
   <string name="activity_user">User</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Nakapag-apply ka na ng isa pang code ng imbitasyon</string>
   <string name="invite_enter_dialog_title_hint">8 na mga alphanumeric character</string>
   <string name="invite_enter_invitation_code">I-enter ang code ng imbitasyon</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="one">%s kaibigang bumoto</item>
     <item quantity="other">%s mga kaibigang bumoto</item>
@@ -165,12 +157,12 @@
   <string name="project_website">Website</string>
   <string name="project_gallery">Galerya</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">araw ang natitira</item>
-    <item quantity="other">araw ang natitira</item>
+    <item quantity="one">%s araw ang natitira</item>
+    <item quantity="other">%s araw ang natitira</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">oras ang natitira</item>
-    <item quantity="other">oras ang natitira</item>
+    <item quantity="one">%s oras ang natitira</item>
+    <item quantity="other">%s oras ang natitira</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="one">%s minutong natitira</item>
@@ -238,7 +230,6 @@
   <string name="countries_country_not_found">Walang mga bansa na tumutugma sa iyong query</string>
   <string name="phone_number_title">Mag-Sign up</string>
   <string name="phone_number_mobile">Numero ng mobile phone</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Maghintay lamang</string>
   <string name="common_open_explorer">Tingnan sa Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Paumanhin, ginagamit na ang numero ng teleponong ito. Pakiusap, subukan ang iba pa.</string>
@@ -247,7 +238,7 @@
   <string name="common_spanish">Espanyol</string>
   <string name="common_bashkir">Bashkir</string>
   <string name="biometric_dialog_title">Patunayan</string>
-  <string name="contacts_search_hint_v1">Account ID, numero ng telepono</string>
+  <string name="contacts_search_hint_v1">Account ID, numero ng telepono, address</string>
   <string name="wallet_xor_to_my_eth">XOR papunta sa aking Ethereum account</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -294,7 +285,6 @@
   <string name="limit_dialog_available_limit">Magagamit upang ilipat</string>
   <string name="limit_dialog_reset">Limitahan ang reset sa</string>
   <string name="limit_dialog_set_amount">Itakda ang halaga sa</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] sa XO ERC20 [Ethereum]</string>
   <string name="common_hour">oras</string>
   <string name="common_japanese">Hapon</string>
   <string name="common_chinese">Intsik</string>
@@ -339,4 +329,14 @@
   <string name="common_thai">Thai</string>
   <string name="common_estonian">Estonian</string>
   <string name="common_arab">Arabo</string>
+  <string name="activity_project_funded_description_template_val">Makakatanggap ka ng impormasyon tungkol sa gantimpalang VAL sa lalong madaling panahon</string>
+  <string name="wallet_val_to_my_eth">VAL papunta sa aking Ethereum account</string>
+  <string name="copy_val_title">Kopyahin ang address ng wallet ng Sora (VAL)</string>
+  <string name="val_balance_title">VAL Token sa iba\'t ibang mga network</string>
+  <string name="activity_val_between_users_transferred_type_template">Natanggap na VAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">Gantimpalang VAL para sa pagboto</string>
+  <string name="wallet_receive_val">Tumanggap ng VAL</string>
+  <string name="view_balance_val">Tingnan ang paglalaan ng token ng Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Ang Ethereum bridge ay hindi aktibo.</string>
+  <string name="transaction_bridge_info">Impormasyon sa tulay ng Ethereum</string>
 </resources>

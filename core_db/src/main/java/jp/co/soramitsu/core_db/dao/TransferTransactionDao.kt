@@ -35,9 +35,12 @@ abstract class TransferTransactionDao {
     @Query("SELECT * FROM transfer_transactions WHERE txHash == :txHash")
     abstract fun getTransactionByHash(txHash: String): TransferTransactionLocal
 
-    @Query("SELECT * FROM transfer_transactions WHERE assetId IS 'xor_erc20#sora' AND status == 0")
+    @Query("SELECT * FROM transfer_transactions WHERE assetId IS 'val_erc20#sora' AND status == 0")
     abstract fun getPendingEthereumTransactions(): Single<List<TransferTransactionLocal>>
 
     @Query("UPDATE transfer_transactions SET status = :newStatus WHERE txHash = :txHash")
     abstract fun updateStatus(txHash: String, newStatus: TransferTransactionLocal.Status)
+
+    @Query("UPDATE transfer_transactions SET txHash = :newHash WHERE txHash = :currentHash")
+    abstract fun updateTxHash(currentHash: String, newHash: String)
 }

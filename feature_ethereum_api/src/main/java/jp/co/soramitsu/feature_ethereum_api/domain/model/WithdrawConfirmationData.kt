@@ -9,7 +9,7 @@ import java.math.BigDecimal
 
 data class WithdrawConfirmationData(
     val ethereumCredentials: EthereumCredentials,
-    val xorTokenAddress: String,
+    val valTokenAddress: String,
     val amount: BigDecimal,
     val tranasctionId: String,
     val accountId: String

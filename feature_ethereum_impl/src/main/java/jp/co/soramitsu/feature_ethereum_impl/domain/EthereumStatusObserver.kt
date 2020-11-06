@@ -34,7 +34,7 @@ class EthereumStatusObserver(
                 }.flatMap { ethCredentials ->
                     didRepository.getAccountId()
                         .flatMap { accountId ->
-                            ethereumRepository.getXorTokenAddress(ethCredentials)
+                            ethereumRepository.getValTokenAddress(ethCredentials)
                                 .map { Triple(ethCredentials, accountId, it) }
                         }
                 }

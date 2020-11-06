@@ -96,7 +96,7 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
             totalAmount: BigDecimal
         ): Bundle {
             return Bundle().apply {
-                putSerializable(KEY_TRANSFER_TYPE, TransferType.XOR_TRANSFER)
+                putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_TRANSFER)
                 putString(KEY_MY_ACCOUNT_ID, myAccountId)
                 putString(KEY_PEER_ID, peerId)
                 putString(KEY_ASSET_ID, assetId)

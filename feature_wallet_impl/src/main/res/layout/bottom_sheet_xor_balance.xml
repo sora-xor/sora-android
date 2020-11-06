@@ -17,14 +17,14 @@
         tools:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/xorBalanceTitle"
+            android:id="@+id/valBalanceTitle"
             style="@style/TextAppearance.Soramitsu.Body1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableStart="@drawable/ic_info"
             android:drawablePadding="@dimen/x1"
             android:includeFontPadding="false"
-            android:text="@string/xor_balance_title"
+            android:text="@string/val_balance_title"
             android:textColor="@color/grey"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -36,13 +36,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/x4"
-            android:drawableStart="@drawable/ic_xor_red_24"
+            android:drawableStart="@drawable/ic_val_red_24"
             android:drawablePadding="@dimen/x1_5"
             android:gravity="center"
             android:includeFontPadding="false"
             android:text="@string/wallet_soranet"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/xorBalanceTitle" />
+            app:layout_constraintTop_toBottomOf="@+id/valBalanceTitle" />
 
         <TextView
             android:id="@+id/soraTokenName"
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
             android:includeFontPadding="false"
-            android:text="@string/xor"
+            android:text="@string/val_token"
             android:textColor="@color/grey"
             app:layout_constraintBottom_toBottomOf="@+id/soraNetworkName"
             app:layout_constraintStart_toEndOf="@+id/soraNetworkName"
@@ -65,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/x4"
-            android:drawableStart="@drawable/ic_xor_grey_24"
+            android:drawableStart="@drawable/ic_val_black_24"
             android:drawablePadding="@dimen/x1_5"
             android:gravity="center"
             android:includeFontPadding="false"
@@ -80,7 +80,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
             android:includeFontPadding="false"
-            android:text="@string/xor_erc20"
+            android:text="@string/val_erc20"
             android:textColor="@color/grey"
             app:layout_constraintBottom_toBottomOf="@+id/ethNetworkName"
             app:layout_constraintStart_toEndOf="@+id/ethNetworkName"

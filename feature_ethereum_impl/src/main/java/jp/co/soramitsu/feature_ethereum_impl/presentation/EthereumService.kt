@@ -50,11 +50,11 @@ class EthereumService : IntentService(ETH_REGISTRATION_SERVICE_NAME) {
     override fun onHandleIntent(intent: Intent?) {
         try {
             if (ACTION_RETRY_REGISTER == intent?.action) {
-//                ethInteractor.registerEthAccount().blockingAwait()
+                ethInteractor.registerEthAccount().blockingAwait()
             } else {
                 val ethRegisterState = ethInteractor.getActualEthRegisterState().blockingGet()
                 if (EthRegisterState.State.NONE == ethRegisterState) {
-//                    ethInteractor.registerEthAccount().blockingAwait()
+                    ethInteractor.registerEthAccount().blockingAwait()
                 }
             }
         } catch (ex: Exception) {

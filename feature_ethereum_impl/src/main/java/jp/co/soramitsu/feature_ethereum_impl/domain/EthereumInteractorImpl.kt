@@ -20,11 +20,11 @@ class EthereumInteractorImpl(
     private val didRepository: DidRepository
 ) : EthereumInteractor {
 
-    override fun transferXorERC20(to: String, amount: BigDecimal): Completable {
+    override fun transferValERC20(to: String, amount: BigDecimal): Completable {
         return didRepository.retrieveMnemonic()
             .flatMap { ethereumRepository.getEthCredentials(it) }
-            .flatMap { ethCreds -> ethereumRepository.getXorTokenAddress(ethCreds).map { Pair(ethCreds, it) } }
-            .flatMapCompletable { ethereumRepository.transferXorErc20(to, amount, it.first, it.second) }
+            .flatMap { ethCreds -> ethereumRepository.getValTokenAddress(ethCreds).map { Pair(ethCreds, it) } }
+            .flatMapCompletable { ethereumRepository.transferValErc20(to, amount, it.first, it.second) }
     }
 
     override fun getMinerFeeInitialData(): Single<Gas> {
@@ -78,7 +78,7 @@ class EthereumInteractorImpl(
         return ethereumRepository.getActualEthRegisterState()
     }
 
-    override fun startCombinedXorErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, ethAddress: String, transactionFee: String): Completable {
+    override fun startCombinedValErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, ethAddress: String, transactionFee: String): Completable {
         return didRepository.retrieveMnemonic()
             .flatMap { ethereumRepository.getEthCredentials(it) }
             .flatMap { ethCredentials -> ethereumRepository.getEthWalletAddress(ethCredentials).map { Pair(it, ethCredentials) } }
@@ -87,20 +87,30 @@ class EthereumInteractorImpl(
                     .flatMapCompletable { accountId ->
                         didRepository.retrieveKeypair()
                             .flatMapCompletable { keypair ->
-                                ethereumRepository.startCombinedXorErcTransfer(partialAmount, amount, accountId, it.first, ethAddress, transactionFee, it.second, keypair)
+                                ethereumRepository.startCombinedValErcTransfer(partialAmount, amount, accountId, it.first, ethAddress, transactionFee, it.second, keypair)
                             }
                     }
             }
     }
 
-    override fun startCombinedXorTransfer(partialAmount: BigDecimal, amount: BigDecimal, peerId: String, peerName: String, transactionFee: BigDecimal, description: String): Completable {
+    override fun startCombinedValTransfer(partialAmount: BigDecimal, amount: BigDecimal, peerId: String, peerName: String, transactionFee: BigDecimal, description: String): Completable {
         return didRepository.retrieveKeypair()
             .flatMapCompletable { keyPair ->
                 didRepository.retrieveMnemonic()
                     .flatMapCompletable {
                         ethereumRepository.getEthCredentials(it)
-                            .flatMap { ethCreds -> ethereumRepository.getXorTokenAddress(ethCreds).map { Pair(ethCreds, it) } }
-                            .flatMapCompletable { ethereumRepository.startCombinedXorTransfer(partialAmount, amount, peerId, peerName, transactionFee, description, it.first, keyPair, it.second) }
+                            .flatMap { ethCreds -> ethereumRepository.getValTokenAddress(ethCreds).map { Pair(ethCreds, it) } }
+                            .flatMapCompletable { ethereumRepository.startCombinedValTransfer(partialAmount, amount, peerId, peerName, transactionFee, description, it.first, keyPair, it.second) }
+                    }
+            }
+    }
+
+    override fun isBridgeEnabled(): Single<Boolean> {
+        return didRepository.retrieveMnemonic()
+            .flatMap {
+                ethereumRepository.getEthCredentials(it)
+                    .flatMap { ethCreds ->
+                        ethereumRepository.isBridgeEnabled(ethCreds)
                     }
             }
     }

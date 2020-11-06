@@ -20,7 +20,7 @@ interface EthereumInteractor {
 
     fun startWithdraw(amount: BigDecimal, ethAddress: String, transactionFee: String): Completable
 
-    fun transferXorERC20(to: String, amount: BigDecimal): Completable
+    fun transferValERC20(to: String, amount: BigDecimal): Completable
 
     fun getMinerFeeInitialData(): Single<Gas>
 
@@ -28,7 +28,9 @@ interface EthereumInteractor {
 
     fun getActualEthRegisterState(): Single<EthRegisterState.State>
 
-    fun startCombinedXorErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, ethAddress: String, transactionFee: String): Completable
+    fun startCombinedValErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, ethAddress: String, transactionFee: String): Completable
 
-    fun startCombinedXorTransfer(partialAmount: BigDecimal, amount: BigDecimal, peerId: String, peerFullName: String, transactionFee: BigDecimal, description: String): Completable
+    fun startCombinedValTransfer(partialAmount: BigDecimal, amount: BigDecimal, peerId: String, peerFullName: String, transactionFee: BigDecimal, description: String): Completable
+
+    fun isBridgeEnabled(): Single<Boolean>
 }

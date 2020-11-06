@@ -17,7 +17,7 @@ import java.util.Date
 class TransactionFactory {
 
     companion object {
-        private const val ASSET_ID = "xor#sora"
+        private const val ASSET_ID = "val#sora"
     }
 
     fun buildTransferWithFeeTransaction(

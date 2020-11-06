@@ -23,7 +23,6 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -55,7 +54,7 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(), KeyboardHelper.Keyboar
         val view = inflater.inflate(R.layout.fragment_receive, container, false)
 
         val accountCurrencySymbol = view.findViewById<TextView>(R.id.currencySymbol)
-        accountCurrencySymbol.text = Const.SORA_SYMBOL
+        accountCurrencySymbol.text = getString(R.string.val_token)
 
         btnKeyboard = view.findViewById(R.id.btn_keyboard)
 
@@ -77,7 +76,7 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(), KeyboardHelper.Keyboar
 
         with(toolbar) {
             showShareButton()
-            setTitle(getString(R.string.wallet_receive_xor))
+            setTitle(getString(R.string.wallet_receive_val))
             setBackgroundColor(ContextCompat.getColor(activity!!, R.color.backgroundGrey))
             setHomeButtonListener {
                 if (keyboardHelper?.isKeyboardShowing == true) {

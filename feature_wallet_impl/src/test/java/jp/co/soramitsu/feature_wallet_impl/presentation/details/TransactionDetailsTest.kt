@@ -6,22 +6,21 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.reactivex.Single
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -41,6 +40,7 @@ class TransactionDetailsTest {
     @Rule @JvmField var schedulersRule = RxSchedulersRule()
 
     @Mock private lateinit var walletInteractor: WalletInteractor
+    @Mock private lateinit var ethereumInteractor: EthereumInteractor
     @Mock private lateinit var router: WalletRouter
     @Mock private lateinit var resourceManager: ResourceManager
     @Mock private lateinit var numbersFormatter: NumbersFormatter
@@ -69,7 +69,9 @@ class TransactionDetailsTest {
         given(resourceManager.getString(R.string.transaction_send_again)).willReturn("Send again")
         given(resourceManager.getString(R.string.transaction_send_back)).willReturn("Send back")
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
+        given(resourceManager.getString(R.string.val_token)).willReturn("VAL")
         given(textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(anyString())).willReturn("MM")
+        given(ethereumInteractor.getAddress()).willReturn(Single.just(ethTransactionId))
     }
 
     @Test fun `show PENDING incoming transaction details opened from list`() {
@@ -85,13 +87,14 @@ class TransactionDetailsTest {
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
+            ethereumInteractor,
             router,
             resourceManager,
             numbersFormatter,
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_XOR.id,
+            AssetHolder.SORA_VAL.id,
             peerId,
             peerName,
             transactionType,
@@ -143,19 +146,19 @@ class TransactionDetailsTest {
         assertEquals(R.drawable.ic_pending_grey_18, transactionDetailsViewModel.statusImageLiveData.value)
 
         transactionDetailsViewModel.amountLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 100", it)
+            assertEquals("100 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 100", transactionDetailsViewModel.amountLiveData.value)
+        assertEquals("100 VAL", transactionDetailsViewModel.amountLiveData.value)
 
         transactionDetailsViewModel.totalAmountLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 100", it)
+            assertEquals("100 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 100", transactionDetailsViewModel.totalAmountLiveData.value)
+        assertEquals("100 VAL", transactionDetailsViewModel.totalAmountLiveData.value)
 
         transactionDetailsViewModel.tranasctionFeeLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 0", it)
+            assertEquals("0 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 0", transactionDetailsViewModel.tranasctionFeeLiveData.value)
+        assertEquals("0 VAL", transactionDetailsViewModel.tranasctionFeeLiveData.value)
 
         transactionDetailsViewModel.transactionDescriptionLiveData.observeForever {
             assertEquals(transactionDescription, it)
@@ -172,13 +175,14 @@ class TransactionDetailsTest {
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
+            ethereumInteractor,
             router,
             resourceManager,
             numbersFormatter,
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_XOR.id,
+            AssetHolder.SORA_VAL.id,
             peerId,
             peerName,
             transactionType,
@@ -230,19 +234,19 @@ class TransactionDetailsTest {
         assertEquals(R.drawable.ic_error_red_18, transactionDetailsViewModel.statusImageLiveData.value)
 
         transactionDetailsViewModel.amountLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 100", it)
+            assertEquals("100 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 100", transactionDetailsViewModel.amountLiveData.value)
+        assertEquals("100 VAL", transactionDetailsViewModel.amountLiveData.value)
 
         transactionDetailsViewModel.totalAmountLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 100", it)
+            assertEquals("100 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 100", transactionDetailsViewModel.totalAmountLiveData.value)
+        assertEquals("100 VAL", transactionDetailsViewModel.totalAmountLiveData.value)
 
         transactionDetailsViewModel.tranasctionFeeLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 0", it)
+            assertEquals("0 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 0", transactionDetailsViewModel.tranasctionFeeLiveData.value)
+        assertEquals("0 VAL", transactionDetailsViewModel.tranasctionFeeLiveData.value)
 
         transactionDetailsViewModel.transactionDescriptionLiveData.observeForever {
             assertEquals(transactionDescription, it)
@@ -262,13 +266,14 @@ class TransactionDetailsTest {
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
+            ethereumInteractor,
             router,
             resourceManager,
             numbersFormatter,
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_XOR.id,
+            AssetHolder.SORA_VAL.id,
             peerId,
             peerName,
             transactionType,
@@ -305,19 +310,19 @@ class TransactionDetailsTest {
         assertEquals(R.drawable.ic_success_green_18, transactionDetailsViewModel.statusImageLiveData.value)
 
         transactionDetailsViewModel.amountLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 100", it)
+            assertEquals("100 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 100", transactionDetailsViewModel.amountLiveData.value)
+        assertEquals("100 VAL", transactionDetailsViewModel.amountLiveData.value)
 
         transactionDetailsViewModel.totalAmountLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 100", it)
+            assertEquals("100 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 100", transactionDetailsViewModel.totalAmountLiveData.value)
+        assertEquals("100 VAL", transactionDetailsViewModel.totalAmountLiveData.value)
 
         transactionDetailsViewModel.tranasctionFeeLiveData.observeForever {
-            assertEquals("${Const.SORA_SYMBOL} 0", it)
+            assertEquals("0 VAL", it)
         }
-        assertEquals("${Const.SORA_SYMBOL} 0", transactionDetailsViewModel.tranasctionFeeLiveData.value)
+        assertEquals("0 VAL", transactionDetailsViewModel.tranasctionFeeLiveData.value)
 
         transactionDetailsViewModel.transactionDescriptionLiveData.observeForever {
             assertEquals(transactionDescription, it)
@@ -337,13 +342,14 @@ class TransactionDetailsTest {
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
+            ethereumInteractor,
             router,
             resourceManager,
             numbersFormatter,
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_XOR.id,
+            AssetHolder.SORA_VAL.id,
             peerId,
             peerName,
             transactionType,
@@ -361,7 +367,7 @@ class TransactionDetailsTest {
 
         transactionDetailsViewModel.btnNextClicked()
 
-        verify(router).showXorTransferAmount(peerId, peerName, BigDecimal.ZERO)
+        verify(router).showValTransferAmount(peerId, peerName, BigDecimal.ZERO)
     }
 
     @Test fun `backpress calls returnToWalletFragment() from wallet`() {
@@ -376,6 +382,7 @@ class TransactionDetailsTest {
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
+            ethereumInteractor,
             router,
             resourceManager,
             numbersFormatter,

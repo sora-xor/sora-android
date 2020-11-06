@@ -15,6 +15,7 @@ class Const private constructor() {
         const val SORA_TERMS_PAGE = "https://sora.org/terms"
         const val SORA_PRIVACY_PAGE = "https://sora.org/privacy"
         const val XOR_ASSET_ID = "xor#sora"
+        const val VAL_ASSET_ID = "val#sora"
 
         const val PIN_CODE_ACTION = "pin_code_action"
         const val IS_PUSH_UPDATE_NEEDED = "is_push_update_needed"
@@ -31,7 +32,8 @@ class Const private constructor() {
 
         const val NO_ICON_RESOURCE = 0
 
-        val SORA_SYMBOL: CharSequence = "\ue000"
         val PROJECT_DID = arrayOf("did:sora:passport")
+
+        val NOTARY_ADDRESS = "notary@notary"
     }
 }

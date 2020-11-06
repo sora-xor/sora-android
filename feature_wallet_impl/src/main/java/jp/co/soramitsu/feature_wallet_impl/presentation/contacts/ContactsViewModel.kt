@@ -71,7 +71,7 @@ class ContactsViewModel(
                 .subscribeOn(Schedulers.io())
                 .map { accounts ->
                     mutableListOf<Any>().apply {
-//                        add(ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH)) // временно убран
+                        add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
                         add(ContactHeader(resourceManager.getString(R.string.contacts_title)))
                         addAll(accounts.map { ContactListItem(it) })
                     }
@@ -85,7 +85,7 @@ class ContactsViewModel(
                 }
                 .subscribe({
                     contactsLiveData.value = it
-                    emptyContactsVisibilityLiveData.value = it.size == 1
+                    emptyContactsVisibilityLiveData.value = it.size == 2
                 }, {
                     logException(it)
                 })
@@ -93,17 +93,16 @@ class ContactsViewModel(
     }
 
     fun search(contents: String) {
-//        if (ethereumAddressValidator.isAddressValid(contents)) {
-//            proccessEthAddress(contents) // Eth адреса временно отключены
-//        } else {
-//            searchUser(contents)
-//        }
-        searchUser(contents)
+        if (ethereumAddressValidator.isAddressValid(contents)) {
+            proccessEthAddress(contents)
+        } else {
+            searchUser(contents)
+        }
     }
 
     private fun proccessEthAddress(contents: String) {
         val list = mutableListOf<Any>().apply {
-            add(ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH))
+            add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
             add(ContactHeader(resourceManager.getString(R.string.contacts_search_results)))
             add(EthListItem(contents))
         }
@@ -119,7 +118,7 @@ class ContactsViewModel(
                 .subscribeOn(Schedulers.io())
                 .map { accounts ->
                     mutableListOf<Any>().apply {
-//                        add(ContactMenuItem(R.drawable.ic_xor_grey_24, R.string.wallet_xor_to_my_eth, ContactMenuItem.Type.XOR_TO_MY_ETH))
+                        add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
                         add(ContactHeader(resourceManager.getString(R.string.contacts_title)))
                         addAll(accounts.map { ContactListItem(it) })
                     }
@@ -134,7 +133,7 @@ class ContactsViewModel(
                 .doFinally { preloader.hidePreloader() }
                 .subscribe({
                     contactsLiveData.value = it
-                    emptySearchResultVisibilityLiveData.value = it.size == 1
+                    emptySearchResultVisibilityLiveData.value = it.size == 2
                 }, {
                     onError(it)
                 })
@@ -157,7 +156,7 @@ class ContactsViewModel(
                     val accountToTransfer = pair.second
 
                     with(accountToTransfer) {
-                        router.showXorTransferAmount(accountId, "$firstName $lastName", amountToTransfer)
+                        router.showValTransferAmount(accountId, "$firstName $lastName", amountToTransfer)
                     }
                 }, {
                     if (it is QrException) {
@@ -174,7 +173,7 @@ class ContactsViewModel(
     }
 
     fun contactClicked(accountId: String, fullName: String) {
-        router.showXorTransferAmount(accountId, fullName, BigDecimal.ZERO)
+        router.showValTransferAmount(accountId, fullName, BigDecimal.ZERO)
     }
 
     fun openCamera() {
@@ -200,13 +199,13 @@ class ContactsViewModel(
 
     fun menuItemClicked(it: ContactMenuItem) {
         when (it.type) {
-            ContactMenuItem.Type.XOR_TO_MY_ETH -> showXORtoErcTransfer()
+            ContactMenuItem.Type.VAL_TO_MY_ETH -> showValtoErcTransfer()
         }
     }
 
-    private fun showXORtoErcTransfer() {
+    private fun showValtoErcTransfer() {
         ethereumAddressLiveData.value?.let {
-            router.showXorWithdrawToErc(it, BigDecimal.ZERO)
+            router.showValWithdrawToErc(it, BigDecimal.ZERO)
         }
     }
 
@@ -217,9 +216,9 @@ class ContactsViewModel(
     fun ethItemClicked(item: EthListItem) {
         ethereumAddressLiveData.value?.let {
             if (it == item.ethereumAddress) {
-                router.showXorWithdrawToErc(it, BigDecimal.ZERO)
+                router.showValWithdrawToErc(it, BigDecimal.ZERO)
             } else {
-                router.showXorERCTransferAmount(item.ethereumAddress, BigDecimal.ZERO)
+                router.showValERCTransferAmount(item.ethereumAddress, BigDecimal.ZERO)
             }
         }
     }
