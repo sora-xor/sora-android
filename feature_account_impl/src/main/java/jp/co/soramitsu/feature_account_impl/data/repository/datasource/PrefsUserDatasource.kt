@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import com.google.gson.reflect.TypeToken

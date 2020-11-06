@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_votable_impl.data.mappers
 
 import jp.co.soramitsu.core_db.model.ProjectDetailsLocal
