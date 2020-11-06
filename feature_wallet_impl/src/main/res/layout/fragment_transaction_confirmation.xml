@@ -56,7 +56,7 @@
                     android:layout_marginStart="@dimen/margin_padding_by_side"
                     android:layout_marginTop="@dimen/x2"
                     android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:drawableStart="@drawable/ic_xor_red_24"
+                    android:drawableStart="@drawable/ic_val_red_24"
                     android:drawablePadding="@dimen/x1"
                     android:fontFamily="@font/soramitsu_semibold"
                     android:includeFontPadding="false"
@@ -75,11 +75,13 @@
                     android:layout_marginEnd="@dimen/margin_padding_by_side"
                     android:fontFamily="@font/sora_semibold"
                     android:textColor="@color/circleBgGrey"
+                    android:gravity="center_vertical"
+                    android:includeFontPadding="false"
                     app:layout_constraintBottom_toBottomOf="@id/inputAccountName"
                     app:layout_constraintHorizontal_bias="1.0"
                     app:layout_constraintStart_toEndOf="@id/inputAccountName"
                     app:layout_constraintTop_toTopOf="@id/inputAccountName"
-                    tools:text="XOR" />
+                    tools:text="VAL" />
 
                 <TextView
                     android:id="@+id/inputAccountInfo"

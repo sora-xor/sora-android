@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">资源不可用</string>
   <string name="common_error_internal_error_title">内部错误</string>
   <string name="projects_title">Sora项目</string>
-  <string name="project_founded_template" formatted="false">%s 的%%票%s</string>
+  <string name="project_founded_template" formatted="false">%s的%%票%s</string>
   <string name="project_votes_template">%s投票数</string>
   <string name="project_ended_template">结束%s</string>
   <string name="project_spent_format">您已花费%s票</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">助记词是\n一种类型的密码。</string>
   <string name="common_passphrase_body">它用于恢复对帐户的访问。写下来，如果没有它，我们将无法恢复您的帐户！</string>
   <string name="common_passphrase_your_passphrase">您的助记词</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">更新您的Sora应用</string>
   <string name="common_unsupported_version_body">Sora应用可通过App Store更新。这包括改进和错误修复。</string>
   <string name="common_unsupported_version_open_google_play">开启Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">请检查网络连接，稍后再试。</string>
   <string name="common_error_pincode_check_error">输入的密码有误</string>
   <string name="activity_user_registered_type">已注册的好友</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">您的声誉将会提高！</string>
   <string name="activity_voting_rights_credited_type_template">投票分配</string>
   <string name="activity_voting_rights_title_template">每日投票</string>
   <string name="activity_invitation_credited_type_template">邀请分配</string>
   <string name="activity_invitation_credited_title_template">邀请已记入</string>
   <string name="activity_project_funded_type_template">项目已完成！</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">您将很快收到有关XOR奖励的信息</string>
   <string name="activity_project_created_type_template">新项目！</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">XOR 投票奖励</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">排名已更改</string>
   <string name="activity_project">项目</string>
   <string name="activity_user">用户</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">您已经应用了另一个邀请码</string>
   <string name="invite_enter_dialog_title_hint">8个字母数字字符</string>
   <string name="invite_enter_invitation_code">输入邀请码</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">%s 好友已投</item>
   </plurals>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">没有符合您查询条件的国家</string>
   <string name="phone_number_title">注册</string>
   <string name="phone_number_mobile">手机号码</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">请稍候</string>
   <string name="common_open_explorer">在区块链浏览器中查看</string>
   <string name="common_error_phone_already_exists">抱歉，此电话号码已被使用。请尝试另一个。</string>
@@ -241,7 +232,7 @@
   <string name="common_spanish">西班牙语</string>
   <string name="common_bashkir">巴什基尔语</string>
   <string name="biometric_dialog_title">身份验证</string>
-  <string name="contacts_search_hint_v1">帐号，电话</string>
+  <string name="contacts_search_hint_v1">帐号，电话号码，地址</string>
   <string name="wallet_xor_to_my_eth">XOR至我的以太坊账户</string>
   <string name="wallet_ethereum">以太坊</string>
   <string name="wallet_soranet">Sora网络</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">可转让</string>
   <string name="limit_dialog_reset">限位重置</string>
   <string name="limit_dialog_set_amount">设置为</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet]到XOR ERC20 [Ethereum]</string>
   <string name="common_hour">小时</string>
   <string name="common_japanese">日文</string>
   <string name="common_chinese">中文</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">泰国</string>
   <string name="common_estonian">爱沙尼亚语</string>
   <string name="common_arab">阿拉伯</string>
+  <string name="activity_project_funded_description_template_val">您将很快收到有关VAL奖励的信息</string>
+  <string name="wallet_val_to_my_eth">VAL至我的以太坊账户</string>
+  <string name="copy_val_title">复制Sora（VAL）钱包地址</string>
+  <string name="val_balance_title">不同网络上的VAL令牌</string>
+  <string name="activity_val_between_users_transferred_type_template">收到VAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">VAL 投票奖励</string>
+  <string name="wallet_receive_val">收到VAL</string>
+  <string name="view_balance_val">查看Sora（VAL）令牌分配</string>
+  <string name="transaction_bridge_not_active_error">以太坊桥未激活。</string>
+  <string name="transaction_bridge_info">以太坊桥信息</string>
 </resources>

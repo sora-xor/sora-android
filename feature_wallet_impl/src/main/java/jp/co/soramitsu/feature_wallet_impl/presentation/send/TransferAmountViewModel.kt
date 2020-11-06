@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import androidx.lifecycle.LiveData
@@ -15,7 +10,6 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
@@ -67,11 +61,17 @@ class TransferAmountViewModel(
     private val _titleStringLiveData = MutableLiveData<String>()
     val titleStringLiveData: LiveData<String> = _titleStringLiveData
 
+    private val _errorStringLiveData = MutableLiveData<String>()
+    val errorStringLiveData: LiveData<String> = _errorStringLiveData
+
+    private val _errorVisibilityLiveData = MutableLiveData<Boolean>()
+    val errorVisibilityLiveData: LiveData<Boolean> = _errorVisibilityLiveData
+
     private val _balanceFormattedLiveData = MediatorLiveData<String>()
     val balanceFormattedLiveData: LiveData<String> = _balanceFormattedLiveData
 
-    private val xorBalanceLiveData = MediatorLiveData<AssetBalance>()
-    private val xorErcBalanceLiveData = MediatorLiveData<AssetBalance>()
+    private val valBalanceLiveData = MediatorLiveData<AssetBalance>()
+    private val valErcBalanceLiveData = MediatorLiveData<AssetBalance>()
     private val ethBalanceLiveData = MediatorLiveData<AssetBalance>()
 
     private val _transactionFeeFormattedLiveData = MediatorLiveData<String>()
@@ -116,8 +116,8 @@ class TransferAmountViewModel(
     private val _transactionFeeVisibilityLiveData = MutableLiveData<Boolean>()
     val transactionFeeVisibilityLiveData: LiveData<Boolean> = _transactionFeeVisibilityLiveData
 
-    private val _minerFeeVisibilityLiveData = MutableLiveData<Event<Unit>>()
-    val minerFeeVisibilityLiveData: LiveData<Event<Unit>> = _minerFeeVisibilityLiveData
+    private val _minerFeeVisibilityLiveData = MutableLiveData<Boolean>()
+    val minerFeeVisibilityLiveData: LiveData<Boolean> = _minerFeeVisibilityLiveData
 
     private val _minerFeePreloaderVisibilityLiveData = MutableLiveData<Boolean>()
     val minerFeePreloaderVisibilityLiveData: LiveData<Boolean> = _minerFeePreloaderVisibilityLiveData
@@ -135,7 +135,8 @@ class TransferAmountViewModel(
     private val transactionFeeLiveData = MediatorLiveData<BigDecimal>()
     private val minerFeeLiveData = MutableLiveData<BigDecimal>()
     private val amountLiveData = MutableLiveData<BigDecimal>()
-    private val initialWithdraw = transferType == TransferType.XOR_WITHDRAW
+    private val initialWithdraw = transferType == TransferType.VAL_WITHDRAW
+    private var isBridgeEnabled = false
 
     init {
         _descriptionHintLiveData.value = resourceManager.getString(R.string.common_input_validator_max_hint).format(DESCRIPTION_MAX_LENGTH.toString())
@@ -146,7 +147,7 @@ class TransferAmountViewModel(
 
         configureScreenByTransferType()
 
-        if (transferType == TransferType.XOR_WITHDRAW || transferType == TransferType.XORXORERC_TO_XORERC || transferType == TransferType.XORERC_TRANSFER) {
+        if (transferType == TransferType.VAL_WITHDRAW || transferType == TransferType.VALVALERC_TO_VALERC || transferType == TransferType.VALERC_TRANSFER) {
             disposables.add(
                 interactor.getWithdrawMeta()
                     .subscribeOn(Schedulers.io())
@@ -184,33 +185,33 @@ class TransferAmountViewModel(
         }
 
         disposables.add(
-            interactor.getXorAndXorErcBalanceAmount()
+            interactor.getValAndValErcBalanceAmount()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    _balanceFormattedLiveData.value = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(it)}"
+                    _balanceFormattedLiveData.value = "${numbersFormatter.formatBigDecimal(it)} ${resourceManager.getString(R.string.val_token)}"
                 }, {
                     it.printStackTrace()
                 })
         )
 
         disposables.add(
-            interactor.getBalance(AssetHolder.SORA_XOR.id)
+            interactor.getBalance(AssetHolder.SORA_VAL.id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    xorBalanceLiveData.value = it
+                    valBalanceLiveData.value = it
                 }, {
                     it.printStackTrace()
                 })
         )
 
         disposables.add(
-            interactor.getBalance(AssetHolder.SORA_XOR_ERC_20.id)
+            interactor.getBalance(AssetHolder.SORA_VAL_ERC_20.id)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    xorErcBalanceLiveData.value = it
+                    valErcBalanceLiveData.value = it
                 }, {
                     it.printStackTrace()
                 })
@@ -239,11 +240,10 @@ class TransferAmountViewModel(
         }
 
         transactionFeeLiveData.value = fee
-        _nextButtonEnableLiveData.value = currentAmount > BigDecimal.ZERO
     }
 
     private fun calcMinerFee() {
-        val disposable = if (transferType == TransferType.XOR_WITHDRAW) {
+        val disposable = if (transferType == TransferType.VAL_WITHDRAW || transferType == TransferType.VALVALERC_TO_VALERC) {
             interactor.calculateDefaultMinerFeeInEthWithdraw()
         } else {
             interactor.calculateDefaultMinerFeeInEthTransfer()
@@ -279,7 +279,7 @@ class TransferAmountViewModel(
     }
 
     fun updateTransferMeta() {
-        if (transferType == TransferType.XOR_WITHDRAW || transferType == TransferType.XORXORERC_TO_XORERC || transferType == TransferType.XORERC_TRANSFER) {
+        if (transferType == TransferType.VAL_WITHDRAW || transferType == TransferType.VALVALERC_TO_VALERC || transferType == TransferType.VALERC_TRANSFER) {
             disposables.add(
                 interactor.updateWithdrawMeta()
                     .subscribeOn(Schedulers.io())
@@ -304,23 +304,23 @@ class TransferAmountViewModel(
 
     fun nextButtonClicked(amount: BigDecimal?, description: String) {
         when (transferType) {
-            TransferType.XOR_TRANSFER -> soraNetTransfer(amount, description)
-            TransferType.XORERC_TRANSFER -> xorErcTransfer(amount)
-            TransferType.XORXORERC_TO_XORERC -> combinedXorErcTransfer(amount!!)
-            TransferType.XORXORERC_TO_XOR -> combinedXorTransfer(amount!!, description)
-            TransferType.XOR_WITHDRAW -> withdraw(amount, description)
+            TransferType.VAL_TRANSFER -> soraNetTransfer(amount, description)
+            TransferType.VALERC_TRANSFER -> valErcTransfer(amount)
+            TransferType.VALVALERC_TO_VALERC -> combinedValErcTransfer(amount!!)
+            TransferType.VALVALERC_TO_VAL -> combinedValTransfer(amount!!, description)
+            TransferType.VAL_WITHDRAW -> withdraw(amount, description)
         }
     }
 
-    private fun combinedXorTransfer(amount: BigDecimal, description: String) {
+    private fun combinedValTransfer(amount: BigDecimal, description: String) {
         minerFeeLiveData.value?.let { minerFee ->
             transactionFeeLiveData.value?.let { transferFee ->
-                xorErcBalanceLiveData.value?.let { xorErcBalance ->
-                    xorBalanceLiveData.value?.let { xorBalance ->
+                valErcBalanceLiveData.value?.let { valErcBalance ->
+                    valBalanceLiveData.value?.let { valBalance ->
                         ethBalanceLiveData.value?.let { ethBalance ->
-                            val depositAmount = (amount + transferFee) - xorBalance.balance
+                            val depositAmount = (amount + transferFee) - valBalance.balance
 
-                            if (areFieldsValidForERC(depositAmount, ethBalance.balance, xorErcBalance.balance, minerFee)) {
+                            if (areFieldsValidForERC(depositAmount, ethBalance.balance, valErcBalance.balance, minerFee)) {
                                 _initialAmountLiveData.value = amount!!.toString()
                                 router.showTransactionConfirmation(recipientId, recipientFullName, depositAmount, amount, description, minerFee, transferFee, transferType)
                             }
@@ -331,15 +331,16 @@ class TransferAmountViewModel(
         }
     }
 
-    private fun combinedXorErcTransfer(amount: BigDecimal) {
+    private fun combinedValErcTransfer(amount: BigDecimal) {
         minerFeeLiveData.value?.let { minerFee ->
             transactionFeeLiveData.value?.let { withdrawFee ->
-                xorErcBalanceLiveData.value?.let { xorErcBalance ->
-                    xorBalanceLiveData.value?.let { xorBalance ->
+                valErcBalanceLiveData.value?.let { valErcBalance ->
+                    valBalanceLiveData.value?.let { valBalance ->
                         ethBalanceLiveData.value?.let { ethBalance ->
-                            val withdrawAmount = amount - xorErcBalance.balance
+                            val withdrawAmount = amount - valErcBalance.balance
+
                             val transferAmount = amount - withdrawAmount
-                            if (areFieldsValidForWithdraw(withdrawAmount, ethBalance.balance, xorBalance.balance, minerFee, withdrawFee) && areFieldsValidForERC(transferAmount, ethBalance.balance - minerFee, xorErcBalance.balance, minerFee)) {
+                            if (areFieldsValidForWithdraw(withdrawAmount, ethBalance.balance, valBalance.balance, minerFee, withdrawFee) && areFieldsValidForERC(transferAmount, ethBalance.balance - minerFee, valErcBalance.balance, minerFee)) {
                                 _initialAmountLiveData.value = amount!!.toString()
                                 router.showTransactionConfirmation(recipientId, recipientFullName, withdrawAmount, amount, "", minerFee, withdrawFee, transferType)
                             }
@@ -350,11 +351,11 @@ class TransferAmountViewModel(
         }
     }
 
-    private fun xorErcTransfer(amount: BigDecimal?) {
+    private fun valErcTransfer(amount: BigDecimal?) {
         minerFeeLiveData.value?.let { fee ->
-            xorErcBalanceLiveData.value?.let { xorErcBalance ->
+            valErcBalanceLiveData.value?.let { valErcBalance ->
                 ethBalanceLiveData.value?.let { ethBalance ->
-                    if (areFieldsValidForERC(amount, ethBalance.balance, xorErcBalance.balance, fee)) {
+                    if (areFieldsValidForERC(amount, ethBalance.balance, valErcBalance.balance, fee)) {
                         _initialAmountLiveData.value = amount!!.toString()
                         router.showTransactionConfirmation(recipientId, recipientFullName, BigDecimal.ZERO, amount, "", fee, BigDecimal.ZERO, transferType)
                     }
@@ -365,8 +366,8 @@ class TransferAmountViewModel(
 
     private fun soraNetTransfer(amount: BigDecimal?, description: String) {
         transactionFeeLiveData.value?.let { fee ->
-            xorBalanceLiveData.value?.let { xorBalance ->
-                if (areFieldsValidForSoranet(amount, xorBalance.balance, fee)) {
+            valBalanceLiveData.value?.let { valBalance ->
+                if (areFieldsValidForSoranet(amount, valBalance.balance, fee)) {
                     _initialAmountLiveData.value = amount!!.toString()
                     router.showTransactionConfirmation(recipientId, recipientFullName, BigDecimal.ZERO, amount, description, BigDecimal.ZERO, fee, transferType)
                 }
@@ -377,9 +378,9 @@ class TransferAmountViewModel(
     private fun withdraw(amount: BigDecimal?, description: String) {
         minerFeeLiveData.value?.let { minerFee ->
             transactionFeeLiveData.value?.let { withdrawFee ->
-                xorBalanceLiveData.value?.let { xorBalance ->
+                valBalanceLiveData.value?.let { valBalance ->
                     ethBalanceLiveData.value?.let { ethBalance ->
-                        if (areFieldsValidForWithdraw(amount, ethBalance.balance, xorBalance.balance, minerFee, withdrawFee)) {
+                        if (areFieldsValidForWithdraw(amount, ethBalance.balance, valBalance.balance, minerFee, withdrawFee)) {
                             _initialAmountLiveData.value = amount!!.toString()
                             router.showTransactionConfirmation(recipientId, recipientFullName, BigDecimal.ZERO, amount, description, minerFee, withdrawFee, transferType)
                         }
@@ -392,32 +393,32 @@ class TransferAmountViewModel(
     fun amountChanged(amount: BigDecimal) {
         amountLiveData.setValueIfNew(amount)
 
-//        if (!initialWithdraw) {
-//            calculateTransferTypeByAmount(amount)
-//            configureScreenByTransferType()
-//        }
+        if (!initialWithdraw) {
+            calculateTransferTypeByAmount(amount)
+            configureScreenByTransferType()
+        }
     }
 
     private fun calculateTransferTypeByAmount(amount: BigDecimal) {
-        xorBalanceLiveData.value?.let { xorBalance ->
-            xorErcBalanceLiveData.value?.let { xorErcBalance ->
-                if (transferType == TransferType.XOR_TRANSFER || transferType == TransferType.XORXORERC_TO_XOR) {
+        valBalanceLiveData.value?.let { valBalance ->
+            valErcBalanceLiveData.value?.let { valErcBalance ->
+                if (transferType == TransferType.VAL_TRANSFER || transferType == TransferType.VALVALERC_TO_VAL) {
                     transactionFeeLiveData.value?.let { transferFee ->
-                        transferType = if (amount + transferFee > xorBalance.balance) {
-                            TransferType.XORXORERC_TO_XOR
+                        transferType = if (amount + transferFee > valBalance.balance) {
+                            TransferType.VALVALERC_TO_VAL
                         } else {
-                            TransferType.XOR_TRANSFER
+                            TransferType.VAL_TRANSFER
                         }
                     }
                 } else {
                     transactionFeeLiveData.value?.let { withdrawFee ->
-                        transferType = if (amount <= xorErcBalance.balance) {
-                            TransferType.XORERC_TRANSFER
+                        transferType = if (amount <= valErcBalance.balance) {
+                            TransferType.VALERC_TRANSFER
                         } else {
-                            if (amount + withdrawFee <= xorBalance.balance) {
-                                TransferType.XOR_WITHDRAW
+                            if (amount + withdrawFee <= valBalance.balance) {
+                                TransferType.VAL_WITHDRAW
                             } else {
-                                TransferType.XORXORERC_TO_XORERC
+                                TransferType.VALVALERC_TO_VALERC
                             }
                         }
                     }
@@ -443,7 +444,7 @@ class TransferAmountViewModel(
         return true
     }
 
-    private fun areFieldsValidForERC(amount: BigDecimal?, ethBalance: BigDecimal, xorBalance: BigDecimal, fee: BigDecimal): Boolean {
+    private fun areFieldsValidForERC(amount: BigDecimal?, ethBalance: BigDecimal, valBalance: BigDecimal, fee: BigDecimal): Boolean {
         if (amount == null) {
             return false
         }
@@ -452,7 +453,7 @@ class TransferAmountViewModel(
             return false
         }
 
-        if (amount > xorBalance) {
+        if (amount > valBalance) {
             onError(R.string.amount_error_no_funds)
             return false
         }
@@ -465,7 +466,7 @@ class TransferAmountViewModel(
         return true
     }
 
-    private fun areFieldsValidForWithdraw(amount: BigDecimal?, ethBalance: BigDecimal, xorBalance: BigDecimal, minerFee: BigDecimal, transactionFee: BigDecimal): Boolean {
+    private fun areFieldsValidForWithdraw(amount: BigDecimal?, ethBalance: BigDecimal, valBalance: BigDecimal, minerFee: BigDecimal, transactionFee: BigDecimal): Boolean {
         if (amount == null) {
             return false
         }
@@ -474,7 +475,7 @@ class TransferAmountViewModel(
             return false
         }
 
-        if (amount + transactionFee > xorBalance) {
+        if (amount + transactionFee > valBalance) {
             onError(R.string.amount_error_no_funds)
             return false
         }
@@ -559,19 +560,20 @@ class TransferAmountViewModel(
         resetLiveData()
 
         when (transferType) {
-            TransferType.XOR_TRANSFER -> {
-                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_XOR.assetLastName}"
+            TransferType.VAL_TRANSFER -> {
+                _errorVisibilityLiveData.value = false
+                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_VAL.assetLastName}"
 
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(recipientFullName)
                 if (recipientId == recipientFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_xor_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_red_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
                 _recipientNameLiveData.value = recipientFullName
-                _inputTokenIcon.value = R.drawable.ic_xor_red_24
-                _inputTokenName.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastName.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenIcon.value = R.drawable.ic_val_red_24
+                _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
 
                 _transactionFeeFormattedLiveData.addSource(transactionFeeLiveData) { fee ->
@@ -579,7 +581,7 @@ class TransferAmountViewModel(
                         _transactionFeeVisibilityLiveData.value = false
                     }
 
-                    val soraFee = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(fee)}"
+                    val soraFee = "${numbersFormatter.formatBigDecimal(fee)} ${resourceManager.getString(R.string.val_token)}"
                     _transactionFeeFormattedLiveData.value = soraFee
                 }
 
@@ -591,17 +593,22 @@ class TransferAmountViewModel(
                     calcTransactionFee()
                 }
 
+                amountLiveData.observeForever {
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO
+                }
+
                 _transactionFeeVisibilityLiveData.value = true
             }
 
-            TransferType.XORERC_TRANSFER -> {
-                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_XOR.assetLastName}"
+            TransferType.VALERC_TRANSFER -> {
+                _errorVisibilityLiveData.value = false
+                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_VAL.assetLastName}"
 
-                _recipientIconLiveData.value = R.drawable.ic_xor_grey_24
+                _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = recipientId
-                _inputTokenIcon.value = R.drawable.ic_xor_grey_24
-                _inputTokenName.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastName.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenIcon.value = R.drawable.ic_val_black_24
+                _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
                 _hideDescriptionEventLiveData.value = Event(Unit)
 
@@ -615,10 +622,10 @@ class TransferAmountViewModel(
 
                 calcMinerFee()
 
-                _minerFeeVisibilityLiveData.value = Event(Unit)
+                _minerFeeVisibilityLiveData.value = true
 
                 _transactionFeeFormattedLiveData.addSource(transactionFeeLiveData) { fee ->
-                    val soraFee = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(fee)}"
+                    val soraFee = "${numbersFormatter.formatBigDecimal(fee)} ${resourceManager.getString(R.string.val_token)}"
                     _transactionFeeFormattedLiveData.value = soraFee
                 }
 
@@ -633,19 +640,21 @@ class TransferAmountViewModel(
                 _transactionFeeVisibilityLiveData.value = false
             }
 
-            TransferType.XORXORERC_TO_XORERC -> {
-                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_XOR.assetLastName}"
+            TransferType.VALVALERC_TO_VALERC -> {
+                checkBridgeStatus()
 
-                _recipientIconLiveData.value = R.drawable.ic_xor_grey_24
+                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_VAL.assetLastName}"
+
+                _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = recipientId
                 _inputTokenIcon.value = R.drawable.ic_double_token_24
-                _inputTokenName.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastName.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
                 _hideDescriptionEventLiveData.value = Event(Unit)
 
                 amountLiveData.observeForever {
-                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
                 }
 
                 _minerFeeFormattedLiveData.addSource(minerFeeLiveData) { fee ->
@@ -654,14 +663,14 @@ class TransferAmountViewModel(
 
                 calcMinerFee()
 
-                _minerFeeVisibilityLiveData.value = Event(Unit)
+                _minerFeeVisibilityLiveData.value = true
 
                 _transactionFeeFormattedLiveData.addSource(transactionFeeLiveData) { fee ->
                     if (fee == BigDecimal.ZERO) {
                         _transactionFeeVisibilityLiveData.value = false
                     }
 
-                    val soraFee = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(fee)}"
+                    val soraFee = "${numbersFormatter.formatBigDecimal(fee)} ${resourceManager.getString(R.string.val_token)}"
                     _transactionFeeFormattedLiveData.value = soraFee
                 }
 
@@ -676,19 +685,21 @@ class TransferAmountViewModel(
                 _transactionFeeVisibilityLiveData.value = true
             }
 
-            TransferType.XORXORERC_TO_XOR -> {
-                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_XOR.assetLastName}"
+            TransferType.VALVALERC_TO_VAL -> {
+                checkBridgeStatus()
+
+                _titleStringLiveData.value = "${resourceManager.getString(R.string.common_send)} ${AssetHolder.SORA_VAL.assetLastName}"
 
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(recipientFullName)
                 if (recipientId == recipientFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_xor_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_red_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
                 _recipientNameLiveData.value = recipientFullName
                 _inputTokenIcon.value = R.drawable.ic_double_token_24
-                _inputTokenName.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastName.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
 
                 _minerFeeFormattedLiveData.addSource(minerFeeLiveData) { fee ->
@@ -697,14 +708,14 @@ class TransferAmountViewModel(
 
                 calcMinerFee()
 
-                _minerFeeVisibilityLiveData.value = Event(Unit)
+                _minerFeeVisibilityLiveData.value = true
 
                 _transactionFeeFormattedLiveData.addSource(transactionFeeLiveData) { fee ->
                     if (fee == BigDecimal.ZERO) {
                         _transactionFeeVisibilityLiveData.value = false
                     }
 
-                    val soraFee = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(fee)}"
+                    val soraFee = "${numbersFormatter.formatBigDecimal(fee)} ${resourceManager.getString(R.string.val_token)}"
                     _transactionFeeFormattedLiveData.value = soraFee
                 }
 
@@ -716,22 +727,28 @@ class TransferAmountViewModel(
                     calcTransactionFee()
                 }
 
+                amountLiveData.observeForever {
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
+                }
+
                 _transactionFeeVisibilityLiveData.value = true
             }
 
-            TransferType.XOR_WITHDRAW -> {
-                _titleStringLiveData.value = "${resourceManager.getString(R.string.wallet_withdraw)} ${AssetHolder.SORA_XOR.assetLastName}"
+            TransferType.VAL_WITHDRAW -> {
+                checkBridgeStatus()
 
-                _recipientIconLiveData.value = R.drawable.ic_xor_grey_24
+                _titleStringLiveData.value = "${resourceManager.getString(R.string.wallet_withdraw)} ${AssetHolder.SORA_VAL.assetLastName}"
+
+                _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = recipientId
-                _inputTokenIcon.value = R.drawable.ic_xor_red_24
-                _inputTokenName.value = AssetHolder.SORA_XOR.assetFirstName
-                _inputTokenLastName.value = AssetHolder.SORA_XOR.assetLastName
+                _inputTokenIcon.value = R.drawable.ic_val_red_24
+                _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
+                _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
                 _hideDescriptionEventLiveData.value = Event(Unit)
 
                 amountLiveData.observeForever {
-                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
                 }
 
                 _minerFeeFormattedLiveData.addSource(minerFeeLiveData) { fee ->
@@ -740,14 +757,14 @@ class TransferAmountViewModel(
 
                 calcMinerFee()
 
-                _minerFeeVisibilityLiveData.value = Event(Unit)
+                _minerFeeVisibilityLiveData.value = true
 
                 _transactionFeeFormattedLiveData.addSource(transactionFeeLiveData) { fee ->
                     if (fee == BigDecimal.ZERO) {
                         _transactionFeeVisibilityLiveData.value = false
                     }
 
-                    val soraFee = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(fee)}"
+                    val soraFee = "${numbersFormatter.formatBigDecimal(fee)} ${resourceManager.getString(R.string.val_token)}"
                     _transactionFeeFormattedLiveData.value = soraFee
                 }
 
@@ -771,6 +788,33 @@ class TransferAmountViewModel(
         _minerFeeFormattedLiveData.removeSource(minerFeeLiveData)
         _minerFeeFormattedLiveData.removeSource(minerFeeLiveData)
         _transactionFeeVisibilityLiveData.value = false
+        _minerFeeVisibilityLiveData.value = false
+    }
+
+    private fun checkBridgeStatus() {
+        disposables.add(
+            ethereumInteractor.isBridgeEnabled()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    if (!it) {
+                        _errorStringLiveData.value = resourceManager.getString(R.string.transaction_bridge_not_active_error)
+                        _errorVisibilityLiveData.value = true
+                        _nextButtonEnableLiveData.value = false
+                    }
+                    isBridgeEnabled = it
+                    _errorVisibilityLiveData.value = !it
+
+                    amountLiveData.value?.let {
+                        _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
+                    }
+                }, {
+                    _errorStringLiveData.value = resourceManager.getString(R.string.transaction_bridge_not_active_error)
+                    _errorVisibilityLiveData.value = true
+                    _nextButtonEnableLiveData.value = false
+                    isBridgeEnabled = false
+                })
+        )
     }
 
     fun ethErrorOkClicked() {

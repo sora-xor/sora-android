@@ -56,8 +56,8 @@
   <string name="common_sms_code_expired">인증 코드가 만료되었습니다. 다른 걸로 시도해보십시오.</string>
   <string name="common_sms_code_not_correct">확인 코드가 올바르지 않습니다.</string>
   <string name="wallet_empty_description">송수신 거래가 \n여기에 표시됩니다.</string>
-  <string name="wallet_qr_share_message_template">수신할 내 소라 네트워크 주소:</string>
-  <string name="wallet_qr_share_message_empty_template">수신할 내 소라 네트워크 주소:</string>
+  <string name="wallet_qr_share_message_template">수신할 내 소라 네트워크 주소%s %s:</string>
+  <string name="wallet_qr_share_message_empty_template">수신할 내 소라 네트워크 주소%s:</string>
   <string name="tutorial_sign_up">가입하기</string>
   <string name="common_terms_title">이용 약관</string>
   <string name="invite_link_format">아래 링크를 사용하여 소라에 가입하세요:%s</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">비밀번호 문구는\n비밀번호의 유형입니다.</string>
   <string name="common_passphrase_body">계정 액세스를 복구하는 데 사용됩니다. 그것이 없는 경우 계정을 복수할 수 없으니, 반드시 기록해주시기 바랍니다!</string>
   <string name="common_passphrase_your_passphrase">귀하의 비밀번호 문구</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">소라 앱 업데이트</string>
   <string name="common_unsupported_version_body">업데이트된 소라 응용 프로그램은 구글 플레이에서 사용할 수 있습니다. 여기에는 개선 및 버그 수정이 포함되어 있습니다.</string>
   <string name="common_unsupported_version_open_google_play">구글 플레이 열기</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">인터넷 연결을 확인하고 나중에 다시 시도하십시오.</string>
   <string name="common_error_pincode_check_error">입력된 코드가 잘못되었습니다.</string>
   <string name="activity_user_registered_type">등록된 친구</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">귀하의 명성은 증가될 것입니다!</string>
   <string name="activity_voting_rights_credited_type_template">투표 분포</string>
   <string name="activity_voting_rights_title_template">일일 투표</string>
   <string name="activity_invitation_credited_type_template">초대장 배포</string>
   <string name="activity_invitation_credited_title_template">초대장이 인정되었습니다.</string>
   <string name="activity_project_funded_type_template">프로젝트가 완료되었습니다!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">곧 XOR 보상에 대한 정보를 받게 됩니다.</string>
   <string name="activity_project_created_type_template">새로운 프로젝트!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">투표에 대한 XOR 보상</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">순위가 변경되었습니다.</string>
   <string name="activity_project">프로젝트</string>
   <string name="activity_user">사용자</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">다른 초대 코드를 이미 적용하셨습니다.</string>
   <string name="invite_enter_dialog_title_hint">숫자 8자리</string>
   <string name="invite_enter_invitation_code">초대 코드 입력</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">친구가 투표했다</item>
   </plurals>
@@ -163,10 +155,10 @@
   <string name="project_website">웹사이트</string>
   <string name="project_gallery">갤러리</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="other">일 남음</item>
+    <item quantity="other">%s 일 남음</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="other">시간 남음\n시간 남음</item>
+    <item quantity="other">%s 시간 남음</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="other">%s 분 남음</item>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">쿼리와 일치하는 국가가 없습니다</string>
   <string name="phone_number_title">가입하기</string>
   <string name="phone_number_mobile">휴대폰 번호</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">기다려주세요.</string>
   <string name="common_open_explorer">블록체인 탐색기에서 보기</string>
   <string name="common_error_phone_already_exists">죄송합니다, 이 전화번호는 이미 사용 중입니다. 다른 번호로 시도하세요.</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">이체 가능</string>
   <string name="limit_dialog_reset">한도 재설정</string>
   <string name="limit_dialog_set_amount">금액 설정하기</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet]-XOR ERC20 [이더리움]</string>
   <string name="common_hour">시간</string>
   <string name="common_japanese">일본어</string>
   <string name="common_chinese">중국어</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">태국어</string>
   <string name="common_estonian">에스토니아 사람</string>
   <string name="common_arab">아라비아 사람</string>
+  <string name="activity_project_funded_description_template_val">곧 VAL 보상에 대한 정보를 받게 됩니다.</string>
+  <string name="wallet_val_to_my_eth">내 이더리움 계좌로</string>
+  <string name="copy_val_title">Sora (VAL) 지갑 주소 복사</string>
+  <string name="val_balance_title">다른 네트워크의 VAL 토큰</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL 수신됨</string>
+  <string name="activity_val_reward_credited_from_project_type_template">투표에 대한 VAL 보상</string>
+  <string name="wallet_receive_val">수신 VAL</string>
+  <string name="view_balance_val">Sora (VAL) 토큰 할당보기</string>
+  <string name="transaction_bridge_not_active_error">이더 리움 브리지가 활성화되지 않았습니다.</string>
+  <string name="transaction_bridge_info">이더 리움 브리지 정보</string>
 </resources>

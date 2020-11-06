@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Серһүҙ паролден төрө.</string>
   <string name="common_passphrase_body">Ул аккаунтҡа инеү өсөн ҡулланыла. Юғалтыу осоронда һеҙ аккаунтҡа инеү ҡайтара алмайығыҙ!</string>
   <string name="common_passphrase_your_passphrase">Һеҙҙең серһүҙегеҙ</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Sora ҡушымтаһын яңыртырға</string>
   <string name="common_unsupported_version_body">Google Playҙа яңы яҡшыртылған Sora ҡушымтаһы бар.</string>
   <string name="common_unsupported_version_open_google_play">Google Play асырға</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Зинһар, интернет селтәрен тикшерегеҙ һәм һуңыраҡ ҡабатлап ҡарағыҙ.</string>
   <string name="common_error_pincode_check_error">Яңылыш код индерелгән</string>
   <string name="activity_user_registered_type">Дуҫығыҙ теркәлгән</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Һеҙҙең абруйығыҙ артасаҡ!</string>
   <string name="activity_voting_rights_credited_type_template">Саҡырыу таратыу</string>
   <string name="activity_voting_rights_title_template">Көнлө тауыштар</string>
   <string name="activity_invitation_credited_type_template">Саҡырыу таратыу</string>
   <string name="activity_invitation_credited_title_template">Саҡырыуҙар иҫәпләнде</string>
   <string name="activity_project_funded_type_template">Проект тамамланған!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">XOR бүләге тураһында мәғлүмәт тиҙҙән буласаҡ</string>
   <string name="activity_project_created_type_template">Яңы проект!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">Тауыш биргән өсөн XOR бүләк</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Абруй үҙгәрелгән</string>
   <string name="activity_project">Проект</string>
   <string name="activity_user">Файҙаланыусы</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Һеҙ икенсе саҡырыу кодын индерҙегеҙ</string>
   <string name="invite_enter_dialog_title_hint">8 хәреф йәки һанлы символ</string>
   <string name="invite_enter_invitation_code">Саҡырыу кодын индерегеҙ</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="zero">%s дуҫ тауыш биргән</item>
     <item quantity="one">%s дуҫ тауыш биргән</item>
@@ -262,7 +254,6 @@
   <string name="countries_country_not_found">Һеҙҙең һорау буйынса ил табылманы</string>
   <string name="phone_number_title">Теркәлеү</string>
   <string name="phone_number_mobile">Телефон номеры</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Зинһар, көтөгөҙ</string>
   <string name="common_open_explorer">Blockchain Explorer\'да ҡарау</string>
   <string name="common_error_phone_already_exists">Ғәфү итегеҙ, был телефон номеры ҡулланыла. Зинһар, икенсене ҡулланып ҡарағыҙ.</string>
@@ -271,7 +262,7 @@
   <string name="common_spanish">Испан</string>
   <string name="common_bashkir">Башҡорт</string>
   <string name="biometric_dialog_title">Тикшереү</string>
-  <string name="contacts_search_hint_v1">Аккаунт, телефон номерын</string>
+  <string name="contacts_search_hint_v1">Аккаунт, телефон номеры йәки адрес</string>
   <string name="wallet_xor_to_my_eth">XOR минен Ethereum счетыма</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -318,7 +309,6 @@
   <string name="limit_dialog_available_limit">Арзан тапшырыу өсөн</string>
   <string name="limit_dialog_reset">Был лимит түгелеп</string>
   <string name="limit_dialog_set_amount">Сумма билдәләнә</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] в XOR ERC20 [Ethereum]</string>
   <string name="common_hour">сәғәт</string>
   <string name="common_japanese">Япон</string>
   <string name="common_chinese">Ҡытай</string>
@@ -367,4 +357,14 @@
   <string name="common_thai">Тай</string>
   <string name="common_estonian">Эстон</string>
   <string name="common_arab">Ғәрәп</string>
+  <string name="activity_project_funded_description_template_val">VAL бүләге тураһында мәғлүмәт тиҙҙән буласаҡ</string>
+  <string name="wallet_val_to_my_eth">VAL минен Ethereum счетыма</string>
+  <string name="copy_val_title">Скопируйте адрес кошелька Sora (VAL)</string>
+  <string name="val_balance_title">Токен VAL в разных сетях</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL алынған</string>
+  <string name="activity_val_reward_credited_from_project_type_template">Тауыш биргән өсөн VAL бүләк</string>
+  <string name="wallet_receive_val">VAL алырға</string>
+  <string name="view_balance_val">Просмотр распределения токенов Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Ethereum bridge түгел актив.</string>
+  <string name="transaction_bridge_info">Күпер мәғлүмәт эфириум</string>
 </resources>

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -99,6 +94,7 @@ class EthereumRepositoryTest {
     fun setUp() {
         given(contractApiProvider.getGasPrice()).willReturn(gasPrice)
         given(contractApiProvider.getGasLimit()).willReturn(gasLimit)
+        given(etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)).willReturn(BigDecimal(minerFee))
         given(contractApiProvider.getSmartContractApi(ethereumCredentials)).willReturn(smartContractApi)
         given(contractApiProvider.getErc20ContractApi(ethereumCredentials, xorTokenAddress)).willReturn(erc20ContractApi)
         ethereumRepository = EthereumRepositoryImpl(ethereumDatasource, ethereumCredentialsMapper, api, soranetApi, web3j, web3jBip32Crypto,
@@ -110,23 +106,19 @@ class EthereumRepositoryTest {
         val transactionDao = mock(TransferTransactionDao::class.java)
         val remoteCall = mock(RemoteCall::class.java)
         val transactionReceipt = mock(TransactionReceipt::class.java)
-        val minerFeeInEth = BigDecimal("200")
 
         given(etherWeiConverter.fromEtherToWei(amount)).willReturn(amount.toBigInteger())
-        given(etherWeiConverter.fromWeiToEther(BigInteger("100"))).willReturn(minerFeeInEth)
-        given(contractApiProvider.getGasPrice()).willReturn(BigInteger.TEN)
-        given(erc20ContractApi.transferXor(address, amount.toBigInteger())).willReturn(remoteCall as RemoteCall<TransactionReceipt>?)
+        given(erc20ContractApi.transferVal(address, amount.toBigInteger())).willReturn(remoteCall as RemoteCall<TransactionReceipt>?)
         given(ethereumCredentialsMapper.getAddress(anyNonNull())).willReturn(address)
         given(remoteCall!!.send()).willReturn(transactionReceipt)
         given(transactionReceipt.transactionHash).willReturn(txHash)
-        given(transactionReceipt.gasUsed).willReturn(BigInteger.TEN)
         given(db.transactionDao()).willReturn(transactionDao)
 
-        ethereumRepository.transferXorErc20(address, amount, ethereumCredentials, xorTokenAddress)
+        ethereumRepository.transferValErc20(address, amount, ethereumCredentials, xorTokenAddress)
             .test()
             .assertComplete()
 
-        verify(erc20ContractApi).transferXor(address, amount.toBigInteger())
+        verify(erc20ContractApi).transferVal(address, amount.toBigInteger())
         verify(remoteCall).send()
     }
 
@@ -153,6 +145,7 @@ class EthereumRepositoryTest {
         val keyPair = mock(KeyPair::class.java)
         val transaction = mock(TransactionOuterClass.Transaction::class.java)
         val irohaRequest = IrohaRequest(Base64.getEncoder().encodeToString(transactionByteArray))
+        given(etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)).willReturn(BigDecimal(minerFee))
 
         given(db.withdrawTransactionDao()).willReturn(withdrawTransactionDao)
         given(transactionFactory.buildWithdrawTransaction(amount, srcAccountId, address, minerFee, keyPair)).willReturn(Single.just(Pair(irohaRequest, txHash)))

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 
 import android.os.Bundle
@@ -82,7 +77,9 @@ class AssetSettingsFragment : BaseFragment<AssetSettingsViewModel>() {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
                 val from = viewHolder.adapterPosition
                 val to = target.adapterPosition
-                viewModel.assetPositionChanged(from, to)
+                if (from != 0 && to != 0) {
+                    viewModel.assetPositionChanged(from, to)
+                }
                 return false
             }
 

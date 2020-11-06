@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">ทรัพยากรไม่พร้อมใช้งาน</string>
   <string name="common_error_internal_error_title">ข้อผิดพลาดภายใน</string>
   <string name="projects_title">โครงการ Sora</string>
-  <string name="project_founded_template" formatted="false">%s %% คะแนนจาก %s</string>
+  <string name="project_founded_template" formatted="false">%s%% คะแนนจาก %s</string>
   <string name="project_votes_template">%sคะแนน</string>
   <string name="project_ended_template">สิ้นสุดแล้ว %s</string>
   <string name="project_spent_format">คุณใช้ไป%sคะแนน</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">ข้อความรหัสผ่านคือรหัสผ่านประเภทหนึ่ง</string>
   <string name="common_passphrase_body">มันถูกใช้เพื่อกู้คืนการเข้าถึงบัญชี โปรดจดบันทึกไว้ หากไม่มีข้อความรหัสผ่านเราจะไม่สามารถกู้คืนบัญชีของคุณได้</string>
   <string name="common_passphrase_your_passphrase">ข้อความรหัสผ่านของคุณ</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">อัปเดตแอปพลิเคชัน Sora ของคุณ</string>
   <string name="common_unsupported_version_body">แอปพลิเคชัน Sora อัปเดตและพร้อมใช้งานแล้วใน Google Play โดยมีการพัฒนาปรับปรุงและแก้บั๊ก</string>
   <string name="common_unsupported_version_open_google_play">เปิด Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตและลองใหม่อีกครั้งในภายหลัง</string>
   <string name="common_error_pincode_check_error">รหัสที่กรอกไม่ถูกต้อง</string>
   <string name="activity_user_registered_type">เพื่อนที่ลงทะเบียนแล้ว</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">ชื่อเสียงของคุณจะเพิ่มขึ้น!</string>
   <string name="activity_voting_rights_credited_type_template">การแจกจ่ายคะแนน</string>
   <string name="activity_voting_rights_title_template">คะแนนรายวัน</string>
   <string name="activity_invitation_credited_type_template">การแจกจ่ายคําเชิญ</string>
   <string name="activity_invitation_credited_title_template">คำเชิญที่ถูกให้เครดิตแล้ว</string>
   <string name="activity_project_funded_type_template">โครงการเสร็จสมบูรณ์!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">คุณจะได้รับข้อมูลเกี่ยวกับรางวัล XOR ในเร็ว ๆ นี้</string>
   <string name="activity_project_created_type_template">โครงการใหม่!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">รางวัล XOR สําหรับการลงคะแนน</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">ลำดับเกิดการเปลี่ยนแปลง</string>
   <string name="activity_project">โครงการ</string>
   <string name="activity_user">ผู้ใช้</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">คุณได้ใส่รหัสเชิญอื่นแล้ว</string>
   <string name="invite_enter_dialog_title_hint">ตัวเลขและตัวอักษร 8 ตัว</string>
   <string name="invite_enter_invitation_code">กรอกรหัสคําเชิญ</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">คะแนนจากเพื่อน</item>
   </plurals>
@@ -163,10 +155,10 @@
   <string name="project_website">เว็บไซต์</string>
   <string name="project_gallery">แกลเลอรี่</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="other">วันที่เหลือ</item>
+    <item quantity="other">%s วันที่เหลือ</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="other">ชั่วโมงที่เหลือ</item>
+    <item quantity="other">%s ชั่วโมงที่เหลือ</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="other">%s นาทีที่เหลือ</item>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">ไม่มีประเทศที่ตรงกับคำค้นหาของคุณ</string>
   <string name="phone_number_title">ลงชื่อ</string>
   <string name="phone_number_mobile">หมายเลขโทรศัพท์มือถือ</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">โปรดรอสักครู่</string>
   <string name="common_open_explorer">ดูในมุมมองผู้สำรวจ Blockchain</string>
   <string name="common_error_phone_already_exists">ขออภัยหมายเลขโทรศัพท์นี้มีการใช้งานแล้ว กรุณาลองใหม่</string>
@@ -241,7 +232,7 @@
   <string name="common_spanish">สเปน</string>
   <string name="common_bashkir">Bashkir</string>
   <string name="biometric_dialog_title">รับรองความถูกต้อง</string>
-  <string name="contacts_search_hint_v1">หมายเลขบัญชีผู้ใช้, หมายเลขโทรศัพท์มือถือ</string>
+  <string name="contacts_search_hint_v1">หมายเลขบัญชีผู้ใช้, หมายเลขโทรศัพท์, ที่อยู่</string>
   <string name="wallet_xor_to_my_eth">XOR ไปยังบัญชี Ethereum ของฉัน</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">พร้อมที่จะโอน</string>
   <string name="limit_dialog_reset">จํากัดการตั้งค่าใหม่ใน</string>
   <string name="limit_dialog_set_amount">กำหนดจำนวนเงินเป็น</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] ถึง XOR ERC20 [Ethereum]</string>
   <string name="common_hour">ชั่วโมง</string>
   <string name="common_japanese">ญี่ปุ่น</string>
   <string name="common_chinese">จีน</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">ไทย</string>
   <string name="common_estonian">เอสโตเนีย</string>
   <string name="common_arab">อาหรับ</string>
+  <string name="activity_project_funded_description_template_val">คุณจะได้รับข้อมูลเกี่ยวกับรางวัล VAL ในเร็ว ๆ นี้</string>
+  <string name="wallet_val_to_my_eth">VAL ไปยังบัญชี Ethereum ของฉัน</string>
+  <string name="copy_val_title">คัดลอกที่อยู่กระเป๋าเงิน Sora (VAL)</string>
+  <string name="val_balance_title">VAL Token บนเครือข่ายต่างๆ</string>
+  <string name="activity_val_between_users_transferred_type_template">ได้รับ VAL แล้ว</string>
+  <string name="activity_val_reward_credited_from_project_type_template">รางวัล VAL สําหรับการลงคะแนน</string>
+  <string name="wallet_receive_val">รับ VAL</string>
+  <string name="view_balance_val">ดูการจัดสรรโทเค็น Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Ethereum bridge ไม่ทำงาน</string>
+  <string name="transaction_bridge_info">ข้อมูลสะพาน Ethereum</string>
 </resources>

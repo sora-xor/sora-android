@@ -42,7 +42,8 @@ buildscript {
             googleAuthApiPhone: '17.1.0',
             googleAuthApi     : '17.0.0',
             biometric         : '1.0.1',
-            web3j             : '4.2.0-android'
+            web3j             : '4.2.0-android',
+            workerManager     : '2.4.0'
     ]
 
     ext {
@@ -60,6 +61,8 @@ buildscript {
         cardViewDep = "androidx.cardview:cardview:$versions.support"
         constraintDep = "androidx.constraintlayout:constraintlayout:$versions.constraint"
         swipelayoutDep = "androidx.swiperefreshlayout:swiperefreshlayout:$versions.swipe"
+
+        workerManagerDep = "androidx.work:work-runtime-ktx:$versions.workerManager"
 
         loggerDep = "com.orhanobut:logger:$versions.logger"
 

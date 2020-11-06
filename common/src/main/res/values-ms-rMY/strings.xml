@@ -40,7 +40,7 @@
   <string name="common_error_project_not_found">Maaf, tetapi projek itu tidak dijumpai.</string>
   <string name="startup_verification_title">Mengesahkan kebenaran…</string>
   <string name="reputation_total_rank_template" formatted="false">%s daripada %s</string>
-  <string name="reputation_last_votes_template">[% s] undian diterima kali terakhir</string>
+  <string name="reputation_last_votes_template">%s undian diterima kali terakhir</string>
   <string name="reputation_timer_format">Reputasi anda \n akan dikemas kini dalam %s</string>
   <string name="reputation_soon">Reputasi anda akan dikemas kini tidak lama lagi</string>
   <string name="common_error_wrong_user_status">Tidak dapat meneruskan operasi kerana status pengguna tidak sah</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Frasa Laluan ialah \n sejenis kata laluan.</string>
   <string name="common_passphrase_body">Ia digunakan untuk mendapatkan semula akses ke akaun. Tuliskan, kami tidak akan dapat memulihkan akaun anda tanpanya!</string>
   <string name="common_passphrase_your_passphrase">Frasa laluan anda</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Kemas kini Aplikasi Sora anda</string>
   <string name="common_unsupported_version_body">Aplikasi Sora yang dikemas kini boleh didapati di Google Play. Ia merangkumi penambahbaikan dan pembetulan pepijat.</string>
   <string name="common_unsupported_version_open_google_play">Buka Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Sila, periksa sambungan internet dan cuba lagi kemudian.</string>
   <string name="common_error_pincode_check_error">Kod yang dimasukkan salah</string>
   <string name="activity_user_registered_type">Rakan Berdaftar</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Reputasi anda akan meningkat!</string>
   <string name="activity_voting_rights_credited_type_template">Pengedaran undi</string>
   <string name="activity_voting_rights_title_template">Undian harian</string>
   <string name="activity_invitation_credited_type_template">Pengedaran jemputan</string>
   <string name="activity_invitation_credited_title_template">Jemputan dikreditkan</string>
   <string name="activity_project_funded_type_template">Projek telah selesai!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Anda akan menerima maklumat mengenai ganjaran XOR tidak lama lagi</string>
   <string name="activity_project_created_type_template">Projek baru!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">Ganjaran XOR untuk mengundi</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Pangkat berubah</string>
   <string name="activity_project">Projek</string>
   <string name="activity_user">Pengguna</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Anda telah menggunakan kod jemputan yang lain</string>
   <string name="invite_enter_dialog_title_hint">8 aksara alfanumerik</string>
   <string name="invite_enter_invitation_code">Masukkan kod jemputan</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">%s rakan mengundi</item>
   </plurals>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">Tiada negara yang padan dengan pertanyaan anda</string>
   <string name="phone_number_title">Daftar</string>
   <string name="phone_number_mobile">Nombor Telefon Bimbit</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Sila tunggu</string>
   <string name="common_open_explorer">Lihat di Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Maaf, nombor telefon ini sudah digunakan. Sila cuba yang lain.</string>
@@ -241,7 +232,7 @@
   <string name="common_spanish">Bahasa sepanyol</string>
   <string name="common_bashkir">Bahasa Bashkir</string>
   <string name="biometric_dialog_title">Mengesahkan</string>
-  <string name="contacts_search_hint_v1">ID akaun, nombor telefon</string>
+  <string name="contacts_search_hint_v1">ID akaun, nombor telefon, alamat</string>
   <string name="wallet_xor_to_my_eth">XOR ke akaun Ethereum saya</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">Tersedia untuk dipindahkan</string>
   <string name="limit_dialog_reset">Hadkan set semula dalam</string>
   <string name="limit_dialog_set_amount">Tetapkan jumlah kepada</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] hingga XOR ERC20 [Ethereum]</string>
   <string name="common_hour">jam</string>
   <string name="common_japanese">Bahasa Jepun</string>
   <string name="common_chinese">Bahasa Cina</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">Orang Thai</string>
   <string name="common_estonian">Orang Estonia</string>
   <string name="common_arab">Arab</string>
+  <string name="activity_project_funded_description_template_val">Anda akan menerima maklumat mengenai ganjaran VAL tidak lama lagi</string>
+  <string name="wallet_val_to_my_eth">VAL ke akaun Ethereum saya</string>
+  <string name="copy_val_title">Salin alamat dompet Sora (VAL)</string>
+  <string name="val_balance_title">Token VAL pada rangkaian yang berbeza</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL Diterima</string>
+  <string name="activity_val_reward_credited_from_project_type_template">Ganjaran VAL untuk mengundi</string>
+  <string name="wallet_receive_val">Terima VAL</string>
+  <string name="view_balance_val">Lihat peruntukan token Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Jambatan Ethereum tidak aktif.</string>
+  <string name="transaction_bridge_info">Maklumat jambatan Ethereum</string>
 </resources>

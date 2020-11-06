@@ -23,6 +23,15 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
+
     flavorDimensions "default"
 
     productFlavors {
@@ -65,6 +74,12 @@ dependencies {
 
     implementation retrofitDep
     implementation gsonDep
+
+    implementation workerManagerDep
+
+    implementation(crashlyticsDep) {
+        transitive = true
+    }
 
     testImplementation jUnitDep
     testImplementation mockitoDep

@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">មិនមានធនធាន</string>
   <string name="common_error_internal_error_title">កំហុសខាងក្នុង</string>
   <string name="projects_title">គម្រោង Sora</string>
-  <string name="project_founded_template" formatted="false">%s %% សម្លេងឆ្នោតនៃ %s</string>
+  <string name="project_founded_template" formatted="false">%s%% សម្លេងឆ្នោតនៃ %s</string>
   <string name="project_votes_template">%s សម្លេងឆ្នោត</string>
   <string name="project_ended_template">បានបញ្ចប់ %s</string>
   <string name="project_spent_format">អ្នកបានចំណាយ %s សម្លេងឆ្នោត</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">ឃ្លាសម្ងាត់គឺជា\nប្រភេទពាក្យសម្ងាត់។</string>
   <string name="common_passphrase_body">វាត្រូវបានប្រើប្រាស់ដើម្បីស្តារការចូលប្រើគណនី។ សរសេរវាទុក ហើយយើងនឹងមិនអាចស្ដារគណនីរបស់អ្នកបានទេបើគ្មានវា!</string>
   <string name="common_passphrase_your_passphrase">ឃ្លាសម្ងាត់របស់អ្នក</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">ធ្វើបច្ចុប្បន្នភាពកម្មវិធី Sora របស់អ្នក</string>
   <string name="common_unsupported_version_body">កម្មវិធី Sora បច្ចុប្បន្នភាពថ្មីមាននៅក្នុង Google Play ។ វារួមបញ្ចូលទាំងការកែលម្អនិងការកែកំហុស។</string>
   <string name="common_unsupported_version_open_google_play">បើក Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">សូមពិនិត្យការភ្ជាប់ទៅកាន់អ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀតនៅពេលក្រោយ។</string>
   <string name="common_error_pincode_check_error">បញ្ចូលលេខកូដមិនត្រឹមត្រូវ</string>
   <string name="activity_user_registered_type">មិត្តភក្ដិបានចុះឈ្មោះ</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">កេរ្តិ៍ឈ្មោះរបស់អ្នកនឹងត្រូវបានកើនឡើង!</string>
   <string name="activity_voting_rights_credited_type_template">ការចែកចាយសម្លេងឆ្នោត</string>
   <string name="activity_voting_rights_title_template">ការបោះឆ្នោតប្រចាំថ្ងៃ</string>
   <string name="activity_invitation_credited_type_template">ការចែកចាយការអញ្ជើញ</string>
   <string name="activity_invitation_credited_title_template">ការអញ្ជើញត្រូវបានដាក់បញ្ចូល</string>
   <string name="activity_project_funded_type_template">គម្រោងត្រូវបានបញ្ចប់!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">អ្នកនឹងទទួលបានព័ត៌មានអំពីរង្វាន់ XOR ឆាប់ៗនេះ</string>
   <string name="activity_project_created_type_template">គម្រោងថ្មី!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">រង្វាន់ជា XOR សម្រាប់ការបោះឆ្នោត</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">ចំណាត់ថ្នាក់ត្រូវបានផ្លាស់ប្តូរ</string>
   <string name="activity_project">គម្រោង</string>
   <string name="activity_user">អ្នកប្រើ</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">អ្នកបានដាក់លេខកូដអញ្ចើញមួយទៀតរូចហើយ</string>
   <string name="invite_enter_dialog_title_hint">អក្សរក្រមលេខ ៨ តួ</string>
   <string name="invite_enter_invitation_code">បញ្ចូលលេខកូដអញ្ជើញ</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="one">មិត្តភក្តិ %s បានបោះឆ្នោត</item>
     <item quantity="other">មិត្តភក្តិ %s បានបោះឆ្នោត</item>
@@ -165,19 +157,15 @@
   <string name="project_website">គេហទំព័រ</string>
   <string name="project_gallery">វិចិត្រសាល</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">នៅសល់ %s ថ្ងៃទៀត</item>
     <item quantity="other">នៅសល់ %s ថ្ងៃទៀត</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">នៅសល់ %s ម៉ោងទៀត</item>
     <item quantity="other">នៅសល់ %s ម៉ោងទៀត</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
-    <item quantity="one">នៅសល់ %s នាទីទៀត</item>
     <item quantity="other">នៅសល់ %s នាទីទៀត</item>
   </plurals>
   <plurals name="project_date_second_plurals">
-    <item quantity="one">នៅសល់ %s វិនាទីទៀត</item>
     <item quantity="other">នៅសល់ %s វិនាទីទៀត</item>
   </plurals>
   <string name="activity">សកម្មភាព</string>
@@ -238,7 +226,6 @@
   <string name="countries_country_not_found">គ្មានប្រទេសណាត្រូវនឹងការស្វែងរករបស់អ្នកទេ</string>
   <string name="phone_number_title">ចុះឈ្មោះ</string>
   <string name="phone_number_mobile">លេខទូរស័ព្ទ</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">សូមរង់ចាំ</string>
   <string name="common_open_explorer">មើលនៅក្នុង Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">សូមទោស លេខទូរស័ព្ទនេះបានប្រើប្រាស់រួចហើយ។ សូមសាកល្បងមួយផ្សេងទៀត។</string>
@@ -247,7 +234,7 @@
   <string name="common_spanish">ភាសាអេស្ប៉ាញ</string>
   <string name="common_bashkir">ភាសាបាហ្គាស</string>
   <string name="biometric_dialog_title">ផ្ទៀងផ្ទាត់ភាពត្រឹមត្រូវ</string>
-  <string name="contacts_search_hint_v1">លេខសម្គាល់គណនីលេខទូរស័ព្ទ</string>
+  <string name="contacts_search_hint_v1">លេខសម្គាល់គណនី លេខទូរស័ព្ទ ឬអាសយដ្ឋាន</string>
   <string name="wallet_xor_to_my_eth">XOR ទៅគណនី Ethereum របស់ខ្ញុំ</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -294,7 +281,6 @@
   <string name="limit_dialog_available_limit">អាចផ្ទេរបាន</string>
   <string name="limit_dialog_reset">កំណត់ឡើងវិញនៅក្នុងរយៈពេល</string>
   <string name="limit_dialog_set_amount">កំណត់ចំនួនរហូតដល់</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] ទៅកាន់គណនី XOR ERC20 [Ethereum]</string>
   <string name="common_hour">ម៉ោង</string>
   <string name="common_japanese">ភាសាជប៉ុន</string>
   <string name="common_chinese">ភាសាចិន</string>
@@ -315,7 +301,6 @@
   <string name="referendum_unsupport_title">ទេ</string>
   <string name="referendum_ended_title">បានបញ្ចប់</string>
   <plurals name="referendum_date_day_plurals_value">
-    <item quantity="one">នៅសល់ %d ថ្ងៃទៀត</item>
     <item quantity="other">នៅសល់ %d ថ្ងៃទៀត</item>
   </plurals>
   <string name="referendum_finishing_soon">បញ្ចប់ឆាប់ៗនេះ</string>
@@ -339,4 +324,14 @@
   <string name="common_thai">ថៃ</string>
   <string name="common_estonian">អេស្តូនី</string>
   <string name="common_arab">អារ៉ាប់</string>
+  <string name="activity_project_funded_description_template_val">អ្នកនឹងទទួលបានព័ត៌មានអំពីរង្វាន់ VAL ឆាប់ៗនេះ</string>
+  <string name="wallet_val_to_my_eth">VAL ទៅគណនី Ethereum របស់ខ្ញុំ</string>
+  <string name="copy_val_title">ចម្លងអាសយដ្ឋានកាបូបសូរ៉ា (VAL)</string>
+  <string name="val_balance_title">VAL Token នៅលើបណ្តាញផ្សេងៗគ្នា</string>
+  <string name="activity_val_between_users_transferred_type_template">បានទទួល VAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">រង្វាន់ជា VAL សម្រាប់ការបោះឆ្នោត</string>
+  <string name="wallet_receive_val">ទទួល VAL</string>
+  <string name="view_balance_val">មើលការបែងចែកនិមិត្តសញ្ញាសូរ៉ា (VAL)</string>
+  <string name="transaction_bridge_not_active_error">ស្ពាន Ethereum មិនសកម្មទេ។</string>
+  <string name="transaction_bridge_info">ព័ត៌មានអំពីស្ពាន Ethereum</string>
 </resources>

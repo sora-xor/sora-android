@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.util
 
 import jp.co.soramitsu.common.R
@@ -41,7 +36,7 @@ enum class ActivityFeedTypes(
 
     XOR_REWARD_CREDITED_FROM_PROJECT(
         "XORRewardCreditedFromProject",
-        R.string.activity_xor_reward_credited_from_project_type_template,
+        R.string.activity_val_reward_credited_from_project_type_template,
         -1,
         -1,
         R.drawable.icon_activity_xor
@@ -51,7 +46,7 @@ enum class ActivityFeedTypes(
         "ProjectFunded",
         R.string.activity_project_funded_type_template,
         R.string.activity_project_funded_title_template,
-        R.string.activity_project_funded_description_template,
+        R.string.activity_project_funded_description_template_val,
         R.drawable.icon_activity_project
     ),
 
@@ -81,7 +76,7 @@ enum class ActivityFeedTypes(
 
     XOR_BETWEEN_USERS_TRANSFERRED(
         "XORBetweenUsersTransferred",
-        R.string.activity_xor_between_users_transferred_type_template,
+        R.string.activity_val_between_users_transferred_type_template,
         -1,
         -1,
         R.drawable.icon_activity_xor

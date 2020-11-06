@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_padding_list_element"
         android:gravity="center_vertical"
-        tools:src="@drawable/ic_eth_grey_24" />
+        tools:src="@drawable/ic_eth_24" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/x1"
-                tools:text="XOR" />
+                tools:text="VAL" />
 
             <TextView
                 android:id="@+id/assetLastNameTv"

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.details.di
 
 import androidx.fragment.app.Fragment
@@ -19,6 +14,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
+import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -38,6 +34,7 @@ class TransactionDetailsModule {
     @ViewModelKey(TransactionDetailsViewModel::class)
     fun provideViewModel(
         walletInteractor: WalletInteractor,
+        ethereumInteractor: EthereumInteractor,
         walletRouter: WalletRouter,
         resourceManager: ResourceManager,
         numbersFormatter: NumbersFormatter,
@@ -61,6 +58,7 @@ class TransactionDetailsModule {
     ): ViewModel {
         return TransactionDetailsViewModel(
             walletInteractor,
+            ethereumInteractor,
             walletRouter,
             resourceManager,
             numbersFormatter,

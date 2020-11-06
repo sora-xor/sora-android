@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import android.os.Bundle
@@ -21,19 +16,21 @@ import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.enable
-import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.showBrowser
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.send.error.BridgeDisabledErrorBottomSheetDialog
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.error.EthereumAccountErrorBottomSheetDialog
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.error.FeeErrorBottomSheetDialog
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.gas.GasSelectBottomSheetDialog
@@ -60,6 +57,7 @@ import kotlinx.android.synthetic.main.fragment_transfer_amount.preloader
 import kotlinx.android.synthetic.main.fragment_transfer_amount.toolbar
 import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeTextView
 import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeWrapper
+import kotlinx.android.synthetic.main.fragment_transfer_amount.errorTextView
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -72,18 +70,18 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         private const val KEY_RECIPIENT_ID = "recipient_id"
         private const val KEY_DESCRIPTION_MAX_BYTES = 64
 
-        fun createBundleForXorTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
+        fun createBundleForValTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
             return Bundle().apply {
-                putSerializable(KEY_TRANSFER_TYPE, TransferType.XOR_TRANSFER)
+                putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_TRANSFER)
                 putString(KEY_RECIPIENT_ID, recipientId)
                 putString(KEY_FULL_NAME, fullName)
                 putString(KEY_AMOUNT, amount.toString())
             }
         }
 
-        fun createBundleForXorErcTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
+        fun createBundleForValErcTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
             return Bundle().apply {
-                putSerializable(KEY_TRANSFER_TYPE, TransferType.XORERC_TRANSFER)
+                putSerializable(KEY_TRANSFER_TYPE, TransferType.VALERC_TRANSFER)
                 putString(KEY_RECIPIENT_ID, recipientId)
                 putString(KEY_FULL_NAME, fullName)
                 putString(KEY_AMOUNT, amount.toString())
@@ -92,7 +90,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
 
         fun createBundleForWithdraw(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
             return Bundle().apply {
-                putSerializable(KEY_TRANSFER_TYPE, TransferType.XOR_WITHDRAW)
+                putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_WITHDRAW)
                 putString(KEY_RECIPIENT_ID, recipientId)
                 putString(KEY_FULL_NAME, fullName)
                 putString(KEY_AMOUNT, amount.toString())
@@ -163,7 +161,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
 
         amountEt.addTextChangedListener(amountTextWatcher)
 
-        currencySymbolTv.text = Const.SORA_SYMBOL
+        currencySymbolTv.text = resourceManager.getString(R.string.val_token)
 
         nextBtn.setOnClickListener(
             DebounceClickListener(debounceClickHandler) {
@@ -194,6 +192,15 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         }
 
         descriptionEt.filters = arrayOf(DescriptionInputFilter(KEY_DESCRIPTION_MAX_BYTES, "UTF-8"))
+
+        errorTextView.setDebouncedClickListener(debounceClickHandler) {
+            BridgeDisabledErrorBottomSheetDialog(
+                activity!!,
+                debounceClickHandler
+            ) {
+                showBrowser(it)
+            }.show()
+        }
     }
 
     override fun subscribe(viewModel: TransferAmountViewModel) {
@@ -207,6 +214,10 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             if (this::gasDialog.isInitialized) {
                 gasDialog.showGasPriceError(it)
             }
+        })
+
+        observe(viewModel.errorStringLiveData, Observer {
+            errorTextView.text = it
         })
 
         observe(viewModel.titleStringLiveData, Observer {
@@ -333,9 +344,23 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         })
 
         observe(viewModel.minerFeeVisibilityLiveData, Observer {
-            minerFeeTitle.show()
-            minerFeeWrapper.show()
-            currency_divider2.show()
+            if (it) {
+                minerFeeTitle.show()
+                minerFeeWrapper.show()
+                currency_divider2.show()
+            } else {
+                minerFeeTitle.gone()
+                minerFeeWrapper.gone()
+                currency_divider2.gone()
+            }
+        })
+
+        observe(viewModel.errorVisibilityLiveData, Observer {
+            if (it) {
+                errorTextView.show()
+            } else {
+                errorTextView.gone()
+            }
         })
 
         observe(viewModel.initialAmountLiveData, Observer {

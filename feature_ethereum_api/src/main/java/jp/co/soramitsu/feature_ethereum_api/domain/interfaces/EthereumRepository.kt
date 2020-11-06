@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_ethereum_api.domain.interfaces
 
 import io.reactivex.Completable
@@ -17,7 +12,7 @@ import java.security.KeyPair
 
 interface EthereumRepository {
 
-    fun getXorTokenAddress(ethCredentials: EthereumCredentials): Single<String>
+    fun getValTokenAddress(ethCredentials: EthereumCredentials): Single<String>
 
     fun registerEthAccount(accountId: String, serializedValue: String, keyPair: KeyPair): Completable
 
@@ -27,21 +22,21 @@ interface EthereumRepository {
 
     fun startWithdraw(amount: BigDecimal, srcAccountId: String, ethAddress: String, transactionFee: String, keyPair: KeyPair): Completable
 
-    fun startCombinedXorErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, srcAccountId: String, withdrawEthAddress: String, transferEthAddress: String, transactionFee: String, ethCredentials: EthereumCredentials, keyPair: KeyPair): Completable
+    fun startCombinedValErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, srcAccountId: String, withdrawEthAddress: String, transferEthAddress: String, transactionFee: String, ethCredentials: EthereumCredentials, keyPair: KeyPair): Completable
 
-    fun startCombinedXorTransfer(partialAmount: BigDecimal, amount: BigDecimal, transferAccountId: String, transferName: String, transactionFee: BigDecimal, description: String, ethCredentials: EthereumCredentials, keyPair: KeyPair, xorTokenAddress: String): Completable
+    fun startCombinedValTransfer(partialAmount: BigDecimal, amount: BigDecimal, transferAccountId: String, transferName: String, transactionFee: BigDecimal, description: String, ethCredentials: EthereumCredentials, keyPair: KeyPair, tokenAddress: String): Completable
 
     fun getEthWalletAddress(ethCredentials: EthereumCredentials): Single<String>
 
-    fun calculateXorErc20TransferFee(): Single<BigDecimal>
+    fun calculateValErc20TransferFee(): Single<BigDecimal>
 
-    fun calculateXorErc20WithdrawFee(): Single<BigDecimal>
+    fun calculateValErc20WithdrawFee(): Single<BigDecimal>
 
     fun setGasPrice(gasPriceInGwei: BigInteger): Single<BigDecimal>
 
     fun setGasLimit(gasLimit: BigInteger): Single<BigDecimal>
 
-    fun transferXorErc20(to: String, amount: BigDecimal, ethCredentials: EthereumCredentials, xorTokenAddress: String): Completable
+    fun transferValErc20(to: String, amount: BigDecimal, ethCredentials: EthereumCredentials, tokenAddress: String): Completable
 
     fun getEthRegistrationState(): EthRegisterState
 
@@ -57,15 +52,17 @@ interface EthereumRepository {
 
     fun getBlockChainExplorerUrl(transactionHash: String): Single<String>
 
-    fun updateXorErc20AndEthBalance(ethCredentials: EthereumCredentials, ethWalletAddress: String, xorTokenAddress: String): Completable
+    fun updateValErc20AndEthBalance(ethCredentials: EthereumCredentials, ethWalletAddress: String, tokenAddress: String): Completable
 
-    fun confirmWithdraw(ethCredentials: EthereumCredentials, amount: BigDecimal, txHash: String, accountId: String, gasPrice: BigInteger, gasLimit: BigInteger, xorTokenAddress: String): Single<String>
+    fun confirmWithdraw(ethCredentials: EthereumCredentials, amount: BigDecimal, txHash: String, accountId: String, gasPrice: BigInteger, gasLimit: BigInteger, tokenAddress: String): Single<String>
 
     fun getActualEthRegisterState(): Single<EthRegisterState.State>
 
-    fun updateTransactionStatuses(ethCredentials: EthereumCredentials, accountId: String, xorTokenAddress: String): Completable
+    fun updateTransactionStatuses(ethCredentials: EthereumCredentials, accountId: String, tokenAddress: String): Completable
 
-    fun processLastCombinedWithdrawTransaction(ethCredentials: EthereumCredentials, xorTokenAddress: String): Completable
+    fun processLastCombinedWithdrawTransaction(ethCredentials: EthereumCredentials, tokenAddress: String): Completable
 
     fun processLastCombinedDepositTransaction(first: EthereumCredentials): Completable
+
+    fun isBridgeEnabled(ethCredentials: EthereumCredentials): Single<Boolean>
 }

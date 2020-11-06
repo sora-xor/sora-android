@@ -6,10 +6,10 @@
   <string name="common_error_not_found_title">Risorsa non disponibile</string>
   <string name="common_error_internal_error_title">Errore interno</string>
   <string name="projects_title">Progetti Sora</string>
-  <string name="project_founded_template" formatted="false">%s %% voti di %s</string>
+  <string name="project_founded_template" formatted="false">%s%% voti di %s</string>
   <string name="project_votes_template">%s voti</string>
   <string name="project_ended_template">Terminato %s</string>
-  <string name="project_spent_format">Hai speso % di voti</string>
+  <string name="project_spent_format">Hai speso %s di voti</string>
   <string name="empty_voted_project_description">Vota per i progetti e loro \nappariranno qui</string>
   <string name="empty_completed_project_description">Al termine della votazione, è possibile\ntrovare i progetti qui</string>
   <string name="project_contacts">Contatti e informazioni</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">La passphrase è\nun tipo di password.</string>
   <string name="common_passphrase_body">Viene utilizzato per ripristinare l\'accesso all\'account. Scrivila e custodiscila con cura, senza di essa non saremo in grado di recuperare il tuo account!</string>
   <string name="common_passphrase_your_passphrase">La tua passphrase</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Aggiorna la tua App Sora</string>
   <string name="common_unsupported_version_body">L\'aggiornamento di Sora è disponibile in Google Play. Include miglioramenti e correzioni dei bug.</string>
   <string name="common_unsupported_version_open_google_play">Apri Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Per favore, controlla la connessione a Internet e riprova più tardi.</string>
   <string name="common_error_pincode_check_error">Il codice inserito è sbagliato</string>
   <string name="activity_user_registered_type">Amico registrato</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">La tua reputazione sarà aumentata!</string>
   <string name="activity_voting_rights_credited_type_template">Distribuzione dei voti</string>
   <string name="activity_voting_rights_title_template">Voti giornalieri</string>
   <string name="activity_invitation_credited_type_template">Distribuzione inviti</string>
   <string name="activity_invitation_credited_title_template">Inviti accreditati</string>
   <string name="activity_project_funded_type_template">Il progetto è stato completato!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Riceverai presto informazioni sulla ricompensa in XOR</string>
   <string name="activity_project_created_type_template">Nuovo progetto!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">Premio XOR per il voto</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s%s</string>
   <string name="activity_user_rank_changed_type_template">La posizione in classifica è cambiata</string>
   <string name="activity_project">Progetto</string>
   <string name="activity_user">Utente</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Hai già inserito un altro codice di invito</string>
   <string name="invite_enter_dialog_title_hint">8 caratteri alfanumerici</string>
   <string name="invite_enter_invitation_code">Inserisci il codice di invito</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="one">Amico ha votato</item>
     <item quantity="other">Alcuni amici hanno votato</item>
@@ -165,12 +157,12 @@
   <string name="project_website">Sito web</string>
   <string name="project_gallery">Galleria</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">Giorno rimanente</item>
-    <item quantity="other">Giorni rimanenti</item>
+    <item quantity="one">%s Giorno rimanente</item>
+    <item quantity="other">%s Giorni rimanenti</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">Ora rimanente</item>
-    <item quantity="other">Ore rimanenti</item>
+    <item quantity="one">%s Ora rimanente</item>
+    <item quantity="other">%s Ore rimanenti</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="one">%s Minuto rimanente</item>
@@ -238,7 +230,6 @@
   <string name="countries_country_not_found">Nessun paese corrisponde alla tua ricerca</string>
   <string name="phone_number_title">Registrazione</string>
   <string name="phone_number_mobile">Numero di cellulare</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Attendere prego</string>
   <string name="common_open_explorer">Visualizza in Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Spiacenti, questo numero di telefono è già stato utilizzato. Per favore, provane un altro.</string>
@@ -247,7 +238,7 @@
   <string name="common_spanish">Spagnolo</string>
   <string name="common_bashkir">Baschiro</string>
   <string name="biometric_dialog_title">Eseguire l\'autenticazione</string>
-  <string name="contacts_search_hint_v1">ID account, numero di telefono</string>
+  <string name="contacts_search_hint_v1">ID account, numero di telefono, indirizzo</string>
   <string name="wallet_xor_to_my_eth">XOR sul mio account Ethereum</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -294,7 +285,6 @@
   <string name="limit_dialog_available_limit">Disponibile per il trasferimento</string>
   <string name="limit_dialog_reset">Limite ripristinato a</string>
   <string name="limit_dialog_set_amount">Imposta importo a</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] a XOR ERC20 [Ethereum]</string>
   <string name="common_hour">ora</string>
   <string name="common_japanese">Giapponese</string>
   <string name="common_chinese">Cinese</string>
@@ -339,4 +329,14 @@
   <string name="common_thai">Thai</string>
   <string name="common_estonian">Estone</string>
   <string name="common_arab">Arabo</string>
+  <string name="activity_project_funded_description_template_val">Riceverai presto informazioni sulla ricompensa in VAL</string>
+  <string name="wallet_val_to_my_eth">VAL sul mio account Ethereum</string>
+  <string name="copy_val_title">Copia l\'indirizzo del portafoglio Sora (VAL)</string>
+  <string name="val_balance_title">Token VAL su reti diverse</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL Ricevuti</string>
+  <string name="activity_val_reward_credited_from_project_type_template">Premio VAL per il voto</string>
+  <string name="wallet_receive_val">Ricevi VAL</string>
+  <string name="view_balance_val">Visualizza l\'allocazione dei token Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Il bridge Ethereum non è attivo.</string>
+  <string name="transaction_bridge_info">Informazioni sul bridge Ethereum</string>
 </resources>

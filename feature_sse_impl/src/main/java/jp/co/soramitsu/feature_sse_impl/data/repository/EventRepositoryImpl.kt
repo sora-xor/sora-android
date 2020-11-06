@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_sse_impl.data.repository
 
 import com.google.gson.JsonParser
@@ -97,10 +92,6 @@ class EventRepositoryImpl @Inject constructor(
         }
 
         override fun onMessage(sse: ServerSentEvent, id: String, eventType: ServerSentEvent.Type?, data: String) {
-            if (id.isNotEmpty()) {
-                eventDatasource.saveLastEventId(id)
-            }
-
             when (eventType) {
                 ServerSentEvent.Type.EVENT -> {
                     val event = parseEvent(data)
@@ -110,6 +101,10 @@ class EventRepositoryImpl @Inject constructor(
                 }
                 else -> {
                 }
+            }
+
+            if (id.isNotEmpty()) {
+                eventDatasource.saveLastEventId(id)
             }
         }
 

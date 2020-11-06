@@ -132,7 +132,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginEnd="@dimen/x1_2"
                         android:background="@drawable/ethereum_transaction_button_background"
-                        android:drawableStart="@drawable/ic_eth_grey_16"
+                        android:drawableStart="@drawable/ic_eth_16"
                         android:drawablePadding="@dimen/x1"
                         android:gravity="center"
                         android:includeFontPadding="false"
@@ -158,8 +158,8 @@
                         android:paddingTop="@dimen/x1_2"
                         android:paddingEnd="@dimen/margin_padding_content"
                         android:paddingBottom="@dimen/x1_2"
-                        android:textColor="@color/uikit_lightRed"
-                        android:text="@string/wallet_soranet" />
+                        android:text="@string/wallet_soranet"
+                        android:textColor="@color/uikit_lightRed" />
 
 
                 </LinearLayout>
@@ -190,7 +190,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/x1"
-                    android:drawableStart="@drawable/ic_xor_red_24"
+                    android:drawableStart="@drawable/ic_val_red_24"
                     android:drawableEnd="@drawable/ic_copy_red_18"
                     android:drawablePadding="@dimen/margin_padding_list_element"
                     android:gravity="center_vertical"
@@ -224,7 +224,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/x1"
-                    android:drawableStart="@drawable/ic_xor_red_24"
+                    android:drawableStart="@drawable/ic_val_red_24"
                     android:drawableEnd="@drawable/ic_copy_red_18"
                     android:drawablePadding="@dimen/margin_padding_list_element"
                     android:gravity="center_vertical"

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.detail.project
 
 import android.app.Activity
@@ -138,9 +133,11 @@ class DetailProjectViewModel(
                     logException(it)
                 })
         )
+
+        syncVotes()
     }
 
-    fun syncVotes() {
+    private fun syncVotes() {
         disposables.add(
             interactor.syncVotes()
                 .subscribeOn(Schedulers.io())

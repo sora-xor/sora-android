@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 
 import androidx.lifecycle.LiveData
@@ -86,35 +81,35 @@ class AssetSettingsViewModel(
     }
 
     private fun mapAssetToAssetModel(assets: List<Asset>): Pair<List<AssetConfigurableModel>, List<AssetHidingModel>> {
-        val soraAsset = assets.first { AssetHolder.SORA_XOR.id == it.id }
-        val xorErc20Asset = assets.first { AssetHolder.SORA_XOR_ERC_20.id == it.id }
+        val valAsset = assets.first { AssetHolder.SORA_VAL.id == it.id }
+        val valErc20Asset = assets.first { AssetHolder.SORA_VAL_ERC_20.id == it.id }
 
-        val soraAssetState = when (soraAsset.state) {
+        val soraAssetState = when (valAsset.state) {
             Asset.State.NORMAL -> AssetConfigurableModel.State.NORMAL
             Asset.State.ASSOCIATING -> AssetConfigurableModel.State.ASSOCIATING
             Asset.State.ERROR -> AssetConfigurableModel.State.ERROR
             Asset.State.UNKNOWN -> AssetConfigurableModel.State.NORMAL
         }
 
-        val soraAssetBalance = soraAsset.assetBalance?.balance
-        val xorErc20AssetBalance = xorErc20Asset.assetBalance?.balance
+        val valAssetBalance = valAsset.assetBalance?.balance
+        val valErc20AssetBalance = valErc20Asset.assetBalance?.balance
 
-        val totalXorBalance = if (soraAssetBalance == null) {
-            xorErc20AssetBalance
+        val totalValBalance = if (valAssetBalance == null) {
+            valErc20AssetBalance
         } else {
-            if (xorErc20AssetBalance == null) {
-                soraAssetBalance
+            if (valErc20AssetBalance == null) {
+                valAssetBalance
             } else {
-                soraAssetBalance + xorErc20AssetBalance
+                valAssetBalance + valErc20AssetBalance
             }
         }
 
-        val totalXorBalanceFormatted = totalXorBalance?.let {
+        val totalValBalanceFormatted = totalValBalance?.let {
             numbersFormatter.formatBigDecimal(it)
         }
 
-        val soraAssetIconResource = R.drawable.ic_xor_transparent_24
-        val soraAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
+        val valAssetIconResource = R.drawable.ic_val_red_24
+        val valAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
 
         val ethAsset = assets.first { AssetHolder.ETHER_ETH.id == it.id }
 
@@ -125,16 +120,16 @@ class AssetSettingsViewModel(
             Asset.State.UNKNOWN -> AssetConfigurableModel.State.NORMAL
         }
 
-        val ethAssetIconResource = R.drawable.ic_eth_grey_24
+        val ethAssetIconResource = R.drawable.ic_eth_24
         val ethAssetIconBackground = resourceManager.getColor(R.color.asset_view_eth_background_color)
         val ethAssetBalance = ethAsset.assetBalance?.balance?.let {
             numbersFormatter.formatBigDecimal(it)
         }
 
         val displayingAssets = mutableListOf<AssetConfigurableModel>().apply {
-            val soraDisplayingAsset = AssetConfigurableModel(soraAsset.id, soraAsset.assetFirstName, soraAsset.assetLastName, soraAssetIconResource, soraAssetIconBackground,
-                soraAsset.hidingAllowed, false, totalXorBalanceFormatted, soraAssetState)
-            soraDisplayingAsset.position = soraAsset.position
+            val soraDisplayingAsset = AssetConfigurableModel(valAsset.id, valAsset.assetFirstName, valAsset.assetLastName, valAssetIconResource, valAssetIconBackground,
+                valAsset.hidingAllowed, false, totalValBalanceFormatted, soraAssetState)
+            soraDisplayingAsset.position = valAsset.position
             add(soraDisplayingAsset)
         }
 

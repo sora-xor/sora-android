@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import android.os.Bundle
@@ -32,13 +27,12 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.eth.EthAssetActio
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.RecentEventsAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.xor.XorAssetActionsBottomSheet
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.xor.XorBalanceBottomSheet
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.xor.ValAssetActionsBottomSheet
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.xor.ValBalanceBottomSheet
 import kotlinx.android.synthetic.main.fragment_wallet.assetsRv
 import kotlinx.android.synthetic.main.fragment_wallet.contentContainer
 import kotlinx.android.synthetic.main.fragment_wallet.eventRecyclerView
-import kotlinx.android.synthetic.main.fragment_wallet.howItWorksCard
-// import kotlinx.android.synthetic.main.fragment_wallet.moreView
+import kotlinx.android.synthetic.main.fragment_wallet.moreView
 import kotlinx.android.synthetic.main.fragment_wallet.pageContainer
 import kotlinx.android.synthetic.main.fragment_wallet.placeholder
 import kotlinx.android.synthetic.main.fragment_wallet.receiveTv
@@ -90,12 +84,6 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
             }
         )
 
-        howItWorksCard.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                viewModel.btnHelpClicked()
-            }
-        )
-
         bottomSheetBehavior = LockBottomSheetBehavior.fromView(recentEventsBottomSheet)
         bottomSheetBehavior.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -130,9 +118,9 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
 
         eventRecyclerView.addOnScrollListener(scrollListener)
 
-//        moreView.setOnClickListener {
-//            viewModel.assetSettingsClicked()
-//        }
+        moreView.setOnClickListener {
+            viewModel.assetSettingsClicked()
+        }
     }
 
     override fun onStart() {
@@ -199,14 +187,14 @@ class WalletFragment : BaseFragment<WalletViewModel>() {
         viewModel.updateTransactions()
     }
 
-    private fun openXorBalancesInfo(balances: XorBalances) {
-        val bottomSheet = XorBalanceBottomSheet(requireActivity(), balances.sora, balances.eth)
+    private fun openXorBalancesInfo(balances: ValBalances) {
+        val bottomSheet = ValBalanceBottomSheet(requireActivity(), balances.sora, balances.eth)
 
         bottomSheet.show()
     }
 
     private fun openXorAddressesInfo() {
-        val bottomSheet = XorAssetActionsBottomSheet(requireActivity(), { assetId ->
+        val bottomSheet = ValAssetActionsBottomSheet(requireActivity(), { assetId ->
             viewModel.copyAssetAddressClicked(assetId)
         }, {
             viewModel.viewXorBalanceClicked()

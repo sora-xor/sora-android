@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -81,7 +76,7 @@ class TransferAmountViewModelTest {
     private val recipientFullName = "recipientFull Name"
     private val recipientInitials = "RN"
     private val initialAmount = BigDecimal.TEN
-    private val transferType = TransferType.XOR_TRANSFER
+    private val transferType = TransferType.VAL_TRANSFER
 
     @Before
     fun setUp() {
@@ -89,10 +84,10 @@ class TransferAmountViewModelTest {
             .willReturn("Maximum %s symbols")
         given(textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(anyString()))
             .willReturn(recipientInitials)
-        given(walletInteractor.getBalance(AssetHolder.SORA_XOR.id)).willReturn(Observable.just(AssetBalance(AssetHolder.SORA_XOR.id, BigDecimal.TEN)))
-        given(walletInteractor.getBalance(AssetHolder.SORA_XOR_ERC_20.id)).willReturn(Observable.just(AssetBalance(AssetHolder.SORA_XOR_ERC_20.id, BigDecimal.TEN)))
+        given(walletInteractor.getBalance(AssetHolder.SORA_VAL.id)).willReturn(Observable.just(AssetBalance(AssetHolder.SORA_VAL.id, BigDecimal.TEN)))
+        given(walletInteractor.getBalance(AssetHolder.SORA_VAL_ERC_20.id)).willReturn(Observable.just(AssetBalance(AssetHolder.SORA_VAL_ERC_20.id, BigDecimal.TEN)))
         given(walletInteractor.getBalance(AssetHolder.ETHER_ETH.id)).willReturn(Observable.just(AssetBalance(AssetHolder.ETHER_ETH.id, BigDecimal.TEN)))
-        given(walletInteractor.getXorAndXorErcBalanceAmount()).willReturn(Observable.just(BigDecimal.TEN))
+        given(walletInteractor.getValAndValErcBalanceAmount()).willReturn(Observable.just(BigDecimal.TEN))
         given(walletInteractor.getTransferMeta()).willReturn(Observable.just(TransferMeta(0.6, FeeType.FIXED)))
         given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt()))
             .willReturn(fixedFeeStr)
@@ -123,9 +118,10 @@ class TransferAmountViewModelTest {
 
     @Test
     fun `next button click calls router showTransactionConfirmation()`() {
-        val formattedFeeStr = "\uE000 0.6"
+        val formattedFeeStr = "0.6 VAL"
 
         given(walletInteractor.updateTransferMeta()).willReturn(Completable.complete())
+        given(resourceManager.getString(R.string.val_token)).willReturn("VAL")
         given(walletInteractor.updateAssets()).willReturn(Completable.complete())
 
         transferAmountViewModel.updateBalance()

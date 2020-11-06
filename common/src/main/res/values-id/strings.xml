@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">Sumberdaya tidak tersedia</string>
   <string name="common_error_internal_error_title">Kesalahan Internal</string>
   <string name="projects_title">Proyek Sora</string>
-  <string name="project_founded_template" formatted="false">%s %% suara dari %s</string>
+  <string name="project_founded_template" formatted="false">%s%% suara dari %s</string>
   <string name="project_votes_template">%s suara</string>
   <string name="project_ended_template">Berakhir %s</string>
   <string name="project_spent_format">Anda telah menggunakan suara %s</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Passphrase adalah\njenis sandi.</string>
   <string name="common_passphrase_body">Ini digunakan untuk memulihkan akses ke akun. Tuliskan, kami tidak akan dapat memulihkan akun Anda tanpanya!</string>
   <string name="common_passphrase_your_passphrase">Frasa sandi Anda</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Perbarui Aplikasi Sora Anda</string>
   <string name="common_unsupported_version_body">Aplikasi Sora yang Diperbarui tersedia di Google Play. Ini termasuk perbaikan dan perbaikan bug.</string>
   <string name="common_unsupported_version_open_google_play">Buka Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Silakan periksa koneksi internet dan coba lagi nanti.</string>
   <string name="common_error_pincode_check_error">Kode yang dimasukkan salah</string>
   <string name="activity_user_registered_type">Teman Terdaftar</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Reputasi Anda akan meningkat!</string>
   <string name="activity_voting_rights_credited_type_template">Distribusi suara</string>
   <string name="activity_voting_rights_title_template">Suara harian</string>
   <string name="activity_invitation_credited_type_template">Distribusi undangan</string>
   <string name="activity_invitation_credited_title_template">Undangan yang dikreditkan</string>
   <string name="activity_project_funded_type_template">Proyek telah selesai!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Anda akan menerima informasi tentang hadiah XOR segera</string>
   <string name="activity_project_created_type_template">Proyek baru!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">XOR reward untuk pemungutan suara</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Peringkat berubah</string>
   <string name="activity_project">Proyek</string>
   <string name="activity_user">Pengguna</string>
@@ -132,13 +125,12 @@
   <string name="pincode_touch_fingerprint_scanner">Sentuh pemindai sidik jari</string>
   <string name="invite_fragment_title">Teman</string>
   <string name="invite_accepted_invitations_title">Undangan yang diterima</string>
-  <string name="invite_parent_invitation_template" formatted="false">Anda diundang oleh [% s] [% s]</string>
+  <string name="invite_parent_invitation_template" formatted="false">Anda diundang oleh %s %s</string>
   <string name="invite_code_sharing_title">Bagikan kode undangan Anda</string>
   <string name="invite_send_invite">Kirim undangan</string>
   <string name="invite_enter_error_already_applied">Anda telah menerapkan kode undangan lain</string>
   <string name="invite_enter_dialog_title_hint">8 karakter alfanumerik</string>
   <string name="invite_enter_invitation_code">Masukkan kode undangan</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">%s teman memberi suara</item>
   </plurals>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">Tidak ada negara yang cocok dengan kueri Anda</string>
   <string name="phone_number_title">Daftar</string>
   <string name="phone_number_mobile">Nomor ponsel</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Harap tunggu</string>
   <string name="common_open_explorer">Lihat di Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Maaf, nomor telepon ini sudah digunakan. Silakan, coba yang lain.</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">Tersedia untuk ditransfer</string>
   <string name="limit_dialog_reset">Batasi reset in</string>
   <string name="limit_dialog_set_amount">Tetapkan jumlah ke</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] ke XOR ERC20 [Ethereum]</string>
   <string name="common_hour">jam</string>
   <string name="common_japanese">Bahasa Jepang</string>
   <string name="common_chinese">Bahasa Cina</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">Thai</string>
   <string name="common_estonian">Estonia</string>
   <string name="common_arab">Arab</string>
+  <string name="activity_project_funded_description_template_val">Saate teavet VAL-i preemia kohta varsti</string>
+  <string name="wallet_val_to_my_eth">VAL minu Ethereumi kontole</string>
+  <string name="copy_val_title">Kopeeri Sora (VAL) rahakoti aadress</string>
+  <string name="val_balance_title">VAL-märgis erinevates võrkudes</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL vastu võetud</string>
+  <string name="activity_val_reward_credited_from_project_type_template">VAL Preemia hääletamise eest</string>
+  <string name="wallet_receive_val">Võta vastu VAL</string>
+  <string name="view_balance_val">Lihat alokasi token Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Jembatan Ethereum tidak aktif.</string>
+  <string name="transaction_bridge_info">Info jembatan Ethereum</string>
 </resources>

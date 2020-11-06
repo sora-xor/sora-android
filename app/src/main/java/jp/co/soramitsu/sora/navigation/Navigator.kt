@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.navigation
 
 import android.os.Bundle
@@ -98,15 +93,15 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.receiveFragment)
     }
 
-    override fun showXorTransferAmount(recipientId: String, fullName: String, amount: BigDecimal) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForXorTransfer(recipientId, fullName, amount))
+    override fun showValTransferAmount(recipientId: String, fullName: String, amount: BigDecimal) {
+        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForValTransfer(recipientId, fullName, amount))
     }
 
-    override fun showXorERCTransferAmount(address: String, amount: BigDecimal) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForXorErcTransfer(address, "", amount))
+    override fun showValERCTransferAmount(address: String, amount: BigDecimal) {
+        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForValErcTransfer(address, "", amount))
     }
 
-    override fun showXorWithdrawToErc(etherAddress: String, amount: BigDecimal) {
+    override fun showValWithdrawToErc(etherAddress: String, amount: BigDecimal) {
         navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForWithdraw(etherAddress, "", amount))
     }
 

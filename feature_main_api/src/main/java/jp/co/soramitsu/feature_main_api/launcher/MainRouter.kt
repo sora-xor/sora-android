@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_api.launcher
 
 import androidx.navigation.NavController
@@ -37,7 +32,7 @@ interface MainRouter {
 
     fun showVotesHistory()
 
-    fun showXorTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
+    fun showValTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
 
     fun showUnsupportedScreen(appUrl: String)
 

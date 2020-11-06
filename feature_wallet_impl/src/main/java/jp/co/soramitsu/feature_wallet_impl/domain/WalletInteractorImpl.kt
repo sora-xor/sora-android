@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.domain
 
 import io.reactivex.Completable
@@ -35,7 +30,7 @@ class WalletInteractorImpl(
             walletRepository.getAssets().subscribeOn(Schedulers.io()),
             ethRepository.observeEthRegisterState().subscribeOn(Schedulers.io()),
             BiFunction<List<Asset>, EthRegisterState.State, List<Asset>> { assets, ethRegisterState ->
-                val soraAsset = assets[0]
+                val valAsset = assets[0]
 
                 val ethAssetState = when (ethRegisterState) {
                     EthRegisterState.State.NONE -> Asset.State.ASSOCIATING
@@ -44,12 +39,12 @@ class WalletInteractorImpl(
                     EthRegisterState.State.FAILED -> Asset.State.ERROR
                 }
                 val ethAsset = assets[1].copy(state = ethAssetState)
-                val xorErc20Asset = assets[2].copy(state = ethAssetState)
+                val valErc20Asset = assets[2].copy(state = ethAssetState)
 
                 mutableListOf<Asset>().apply {
-                    add(soraAsset)
-//                    add(ethAsset) // временно убран
-                    add(xorErc20Asset)
+                    add(valAsset)
+                    add(ethAsset)
+                    add(valErc20Asset)
                 }
             }
         )
@@ -63,11 +58,11 @@ class WalletInteractorImpl(
                     .flatMap { ethCredentials ->
                         ethRepository.getEthWalletAddress(ethCredentials)
                             .flatMap { ethWalletAddress ->
-                                ethRepository.getXorTokenAddress(ethCredentials)
+                                ethRepository.getValTokenAddress(ethCredentials)
                                     .map { Triple(ethCredentials, ethWalletAddress, it) }
                             }
                     }
-                    .flatMapCompletable { ethRepository.updateXorErc20AndEthBalance(it.first, it.second, it.third) }
+                    .flatMapCompletable { ethRepository.updateValErc20AndEthBalance(it.first, it.second, it.third) }
 
             )
     }
@@ -80,11 +75,11 @@ class WalletInteractorImpl(
         return walletRepository.getBalance(assetId)
     }
 
-    override fun getXorAndXorErcBalanceAmount(): Observable<BigDecimal> {
-        return walletRepository.getBalance(AssetHolder.SORA_XOR.id)
-            .flatMap { xorBalance ->
-                walletRepository.getBalance(AssetHolder.SORA_XOR_ERC_20.id)
-                    .map { mutableListOf(xorBalance, it) }
+    override fun getValAndValErcBalanceAmount(): Observable<BigDecimal> {
+        return walletRepository.getBalance(AssetHolder.SORA_VAL.id)
+            .flatMap { valBalance ->
+                walletRepository.getBalance(AssetHolder.SORA_VAL_ERC_20.id)
+                    .map { mutableListOf(valBalance, it) }
             }
             .map {
                 it.fold<AssetBalance, BigDecimal>(BigDecimal.ZERO) { amount, assetBalance ->
@@ -228,9 +223,9 @@ class WalletInteractorImpl(
 
     private fun calculateDefaultMinerFeeInEth(isWithdrawal: Boolean): Single<BigDecimal> {
         return if (isWithdrawal) {
-            ethRepository.calculateXorErc20WithdrawFee()
+            ethRepository.calculateValErc20WithdrawFee()
         } else {
-            ethRepository.calculateXorErc20TransferFee()
+            ethRepository.calculateValErc20TransferFee()
         }
     }
 

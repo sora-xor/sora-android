@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">Ressurss pole saadaval</string>
   <string name="common_error_internal_error_title">Sisemine viga</string>
   <string name="projects_title">Sora projektid</string>
-  <string name="project_founded_template" formatted="false">%s %% / %s häältest </string>
+  <string name="project_founded_template" formatted="false">%s%% / %s häältest </string>
   <string name="project_votes_template">%s häält</string>
   <string name="project_ended_template">Lõppenud %s</string>
   <string name="project_spent_format">Olete kulutanud %s häält</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Paroolifraas on teatud tüüpi parool.</string>
   <string name="common_passphrase_body">Seda kasutatakse kontole juurdepääsu taastamiseks. Kirjutage see üles, ilma selleta ei saa me teie kontot taastada!</string>
   <string name="common_passphrase_your_passphrase">Teie paroolifraas</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Uuendage oma Sora rakendust</string>
   <string name="common_unsupported_version_body">Uuendatud Sora rakendus on saadaval Google Plays. See sisaldab parendusi ja veaparandusi.</string>
   <string name="common_unsupported_version_open_google_play">Avage Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Palun kontrollige Interneti ühendust ja proovige uuesti.</string>
   <string name="common_error_pincode_check_error">Sisestatud kood on vale</string>
   <string name="activity_user_registered_type">Sõber on registreeritud</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Teie reputatsioon suureneb!</string>
   <string name="activity_voting_rights_credited_type_template">Häälte jaotus</string>
   <string name="activity_voting_rights_title_template">Hääli päevas</string>
   <string name="activity_invitation_credited_type_template">Kutsete levitamine</string>
   <string name="activity_invitation_credited_title_template">Kutsed krediteeritud</string>
   <string name="activity_project_funded_type_template">Projekt on valmis!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Saate teavet XOR-i preemia kohta varsti</string>
   <string name="activity_project_created_type_template">Uus projekt!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">XOR Preemia hääletamise eest</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Auaste muutunud</string>
   <string name="activity_project">Projekt</string>
   <string name="activity_user">Kasutaja</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Olete juba rakendanud mõne teise kutsekoodi</string>
   <string name="invite_enter_dialog_title_hint">8 tähtnumbrilist märki</string>
   <string name="invite_enter_invitation_code">Sisestage kutsekood</string>
-  <string name="project_votes_k_template">%s K</string>
   <plurals name="project_friends_template">
     <item quantity="one">%s sõber hääletas</item>
     <item quantity="other">%s sõpra hääletasid</item>
@@ -165,12 +157,12 @@
   <string name="project_website">Veebisait</string>
   <string name="project_gallery">Galerii</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="one">päeva järel</item>
-    <item quantity="other">päeva järel</item>
+    <item quantity="one">%s päeva järel</item>
+    <item quantity="other">%s päeva järel</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="one">tundi järel</item>
-    <item quantity="other">tundi järel</item>
+    <item quantity="one">%s tundi järel</item>
+    <item quantity="other">%s tundi järel</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
     <item quantity="one">%s minutit järel</item>
@@ -238,7 +230,6 @@
   <string name="countries_country_not_found">Teie päringule vastavaid riike pole</string>
   <string name="phone_number_title">Registreeru</string>
   <string name="phone_number_mobile">Mobiiltelefoni number</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Palun oota</string>
   <string name="common_open_explorer">Kuva blockchain exploreris</string>
   <string name="common_error_phone_already_exists">Kahjuks on see telefoninumber juba kasutusel. Palun proovige teist telefoninumbrit.</string>
@@ -247,7 +238,7 @@
   <string name="common_spanish">Hispaania keeles</string>
   <string name="common_bashkir">Baškiiri</string>
   <string name="biometric_dialog_title">Autentimine</string>
-  <string name="contacts_search_hint_v1">Konto ID, telefoninumber</string>
+  <string name="contacts_search_hint_v1">Konto ID, telefoninumber, aadress</string>
   <string name="wallet_xor_to_my_eth">XOR minu Ethereumi kontole</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -294,7 +285,6 @@
   <string name="limit_dialog_available_limit">Saadaval ülekandmiseks</string>
   <string name="limit_dialog_reset">Piirata lähtestamine sisse</string>
   <string name="limit_dialog_set_amount">Määra summaks</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] kuni XOR ERC20 [Ethereum]</string>
   <string name="common_hour">tund</string>
   <string name="common_japanese">Jaapanlane</string>
   <string name="common_chinese">Hiina keel</string>
@@ -339,4 +329,14 @@
   <string name="common_thai">Tai</string>
   <string name="common_estonian">Eestlane</string>
   <string name="common_arab">Araabia</string>
+  <string name="activity_project_funded_description_template_val">Saate teavet VAL-i preemia kohta varsti</string>
+  <string name="wallet_val_to_my_eth">VAL minu Ethereumi kontole</string>
+  <string name="copy_val_title">Kopeeri Sora (VAL) rahakoti aadress</string>
+  <string name="val_balance_title">VAL-märgis erinevates võrkudes</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL vastu võetud</string>
+  <string name="activity_val_reward_credited_from_project_type_template">VAL Preemia hääletamise eest</string>
+  <string name="wallet_receive_val">Võta vastu VAL</string>
+  <string name="view_balance_val">Kuva Sora (VAL) märgi jaotamine</string>
+  <string name="transaction_bridge_not_active_error">Ethereumi sild ei ole aktiivne.</string>
+  <string name="transaction_bridge_info">Ethereumi silla teave</string>
 </resources>

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
 import io.reactivex.disposables.CompositeDisposable
@@ -34,7 +29,7 @@ class EthereumStatusObserver(
                 }.flatMap { ethCredentials ->
                     didRepository.getAccountId()
                         .flatMap { accountId ->
-                            ethereumRepository.getXorTokenAddress(ethCredentials)
+                            ethereumRepository.getValTokenAddress(ethCredentials)
                                 .map { Triple(ethCredentials, accountId, it) }
                         }
                 }

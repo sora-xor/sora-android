@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -62,6 +57,7 @@ class MainViewModelTest {
         given(interactor.observeVotedVotables()).willReturn(Observable.just(emptyList()))
         given(interactor.observeOpenVotables()).willReturn(Observable.just(emptyList()))
         given(interactor.observeVotes()).willReturn(votesSubject)
+        given(interactor.syncVotes()).willReturn(Completable.complete())
 
 
         given(preloader.preloadCompletableCompose()).willReturn(CompletableTransformer { upstream -> upstream })
@@ -76,22 +72,6 @@ class MainViewModelTest {
         assertNotNull(mainViewModel.allProjectsLiveData.value)
     }
 
-    @Test fun `calling loadVotes function fill votesLiveData and then format it`() {
-        val votes = BigDecimal(5000.0)
-        val formattedVotes = "5000"
-
-        given(interactor.syncVotes()).willReturn(Completable.complete())
-
-        given(numbersFormatter.formatInteger(votes)).willReturn(formattedVotes)
-        mainViewModel.votesFormattedLiveData.observeForever(formattedVotesObserver)
-
-        mainViewModel.syncVotes()
-        votesSubject.onNext(votes)
-
-        verify(interactor).syncVotes()
-        verify(formattedVotesObserver).onChanged(eq(formattedVotes))
-    }
-
     @Test fun `vote project flow`() {
         val votes = BigDecimal(5000.0)
         val votesToVote = 5L
@@ -101,11 +81,9 @@ class MainViewModelTest {
         val projectId = "test project id"
         val selectedProject = mock(Project::class.java)
 
-        given(interactor.syncVotes()).willReturn(Completable.complete())
         given(numbersFormatter.formatInteger(votes)).willReturn(formattedVotes)
         mainViewModel.votesFormattedLiveData.observeForever(formattedVotesObserver)
 
-        mainViewModel.syncVotes()
         votesSubject.onNext(votes)
 
         given(selectedProject.id).willReturn(projectId)

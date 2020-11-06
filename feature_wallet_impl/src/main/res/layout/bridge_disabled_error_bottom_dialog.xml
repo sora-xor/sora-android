@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusableInTouchMode="true"
+    app:cardCornerRadius="@dimen/x1"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/x2"
+        android:paddingBottom="@dimen/x8">
+
+        <TextView
+            android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Body1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_padding_by_side"
+            android:layout_marginEnd="@dimen/margin_padding_by_side"
+            android:layout_marginBottom="@dimen/margin_padding_by_side"
+            android:drawableStart="@drawable/ic_warning_26"
+            android:drawablePadding="@dimen/margin_padding_content"
+            android:fontFamily="@font/sora_semibold"
+            android:gravity="center_vertical"
+            android:text="@string/transaction_bridge_not_active_error"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/websiteWrapper"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/x7"
+            android:background="?selectableItemBackground"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/x3"
+            android:paddingEnd="@dimen/x3">
+
+            <ImageView
+                android:id="@+id/websiteIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_info_24"
+                app:layout_constraintBottom_toBottomOf="@id/websiteSubtitleTv"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@id/websiteTv" />
+
+            <TextView
+                android:id="@+id/websiteTv"
+                style="@style/TextAppearance.Soramitsu.Body1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:lineSpacingExtra="5sp"
+                android:text="@string/transaction_bridge_info"
+                android:textColor="@color/black"
+                app:layout_constraintBottom_toTopOf="@+id/websiteSubtitleTv"
+                app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
+                app:layout_constraintStart_toEndOf="@id/websiteIcon"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+            <TextView
+                android:id="@+id/websiteSubtitleTv"
+                style="@style/TextAppearance.Soramitsu.Body2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:lineSpacingExtra="5sp"
+                android:text="@string/about_website"
+                android:textColor="@color/uikit_lightRed"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
+                app:layout_constraintStart_toEndOf="@id/websiteIcon"
+                app:layout_constraintTop_toBottomOf="@+id/websiteTv"
+                tools:text="@string/about_website" />
+
+            <ImageView
+                android:id="@+id/wesiteRightIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_arrow_top_right_16"
+                app:layout_constraintBottom_toBottomOf="@id/websiteSubtitleTv"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/websiteTv" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="@dimen/x2"
+            android:layout_marginEnd="@dimen/x2"
+            android:background="@color/thinBorder" />
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

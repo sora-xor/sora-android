@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import com.google.gson.JsonSyntaxException
@@ -125,6 +120,7 @@ class WalletRepositoryImpl @Inject constructor(
                     }
 
                     if (it.type == TransactionRemote.Type.DEPOSIT) {
+                        db.transactionDao().updateTxHash("0x${it.details}", it.transactionId)
                         depositTxs.add(mapTransactionRemoteToDepositTransactionLocal(it))
                     }
                 }
@@ -144,7 +140,7 @@ class WalletRepositoryImpl @Inject constructor(
     override fun transfer(amount: String, myAccountId: String, dstUserId: String, description: String, fee: String, keyPair: KeyPair): Single<String> {
         return transactionFactory.buildTransferWithFeeTransaction(amount, myAccountId, dstUserId, description, fee, keyPair)
             .flatMap { pair ->
-                api.transferXor(pair.first).map { pair }
+                api.transferVal(pair.first).map { pair }
             }.flatMap {
                 Single.just(it.second)
             }
@@ -184,7 +180,7 @@ class WalletRepositoryImpl @Inject constructor(
                         buildGetBalanceRequest(accountId, keyPair)
                             .flatMap { api.getBalance(it) }
                             .map {
-                                val asset = AssetHolder.SORA_XOR
+                                val asset = AssetHolder.SORA_VAL
                                 it.assets.map { AssetBalance(asset.id, it.balance) }
                             }
                             .doOnSuccess {
@@ -199,7 +195,7 @@ class WalletRepositoryImpl @Inject constructor(
 
     private fun buildGetBalanceRequest(accountId: String, keyPair: KeyPair): Single<GetBalanceRequest> {
         return transactionFactory.buildGetAccountAssetsQuery(accountId, keyPair)
-            .map { GetBalanceRequest(arrayOf(AssetHolder.SORA_XOR.id), Base64.toBase64String(it.toByteArray())) }
+            .map { GetBalanceRequest(arrayOf(AssetHolder.SORA_VAL.id), Base64.toBase64String(it.toByteArray())) }
     }
 
     override fun getQrAmountString(accountId: String, amount: String): Single<String> {
@@ -222,7 +218,7 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override fun updateTransferMeta(): Completable {
-        return api.getTransferMeta(AssetHolder.SORA_XOR.id)
+        return api.getTransferMeta(AssetHolder.SORA_VAL.id)
             .map { TransferMeta(it.feeRate, it.feeType) }
             .doOnSuccess { datasource.saveTransferMeta(it) }
             .ignoreElement()
@@ -233,7 +229,7 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override fun updateWithdrawMeta(): Completable {
-        return api.getWithdrawalMeta(AssetHolder.SORA_XOR.id, "ETH")
+        return api.getWithdrawalMeta(AssetHolder.SORA_VAL.id, "ETH")
             .map { TransferMeta(it.feeRate.toDouble(), it.feeType) }
             .doOnSuccess { datasource.saveWithdrawMeta(it) }
             .ignoreElement()
@@ -269,6 +265,8 @@ class WalletRepositoryImpl @Inject constructor(
 
             if (status == WithdrawTransaction.Status.CONFIRM_COMPLETED) {
                 db.transactionDao().updateStatus(operationId, TransferTransactionLocal.Status.COMMITTED)
+            } else if (status == WithdrawTransaction.Status.CONFIRM_FAILED || status == WithdrawTransaction.Status.INTENT_FAILED || status == WithdrawTransaction.Status.TRANSFER_FAILED) {
+                db.transactionDao().updateStatus(operationId, TransferTransactionLocal.Status.REJECTED)
             }
         }
     }
@@ -283,7 +281,7 @@ class WalletRepositoryImpl @Inject constructor(
         return db.depositTransactionDao().getTransaction(operationId)
             .flatMap { transactionFactory.buildTransferWithFeeTransaction(it.amount.toString(), myAccountId, it.peerId!!, it.details, it.transferFee.toString(), keyPair) }
             .flatMap { pair ->
-                api.transferXor(pair.first).map { pair }
+                api.transferVal(pair.first).map { pair }
             }
             .map { db.depositTransactionDao().updateStatus(operationId, DepositTransactionLocal.Status.TRANSFER_COMPLETED) }
             .ignoreElement()

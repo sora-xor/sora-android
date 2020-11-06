@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -65,11 +60,11 @@ class WalletViewModelTest {
 
     private lateinit var walletViewModel: WalletViewModel
 
-    private val assetXor = Asset(AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR.assetFirstName, AssetHolder.SORA_XOR.assetLastName,
-        true, false, 1, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.SORA_XOR.id, BigDecimal.TEN))
+    private val assetXor = Asset(AssetHolder.SORA_VAL.id, AssetHolder.SORA_VAL.assetFirstName, AssetHolder.SORA_VAL.assetLastName,
+        true, false, 1, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.SORA_VAL.id, BigDecimal.TEN))
 
-    private val assetXorErc = Asset(AssetHolder.SORA_XOR_ERC_20.id, AssetHolder.SORA_XOR_ERC_20.assetFirstName, AssetHolder.SORA_XOR_ERC_20.assetLastName,
-        true, false, 2, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.SORA_XOR_ERC_20.id, BigDecimal.TEN))
+    private val assetXorErc = Asset(AssetHolder.SORA_VAL_ERC_20.id, AssetHolder.SORA_VAL_ERC_20.assetFirstName, AssetHolder.SORA_VAL_ERC_20.assetLastName,
+        true, false, 2, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.SORA_VAL_ERC_20.id, BigDecimal.TEN))
 
     private val assetEth = Asset(AssetHolder.ETHER_ETH.id, AssetHolder.ETHER_ETH.assetFirstName, AssetHolder.ETHER_ETH.assetLastName,
         false, false, 0, Asset.State.NORMAL, 2, AssetBalance(AssetHolder.ETHER_ETH.id, BigDecimal.TEN))
@@ -101,7 +96,7 @@ class WalletViewModelTest {
             "peername lastname",
             "peerId",
             "01 Jan 1970 00:00",
-            "${Const.SORA_SYMBOL} 10.12"
+            "10.12 VAL"
         )
     )
 

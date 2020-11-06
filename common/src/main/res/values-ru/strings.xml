@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Парольная фраза – это\nвид пароля.</string>
   <string name="common_passphrase_body">Она используется для восстановления доступа к аккаунту. В случае потери восстановить доступ будет невозможно!</string>
   <string name="common_passphrase_your_passphrase">Ваша парольная фраза</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Обновите приложение Sora</string>
   <string name="common_unsupported_version_body">Обновленное приложение Sora, с исправлениями и улучшениями, доступно в Google Play.</string>
   <string name="common_unsupported_version_open_google_play">Открыть Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Пожалуйста, проверьте подключение к Интернету и повторите попытку.</string>
   <string name="common_error_pincode_check_error">Введен неверный код</string>
   <string name="activity_user_registered_type">Регистрация друга</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Ваша репутация повысилась!</string>
   <string name="activity_voting_rights_credited_type_template">Распределение голосов</string>
   <string name="activity_voting_rights_title_template">Ежедневные голоса</string>
   <string name="activity_invitation_credited_type_template">Распределение приглашений</string>
   <string name="activity_invitation_credited_title_template">Приглашения добавлены</string>
   <string name="activity_project_funded_type_template">Проект завершен!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Информация о награде в XOR скоро станет доступна</string>
   <string name="activity_project_created_type_template">Новый проект!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">Награда в XOR за активность</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Изменение рейтинга</string>
   <string name="activity_project">Проект</string>
   <string name="activity_user">Пользователь</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Вы уже применили другой код приглашения</string>
   <string name="invite_enter_dialog_title_hint">8 знаков – букв или цифр</string>
   <string name="invite_enter_invitation_code">Введите код приглашения</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="zero">%s друзей проголосовали</item>
     <item quantity="one">%s друг проголосовал</item>
@@ -171,28 +163,24 @@
   <string name="project_website">Веб-сайт</string>
   <string name="project_gallery">Галерея</string>
   <plurals name="project_date_day_plurals">
-    <item quantity="zero">осталось %s дней</item>
     <item quantity="one">остался %s день</item>
     <item quantity="few">осталось %s дня</item>
     <item quantity="many">осталось %s дней</item>
     <item quantity="other">осталось %s дней</item>
   </plurals>
   <plurals name="project_date_hour_plurals">
-    <item quantity="zero">осталось %s часов</item>
     <item quantity="one">остался %s час</item>
     <item quantity="few">осталось %s часа</item>
     <item quantity="many">осталось %s часов</item>
     <item quantity="other">осталось %s часов</item>
   </plurals>
   <plurals name="project_date_minute_plurals">
-    <item quantity="zero">осталось %s минут</item>
     <item quantity="one">осталась %s минута</item>
     <item quantity="few">осталось %s минуты</item>
     <item quantity="many">осталось %s минут</item>
     <item quantity="other">осталось %s минут</item>
   </plurals>
   <plurals name="project_date_second_plurals">
-    <item quantity="zero">осталось %s секунд</item>
     <item quantity="one">осталась %s секунда</item>
     <item quantity="few">осталось %s секунды</item>
     <item quantity="many">осталось %s секунд</item>
@@ -256,7 +244,6 @@
   <string name="countries_country_not_found">Нет стран, соответствующих вашему запросу</string>
   <string name="phone_number_title">Регистрация</string>
   <string name="phone_number_mobile">Номер телефона</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Пожалуйста, подождите</string>
   <string name="common_open_explorer">Просмотр в Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Извините, этот номер телефона уже используется. Пожалуйста, попробуйте другой.</string>
@@ -265,7 +252,7 @@
   <string name="common_spanish">Испанский</string>
   <string name="common_bashkir">Башкирский</string>
   <string name="biometric_dialog_title">Аутентификация</string>
-  <string name="contacts_search_hint_v1">Аккаунт, номер телефона</string>
+  <string name="contacts_search_hint_v1">Аккаунт, номер телефона или адрес</string>
   <string name="wallet_xor_to_my_eth">XOR на мой счет Ethereum</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -312,7 +299,6 @@
   <string name="limit_dialog_available_limit">Доступно для перевода</string>
   <string name="limit_dialog_reset">Обнуление лимитов через</string>
   <string name="limit_dialog_set_amount">Установить сумму в</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] в XOR ERC20 [Ethereum]</string>
   <string name="common_hour">час</string>
   <string name="common_japanese">Японский</string>
   <string name="common_chinese">Китайский</string>
@@ -333,7 +319,6 @@
   <string name="referendum_unsupport_title">Нет</string>
   <string name="referendum_ended_title">Завершился</string>
   <plurals name="referendum_date_day_plurals_value">
-    <item quantity="zero"></item>
     <item quantity="one">%d день</item>
     <item quantity="few">%d дня</item>
     <item quantity="many">%d дней</item>
@@ -360,4 +345,14 @@
   <string name="common_thai">Тайский</string>
   <string name="common_estonian">Эстонский</string>
   <string name="common_arab">Араб</string>
+  <string name="activity_project_funded_description_template_val">Информация о награде в VAL скоро станет доступна</string>
+  <string name="wallet_val_to_my_eth">VAL на мой счет Ethereum</string>
+  <string name="copy_val_title">Скопируйте адрес кошелька Sora (VAL)</string>
+  <string name="val_balance_title">Токен VAL в разных сетях</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL получены</string>
+  <string name="activity_val_reward_credited_from_project_type_template">Награда в VAL за активность</string>
+  <string name="wallet_receive_val">Получить VAL</string>
+  <string name="view_balance_val">Просмотр распределения токенов Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Мост Ethereum не активен.</string>
+  <string name="transaction_bridge_info">Информация о мосте Ethereum</string>
 </resources>

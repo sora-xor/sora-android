@@ -1,14 +1,8 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers
 
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.Const.Companion.NO_ICON_RESOURCE
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.getInitials
 import jp.co.soramitsu.common.util.ext.isErc20Address
@@ -41,7 +35,14 @@ class TransactionMappers @Inject constructor(
                 val title = getTitle(it, myAccountId, myEthAddress)
                 val details: String = getDetails(it, myAccountId, myEthAddress)
                 val dateString = dateTimeFormatter.formatDate(createdAt, DateTimeFormatter.DD_MMM_YYYY_HH_MM_SS)
-                val amountFormatted = "${Const.SORA_SYMBOL} ${numbersFormatter.formatBigDecimal(it.amount)}"
+                val assetName = when (assetId) {
+                    AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR_ERC_20.id -> resourceManager.getString(R.string.xor)
+                    AssetHolder.SORA_VAL.id, AssetHolder.SORA_VAL_ERC_20.id -> resourceManager.getString(R.string.val_token)
+                    AssetHolder.ETHER_ETH.id -> resourceManager.getString(R.string.transaction_eth_sign)
+                    else -> resourceManager.getString(R.string.val_token)
+                }
+
+                val amountFormatted = "${numbersFormatter.formatBigDecimal(it.amount)} $assetName"
 
                 SoraTransaction(
                     it.soranetTxHash + it.ethTxHash,
@@ -74,13 +75,19 @@ class TransactionMappers @Inject constructor(
                 Transaction.Status.PENDING -> R.drawable.ic_pending_30
                 else -> {
                     if (peerId?.isErc20Address() == true || details.isErc20Address()) {
-                        R.drawable.ic_xor_grey_30
-                    } else if (type == Transaction.Type.DEPOSIT || type == Transaction.Type.REWARD) {
-                        R.drawable.ic_xor_red_30
-                    } else if (peerName.isEmpty() || peerName.getInitials().isEmpty()) {
-                        R.drawable.ic_xor_red_30
+                        if (assetId == AssetHolder.SORA_XOR_ERC_20.id) {
+                            R.drawable.ic_xor_black_30
+                        } else if (assetId == AssetHolder.SORA_VAL_ERC_20.id) {
+                            R.drawable.ic_val_black_30
+                        } else {
+                            R.drawable.ic_eth_30
+                        }
                     } else {
-                        NO_ICON_RESOURCE
+                        if (assetId == AssetHolder.SORA_XOR.id) {
+                            R.drawable.ic_xor_red_30
+                        } else {
+                            R.drawable.ic_val_red_30
+                        }
                     }
                 }
             }
@@ -94,12 +101,12 @@ class TransactionMappers @Inject constructor(
             } else if (peerId?.toLowerCase() == myEthAddress.toLowerCase() || details.toLowerCase() == myEthAddress.toLowerCase()) {
                 resourceManager.getString(R.string.wallet_history_to_my_ethereum_title)
             } else {
-                processTitleByType(type, peerName, peerId)
+                processTitleByType(type, peerName, peerId, details, myEthAddress)
             }
         }
     }
 
-    private fun processTitleByType(type: Transaction.Type, peerName: String, peerId: String?): String {
+    private fun processTitleByType(type: Transaction.Type, peerName: String, peerId: String?, details: String?, myEthAddress: String): String {
         return when (type) {
             Transaction.Type.REWARD -> {
                 if (peerName.isNotEmpty()) {
@@ -120,7 +127,11 @@ class TransactionMappers @Inject constructor(
                 resourceManager.getString(R.string.wallet_history_to_my_soranet_title)
             }
             Transaction.Type.WITHDRAW -> {
-                resourceManager.getString(R.string.wallet_history_to_my_ethereum_title)
+                if (peerId?.toLowerCase() == myEthAddress.toLowerCase() || details?.toLowerCase() == myEthAddress.toLowerCase()) {
+                    resourceManager.getString(R.string.wallet_history_to_my_ethereum_title)
+                } else {
+                    resourceManager.getString(R.string.wallet_transfer_to_ethereum)
+                }
             }
         }
     }

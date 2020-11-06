@@ -6,7 +6,7 @@
   <string name="common_error_not_found_title">Ресурс недоступний</string>
   <string name="common_error_internal_error_title">Внутрішня помилка</string>
   <string name="projects_title">Проєкти Sora</string>
-  <string name="project_founded_template" formatted="false">%s %% голосів із %s</string>
+  <string name="project_founded_template" formatted="false">%s%% голосів із %s</string>
   <string name="project_votes_template">%s голосів</string>
   <string name="project_ended_template">Завершився %s</string>
   <string name="project_spent_format">Ви віддали %s голосів</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">Парольна фраза є\nтипом пароля.</string>
   <string name="common_passphrase_body">Вона використовується для відновлення доступу до облікового запису. У разі втрати відновити доступ буде неможливо!</string>
   <string name="common_passphrase_your_passphrase">Ваша парольна фраза</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">Оновіть додаток Sora</string>
   <string name="common_unsupported_version_body">Оновлений додаток Sora, що містить покращення і виправлення, доступний в Google Play.</string>
   <string name="common_unsupported_version_open_google_play">Відкрити Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">Будь ласка, перевірте підключення до Інтернету та повторіть спробу пізніше.</string>
   <string name="common_error_pincode_check_error">Введено неправильний код</string>
   <string name="activity_user_registered_type">Реєстрація друга</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">Ваша репутація підвищилася!</string>
   <string name="activity_voting_rights_credited_type_template">Розподіл голосів</string>
   <string name="activity_voting_rights_title_template">Щоденні голоси</string>
   <string name="activity_invitation_credited_type_template">Розподіл запрошень</string>
   <string name="activity_invitation_credited_title_template">Запрошення зараховано</string>
   <string name="activity_project_funded_type_template">Проєкт завершено!</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">Інформація про нагороду в XOR незабаром буде доступна</string>
   <string name="activity_project_created_type_template">Новий проєкт!</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">Нагорода у XOR за голосування</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">Рейтинг змінено</string>
   <string name="activity_project">Проєкт</string>
   <string name="activity_user">Користувач</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">Ви вже застосували інший код запрошення</string>
   <string name="invite_enter_dialog_title_hint">8 буквено-цифрових символів</string>
   <string name="invite_enter_invitation_code">Введіть код запрошення</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="one">%s друг проголосував</item>
     <item quantity="few">%s друга проголосували</item>
@@ -250,7 +242,6 @@
   <string name="countries_country_not_found">Немає країн, що відповідають вашому запиту</string>
   <string name="phone_number_title">Реєстрація</string>
   <string name="phone_number_mobile">Номер телефону</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">Будь ласка, зачекайте</string>
   <string name="common_open_explorer">Переглянути в Blockchain Explorer</string>
   <string name="common_error_phone_already_exists">Вибачте, цей номер телефону вже використовується. Будь ласка, спробуйте інший.</string>
@@ -259,7 +250,7 @@
   <string name="common_spanish">Іспанська</string>
   <string name="common_bashkir">Башкирська</string>
   <string name="biometric_dialog_title">Аутентифікація</string>
-  <string name="contacts_search_hint_v1">Акаунт, номер телефону</string>
+  <string name="contacts_search_hint_v1">Акаунт, номер телефону, адреса</string>
   <string name="wallet_xor_to_my_eth">XOR на мій рахунок Ethereum</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -306,7 +297,6 @@
   <string name="limit_dialog_available_limit">Доступні для передачі</string>
   <string name="limit_dialog_reset">Обмежити скидання в</string>
   <string name="limit_dialog_set_amount">Встановити суму в</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet] до XOR ERC20 [Ethereum]</string>
   <string name="common_hour">година</string>
   <string name="common_japanese">Японська</string>
   <string name="common_chinese">Китайська</string>
@@ -353,4 +343,14 @@
   <string name="common_thai">Тайська</string>
   <string name="common_estonian">Естонська</string>
   <string name="common_arab">Арабська</string>
+  <string name="activity_project_funded_description_template_val">Інформація про нагороду в VAL незабаром буде доступна</string>
+  <string name="wallet_val_to_my_eth">VAL на мій рахунок Ethereum</string>
+  <string name="copy_val_title">Скопіюйте адресу гаманця Sora (VAL)</string>
+  <string name="val_balance_title">VAL Token у різних мережах</string>
+  <string name="activity_val_between_users_transferred_type_template">VAL отримано</string>
+  <string name="activity_val_reward_credited_from_project_type_template">Нагорода у VAL за голосування</string>
+  <string name="wallet_receive_val">Отримати VAL</string>
+  <string name="view_balance_val">Переглянути розподіл маркерів Sora (VAL)</string>
+  <string name="transaction_bridge_not_active_error">Міст Ethereum не активний.</string>
+  <string name="transaction_bridge_info">Інформація про міст Ефіріуму</string>
 </resources>

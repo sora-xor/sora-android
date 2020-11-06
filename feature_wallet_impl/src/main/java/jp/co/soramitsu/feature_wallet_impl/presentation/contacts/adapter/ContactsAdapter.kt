@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter
 
 import android.annotation.SuppressLint
@@ -137,7 +132,7 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
 
         fun bind(contactEthListItem: EthListItem, debounceClickHandler: DebounceClickHandler, itemViewClickListener: (EthListItem) -> Unit) {
             nameTv.text = contactEthListItem.ethereumAddress
-            iconTv.setImageResource(R.drawable.ic_eth_grey_16)
+            iconTv.setImageResource(R.drawable.ic_eth_16)
 
             root.setOnClickListener(DebounceClickListener(debounceClickHandler) {
                 itemViewClickListener(contactEthListItem)

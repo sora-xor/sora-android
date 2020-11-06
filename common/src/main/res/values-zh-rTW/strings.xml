@@ -6,8 +6,8 @@
   <string name="common_error_not_found_title">資源不可用</string>
   <string name="common_error_internal_error_title">內部錯誤</string>
   <string name="projects_title">Sora項目</string>
-  <string name="project_founded_template" formatted="false">%s %%的選票%s</string>
-  <string name="project_votes_template">選票</string>
+  <string name="project_founded_template" formatted="false">%s%%的選票%s</string>
+  <string name="project_votes_template">%s 選票</string>
   <string name="project_ended_template">已結束%s</string>
   <string name="project_spent_format">您已投了 %s 選票</string>
   <string name="empty_voted_project_description">為項目投票，\n項目會顯示在這裡</string>
@@ -73,7 +73,6 @@
   <string name="common_passphrase_header">密碼短語為\n一種密碼。</string>
   <string name="common_passphrase_body">它用於恢復對帳戶的訪問。寫下來，沒有它我們將無法恢復您的帳戶！</string>
   <string name="common_passphrase_your_passphrase">您的密碼短語</string>
-  <string name="common_question_mark">\?</string>
   <string name="common_unsupported_version_title">更新您的Sora應用</string>
   <string name="common_unsupported_version_body">Google Play 推出更新的Sora應用，其更新包括改進和錯誤修復。</string>
   <string name="common_unsupported_version_open_google_play">開啟Google Play</string>
@@ -108,21 +107,15 @@
   <string name="common_error_unauthorized_body">請檢查網絡連接，稍後再試。</string>
   <string name="common_error_pincode_check_error">輸入的密碼有錯誤</string>
   <string name="activity_user_registered_type">已註冊的朋友</string>
-  <string name="activity_user_registered_title_template" formatted="false">%s %s</string>
   <string name="activity_user_registered_description">您的聲譽將會提高！</string>
   <string name="activity_voting_rights_credited_type_template">票數分配</string>
   <string name="activity_voting_rights_title_template">每日票數</string>
   <string name="activity_invitation_credited_type_template">邀請分配</string>
   <string name="activity_invitation_credited_title_template">邀請已記入</string>
   <string name="activity_project_funded_type_template">項目已經完成！</string>
-  <string name="activity_project_funded_title_template">%s</string>
   <string name="activity_project_funded_description_template">您將很快收到有關XOR獎勵的信息</string>
   <string name="activity_project_created_type_template">新項目！</string>
-  <string name="activity_project_created_title_template">%s</string>
-  <string name="activity_project_created_description_template">%s</string>
-  <string name="activity_project_closed_title_template">%s</string>
   <string name="activity_xor_reward_credited_from_project_type_template">XOR投票獎勵</string>
-  <string name="activity_voted_friend_added_title_template" formatted="false">%s %s</string>
   <string name="activity_user_rank_changed_type_template">排名已更改</string>
   <string name="activity_project">項目</string>
   <string name="activity_user">用戶</string>
@@ -138,7 +131,6 @@
   <string name="invite_enter_error_already_applied">您已經應用了另一個邀請代碼</string>
   <string name="invite_enter_dialog_title_hint">8個字母數字字符</string>
   <string name="invite_enter_invitation_code">輸入邀請代碼</string>
-  <string name="project_votes_k_template">%sK</string>
   <plurals name="project_friends_template">
     <item quantity="other">%s朋友已投票</item>
   </plurals>
@@ -232,7 +224,6 @@
   <string name="countries_country_not_found">沒有符合您所查詢的國家</string>
   <string name="phone_number_title">註冊</string>
   <string name="phone_number_mobile">手機號碼</string>
-  <string name="asset_details">XOR</string>
   <string name="common_please_wait">請稍候</string>
   <string name="common_open_explorer">在區塊鏈瀏覽器中查看</string>
   <string name="common_error_phone_already_exists">抱歉，此電話號碼已被使用。請嘗試另一個。</string>
@@ -241,7 +232,7 @@
   <string name="common_spanish">西班牙語</string>
   <string name="common_bashkir">巴什基爾語</string>
   <string name="biometric_dialog_title">認證</string>
-  <string name="contacts_search_hint_v1">帳號、電話號碼</string>
+  <string name="contacts_search_hint_v1">帳號、電話號碼、地址</string>
   <string name="wallet_xor_to_my_eth">XOR到我的以太坊賬戶</string>
   <string name="wallet_ethereum">以太坊</string>
   <string name="wallet_soranet">SoraNet</string>
@@ -288,7 +279,6 @@
   <string name="limit_dialog_available_limit">可轉讓</string>
   <string name="limit_dialog_reset">限制重置</string>
   <string name="limit_dialog_set_amount">將金額設置為</string>
-  <string name="limit_dialog_subtitle">XOR [SoraNet]到XOR ERC20 [以太坊]</string>
   <string name="common_hour">小時</string>
   <string name="common_japanese">日語</string>
   <string name="common_chinese">中文</string>
@@ -332,4 +322,14 @@
   <string name="common_thai">泰國</string>
   <string name="common_estonian">愛沙尼亞語</string>
   <string name="common_arab">阿拉伯</string>
+  <string name="activity_project_funded_description_template_val">您將很快收到有關VAL獎勵的信息</string>
+  <string name="wallet_val_to_my_eth">VAL到我的以太坊賬戶</string>
+  <string name="copy_val_title">複製Sora（VAL）錢包地址</string>
+  <string name="val_balance_title">不同網絡上的VAL令牌</string>
+  <string name="activity_val_between_users_transferred_type_template">收到 VAL</string>
+  <string name="activity_val_reward_credited_from_project_type_template">VAL投票獎勵</string>
+  <string name="wallet_receive_val">收到VAL</string>
+  <string name="view_balance_val">查看Sora（VAL）令牌分配</string>
+  <string name="transaction_bridge_not_active_error">以太坊橋未激活。</string>
+  <string name="transaction_bridge_info">以太坊橋信息</string>
 </resources>
