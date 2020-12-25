@@ -41,7 +41,9 @@ class TransactionDetailsViewModel(
     private val transactionType: Transaction.Type,
     private val soranetTransactionId: String,
     private val ethTransactionId: String,
-    private val status: String,
+    private val secondEthTransactionId: String,
+    private val transactionStatus: Transaction.Status,
+    private val detailedStatus: Transaction.DetailedStatus,
     private val date: Long,
     private val amount: BigDecimal,
     private val totalAmount: BigDecimal,
@@ -189,8 +191,8 @@ class TransactionDetailsViewModel(
                 _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_back)
                 _fromLiveData.value = peerId
                 _toLiveData.value = myAccountId
-                _fromIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_red_20 else R.drawable.ic_xor_red_20
-                _toIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_red_20 else R.drawable.ic_xor_red_20
+                _fromIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_gold_20 else R.drawable.ic_xor_red_20
+                _toIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_gold_20 else R.drawable.ic_xor_red_20
                 _tranasctionFeeVisibilityLiveData.value = false
                 _minerFeeVisibilityLiveData.value = false
                 _totalAmountVisibilityLiveData.value = false
@@ -198,7 +200,7 @@ class TransactionDetailsViewModel(
 
                 if (peerId == peerFullName.trim()) {
                     _buttonDescriptionEllipsizeMiddleLiveData.value = true
-                    _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_red_20 else R.drawable.ic_xor_red_20
+                    _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_gold_20 else R.drawable.ic_xor_red_20
                 } else {
                     _buttonDescriptionEllipsizeMiddleLiveData.value = false
                     _buttonDescriptionTextIconLiveData.value = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
@@ -218,8 +220,8 @@ class TransactionDetailsViewModel(
                     }
 
                     AssetHolder.SORA_VAL.id -> {
-                        _fromIconLiveData.value = R.drawable.ic_val_red_20
-                        _toIconLiveData.value = R.drawable.ic_val_red_20
+                        _fromIconLiveData.value = R.drawable.ic_val_gold_20
+                        _toIconLiveData.value = R.drawable.ic_val_gold_20
                     }
 
                     AssetHolder.SORA_VAL_ERC_20.id -> {
@@ -241,10 +243,10 @@ class TransactionDetailsViewModel(
                     val icon = when (assetId) {
                         AssetHolder.SORA_XOR.id -> R.drawable.ic_xor_red_24
                         AssetHolder.SORA_XOR_ERC_20.id -> R.drawable.ic_xor_black_24
-                        AssetHolder.SORA_VAL.id -> R.drawable.ic_val_red_24
+                        AssetHolder.SORA_VAL.id -> R.drawable.ic_val_gold_24
                         AssetHolder.SORA_VAL_ERC_20.id -> R.drawable.ic_val_black_24
                         AssetHolder.ETHER_ETH.id -> R.drawable.ic_eth_24
-                        else -> R.drawable.ic_val_red_24
+                        else -> R.drawable.ic_val_gold_24
                     }
                     _buttonDescriptionIconLiveData.value = icon
                 } else {
@@ -254,17 +256,22 @@ class TransactionDetailsViewModel(
             }
 
             Transaction.Type.WITHDRAW -> {
-                if (ethTransactionId.isEmpty()) {
+                if (secondEthTransactionId.isEmpty()) {
                     _fromIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
                         R.drawable.ic_xor_red_20
                     } else {
-                        R.drawable.ic_val_red_20
+                        R.drawable.ic_val_gold_20
                     }
                 } else {
-                    _fromIconLiveData.value = R.drawable.ic_double_token_24
+                    _fromIconLiveData.value = R.drawable.ic_double_24
                 }
 
-                _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_again)
+                _btnTitleLiveData.value = if (transactionStatus == Transaction.Status.REJECTED) {
+                    resourceManager.getString(R.string.common_retry)
+                } else {
+                    resourceManager.getString(R.string.transaction_send_again)
+                }
+
                 _buttonDescriptionLiveData.value = peerFullName
                 _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
                     R.drawable.ic_xor_black_24
@@ -313,10 +320,8 @@ class TransactionDetailsViewModel(
             }
         }
 
-        _ethTransactionIdVisibilityLiveData.value = ethTransactionId.isNotEmpty()
+        _ethTransactionIdVisibilityLiveData.value = secondEthTransactionId.isNotEmpty() || ethTransactionId.isNotEmpty()
         _soranetTransactionIdVisibilityLiveData.value = soranetTransactionId.isNotEmpty()
-
-        val transactionStatus = Transaction.Status.valueOf(status.toUpperCase())
 
         val transactionStatusResource = when (transactionStatus) {
             Transaction.Status.REJECTED -> R.string.status_rejected
@@ -350,22 +355,31 @@ class TransactionDetailsViewModel(
     }
 
     fun btnNextClicked() {
-        when (assetId) {
-            AssetHolder.SORA_VAL.id -> {
-                router.showValTransferAmount(peerId, peerFullName, BigDecimal.ZERO)
+        if (transactionStatus == Transaction.Status.REJECTED) {
+            when (transactionType) {
+                Transaction.Type.WITHDRAW -> {
+                    val isTxFeeNeeded = detailedStatus == Transaction.DetailedStatus.INTENT_FAILED
+                    router.showWithdrawRetryFragment(soranetTransactionId, ethTransactionId, peerId, amount, isTxFeeNeeded)
+                }
             }
+        } else {
+            when (assetId) {
+                AssetHolder.SORA_VAL.id -> {
+                    router.showValTransferAmount(peerId, peerFullName, BigDecimal.ZERO)
+                }
 
-            AssetHolder.SORA_VAL_ERC_20.id -> {
-                if (transactionType == Transaction.Type.WITHDRAW) {
-                    ethAddress.value?.let { ethAddress ->
-                        if (peerId == ethAddress) {
-                            router.showValWithdrawToErc(peerId, BigDecimal.ZERO)
-                        } else {
-                            router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
+                AssetHolder.SORA_VAL_ERC_20.id -> {
+                    if (transactionType == Transaction.Type.WITHDRAW) {
+                        ethAddress.value?.let { ethAddress ->
+                            if (peerId == ethAddress) {
+                                router.showValWithdrawToErc(peerId, BigDecimal.ZERO)
+                            } else {
+                                router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
+                            }
                         }
+                    } else {
+                        router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
                     }
-                } else {
-                    router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
                 }
             }
         }
@@ -380,7 +394,7 @@ class TransactionDetailsViewModel(
     }
 
     fun ethereumTransactionIdClicked() {
-        _transactionClickEvent.value = ethTransactionId
+        _transactionClickEvent.value = getEthTransactionId()
     }
 
     fun copyTransactionIdClicked(transactionId: String) {
@@ -414,5 +428,13 @@ class TransactionDetailsViewModel(
     fun fromClicked() {
         clipboardManager.addToClipboard(LABEL_ACCOUNT_ID, fromLiveData.value.toString())
         _peerIdBufferEvent.value = Event(Unit)
+    }
+
+    private fun getEthTransactionId(): String {
+        return if (secondEthTransactionId.isEmpty()) {
+            ethTransactionId
+        } else {
+            secondEthTransactionId
+        }
     }
 }

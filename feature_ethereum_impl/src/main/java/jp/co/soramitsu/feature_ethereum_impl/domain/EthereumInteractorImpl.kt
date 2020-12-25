@@ -7,17 +7,20 @@ package jp.co.soramitsu.feature_ethereum_impl.domain
 
 import io.reactivex.Completable
 import io.reactivex.Single
+import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
+import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import java.math.BigDecimal
 import java.math.BigInteger
 
 class EthereumInteractorImpl(
     private val ethereumRepository: EthereumRepository,
-    private val didRepository: DidRepository
+    private val didRepository: DidRepository,
+    private val healthChecker: HealthChecker
 ) : EthereumInteractor {
 
     override fun transferValERC20(to: String, amount: BigDecimal): Completable {
@@ -27,10 +30,41 @@ class EthereumInteractorImpl(
             .flatMapCompletable { ethereumRepository.transferValErc20(to, amount, it.first, it.second) }
     }
 
-    override fun getMinerFeeInitialData(): Single<Gas> {
+    private fun getMinerFeeInitialData(gasLimit: BigInteger): Single<Gas> {
         return didRepository.retrieveMnemonic()
             .flatMap { ethereumRepository.getEthCredentials(it) }
-            .flatMap { ethereumRepository.getGasEstimations(it) }
+            .flatMap { ethereumRepository.getGasEstimations(gasLimit, it) }
+    }
+
+    override fun getMinerFeeInitialDataForTransfer(): Single<Gas> {
+        return getMinerFeeInitialData(ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())
+    }
+
+    override fun getMinerFeeInitialDataForTransferWithdraw(): Single<Gas> {
+        return getMinerFeeInitialData(ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger() + ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())
+    }
+
+    override fun retryWithdrawTransaction(soranetHash: String): Completable {
+        return didRepository.getAccountId()
+            .flatMapCompletable { accountId ->
+                didRepository.retrieveKeypair()
+                    .flatMapCompletable { keyPair ->
+                        didRepository.retrieveMnemonic()
+                            .flatMap {
+                                ethereumRepository.getEthCredentials(it)
+                            }
+                            .flatMapCompletable { ethereumCredentials ->
+                                ethereumRepository.getValTokenAddress(ethereumCredentials)
+                                    .flatMapCompletable { tokenAddress ->
+                                        ethereumRepository.retryWithdraw(ethereumCredentials, soranetHash, accountId, tokenAddress, keyPair)
+                                    }
+                            }
+                    }
+            }
+    }
+
+    override fun getMinerFeeInitialDataForWithdraw(): Single<Gas> {
+        return getMinerFeeInitialData(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())
     }
 
     override fun getAddress(): Single<String> {
@@ -105,13 +139,16 @@ class EthereumInteractorImpl(
             }
     }
 
-    override fun isBridgeEnabled(): Single<Boolean> {
-        return didRepository.retrieveMnemonic()
+    override fun isBridgeEnabled(): Single<Pair<Boolean, Boolean>> =
+        if (healthChecker.ethreumConfigState.value != true)
+            Single.just(Pair(first = false, second = true))
+        else didRepository.retrieveMnemonic()
             .flatMap {
                 ethereumRepository.getEthCredentials(it)
                     .flatMap { ethCreds ->
-                        ethereumRepository.isBridgeEnabled(ethCreds)
+                        ethereumRepository.isBridgeEnabled(ethCreds).map { br ->
+                            Pair(first = true, second = br)
+                        }
                     }
             }
-    }
 }

@@ -17,7 +17,7 @@ class EthereumStatusObserver(
 ) {
 
     companion object {
-        private const val POLLING_REFRESH_TIME = 10L
+        private const val POLLING_REFRESH_TIME = 15L
     }
 
     private var disposables: CompositeDisposable? = null

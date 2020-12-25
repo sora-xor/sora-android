@@ -10,7 +10,6 @@ import io.reactivex.Single
 import iroha.protocol.TransactionOuterClass
 import jp.co.soramitsu.common.data.network.dto.StatusDto
 import jp.co.soramitsu.common.data.network.response.BaseResponse
-import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.TransferTransactionDao
@@ -31,7 +30,9 @@ import jp.co.soramitsu.feature_ethereum_impl.data.network.request.IrohaRequest
 import jp.co.soramitsu.feature_ethereum_impl.data.network.response.WithdrawalProofsResponse
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiConverter
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
+import jp.co.soramitsu.feature_ethereum_impl.util.EthereumConfigProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
+import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import jp.co.soramitsu.test_shared.eqNonNull
@@ -44,12 +45,9 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.verify
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.web3j.crypto.Bip32ECKeyPair
-import org.web3j.crypto.Credentials
-import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.RemoteCall
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import java.math.BigDecimal
@@ -64,7 +62,8 @@ class EthereumRepositoryTest {
     @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
     @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
 
-    @Mock private lateinit var web3j: Web3j
+    @Mock private lateinit var web3jProvider: Web3jProvider
+    @Mock private lateinit var ethereumConfigProvider: EthereumConfigProvider
     @Mock private lateinit var web3jBip32Crypto: Web3jBip32Crypto
     @Mock private lateinit var ethereumDatasource: EthereumDatasource
     @Mock private lateinit var ethereumCredentialsMapper: EthereumCredentialsMapper
@@ -77,7 +76,6 @@ class EthereumRepositoryTest {
     @Mock private lateinit var erc20ContractApi: ERC20ContractApi
     @Mock private lateinit var etherWeiConverter: EtherWeiConverter
     @Mock private lateinit var db: AppDatabase
-    @Mock private lateinit var appLinksProvider: AppLinksProvider
     @Mock private lateinit var ethRegisterStateMapper: EthRegisterStateMapper
 
     private lateinit var ethereumRepository: EthereumRepository
@@ -102,8 +100,8 @@ class EthereumRepositoryTest {
         given(etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)).willReturn(BigDecimal(minerFee))
         given(contractApiProvider.getSmartContractApi(ethereumCredentials)).willReturn(smartContractApi)
         given(contractApiProvider.getErc20ContractApi(ethereumCredentials, xorTokenAddress)).willReturn(erc20ContractApi)
-        ethereumRepository = EthereumRepositoryImpl(ethereumDatasource, ethereumCredentialsMapper, api, soranetApi, web3j, web3jBip32Crypto,
-            serializer, contractApiProvider, transactionFactory, etherWeiConverter, db, appLinksProvider, ethRegisterStateMapper)
+        ethereumRepository = EthereumRepositoryImpl(ethereumDatasource, ethereumCredentialsMapper, api, soranetApi, web3jProvider, web3jBip32Crypto,
+            serializer, contractApiProvider, transactionFactory, etherWeiConverter, db, ethRegisterStateMapper, ethereumConfigProvider)
     }
 
     @Test

@@ -37,8 +37,10 @@ class TransactionMappersTest {
 
     private val transactions = mutableListOf(Transaction(
         "",
+        "",
         "transactionId",
         Transaction.Status.COMMITTED,
+        Transaction.DetailedStatus.TRANSFER_COMPLETED,
         "assetId",
         "myAddress",
         "details",
@@ -57,7 +59,7 @@ class TransactionMappersTest {
         SoraTransaction(
             "transactionId",
             true,
-            R.drawable.ic_val_red_30,
+            R.drawable.ic_val_gold_30,
             "PL",
             "peerName lastname",
             "details",

@@ -21,7 +21,7 @@ class BridgeDisabledErrorBottomSheetDialog(
 ) : BottomSheetDialog(context, R.style.BottomSheetDialog) {
 
     companion object {
-        private const val BRIDGE_INFO_URL = "https://medium.com/@sora.xor/ethbridge"
+        private const val BRIDGE_INFO_URL = "https://github.com/sora-xor/VAL-bridge-activation"
     }
 
     init {

@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">تطبيق Sora المحدث متاح في Google Play. يتوفر على التحسينات و تم فيه إصلاح الثغرات.</string>
   <string name="common_unsupported_version_open_google_play">افتح Google Play</string>
   <string name="common_select_email_app_title">اختيار تطبيق البريد الإلكتروني</string>
+  <string name="ethereum_config_unavailable">عقدة إيثريوم غير متوفرة</string>
   <string name="common_network_unavailable">شبكة الاتصال غير متوفرة</string>
   <string name="common_privacy_title">سياسة الخصوصية</string>
   <string name="common_save">حفظ</string>
@@ -265,7 +266,7 @@
   <string name="contacts_search_hint_v1">تعريف الحساب، رقم الهاتف، العنوان</string>
   <string name="wallet_xor_to_my_eth">XOR إلى حساب الإيثريوم الخاص بي</string>
   <string name="wallet_ethereum">الإيثيريوم</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">مجموع</string>
   <string name="transaction_token">رمز العملة</string>
   <string name="transaction_note">ملحوظة</string>
@@ -293,12 +294,12 @@
   <string name="asset_state_associating">ربط...</string>
   <string name="asset_state_error">خطأ</string>
   <string name="common_add">اضافة</string>
-  <string name="wallet_history_to_my_soranet_title">الى حسابي في Soranet</string>
+  <string name="wallet_history_to_my_soranet_title">الى حسابي في SORA NET</string>
   <string name="wallet_history_to_my_ethereum_title">الى عنواني في محفظة الايثيريوم</string>
   <string name="wallet_history_reward_from_system">مكافأة من النظام</string>
   <string name="wallet_history_from_ethereum_address_title">من محفظة الايثيريوم</string>
-  <string name="wallet_history_from_soranet_address_title">من حساب Soranet</string>
-  <string name="wallet_history_to_soranet_account">الى حساب Soranet</string>
+  <string name="wallet_history_from_soranet_address_title">من حساب SORA NET</string>
+  <string name="wallet_history_to_soranet_account">الى حساب SORA NET</string>
   <string name="wallet_history_to_ethereum_address">الى حساب الايثيريوم</string>
   <string name="common_french">الفرنسية</string>
   <string name="common_ukrainian">الأوكرانية</string>
@@ -322,7 +323,7 @@
   <string name="unknown_balance">مجهول</string>
   <string name="xor_balance_title">XOR Token على شبكات مختلفة</string>
   <string name="copy_xor_title">انسخ عنوان محفظة Sora (XOR)</string>
-  <string name="copy_eth_title">نسخ عنوان محفظة Eth (ETH)</string>
+  <string name="copy_eth_title">نسخ عنوان محفظة Ethereum (ETH)</string>
   <string name="view_balance">عرض تخصيص الرمز المميز Sora (XOR)</string>
   <string name="referendum_ends_in_title">ينتهي بـ</string>
   <string name="referendum_support_title">نعم</string>
@@ -359,12 +360,13 @@
   <string name="common_arab">عرب</string>
   <string name="activity_project_funded_description_template_val">ستتلقى معلومات حول مكافأة VAL قريبًا</string>
   <string name="wallet_val_to_my_eth">VAL إلى حساب الإيثريوم الخاص بي</string>
-  <string name="copy_val_title">انسخ عنوان محفظة Sora (VAL)</string>
+  <string name="copy_val_title">انسخ عنوان محفظة SORA NET (VAL)</string>
   <string name="val_balance_title">VAL Token على شبكات مختلفة</string>
   <string name="activity_val_between_users_transferred_type_template">تم استلام VAL</string>
   <string name="activity_val_reward_credited_from_project_type_template">مكافأة VAL للتصويت</string>
   <string name="wallet_receive_val">استلام VAL</string>
-  <string name="view_balance_val">عرض تخصيص الرمز المميز Sora (VAL)</string>
+  <string name="view_balance_val">عرض تخصيص الرمز المميز SORA NET (VAL)</string>
   <string name="transaction_bridge_not_active_error">حساب الايثيريوم غير مرتبط</string>
   <string name="transaction_bridge_info">معلومات جسر Ethereum</string>
+  <string name="common_retry">أعد المحاولة</string>
 </resources>

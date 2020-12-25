@@ -17,6 +17,7 @@ class HealthChecker {
         DEAD
     }
 
+    val ethreumConfigState = BehaviorSubject.create<Boolean>()
     private val health = BehaviorSubject.create<Boolean>()
     private val healthState = BehaviorSubject.create<State>()
     private val healthRestoredEventKeeper = PublishSubject.create<Event<Unit>>()
@@ -41,4 +42,14 @@ class HealthChecker {
     fun observeHealthRestoredEvents(): Observable<Event<Unit>> {
         return healthRestoredEventKeeper
     }
+
+    //region ethreum config provider
+
+    fun ethrereumConfigOk() = ethreumConfigState.onNext(true)
+
+    fun ethereumConfigError() = ethreumConfigState.onNext(false)
+
+    fun observeEthereumConfigState(): Observable<Boolean> = ethreumConfigState
+
+    //endregion
 }

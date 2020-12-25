@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">កម្មវិធី Sora បច្ចុប្បន្នភាពថ្មីមាននៅក្នុង Google Play ។ វារួមបញ្ចូលទាំងការកែលម្អនិងការកែកំហុស។</string>
   <string name="common_unsupported_version_open_google_play">បើក Google Play</string>
   <string name="common_select_email_app_title">ជ្រើសរើសកម្មវិធីអ៊ីមែល</string>
+  <string name="ethereum_config_unavailable">មិនមានថ្នាំង Ethereum</string>
   <string name="common_network_unavailable">មិនមានការតភ្ជាប់ទៅកាន់អ៊ីនធ័រណិត</string>
   <string name="common_privacy_title">គោលការណ៍ភាពឯកជន</string>
   <string name="common_save">រក្សាទុក</string>
@@ -237,7 +238,7 @@
   <string name="contacts_search_hint_v1">លេខសម្គាល់គណនី លេខទូរស័ព្ទ ឬអាសយដ្ឋាន</string>
   <string name="wallet_xor_to_my_eth">XOR ទៅគណនី Ethereum របស់ខ្ញុំ</string>
   <string name="wallet_ethereum">Ethereum</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">សរុប</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_note">កំណត់ចំណាំ</string>
@@ -265,12 +266,12 @@
   <string name="asset_state_associating">កំពុងភ្ជាប់...</string>
   <string name="asset_state_error">កំហុស</string>
   <string name="common_add">បន្ថែម</string>
-  <string name="wallet_history_to_my_soranet_title">ផ្ញើទៅកាន់គណនី Soranet របស់ខ្ញុំ</string>
+  <string name="wallet_history_to_my_soranet_title">ផ្ញើទៅកាន់គណនី SORA NET របស់ខ្ញុំ</string>
   <string name="wallet_history_to_my_ethereum_title">ផ្ញើទៅកាន់អាស័យដ្ឋាន Ethereum របស់ខ្ញុំ</string>
   <string name="wallet_history_reward_from_system">រង្វាន់ពីប្រព័ន្ធ</string>
   <string name="wallet_history_from_ethereum_address_title">ផ្ញើមកពីអាសយដ្ឋាន Ethereum</string>
-  <string name="wallet_history_from_soranet_address_title">ផ្ញើមកពីគណនី Soranet</string>
-  <string name="wallet_history_to_soranet_account">ផ្ញើទៅកាន់គណនី Soranet</string>
+  <string name="wallet_history_from_soranet_address_title">ផ្ញើមកពីគណនី SORA NET</string>
+  <string name="wallet_history_to_soranet_account">ផ្ញើទៅកាន់គណនី SORA NET</string>
   <string name="wallet_history_to_ethereum_address">ផ្ញើទៅកាន់អាសយដ្ឋាន Ethereum</string>
   <string name="common_french">ភាសាបារាំង</string>
   <string name="common_ukrainian">ភាសាអ៊ុយក្រែន</string>
@@ -334,4 +335,5 @@
   <string name="view_balance_val">មើលការបែងចែកនិមិត្តសញ្ញាសូរ៉ា (VAL)</string>
   <string name="transaction_bridge_not_active_error">ស្ពាន Ethereum មិនសកម្មទេ។</string>
   <string name="transaction_bridge_info">ព័ត៌មានអំពីស្ពាន Ethereum</string>
+  <string name="common_retry">ព្យាយាមម្តងទៀត</string>
 </resources>

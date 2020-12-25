@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.network
 
-import jp.co.soramitsu.feature_ethereum_impl.BuildConfig
+import jp.co.soramitsu.feature_ethereum_impl.util.EthereumConfigProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.GasProvider
 import org.web3j.abi.TypeReference
 import org.web3j.abi.Utils
@@ -28,8 +28,9 @@ import java.math.BigInteger
 class SmartContractApi(
     web3j: Web3j,
     fastRawTransactionManager: FastRawTransactionManager,
-    gasProvider: GasProvider
-) : Contract(BIN_NOT_PROVIDED, BuildConfig.MASTER_CONTRACT_ADDRESS, web3j, fastRawTransactionManager, gasProvider) {
+    gasProvider: GasProvider,
+    ethereumConfigProvider: EthereumConfigProvider
+) : Contract(BIN_NOT_PROVIDED, ethereumConfigProvider.config.masterContract, web3j, fastRawTransactionManager, gasProvider) {
 
     companion object {
         private const val FUNC_MINTTOKENSBYPEERS = "mintTokensByPeers"

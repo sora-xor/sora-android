@@ -9,7 +9,6 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.functions.BiFunction
-import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.Serializer
@@ -25,7 +24,6 @@ import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import jp.co.soramitsu.feature_ethereum_api.domain.model.GasEstimation
-import jp.co.soramitsu.feature_ethereum_impl.BuildConfig
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthRegisterStateMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.network.EthereumNetworkApi
@@ -35,11 +33,12 @@ import jp.co.soramitsu.feature_ethereum_impl.data.network.model.EthPublicKeyWith
 import jp.co.soramitsu.feature_ethereum_impl.data.network.model.KeccakProof
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiConverter
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
+import jp.co.soramitsu.feature_ethereum_impl.util.EthereumConfigProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
+import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
 import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Sign
-import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.utils.Numeric
 import java.math.BigDecimal
@@ -53,15 +52,15 @@ class EthereumRepositoryImpl @Inject constructor(
     private val ethereumCredentialsMapper: EthereumCredentialsMapper,
     private val api: EthereumNetworkApi,
     private val soranetApi: SoranetApi,
-    private val web3j: Web3j,
+    private val web3jProvider: Web3jProvider,
     private val web3jBip32Crypto: Web3jBip32Crypto,
     private val serializer: Serializer,
     private val contractApiProvider: ContractsApiProvider,
     private val transactionFactory: TransactionFactory,
     private val etherWeiConverter: EtherWeiConverter,
     private val db: AppDatabase,
-    private val appLinksProvider: AppLinksProvider,
-    private val ethRegisterStateMapper: EthRegisterStateMapper
+    private val ethRegisterStateMapper: EthRegisterStateMapper,
+    private val ethereumConfigProvider: EthereumConfigProvider
 ) : EthereumRepository {
 
     companion object {
@@ -114,7 +113,7 @@ class EthereumRepositoryImpl @Inject constructor(
 
     private fun getEthereumBalanceRemote(ethCredentials: EthereumCredentials): Single<AssetBalance> {
         return Single.fromCallable { ethereumCredentialsMapper.getAddress(ethCredentials.privateKey) }
-            .map { web3j.ethGetBalance(it, DefaultBlockParameterName.LATEST).send().balance }
+            .map { web3jProvider.web3j.ethGetBalance(it, DefaultBlockParameterName.LATEST).send().balance }
             .map { etherWeiConverter.fromWeiToEther(it) }
             .map { AssetBalance(AssetHolder.ETHER_ETH.id, it) }
     }
@@ -166,11 +165,15 @@ class EthereumRepositoryImpl @Inject constructor(
         return calculateValErc20Fee(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())
     }
 
+    override fun calculateValErc20CombinedFee(): Single<BigDecimal> {
+        return calculateValErc20Fee(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger() + ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())
+    }
+
     private fun calculateValErc20Fee(gasLimit: BigInteger): Single<BigDecimal> {
         return Single.fromCallable { contractApiProvider.setGasLimit(gasLimit) }
             .map { contractApiProvider.fetchGasPrice() }
-            .map { it * gasLimit }
-            .map { etherWeiConverter.fromWeiToEther(it) }
+            .map { etherWeiConverter.fromWeiToGwei(it) * gasLimit }
+            .map { etherWeiConverter.fromGweiToEther(it) }
     }
 
     override fun registerEthAccount(accountId: String, serializedValue: String, keyPair: KeyPair): Completable {
@@ -239,6 +242,42 @@ class EthereumRepositoryImpl @Inject constructor(
         return EthereumCredentials(credentials.ecKeyPair.privateKey)
     }
 
+    override fun retryWithdraw(ethCredentials: EthereumCredentials, soranetHash: String, accountId: String, tokenAddress: String, keyPair: KeyPair): Completable {
+        return Completable.fromCallable {
+            val secondsNow = Date().time / 1000
+            val gasLimit = contractApiProvider.getGasLimit()
+            val gasPrice = contractApiProvider.getGasPrice()
+            val minerFee = etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)
+
+            db.withdrawTransactionDao().updateGasLimit(soranetHash, gasLimit)
+            db.withdrawTransactionDao().updateGasPrice(soranetHash, gasPrice)
+            db.withdrawTransactionDao().updateMinerFee(soranetHash, minerFee)
+            db.withdrawTransactionDao().updateTimestamp(soranetHash, secondsNow)
+
+            db.withdrawTransactionDao().getTransactionByIntentHash(soranetHash)?.let {
+                when (it.status) {
+                    WithdrawTransactionLocal.Status.INTENT_FAILED -> {
+                        startWithdrawRetry(soranetHash, it.withdrawAmount, accountId, it.peerId!!, it.intentFee.toString(), keyPair).blockingGet()
+                    }
+
+                    WithdrawTransactionLocal.Status.CONFIRM_FAILED -> {
+                        confirmWithdraw(ethCredentials, it.withdrawAmount, soranetHash, accountId, it.gasPrice, it.gasLimit, tokenAddress)
+                            .runCatching {
+                                val hash = blockingGet()
+                                db.withdrawTransactionDao().updateConfirmTxHash(it.intentTxHash, hash)
+                                db.withdrawTransactionDao().updateStatus(it.intentTxHash, WithdrawTransactionLocal.Status.CONFIRM_PENDING)
+                            }
+                            .onFailure {
+                                db.withdrawTransactionDao().updateStatus(soranetHash, WithdrawTransactionLocal.Status.CONFIRM_FAILED)
+                            }
+                    }
+
+                    else -> {}
+                }
+            }
+        }
+    }
+
     override fun startWithdraw(amount: BigDecimal, srcAccountId: String, ethAddress: String, transactionFee: String, keyPair: KeyPair): Completable {
         return transactionFactory.buildWithdrawTransaction(amount, srcAccountId, ethAddress, transactionFee, keyPair)
             .flatMap { result ->
@@ -251,6 +290,29 @@ class EthereumRepositoryImpl @Inject constructor(
                     BigDecimal.ZERO, secondsNow, ethAddress, "", "", BigDecimal(transactionFee), minerFee, gasLimit, gasPrice)
 
                 db.withdrawTransactionDao().insert(tx)
+
+                api.withdraw(result.first)
+                    .map { result.second }
+            }
+            .ignoreElement()
+    }
+
+    private fun startWithdrawRetry(oldSoranetHash: String, amount: BigDecimal, srcAccountId: String, ethAddress: String, transactionFee: String, keyPair: KeyPair): Completable {
+        return transactionFactory.buildWithdrawTransaction(amount, srcAccountId, ethAddress, transactionFee, keyPair)
+            .flatMap { result ->
+                val gasLimit = contractApiProvider.getGasLimit()
+                val gasPrice = contractApiProvider.getGasPrice()
+                val minerFee = etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)
+                val secondsNow = Date().time / 1000
+
+                db.withdrawTransactionDao().updateStatus(oldSoranetHash, WithdrawTransactionLocal.Status.INTENT_STARTED)
+                db.withdrawTransactionDao().updateIntentHash(oldSoranetHash, result.second)
+                db.withdrawTransactionDao().updateGasLimit(result.second, gasLimit)
+                db.withdrawTransactionDao().updateGasPrice(result.second, gasPrice)
+                db.withdrawTransactionDao().updateMinerFee(result.second, minerFee)
+                db.withdrawTransactionDao().updateConfirmTxHash(result.second, "")
+                db.withdrawTransactionDao().updateTransferHash(result.second, "")
+                db.withdrawTransactionDao().updateTimestamp(result.second, secondsNow)
 
                 api.withdraw(result.first)
                     .map { result.second }
@@ -291,7 +353,7 @@ class EthereumRepositoryImpl @Inject constructor(
 
     override fun startCombinedValTransfer(partialAmount: BigDecimal, amount: BigDecimal, transferAccountId: String, transferName: String, transactionFee: BigDecimal, description: String, ethCredentials: EthereumCredentials, keyPair: KeyPair, tokenAddress: String): Completable {
         return Single.fromCallable { etherWeiConverter.fromEtherToWei(partialAmount) }
-            .map { contractApiProvider.getErc20ContractApi(ethCredentials, tokenAddress).transferVal(BuildConfig.MASTER_CONTRACT_ADDRESS, it).send() }
+            .map { contractApiProvider.getErc20ContractApi(ethCredentials, tokenAddress).transferVal(ethereumConfigProvider.config.masterContract, it).send() }
             .flatMap { tx ->
                 getGasLimit()
                     .flatMap { gasLimit ->
@@ -380,11 +442,9 @@ class EthereumRepositoryImpl @Inject constructor(
         return ethDataSource.observeEthRegisterState()
     }
 
-    override fun getGasEstimations(ethCredentials: EthereumCredentials): Single<Gas> {
-        return Single.zip(
-            getGasLimit(),
-            getGasPrice(),
-            BiFunction<BigInteger, BigInteger, Gas> { gasLimit, gasPrice ->
+    override fun getGasEstimations(gasLimit: BigInteger, ethCredentials: EthereumCredentials): Single<Gas> {
+        return getGasPrice()
+            .map { gasPrice ->
                 val estimations = listOf(
                     getSlowEstimations(gasLimit, gasPrice),
                     getRegularEstimations(gasLimit, gasPrice),
@@ -399,32 +459,34 @@ class EthereumRepositoryImpl @Inject constructor(
 
                 Gas(gasPriceInGwei, gasLimit, estimations)
             }
-        )
     }
 
     private fun getSlowEstimations(gasLimit: BigInteger, gasPrice: BigInteger): GasEstimation {
         val amount = gasLimit - BigInteger.TEN
-        val amountWithPrice = amount * gasPrice
-        val amountInEth = etherWeiConverter.fromWeiToEther(amountWithPrice)
+        val gweiPrice = etherWeiConverter.fromWeiToGwei(gasPrice)
+        val amountWithPrice = amount * gweiPrice
+        val amountInEth = etherWeiConverter.fromGweiToEther(amountWithPrice)
         return GasEstimation(GasEstimation.Type.SLOW, amount, amountInEth, 600)
     }
 
     private fun getRegularEstimations(gasLimit: BigInteger, gasPrice: BigInteger): GasEstimation {
-        val amountWithPrice = gasLimit * gasPrice
-        val amountInEth = etherWeiConverter.fromWeiToEther(amountWithPrice)
+        val gweiPrice = etherWeiConverter.fromWeiToGwei(gasPrice)
+        val amountWithPrice = gasLimit * gweiPrice
+        val amountInEth = etherWeiConverter.fromGweiToEther(amountWithPrice)
         return GasEstimation(GasEstimation.Type.REGULAR, gasLimit, amountInEth, 90)
     }
 
     private fun getFastEstimations(gasLimit: BigInteger, gasPrice: BigInteger): GasEstimation {
         val amount = gasLimit + BigInteger.TEN
-        val amountWithPrice = amount * gasPrice
-        val amountInEth = etherWeiConverter.fromWeiToEther(amountWithPrice)
+        val gweiPrice = etherWeiConverter.fromWeiToGwei(gasPrice)
+        val amountWithPrice = amount * gweiPrice
+        val amountInEth = etherWeiConverter.fromGweiToEther(amountWithPrice)
         return GasEstimation(GasEstimation.Type.FAST, amount, amountInEth, 20)
     }
 
     override fun getBlockChainExplorerUrl(transactionHash: String): Single<String> {
         return Single.fromCallable {
-            appLinksProvider.etherscanExplorerUrl + transactionHash
+            ethereumConfigProvider.config.scanUrl + transactionHash
         }
     }
 
@@ -528,6 +590,7 @@ class EthereumRepositoryImpl @Inject constructor(
                 db.runInTransaction {
                     it.forEach {
                         var status = getWithdrawTransactionStatus(it.confirmTxHash, it.intentTxHash, ethCredentials)
+
                         if (it.status == WithdrawTransactionLocal.Status.INTENT_COMPLETED && it.confirmTxHash.isEmpty() && it.gasLimit > BigInteger.ZERO && it.gasPrice > BigInteger.ZERO) {
                             confirmWithdraw(ethCredentials, it.withdrawAmount, it.intentTxHash, accountId, it.gasPrice, it.gasLimit, tokenAddress)
                                 .runCatching {
@@ -570,7 +633,7 @@ class EthereumRepositoryImpl @Inject constructor(
     }
 
     private fun getDepositStatus(txHash: String): DepositTransactionLocal.Status {
-        val receipt = web3j.ethGetTransactionReceipt(txHash).send()
+        val receipt = web3jProvider.web3j.ethGetTransactionReceipt(txHash).send()
         val blockNumberRaw = receipt.transactionReceipt.get().blockNumberRaw
 
         return if (blockNumberRaw == null) {
@@ -585,7 +648,7 @@ class EthereumRepositoryImpl @Inject constructor(
     }
 
     private fun getTransactionStatus(txHash: String): TransferTransactionLocal.Status {
-        val receipt = web3j.ethGetTransactionReceipt(txHash).send()
+        val receipt = web3jProvider.web3j.ethGetTransactionReceipt(txHash).send()
         val blockNumberRaw = receipt.transactionReceipt.get().blockNumberRaw
 
         return if (blockNumberRaw == null) {
@@ -608,7 +671,7 @@ class EthereumRepositoryImpl @Inject constructor(
                 WithdrawTransactionLocal.Status.CONFIRM_PENDING
             }
         } else {
-            val receipt = web3j.ethGetTransactionReceipt(confirmTxHash).send()
+            val receipt = web3jProvider.web3j.ethGetTransactionReceipt(confirmTxHash).send()
 
             if (receipt.transactionReceipt.isEmpty || receipt.transactionReceipt.get().blockNumberRaw == null) {
                 WithdrawTransactionLocal.Status.CONFIRM_PENDING
@@ -635,7 +698,7 @@ class EthereumRepositoryImpl @Inject constructor(
                 WithdrawTransactionLocal.Status.TRANSFER_PENDING
             }
         } else {
-            val receipt = web3j.ethGetTransactionReceipt(transferTxHash).send()
+            val receipt = web3jProvider.web3j.ethGetTransactionReceipt(transferTxHash).send()
 
             if (receipt.result == null) {
                 WithdrawTransactionLocal.Status.TRANSFER_PENDING

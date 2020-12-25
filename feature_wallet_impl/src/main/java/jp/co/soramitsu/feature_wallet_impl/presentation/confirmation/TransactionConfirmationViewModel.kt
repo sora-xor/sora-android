@@ -37,7 +37,8 @@ class TransactionConfirmationViewModel(
     private val description: String,
     private val peerFullName: String,
     private val peerId: String,
-    private val transferType: TransferType
+    private val transferType: TransferType,
+    private val retrySoranetHash: String
 ) : BaseViewModel(), WithProgress by progress {
 
     private val _amountFormattedLiveData = MutableLiveData<String>()
@@ -107,14 +108,14 @@ class TransactionConfirmationViewModel(
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
 
                 if (peerId == peerFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_val_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_gold_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
 
                 _recipientNameLiveData.value = peerFullName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
-                _inputTokenIconLiveData.value = R.drawable.ic_val_red_24
+                _inputTokenIconLiveData.value = R.drawable.ic_val_gold_24
                 _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
@@ -143,7 +144,7 @@ class TransactionConfirmationViewModel(
                 _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = peerId
                 _outputTitle.value = resourceManager.getString(R.string.wallet_withdraw)
-                _inputTokenIconLiveData.value = R.drawable.ic_val_red_24
+                _inputTokenIconLiveData.value = R.drawable.ic_val_gold_24
                 _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
@@ -160,7 +161,7 @@ class TransactionConfirmationViewModel(
                 _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = peerId
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
-                _inputTokenIconLiveData.value = R.drawable.ic_double_token_24
+                _inputTokenIconLiveData.value = R.drawable.ic_double_24
                 _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
@@ -184,7 +185,7 @@ class TransactionConfirmationViewModel(
                 _minerFeeFormattedLiveData.value = "$minerFee ${resourceManager.getString(R.string.transaction_eth_sign)}"
                 _recipientNameLiveData.value = peerFullName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
-                _inputTokenIconLiveData.value = R.drawable.ic_double_token_24
+                _inputTokenIconLiveData.value = R.drawable.ic_double_24
                 _inputTokenNameLiveData.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastNameLiveData.value = AssetHolder.SORA_VAL.assetLastName
             }
@@ -196,12 +197,18 @@ class TransactionConfirmationViewModel(
     }
 
     fun nextClicked() {
-        when (transferType) {
-            TransferType.VAL_TRANSFER -> soraNetTransferToRecipient()
-            TransferType.VALERC_TRANSFER -> valErcTransferToRecipient()
-            TransferType.VAL_WITHDRAW -> withdraw()
-            TransferType.VALVALERC_TO_VALERC -> combinedValErcTransferToRecipient()
-            TransferType.VALVALERC_TO_VAL -> combinedValTransferToRecipient()
+        if (retrySoranetHash.isEmpty()) {
+            when (transferType) {
+                TransferType.VAL_TRANSFER -> soraNetTransferToRecipient()
+                TransferType.VALERC_TRANSFER -> valErcTransferToRecipient()
+                TransferType.VAL_WITHDRAW -> withdraw()
+                TransferType.VALVALERC_TO_VALERC -> combinedValErcTransferToRecipient()
+                TransferType.VALVALERC_TO_VAL -> combinedValTransferToRecipient()
+            }
+        } else {
+            when (transferType) {
+                TransferType.VAL_WITHDRAW -> retryWithdraw()
+            }
         }
     }
 
@@ -238,6 +245,21 @@ class TransactionConfirmationViewModel(
     private fun withdraw() {
         disposables.add(
             ethereumInteractor.startWithdraw(amount, peerId, transactionFee.toString())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { showProgress() }
+                .doOnTerminate { hideProgress() }
+                .subscribe({
+                    router.returnToWalletFragment()
+                }, {
+                    onError(it)
+                })
+        )
+    }
+
+    private fun retryWithdraw() {
+        disposables.add(
+            ethereumInteractor.retryWithdrawTransaction(retrySoranetHash)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { showProgress() }

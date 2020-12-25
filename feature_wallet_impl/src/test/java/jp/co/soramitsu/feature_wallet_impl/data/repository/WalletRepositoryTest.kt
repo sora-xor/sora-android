@@ -113,8 +113,10 @@ class WalletRepositoryTest {
         val transactions = mutableListOf(
             Transaction(
                 "",
+                "",
                 "transactionId",
                 Transaction.Status.COMMITTED,
+                Transaction.DetailedStatus.TRANSFER_COMPLETED,
                 AssetHolder.SORA_XOR.id,
                 "myAddress",
                 "details",
@@ -130,7 +132,9 @@ class WalletRepositoryTest {
             Transaction(
                 "transactionId",
                 "",
+                "",
                 Transaction.Status.COMMITTED,
+                Transaction.DetailedStatus.TRANSFER_COMPLETED,
                 AssetHolder.SORA_XOR_ERC_20.id,
                 "myAddress",
                 "details",

@@ -9,8 +9,10 @@ import java.math.BigDecimal
 
 data class Transaction(
     val ethTxHash: String,
+    val secondTxHash: String,
     val soranetTxHash: String,
     val status: Status,
+    val detailedStatus: DetailedStatus,
     val assetId: String?,
     val myAddress: String,
     val details: String,
@@ -27,6 +29,23 @@ data class Transaction(
         PENDING,
         COMMITTED,
         REJECTED
+    }
+
+    enum class DetailedStatus {
+        INTENT_STARTED,
+        INTENT_PENDING,
+        INTENT_COMPLETED,
+        INTENT_FAILED,
+        CONFIRM_PENDING,
+        CONFIRM_COMPLETED,
+        CONFIRM_FAILED,
+        TRANSFER_PENDING,
+        TRANSFER_FAILED,
+        TRANSFER_COMPLETED,
+        DEPOSIT_PENDING,
+        DEPOSIT_FAILED,
+        DEPOSIT_COMPLETED,
+        DEPOSIT_RECEIVED,
     }
 
     enum class Type {

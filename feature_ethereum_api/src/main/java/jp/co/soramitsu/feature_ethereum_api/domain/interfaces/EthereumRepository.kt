@@ -53,7 +53,7 @@ interface EthereumRepository {
 
     fun observeEthRegisterState(): Observable<EthRegisterState.State>
 
-    fun getGasEstimations(ethCredentials: EthereumCredentials): Single<Gas>
+    fun getGasEstimations(gasLimit: BigInteger, ethCredentials: EthereumCredentials): Single<Gas>
 
     fun getBlockChainExplorerUrl(transactionHash: String): Single<String>
 
@@ -70,4 +70,8 @@ interface EthereumRepository {
     fun processLastCombinedDepositTransaction(first: EthereumCredentials): Completable
 
     fun isBridgeEnabled(ethCredentials: EthereumCredentials): Single<Boolean>
+
+    fun calculateValErc20CombinedFee(): Single<BigDecimal>
+
+    fun retryWithdraw(ethCredentials: EthereumCredentials, soranetHash: String, accountId: String, tokenAddress: String, keyPair: KeyPair): Completable
 }

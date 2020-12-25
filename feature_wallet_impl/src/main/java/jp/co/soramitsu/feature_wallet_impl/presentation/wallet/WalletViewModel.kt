@@ -92,9 +92,9 @@ class WalletViewModel(
 
             add(loadSoraAddress())
 
-            add(loadTransactions())
-
             add(loadAssets())
+
+            add(loadTransactions())
         }
     }
 
@@ -164,9 +164,8 @@ class WalletViewModel(
 
     fun eventClicked(eventItem: SoraTransaction) {
         transactions?.firstOrNull { isSameId(it, eventItem) }?.apply {
-            val statusString = status.toString().substring(0, 1).toUpperCase() + status.toString().substring(1).toLowerCase()
             val date = Date(timestampInMillis)
-            router.showTransactionDetailsFromList(myAddress, peerId ?: "", peerName, ethTxHash, soranetTxHash, amount, statusString,
+            router.showTransactionDetailsFromList(myAddress, peerId ?: "", peerName, ethTxHash, secondTxHash, soranetTxHash, amount, status, detailedStatus,
                 assetId ?: "", date, type, details, ethFee, soranetFee, amount + soranetFee + ethFee)
         }
     }
@@ -226,7 +225,7 @@ class WalletViewModel(
     private fun loadTransactions(): Disposable {
         return interactor.getTransactions()
             .doOnNext { transactions = it }
-            .map { transactionMappers.mapTransactionToSoraTransactionWithHeaders(it, assetAddresses[SORA_VAL.id]!!, assetAddresses[SORA_VAL_ERC_20.id]!!) }
+            .map { transactionMappers.mapTransactionToSoraTransactionWithHeaders(it, assetAddresses[SORA_VAL.id], assetAddresses[SORA_VAL_ERC_20.id]) }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({
@@ -338,7 +337,7 @@ class WalletViewModel(
             numbersFormatter.formatBigDecimal(it, valAsset.roundingPrecision)
         }
 
-        val valAssetIconResource = R.drawable.ic_val_red_24
+        val valAssetIconResource = R.drawable.ic_val_gold_24
         val valAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
 
         val ethAsset = assets.first { ETHER_ETH.id == it.id }

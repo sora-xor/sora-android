@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation
 
+import android.app.ActivityManager
+import android.app.ActivityManager.RunningAppProcessInfo
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
@@ -13,6 +15,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
 import androidx.navigation.NavController
@@ -75,10 +78,14 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         }
     }
 
-    @Inject lateinit var mainRouter: MainRouter
-    @Inject lateinit var eventsObservingStarter: EventsObservingStarter
-    @Inject lateinit var ethServiceStarter: EthServiceStarter
-    @Inject lateinit var ethStatusPollingServiceStarter: EthStatusPollingServiceStarter
+    @Inject
+    lateinit var mainRouter: MainRouter
+    @Inject
+    lateinit var eventsObservingStarter: EventsObservingStarter
+    @Inject
+    lateinit var ethServiceStarter: EthServiceStarter
+    @Inject
+    lateinit var ethStatusPollingServiceStarter: EthStatusPollingServiceStarter
 
     private var timeInBackground: Date? = null
 
@@ -145,6 +152,14 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
             }
         })
 
+        viewModel.ethereumConfigStateLiveData.observe(this, Observer {
+            if (it) {
+                hideBadConnectionView()
+            } else {
+                showBadConnectionView(R.string.ethereum_config_unavailable)
+            }
+        })
+
         viewModel.addInviteIsPossibleLiveData.observe(this, EventObserver {
             val message = getString(R.string.invite_enter_confirmation_body_mask, it)
             AlertDialog.Builder(this)
@@ -172,8 +187,9 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         }
     }
 
-    private fun showBadConnectionView() {
+    private fun showBadConnectionView(@StringRes content: Int = R.string.common_network_unavailable) {
         if (View.GONE == badConnectionView.visibility) {
+            badConnectionView.setText(content)
             val animation = TranslateAnimation(0f, 0f, -ANIM_START_POSITION, 0f)
             animation.duration = ANIM_DURATION
             badConnectionView.startAnimation(animation)
@@ -248,11 +264,22 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         }
         timeInBackground = null
         super.onResume()
+        runServices()
+    }
 
-        Handler().postDelayed({
-            eventsObservingStarter.startObserver()
-            ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
-        }, SERVICE_START_DELAY)
+    private fun runServices() {
+        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val runningAppProcesses = activityManager.runningAppProcesses
+        if (runningAppProcesses != null) {
+            val importance = runningAppProcesses[0].importance
+
+            if (importance <= RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                Handler().postDelayed({
+                    eventsObservingStarter.startObserver()
+                    ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
+                }, SERVICE_START_DELAY)
+            }
+        }
     }
 
     private fun idleTimePassedFrom(timeInBackground: Date): Boolean {

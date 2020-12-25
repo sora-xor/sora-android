@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">업데이트된 소라 응용 프로그램은 구글 플레이에서 사용할 수 있습니다. 여기에는 개선 및 버그 수정이 포함되어 있습니다.</string>
   <string name="common_unsupported_version_open_google_play">구글 플레이 열기</string>
   <string name="common_select_email_app_title">이메일 앱 선택</string>
+  <string name="ethereum_config_unavailable">이더 리움 노드를 사용할 수 없음</string>
   <string name="common_network_unavailable">네트워크 연결을 사용할 수 없음</string>
   <string name="common_privacy_title">개인정보보호정책</string>
   <string name="common_save">저장</string>
@@ -292,7 +293,7 @@
   <string name="unknown_balance">알 수 없음</string>
   <string name="xor_balance_title">다른 네트워크의 XOR 토큰</string>
   <string name="copy_xor_title">Sora (XOR) 지갑 주소 복사</string>
-  <string name="copy_eth_title">Eth (ETH) 지갑 주소 복사</string>
+  <string name="copy_eth_title">Ethereum (ETH) 지갑 주소 복사</string>
   <string name="view_balance">Sora (XOR) 토큰 할당보기</string>
   <string name="referendum_ends_in_title">끝</string>
   <string name="referendum_support_title">네</string>
@@ -324,12 +325,13 @@
   <string name="common_arab">아라비아 사람</string>
   <string name="activity_project_funded_description_template_val">곧 VAL 보상에 대한 정보를 받게 됩니다.</string>
   <string name="wallet_val_to_my_eth">내 이더리움 계좌로</string>
-  <string name="copy_val_title">Sora (VAL) 지갑 주소 복사</string>
+  <string name="copy_val_title">SORA NET (VAL) 지갑 주소 복사</string>
   <string name="val_balance_title">다른 네트워크의 VAL 토큰</string>
   <string name="activity_val_between_users_transferred_type_template">VAL 수신됨</string>
   <string name="activity_val_reward_credited_from_project_type_template">투표에 대한 VAL 보상</string>
   <string name="wallet_receive_val">수신 VAL</string>
-  <string name="view_balance_val">Sora (VAL) 토큰 할당보기</string>
+  <string name="view_balance_val">SORA NET (VAL) 토큰 할당보기</string>
   <string name="transaction_bridge_not_active_error">이더 리움 브리지가 활성화되지 않았습니다.</string>
   <string name="transaction_bridge_info">이더 리움 브리지 정보</string>
+  <string name="common_retry">다시 해 보다</string>
 </resources>

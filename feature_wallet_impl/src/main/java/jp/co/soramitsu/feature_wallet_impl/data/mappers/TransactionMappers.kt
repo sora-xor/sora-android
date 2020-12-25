@@ -91,12 +91,14 @@ fun mapTransactionLocalToTransaction(transactionLocal: TransferTransactionLocal)
             } else {
                 ""
             },
+            "",
             if (assetId == AssetHolder.SORA_XOR.id || assetId == AssetHolder.SORA_VAL.id) {
                 txHash
             } else {
                 ""
             },
             mapTransactionStatusLocalToTransactionStatus(status),
+            mapTransactionStatusLocalToTransactionDetailedStatus(status),
             assetId,
             myAddress,
             details,
@@ -128,6 +130,14 @@ fun mapTransactionStatusLocalToTransactionStatus(statusRemote: TransferTransacti
     }
 }
 
+fun mapTransactionStatusLocalToTransactionDetailedStatus(statusRemote: TransferTransactionLocal.Status): Transaction.DetailedStatus {
+    return when (statusRemote) {
+        TransferTransactionLocal.Status.COMMITTED -> Transaction.DetailedStatus.TRANSFER_COMPLETED
+        TransferTransactionLocal.Status.PENDING -> Transaction.DetailedStatus.TRANSFER_PENDING
+        TransferTransactionLocal.Status.REJECTED -> Transaction.DetailedStatus.TRANSFER_FAILED
+    }
+}
+
 fun mapTransactionTypeLocalToTransactionType(typeRemote: TransferTransactionLocal.Type): Transaction.Type {
     return when (typeRemote) {
         TransferTransactionLocal.Type.INCOMING -> Transaction.Type.INCOMING
@@ -141,9 +151,11 @@ fun mapTransactionTypeLocalToTransactionType(typeRemote: TransferTransactionLoca
 fun mapWithdrawTransactionLocalToTransaction(transactionLocal: WithdrawTransactionLocal, myAccountId: String, myEthAddress: String): Transaction {
     return with(transactionLocal) {
         Transaction(
+            transactionLocal.confirmTxHash,
             transactionLocal.transferTxHash,
             intentTxHash,
             mapWithdrawTransactionStatusLocalToTransactionStatus(status, transferAmount != BigDecimal.ZERO),
+            mapWithdrawTransactionStatusLocalToTransactionDetailedStatus(status),
             AssetHolder.SORA_VAL_ERC_20.id,
             if (transferPeerId.isNullOrEmpty()) {
                 myAccountId
@@ -186,6 +198,20 @@ fun mapWithdrawTransactionStatusLocalToTransactionStatus(statusLocal: WithdrawTr
                 Transaction.Status.COMMITTED
             }
         WithdrawTransactionLocal.Status.TRANSFER_COMPLETED -> Transaction.Status.COMMITTED
+    }
+}
+
+fun mapWithdrawTransactionStatusLocalToTransactionDetailedStatus(statusLocal: WithdrawTransactionLocal.Status): Transaction.DetailedStatus {
+    return when (statusLocal) {
+        WithdrawTransactionLocal.Status.INTENT_FAILED -> Transaction.DetailedStatus.INTENT_FAILED
+        WithdrawTransactionLocal.Status.INTENT_PENDING, WithdrawTransactionLocal.Status.INTENT_STARTED -> Transaction.DetailedStatus.INTENT_PENDING
+        WithdrawTransactionLocal.Status.INTENT_COMPLETED -> Transaction.DetailedStatus.INTENT_COMPLETED
+        WithdrawTransactionLocal.Status.CONFIRM_FAILED -> Transaction.DetailedStatus.CONFIRM_FAILED
+        WithdrawTransactionLocal.Status.CONFIRM_PENDING -> Transaction.DetailedStatus.CONFIRM_PENDING
+        WithdrawTransactionLocal.Status.CONFIRM_COMPLETED -> Transaction.DetailedStatus.CONFIRM_COMPLETED
+        WithdrawTransactionLocal.Status.TRANSFER_FAILED -> Transaction.DetailedStatus.TRANSFER_FAILED
+        WithdrawTransactionLocal.Status.TRANSFER_COMPLETED -> Transaction.DetailedStatus.TRANSFER_COMPLETED
+        WithdrawTransactionLocal.Status.TRANSFER_PENDING -> Transaction.DetailedStatus.TRANSFER_PENDING
     }
 }
 
@@ -245,8 +271,10 @@ fun mapDepositTransactionLocalToTransaction(transactionLocal: DepositTransaction
     return with(transactionLocal) {
         Transaction(
             transactionLocal.depositTxHash,
+            "",
             transactionLocal.transferTxHash,
             mapDepositTransactionLocalStatusToTransactionStatus(status),
+            mapDepositTransactionLocalStatusToTransactionDetailedStatus(status),
             AssetHolder.SORA_VAL_ERC_20.id,
             myEthAddress,
             details,
@@ -267,6 +295,17 @@ fun mapDepositTransactionLocalStatusToTransactionStatus(status: DepositTransacti
         DepositTransactionLocal.Status.DEPOSIT_PENDING, DepositTransactionLocal.Status.DEPOSIT_RECEIVED, DepositTransactionLocal.Status.TRANSFER_PENDING -> Transaction.Status.PENDING
         DepositTransactionLocal.Status.DEPOSIT_FAILED, DepositTransactionLocal.Status.TRANSFER_FAILED -> Transaction.Status.REJECTED
         DepositTransactionLocal.Status.TRANSFER_COMPLETED, DepositTransactionLocal.Status.DEPOSIT_COMPLETED -> Transaction.Status.COMMITTED
+    }
+}
+
+fun mapDepositTransactionLocalStatusToTransactionDetailedStatus(status: DepositTransactionLocal.Status): Transaction.DetailedStatus {
+    return when (status) {
+        DepositTransactionLocal.Status.DEPOSIT_PENDING -> Transaction.DetailedStatus.DEPOSIT_PENDING
+        DepositTransactionLocal.Status.DEPOSIT_FAILED -> Transaction.DetailedStatus.DEPOSIT_FAILED
+        DepositTransactionLocal.Status.DEPOSIT_COMPLETED, DepositTransactionLocal.Status.DEPOSIT_RECEIVED -> Transaction.DetailedStatus.DEPOSIT_COMPLETED
+        DepositTransactionLocal.Status.TRANSFER_FAILED -> Transaction.DetailedStatus.TRANSFER_FAILED
+        DepositTransactionLocal.Status.TRANSFER_COMPLETED -> Transaction.DetailedStatus.TRANSFER_COMPLETED
+        DepositTransactionLocal.Status.TRANSFER_PENDING -> Transaction.DetailedStatus.TRANSFER_COMPLETED
     }
 }
 

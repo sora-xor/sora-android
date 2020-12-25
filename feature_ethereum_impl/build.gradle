@@ -35,27 +35,18 @@ android {
 
     productFlavors {
         develop {
-            buildConfigField "String", "ETH_HOST_URL", "\"https://ropsten.infura.io/v3/6b7733290b9a4156bf62a4ba105b76ec\""
-            buildConfigField "String", "MASTER_CONTRACT_ADDRESS", "\"0x9d4ca2af7cc11638d47997c8c5f82b9d53cc4ce5\""
             dimension 'default'
         }
 
         tst {
-            buildConfigField "String", "ETH_HOST_URL", "\"https://rinkeby.infura.io/v3/d474ba6eb5ae4552bd4c26d460a135a2\""
-            buildConfigField "String", "MASTER_CONTRACT_ADDRESS", "\"0xbbf10481398c7110d8d0640e8c56afcb8ad43a62\""
             dimension 'default'
         }
 
         staging {
-            buildConfigField "String", "ETH_HOST_URL", "\"https://rinkeby.infura.io/v3/d474ba6eb5ae4552bd4c26d460a135a2\""
-            buildConfigField "String", "MASTER_CONTRACT_ADDRESS", "\"0x27ed23f7bbb76eb8d461a6361704bda12a2669e2\""
             dimension 'default'
         }
 
         production {
-            buildConfigField "String", "ETH_HOST_URL", "\"https://parity-mainnet-open.s0.dev.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "MASTER_CONTRACT_ADDRESS", "\"0xc08edf13be9b9cc584c5da8004ce7e6be63c1316\""
-            buildConfigField "String", "FEE_CALCULATION_ADDRESS", "\"0x43fd5530789ce64a6569d882cfdfa07c7ed33be6\""
             dimension 'default'
         }
     }

@@ -47,6 +47,9 @@ interface TransactionConfirmationComponent {
         fun withPeerFullName(@Named("peerFullName") fullName: String): Builder
 
         @BindsInstance
+        fun withRetrySoranetHash(@Named("retrySoranetHash") retrySoranetHash: String): Builder
+
+        @BindsInstance
         fun withPeerId(@Named("peerId") peerId: String): Builder
 
         @BindsInstance

@@ -64,10 +64,11 @@ class TransactionConfirmationModule {
         @Named("description") description: String,
         @Named("peerFullName") peerFullName: String,
         @Named("peerId") peerId: String,
+        @Named("retrySoranetHash") retrySoranetHash: String,
         transferType: TransferType
     ): ViewModel {
         return TransactionConfirmationViewModel(walletInteractor, ethereumInteractor, router, progress, resourceManager,
-            numbersFormatter, textFormatter, partialAmount, amount, minerFee, transactionFee, description, peerFullName, peerId, transferType)
+            numbersFormatter, textFormatter, partialAmount, amount, minerFee, transactionFee, description, peerFullName, peerId, transferType, retrySoranetHash)
     }
 
     @Provides

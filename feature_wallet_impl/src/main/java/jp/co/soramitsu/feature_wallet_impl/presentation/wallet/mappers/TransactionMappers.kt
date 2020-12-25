@@ -26,48 +26,52 @@ class TransactionMappers @Inject constructor(
 
     fun mapTransactionToSoraTransactionWithHeaders(
         transactions: List<Transaction>,
-        myAccountId: String,
-        myEthAddress: String
+        myAccountId: String?,
+        myEthAddress: String?
     ): List<Any> {
         val transactionsWithHeaders = mutableListOf<Any>()
         var lastDateString = ""
 
-        transactions.forEach {
-            val createdAt = Date(it.timestampInMillis)
+        myAccountId?.let {
+            myEthAddress?.let {
+                transactions.forEach {
+                    val createdAt = Date(it.timestampInMillis)
 
-            val soraTransaction = with(it) {
-                val statusIcon = getIcon(it)
-                val title = getTitle(it, myAccountId, myEthAddress)
-                val details: String = getDetails(it, myAccountId, myEthAddress)
-                val dateString = dateTimeFormatter.formatDate(createdAt, DateTimeFormatter.DD_MMM_YYYY_HH_MM_SS)
-                val assetName = when (assetId) {
-                    AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR_ERC_20.id -> resourceManager.getString(R.string.xor)
-                    AssetHolder.SORA_VAL.id, AssetHolder.SORA_VAL_ERC_20.id -> resourceManager.getString(R.string.val_token)
-                    AssetHolder.ETHER_ETH.id -> resourceManager.getString(R.string.transaction_eth_sign)
-                    else -> resourceManager.getString(R.string.val_token)
+                    val soraTransaction = with(it) {
+                        val statusIcon = getIcon(it)
+                        val title = getTitle(it, myAccountId, myEthAddress)
+                        val details: String = getDetails(it, myAccountId, myEthAddress)
+                        val dateString = dateTimeFormatter.formatDate(createdAt, DateTimeFormatter.DD_MMM_YYYY_HH_MM_SS)
+                        val assetName = when (assetId) {
+                            AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR_ERC_20.id -> resourceManager.getString(R.string.xor)
+                            AssetHolder.SORA_VAL.id, AssetHolder.SORA_VAL_ERC_20.id -> resourceManager.getString(R.string.val_token)
+                            AssetHolder.ETHER_ETH.id -> resourceManager.getString(R.string.transaction_eth_sign)
+                            else -> resourceManager.getString(R.string.val_token)
+                        }
+
+                        val amountFormatted = "${numbersFormatter.formatBigDecimal(it.amount)} $assetName"
+
+                        SoraTransaction(
+                            it.soranetTxHash + it.ethTxHash,
+                            Transaction.Type.OUTGOING != it.type && Transaction.Type.WITHDRAW != it.type,
+                            statusIcon,
+                            peerName.getInitials(),
+                            title,
+                            details,
+                            dateString,
+                            amountFormatted
+                        )
+                    }
+
+                    val dayString = dateTimeFormatter.dateToDayWithoutCurrentYear(createdAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
+
+                    if (lastDateString != dayString) {
+                        lastDateString = dayString
+                        transactionsWithHeaders.add(EventHeader(dayString))
+                    }
+                    transactionsWithHeaders.add(soraTransaction)
                 }
-
-                val amountFormatted = "${numbersFormatter.formatBigDecimal(it.amount)} $assetName"
-
-                SoraTransaction(
-                    it.soranetTxHash + it.ethTxHash,
-                    Transaction.Type.OUTGOING != it.type && Transaction.Type.WITHDRAW != it.type,
-                    statusIcon,
-                    peerName.getInitials(),
-                    title,
-                    details,
-                    dateString,
-                    amountFormatted
-                )
             }
-
-            val dayString = dateTimeFormatter.dateToDayWithoutCurrentYear(createdAt, resourceManager.getString(R.string.common_today), resourceManager.getString(R.string.common_yesterday))
-
-            if (lastDateString != dayString) {
-                lastDateString = dayString
-                transactionsWithHeaders.add(EventHeader(dayString))
-            }
-            transactionsWithHeaders.add(soraTransaction)
         }
 
         return transactionsWithHeaders
@@ -91,7 +95,7 @@ class TransactionMappers @Inject constructor(
                         if (assetId == AssetHolder.SORA_XOR.id) {
                             R.drawable.ic_xor_red_30
                         } else {
-                            R.drawable.ic_val_red_30
+                            R.drawable.ic_val_gold_30
                         }
                     }
                 }

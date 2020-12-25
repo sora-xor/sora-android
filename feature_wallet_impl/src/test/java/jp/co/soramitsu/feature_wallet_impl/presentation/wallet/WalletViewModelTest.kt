@@ -76,8 +76,10 @@ class WalletViewModelTest {
 
     private val transactions = mutableListOf(Transaction(
         "",
+        "",
         "transactionId",
         Transaction.Status.COMMITTED,
+        Transaction.DetailedStatus.TRANSFER_COMPLETED,
         "assetId",
         "myAddress",
         "details",
@@ -171,9 +173,11 @@ class WalletViewModelTest {
             tx.peerId!!,
             tx.peerName,
             tx.ethTxHash,
+            "",
             tx.soranetTxHash,
             tx.amount,
-            "Committed",
+            Transaction.Status.COMMITTED,
+            Transaction.DetailedStatus.TRANSFER_COMPLETED,
             tx.assetId!!,
             date,
             tx.type,

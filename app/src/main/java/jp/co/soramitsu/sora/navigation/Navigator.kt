@@ -110,8 +110,16 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForWithdraw(etherAddress, "", amount))
     }
 
+    override fun showWithdrawRetryFragment(soranetTransactionId: String, ethTransactionId: String, peerId: String, amount: BigDecimal, isTxFeeNeeded: Boolean) {
+        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForWithdrawRetry(soranetTransactionId, ethTransactionId, peerId, amount, isTxFeeNeeded))
+    }
+
     override fun showTransactionConfirmation(peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, description: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType) {
         navController?.navigate(R.id.transactionConfirmation, TransactionConfirmationFragment.createBundle(peerId, fullName, partialAmount, amount, description, minerFee, transactionFee, transferType))
+    }
+
+    override fun showRetryTransactionConfirmation(soranetHash: String, peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, description: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType) {
+        navController?.navigate(R.id.transactionConfirmation, TransactionConfirmationFragment.createRetryBundle(soranetHash, peerId, fullName, partialAmount, amount, description, minerFee, transactionFee, transferType))
     }
 
     override fun showUnsupportedScreen(appUrl: String) {
@@ -147,9 +155,11 @@ class Navigator : MainRouter, WalletRouter {
         peerId: String,
         recipientFullName: String,
         ethTransactionId: String,
+        secondEthTransactionId: String,
         soranetTransactionId: String,
         amount: BigDecimal,
-        status: String,
+        status: Transaction.Status,
+        detailedStatus: Transaction.DetailedStatus,
         assetId: String,
         dateTime: Date,
         type: Transaction.Type,
@@ -159,7 +169,7 @@ class Navigator : MainRouter, WalletRouter {
         totalAmount: BigDecimal
     ) {
         val bundle = TransactionDetailsFragment.createBundleFromList(myAccountId, peerId, recipientFullName,
-            ethTransactionId, soranetTransactionId, amount, status, assetId, dateTime, type, description, minerFee, transactionFee, totalAmount)
+            ethTransactionId, secondEthTransactionId, soranetTransactionId, amount, status, detailedStatus, assetId, dateTime, type, description, minerFee, transactionFee, totalAmount)
         navController?.navigate(R.id.transactionDetails, bundle)
     }
 
