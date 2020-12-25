@@ -36,6 +36,9 @@ class MainViewModel(
     private val _badConnectionVisibilityLiveData = MutableLiveData<Boolean>()
     val badConnectionVisibilityLiveData: LiveData<Boolean> = _badConnectionVisibilityLiveData
 
+    private val _ethereumConfigStateLiveData = MutableLiveData<Boolean>()
+    val ethereumConfigStateLiveData: LiveData<Boolean> = _ethereumConfigStateLiveData
+
     private val _addInviteIsPossibleLiveData = MutableLiveData<Event<String>>()
     val addInviteIsPossibleLiveData: LiveData<Event<String>> = _addInviteIsPossibleLiveData
 
@@ -49,6 +52,18 @@ class MainViewModel(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     _badConnectionVisibilityLiveData.setValueIfNew(!it)
+                }, {
+                    it.printStackTrace()
+                })
+        )
+        disposables.add(
+            healthChecker.observeEthereumConfigState()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    if (_badConnectionVisibilityLiveData.value != true) {
+                        _ethereumConfigStateLiveData.setValueIfNew(it)
+                    }
                 }, {
                     it.printStackTrace()
                 })

@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">Aplikasi Sora yang Diperbarui tersedia di Google Play. Ini termasuk perbaikan dan perbaikan bug.</string>
   <string name="common_unsupported_version_open_google_play">Buka Google Play</string>
   <string name="common_select_email_app_title">Pilih aplikasi email</string>
+  <string name="ethereum_config_unavailable">Node Ethereum tidak tersedia</string>
   <string name="common_network_unavailable">Koneksi jaringan tidak tersedia</string>
   <string name="common_privacy_title">Kebijakan Privasi</string>
   <string name="common_save">Simpan</string>
@@ -235,7 +236,7 @@
   <string name="contacts_search_hint_v1">ID akun, nomor telepon</string>
   <string name="wallet_xor_to_my_eth">Akan diambil dari akun Ethereum Anda</string>
   <string name="wallet_ethereum">Ethereum</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">Total</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_note">Catatan</string>
@@ -263,12 +264,12 @@
   <string name="asset_state_associating">Asosiasi</string>
   <string name="asset_state_error">Kesalahan</string>
   <string name="common_add">Menambahkan</string>
-  <string name="wallet_history_to_my_soranet_title">Ke akun Soranet Saya</string>
+  <string name="wallet_history_to_my_soranet_title">Ke akun SORA NET Saya</string>
   <string name="wallet_history_to_my_ethereum_title">Ke alamat Ethereum Saya</string>
   <string name="wallet_history_reward_from_system">Hadiah dari sistem</string>
   <string name="wallet_history_from_ethereum_address_title">Dari alamat Ethereum</string>
-  <string name="wallet_history_from_soranet_address_title">Dari akun Soranet</string>
-  <string name="wallet_history_to_soranet_account">Ke akun Soranet</string>
+  <string name="wallet_history_from_soranet_address_title">Dari akun SORA NET</string>
+  <string name="wallet_history_to_soranet_account">Ke akun SORA NET</string>
   <string name="wallet_history_to_ethereum_address">Ke alamat Ethereum</string>
   <string name="common_french">Bahasa Perancis</string>
   <string name="common_ukrainian">Bahasa Ukraina</string>
@@ -292,7 +293,7 @@
   <string name="unknown_balance">Tidak diketahui</string>
   <string name="xor_balance_title">Token XOR di jaringan yang berbeda</string>
   <string name="copy_xor_title">Salin alamat dompet Sora (XOR)</string>
-  <string name="copy_eth_title">Salin alamat dompet Eth (ETH)</string>
+  <string name="copy_eth_title">Salin alamat dompet Ethereum (ETH)</string>
   <string name="view_balance">Lihat alokasi token Sora (XOR)</string>
   <string name="referendum_ends_in_title">Berakhir di</string>
   <string name="referendum_support_title">Iya</string>
@@ -324,12 +325,13 @@
   <string name="common_arab">Arab</string>
   <string name="activity_project_funded_description_template_val">Saate teavet VAL-i preemia kohta varsti</string>
   <string name="wallet_val_to_my_eth">VAL minu Ethereumi kontole</string>
-  <string name="copy_val_title">Kopeeri Sora (VAL) rahakoti aadress</string>
+  <string name="copy_val_title">Kopeeri SORA NET (VAL) rahakoti aadress</string>
   <string name="val_balance_title">VAL-märgis erinevates võrkudes</string>
   <string name="activity_val_between_users_transferred_type_template">VAL vastu võetud</string>
   <string name="activity_val_reward_credited_from_project_type_template">VAL Preemia hääletamise eest</string>
   <string name="wallet_receive_val">Võta vastu VAL</string>
-  <string name="view_balance_val">Lihat alokasi token Sora (VAL)</string>
+  <string name="view_balance_val">Lihat alokasi token SORA NET (VAL)</string>
   <string name="transaction_bridge_not_active_error">Jembatan Ethereum tidak aktif.</string>
   <string name="transaction_bridge_info">Info jembatan Ethereum</string>
+  <string name="common_retry">Mencoba kembali</string>
 </resources>

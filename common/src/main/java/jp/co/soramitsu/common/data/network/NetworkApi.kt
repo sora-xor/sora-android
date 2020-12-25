@@ -8,6 +8,8 @@ package jp.co.soramitsu.common.data.network
 import jp.co.soramitsu.common.data.network.auth.AuthHolder
 import jp.co.soramitsu.common.data.network.sse.SseClient
 import jp.co.soramitsu.common.domain.AppLinksProvider
+import okhttp3.OkHttpClient
+import javax.inject.Named
 
 interface NetworkApi {
 
@@ -22,4 +24,6 @@ interface NetworkApi {
     fun appLinksProvider(): AppLinksProvider
 
     fun provideSseClient(): SseClient
+
+    @Named("WEB3J_CLIENT") fun provideWeb3jOkHttpClient(): OkHttpClient.Builder
 }

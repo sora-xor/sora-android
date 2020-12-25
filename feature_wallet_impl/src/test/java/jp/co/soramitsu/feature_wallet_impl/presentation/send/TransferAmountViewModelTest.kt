@@ -98,7 +98,7 @@ class TransferAmountViewModelTest {
             .willReturn(fixedFeeStr)
 
         transferAmountViewModel = TransferAmountViewModel(walletInteractor, ethereumInteractor, router,
-            progress, numbersFormatter, dateTimeFormatter, textFormatter, resourceManager, recipientId, recipientFullName, initialAmount, transferType)
+            progress, numbersFormatter, dateTimeFormatter, textFormatter, resourceManager, recipientId, recipientFullName, "", "", initialAmount, true, transferType)
     }
 
     @Test

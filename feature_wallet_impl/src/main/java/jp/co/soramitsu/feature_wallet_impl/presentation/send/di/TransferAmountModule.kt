@@ -54,11 +54,14 @@ class TransferAmountModule {
         resourceManager: ResourceManager,
         @Named("recipientId") recipientId: String,
         @Named("recipientFullName") recipientFullName: String,
+        @Named("retrySoranetHash") retrySoranetHash: String,
+        @Named("retryEthHash") retryEthHash: String,
+        @Named("isTxFeeNeeded") isTxFeeNeeded: Boolean,
         initialAmount: BigDecimal,
         transferType: TransferType
     ): ViewModel {
         return TransferAmountViewModel(walletInteractor, etherInteractor, router, progress, numbersFormatter, dateTimeFormatter, textFormatter, resourceManager,
-            recipientId, recipientFullName, initialAmount, transferType)
+            recipientId, recipientFullName, retrySoranetHash, retryEthHash, initialAmount, isTxFeeNeeded, transferType)
     }
 
     @Provides

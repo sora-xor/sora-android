@@ -39,8 +39,8 @@ import java.math.BigInteger
 class GasSelectBottomSheetDialog(
     context: Context,
     debounceClickHandler: DebounceClickHandler,
-    private val selectGasDialogInitialData: SelectGasDialogInitialData,
-    itemClickListener: (GasEstimationItem, BigInteger) -> Unit,
+    private var selectGasDialogInitialData: SelectGasDialogInitialData,
+    private val itemClickListener: (GasEstimationItem, BigInteger) -> Unit,
     gasLimitAndPriceInputChanged: (BigInteger, BigInteger) -> Unit,
     advancedStateDisabledEvent: () -> Unit
 ) : BottomSheetDialog(context, R.style.BottomSheetDialog) {
@@ -127,25 +127,27 @@ class GasSelectBottomSheetDialog(
         }
 
         selectGasAdapter = SelectGasAdapter(debounceClickHandler) {
-            selectGasAdapter.selectedGasEstimationItem = it.type
-            submitGasInEth(it.amountInEthFormatted)
-            submitEstimationTime(it.timeFormatted)
-            itemClickListener(it, selectGasDialogInitialData.defaultGasPrice)
-            selectGasAdapter.notifyDataSetChanged()
+            estimationClicked(it)
         }
 
-        selectGasAdapter.submitList(selectGasDialogInitialData.gasEstimationItems)
         gasRecyclerView.adapter = selectGasAdapter
 
+        selectGasAdapter.submitList(selectGasDialogInitialData.gasEstimationItems)
         gasLimitSeekBar.max = selectGasDialogInitialData.gasEstimationItems[GasEstimationItem.Type.FAST.ordinal].amount.toInt()
-
         submitGasInEth(selectGasDialogInitialData.gasEstimationItems[GasEstimationItem.Type.REGULAR.ordinal].amountInEthFormatted)
-
         submitEstimationTime(selectGasDialogInitialData.gasEstimationItems[GasEstimationItem.Type.REGULAR.ordinal].timeFormatted)
     }
 
     fun submitGasInEth(gasInEth: String) {
         minerFeeTv.text = gasInEth
+    }
+
+    private fun estimationClicked(it: GasEstimationItem) {
+        selectGasAdapter.selectedGasEstimationItem = it.type
+        submitGasInEth(it.amountInEthFormatted)
+        submitEstimationTime(it.timeFormatted)
+        itemClickListener(it, selectGasDialogInitialData.defaultGasPrice)
+        selectGasAdapter.notifyDataSetChanged()
     }
 
     private fun submitEstimationTime(timeInMinutes: String) {
@@ -182,5 +184,15 @@ class GasSelectBottomSheetDialog(
     fun showGasPriceError(it: String) {
         gasPriceErrorText.show()
         gasPriceErrorText.text = it
+    }
+
+    fun updateEstimations(it: SelectGasDialogInitialData) {
+        selectGasDialogInitialData = it
+
+        selectGasAdapter.submitList(selectGasDialogInitialData.gasEstimationItems)
+        estimationClicked(selectGasDialogInitialData.gasEstimationItems[GasEstimationItem.Type.REGULAR.ordinal])
+
+        gasLimitErrorText.gone()
+        gasPriceErrorText.gone()
     }
 }

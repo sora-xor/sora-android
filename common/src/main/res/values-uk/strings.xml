@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">Оновлений додаток Sora, що містить покращення і виправлення, доступний в Google Play.</string>
   <string name="common_unsupported_version_open_google_play">Відкрити Google Play</string>
   <string name="common_select_email_app_title">Виберіть додаток для електронної пошти</string>
+  <string name="ethereum_config_unavailable">Вузол Ethereum недоступний</string>
   <string name="common_network_unavailable">Немає доступу до Інтернету</string>
   <string name="common_privacy_title">Політика конфіденційності</string>
   <string name="common_save">Зберегти</string>
@@ -253,7 +254,7 @@
   <string name="contacts_search_hint_v1">Акаунт, номер телефону, адреса</string>
   <string name="wallet_xor_to_my_eth">XOR на мій рахунок Ethereum</string>
   <string name="wallet_ethereum">Ethereum</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">Всього</string>
   <string name="transaction_token">Токен</string>
   <string name="transaction_note">Примітка</string>
@@ -281,12 +282,12 @@
   <string name="asset_state_associating">Зв\'язування...</string>
   <string name="asset_state_error">Помилка</string>
   <string name="common_add">Додати</string>
-  <string name="wallet_history_to_my_soranet_title">На мій рахунок Soranet</string>
+  <string name="wallet_history_to_my_soranet_title">На мій рахунок SORA NET</string>
   <string name="wallet_history_to_my_ethereum_title">На мою адресу Ethereum</string>
   <string name="wallet_history_reward_from_system">Нагорода від системи</string>
   <string name="wallet_history_from_ethereum_address_title">От адреса в Ethereum</string>
-  <string name="wallet_history_from_soranet_address_title">От аккаунта в Soranet</string>
-  <string name="wallet_history_to_soranet_account">На рахунок Soranet</string>
+  <string name="wallet_history_from_soranet_address_title">От аккаунта в SORA NET</string>
+  <string name="wallet_history_to_soranet_account">На рахунок SORA NET</string>
   <string name="wallet_history_to_ethereum_address">На адрес в Ethereum</string>
   <string name="common_french">Французький</string>
   <string name="common_ukrainian">Українська</string>
@@ -310,7 +311,7 @@
   <string name="unknown_balance">Невідомо</string>
   <string name="xor_balance_title">XOR Token у різних мережах</string>
   <string name="copy_xor_title">Скопіюйте адресу гаманця Sora (XOR)</string>
-  <string name="copy_eth_title">Скопіюйте адресу гаманця Eth (ETH)</string>
+  <string name="copy_eth_title">Скопіюйте адресу гаманця Ethereum (ETH)</string>
   <string name="view_balance">Переглянути розподіл маркерів Sora (XOR)</string>
   <string name="referendum_ends_in_title">Закінчується в</string>
   <string name="referendum_support_title">Так</string>
@@ -345,12 +346,13 @@
   <string name="common_arab">Арабська</string>
   <string name="activity_project_funded_description_template_val">Інформація про нагороду в VAL незабаром буде доступна</string>
   <string name="wallet_val_to_my_eth">VAL на мій рахунок Ethereum</string>
-  <string name="copy_val_title">Скопіюйте адресу гаманця Sora (VAL)</string>
+  <string name="copy_val_title">Скопіюйте адресу гаманця SORA NET (VAL)</string>
   <string name="val_balance_title">VAL Token у різних мережах</string>
   <string name="activity_val_between_users_transferred_type_template">VAL отримано</string>
   <string name="activity_val_reward_credited_from_project_type_template">Нагорода у VAL за голосування</string>
   <string name="wallet_receive_val">Отримати VAL</string>
-  <string name="view_balance_val">Переглянути розподіл маркерів Sora (VAL)</string>
+  <string name="view_balance_val">Переглянути розподіл маркерів SORA NET (VAL)</string>
   <string name="transaction_bridge_not_active_error">Міст Ethereum не активний.</string>
   <string name="transaction_bridge_info">Інформація про міст Ефіріуму</string>
+  <string name="common_retry">Повторіть спробу</string>
 </resources>

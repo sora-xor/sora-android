@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">L\'aggiornamento di Sora è disponibile in Google Play. Include miglioramenti e correzioni dei bug.</string>
   <string name="common_unsupported_version_open_google_play">Apri Google Play</string>
   <string name="common_select_email_app_title">Seleziona l\'app di posta elettronica</string>
+  <string name="ethereum_config_unavailable">Nodo Ethereum non disponibile</string>
   <string name="common_network_unavailable">Connessione di rete non disponibile</string>
   <string name="common_privacy_title">Informativa sulla privacy</string>
   <string name="common_save">Salva</string>
@@ -241,7 +242,7 @@
   <string name="contacts_search_hint_v1">ID account, numero di telefono, indirizzo</string>
   <string name="wallet_xor_to_my_eth">XOR sul mio account Ethereum</string>
   <string name="wallet_ethereum">Ethereum</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">Totale</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_note">Nota</string>
@@ -269,12 +270,12 @@
   <string name="asset_state_associating">Associazione...</string>
   <string name="asset_state_error">Errore</string>
   <string name="common_add">Aggiungi</string>
-  <string name="wallet_history_to_my_soranet_title">Al mio account Sora</string>
+  <string name="wallet_history_to_my_soranet_title">Al mio account SORA NET</string>
   <string name="wallet_history_to_my_ethereum_title">Al mio indirizzo Ethereum</string>
   <string name="wallet_history_reward_from_system">Ricompensa</string>
   <string name="wallet_history_from_ethereum_address_title">Da indirizzo Ethereum</string>
-  <string name="wallet_history_from_soranet_address_title">Dall\'account Sora</string>
-  <string name="wallet_history_to_soranet_account">All\'account Sora</string>
+  <string name="wallet_history_from_soranet_address_title">Dall\'account SORA NET</string>
+  <string name="wallet_history_to_soranet_account">All\'account SORA NET</string>
   <string name="wallet_history_to_ethereum_address">All\'indirizzo di Ethereum</string>
   <string name="common_french">Francese</string>
   <string name="common_ukrainian">Ucraino</string>
@@ -298,7 +299,7 @@
   <string name="unknown_balance">Sconosciuto</string>
   <string name="xor_balance_title">Token XOR su reti diverse</string>
   <string name="copy_xor_title">Copia l\'indirizzo del portafoglio Sora (XOR)</string>
-  <string name="copy_eth_title">Copia l\'indirizzo del portafoglio Eth (ETH)</string>
+  <string name="copy_eth_title">Copia l\'indirizzo del portafoglio Ethereum (ETH)</string>
   <string name="view_balance">Visualizza l\'allocazione dei token Sora (XOR)</string>
   <string name="referendum_ends_in_title">Finisce in</string>
   <string name="referendum_support_title">sì</string>
@@ -331,12 +332,13 @@
   <string name="common_arab">Arabo</string>
   <string name="activity_project_funded_description_template_val">Riceverai presto informazioni sulla ricompensa in VAL</string>
   <string name="wallet_val_to_my_eth">VAL sul mio account Ethereum</string>
-  <string name="copy_val_title">Copia l\'indirizzo del portafoglio Sora (VAL)</string>
+  <string name="copy_val_title">Copia l\'indirizzo del portafoglio SORA NET (VAL)</string>
   <string name="val_balance_title">Token VAL su reti diverse</string>
   <string name="activity_val_between_users_transferred_type_template">VAL Ricevuti</string>
   <string name="activity_val_reward_credited_from_project_type_template">Premio VAL per il voto</string>
   <string name="wallet_receive_val">Ricevi VAL</string>
-  <string name="view_balance_val">Visualizza l\'allocazione dei token Sora (VAL)</string>
+  <string name="view_balance_val">Visualizza l\'allocazione dei token SORA NET (VAL)</string>
   <string name="transaction_bridge_not_active_error">Il bridge Ethereum non è attivo.</string>
   <string name="transaction_bridge_info">Informazioni sul bridge Ethereum</string>
+  <string name="common_retry">Riprova</string>
 </resources>

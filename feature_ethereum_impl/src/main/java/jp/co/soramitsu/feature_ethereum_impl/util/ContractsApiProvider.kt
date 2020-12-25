@@ -9,7 +9,6 @@ import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.network.ERC20ContractApi
 import jp.co.soramitsu.feature_ethereum_impl.data.network.SmartContractApi
-import org.web3j.protocol.Web3j
 import org.web3j.tx.FastRawTransactionManager
 import org.web3j.tx.response.NoOpProcessor
 import java.math.BigInteger
@@ -18,8 +17,9 @@ import javax.inject.Singleton
 
 @Singleton
 class ContractsApiProvider @Inject constructor(
-    private val web3j: Web3j,
-    private val ethereumCredentialsMapper: EthereumCredentialsMapper
+    private val web3jProvider: Web3jProvider,
+    private val ethereumCredentialsMapper: EthereumCredentialsMapper,
+    private val ethereumConfigProvider: EthereumConfigProvider
 ) {
 
     companion object {
@@ -34,20 +34,20 @@ class ContractsApiProvider @Inject constructor(
 
     fun getSmartContractApi(ethCredentials: EthereumCredentials): SmartContractApi {
         if (smartContractApi == null) {
-            smartContractApi = SmartContractApi(web3j, getOrCreateFastRawTransactionManager(ethCredentials), gasProvider)
+            smartContractApi = SmartContractApi(web3jProvider.web3j, getOrCreateFastRawTransactionManager(ethCredentials), gasProvider, ethereumConfigProvider)
         }
         return smartContractApi!!
     }
 
     fun getErc20ContractApi(ethCredentials: EthereumCredentials, tokenAddress: String): ERC20ContractApi {
         if (erc20ContractApi == null) {
-            erc20ContractApi = ERC20ContractApi(web3j, getOrCreateFastRawTransactionManager(ethCredentials), gasProvider, tokenAddress)
+            erc20ContractApi = ERC20ContractApi(web3jProvider.web3j, getOrCreateFastRawTransactionManager(ethCredentials), gasProvider, tokenAddress)
         }
         return erc20ContractApi!!
     }
 
     fun fetchGasPrice(): BigInteger {
-        val gasPrice = web3j.ethGasPrice().send().gasPrice
+        val gasPrice = web3jProvider.web3j.ethGasPrice().send().gasPrice
         gasProvider.price = gasPrice
         return gasPrice
     }
@@ -71,7 +71,7 @@ class ContractsApiProvider @Inject constructor(
     private fun getOrCreateFastRawTransactionManager(ethCredentials: EthereumCredentials): FastRawTransactionManager {
         if (fastRawTransactionManager == null) {
             val credentials = ethereumCredentialsMapper.getCredentials(ethCredentials.privateKey)
-            fastRawTransactionManager = FastRawTransactionManager(web3j, credentials, NoOpProcessor(web3j))
+            fastRawTransactionManager = FastRawTransactionManager(web3jProvider.web3j, credentials, NoOpProcessor(web3jProvider.web3j))
         }
 
         return fastRawTransactionManager!!

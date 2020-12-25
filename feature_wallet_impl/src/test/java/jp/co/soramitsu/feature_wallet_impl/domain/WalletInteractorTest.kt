@@ -64,7 +64,7 @@ class WalletInteractorTest {
     }
 
     @Test fun `get transaction history called`() {
-        val transaction = Transaction("", "transactionid", Transaction.Status.PENDING, "assetId", "myAddress", "details", "peername", BigDecimal.TEN, 10000, "peerid", "reason", Transaction.Type.REWARD, BigDecimal.ZERO, BigDecimal.ONE)
+        val transaction = Transaction("", "","transactionid", Transaction.Status.PENDING, Transaction.DetailedStatus.TRANSFER_PENDING,"assetId", "myAddress", "details", "peername", BigDecimal.TEN, 10000, "peerid", "reason", Transaction.Type.REWARD, BigDecimal.ZERO, BigDecimal.ONE)
         val mnemonic = "mnemonic"
         val ethereumCredentials = mock(EthereumCredentials::class.java)
 

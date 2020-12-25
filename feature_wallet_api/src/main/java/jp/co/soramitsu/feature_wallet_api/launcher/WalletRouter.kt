@@ -17,9 +17,11 @@ interface WalletRouter {
         peerId: String,
         recipientFullName: String,
         ethTransactionId: String,
+        secondEthTransactionId: String,
         soranetTransactionId: String,
         amount: BigDecimal,
-        status: String,
+        status: Transaction.Status,
+        detailedStatus: Transaction.DetailedStatus,
         assetId: String,
         dateTime: Date,
         type: Transaction.Type,
@@ -39,6 +41,8 @@ interface WalletRouter {
 
     fun showTransactionConfirmation(peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, description: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType)
 
+    fun showRetryTransactionConfirmation(soranetHash: String, peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, description: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType)
+
     fun showContacts()
 
     fun showReceive()
@@ -48,4 +52,6 @@ interface WalletRouter {
     fun showAssetSettings()
 
     fun showValWithdrawToErc(etherAddress: String, amount: BigDecimal)
+
+    fun showWithdrawRetryFragment(soranetTransactionId: String, ethTransactionId: String, peerId: String, amount: BigDecimal, isTxFeeNeeded: Boolean)
 }

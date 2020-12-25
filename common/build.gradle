@@ -33,7 +33,6 @@ android {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/dev/join/\""
             buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.dev.soranet.soramitsu.co.jp/#/transactions/transaction/\""
-            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://ropsten.etherscan.io/tx/\""
             dimension 'default'
         }
 
@@ -44,7 +43,6 @@ android {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/tst/join/\""
             buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.tst.soranet.soramitsu.co.jp/#/transactions/transaction/\""
-            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://rinkeby.etherscan.io/tx/\""
             dimension 'default'
         }
 
@@ -55,7 +53,6 @@ android {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/stg/join/\""
             buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s4.stg1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
-            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://rinkeby.etherscan.io/tx/\""
             dimension 'default'
         }
 
@@ -66,7 +63,6 @@ android {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
             buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
-            buildConfigField "String", "ETHERSCAN_EXPLORER_URL", "\"https://etherscan.io/tx/\""
             dimension 'default'
         }
     }

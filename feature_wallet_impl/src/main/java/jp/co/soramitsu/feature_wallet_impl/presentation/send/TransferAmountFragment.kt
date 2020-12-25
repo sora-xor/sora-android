@@ -75,6 +75,10 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         private const val KEY_RECIPIENT_ID = "recipient_id"
         private const val KEY_DESCRIPTION_MAX_BYTES = 64
 
+        private const val KEY_IS_TX_FEE_NEEDED = "key_is_tx_fee_needed"
+        private const val KEY_RETRY_SORANET_HASH = "key_retry_soranet_hash"
+        private const val KEY_RETRY_ETH_HASH = "key_retry_eth_hash"
+
         fun createBundleForValTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
             return Bundle().apply {
                 putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_TRANSFER)
@@ -99,6 +103,18 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
                 putString(KEY_RECIPIENT_ID, recipientId)
                 putString(KEY_FULL_NAME, fullName)
                 putString(KEY_AMOUNT, amount.toString())
+            }
+        }
+
+        fun createBundleForWithdrawRetry(soranetTransactionId: String, ethTransactionId: String, peerId: String, amount: BigDecimal, isTxFeeNeeded: Boolean): Bundle {
+            return Bundle().apply {
+                putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_WITHDRAW)
+                putString(KEY_RECIPIENT_ID, peerId)
+                putString(KEY_FULL_NAME, peerId)
+                putString(KEY_AMOUNT, amount.toString())
+                putString(KEY_RETRY_SORANET_HASH, soranetTransactionId)
+                putString(KEY_RETRY_ETH_HASH, ethTransactionId)
+                putBoolean(KEY_IS_TX_FEE_NEEDED, isTxFeeNeeded)
             }
         }
     }
@@ -139,12 +155,19 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         val initialAmount = BigDecimal(arguments!!.getString(KEY_AMOUNT, ""))
         val transferType = arguments!!.getSerializable(KEY_TRANSFER_TYPE) as TransferType
 
+        val retrySoranetHash = arguments!!.getString(KEY_RETRY_SORANET_HASH, "")
+        val retryEthHash = arguments!!.getString(KEY_RETRY_ETH_HASH, "")
+        val isTxFeeNeeded = arguments!!.getBoolean(KEY_IS_TX_FEE_NEEDED, true)
+
         FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
             .transferAmountComponentBuilder()
             .withFragment(this)
             .withRecipientId(recipientId)
             .withRecipientFullName(recipientFullName)
             .withInitialAmount(initialAmount)
+            .withRetryEthHash(retryEthHash)
+            .withRetrySoranetHash(retrySoranetHash)
+            .withIsTxFeeNeeded(isTxFeeNeeded)
             .withTransferType(transferType)
             .build()
             .inject(this)
@@ -237,7 +260,7 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             inputAccountLastname.text = it
         })
 
-        observe(viewModel.gasSelectBottomDialogShowLiveData, EventObserver {
+        observe(viewModel.gasSelectBottomDialogShowLiveData, Observer {
             if (!this::gasDialog.isInitialized) {
                 gasDialog = GasSelectBottomSheetDialog(
                     activity!!,
@@ -256,8 +279,14 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
                         }
                     }
                 )
+            } else {
+                gasDialog.updateEstimations(it)
             }
 
+            gasDialog.show()
+        })
+
+        observe(viewModel.showGasSelectBottomDialogShowLiveData, Observer {
             gasDialog.show()
         })
 
@@ -378,6 +407,12 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             } else {
                 nextBtn.disable()
             }
+        })
+
+        observe(viewModel.retryModeEnabled, Observer {
+            amountEt.isEnabled = !it
+            keyboardImg.setOnClickListener(null)
+            descriptionEt.isEnabled = !it
         })
 
         viewModel.updateBalance()

@@ -22,8 +22,6 @@ interface EthereumInteractor {
 
     fun transferValERC20(to: String, amount: BigDecimal): Completable
 
-    fun getMinerFeeInitialData(): Single<Gas>
-
     fun updateFeeWithCurrentGasLimitAndPrice(gasLimit: BigInteger, gasPrice: BigInteger): Single<BigDecimal>
 
     fun getActualEthRegisterState(): Single<EthRegisterState.State>
@@ -32,5 +30,16 @@ interface EthereumInteractor {
 
     fun startCombinedValTransfer(partialAmount: BigDecimal, amount: BigDecimal, peerId: String, peerFullName: String, transactionFee: BigDecimal, description: String): Completable
 
-    fun isBridgeEnabled(): Single<Boolean>
+    /**
+     * @return first - ethereum config is ok, second - bridge is ok
+     */
+    fun isBridgeEnabled(): Single<Pair<Boolean, Boolean>>
+
+    fun getMinerFeeInitialDataForWithdraw(): Single<Gas>
+
+    fun getMinerFeeInitialDataForTransfer(): Single<Gas>
+
+    fun getMinerFeeInitialDataForTransferWithdraw(): Single<Gas>
+
+    fun retryWithdrawTransaction(soranetHash: String): Completable
 }

@@ -49,11 +49,10 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
         private const val KEY_PARTIAL_AMOUNT = "partial_amount"
         private const val KEY_PEER_FULL_NAME = "peer_full_name"
         private const val KEY_PEER_ID = "account_id"
-        private const val NOTARY_ADDRESS = "notary_address"
-        private const val FEE_ADDRESS = "fee_address"
         private const val KEY_MINER_FEE = "miner_fee"
         private const val KEY_TRANSACTION_FEE = "transaction_fee"
         private const val KEY_TRANSFER_TYPE = "transfer_type"
+        private const val KEY_RETRY_SORANET_HASH = "retry_soranet_hash"
 
         fun createBundle(
             peerId: String,
@@ -76,9 +75,34 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
                 putSerializable(KEY_TRANSFER_TYPE, transferType)
             }
         }
+
+        fun createRetryBundle(
+            soranetHash: String,
+            peerId: String,
+            peerFullName: String,
+            partialAmount: BigDecimal,
+            amount: BigDecimal,
+            description: String,
+            minerFee: BigDecimal,
+            transactionFee: BigDecimal,
+            transferType: TransferType
+        ): Bundle {
+            return Bundle().apply {
+                putString(KEY_RETRY_SORANET_HASH, soranetHash)
+                putString(KEY_PEER_ID, peerId)
+                putString(KEY_PEER_FULL_NAME, peerFullName)
+                putSerializable(KEY_PARTIAL_AMOUNT, partialAmount)
+                putSerializable(KEY_AMOUNT, amount)
+                putString(DESCRIPTION, description)
+                putSerializable(KEY_MINER_FEE, minerFee)
+                putSerializable(KEY_TRANSACTION_FEE, transactionFee)
+                putSerializable(KEY_TRANSFER_TYPE, transferType)
+            }
+        }
     }
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var progressDialog: SoraProgressDialog
 
@@ -95,6 +119,7 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
         val peerFullName = arguments!!.getString(KEY_PEER_FULL_NAME, "")
         val peerId = arguments!!.getString(KEY_PEER_ID, "")
         val transferType = arguments!!.getSerializable(KEY_TRANSFER_TYPE) as TransferType
+        val retrySoranetHash = arguments!!.getString(KEY_RETRY_SORANET_HASH, "")
 
         FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
             .transactionConfirmationComponentBuilder()
@@ -107,6 +132,7 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
             .withPeerFullName(peerFullName)
             .withPeerId(peerId)
             .withTransferType(transferType)
+            .withRetrySoranetHash(retrySoranetHash)
             .build()
             .inject(this)
     }

@@ -16,6 +16,10 @@ class EtherWeiConverter @Inject constructor() {
         return Convert.fromWei(amountInWei.toBigDecimal(), Convert.Unit.ETHER)
     }
 
+    fun fromGweiToEther(amountInGwei: BigInteger): BigDecimal {
+        return Convert.fromWei(fromGweiToWei(amountInGwei).toBigDecimal(), Convert.Unit.ETHER)
+    }
+
     fun fromEtherToWei(amountInEther: BigDecimal): BigInteger {
         return Convert.toWei(amountInEther, Convert.Unit.ETHER).toBigInteger()
     }

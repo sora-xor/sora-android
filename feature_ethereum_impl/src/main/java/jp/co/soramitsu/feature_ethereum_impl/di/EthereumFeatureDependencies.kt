@@ -11,10 +11,13 @@ import jp.co.soramitsu.common.data.network.DCApiCreator
 import jp.co.soramitsu.common.data.network.NetworkApiCreator
 import jp.co.soramitsu.common.data.network.SoranetApiCreator
 import jp.co.soramitsu.common.domain.AppLinksProvider
+import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.core_db.AppDatabase
+import okhttp3.OkHttpClient
+import javax.inject.Named
 
 interface EthereumFeatureDependencies {
 
@@ -25,6 +28,8 @@ interface EthereumFeatureDependencies {
     fun soranetApiCreator(): SoranetApiCreator
 
     fun dcApiCreator(): DCApiCreator
+
+    fun healthChecker(): HealthChecker
 
     fun encryptedPreferences(): EncryptedPreferences
 
@@ -37,4 +42,6 @@ interface EthereumFeatureDependencies {
     fun appLinksProvider(): AppLinksProvider
 
     fun contextManager(): ContextManager
+
+    @Named("WEB3J_CLIENT") fun okhttpClient(): OkHttpClient.Builder
 }

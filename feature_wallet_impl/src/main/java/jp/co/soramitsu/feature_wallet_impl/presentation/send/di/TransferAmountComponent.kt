@@ -32,6 +32,15 @@ interface TransferAmountComponent {
         fun withRecipientId(@Named("recipientId") recipientId: String): Builder
 
         @BindsInstance
+        fun withRetrySoranetHash(@Named("retrySoranetHash") soranetHash: String): Builder
+
+        @BindsInstance
+        fun withRetryEthHash(@Named("retryEthHash") ethHash: String): Builder
+
+        @BindsInstance
+        fun withIsTxFeeNeeded(@Named("isTxFeeNeeded") isTxFeeNeeded: Boolean): Builder
+
+        @BindsInstance
         fun withRecipientFullName(@Named("recipientFullName") recipientFullName: String): Builder
 
         @BindsInstance

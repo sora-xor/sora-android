@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">Päivitetty Sora-sovellus on saatavana Google Playsta. Se sisältää parannuksia ja virhekorjauksia.</string>
   <string name="common_unsupported_version_open_google_play">Avaa Google Play</string>
   <string name="common_select_email_app_title">Valitse sähköpostisovellus</string>
+  <string name="ethereum_config_unavailable">Ethereum-solmu ei ole käytettävissä</string>
   <string name="common_network_unavailable">Verkkoyhteys ei ole käytettävissä</string>
   <string name="common_privacy_title">Tietosuojakäytäntö</string>
   <string name="common_save">Tallentaa</string>
@@ -241,7 +242,7 @@
   <string name="contacts_search_hint_v1">Tilitunnus, puhelinnumero, osoite</string>
   <string name="wallet_xor_to_my_eth">XOR minun Ethereum tilille</string>
   <string name="wallet_ethereum">Ethereum</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">Yhteensä</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_note">Huomautus</string>
@@ -269,12 +270,12 @@
   <string name="asset_state_associating">Yhdistetään ...</string>
   <string name="asset_state_error">Virhe</string>
   <string name="common_add">Lisää</string>
-  <string name="wallet_history_to_my_soranet_title">Oma SoraNet-tililleni</string>
+  <string name="wallet_history_to_my_soranet_title">Oma SORA NET-tililleni</string>
   <string name="wallet_history_to_my_ethereum_title">Oma Ethereum-osoitteeseen</string>
   <string name="wallet_history_reward_from_system">Palkkio järjestelmästä</string>
   <string name="wallet_history_from_ethereum_address_title">Ethereum-osoitteesta</string>
-  <string name="wallet_history_from_soranet_address_title">SoraNet-tililtä</string>
-  <string name="wallet_history_to_soranet_account">SoraNet-tilille</string>
+  <string name="wallet_history_from_soranet_address_title">SORA NET-tililtä</string>
+  <string name="wallet_history_to_soranet_account">SORA NET-tilille</string>
   <string name="wallet_history_to_ethereum_address">Ethereum-osoitteeseen</string>
   <string name="common_french">Ranskan kieli</string>
   <string name="common_ukrainian">Ukraina</string>
@@ -298,7 +299,7 @@
   <string name="unknown_balance">Tuntematon</string>
   <string name="xor_balance_title">XOR-tunniste eri verkoissa</string>
   <string name="copy_xor_title">Kopioi Sora (XOR) lompakon osoite</string>
-  <string name="copy_eth_title">Kopioi Ethth (ETH) lompakon osoite</string>
+  <string name="copy_eth_title">Kopioi Ethereum (ETH) lompakon osoite</string>
   <string name="view_balance">Näytä Sora (XOR) -merkkien allokointi</string>
   <string name="referendum_ends_in_title">Päättyy</string>
   <string name="referendum_support_title">Joo</string>
@@ -331,12 +332,13 @@
   <string name="common_arab">Arab</string>
   <string name="activity_project_funded_description_template_val">Saat pian tietoa VAL-palkinnosta</string>
   <string name="wallet_val_to_my_eth">VAL minun Ethereum tilille</string>
-  <string name="copy_val_title">Kopioi Sora (VAL) lompakon osoite</string>
+  <string name="copy_val_title">Kopioi SORA NET (VAL) lompakon osoite</string>
   <string name="val_balance_title">VAL-tunniste eri verkoissa</string>
   <string name="activity_val_between_users_transferred_type_template">VAL vastaanotettu</string>
   <string name="activity_val_reward_credited_from_project_type_template">VAL Palkkio äänestämisestä</string>
   <string name="wallet_receive_val">Vastaanota VAL</string>
-  <string name="view_balance_val">Näytä Sora (VAL) -merkkien allokointi</string>
+  <string name="view_balance_val">Näytä SORA NET (VAL) -merkkien allokointi</string>
   <string name="transaction_bridge_not_active_error">Ethereumin silta ei ole aktiivinen.</string>
   <string name="transaction_bridge_info">Ethereumin sillan tiedot</string>
+  <string name="common_retry">Yritä uudelleen</string>
 </resources>

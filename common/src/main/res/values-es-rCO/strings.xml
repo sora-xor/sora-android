@@ -77,6 +77,7 @@
   <string name="common_unsupported_version_body">La aplicación Sora actualizada está disponible en Google Play. Incluye mejoras y correcciones de errores.</string>
   <string name="common_unsupported_version_open_google_play">Abrir Google Play</string>
   <string name="common_select_email_app_title">Seleccionar aplicación de correo electrónico</string>
+  <string name="ethereum_config_unavailable">Nodo Ethereum no disponible</string>
   <string name="common_network_unavailable">Conexión de red no disponible</string>
   <string name="common_privacy_title">Política de privacidad</string>
   <string name="common_save">Guardar</string>
@@ -241,7 +242,7 @@
   <string name="contacts_search_hint_v1">ID de cuenta, número de teléfono, dirección</string>
   <string name="wallet_xor_to_my_eth">XOR a mi cuenta de Ethereum</string>
   <string name="wallet_ethereum">Ethereum</string>
-  <string name="wallet_soranet">SoraNet</string>
+  <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">Total</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_note">Nota</string>
@@ -269,12 +270,12 @@
   <string name="asset_state_associating">Asociando...</string>
   <string name="asset_state_error">Error</string>
   <string name="common_add">Añadir</string>
-  <string name="wallet_history_to_my_soranet_title">A mi cuenta de Soranet</string>
+  <string name="wallet_history_to_my_soranet_title">A mi cuenta de SORA NET</string>
   <string name="wallet_history_to_my_ethereum_title">A mi dirección de Ethereum</string>
   <string name="wallet_history_reward_from_system">Recompensa del sistema</string>
   <string name="wallet_history_from_ethereum_address_title">Desde la dirección de Ethereum</string>
-  <string name="wallet_history_from_soranet_address_title">De la cuenta de Soranet</string>
-  <string name="wallet_history_to_soranet_account">A la cuenta de Soranet</string>
+  <string name="wallet_history_from_soranet_address_title">De la cuenta de SORA NET</string>
+  <string name="wallet_history_to_soranet_account">A la cuenta de SORA NET</string>
   <string name="wallet_history_to_ethereum_address">A la dirección de Ethereum</string>
   <string name="common_french">Francés</string>
   <string name="common_ukrainian">Ucraniano</string>
@@ -298,7 +299,7 @@
   <string name="unknown_balance">Desconocido</string>
   <string name="xor_balance_title">Token XOR en diferentes redes</string>
   <string name="copy_xor_title">Copiar la dirección de la billetera de Sora (XOR)</string>
-  <string name="copy_eth_title">Copiar la dirección de la billetera Eth (ETH)</string>
+  <string name="copy_eth_title">Copiar la dirección de la billetera Ethereum (ETH)</string>
   <string name="view_balance">Ver la asignación de tokens de Sora (XOR)</string>
   <string name="referendum_ends_in_title">Termina en</string>
   <string name="referendum_support_title">Sí</string>
@@ -331,12 +332,13 @@
   <string name="common_arab">Árabe</string>
   <string name="activity_project_funded_description_template_val">Recibirá información sobre la recompensa VAL pronto</string>
   <string name="wallet_val_to_my_eth">VAL a mi cuenta de Ethereum</string>
-  <string name="copy_val_title">Copiar la dirección de la billetera de Sora (VAL)</string>
+  <string name="copy_val_title">Copiar la dirección de la billetera de SORA NET (VAL)</string>
   <string name="val_balance_title">Token VAL en diferentes redes</string>
   <string name="activity_val_between_users_transferred_type_template">VAL recibido</string>
   <string name="activity_val_reward_credited_from_project_type_template">Recompensa VAL por votar</string>
   <string name="wallet_receive_val">Recibe VAL</string>
-  <string name="view_balance_val">Ver la asignación de tokens de Sora (VAL)</string>
+  <string name="view_balance_val">Ver la asignación de tokens de SORA NET (VAL)</string>
   <string name="transaction_bridge_not_active_error">El puente Ethereum no está activo.</string>
   <string name="transaction_bridge_info">Información sobre el puente Ethereum</string>
+  <string name="common_retry">Reintentar</string>
 </resources>

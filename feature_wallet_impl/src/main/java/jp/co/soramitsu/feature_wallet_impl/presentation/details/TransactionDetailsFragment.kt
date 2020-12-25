@@ -66,6 +66,7 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
         private const val DESCRIPTION = "description"
         private const val SORANET_TRANSACTION_ID = "soranet_transaction_id"
         private const val ETH_TRANSACTION_ID = "eth_transaction_id"
+        private const val SECOND_ETH_TRANSACTION_ID = "second_eth_transaction_id"
         private const val KEY_AMOUNT = "amount"
         private const val KEY_MY_ACCOUNT_ID = "my_account_id"
         private const val KEY_PEER_ID = "peer_id"
@@ -74,6 +75,7 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
         private const val DATE = "date"
         private const val TYPE = "type"
         private const val STATUS = "status"
+        private const val DETAILED_STATUS = "detailed_status"
         private const val KEY_TRANSACTION_FEE = "transaction_fee"
         private const val KEY_MINER_FEE = "miner_fee"
         private const val KEY_TOTAL_AMOUNT = "key_total_amount"
@@ -84,9 +86,11 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
             peerId: String,
             peerName: String,
             ethTransactionId: String,
+            secondEthTransactionId: String,
             soranetTransactionId: String,
             amount: BigDecimal,
-            status: String,
+            status: Transaction.Status,
+            detailedStatus: Transaction.DetailedStatus,
             assetId: String,
             dateTime: Date,
             type: Transaction.Type,
@@ -103,9 +107,11 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
                 putString(KEY_PEER_NAME, peerName)
                 putString(SORANET_TRANSACTION_ID, soranetTransactionId)
                 putString(ETH_TRANSACTION_ID, ethTransactionId)
+                putString(SECOND_ETH_TRANSACTION_ID, secondEthTransactionId)
                 putSerializable(KEY_AMOUNT, amount)
                 putSerializable(KEY_TOTAL_AMOUNT, totalAmount)
-                putString(STATUS, status)
+                putSerializable(STATUS, status)
+                putSerializable(DETAILED_STATUS, detailedStatus)
                 putLong(DATE, dateTime.time)
                 putSerializable(TYPE, type)
                 putString(DESCRIPTION, description)
@@ -129,7 +135,9 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
         val peerFullName = arguments!!.getString(KEY_PEER_NAME, "")
         val soranetTransactionId = arguments!!.getString(SORANET_TRANSACTION_ID, "")
         val ethTransactionId = arguments!!.getString(ETH_TRANSACTION_ID, "")
-        val status = arguments!!.getString(STATUS, "")
+        val secondEthTransactionId = arguments!!.getString(SECOND_ETH_TRANSACTION_ID, "")
+        val status = arguments!!.get(STATUS) as Transaction.Status
+        val detailedStatus = arguments!!.get(DETAILED_STATUS) as Transaction.DetailedStatus
         val date = arguments!!.getLong(DATE, 0)
         val type = arguments!!.get(TYPE) as Transaction.Type
         val amount = arguments!!.getSerializable(KEY_AMOUNT) as BigDecimal
@@ -145,9 +153,11 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
             .withPeerId(peerId)
             .withPeerFullName(peerFullName)
             .withSoranetTransactionId(soranetTransactionId)
-            .withethTransactionId(ethTransactionId)
+            .withEthTransactionId(ethTransactionId)
+            .withSecondEthTransactionId(secondEthTransactionId)
             .withTransactionType(type)
             .withStatus(status)
+            .withDetailedStatus(detailedStatus)
             .withAssetId(assetId)
             .withDate(date)
             .withAmount(amount)

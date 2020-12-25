@@ -42,10 +42,16 @@ interface TransactionDetailsComponent {
         fun withSoranetTransactionId(@Named("soranetTransactionId") transactionId: String): Builder
 
         @BindsInstance
-        fun withethTransactionId(@Named("ethTransactionId") transactionId: String): Builder
+        fun withEthTransactionId(@Named("ethTransactionId") transactionId: String): Builder
 
         @BindsInstance
-        fun withStatus(@Named("status") status: String): Builder
+        fun withSecondEthTransactionId(@Named("secondEthTransactionId") transactionId: String): Builder
+
+        @BindsInstance
+        fun withStatus(@Named("status") status: Transaction.Status): Builder
+
+        @BindsInstance
+        fun withDetailedStatus(@Named("detailedStatus") status: Transaction.DetailedStatus): Builder
 
         @BindsInstance
         fun withAssetId(@Named("assetId") assetId: String): Builder

@@ -43,7 +43,7 @@ internal class ServerSentEventImpl(
                 if (response.isSuccessful) {
                     openSse(response, 0)
                 } else {
-                    val throwable = IOException(response.message())
+                    val throwable = IOException("${response.code()} ${response.message()}")
                     listener.onResponseError(this@ServerSentEventImpl, throwable, response)
                     listener.onClosed(this@ServerSentEventImpl)
                     close()

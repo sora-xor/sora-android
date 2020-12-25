@@ -9,6 +9,7 @@ import io.reactivex.Single
 import jp.co.soramitsu.common.data.network.response.BaseResponse
 import jp.co.soramitsu.feature_ethereum_impl.data.network.request.IrohaRequest
 import jp.co.soramitsu.feature_ethereum_impl.data.network.response.EthRegisterStateResponse
+import jp.co.soramitsu.feature_ethereum_impl.data.network.response.EthRemoteConfigResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -23,4 +24,7 @@ interface EthereumNetworkApi {
 
     @GET("/wallet/v1/eth/register/state")
     fun getEthRegisterState(): Single<EthRegisterStateResponse>
+
+    @GET("/information/v1/discovery")
+    fun getEthConfig(): Single<EthRemoteConfigResponse>
 }

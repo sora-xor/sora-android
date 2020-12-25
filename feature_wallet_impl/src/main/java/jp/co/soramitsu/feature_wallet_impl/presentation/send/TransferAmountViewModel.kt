@@ -47,7 +47,10 @@ class TransferAmountViewModel(
     private val resourceManager: ResourceManager,
     private val recipientId: String,
     private val recipientFullName: String,
+    private val retrySoranetHash: String,
+    private val retryEthHash: String,
     private val initialAmount: BigDecimal,
+    private val isTxFeeNeeded: Boolean,
     private var transferType: TransferType
 ) : BaseViewModel(), WithProgress by progress {
 
@@ -56,6 +59,8 @@ class TransferAmountViewModel(
         private const val GAS_LIMIT_MIN = 21000
         private const val GAS_PRICE_MIN = 1
     }
+
+    private var minerFeeUpdated = false
 
     private val _gasLimitErrorLiveData = MutableLiveData<String>()
     val gasLimitErrorLiveData: LiveData<String> = _gasLimitErrorLiveData
@@ -133,15 +138,21 @@ class TransferAmountViewModel(
     private val _ethAccountErrorLiveData = MutableLiveData<Event<Unit>>()
     val ethAccountErrorLiveData: LiveData<Event<Unit>> = _ethAccountErrorLiveData
 
-    private val _gasSelectBottomDialogShowLiveData = MutableLiveData<Event<SelectGasDialogInitialData>>()
-    val gasSelectBottomDialogShowLiveData: LiveData<Event<SelectGasDialogInitialData>> = _gasSelectBottomDialogShowLiveData
+    private val _gasSelectBottomDialogShowLiveData = MutableLiveData<SelectGasDialogInitialData>()
+    val gasSelectBottomDialogShowLiveData: LiveData<SelectGasDialogInitialData> = _gasSelectBottomDialogShowLiveData
+
+    private val _showGasSelectBottomDialogShowLiveData = MutableLiveData<Event<Unit>>()
+    val showGasSelectBottomDialogShowLiveData: LiveData<Event<Unit>> = _showGasSelectBottomDialogShowLiveData
+
+    private val _retryModeEnabled = MutableLiveData<Boolean>()
+    val retryModeEnabled: LiveData<Boolean> = _retryModeEnabled
 
     private val transactionFeeMetaLiveData = MutableLiveData<TransferMeta>()
     private val transactionFeeLiveData = MediatorLiveData<BigDecimal>()
     private val minerFeeLiveData = MutableLiveData<BigDecimal>()
     private val amountLiveData = MutableLiveData<BigDecimal>()
     private val initialWithdraw = transferType == TransferType.VAL_WITHDRAW
-    private var isBridgeEnabled = false
+    private var isBridgeEnabled = Pair(first = true, second = false)
 
     init {
         _descriptionHintLiveData.value = resourceManager.getString(R.string.common_input_validator_max_hint).format(DESCRIPTION_MAX_LENGTH.toString())
@@ -232,6 +243,8 @@ class TransferAmountViewModel(
                     it.printStackTrace()
                 })
         )
+
+        _retryModeEnabled.value = retryEthHash.isNotEmpty() || retrySoranetHash.isNotEmpty()
     }
 
     private fun calcTransactionFee() {
@@ -248,10 +261,11 @@ class TransferAmountViewModel(
     }
 
     private fun calcMinerFee() {
-        val disposable = if (transferType == TransferType.VAL_WITHDRAW || transferType == TransferType.VALVALERC_TO_VALERC) {
-            interactor.calculateDefaultMinerFeeInEthWithdraw()
-        } else {
-            interactor.calculateDefaultMinerFeeInEthTransfer()
+        val disposable = when (transferType) {
+            TransferType.VAL_WITHDRAW -> interactor.calculateDefaultMinerFeeInEthWithdraw()
+            TransferType.VALERC_TRANSFER, TransferType.VALVALERC_TO_VAL -> interactor.calculateDefaultMinerFeeInEthTransfer()
+            TransferType.VALVALERC_TO_VALERC -> interactor.calculateDefaultMinerFeeInEthTransferWithWithdraw()
+            else -> interactor.calculateDefaultMinerFeeInEthTransfer()
         }
 
         disposables.add(
@@ -260,6 +274,7 @@ class TransferAmountViewModel(
                 .doOnSubscribe { _minerFeePreloaderVisibilityLiveData.value = true }
                 .doFinally { _minerFeePreloaderVisibilityLiveData.value = false }
                 .subscribe({ fee ->
+                    minerFeeUpdated = true
                     minerFeeLiveData.value = fee
                 }, {
                     logException(it)
@@ -308,12 +323,21 @@ class TransferAmountViewModel(
     }
 
     fun nextButtonClicked(amount: BigDecimal?, description: String) {
-        when (transferType) {
-            TransferType.VAL_TRANSFER -> soraNetTransfer(amount, description)
-            TransferType.VALERC_TRANSFER -> valErcTransfer(amount)
-            TransferType.VALVALERC_TO_VALERC -> combinedValErcTransfer(amount!!)
-            TransferType.VALVALERC_TO_VAL -> combinedValTransfer(amount!!, description)
-            TransferType.VAL_WITHDRAW -> withdraw(amount, description)
+        _retryModeEnabled.value?.let {
+            if (it) {
+                when (transferType) {
+                    TransferType.VAL_WITHDRAW -> retryWithdraw(amount!!, description)
+                    else -> retryWithdraw(amount!!, description)
+                }
+            } else {
+                when (transferType) {
+                    TransferType.VAL_TRANSFER -> soraNetTransfer(amount, description)
+                    TransferType.VALERC_TRANSFER -> valErcTransfer(amount)
+                    TransferType.VALVALERC_TO_VALERC -> combinedValErcTransfer(amount!!)
+                    TransferType.VALVALERC_TO_VAL -> combinedValTransfer(amount!!, description)
+                    TransferType.VAL_WITHDRAW -> withdraw(amount, description)
+                }
+            }
         }
     }
 
@@ -395,21 +419,38 @@ class TransferAmountViewModel(
         }
     }
 
+    private fun retryWithdraw(amount: BigDecimal, description: String) {
+        minerFeeLiveData.value?.let { minerFee ->
+            transactionFeeLiveData.value?.let { withdrawFee ->
+                valBalanceLiveData.value?.let { valBalance ->
+                    ethBalanceLiveData.value?.let { ethBalance ->
+                        if (areFieldsValidForRetryWithdraw(ethBalance.balance, valBalance.balance, minerFee, withdrawFee)) {
+                            router.showRetryTransactionConfirmation(retrySoranetHash, recipientId, recipientFullName, BigDecimal.ZERO, amount, description, minerFee, withdrawFee, transferType)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun amountChanged(amount: BigDecimal) {
         amountLiveData.setValueIfNew(amount)
 
         if (!initialWithdraw) {
-            calculateTransferTypeByAmount(amount)
-            configureScreenByTransferType()
+            val newTransferType = calculateTransferTypeByAmount(amount)
+            if (transferType != newTransferType) {
+                transferType = newTransferType
+                configureScreenByTransferType()
+            }
         }
     }
 
-    private fun calculateTransferTypeByAmount(amount: BigDecimal) {
+    private fun calculateTransferTypeByAmount(amount: BigDecimal): TransferType {
         valBalanceLiveData.value?.let { valBalance ->
             valErcBalanceLiveData.value?.let { valErcBalance ->
                 if (transferType == TransferType.VAL_TRANSFER || transferType == TransferType.VALVALERC_TO_VAL) {
                     transactionFeeLiveData.value?.let { transferFee ->
-                        transferType = if (amount + transferFee > valBalance.balance) {
+                        return if (amount + transferFee > valBalance.balance) {
                             TransferType.VALVALERC_TO_VAL
                         } else {
                             TransferType.VAL_TRANSFER
@@ -417,7 +458,7 @@ class TransferAmountViewModel(
                     }
                 } else {
                     transactionFeeLiveData.value?.let { withdrawFee ->
-                        transferType = if (amount <= valErcBalance.balance) {
+                        return if (amount <= valErcBalance.balance) {
                             TransferType.VALERC_TRANSFER
                         } else {
                             if (amount + withdrawFee <= valBalance.balance) {
@@ -430,6 +471,8 @@ class TransferAmountViewModel(
                 }
             }
         }
+
+        return transferType
     }
 
     private fun areFieldsValidForSoranet(amount: BigDecimal?, userAmount: BigDecimal, fee: BigDecimal): Boolean {
@@ -493,18 +536,43 @@ class TransferAmountViewModel(
         return true
     }
 
+    private fun areFieldsValidForRetryWithdraw(ethBalance: BigDecimal, valBalance: BigDecimal, minerFee: BigDecimal, transactionFee: BigDecimal): Boolean {
+        if (isTxFeeNeeded && transactionFee > valBalance) {
+            onError(R.string.amount_error_no_funds)
+            return false
+        }
+
+        if (minerFee > ethBalance) {
+            _minerFeeErrorLiveData.value = Event(FeeDialogErrorData("$minerFee ETH", "${numbersFormatter.formatBigDecimal(ethBalance)} ETH"))
+            return false
+        }
+
+        return true
+    }
+
     fun minerFeeEditClicked() {
-        disposables.add(
-            ethereumInteractor.getMinerFeeInitialData()
-                .map { mapGasEstimationsToSelectGasDialogInitialData(it) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    _gasSelectBottomDialogShowLiveData.value = Event(it)
-                }, {
-                    it.printStackTrace()
-                })
-        )
+        if (minerFeeUpdated) {
+            val disposable = when (transferType) {
+                TransferType.VAL_WITHDRAW -> ethereumInteractor.getMinerFeeInitialDataForWithdraw()
+                TransferType.VALERC_TRANSFER, TransferType.VALVALERC_TO_VAL -> ethereumInteractor.getMinerFeeInitialDataForTransfer()
+                TransferType.VALVALERC_TO_VALERC -> ethereumInteractor.getMinerFeeInitialDataForTransferWithdraw()
+                else -> ethereumInteractor.getMinerFeeInitialDataForTransfer()
+            }
+
+            disposables.add(
+                disposable.map { mapGasEstimationsToSelectGasDialogInitialData(it) }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        minerFeeUpdated = false
+                        _gasSelectBottomDialogShowLiveData.value = it
+                    }, {
+                        it.printStackTrace()
+                    })
+            )
+        } else {
+            _showGasSelectBottomDialogShowLiveData.value = Event(Unit)
+        }
     }
 
     private fun mapGasEstimationsToSelectGasDialogInitialData(gas: Gas): SelectGasDialogInitialData {
@@ -571,12 +639,12 @@ class TransferAmountViewModel(
 
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(recipientFullName)
                 if (recipientId == recipientFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_val_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_gold_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
                 _recipientNameLiveData.value = recipientFullName
-                _inputTokenIcon.value = R.drawable.ic_val_red_24
+                _inputTokenIcon.value = R.drawable.ic_val_gold_24
                 _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
@@ -652,14 +720,14 @@ class TransferAmountViewModel(
 
                 _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = recipientId
-                _inputTokenIcon.value = R.drawable.ic_double_token_24
+                _inputTokenIcon.value = R.drawable.ic_double_24
                 _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
                 _hideDescriptionEventLiveData.value = Event(Unit)
 
                 amountLiveData.observeForever {
-                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled.first && isBridgeEnabled.second
                 }
 
                 _minerFeeFormattedLiveData.addSource(minerFeeLiveData) { fee ->
@@ -697,12 +765,12 @@ class TransferAmountViewModel(
 
                 val initials = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(recipientFullName)
                 if (recipientId == recipientFullName.trim()) {
-                    _recipientIconLiveData.value = R.drawable.ic_val_red_24
+                    _recipientIconLiveData.value = R.drawable.ic_val_gold_24
                 } else {
                     _recipientTextIconLiveData.value = initials
                 }
                 _recipientNameLiveData.value = recipientFullName
-                _inputTokenIcon.value = R.drawable.ic_double_token_24
+                _inputTokenIcon.value = R.drawable.ic_double_24
                 _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.filter_to)
@@ -733,7 +801,7 @@ class TransferAmountViewModel(
                 }
 
                 amountLiveData.observeForever {
-                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled.first && isBridgeEnabled.second
                 }
 
                 _transactionFeeVisibilityLiveData.value = true
@@ -746,14 +814,14 @@ class TransferAmountViewModel(
 
                 _recipientIconLiveData.value = R.drawable.ic_val_black_24
                 _recipientNameLiveData.value = recipientId
-                _inputTokenIcon.value = R.drawable.ic_val_red_24
+                _inputTokenIcon.value = R.drawable.ic_val_gold_24
                 _inputTokenName.value = AssetHolder.SORA_VAL.assetFirstName
                 _inputTokenLastName.value = AssetHolder.SORA_VAL.assetLastName
                 _outputTitle.value = resourceManager.getString(R.string.wallet_transfer_to_ethereum)
                 _hideDescriptionEventLiveData.value = Event(Unit)
 
                 amountLiveData.observeForever {
-                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
+                    _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled.first && isBridgeEnabled.second
                 }
 
                 _minerFeeFormattedLiveData.addSource(minerFeeLiveData) { fee ->
@@ -802,22 +870,22 @@ class TransferAmountViewModel(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    if (!it) {
+                    if (it.first && !it.second) {
                         _errorStringLiveData.value = resourceManager.getString(R.string.transaction_bridge_not_active_error)
                         _errorVisibilityLiveData.value = true
                         _nextButtonEnableLiveData.value = false
                     }
                     isBridgeEnabled = it
-                    _errorVisibilityLiveData.value = !it
+                    _errorVisibilityLiveData.value = it.first && !it.second
 
-                    amountLiveData.value?.let {
-                        _nextButtonEnableLiveData.value = it > BigDecimal.ZERO && isBridgeEnabled
+                    amountLiveData.value?.let { value ->
+                        _nextButtonEnableLiveData.value = value > BigDecimal.ZERO && isBridgeEnabled.first && isBridgeEnabled.second
                     }
                 }, {
                     _errorStringLiveData.value = resourceManager.getString(R.string.transaction_bridge_not_active_error)
                     _errorVisibilityLiveData.value = true
                     _nextButtonEnableLiveData.value = false
-                    isBridgeEnabled = false
+                    isBridgeEnabled = Pair(first = true, second = false)
                 })
         )
     }

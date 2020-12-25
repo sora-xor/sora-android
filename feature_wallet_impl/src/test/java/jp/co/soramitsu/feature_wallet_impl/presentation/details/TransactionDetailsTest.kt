@@ -76,7 +76,8 @@ class TransactionDetailsTest {
 
     @Test fun `show PENDING incoming transaction details opened from list`() {
         val transactionType = Transaction.Type.INCOMING
-        val status = "pending"
+        val status = Transaction.Status.PENDING
+        val detailedStatus = Transaction.DetailedStatus.INTENT_PENDING
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
         given(resourceManager.getString(R.string.transaction_send_back)).willReturn("Send back")
@@ -100,7 +101,9 @@ class TransactionDetailsTest {
             transactionType,
             soranetTransactionId,
             ethTransactionId,
+            "",
             status,
+            detailedStatus,
             date,
             amount,
             totalAmount,
@@ -168,7 +171,8 @@ class TransactionDetailsTest {
 
     @Test fun `show REJECTED outgoing transaction details`() {
         val transactionType = Transaction.Type.OUTGOING
-        val status = "rejected"
+        val status = Transaction.Status.REJECTED
+        val detailedStatus = Transaction.DetailedStatus.INTENT_FAILED
 
         given(numbersFormatter.formatBigDecimal(totalAmount)).willReturn("100")
         given(numbersFormatter.formatBigDecimal(transactionFee)).willReturn("0")
@@ -188,7 +192,9 @@ class TransactionDetailsTest {
             transactionType,
             soranetTransactionId,
             ethTransactionId,
+            "",
             status,
+            detailedStatus,
             date,
             amount,
             totalAmount,
@@ -255,9 +261,9 @@ class TransactionDetailsTest {
     }
 
     @Test fun `show COMMITED withdraw transaction details from list`() {
-        val isFromList = true
         val transactionType = Transaction.Type.WITHDRAW
-        val status = "committed"
+        val status = Transaction.Status.COMMITTED
+        val detailedStatus = Transaction.DetailedStatus.TRANSFER_COMPLETED
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
         given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
@@ -279,7 +285,9 @@ class TransactionDetailsTest {
             transactionType,
             soranetTransactionId,
             ethTransactionId,
+            "",
             status,
+            detailedStatus,
             date,
             amount,
             totalAmount,
@@ -333,7 +341,8 @@ class TransactionDetailsTest {
     @Test fun `click next button calls showTransferAmount if opened from list`() {
         val isFromList = true
         val transactionType = Transaction.Type.WITHDRAW
-        val status = "committed"
+        val status = Transaction.Status.COMMITTED
+        val detailedStatus = Transaction.DetailedStatus.TRANSFER_COMPLETED
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
         given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
@@ -355,7 +364,9 @@ class TransactionDetailsTest {
             transactionType,
             soranetTransactionId,
             ethTransactionId,
+            "",
             status,
+            detailedStatus,
             date,
             amount,
             totalAmount,
@@ -373,7 +384,8 @@ class TransactionDetailsTest {
     @Test fun `backpress calls returnToWalletFragment() from wallet`() {
         val isFromList = true
         val transactionType = Transaction.Type.WITHDRAW
-        val status = "committed"
+        val status = Transaction.Status.COMMITTED
+        val detailedStatus = Transaction.DetailedStatus.TRANSFER_COMPLETED
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
         given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
@@ -395,7 +407,9 @@ class TransactionDetailsTest {
             transactionType,
             soranetTransactionId,
             ethTransactionId,
+            "",
             status,
+            detailedStatus,
             date,
             amount,
             totalAmount,

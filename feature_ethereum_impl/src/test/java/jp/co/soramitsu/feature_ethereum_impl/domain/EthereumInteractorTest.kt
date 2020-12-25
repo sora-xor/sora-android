@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_ethereum_impl.domain
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.reactivex.Completable
 import io.reactivex.Single
+import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.did.DidRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
@@ -34,6 +35,7 @@ class EthereumInteractorTest {
 
     @Mock private lateinit var ethereumRepository: EthereumRepository
     @Mock private lateinit var didRepository: DidRepository
+    @Mock private lateinit var healthChecker: HealthChecker
 
     private lateinit var ethereumInteractorImpl: EthereumInteractorImpl
 
@@ -44,7 +46,7 @@ class EthereumInteractorTest {
     private val keyPair = mock(KeyPair::class.java)
 
     @Before fun setUp() {
-        ethereumInteractorImpl = EthereumInteractorImpl(ethereumRepository, didRepository)
+        ethereumInteractorImpl = EthereumInteractorImpl(ethereumRepository, didRepository, healthChecker)
         given(didRepository.getAccountId()).willReturn(Single.just(accountId))
         given(didRepository.retrieveKeypair()).willReturn(Single.just(keyPair))
     }

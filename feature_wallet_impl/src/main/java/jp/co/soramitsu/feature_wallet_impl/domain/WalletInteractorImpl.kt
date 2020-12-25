@@ -219,19 +219,15 @@ class WalletInteractorImpl(
     }
 
     override fun calculateDefaultMinerFeeInEthWithdraw(): Single<BigDecimal> {
-        return calculateDefaultMinerFeeInEth(true)
+        return ethRepository.calculateValErc20WithdrawFee()
     }
 
     override fun calculateDefaultMinerFeeInEthTransfer(): Single<BigDecimal> {
-        return calculateDefaultMinerFeeInEth(false)
+        return ethRepository.calculateValErc20TransferFee()
     }
 
-    private fun calculateDefaultMinerFeeInEth(isWithdrawal: Boolean): Single<BigDecimal> {
-        return if (isWithdrawal) {
-            ethRepository.calculateValErc20WithdrawFee()
-        } else {
-            ethRepository.calculateValErc20TransferFee()
-        }
+    override fun calculateDefaultMinerFeeInEthTransferWithWithdraw(): Single<BigDecimal> {
+        return ethRepository.calculateValErc20CombinedFee()
     }
 
     override fun hideAssets(assetIds: List<String>): Completable {

@@ -64,4 +64,6 @@ interface WalletInteractor {
     fun displayAssets(assetIds: List<String>): Completable
 
     fun updateAssetPositions(assetPositions: Map<String, Int>): Completable
+
+    fun calculateDefaultMinerFeeInEthTransferWithWithdraw(): Single<BigDecimal>
 }

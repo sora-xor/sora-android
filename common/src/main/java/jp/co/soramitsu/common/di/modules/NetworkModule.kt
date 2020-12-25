@@ -132,6 +132,20 @@ class NetworkModule {
 
     @Provides
     @Singleton
+    @Named("WEB3J_CLIENT")
+    fun provideWeb3jOkHttpClient(
+        logging: HttpLoggingInterceptor
+    ): OkHttpClient.Builder {
+        return OkHttpClient.Builder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .addInterceptor(logging)
+    }
+
+    @Provides
+    @Singleton
     @Named("DC_CLIENT")
     fun provideDCClient(
         logging: HttpLoggingInterceptor,
@@ -215,18 +229,12 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    @Named("ETHERSCAN_EXPLORER_URL")
-    fun provideEtherscanChainExplorerUrl(): String = BuildConfig.ETHERSCAN_EXPLORER_URL
-
-    @Singleton
-    @Provides
     fun provideAppLinksProvider(
         @Named("SORA_HOST_URL") soraHostUrl: String,
         @Named("DEFAULT_MARKET_URL") defaultMarketUrl: String,
         @Named("INVITE_LINK_URL") invitekUrl: String,
-        @Named("BLOCKCHAIN_EXPLORER_URL") blockChainExplorerUrl: String,
-        @Named("ETHERSCAN_EXPLORER_URL") etherscanExplorerUrl: String
+        @Named("BLOCKCHAIN_EXPLORER_URL") blockChainExplorerUrl: String
     ): AppLinksProvider {
-        return AppLinksProvider(soraHostUrl, defaultMarketUrl, invitekUrl, blockChainExplorerUrl, etherscanExplorerUrl)
+        return AppLinksProvider(soraHostUrl, defaultMarketUrl, invitekUrl, blockChainExplorerUrl)
     }
 }

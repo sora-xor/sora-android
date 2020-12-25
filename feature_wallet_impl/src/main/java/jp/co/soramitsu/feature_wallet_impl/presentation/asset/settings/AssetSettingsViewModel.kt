@@ -113,7 +113,7 @@ class AssetSettingsViewModel(
             numbersFormatter.formatBigDecimal(it)
         }
 
-        val valAssetIconResource = R.drawable.ic_val_red_24
+        val valAssetIconResource = R.drawable.ic_val_gold_24
         val valAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
 
         val ethAsset = assets.first { AssetHolder.ETHER_ETH.id == it.id }

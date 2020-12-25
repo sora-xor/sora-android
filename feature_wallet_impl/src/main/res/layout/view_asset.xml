@@ -24,7 +24,7 @@
                 android:layout_margin="@dimen/x2"
                 android:gravity="center"
                 android:textColor="@android:color/white"
-                tools:src="@drawable/ic_val_red_24" />
+                tools:src="@drawable/ic_val_gold_24" />
 
         </FrameLayout>
 
