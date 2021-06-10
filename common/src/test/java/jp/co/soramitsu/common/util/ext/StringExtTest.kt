@@ -5,9 +5,7 @@
 
 package jp.co.soramitsu.common.util.ext
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class StringExtTest {

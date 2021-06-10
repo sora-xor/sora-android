@@ -4,7 +4,7 @@
     android:id="@+id/soraAssetView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/x1_2"
-    android:layout_marginBottom="@dimen/x1_2"
-    android:elevation="@dimen/x2"
-    app:cardCornerRadius="10dp" />
+    android:layout_marginTop="@dimen/x1_5"
+    android:foreground="?attr/selectableItemBackgroundBorderless"
+    app:cardCornerRadius="@dimen/x2"
+    app:cardElevation="4dp" />

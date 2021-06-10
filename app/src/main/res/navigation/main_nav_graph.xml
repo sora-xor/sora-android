@@ -3,155 +3,140 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_nav_graph"
-    app:startDestination="@id/mainFragment">
+    app:startDestination="@id/walletFragment">
 
     <fragment
         android:id="@+id/inviteFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.invite.InviteFragment"
-        android:label="fragment_invite"
         tools:layout="@layout/fragment_invite" />
+
+    <fragment
+        android:id="@+id/stakingFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.staking.StakingFragment"
+        tools:layout="@layout/fragment_staking" />
+
+    <fragment
+        android:id="@+id/polkaswapFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.polkaswap.PolkaSwapFragment"
+        tools:layout="@layout/fragment_polka_swap" />
 
     <fragment
         android:id="@+id/votesFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.voteshistory.VotesHistoryFragment"
-        android:label="fragment_invite"
         tools:layout="@layout/fragment_votes_history" />
 
     <fragment
         android:id="@+id/termsFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.terms.TermsFragment"
-        android:label="fragment_terms"
         tools:layout="@layout/fragment_terms" />
 
     <fragment
         android:id="@+id/privacyFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.privacy.PrivacyFragment"
-        android:label="fragment_privacy"
         tools:layout="@layout/fragment_terms" />
 
     <fragment
         android:id="@+id/pincodeFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment"
-        android:label="fragment_pincode"
         tools:layout="@layout/fragment_pincode" />
 
     <fragment
         android:id="@+id/userVerificationFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.userverification.UserVerificationFragment"
-        android:label="fragment_userverificationfragment"
         tools:layout="@layout/fragment_user_verification" />
-
-    <fragment
-        android:id="@+id/projectDetailFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.project.DetailProjectFragment"
-        android:label="fragment_detail_project"
-        tools:layout="@layout/fragment_project_detail" />
 
     <fragment android:id="@+id/referendumDetailFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment"
-        android:label="fragment_detail_referendum"
         tools:layout="@layout/fragment_referendum_detail" />
 
     <fragment
         android:id="@+id/personalDataEditFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.personaldataedit.PersonalDataEditFragment"
-        android:label="fragment_personal_data_edit"
         tools:layout="@layout/fragment_personal_data_edit" />
 
     <fragment
         android:id="@+id/passphraseFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.passphrase.PassphraseFragment"
-        android:label="fragment_passphrase"
         tools:layout="@layout/fragment_my_mnemonic" />
 
     <fragment
         android:id="@+id/selectLanguageFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.language.SelectLanguageFragment"
-        android:label="fragment_passphrase"
         tools:layout="@layout/fragment_select_language" />
 
     <fragment
         android:id="@+id/profileFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.ProfileFragment"
-        android:label="fragment_detail"
         tools:layout="@layout/fragment_profile" />
 
     <fragment
-        android:id="@+id/activityFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.activity.ActivityFragment"
-        android:label="fragment_activity"
-        tools:layout="@layout/fragment_activity" />
-
-    <fragment
-        android:id="@+id/reputationFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.reputation.ReputationFragment"
-        android:label="fragment_detail"
-        tools:layout="@layout/fragment_reputation" />
+        android:id="@+id/parliamentFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.parliament.ParliamentFragment"
+        tools:layout="@layout/fragment_parliament" />
 
     <fragment
         android:id="@+id/faqFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.faq.FaqFragment"
-        android:label="fragment_faq"
         tools:layout="@layout/fragment_terms" />
 
     <fragment
         android:id="@+id/walletFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.WalletFragment"
-        android:label="fragmen_wallet"
         tools:layout="@layout/fragment_wallet" />
 
     <fragment
         android:id="@+id/contactsFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment"
-        android:label="fragment_contacts"
         tools:layout="@layout/fragment_contacts" />
 
     <fragment
         android:id="@+id/transferAmountFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment"
-        android:label="fragment_transfer_amount"
         tools:layout="@layout/fragment_transfer_amount" />
 
     <fragment
         android:id="@+id/transactionDetails"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment"
-        android:label="fragment_transaction_details"
         tools:layout="@layout/fragment_transaction_details" />
 
     <fragment
         android:id="@+id/transactionConfirmation"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment"
-        android:label="fragment_transaction_confirmation"
         tools:layout="@layout/fragment_transaction_confirmation" />
 
     <fragment
         android:id="@+id/receiveFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment"
-        android:label="fragment_receive_amount"
         tools:layout="@layout/fragment_receive" />
+
+    <fragment
+        android:id="@+id/assetListFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment"
+        tools:layout="@layout/fragment_asset_list" />
 
     <fragment
         android:id="@+id/mainFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment"
-        android:label="fragment_main"
         tools:layout="@layout/fragment_main" />
 
     <fragment
         android:id="@+id/unsupportedVersionFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment"
-        android:label="fragment_transaction_details"
         tools:layout="@layout/fragment_unsupported_version" />
 
     <fragment
         android:id="@+id/aboutFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.about.AboutFragment"
-        android:label="fragment_about"
         tools:layout="@layout/fragment_about" />
 
     <fragment
         android:id="@+id/assetSettingsFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.AssetSettingsFragment"
-        android:label="fragment_asset_settings"
         tools:layout="@layout/fragment_about" />
+
+    <fragment
+        android:id="@+id/claimFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment"
+        tools:layout="@layout/fragment_claim" />
 
 </navigation>

@@ -5,16 +5,12 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.Completable
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_account_api.domain.model.Reputation
-import jp.co.soramitsu.feature_account_api.domain.model.User
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -22,36 +18,39 @@ import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 class ProfileViewModel(
     private val interactor: MainInteractor,
     private val router: MainRouter,
-    private val numbersFormatter: NumbersFormatter,
-    private val resourceManager: ResourceManager
+    private val numbersFormatter: NumbersFormatter
 ) : BaseViewModel() {
 
-    val userLiveData = MutableLiveData<User>()
-    val selectedLanguageLiveData = MutableLiveData<String>()
-    val votesLiveData = MutableLiveData<String>()
-    val userReputationLiveData = MutableLiveData<Reputation>()
+    private val _biometryEnabledLiveData = MutableLiveData<Boolean>()
+    val biometryEnabledLiveData: LiveData<Boolean> = _biometryEnabledLiveData
+
+    private val _biometryAvailabledLiveData = MutableLiveData<Boolean>()
+    val biometryAvailabledLiveData: LiveData<Boolean> = _biometryAvailabledLiveData
 
     init {
-        disposables.add(observeVotes())
-    }
-
-    fun loadUserData(updateCached: Boolean) {
         disposables.add(
-            Completable.mergeArray(
-                loadUser(updateCached),
-                loadVotes(updateCached),
-                loadReputation(updateCached),
-                loadSelectedLanguage()
-            ).subscribe({
-                if (!updateCached) loadUserData(true)
-            }, {
-                logException(it)
-            })
+            interactor.isBiometryAvailable()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        _biometryAvailabledLiveData.value = it
+                    },
+                    ::onError
+                )
         )
-    }
 
-    fun onReputationClick() {
-        router.showReputation()
+        disposables.add(
+            interactor.isBiometryEnabled()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        _biometryEnabledLiveData.value = it
+                    },
+                    ::onError
+                )
+        )
     }
 
     fun onVotesClick() {
@@ -66,10 +65,6 @@ class ProfileViewModel(
         router.showPin(PinCodeAction.OPEN_PASSPHRASE)
     }
 
-    fun onEditProfileClicked() {
-        router.showPersonalDataEdition()
-    }
-
     fun profileAboutClicked() {
         router.showAbout()
     }
@@ -78,51 +73,34 @@ class ProfileViewModel(
         router.showSelectLanguage()
     }
 
-    private fun loadUser(updateCached: Boolean): Completable {
-        return interactor.getUserInfo(updateCached)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess { userLiveData.value = it }
-            .ignoreElement()
+    fun profileChangePin() {
+        router.showPin(PinCodeAction.CHANGE_PIN_CODE)
     }
 
-    private fun loadReputation(updateCached: Boolean): Completable {
-        return interactor.getUserReputation(updateCached)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess {
-                userReputationLiveData.value = it
-            }
-            .ignoreElement()
-    }
-
-    private fun loadVotes(updateCached: Boolean): Completable {
-        return if (updateCached) {
-            interactor.syncVotes()
+    fun biometryIsChecked(isChecked: Boolean) {
+        disposables.add(
+            interactor.setBiometryEnabled(isChecked)
+                .andThen(interactor.isBiometryEnabled())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-        } else {
-            Completable.complete()
-        }
+                .subscribe(
+                    {
+                        _biometryEnabledLiveData.value = it
+                    },
+                    ::onError
+                )
+        )
     }
 
-    private fun observeVotes(): Disposable {
-        return interactor.observeVotes()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({
-                votesLiveData.value = numbersFormatter.formatInteger(it)
-            }, ::onError)
+    fun profileFriendsClicked() {
+        router.showFriends()
     }
 
-    private fun loadSelectedLanguage(): Completable {
-        return interactor.getSelectedLanguage()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSuccess {
-                selectedLanguageLiveData.value =
-                    resourceManager.getString(it.nativeDisplayNameResource)
-            }
-            .ignoreElement()
+    fun logoutClicked() {
+        router.showPin(PinCodeAction.LOGOUT)
+    }
+
+    fun onPersonalDetailsClicked() {
+        router.showPersonalDataEdition()
     }
 }

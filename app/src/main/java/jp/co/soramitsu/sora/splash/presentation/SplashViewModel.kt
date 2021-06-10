@@ -18,12 +18,7 @@ class SplashViewModel(
     fun nextScreen() {
         when (val state = interactor.getRegistrationState()) {
             OnboardingState.REGISTRATION_FINISHED -> {
-                interactor.restoreAuth()
                 router.showMainScreen()
-            }
-            OnboardingState.PHONE_NUMBER_CONFIRMED -> {
-                interactor.restoreAuth()
-                router.showOnBoardingScreen(state)
             }
             OnboardingState.INITIAL -> {
                 router.showOnBoardingScreen(state)
@@ -35,7 +30,7 @@ class SplashViewModel(
         val state = interactor.getRegistrationState()
         interactor.saveInviteCode(invitationCode)
 
-        if (OnboardingState.INITIAL == state || OnboardingState.PHONE_NUMBER_CONFIRMED == state) {
+        if (OnboardingState.INITIAL == state) {
             router.showOnBoardingScreenViaInviteLink()
         } else {
             router.showMainScreenFromInviteLink()

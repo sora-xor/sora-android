@@ -9,7 +9,7 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,31 +28,103 @@ class PrefsEthereumDatasourceTest {
         private const val PREFS_ETH_REGISTER_STATE = "prefs_eth_register_state"
     }
 
-    @Mock private lateinit var encryptedPreferences: EncryptedPreferences
-    @Mock private lateinit var preferences: Preferences
+    @Mock
+    private lateinit var encryptedPreferences: EncryptedPreferences
+
+    @Mock
+    private lateinit var preferences: Preferences
 
     private lateinit var prefsEthereumDatasource: PrefsEthereumDatasource
 
     private val credentials = EthereumCredentials(Credentials.create("1").ecKeyPair.privateKey)
-    private val address = "xorAddress"
+    private val address = "valAddress"
     private val ethRegisterState = EthRegisterState.State.NONE.toString()
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         given(preferences.getString(PREFS_ETH_REGISTER_STATE)).willReturn(ethRegisterState)
         prefsEthereumDatasource = PrefsEthereumDatasource(encryptedPreferences, preferences)
     }
 
-    @Test fun `save eth private key called`() {
+    @Test
+    fun `save eth private key called`() {
         prefsEthereumDatasource.saveEthereumCredentials(credentials)
 
-        verify(encryptedPreferences).putEncryptedString(PREFS_ETH_PRIVATE, credentials.privateKey.toString())
+        verify(encryptedPreferences).putEncryptedString(
+            PREFS_ETH_PRIVATE,
+            credentials.privateKey.toString()
+        )
     }
 
-    @Test fun `retrieve eth private key called`() {
+    @Test
+    fun `retrieve eth private key called`() {
         given(encryptedPreferences.getDecryptedString(PREFS_ETH_PRIVATE)).willReturn("1")
 
         val actualCredentials = prefsEthereumDatasource.retrieveEthereumCredentials()
 
         assertEquals(actualCredentials, credentials)
+    }
+
+    @Test
+    fun `get eth registered state called`() {
+        val ethTxHashKey = "prefs_eth_register_transaction_hash"
+        val ethRegistrationStateKey = "prefs_eth_register_state"
+        val txHash = "txHash"
+        val stateStr = EthRegisterState.State.IN_PROGRESS.toString()
+        val expected = EthRegisterState(EthRegisterState.State.IN_PROGRESS, txHash)
+
+        given(preferences.getNullableString(ethTxHashKey)).willReturn(txHash)
+        given(preferences.getString(ethRegistrationStateKey)).willReturn(stateStr)
+
+        val actual = prefsEthereumDatasource.getEthRegisterState()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `get eth registered state called with empty state`() {
+        val actual = prefsEthereumDatasource.getEthRegisterState()
+
+        assertEquals(EthRegisterState(EthRegisterState.State.NONE, null), actual)
+    }
+
+    @Test
+    fun `save eth registered state called`() {
+        val ethTxHashKey = "prefs_eth_register_transaction_hash"
+        val ethRegistrationStateKey = "prefs_eth_register_state"
+        val txHash = "txHash"
+        val state = EthRegisterState(EthRegisterState.State.IN_PROGRESS, txHash)
+
+        prefsEthereumDatasource.observeEthRegisterState()
+            .test()
+            .assertValue(EthRegisterState.State.NONE)
+
+        prefsEthereumDatasource.saveEthRegisterState(state)
+
+        prefsEthereumDatasource.observeEthRegisterState()
+            .test()
+            .assertValue(state.state)
+
+        verify(preferences).putString(ethTxHashKey, txHash)
+        verify(preferences).putString(ethRegistrationStateKey, state.state.toString())
+    }
+
+    @Test
+    fun `save val address called`() {
+        val valAddressKey = "prefs_val_address"
+
+        prefsEthereumDatasource.saveVALAddress(address)
+
+        verify(preferences).putString(valAddressKey, address)
+    }
+
+    @Test
+    fun `retrieve val address called`() {
+        val valAddressKey = "prefs_val_address"
+        given(preferences.getString(valAddressKey)).willReturn(address)
+
+        val actual = prefsEthereumDatasource.retrieveVALAddress()
+
+        assertEquals(address, actual)
     }
 }

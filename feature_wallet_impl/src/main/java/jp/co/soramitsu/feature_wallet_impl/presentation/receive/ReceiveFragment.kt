@@ -5,176 +5,128 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.receive
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowManager
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.core.content.ContextCompat
+import android.widget.Toast
 import androidx.core.content.FileProvider
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
-import jp.co.soramitsu.common.util.EventObserver
-import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
+import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentReceiveBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
-import jp.co.soramitsu.feature_wallet_impl.presentation.util.observeTextChanges
-import kotlinx.android.synthetic.main.account_selector_amount.accountAmountBodyTextView
-import kotlinx.android.synthetic.main.fragment_receive.qrImg
-import kotlinx.android.synthetic.main.fragment_receive.toolbar
 import java.io.File
 import java.io.FileOutputStream
 
-class ReceiveFragment : BaseFragment<ReceiveViewModel>(), KeyboardHelper.KeyboardListener {
+class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive) {
 
     companion object {
-        private const val QR_ANIMATION_DURATION = 200L
-        private const val QR_SIZE_CHANGE_COEFFICIENT = 2
         private const val IMAGE_NAME = "image.png"
+        private const val ARG_ASSET = "arg_asset"
+        fun createBundle(asset: ReceiveAssetModel) = Bundle().apply {
+            putSerializable(ARG_ASSET, asset)
+        }
     }
 
-    private lateinit var btnKeyboard: ImageView
-
-    private var keyboardHelper: KeyboardHelper? = null
-
-    private var maximizedQrSize = 0
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_receive, container, false)
-
-        val accountCurrencySymbol = view.findViewById<TextView>(R.id.currencySymbol)
-        accountCurrencySymbol.text = getString(R.string.val_token)
-
-        btnKeyboard = view.findViewById(R.id.btn_keyboard)
-
-        return view
-    }
+    private val model: ReceiveAssetModel by lazy { requireArguments().getSerializable(ARG_ASSET) as ReceiveAssetModel }
+    private val viewBinding by viewBinding(FragmentReceiveBinding::bind)
 
     override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
+        FeatureUtils.getFeature<WalletFeatureComponent>(
+            requireContext(),
+            WalletFeatureApi::class.java
+        )
             .receiveAmountComponentBuilder()
             .withFragment(this)
+            .withReceiveModel(model)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-
-        accountAmountBodyTextView.hint = "0"
-
-        with(toolbar) {
-            showShareButton()
-            setTitle(getString(R.string.wallet_receive_val))
-            setBackgroundColor(ContextCompat.getColor(activity!!, R.color.backgroundGrey))
+        with(viewBinding.tbReceive) {
+            setTitle(composeTitle())
             setHomeButtonListener {
-                if (keyboardHelper?.isKeyboardShowing == true) {
-                    hideSoftKeyboard(activity)
-                } else {
-                    viewModel.backButtonPressed()
-                }
+                viewModel.backButtonPressed()
             }
-            setShareButtonListener {
-                viewModel.shareQr()
-            }
+            setRightActionClickListener { viewModel.shareQr() }
         }
+        viewBinding.ivCopyAddress.setOnClickListener {
+            viewModel.copyAddress()
+        }
+        viewBinding.ivQr.setOnClickListener {
+            viewModel.copyAddress()
+        }
+        initListeners()
     }
 
-    override fun subscribe(viewModel: ReceiveViewModel) {
-        btnKeyboard.setOnClickListener {
-            if (keyboardHelper!!.isKeyboardShowing) {
-                hideSoftKeyboard(activity)
+    private fun initListeners() {
+        viewModel.qrBitmapLiveData.observe(viewLifecycleOwner) {
+            viewBinding.ivQr.setImageBitmap(it)
+        }
+
+        viewModel.shareQrCodeLiveData.observe(viewLifecycleOwner) {
+            val mediaStorageDir: File = saveToTempFile(requireContext(), it.first)
+
+            val imageUri = FileProvider.getUriForFile(
+                requireContext(),
+                "${requireActivity().packageName}.provider",
+                mediaStorageDir
+            )
+
+            if (imageUri != null) {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/*"
+                    putExtra(Intent.EXTRA_STREAM, imageUri)
+                    putExtra(Intent.EXTRA_SUBJECT, getString(R.string.common_share))
+                    putExtra(Intent.EXTRA_TEXT, it.second)
+                }
+
+                startActivity(Intent.createChooser(intent, getString(R.string.common_share)))
+            }
+        }
+
+        viewModel.userNameAddress.observe(viewLifecycleOwner) {
+            if (it.second.isEmpty()) {
+                viewBinding.tvUserName.text = it.first
+                viewBinding.tvUserAddress.gone()
             } else {
-                openSoftKeyboard(accountAmountBodyTextView)
+                viewBinding.tvUserName.text = it.second
+                viewBinding.tvUserAddress.show()
+                viewBinding.tvUserAddress.text = it.first
             }
         }
 
-        observe(viewModel.qrBitmapLiveData, Observer {
-            qrImg.setImageBitmap(it)
-        })
+        viewModel.userAvatar.observe(viewLifecycleOwner) {
+            viewBinding.ivUserAvatar.setImageDrawable(it)
+        }
 
-        observe(viewModel.shareQrCodeLiveData, EventObserver {
-            val mediaStorageDir: File? = saveToTempFile(activity!!, it.first)
-
-            if (mediaStorageDir != null) {
-                val imageUri = FileProvider.getUriForFile(activity!!, "${activity!!.packageName}.provider", mediaStorageDir)
-
-                if (imageUri != null) {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "image/*"
-                        putExtra(Intent.EXTRA_STREAM, imageUri)
-                        putExtra(Intent.EXTRA_SUBJECT, getString(R.string.wallet_share_qr_code))
-                        putExtra(Intent.EXTRA_TEXT, it.second)
-                    }
-
-                    startActivity(Intent.createChooser(intent, getString(R.string.wallet_share_qr_code)))
-                }
-            }
-        })
-
-        viewModel.subscribeOnTextChanges(accountAmountBodyTextView.observeTextChanges())
+        viewModel.copiedAddressEvent.observe(viewLifecycleOwner) {
+            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun saveToTempFile(context: Context, bitmap: Bitmap): File? {
+    private fun saveToTempFile(context: Context, bitmap: Bitmap): File {
         val mediaStorageDir = File(context.externalCacheDir!!.absolutePath + IMAGE_NAME)
-
         val outputStream = FileOutputStream(mediaStorageDir)
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
         outputStream.close()
         return mediaStorageDir
     }
 
-    override fun onResume() {
-        super.onResume()
-        activity!!.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        keyboardHelper = KeyboardHelper(view!!)
-        keyboardHelper!!.setKeyboardListener(this)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        keyboardHelper?.release()
-    }
-
-    override fun onKeyboardHide() {
-        if (maximizedQrSize != qrImg.width) {
-            resizeQrImageView(qrImg.width, qrImg.width * QR_SIZE_CHANGE_COEFFICIENT)
-        }
-        btnKeyboard.setImageResource(R.drawable.icon_open_keyboard)
-    }
-
-    override fun onKeyboardShow() {
-        if (maximizedQrSize == 0) maximizedQrSize = qrImg.width
-
-        if (maximizedQrSize == qrImg.width) {
-            resizeQrImageView(qrImg.width, qrImg.width / QR_SIZE_CHANGE_COEFFICIENT)
-        }
-        btnKeyboard.setImageResource(R.drawable.icon_close_keyboard)
-    }
-
-    private fun resizeQrImageView(width: Int, finalWidth: Int) {
-        val anim = ValueAnimator.ofInt(width, finalWidth)
-        anim.addUpdateListener {
-            if (isAdded) {
-                val animatedValue = it.animatedValue as Int
-                val layoutParams = qrImg.layoutParams
-                layoutParams.height = animatedValue
-                layoutParams.width = animatedValue
-                qrImg.layoutParams = layoutParams
-            }
-        }
-        anim.duration = QR_ANIMATION_DURATION
-        anim.start()
-    }
+    private fun composeTitle() = listOf(
+        getString(R.string.common_receive),
+        model.networkName,
+        getString(R.string.brackets_format, model.tokenName)
+    ).filter { it.isNotEmpty() }.joinToString(separator = " ")
 }

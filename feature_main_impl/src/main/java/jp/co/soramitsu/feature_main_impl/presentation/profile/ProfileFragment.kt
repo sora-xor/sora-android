@@ -6,106 +6,89 @@
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentProfileBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_profile.howItWorksCard
-import kotlinx.android.synthetic.main.fragment_profile.phoneNumberTv
-import kotlinx.android.synthetic.main.fragment_profile.profileAboutTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileDetailsTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileLanguageTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileMyReputationNumber
-import kotlinx.android.synthetic.main.fragment_profile.profileMyReputationTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileNameTv
-import kotlinx.android.synthetic.main.fragment_profile.profilePassphraseTextView
-import kotlinx.android.synthetic.main.fragment_profile.profileProfileCard
-import kotlinx.android.synthetic.main.fragment_profile.profileVotesAmount
-import kotlinx.android.synthetic.main.fragment_profile.profileVotesTextView
-import kotlinx.android.synthetic.main.fragment_profile.selectedLanguageText
-import kotlinx.android.synthetic.main.fragment_profile.userReputationAmount
 import javax.inject.Inject
 
-class ProfileFragment : BaseFragment<ProfileViewModel>() {
+class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_profile, container, false)
-    }
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
+    private val binding by viewBinding(FragmentProfileBinding::bind)
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .profileSubComponentBuilder()
             .withProfileFragment(this)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
 
-        profileMyReputationTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.onReputationClick()
-        })
+        binding.profileFriendsTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.profileFriendsClicked()
+        }
 
-        profileVotesTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.onVotesClick()
-        })
+        binding.profilePinTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.profileChangePin()
+        }
 
-        profileDetailsTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.onEditProfileClicked()
-        })
+        binding.profilePersonalDetailsTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.onPersonalDetailsClicked()
+        }
 
-        profileProfileCard.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.onEditProfileClicked()
-        })
-
-        profilePassphraseTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        binding.profilePassphraseTextView.setDebouncedClickListener(debounceClickHandler) {
             viewModel.onPassphraseClick()
-        })
+        }
 
-        profileAboutTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.profileAboutClicked()
-        })
-
-        profileLanguageTextView.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.profileLanguageClicked()
-        })
-
-        howItWorksCard.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        binding.profileFaqTextView.setDebouncedClickListener(debounceClickHandler) {
             viewModel.btnHelpClicked()
-        })
+        }
+
+        binding.profileLogoutTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.logoutClicked()
+        }
+
+        binding.profileBiometryAuthSwitch.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.biometryIsChecked(isChecked)
+        }
+
+        binding.profileAboutTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.profileAboutClicked()
+        }
+
+        binding.profileLanguageTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.profileLanguageClicked()
+        }
+
+        initListeners()
     }
 
-    override fun subscribe(viewModel: ProfileViewModel) {
-        observe(viewModel.userLiveData, Observer { user ->
-            val fullName = "${user.firstName} ${user.lastName}"
-            profileNameTv.text = fullName
-            phoneNumberTv.text = user.phone
-        })
+    private fun initListeners() {
+        viewModel.biometryEnabledLiveData.observe {
+            binding.profileBiometryAuthSwitch.isChecked = it
 
-        observe(viewModel.selectedLanguageLiveData, Observer {
-            selectedLanguageText.text = it
-        })
-
-        observe(viewModel.votesLiveData, Observer { votes ->
-            profileVotesAmount.text = votes
-        })
-
-        observe(viewModel.userReputationLiveData, Observer { reputation ->
-            profileMyReputationNumber.visibility = if (reputation.rank > 0) View.VISIBLE else View.GONE
-            userReputationAmount.text = reputation.rank.toString()
-        })
-
-        viewModel.loadUserData(false)
+            if (binding.profileBiometryAuthSwitch.tag == null) {
+                binding.profileBiometryAuthSwitch.jumpDrawablesToCurrentState()
+                binding.profileBiometryAuthSwitch.tag = it
+            }
+        }
+        viewModel.biometryAvailabledLiveData.observe {
+            binding.profileBiometryAuthTextView.showOrGone(it)
+            binding.profileBiometryAuthSwitch.showOrGone(it)
+        }
     }
 }

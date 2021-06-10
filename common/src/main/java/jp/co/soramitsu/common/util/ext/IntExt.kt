@@ -8,3 +8,6 @@ package jp.co.soramitsu.common.util.ext
 import android.content.Context
 
 fun Int.toPx(context: Context) = this * context.resources.displayMetrics.density
+
+fun Int.trailingZeros(): Int =
+    this.toString(2).reversed().toCharArray().takeWhile { it == '0' }.count()

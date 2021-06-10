@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.util
 
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,11 +19,13 @@ class GasProviderTest {
     private val gasPrice = BigInteger.ONE
     private val estimatedGas = BigInteger.TEN
 
-    @Before fun setup() {
+    @Before
+    fun setup() {
         gasProvider = GasProvider(estimatedGas, gasPrice)
     }
 
-    @Test fun `get gas price and estimate gas called`() {
+    @Test
+    fun `get gas price and estimate gas called`() {
         assertEquals(gasPrice, gasProvider.price)
         assertEquals(estimatedGas, gasProvider.estimatedGas)
     }

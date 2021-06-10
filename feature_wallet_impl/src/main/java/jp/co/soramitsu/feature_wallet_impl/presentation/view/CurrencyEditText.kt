@@ -20,8 +20,8 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
     private var decimalSymbol = '.'
     private var groupingSymbol = ' '
 
-    val integerPartLength: Int = 7
-    val decimalPartLength: Int = 2
+    val integerPartLength: Int = 27
+    var decimalPartLength: Int = 2
 
     private val textWatcherListener = object : TextWatcher {
 
@@ -92,19 +92,21 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
             decimalFormatSymbols.groupingSeparator = groupingSymbol
             decimalFormatSymbols.decimalSeparator = decimalSymbol
             formatter.decimalFormatSymbols = decimalFormatSymbols
+            formatter.maximumFractionDigits = decimalPartLength
             var formattedString = formatter.format(getBigDecimal(amountString))
 
-            if (amountString.endsWith(decimalSymbol))
-                formattedString += decimalSymbol
-            else if (amountString.endsWith("$decimalSymbol$zero"))
-                formattedString += "$decimalSymbol$zero"
-            else if (amountString.endsWith("$decimalSymbol$doubleZero")) {
-                formattedString += "$decimalSymbol$doubleZero"
-            } else {
-                val parts = amountString.split(decimalSymbol)
-                if (parts.size == 2) {
-                    when {
-                        parts[1].endsWith(zero) -> formattedString += zero
+            when {
+                amountString.endsWith(decimalSymbol) -> formattedString += decimalSymbol
+                amountString.endsWith("$decimalSymbol$zero") -> formattedString += "$decimalSymbol$zero"
+                amountString.endsWith("$decimalSymbol$doubleZero") -> {
+                    formattedString += "$decimalSymbol$doubleZero"
+                }
+                else -> {
+                    val parts = amountString.split(decimalSymbol)
+                    if (parts.size == 2) {
+                        when {
+                            parts[1].endsWith(zero) -> formattedString = amountString
+                        }
                     }
                 }
             }

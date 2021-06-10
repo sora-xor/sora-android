@@ -5,21 +5,56 @@
 
 package jp.co.soramitsu.common.domain
 
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
+import jp.co.soramitsu.common.R
 
 class AssetHolder {
 
     companion object {
-        val SORA_XOR = Asset("xor#sora", "SORA NET", "XOR", true, false, 0, Asset.State.NORMAL, 2, null)
-        val SORA_VAL = Asset("val#sora", "SORA", "Validator Token (VAL)", true, false, 0, Asset.State.NORMAL, 2, null)
-        val ETHER_ETH = Asset("ether#ethereum", "Ethereum", "ETH", true, true, 1, Asset.State.UNKNOWN, 18, null)
-        val SORA_XOR_ERC_20 = Asset("xor_erc20#sora", "Ethereum", "XOR", false, true, 0, Asset.State.UNKNOWN, 2, null)
-        val SORA_VAL_ERC_20 = Asset("val_erc20#sora", "Ethereum", "VAL", false, true, 0, Asset.State.UNKNOWN, 2, null)
-
-        private val assets = mutableListOf(SORA_VAL, ETHER_ETH, SORA_VAL_ERC_20)
+        private val knownAssets: Map<String, AssetDefault> = mapOf(
+            // xor
+            "0x0200000000000000000000000000000000000000000000000000000000000000" to
+                AssetDefault(
+                    true, false,
+                    1, 4,
+                    R.drawable.ic_xor_red_shadow
+                ),
+            // val
+            "0x0200040000000000000000000000000000000000000000000000000000000000" to
+                AssetDefault(
+                    true, true,
+                    2, 4,
+                    R.drawable.ic_val_gold_shadow
+                ),
+            // pswap
+            "0x0200050000000000000000000000000000000000000000000000000000000000" to
+                AssetDefault(
+                    true, true,
+                    3, 4,
+                    R.drawable.ic_polkaswap_shadow
+                )
+        )
+        private val defaultAsset: AssetDefault = AssetDefault(
+            isDisplay = true,
+            isHidingAllowed = true,
+            position = 4,
+            roundingPrecision = 4,
+            iconShadow = R.drawable.ic_asset_24
+        )
     }
 
-    fun getAssets(): List<Asset> {
-        return assets
-    }
+    private fun getAsset(id: String): AssetDefault = knownAssets[id] ?: defaultAsset
+    fun isDisplay(id: String): Boolean = getAsset(id).isDisplay
+    fun isHiding(id: String): Boolean = getAsset(id).isHidingAllowed
+    fun position(id: String): Int = getAsset(id).position
+    fun rounding(id: String): Int = getAsset(id).roundingPrecision
+    fun iconShadow(id: String): Int = getAsset(id).iconShadow
+    fun isKnownAsset(id: String): Boolean = knownAssets[id] != null
+
+    internal data class AssetDefault(
+        val isDisplay: Boolean,
+        val isHidingAllowed: Boolean,
+        val position: Int,
+        val roundingPrecision: Int,
+        val iconShadow: Int,
+    )
 }

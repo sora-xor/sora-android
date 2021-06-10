@@ -7,7 +7,6 @@ package jp.co.soramitsu.common.domain
 
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
-import java.io.IOException
 
 class SoraException(
     val kind: Kind,
@@ -58,13 +57,17 @@ class SoraException(
             return SoraException(Kind.HTTP, errorMsg, errorTitle = errorTitle)
         }
 
-        fun networkError(resourceManager: ResourceManager, exception: IOException): SoraException {
+        fun networkError(resourceManager: ResourceManager, exception: Throwable): SoraException {
             return SoraException(Kind.NETWORK, resourceManager.getString(R.string.common_error_network), exception)
         }
 
         fun unexpectedError(exception: Throwable): SoraException {
-            return SoraException(Kind.UNEXPECTED, exception.message
-                ?: "", exception = exception, errorResponseCode = ResponseCode.GENERAL_ERROR)
+            return SoraException(
+                Kind.UNEXPECTED,
+                exception.message
+                    ?: "",
+                exception = exception, errorResponseCode = ResponseCode.GENERAL_ERROR
+            )
         }
     }
 }

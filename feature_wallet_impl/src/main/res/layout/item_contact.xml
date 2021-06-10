@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_contact"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:foreground="?selectableItemBackground"
     android:paddingStart="@dimen/margin_padding_by_side"
-    android:paddingEnd="@dimen/margin_padding_by_side"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:paddingEnd="@dimen/margin_padding_by_side">
+
     <TextView
         android:id="@+id/contactIconTextView"
         android:layout_width="@dimen/user_icon_size"
@@ -16,10 +16,10 @@
         android:layout_gravity="center"
         android:background="@drawable/circle_background"
         android:gravity="center"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:visibility="visible"
         tools:text="SL" />
 
     <ImageView
@@ -28,11 +28,12 @@
         android:layout_height="@dimen/user_icon_size"
         android:layout_gravity="center"
         android:gravity="center"
-        android:src="@drawable/ic_val_gold_16"
+        android:src="@drawable/ic_val_gold_shadow"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:visibility="invisible" />
+        tools:visibility="visible" />
 
     <TextView
         android:id="@+id/contactNameTextView"
@@ -40,28 +41,15 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_content_by_side"
-        android:layout_marginTop="@dimen/margin_padding_description"
-        android:layout_marginEnd="@dimen/margin_padding_content_by_side"
-        android:layout_marginBottom="@dimen/margin_padding_description"
-        android:singleLine="true"
+        android:layout_marginTop="@dimen/margin_padding_by_side"
+        android:layout_marginBottom="@dimen/margin_padding_by_side"
         android:ellipsize="middle"
+        android:singleLine="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/contactRightArrowImageView"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/contactIconTextView"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Sora Labs" />
-
-    <ImageView
-        android:id="@+id/contactRightArrowImageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginTop="@dimen/margin_padding_by_side"
-        android:layout_marginBottom="@dimen/margin_padding_by_side"
-        android:src="@drawable/ic_arrow_right"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <View
         android:id="@+id/contactsGreySeparator"

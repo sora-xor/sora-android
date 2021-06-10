@@ -1,44 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
-  xmlns:tools="http://schemas.android.com/tools"
-  android:layout_width="match_parent"
-  android:layout_height="wrap_content">
-
-  <TextView
-    android:id="@+id/name"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/x2"
-    android:layout_marginStart="@dimen/x2"
-    android:layout_marginEnd="@dimen/x2"
-    android:text="Alice Cooper"
-    android:textColor="@android:color/black"
-    android:textSize="13sp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"/>
-  <View
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="1dp"
-    android:layout_marginTop="@dimen/x2"
-    android:layout_marginStart="@dimen/x2"
-    android:layout_marginEnd="@dimen/x2"
-    android:background="@color/invitesDividerColor"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/name"/>
-  <TextView
-    android:id="@+id/votes"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/x2"
-    android:layout_marginBottom="@dimen/x2"
-    android:layout_marginEnd="@dimen/x2"
-    android:text="+50 votes"
-    android:textColor="@color/greyBlue"
-    android:visibility="gone"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent"/>
+    android:paddingStart="@dimen/x2"
+    android:paddingEnd="@dimen/x2"
+    android:paddingTop="@dimen/x1_5"
+    android:paddingBottom="@dimen/x1_5"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_sora_red_shadow"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:text="@string/invite_accepted_someone"
+        android:textColor="@color/black"
+        android:textSize="13sp"
+        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/date"
+        style="@style/TextAppearance.Soramitsu.Body2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        tools:text="10.04.20, 22:36:45"
+        android:textColor="@color/grey_400"
+        android:textSize="@dimen/text_size_b3"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintTop_toBottomOf="@id/name" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

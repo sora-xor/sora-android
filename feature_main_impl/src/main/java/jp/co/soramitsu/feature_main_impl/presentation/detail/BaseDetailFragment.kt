@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.detail
 
+import androidx.annotation.LayoutRes
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
@@ -14,7 +15,8 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog
 import javax.inject.Inject
 
-abstract class BaseDetailFragment<V : BaseDetailViewModel> : BaseFragment<V>(),
+abstract class BaseDetailFragment<V : BaseDetailViewModel>(@LayoutRes layoutRes: Int) :
+    BaseFragment<V>(layoutRes),
     KeyboardHelper.KeyboardListener {
     abstract var debounceClickHandler: DebounceClickHandler
 
@@ -22,11 +24,12 @@ abstract class BaseDetailFragment<V : BaseDetailViewModel> : BaseFragment<V>(),
 
     private var keyboardHelper: KeyboardHelper? = null
 
-    @Inject lateinit var numbersFormatter: NumbersFormatter
+    @Inject
+    lateinit var numbersFormatter: NumbersFormatter
 
     override fun onResume() {
         super.onResume()
-        keyboardHelper = KeyboardHelper(view!!, this)
+        keyboardHelper = KeyboardHelper(requireView(), this)
     }
 
     override fun onPause() {
@@ -49,7 +52,7 @@ abstract class BaseDetailFragment<V : BaseDetailViewModel> : BaseFragment<V>(),
         whenDone: (Long) -> Unit
     ) {
         voteDialog = VoteBottomSheetDialog(
-            activity!!,
+            requireActivity(),
             votableType,
             maxAllowedVotes,
             { whenDone.invoke(it) },

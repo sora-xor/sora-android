@@ -12,7 +12,7 @@ import android.view.View
 class SoraClickableSpan(private val spanClickListener: () -> Unit) : ClickableSpan() {
 
     override fun updateDrawState(ds: TextPaint) {
-        ds.isUnderlineText = true
+        ds.isUnderlineText = false
     }
 
     override fun onClick(widget: View) {

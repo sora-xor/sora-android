@@ -6,13 +6,12 @@
 package jp.co.soramitsu.feature_main_impl.presentation.detail.referendum
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
@@ -20,6 +19,7 @@ import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.setImageTint
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentReferendumDetailBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.detail.BaseDetailFragment
 import jp.co.soramitsu.feature_main_impl.presentation.util.DeadlineFormatter
@@ -28,36 +28,20 @@ import jp.co.soramitsu.feature_main_impl.presentation.util.loadImage
 import jp.co.soramitsu.feature_votable_api.domain.model.referendum.Referendum
 import jp.co.soramitsu.feature_votable_api.domain.model.referendum.ReferendumStatus
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumClose
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumDeadline
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumDeadlineLabel
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumDescription
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumImage
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumNoCount
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumPersonalNoCount
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumPersonalNoDescription
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumPersonalYesCount
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumPersonalYesDescription
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumResultGroup
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumResultIcon
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumResultStatus
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumTitle
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumTotalVotes
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumVoteAgainst
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumVoteFor
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumVotes
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumVotingGroup
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumVsLine
-import kotlinx.android.synthetic.main.fragment_referendum_detail.referendumYesCount
 import javax.inject.Inject
 
-class DetailReferendumFragment : BaseDetailFragment<DetailReferendumViewModel>() {
+class DetailReferendumFragment :
+    BaseDetailFragment<DetailReferendumViewModel>(R.layout.fragment_referendum_detail) {
     private enum class VotingResultStyle(
         @DrawableRes val iconRes: Int,
         @ColorRes val colorRes: Int,
         @StringRes val statusRes: Int
     ) {
-        Accepted(R.drawable.ic_thumb_up_24, R.color.uikit_lightRed, R.string.referendum_support_title),
+        Accepted(
+            R.drawable.ic_thumb_up_24,
+            R.color.uikit_lightRed,
+            R.string.referendum_support_title
+        ),
         Rejected(R.drawable.ic_thumb_down_24, R.color.grey, R.string.referendum_unsupport_title)
     }
 
@@ -72,49 +56,51 @@ class DetailReferendumFragment : BaseDetailFragment<DetailReferendumViewModel>()
     @Inject
     override lateinit var debounceClickHandler: DebounceClickHandler
 
-    @Inject lateinit var dateTimeFormatter: DateTimeFormatter
+    @Inject
+    lateinit var dateTimeFormatter: DateTimeFormatter
 
     private lateinit var deadlineFormatter: DeadlineFormatter
+    private val binding by viewBinding(FragmentReferendumDetailBinding::bind)
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_referendum_detail, container, false)
-    }
-
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        referendumClose.setOnClickListener { viewModel.backPressed() }
+        binding.referendumClose.setOnClickListener { viewModel.backPressed() }
 
-        referendumVotes.setOnClickListener { viewModel.votesClicked() }
+        binding.referendumVotes.setOnClickListener { viewModel.votesClicked() }
 
-        referendumVoteFor.setDebouncedClickListener(debounceClickHandler) {
+        binding.referendumVoteFor.setDebouncedClickListener(debounceClickHandler) {
             viewModel.voteOnReferendumClicked(toSupport = true)
         }
 
-        referendumVoteAgainst.setDebouncedClickListener(debounceClickHandler) {
+        binding.referendumVoteAgainst.setDebouncedClickListener(debounceClickHandler) {
             viewModel.voteOnReferendumClicked(toSupport = false)
         }
 
-        referendumPersonalYesDescription.text = buildPersonalVotesDescription(R.string.referendum_support_title)
-        referendumPersonalNoDescription.text = buildPersonalVotesDescription(R.string.referendum_unsupport_title)
+        binding.referendumPersonalYesDescription.text =
+            buildPersonalVotesDescription(R.string.referendum_support_title)
+        binding.referendumPersonalNoDescription.text =
+            buildPersonalVotesDescription(R.string.referendum_unsupport_title)
 
-        deadlineFormatter = DeadlineFormatter(referendumDeadlineLabel, referendumDeadline, dateTimeFormatter) {
+        deadlineFormatter = DeadlineFormatter(
+            binding.referendumDeadlineLabel,
+            binding.referendumDeadline,
+            dateTimeFormatter
+        ) {
             viewModel.onDeadline(it)
         }
+
+        initListeners()
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
-
         deadlineFormatter.release()
+        super.onDestroyView()
     }
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .detailReferendumComponentBuilder()
             .withFragment(this)
             .withReferendumId(getReferendumId())
@@ -122,16 +108,14 @@ class DetailReferendumFragment : BaseDetailFragment<DetailReferendumViewModel>()
             .inject(this)
     }
 
-    override fun subscribe(viewModel: DetailReferendumViewModel) {
+    private fun initListeners() {
         viewModel.votesFormattedLiveData.observe {
-            referendumVotes.text = it
+            binding.referendumVotes.text = it
         }
-
         viewModel.referendumLiveData.observe {
             showReferendum(it)
         }
-
-        viewModel.showVoteSheet.observeEvent { payload ->
+        viewModel.showVoteSheet.observe { payload ->
             openVotingSheet(payload.maxAllowedVotes, VotableType.Referendum(payload.toSupport)) {
                 viewModel.voteOnReferendum(it, payload.toSupport)
             }
@@ -139,21 +123,21 @@ class DetailReferendumFragment : BaseDetailFragment<DetailReferendumViewModel>()
     }
 
     private fun showReferendum(referendum: Referendum) = with(referendum) {
-        referendumImage.loadImage(imageLink)
+        binding.referendumImage.loadImage(imageLink)
 
         deadlineFormatter.setReferendum(this)
 
-        referendumTitle.text = name
-        referendumDescription.text = detailedDescription
-        referendumVsLine.percentage = supportingPercentage
+        binding.referendumTitle.text = name
+        binding.referendumDescription.text = detailedDescription
+        binding.referendumVsLine.percentage = supportingPercentage
 
-        referendumYesCount.text = numbersFormatter.formatInteger(supportVotes)
-        referendumNoCount.text = numbersFormatter.formatInteger(opposeVotes)
+        binding.referendumYesCount.text = numbersFormatter.formatInteger(supportVotes)
+        binding.referendumNoCount.text = numbersFormatter.formatInteger(opposeVotes)
 
-        referendumPersonalYesCount.text = numbersFormatter.formatInteger(userSupportVotes)
-        referendumPersonalNoCount.text = numbersFormatter.formatInteger(userOpposeVotes)
+        binding.referendumPersonalYesCount.text = numbersFormatter.formatInteger(userSupportVotes)
+        binding.referendumPersonalNoCount.text = numbersFormatter.formatInteger(userOpposeVotes)
 
-        referendumTotalVotes.text = numbersFormatter.formatInteger(totalVotes)
+        binding.referendumTotalVotes.text = numbersFormatter.formatInteger(totalVotes)
 
         handleReferendumStatus(referendum)
     }
@@ -167,20 +151,20 @@ class DetailReferendumFragment : BaseDetailFragment<DetailReferendumViewModel>()
     }
 
     private fun showReferendumResult(style: VotingResultStyle) {
-        referendumVotingGroup.visibility = View.GONE
+        binding.referendumVotingGroup.visibility = View.GONE
 
-        referendumResultIcon.setImageResource(style.iconRes)
-        referendumResultIcon.setImageTint(style.colorRes)
+        binding.referendumResultIcon.setImageResource(style.iconRes)
+        binding.referendumResultIcon.setImageTint(style.colorRes)
 
-        referendumResultStatus.setText(style.statusRes)
-        referendumResultStatus.setTextColor(
+        binding.referendumResultStatus.setText(style.statusRes)
+        binding.referendumResultStatus.setTextColor(
             ContextCompat.getColor(
                 requireContext(),
                 style.colorRes
             )
         )
 
-        referendumResultGroup.visibility = View.VISIBLE
+        binding.referendumResultGroup.visibility = View.VISIBLE
     }
 
     private fun buildPersonalVotesDescription(@StringRes voteTypeRes: Int): String {
@@ -189,5 +173,5 @@ class DetailReferendumFragment : BaseDetailFragment<DetailReferendumViewModel>()
         return getString(R.string.brackets_format, type)
     }
 
-    private fun getReferendumId() = arguments!!.getString(KEY_REFERENDUM_ID, "")
+    private fun getReferendumId() = requireArguments().getString(KEY_REFERENDUM_ID, "")
 }

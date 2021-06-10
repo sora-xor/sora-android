@@ -87,23 +87,16 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
 
         fun bind(contact: ContactListItem, debounceClickHandler: DebounceClickHandler, itemViewClickListener: (Account) -> Unit) {
             val account = contact.account
-            val nameStr = "${account.firstName} ${account.lastName}"
-            nameTv.text = nameStr
-            val iconStr = (account.firstName.getOrNull(0) ?: "").toString() +
-                (account.lastName.getOrNull(0) ?: "").toString()
-            iconTv.text = iconStr
+            nameTv.text = account.address
+            iconTv.hide()
+            iconIv.show()
+            iconIv.setImageDrawable(contact.icon)
 
-            if (account.firstName == account.accountId) {
-                iconTv.hide()
-                iconIv.show()
-            } else {
-                iconTv.show()
-                iconIv.hide()
-            }
-
-            root.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-                itemViewClickListener(account)
-            })
+            root.setOnClickListener(
+                DebounceClickListener(debounceClickHandler) {
+                    itemViewClickListener(account)
+                }
+            )
 
             if (contact.isLast) {
                 contactSeparator.gone()
@@ -123,9 +116,11 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
             nameTv.setText(contactMenuItem.nameRes)
             iconTv.setImageResource(contactMenuItem.iconRes)
 
-            root.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-                itemViewClickListener(contactMenuItem)
-            })
+            root.setOnClickListener(
+                DebounceClickListener(debounceClickHandler) {
+                    itemViewClickListener(contactMenuItem)
+                }
+            )
         }
     }
 
@@ -139,9 +134,11 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
             nameTv.text = contactEthListItem.ethereumAddress
             iconTv.setImageResource(R.drawable.ic_eth_16)
 
-            root.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-                itemViewClickListener(contactEthListItem)
-            })
+            root.setOnClickListener(
+                DebounceClickListener(debounceClickHandler) {
+                    itemViewClickListener(contactEthListItem)
+                }
+            )
         }
     }
 
@@ -159,7 +156,7 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
 object DiffCallback : DiffUtil.ItemCallback<Any>() {
     override fun areItemsTheSame(oldItem: Any, newItem: Any): Boolean {
         return when {
-            oldItem is ContactListItem && newItem is ContactListItem -> oldItem.account.accountId == newItem.account.accountId
+            oldItem is ContactListItem && newItem is ContactListItem -> oldItem.account.address == newItem.account.address
             oldItem is ContactHeader && newItem is ContactHeader -> true
             oldItem is ContactMenuItem && newItem is ContactMenuItem -> oldItem == newItem
             else -> false

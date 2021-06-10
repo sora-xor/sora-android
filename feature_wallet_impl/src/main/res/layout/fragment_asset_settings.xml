@@ -2,63 +2,58 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/contentContainer"
+    android:id="@+id/clAssetManagement"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/baseOnAccent">
 
-    <jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.view.AssetSettingsToolbar
-        android:id="@+id/assetSettingsToolbar"
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+        android:id="@+id/tbAssetManagement"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:leftActionText="@string/common_done"
-        app:rightActionText="@string/common_hide"
-        app:titleText="@string/asset_settings_title" />
+        app:textRight="@string/common_done"
+        app:titleText="@string/common_manage" />
 
-    <LinearLayout
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/svAssetList"
+        style="@style/SearchViewStyle2"
+        android:layout_width="0dp"
+        android:layout_height="?attr/searchViewHeight"
+        android:layout_margin="@dimen/x1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tbAssetManagement"
+        app:queryHint="@string/search_asset_by_name"
+        tools:layout_height="40dp" />
+
+    <View
+        android:id="@+id/vShadow"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/x1"
+        android:background="?attr/baseBorderPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/svAssetList"
+        tools:background="@color/brand_pmsblack" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAssetManagementList"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/greyBackground"
-        android:orientation="vertical"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x1_5"
+        android:paddingBottom="@dimen/x2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/assetSettingsToolbar">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/assetsRv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:overScrollMode="never"
-            android:paddingTop="@dimen/x2"
-            android:paddingBottom="@dimen/x2"
-            tools:itemCount="2"
-            tools:listitem="@layout/item_asset" />
-
-        <TextView
-            android:id="@+id/addAssetTv"
-            style="@style/TextAppearance.Soramitsu.Body1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:drawableStart="@drawable/ic_add_rounded_selector"
-            android:drawablePadding="@dimen/x2"
-            android:padding="10dp"
-            android:text="@string/asset_add"
-            android:textColor="@drawable/accent_text_color_selector" />
-
-    </LinearLayout>
-
-    <View
-        android:id="@+id/shadowView"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/shadow_view_height"
-        android:background="@drawable/below_shadow"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/assetSettingsToolbar" />
+        app:layout_constraintTop_toBottomOf="@id/vShadow"
+        tools:itemCount="2"
+        tools:listitem="@layout/item_asset_configurable" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,19 +10,13 @@ import android.content.Context
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.did.network.DidNetworkApi
-import jp.co.soramitsu.common.data.did.repository.DidRepositoryImpl
-import jp.co.soramitsu.common.data.did.repository.datasource.PrefsDidDatasource
-import jp.co.soramitsu.common.data.network.NetworkApiCreator
-import jp.co.soramitsu.common.domain.did.DidDatasource
-import jp.co.soramitsu.common.domain.did.DidRepository
+import jp.co.soramitsu.common.data.credentials.repository.CredentialsRepositoryImpl
+import jp.co.soramitsu.common.data.credentials.repository.datasource.PrefsCredentialsDatasource
+import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
+import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.CryptoAssistant
-import jp.co.soramitsu.feature_main_impl.domain.AccountSettingsImpl
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
 import jp.co.soramitsu.sora.SoraApp
-import jp.co.soramitsu.sora.sdk.json.JsonUtil
 import javax.inject.Singleton
 
 @Module
@@ -46,25 +40,13 @@ class AppModule {
         return ResourceManager(contextManager)
     }
 
-    @Singleton
     @Provides
-    fun provideAccountSettings(didRepository: DidRepository): AccountSettings {
-        return AccountSettingsImpl(didRepository)
-    }
+    @Singleton
+    fun provideCredentialsRepository(credentialsRepositoryImpl: CredentialsRepositoryImpl): CredentialsRepository = credentialsRepositoryImpl
 
     @Provides
     @Singleton
-    fun provideDidRepository(didRepositoryImpl: DidRepositoryImpl): DidRepository = didRepositoryImpl
-
-    @Provides
-    @Singleton
-    fun provideDidApi(apiCreator: NetworkApiCreator): DidNetworkApi {
-        return apiCreator.create(DidNetworkApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDidDatasource(encryptedPreferences: EncryptedPreferences, cryptoAssistant: CryptoAssistant): DidDatasource {
-        return PrefsDidDatasource(encryptedPreferences, cryptoAssistant, JsonUtil.buildMapper())
+    fun provideCredentialsDatasource(encryptedPreferences: EncryptedPreferences): CredentialsDatasource {
+        return PrefsCredentialsDatasource(encryptedPreferences)
     }
 }

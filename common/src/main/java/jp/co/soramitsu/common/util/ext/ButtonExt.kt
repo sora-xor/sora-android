@@ -16,3 +16,7 @@ fun Button.disable() {
     this.isEnabled = false
     this.alpha = 0.5f
 }
+
+fun Button.enableIf(f: Boolean) {
+    if (f) this.enable() else this.disable()
+}

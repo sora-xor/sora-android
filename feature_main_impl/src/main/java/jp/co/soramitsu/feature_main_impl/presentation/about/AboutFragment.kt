@@ -6,83 +6,88 @@
 package jp.co.soramitsu.feature_main_impl.presentation.about
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
+import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
-import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ext.createSendEmailIntent
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showBrowser
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentAboutBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_about.contactUsTv
-import kotlinx.android.synthetic.main.fragment_about.privacyTv
-import kotlinx.android.synthetic.main.fragment_about.sourceCodeTv
-import kotlinx.android.synthetic.main.fragment_about.termsTv
-import kotlinx.android.synthetic.main.fragment_about.toolbar
-import kotlinx.android.synthetic.main.fragment_about.versionTv
 import javax.inject.Inject
 
-class AboutFragment : BaseFragment<AboutViewModel>() {
+class AboutFragment : BaseFragment<AboutViewModel>(R.layout.fragment_about) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_about, container, false)
-    }
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
+    private val binding by viewBinding(FragmentAboutBinding::bind)
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .aboutComponentBuilder()
             .withFragment(this)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
+        binding.websiteSubtitleTv.text = BuildConfig.WEBSITE.substring(8)
+        binding.sourceSubtitleTv.text = BuildConfig.SOURCE_LINK.substring(8)
+        binding.telegramSubtitleTv.text = BuildConfig.TELEGRAM_LINK.substring(8)
+        binding.contactSubtitleTv.text = BuildConfig.EMAIL
 
-        with(toolbar) {
-            setHomeButtonListener { viewModel.backPressed() }
-            showHomeButton()
+        binding.icHome.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.backPressed()
         }
 
-        sourceCodeTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        binding.sourceWrapper.setDebouncedClickListener(debounceClickHandler) {
             viewModel.openSourceClicked()
-        })
+        }
 
-        termsTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        binding.tgWrapper.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.telegramClicked()
+        }
+
+        binding.websiteWrapper.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.websiteClicked()
+        }
+
+        binding.termsWrapper.setDebouncedClickListener(debounceClickHandler) {
             viewModel.termsClicked()
-        })
+        }
 
-        privacyTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        binding.privacyWrapper.setDebouncedClickListener(debounceClickHandler) {
             viewModel.privacyClicked()
-        })
+        }
 
-        contactUsTv.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        binding.contactsWrapper.setDebouncedClickListener(debounceClickHandler) {
             viewModel.contactsClicked()
-        })
+        }
+
+        initListeners()
+        viewModel.getAppVersion()
     }
 
-    override fun subscribe(viewModel: AboutViewModel) {
-        observe(viewModel.appVersionLiveData, Observer {
-            versionTv.text = it
-        })
-
-        observe(viewModel.openSendEmailEvent, EventObserver {
-            activity!!.createSendEmailIntent(it, getString(R.string.common_select_email_app_title))
-        })
-
-        observe(viewModel.showBrowserLiveData, EventObserver {
+    private fun initListeners() {
+        viewModel.sourceTitleLiveData.observe {
+            binding.sourceTv.text = it
+        }
+        viewModel.openSendEmailEvent.observe {
+            requireActivity().createSendEmailIntent(
+                it,
+                getString(R.string.common_select_email_app_title)
+            )
+        }
+        viewModel.showBrowserLiveData.observe {
             showBrowser(it)
-        })
-
-        viewModel.getAppVersion()
+        }
     }
 }

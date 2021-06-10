@@ -1,7 +1,6 @@
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.appdistribution'
 apply plugin: 'com.google.firebase.crashlytics'
@@ -36,15 +35,7 @@ android {
         debug {
             versionNameSuffix '-debug'
         }
-        cidebug {
-//            minifyEnabled true
-//            shrinkResources true
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            initWith debug
-            matchingFallbacks = ['debug']
-            signingConfig signingConfigs.cidebug
-        }
-        cifirebasedebug {
+        firebasedebug {
 //            minifyEnabled true
 //            shrinkResources true
 //            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -70,16 +61,16 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    dataBinding {
-        enabled = true
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
     }
 
-    configurations {
-        all*.exclude group: 'com.google.guava', module: 'listenablefuture'
+    buildFeatures {
+        viewBinding true
     }
 
     packagingOptions {
@@ -152,16 +143,12 @@ dependencies {
     implementation project(":feature_account_impl")
     implementation project(':feature_ethereum_api')
     implementation project(':feature_ethereum_impl')
-    implementation project(":feature_information_api")
-    implementation project(":feature_information_impl")
     implementation project(":feature_votable_api")
     implementation project(":feature_votable_impl")
     implementation project(":feature_wallet_api")
     implementation project(":feature_wallet_impl")
     implementation project(":feature_notification_api")
     implementation project(":feature_notification_impl")
-    implementation project(":feature_sse_api")
-    implementation project(":feature_sse_impl")
 
     implementation kotlinDep
 
@@ -183,17 +170,19 @@ dependencies {
 
     implementation rxDep
 
-    implementation firebaseCoreDep
+    implementation platform(firebaseBomDep)
     implementation firebaseMessagingDep
     implementation crashlyticsDep
     implementation googleAnalyticsDep
 
     implementation multidexDep
 
-    implementation irohaDep
+    //implementation irohaDep
 
-    implementation soraDep
+    //implementation soraDep
     implementation novaCryptoDep
+    implementation fearlessLibDep
+    implementation webSocketLibDep
 
     implementation shimmerDep
 

@@ -10,13 +10,10 @@ import android.annotation.SuppressLint
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.zxing.integration.android.IntentIntegrator
 import com.tbruyelle.rxpermissions2.RxPermissions
 import jp.co.soramitsu.common.base.BaseFragment
@@ -24,51 +21,43 @@ import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.ChooserDialog
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.gone
-import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentContactsBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactsAdapter
-import kotlinx.android.synthetic.main.fragment_contacts.contactsSearchView
-import kotlinx.android.synthetic.main.fragment_contacts.preloaderView
-import kotlinx.android.synthetic.main.fragment_contacts.toolbar
 import javax.inject.Inject
 
 @SuppressLint("CheckResult")
-class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTextListener {
+class ContactsFragment :
+    BaseFragment<ContactsViewModel>(R.layout.fragment_contacts),
+    SearchView.OnQueryTextListener {
 
     companion object {
         private const val PICK_IMAGE_REQUEST = 101
+        private const val ARG_ASSET = "arg_asset"
+        fun createBundle(assetId: String) = Bundle().apply {
+            putString(ARG_ASSET, assetId)
+        }
     }
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
-
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
     private lateinit var integrator: IntentIntegrator
-    private lateinit var emptyStateView: View
-    private lateinit var emptySearchResultView: View
-    private lateinit var contactsRecyclerView: RecyclerView
-
     private var keyboardHelper: KeyboardHelper? = null
+    private val viewBinding by viewBinding(FragmentContactsBinding::bind)
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_contacts, container, false)
-    }
-
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-
-        with(toolbar) {
-            inflateMenu(R.menu.contacts_fragment_menu)
-
-            setOnMenuItemClickListener {
+        with(viewBinding.toolbar) {
+            setRightActionClickListener {
                 viewModel.qrMenuItemClicked()
-                true
             }
-
             setHomeButtonListener {
                 if (keyboardHelper?.isKeyboardShowing == true) {
                     hideSoftKeyboard(activity)
@@ -77,97 +66,78 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
                 }
             }
         }
-
-        emptyStateView = view!!.findViewById(R.id.emptyStatePlaceholder)
-        emptySearchResultView = view!!.findViewById(R.id.emptySearchResultPlaceholder)
-        contactsRecyclerView = view!!.findViewById(R.id.contactsRecyclerView)
-
-        contactsSearchView.setOnQueryTextListener(this)
+        viewBinding.contactsSearchView.setOnQueryTextListener(this)
+        initListeners()
     }
 
-    override fun subscribe(viewModel: ContactsViewModel) {
+    private fun initListeners() {
         configureClicks()
-
-        observe(viewModel.contactsLiveData, Observer {
-            if (contactsRecyclerView.adapter == null) {
-                contactsRecyclerView.layoutManager = LinearLayoutManager(activity!!)
-                contactsRecyclerView.adapter = ContactsAdapter(
+        viewModel.contactsLiveData.observe {
+            if (viewBinding.contactsRecyclerView.adapter == null) {
+                viewBinding.contactsRecyclerView.layoutManager =
+                    LinearLayoutManager(requireContext())
+                viewBinding.contactsRecyclerView.adapter = ContactsAdapter(
                     debounceClickHandler,
-                    { viewModel.contactClicked(it.accountId, "${it.firstName} ${it.lastName}") },
-                    { viewModel.menuItemClicked(it) },
-                    { viewModel.ethItemClicked(it) }
+                    { account ->
+                        viewModel.contactClicked(
+                            account.address,
+                            requireArguments().getString(ARG_ASSET).orEmpty()
+                        )
+                    },
+                    { item -> viewModel.menuItemClicked(item) },
+                    { ethItem -> viewModel.ethItemClicked(ethItem) }
                 )
             }
 
-            (contactsRecyclerView.adapter as ContactsAdapter).submitList(it)
-        })
-
-        observe(viewModel.initiateGalleryChooserLiveData, Observer {
-            if (it.getContentIfNotHandled() != null) {
-                selectQrFromGallery()
-            }
-        })
-
-        observe(viewModel.initiateScannerLiveData, EventObserver {
+            (viewBinding.contactsRecyclerView.adapter as ContactsAdapter).submitList(it)
+        }
+        viewModel.chooseGallery.observe {
+            selectQrFromGallery()
+        }
+        viewModel.initiateScanner.observe {
             initiateScan()
-        })
-
-        observe(viewModel.showChooserEvent, EventObserver {
+        }
+        viewModel.showChooser.observe {
             ChooserDialog(
-                activity!!,
+                requireContext(),
                 R.string.contacts_scan,
-                getString(R.string.invoice_scan_camera),
-                getString(R.string.invoice_scan_gallery),
+                getString(R.string.common_camera),
+                getString(R.string.common_gallery),
                 { viewModel.openCamera() },
                 { viewModel.openGallery() }
             ).show()
-        })
-
-        observe(viewModel.emptyContactsVisibilityLiveData, Observer {
-            emptySearchResultView.gone()
-
-            if (it) {
-                emptyStateView.show()
-            } else {
-                emptyStateView.gone()
-            }
-        })
-
-        observe(viewModel.emptySearchResultVisibilityLiveData, Observer {
-            emptyStateView.gone()
-
-            if (it) {
-                emptySearchResultView.show()
-            } else {
-                emptySearchResultView.gone()
-            }
-        })
-
-        observe(viewModel.getPreloadVisibility(), Observer {
-            if (it) {
-                preloaderView.show()
-            } else {
-                preloaderView.gone()
-            }
-        })
-
-        observe(viewModel.qrErrorLiveData, EventObserver {
+        }
+        viewModel.emptyContactsVisibilityLiveData.observe {
+            viewBinding.emptySearchResultPlaceholder.gone()
+            viewBinding.emptyStatePlaceholder.showOrGone(it)
+        }
+        viewModel.emptySearchResultVisibilityLiveData.observe {
+            viewBinding.emptyStatePlaceholder.gone()
+            viewBinding.emptySearchResultPlaceholder.showOrGone(it)
+        }
+        viewModel.getPreloadVisibility().observe {
+            viewBinding.preloaderView.showOrGone(it)
+        }
+        viewModel.qrErrorLiveData.observe {
             showErrorFromResponse(it)
-        })
+        }
     }
 
     private fun configureClicks() {
         integrator = IntentIntegrator.forSupportFragment(this).apply {
-            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES)
+            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
             setPrompt(getString(R.string.contacts_scan))
             setBeepEnabled(false)
         }
 
-        viewModel.getContacts(false, true)
+        viewModel.getContacts(true)
     }
 
     override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
+        FeatureUtils.getFeature<WalletFeatureComponent>(
+            requireContext(),
+            WalletFeatureApi::class.java
+        )
             .contactsComponentBuilder()
             .withFragment(this)
             .build()
@@ -176,7 +146,7 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
 
     override fun onResume() {
         super.onResume()
-        keyboardHelper = KeyboardHelper(view!!)
+        keyboardHelper = KeyboardHelper(requireView())
     }
 
     override fun onPause() {
@@ -201,11 +171,12 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
 
     override fun onQueryTextSubmit(query: String?): Boolean {
         hideSoftKeyboard(activity)
-        viewModel.search(query!!)
+        viewModel.search(query.orEmpty())
         return true
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
+        if (newText?.isEmpty() == true) viewModel.search("")
         return true
     }
 
@@ -223,6 +194,12 @@ class ContactsFragment : BaseFragment<ContactsViewModel>(), SearchView.OnQueryTe
             action = Intent.ACTION_GET_CONTENT
         }
 
-        startActivityForResult(Intent.createChooser(intent, getString(R.string.common_options_title)), PICK_IMAGE_REQUEST)
+        startActivityForResult(
+            Intent.createChooser(
+                intent,
+                getString(R.string.common_options_title)
+            ),
+            PICK_IMAGE_REQUEST
+        )
     }
 }

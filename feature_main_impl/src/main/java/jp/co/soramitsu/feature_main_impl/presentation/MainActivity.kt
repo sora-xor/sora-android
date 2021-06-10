@@ -17,38 +17,40 @@ import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.Observer
+import androidx.core.view.ViewCompat
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import com.google.android.material.color.MaterialColors
+import dev.chrisbanes.insetter.Insetter
+import dev.chrisbanes.insetter.applyInsetter
+import dev.chrisbanes.insetter.windowInsetTypesOf
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.feature_ethereum_api.EthServiceStarter
-import jp.co.soramitsu.feature_ethereum_api.EthStatusPollingServiceStarter
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.ActivityMainBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
-import jp.co.soramitsu.feature_sse_api.EventsObservingStarter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.activity_main.*
 import java.util.Date
 import javax.inject.Inject
 
-class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
+class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), BottomBarController {
 
     companion object {
         const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
 
-        private const val ACTION_CHANGE_LANGUAGE = "jp.co.soramitsu.feature_main_impl.ACTION_CHANGE_LANGUAGE"
+        private const val ACTION_CHANGE_LANGUAGE =
+            "jp.co.soramitsu.feature_main_impl.ACTION_CHANGE_LANGUAGE"
 
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
@@ -80,20 +82,12 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
 
     @Inject
     lateinit var mainRouter: MainRouter
-    @Inject
-    lateinit var eventsObservingStarter: EventsObservingStarter
-    @Inject
-    lateinit var ethServiceStarter: EthServiceStarter
-    @Inject
-    lateinit var ethStatusPollingServiceStarter: EthStatusPollingServiceStarter
 
     private var timeInBackground: Date? = null
 
     private var navController: NavController? = null
 
-    override fun layoutResource(): Int {
-        return R.layout.activity_main
-    }
+    override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
     override fun inject() {
         FeatureUtils.getFeature<MainFeatureComponent>(this, MainFeatureApi::class.java)
@@ -105,22 +99,36 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
 
     override fun onPause() {
         super.onPause()
-        eventsObservingStarter.stopObserver()
-        ethStatusPollingServiceStarter.stopEthStatusPollingServiceService()
+//        eventsObservingStarter.stopObserver()
+//        ethStatusPollingServiceStarter.stopEthStatusPollingServiceService()
     }
 
     override fun initViews() {
-        bottomNavigationView.show()
-        bottomNavigationView.inflateMenu(R.menu.bottom_navigations)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigationView) { _, insets ->
+            insets
+        }
+        Insetter.builder()
+            .paddingTop(windowInsetTypesOf(statusBars = true))
+            .applyToView(binding.flContainer)
+        Insetter.builder()
+            .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
+            .applyToView(binding.clMainContainer)
+        binding.bottomNavigationView.show()
+        binding.bottomNavigationView.inflateMenu(R.menu.bottom_navigations)
 
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment)
+        navController = Navigation.findNavController(this, R.id.fragmentNavHostMain)
         mainRouter.attachNavController(navController!!)
-        NavigationUI.setupWithNavController(bottomNavigationView, navController!!)
+        NavigationUI.setupWithNavController(binding.bottomNavigationView, navController!!)
 
         if (ACTION_CHANGE_LANGUAGE == intent.action) {
             mainRouter.showProfile()
         } else {
             showPin(PinCodeAction.TIMEOUT_CHECK)
+        }
+        binding.badConnectionView.applyInsetter {
+            type(statusBars = true) {
+                padding(top = true)
+            }
         }
     }
 
@@ -130,89 +138,95 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
     }
 
     override fun subscribe(viewModel: MainViewModel) {
-        viewModel.showInviteErrorTimeIsUpLiveData.observe(this, EventObserver {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.invite_enter_error_time_is_up)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        })
-
-        viewModel.showInviteErrorAlreadyAppliedLiveData.observe(this, EventObserver {
-            AlertDialog.Builder(this)
-                .setMessage(R.string.invite_enter_error_already_applied)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        })
-
-        viewModel.badConnectionVisibilityLiveData.observe(this, Observer {
-            if (it) {
-                showBadConnectionView()
-            } else {
-                hideBadConnectionView()
+        viewModel.showInviteErrorTimeIsUpLiveData.observe(
+            this,
+            EventObserver {
+                AlertDialog.Builder(this)
+                    .setMessage(R.string.invite_enter_error_time_is_up)
+                    .setPositiveButton(R.string.common_ok) { _, _ -> }
+                    .show()
             }
-        })
+        )
 
-        viewModel.ethereumConfigStateLiveData.observe(this, Observer {
-            if (it) {
-                hideBadConnectionView()
-            } else {
-                showBadConnectionView(R.string.ethereum_config_unavailable)
+        viewModel.showInviteErrorAlreadyAppliedLiveData.observe(
+            this,
+            EventObserver {
+                AlertDialog.Builder(this)
+                    .setMessage(R.string.invite_enter_error_already_applied)
+                    .setPositiveButton(R.string.common_ok) { _, _ -> }
+                    .show()
             }
-        })
+        )
 
-        viewModel.addInviteIsPossibleLiveData.observe(this, EventObserver {
-            val message = getString(R.string.invite_enter_confirmation_body_mask, it)
-            AlertDialog.Builder(this)
-                .setMessage(message)
-                .setNegativeButton(R.string.common_cancel) { _, _ -> }
-                .setPositiveButton(R.string.common_apply) { _, _ -> viewModel.applyInvitationCode() }
-                .show()
-        })
+        viewModel.badConnectionVisibilityLiveData.observe(
+            this,
+            {
+                if (it) {
+                    showBadConnectionView()
+                } else {
+                    hideBadConnectionView()
+                }
+            }
+        )
 
-        viewModel.invitationCodeAppliedSuccessful.observe(this, EventObserver {
-            AlertDialog.Builder(this)
-                .setTitle(R.string.invite_code_applied_title)
-                .setMessage(R.string.invite_code_applied_body)
-                .setPositiveButton(R.string.common_ok) { _, _ -> }
-                .show()
-        })
+        viewModel.invitationCodeAppliedSuccessful.observe(
+            this,
+            EventObserver {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.invite_code_applied_title)
+                    .setMessage(R.string.invite_code_applied_body)
+                    .setPositiveButton(R.string.common_ok) { _, _ -> }
+                    .show()
+            }
+        )
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.let {
             if (ACTION_INVITE == it.action) {
-                viewModel.startedWithInviteAction()
+                // viewModel.startedWithInviteAction()
             }
         }
     }
 
-    private fun showBadConnectionView(@StringRes content: Int = R.string.common_network_unavailable) {
-        if (View.GONE == badConnectionView.visibility) {
-            badConnectionView.setText(content)
+    private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
+        if (View.GONE == binding.badConnectionView.visibility) {
+            val errorColor = MaterialColors.getColor(binding.badConnectionView, R.attr.statusError)
+            binding.badConnectionView.setText(content)
+            binding.badConnectionView.setBackgroundColor(errorColor)
             val animation = TranslateAnimation(0f, 0f, -ANIM_START_POSITION, 0f)
             animation.duration = ANIM_DURATION
-            badConnectionView.startAnimation(animation)
-            badConnectionView.show()
+            binding.badConnectionView.startAnimation(animation)
+            binding.badConnectionView.show()
+            window.statusBarColor = errorColor
         }
     }
 
-    private fun hideBadConnectionView() {
-        if (View.VISIBLE == badConnectionView.visibility) {
+    private fun hideBadConnectionView(@StringRes content: Int = R.string.common_connected) {
+        if (View.VISIBLE == binding.badConnectionView.visibility) {
+            val successColor =
+                MaterialColors.getColor(binding.badConnectionView, R.attr.statusSuccess)
+            binding.badConnectionView.setText(content)
+            binding.badConnectionView.setBackgroundColor(successColor)
+            window.statusBarColor = successColor
             val animation = TranslateAnimation(0f, 0f, 0f, -ANIM_START_POSITION)
             animation.duration = ANIM_DURATION
+            animation.startOffset = 500
             animation.setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationRepeat(p0: Animation?) {
                 }
 
                 override fun onAnimationEnd(p0: Animation?) {
-                    badConnectionView.gone()
+                    binding.badConnectionView.gone()
+                    window.statusBarColor =
+                        MaterialColors.getColor(binding.badConnectionView, R.attr.baseOnAccent)
                 }
 
                 override fun onAnimationStart(p0: Animation?) {
                 }
             })
-            badConnectionView.startAnimation(animation)
+            binding.badConnectionView.startAnimation(animation)
         }
     }
 
@@ -222,20 +236,16 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
 
     fun checkInviteAction() {
         if (ACTION_INVITE == intent.action) {
-            viewModel.startedWithInviteAction()
+            // viewModel.startedWithInviteAction()
         }
     }
 
-    fun startEthService() {
-        ethServiceStarter.startEthService()
-    }
-
     override fun showBottomBar() {
-        bottomNavigationView.show()
+        binding.bottomNavigationView.show()
     }
 
     override fun hideBottomBar() {
-        bottomNavigationView.gone()
+        binding.bottomNavigationView.gone()
     }
 
     fun restartAfterLanguageChange() {
@@ -264,7 +274,8 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
         }
         timeInBackground = null
         super.onResume()
-        runServices()
+
+        // runServices()
     }
 
     private fun runServices() {
@@ -274,10 +285,13 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
             val importance = runningAppProcesses[0].importance
 
             if (importance <= RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                Handler().postDelayed({
-                    eventsObservingStarter.startObserver()
-                    ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
-                }, SERVICE_START_DELAY)
+                Handler().postDelayed(
+                    {
+                        // eventsObservingStarter.startObserver()
+                        // ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
+                    },
+                    SERVICE_START_DELAY
+                )
             }
         }
     }
@@ -307,6 +321,11 @@ class MainActivity : ToolbarActivity<MainViewModel>(), BottomBarController {
             }
 
             if (mainRouter.currentDestinationIsUserVerification()) {
+                closeApp()
+                return true
+            }
+
+            if (mainRouter.currentDestinationIsClaimFragment()) {
                 closeApp()
                 return true
             }

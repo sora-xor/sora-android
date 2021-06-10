@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
@@ -30,8 +29,8 @@ class ProfileModule {
     @Provides
     @IntoMap
     @ViewModelKey(ProfileViewModel::class)
-    fun provideViewModel(interactor: MainInteractor, router: MainRouter, numbersFormatter: NumbersFormatter, resourceManager: ResourceManager): ViewModel {
-        return ProfileViewModel(interactor, router, numbersFormatter, resourceManager)
+    fun provideViewModel(interactor: MainInteractor, router: MainRouter, numbersFormatter: NumbersFormatter): ViewModel {
+        return ProfileViewModel(interactor, router, numbersFormatter)
     }
 
     @Provides

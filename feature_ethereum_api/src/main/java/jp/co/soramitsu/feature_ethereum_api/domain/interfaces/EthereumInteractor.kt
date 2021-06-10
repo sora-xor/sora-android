@@ -16,8 +16,6 @@ interface EthereumInteractor {
 
     fun getAddress(): Single<String>
 
-    fun registerEthAccount(): Completable
-
     fun startWithdraw(amount: BigDecimal, ethAddress: String, transactionFee: String): Completable
 
     fun transferValERC20(to: String, amount: BigDecimal): Completable

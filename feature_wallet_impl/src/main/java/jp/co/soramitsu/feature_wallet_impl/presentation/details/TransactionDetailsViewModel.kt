@@ -9,15 +9,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
 import jp.co.soramitsu.common.date.DateTimeFormatter
-import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
-import jp.co.soramitsu.common.util.ext.isErc20Address
+import jp.co.soramitsu.common.util.ext.truncateHash
+import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
@@ -27,35 +29,32 @@ import java.math.BigDecimal
 import java.util.Date
 
 class TransactionDetailsViewModel(
-    private val walletInteractor: WalletInteractor,
+    walletInteractor: WalletInteractor,
     private val ethereumInteractor: EthereumInteractor,
     private val router: WalletRouter,
-    private val resourceManager: ResourceManager,
+    resourceManager: ResourceManager,
     private val numbersFormatter: NumbersFormatter,
     private val textFormatter: TextFormatter,
-    private val dateTimeFormatter: DateTimeFormatter,
-    private val myAccountId: String,
+    dateTimeFormatter: DateTimeFormatter,
+    myAccountId: String,
     private val assetId: String,
     private val peerId: String,
-    private val peerFullName: String,
     private val transactionType: Transaction.Type,
     private val soranetTransactionId: String,
-    private val ethTransactionId: String,
-    private val secondEthTransactionId: String,
+    private val soranetBlockId: String,
     private val transactionStatus: Transaction.Status,
-    private val detailedStatus: Transaction.DetailedStatus,
-    private val date: Long,
+    private val success: Boolean?,
+    date: Long,
     private val amount: BigDecimal,
     private val totalAmount: BigDecimal,
     private val transactionFee: BigDecimal,
-    private val minerFee: BigDecimal,
-    private val transactionDescription: String,
     private val clipboardManager: ClipboardManager
 ) : BaseViewModel() {
 
     companion object {
         private const val LABEL_ACCOUNT_ID = "account id"
         private const val LABEL_TRANSACTION_ID = "Transaction Id"
+        private const val LABEL_BLOCK_ID = "Block Id"
     }
 
     private val _statusLiveData = MutableLiveData<String>()
@@ -67,47 +66,17 @@ class TransactionDetailsViewModel(
     private val _dateLiveData = MutableLiveData<String>()
     val dateLiveData: LiveData<String> = _dateLiveData
 
-    private val _fromIconLiveData = MutableLiveData<Int>()
-    val fromIconLiveData: LiveData<Int> = _fromIconLiveData
-
     private val _fromLiveData = MutableLiveData<String>()
     val fromLiveData: LiveData<String> = _fromLiveData
-
-    private val _toIconLiveData = MutableLiveData<Int>()
-    val toIconLiveData: LiveData<Int> = _toIconLiveData
 
     private val _toLiveData = MutableLiveData<String>()
     val toLiveData: LiveData<String> = _toLiveData
 
-    private val _amountLiveData = MutableLiveData<String>()
-    val amountLiveData: LiveData<String> = _amountLiveData
+    private val _amountLiveData = MutableLiveData<Pair<String, String>>()
+    val amountLiveData: LiveData<Pair<String, String>> = _amountLiveData
 
-    private val _tranasctionFeeLiveData = MutableLiveData<String>()
-    val tranasctionFeeLiveData: LiveData<String> = _tranasctionFeeLiveData
-
-    private val _tranasctionFeeVisibilityLiveData = MutableLiveData<Boolean>()
-    val tranasctionFeeVisibilityLiveData: LiveData<Boolean> = _tranasctionFeeVisibilityLiveData
-
-    private val _minerFeeLiveData = MutableLiveData<String>()
-    val minerFeeLiveData: LiveData<String> = _minerFeeLiveData
-
-    private val _minerFeeVisibilityLiveData = MutableLiveData<Boolean>()
-    val minerFeeVisibilityLiveData: LiveData<Boolean> = _minerFeeVisibilityLiveData
-
-    private val _buttonVisibilityLiveData = MutableLiveData<Boolean>()
-    val buttonVisibilityLiveData: LiveData<Boolean> = _buttonVisibilityLiveData
-
-    private val _buttonDescriptionLiveData = MutableLiveData<String>()
-    val buttonDescriptionLiveData: LiveData<String> = _buttonDescriptionLiveData
-
-    private val _buttonDescriptionEllipsizeMiddleLiveData = MutableLiveData<Boolean>()
-    val buttonDescriptionEllipsizeMiddleLiveData: LiveData<Boolean> = _buttonDescriptionEllipsizeMiddleLiveData
-
-    private val _buttonDescriptionTextIconLiveData = MutableLiveData<String>()
-    val buttonDescriptionTextIconLiveData: LiveData<String> = _buttonDescriptionTextIconLiveData
-
-    private val _buttonDescriptionIconLiveData = MutableLiveData<Int>()
-    val buttonDescriptionIconLiveData: LiveData<Int> = _buttonDescriptionIconLiveData
+    private val _transactionFeeLiveData = MutableLiveData<String>()
+    val transactionFeeLiveData: LiveData<String> = _transactionFeeLiveData
 
     private val _btnTitleLiveData = MutableLiveData<String>()
     val btnTitleLiveData: LiveData<String> = _btnTitleLiveData
@@ -115,272 +84,120 @@ class TransactionDetailsViewModel(
     private val _titleLiveData = MutableLiveData<String>()
     val titleLiveData: LiveData<String> = _titleLiveData
 
-    private val _homeBtnVisibilityLiveData = MutableLiveData<Boolean>()
-    val homeBtnVisibilityLiveData: LiveData<Boolean> = _homeBtnVisibilityLiveData
+    private val _transactionHashLiveData = MutableLiveData<String>()
+    val transactionHashLiveData: LiveData<String> = _transactionHashLiveData
 
-    private val _totalAmountLiveData = MutableLiveData<String>()
-    val totalAmountLiveData: LiveData<String> = _totalAmountLiveData
+    private val _blockHashLiveData = MutableLiveData<String>()
+    val blockHashLiveData: LiveData<String> = _blockHashLiveData
 
-    private val _totalAmountVisibilityLiveData = MutableLiveData<Boolean>()
-    val totalAmountVisibilityLiveData: LiveData<Boolean> = _totalAmountVisibilityLiveData
+    private val _peerIdBufferEvent = SingleLiveEvent<Unit>()
+    val peerIdBufferEvent: LiveData<Unit> = _peerIdBufferEvent
 
-    private val _soranetTransactionIdVisibilityLiveData = MutableLiveData<Boolean>()
-    val soranetTransactionIdVisibilityLiveData: LiveData<Boolean> = _soranetTransactionIdVisibilityLiveData
-
-    private val _ethTransactionIdVisibilityLiveData = MutableLiveData<Boolean>()
-    val ethTransactionIdVisibilityLiveData: LiveData<Boolean> = _ethTransactionIdVisibilityLiveData
-
-    private val _transactionDescriptionLiveData = MutableLiveData<String>()
-    val transactionDescriptionLiveData: LiveData<String> = _transactionDescriptionLiveData
-
-    private val _transactionDescriptionVisibilityLiveData = MutableLiveData<Boolean>()
-    val transactionDescriptionVisibilityLiveData: LiveData<Boolean> = _transactionDescriptionVisibilityLiveData
-
-    private val _hideFromViewEvent = MutableLiveData<Event<Unit>>()
-    val hideFromViewEvent: LiveData<Event<Unit>> = _hideFromViewEvent
-
-    private val _hideToViewEvent = MutableLiveData<Event<Unit>>()
-    val hideToViewEvent: LiveData<Event<Unit>> = _hideToViewEvent
-
-    private val _peerIdBufferEvent = MutableLiveData<Event<Unit>>()
-    val peerIdBufferEvent: LiveData<Event<Unit>> = _peerIdBufferEvent
-
-    private val _transactionClickEvent = MutableLiveData<String>()
-    val transactionClickEvent: LiveData<String> = _transactionClickEvent
-
-    private val _transactionIdBufferEvent = MutableLiveData<Event<Unit>>()
-    val transactionIdBufferEvent: LiveData<Event<Unit>> = _transactionIdBufferEvent
-
-    private val _openBlockChainExplorerEvent = MutableLiveData<Event<String>>()
-    val openBlockChainExplorerEvent: LiveData<Event<String>> = _openBlockChainExplorerEvent
-
-    private val ethAddress = MutableLiveData<String>()
+    private val _openBlockChainExplorerEvent = SingleLiveEvent<String>()
+    val openBlockChainExplorerEvent: LiveData<String> = _openBlockChainExplorerEvent
 
     init {
+        _titleLiveData.value = resourceManager.getString(R.string.transaction_details)
+
         disposables.add(
-            ethereumInteractor.getAddress()
+            walletInteractor.getAssets()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ ethAddress.value = it }, {})
+                .subscribe(
+                    { assets ->
+                        val cur = requireNotNull(assets.find { it.id == assetId })
+                        val sign = if (transactionType == Transaction.Type.OUTGOING) "-" else ""
+
+                        _amountLiveData.value = "$sign ${
+                        numbersFormatter.formatBigDecimal(
+                            amount,
+                            cur.roundingPrecision
+                        )
+                        } ${cur.symbol}" to "${
+                        numbersFormatter.formatBigDecimal(
+                            amount,
+                            cur.precision
+                        )
+                        } ${cur.symbol}"
+                        _transactionFeeLiveData.value = "${
+                        numbersFormatter.formatBigDecimal(
+                            transactionFee,
+                            cur.precision
+                        )
+                        } ${SubstrateNetworkOptionsProvider.feeAssetSymbol}"
+                    },
+                    {
+                        logException(it)
+                    }
+                )
         )
 
-        _titleLiveData.value = resourceManager.getString(R.string.transaction_details)
-        _homeBtnVisibilityLiveData.value = true
-
-        val assetName = when (assetId) {
-            AssetHolder.SORA_VAL.id, AssetHolder.SORA_VAL_ERC_20.id -> {
-                resourceManager.getString(R.string.val_token)
-            }
-            AssetHolder.SORA_XOR.id, AssetHolder.SORA_XOR_ERC_20.id -> {
-                resourceManager.getString(R.string.xor)
-            }
-            AssetHolder.ETHER_ETH.id -> {
-                resourceManager.getString(R.string.transaction_eth_sign)
-            }
-            else -> resourceManager.getString(R.string.val_token)
+        _fromLiveData.value = when (transactionType) {
+            Transaction.Type.INCOMING -> peerId.truncateUserAddress()
+            Transaction.Type.OUTGOING -> myAccountId.truncateUserAddress()
+            else -> peerId.truncateUserAddress()
         }
-
-        if (assetId == AssetHolder.SORA_VAL_ERC_20.id) {
-            _buttonDescriptionLiveData.value = peerId
-            _buttonDescriptionEllipsizeMiddleLiveData.value = true
-            _buttonDescriptionIconLiveData.value = R.drawable.ic_eth_30
+        _toLiveData.value = when (transactionType) {
+            Transaction.Type.INCOMING -> myAccountId.truncateUserAddress()
+            Transaction.Type.OUTGOING -> peerId.truncateUserAddress()
+            else -> peerId.truncateUserAddress()
         }
-
-        when (transactionType) {
-            Transaction.Type.INCOMING -> {
-                _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_back)
-                _fromLiveData.value = peerId
-                _toLiveData.value = myAccountId
-                _fromIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_gold_20 else R.drawable.ic_xor_red_20
-                _toIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_gold_20 else R.drawable.ic_xor_red_20
-                _tranasctionFeeVisibilityLiveData.value = false
-                _minerFeeVisibilityLiveData.value = false
-                _totalAmountVisibilityLiveData.value = false
-                _buttonDescriptionLiveData.value = peerFullName
-
-                if (peerId == peerFullName.trim()) {
-                    _buttonDescriptionEllipsizeMiddleLiveData.value = true
-                    _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_VAL.id) R.drawable.ic_val_gold_20 else R.drawable.ic_xor_red_20
-                } else {
-                    _buttonDescriptionEllipsizeMiddleLiveData.value = false
-                    _buttonDescriptionTextIconLiveData.value = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
-                }
+        _btnTitleLiveData.value = when {
+            transactionType == Transaction.Type.INCOMING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
+                resourceManager.getString(R.string.transaction_send_back)
             }
-
-            Transaction.Type.OUTGOING -> {
-                when (assetId) {
-                    AssetHolder.SORA_XOR.id -> {
-                        _fromIconLiveData.value = R.drawable.ic_xor_red_20
-                        _toIconLiveData.value = R.drawable.ic_xor_red_20
-                    }
-
-                    AssetHolder.SORA_XOR_ERC_20.id -> {
-                        _fromIconLiveData.value = R.drawable.ic_xor_black_20
-                        _toIconLiveData.value = R.drawable.ic_xor_black_20
-                    }
-
-                    AssetHolder.SORA_VAL.id -> {
-                        _fromIconLiveData.value = R.drawable.ic_val_gold_20
-                        _toIconLiveData.value = R.drawable.ic_val_gold_20
-                    }
-
-                    AssetHolder.SORA_VAL_ERC_20.id -> {
-                        _fromIconLiveData.value = R.drawable.ic_val_black_20
-                        _toIconLiveData.value = R.drawable.ic_val_black_20
-                    }
-                }
-
-                _btnTitleLiveData.value = resourceManager.getString(R.string.transaction_send_again)
-                _toLiveData.value = peerId
-                _fromLiveData.value = myAccountId
-                _tranasctionFeeVisibilityLiveData.value = transactionFee != BigDecimal.ZERO
-                _minerFeeVisibilityLiveData.value = minerFee != BigDecimal.ZERO
-                _totalAmountVisibilityLiveData.value = totalAmount != amount
-                _buttonDescriptionLiveData.value = peerFullName
-
-                if (peerId == peerFullName.trim()) {
-                    _buttonDescriptionEllipsizeMiddleLiveData.value = true
-                    val icon = when (assetId) {
-                        AssetHolder.SORA_XOR.id -> R.drawable.ic_xor_red_24
-                        AssetHolder.SORA_XOR_ERC_20.id -> R.drawable.ic_xor_black_24
-                        AssetHolder.SORA_VAL.id -> R.drawable.ic_val_gold_24
-                        AssetHolder.SORA_VAL_ERC_20.id -> R.drawable.ic_val_black_24
-                        AssetHolder.ETHER_ETH.id -> R.drawable.ic_eth_24
-                        else -> R.drawable.ic_val_gold_24
-                    }
-                    _buttonDescriptionIconLiveData.value = icon
-                } else {
-                    _buttonDescriptionEllipsizeMiddleLiveData.value = false
-                    _buttonDescriptionTextIconLiveData.value = textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(peerFullName)
-                }
+            transactionType == Transaction.Type.OUTGOING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
+                resourceManager.getString(R.string.transaction_send_again)
             }
-
-            Transaction.Type.WITHDRAW -> {
-                if (secondEthTransactionId.isEmpty()) {
-                    _fromIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
-                        R.drawable.ic_xor_red_20
-                    } else {
-                        R.drawable.ic_val_gold_20
-                    }
-                } else {
-                    _fromIconLiveData.value = R.drawable.ic_double_24
-                }
-
-                _btnTitleLiveData.value = if (transactionStatus == Transaction.Status.REJECTED) {
-                    resourceManager.getString(R.string.common_retry)
-                } else {
-                    resourceManager.getString(R.string.transaction_send_again)
-                }
-
-                _buttonDescriptionLiveData.value = peerFullName
-                _buttonDescriptionIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
-                    R.drawable.ic_xor_black_24
-                } else {
-                    R.drawable.ic_val_black_24
-                }
-                _buttonDescriptionEllipsizeMiddleLiveData.value = true
-                _toIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
-                    R.drawable.ic_xor_black_20
-                } else {
-                    R.drawable.ic_val_black_20
-                }
-                _toLiveData.value = peerId
-                _fromLiveData.value = myAccountId
-                _tranasctionFeeVisibilityLiveData.value = transactionFee != BigDecimal.ZERO
-                _minerFeeVisibilityLiveData.value = minerFee != BigDecimal.ZERO
-                _totalAmountVisibilityLiveData.value = totalAmount != amount
+            transactionType == Transaction.Type.OUTGOING && (transactionStatus == Transaction.Status.REJECTED || (transactionStatus == Transaction.Status.COMMITTED && success == false)) -> {
+                resourceManager.getString(R.string.common_retry)
             }
-
-            Transaction.Type.DEPOSIT -> {
-                _fromIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
-                    R.drawable.ic_xor_black_24
-                } else {
-                    R.drawable.ic_val_black_24
-                }
-                _toIconLiveData.value = if (assetId == AssetHolder.SORA_XOR.id) {
-                    R.drawable.ic_xor_black_24
-                } else {
-                    R.drawable.ic_val_black_24
-                }
-                _toLiveData.value = peerId
-                _fromLiveData.value = myAccountId
-                _tranasctionFeeVisibilityLiveData.value = transactionFee != BigDecimal.ZERO
-                _minerFeeVisibilityLiveData.value = minerFee != BigDecimal.ZERO
-                _totalAmountVisibilityLiveData.value = totalAmount != amount
-                _buttonVisibilityLiveData.value = false
-            }
-
-            Transaction.Type.REWARD -> {
-                _hideFromViewEvent.value = Event(Unit)
-                _hideToViewEvent.value = Event(Unit)
-                _buttonVisibilityLiveData.value = false
-                _totalAmountVisibilityLiveData.value = false
-                _transactionDescriptionVisibilityLiveData.value = false
-                _tranasctionFeeVisibilityLiveData.value = false
-            }
+            else -> ""
         }
-
-        _ethTransactionIdVisibilityLiveData.value = secondEthTransactionId.isNotEmpty() || ethTransactionId.isNotEmpty()
-        _soranetTransactionIdVisibilityLiveData.value = soranetTransactionId.isNotEmpty()
 
         val transactionStatusResource = when (transactionStatus) {
-            Transaction.Status.REJECTED -> R.string.status_rejected
+            Transaction.Status.REJECTED -> R.string.status_error
             Transaction.Status.PENDING -> R.string.status_pending
-            Transaction.Status.COMMITTED -> R.string.status_success
+            Transaction.Status.COMMITTED -> if (success == true) R.string.status_success else R.string.status_error
         }
-        _statusLiveData.value = resourceManager.getString(transactionStatusResource)
+        _statusLiveData.value =
+            if (transactionStatus == Transaction.Status.COMMITTED && success == null) "" else resourceManager.getString(
+                transactionStatusResource
+            )
 
         _statusImageLiveData.value = when (transactionStatus) {
             Transaction.Status.REJECTED -> R.drawable.ic_error_red_18
             Transaction.Status.PENDING -> R.drawable.ic_pending_grey_18
-            Transaction.Status.COMMITTED -> R.drawable.ic_success_green_18
+            Transaction.Status.COMMITTED -> if (success == true) R.drawable.ic_success_green_18 else R.drawable.ic_error_red_18
         }
 
         val dateTime = Date(date)
-        _dateLiveData.value = "${dateTimeFormatter.formatDate(dateTime, DateTimeFormatter.DD_MMM_YYYY)}, ${dateTimeFormatter.formatTimeWithSeconds(dateTime)}"
+        _dateLiveData.value = "${
+        dateTimeFormatter.formatDate(
+            dateTime,
+            DateTimeFormatter.DD_MMM_YYYY
+        )
+        }, ${dateTimeFormatter.formatTimeWithSeconds(dateTime)}"
 
-        _amountLiveData.value = "${numbersFormatter.formatBigDecimal(amount)} $assetName"
-        _tranasctionFeeLiveData.value = "${numbersFormatter.formatBigDecimal(transactionFee)} $assetName"
-        _minerFeeLiveData.value = "$minerFee ${resourceManager.getString(R.string.transaction_eth_sign)}"
-
-        _totalAmountLiveData.value = "${numbersFormatter.formatBigDecimal(totalAmount)} $assetName"
-
-        _transactionDescriptionLiveData.value = transactionDescription
-
-        _transactionDescriptionVisibilityLiveData.value = transactionDescription.isNotEmpty()
-
-        if (assetId != AssetHolder.SORA_VAL_ERC_20.id && assetId != AssetHolder.SORA_VAL.id) {
-            _buttonVisibilityLiveData.value = false
-        }
+        _transactionHashLiveData.value = soranetTransactionId.truncateHash()
+        _blockHashLiveData.value = soranetBlockId.truncateHash()
     }
 
     fun btnNextClicked() {
-        if (transactionStatus == Transaction.Status.REJECTED) {
-            when (transactionType) {
-                Transaction.Type.WITHDRAW -> {
-                    val isTxFeeNeeded = detailedStatus == Transaction.DetailedStatus.INTENT_FAILED
-                    router.showWithdrawRetryFragment(soranetTransactionId, ethTransactionId, peerId, amount, isTxFeeNeeded)
-                }
+        when {
+            transactionType == Transaction.Type.INCOMING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
+                // send back
+                // todo
             }
-        } else {
-            when (assetId) {
-                AssetHolder.SORA_VAL.id -> {
-                    router.showValTransferAmount(peerId, peerFullName, BigDecimal.ZERO)
-                }
 
-                AssetHolder.SORA_VAL_ERC_20.id -> {
-                    if (transactionType == Transaction.Type.WITHDRAW) {
-                        ethAddress.value?.let { ethAddress ->
-                            if (peerId == ethAddress) {
-                                router.showValWithdrawToErc(peerId, BigDecimal.ZERO)
-                            } else {
-                                router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
-                            }
-                        }
-                    } else {
-                        router.showValERCTransferAmount(peerId, BigDecimal.ZERO)
-                    }
-                }
+            transactionType == Transaction.Type.OUTGOING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
+                // send again
+                router.showValTransferAmount(peerId, assetId, BigDecimal.ZERO)
+            }
+
+            transactionType == Transaction.Type.OUTGOING && (transactionStatus == Transaction.Status.REJECTED || (transactionStatus == Transaction.Status.COMMITTED && success == false)) -> {
+                // retry
+                router.showValTransferAmount(peerId, assetId, BigDecimal.ZERO)
             }
         }
     }
@@ -389,52 +206,26 @@ class TransactionDetailsViewModel(
         router.returnToWalletFragment()
     }
 
-    fun soranetTransactionIdClicked() {
-        _transactionClickEvent.value = soranetTransactionId
-    }
-
-    fun ethereumTransactionIdClicked() {
-        _transactionClickEvent.value = getEthTransactionId()
-    }
-
-    fun copyTransactionIdClicked(transactionId: String) {
-        clipboardManager.addToClipboard(LABEL_TRANSACTION_ID, transactionId)
-        _transactionIdBufferEvent.value = Event(Unit)
-    }
-
-    fun showInBlockChainExplorerClicked(transactionId: String) {
-        val disposable = if (transactionId.isErc20Address()) {
-            walletInteractor.getEtherscanExplorerUrl(transactionId)
-        } else {
-            walletInteractor.getBlockChainExplorerUrl(transactionId)
-        }
-
-        disposables.add(
-            disposable.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    _openBlockChainExplorerEvent.value = Event(it)
-                }, {
-                    onError(it)
-                })
-        )
-    }
-
     fun toClicked() {
         clipboardManager.addToClipboard(LABEL_ACCOUNT_ID, toLiveData.value.toString())
-        _peerIdBufferEvent.value = Event(Unit)
+        _peerIdBufferEvent.trigger()
     }
 
     fun fromClicked() {
         clipboardManager.addToClipboard(LABEL_ACCOUNT_ID, fromLiveData.value.toString())
-        _peerIdBufferEvent.value = Event(Unit)
+        _peerIdBufferEvent.trigger()
     }
 
-    private fun getEthTransactionId(): String {
-        return if (secondEthTransactionId.isEmpty()) {
-            ethTransactionId
-        } else {
-            secondEthTransactionId
-        }
+    fun hashTransactionClicked() {
+        clipboardManager.addToClipboard(
+            LABEL_TRANSACTION_ID,
+            transactionHashLiveData.value.toString()
+        )
+        _peerIdBufferEvent.trigger()
+    }
+
+    fun hashBlockClicked() {
+        clipboardManager.addToClipboard(LABEL_BLOCK_ID, blockHashLiveData.value.toString())
+        _peerIdBufferEvent.trigger()
     }
 }

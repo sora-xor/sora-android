@@ -6,60 +6,56 @@
 package jp.co.soramitsu.feature_main_impl.presentation.language
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentSelectLanguageBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_select_language.languageRecyclerView
-import kotlinx.android.synthetic.main.fragment_select_language.toolbar
 import javax.inject.Inject
 
-class SelectLanguageFragment : BaseFragment<SelectLanguageViewModel>() {
+class SelectLanguageFragment :
+    BaseFragment<SelectLanguageViewModel>(R.layout.fragment_select_language) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
-    @Inject lateinit var resourceManager: ResourceManager
+    @Inject
+    lateinit var resourceManager: ResourceManager
+    private val binding by viewBinding(FragmentSelectLanguageBinding::bind)
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_select_language, container, false)
-    }
-
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        with(toolbar) {
+        with(binding.toolbar) {
             setHomeButtonListener { viewModel.onBackPressed() }
             showHomeButton()
         }
 
-        languageRecyclerView.adapter = SelectLanguageAdapter(debounceClickHandler) { viewModel.languageSelected(it) }
+        binding.languageRecyclerView.adapter =
+            SelectLanguageAdapter(debounceClickHandler) { viewModel.languageSelected(it) }
+
+        viewModel.languagesLiveData.observe {
+            (binding.languageRecyclerView.adapter as SelectLanguageAdapter).submitList(it)
+        }
+
+        viewModel.languageChangedLiveData.observe {
+            (activity as MainActivity).restartAfterLanguageChange()
+        }
     }
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .selectLanguageComponentBuilder()
             .withFragment(this)
             .build()
             .inject(this)
-    }
-
-    override fun subscribe(viewModel: SelectLanguageViewModel) {
-        observe(viewModel.languagesLiveData, Observer {
-            (languageRecyclerView.adapter as SelectLanguageAdapter).submitList(it)
-        })
-
-        observe(viewModel.languageChangedLiveData, EventObserver {
-            (activity as MainActivity).restartAfterLanguageChange()
-        })
     }
 }

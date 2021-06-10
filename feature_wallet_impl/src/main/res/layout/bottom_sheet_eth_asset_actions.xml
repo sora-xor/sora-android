@@ -8,43 +8,37 @@
 
     <TextView
         android:id="@+id/titleTv"
-        style="@style/TextAppearance.Soramitsu.Header3"
+        style="@style/TextAppearance.Soramitsu.Paragraph_3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:paddingStart="@dimen/x2_5"
+        android:ellipsize="middle"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2"
         android:paddingTop="@dimen/x2"
-        android:paddingEnd="@dimen/x2_5"
-        android:paddingBottom="@dimen/x2"
+        android:paddingBottom="@dimen/x1_5"
+        android:singleLine="true"
         tools:text="Title" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
         android:background="#ddd" />
 
     <TextView
         android:id="@+id/copyTv"
-        style="@style/TextAppearance.Soramitsu.Body1"
-        android:layout_width="wrap_content"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:background="?selectableItemBackground"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:paddingStart="@dimen/x2_5"
         android:paddingTop="@dimen/x2"
-        android:paddingEnd="@dimen/x2_5"
         android:paddingBottom="@dimen/x2"
-        android:text="@string/common_copy_address" />
-
-    <TextView
-        android:id="@+id/retryTv"
-        style="@style/TextAppearance.Soramitsu.Body1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:paddingStart="@dimen/x2_5"
-        android:paddingTop="@dimen/x2"
-        android:paddingEnd="@dimen/x2_5"
-        android:paddingBottom="@dimen/x2"
-        android:text="@string/wallet_account_retry_registration" />
+        android:gravity="center_horizontal"
+        android:text="@string/common_copy" />
 
 </LinearLayout>

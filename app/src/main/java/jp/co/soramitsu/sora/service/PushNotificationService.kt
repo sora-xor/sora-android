@@ -41,7 +41,7 @@ class PushNotificationService : FirebaseMessagingService() {
         component.inject(this)
     }
 
-    override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
         val notificationIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
@@ -75,7 +75,7 @@ class PushNotificationService : FirebaseMessagingService() {
         pushHandler.pushReceived()
     }
 
-    override fun onNewToken(s: String?) {
+    override fun onNewToken(s: String) {
         s?.let { notificationRepository.saveDeviceToken(it) }
         super.onNewToken(s)
     }

@@ -39,17 +39,11 @@ class HealthChecker {
         return health
     }
 
-    fun observeHealthRestoredEvents(): Observable<Event<Unit>> {
-        return healthRestoredEventKeeper
-    }
-
     //region ethreum config provider
 
     fun ethrereumConfigOk() = ethreumConfigState.onNext(true)
 
     fun ethereumConfigError() = ethreumConfigState.onNext(false)
-
-    fun observeEthereumConfigState(): Observable<Boolean> = ethreumConfigState
 
     //endregion
 }

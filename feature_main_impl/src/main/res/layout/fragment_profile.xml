@@ -1,430 +1,301 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/greyBackground">
+    android:overScrollMode="never">
 
-    <TextView
-        android:id="@+id/title"
-        style="@style/TitleTextStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginTop="@dimen/x2"
-        android:text="@string/profile_title"
-        android:textColor="@color/titleDarkGreyBlue"
-        android:textSize="23sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/howItWorksCard"
-        android:layout_width="29dp"
-        android:layout_height="29dp"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:clickable="true"
-        android:foreground="?selectableItemBackground"
-        app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintBottom_toBottomOf="@+id/title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/title">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white">
 
         <TextView
+            android:id="@+id/title"
+            style="@style/TitleTextStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x2"
+            android:layout_marginTop="@dimen/x2"
+            android:layout_marginEnd="@dimen/x1"
+            android:text="@string/profile_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/profilePersonalDetailsTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x3"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_personal_info_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:padding="@dimen/x2"
+            android:text="@string/personal_info_username_v1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/title" />
+
+        <ImageView
+            android:id="@+id/profilePersonalDetailsArrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:text="@string/common_question_mark"
-            android:textColor="@color/uikit_lightRed"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </androidx.cardview.widget.CardView>
+            android:layout_marginEnd="@dimen/x3"
+            app:layout_constraintBottom_toBottomOf="@+id/profilePersonalDetailsTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/profilePersonalDetailsTextView"
+            app:srcCompat="@drawable/ic_chevron_right_16" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/profileProfileCard"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginTop="@dimen/x2"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:foreground="?selectableItemBackground"
-        app:cardCornerRadius="10dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_max="200dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/howItWorksCard"
-        app:layout_constraintVertical_weight="1">
+        <TextView
+            android:id="@+id/profileFriendsTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_share_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:padding="@dimen/x2"
+            android:text="@string/tabbar_friends_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profilePersonalDetailsTextView" />
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.cardview.widget.CardView
+            android:id="@+id/profileFriendsNumber"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x2"
+            android:visibility="gone"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="@dimen/x2"
+            app:layout_constraintBottom_toBottomOf="@+id/profileFriendsTextView"
+            app:layout_constraintEnd_toStartOf="@+id/profileFriendsArrow"
+            app:layout_constraintTop_toTopOf="@+id/profileFriendsTextView">
+
+            <TextView
+                android:id="@+id/profileFriendsRewardAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/margin_padding_content"
+                android:layout_marginTop="@dimen/x1_2"
+                android:layout_marginEnd="@dimen/margin_padding_content"
+                android:layout_marginBottom="@dimen/x1_2"
+                android:drawableStart="@drawable/icon_profile_vote"
+                android:drawablePadding="@dimen/x1"
+                android:fontFamily="@font/sora_regular"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:paddingTop="@dimen/x1_4"
+                android:paddingBottom="@dimen/x1_4"
+                android:textColor="?attr/statusSuccess"
+                android:textSize="14sp"
+                tools:text="+ 30000000000000" />
+
+        </androidx.cardview.widget.CardView>
+
+        <ImageView
+            android:id="@+id/profileFriendsArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x3"
+            app:layout_constraintBottom_toBottomOf="@+id/profileFriendsNumber"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/profileFriendsNumber"
+            app:srcCompat="@drawable/ic_chevron_right_16" />
+
+
+        <TextView
+            android:id="@+id/profilePassphraseTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_lock_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:padding="@dimen/x2"
+            android:text="@string/profile_passphrase_title_v1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileFriendsTextView" />
+
+        <ImageView
+            android:id="@+id/profilePassphraseArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x3"
+            app:layout_constraintBottom_toBottomOf="@+id/profilePassphraseTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/profilePassphraseTextView"
+            app:srcCompat="@drawable/ic_chevron_right_16" />
+
+        <TextView
+            android:id="@+id/profilePinTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_key_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:padding="@dimen/x2"
+            android:text="@string/profile_change_pin_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profilePassphraseTextView" />
+
+
+        <ImageView
+            android:id="@+id/profilePinArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x3"
+            android:src="@drawable/ic_chevron_right_16"
+            app:layout_constraintBottom_toBottomOf="@+id/profilePinTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/profilePinTextView" />
+
+        <TextView
+            android:id="@+id/profileBiometryAuthTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_face_id_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:padding="@dimen/x2"
+            android:text="@string/profile_biometry_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profilePinTextView" />
+
+        <Switch
+            android:id="@+id/profileBiometryAuthSwitch"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/profileNameTv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x3"
-                android:fontFamily="@font/sora_semibold"
-                android:textColor="@color/black"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="aasdasda asd sa" />
-
-            <TextView
-                android:id="@+id/phoneNumberTv"
-                style="@style/GreyTextStyle2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginBottom="@dimen/x3"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/profileNameTv"
-                tools:text="aasdasda@asd.com" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.cardview.widget.CardView>
-
-    <TextView
-        android:id="@+id/profileMyReputationTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/icon_statistics"
-        android:drawablePadding="@dimen/x1"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/x2_5"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/x2_5"
-        android:text="@string/profile_my_reputation_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/profileProfileCard" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/profileMyReputationNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/x2"
-        android:foreground="?selectableItemBackground"
-        android:visibility="gone"
-        app:cardBackgroundColor="@color/oceanBlue"
-        app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintBottom_toBottomOf="@+id/profileMyReputationTextView"
-        app:layout_constraintEnd_toStartOf="@+id/profileReputationArrow"
-        app:layout_constraintTop_toTopOf="@+id/profileMyReputationTextView">
+            android:layout_height="0dp"
+            android:layout_marginEnd="@dimen/x3"
+            android:checked="false"
+            android:fontFamily="@font/sora_regular"
+            android:thumb="@drawable/ic_switch_thumb"
+            android:track="@drawable/green_switch_track_selector"
+            app:layout_constraintBottom_toBottomOf="@+id/profileBiometryAuthTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profilePinTextView" />
 
         <TextView
-            android:id="@+id/userReputationAmount"
-            android:layout_width="wrap_content"
+            android:id="@+id/profileLanguageTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/margin_padding_content"
-            android:layout_marginTop="@dimen/x1_2"
-            android:layout_marginEnd="@dimen/margin_padding_content"
-            android:layout_marginBottom="@dimen/x1_2"
-            android:drawableLeft="@drawable/icon_cup"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_globe_24"
             android:drawablePadding="@dimen/x1"
-            android:fontFamily="@font/sora_regular"
-            android:gravity="center"
-            android:paddingBottom="@dimen/x1_4"
-            android:paddingTop="@dimen/x1_4"
+            android:gravity="center_vertical"
             android:includeFontPadding="false"
-            android:text="412.61234"
-            android:textColor="@color/white"
-            android:textSize="14sp" />
+            android:padding="@dimen/x2"
+            android:text="@string/profile_language_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileBiometryAuthTextView" />
 
-    </androidx.cardview.widget.CardView>
-
-    <ImageView
-        android:id="@+id/profileReputationArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:paddingEnd="@dimen/margin_padding_content"
-        android:src="@drawable/ic_chevron_right"
-        app:layout_constraintBottom_toBottomOf="@+id/profileMyReputationNumber"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/profileMyReputationNumber" />
-
-    <View
-        android:id="@+id/projectDetailSeparateLineView"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:background="@color/profileDividerColor"
-        android:importantForAccessibility="no"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileMyReputationTextView" />
-
-    <TextView
-        android:id="@+id/profileVotesTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/icon_vote_shape"
-        android:drawablePadding="@dimen/x1"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/profileListItemTopBottomPadding"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/profile_votes_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/profileVotesNumber"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/x2"
-        app:cardBackgroundColor="@color/oceanBlue"
-        app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintBottom_toBottomOf="@+id/profileVotesTextView"
-        app:layout_constraintEnd_toStartOf="@+id/profileReputationArrow"
-        app:layout_constraintTop_toTopOf="@+id/profileVotesTextView">
-
-        <TextView
-            android:id="@+id/profileVotesAmount"
+        <ImageView
+            android:id="@+id/profileLanguageArrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/margin_padding_content"
-            android:layout_marginTop="@dimen/x1_2"
-            android:layout_marginEnd="@dimen/margin_padding_content"
-            android:layout_marginBottom="@dimen/x1_2"
-            android:drawableStart="@drawable/icon_profile_vote"
+            android:layout_marginEnd="@dimen/x3"
+            android:src="@drawable/ic_chevron_right_16"
+            app:layout_constraintBottom_toBottomOf="@+id/profileLanguageTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileBiometryAuthTextView" />
+
+        <TextView
+            android:id="@+id/profileFaqTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_comment_24"
             android:drawablePadding="@dimen/x1"
-            android:paddingBottom="@dimen/x1_4"
-            android:paddingTop="@dimen/x1_4"
-            android:fontFamily="@font/sora_regular"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:includeFontPadding="false"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            tools:text="30000000000000" />
+            android:padding="@dimen/x2"
+            android:text="@string/faq_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileLanguageTextView" />
 
-    </androidx.cardview.widget.CardView>
-
-    <ImageView
-        android:id="@+id/profileVotesArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:paddingEnd="@dimen/margin_padding_content"
-        app:layout_constraintBottom_toBottomOf="@+id/profileVotesNumber"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/profileVotesNumber"
-        app:srcCompat="@drawable/ic_chevron_right" />
-
-    <View
-        android:id="@+id/projectDetailSeparateLineView2"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:background="@color/profileDividerColor"
-        android:importantForAccessibility="no"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileVotesTextView" />
-
-    <TextView
-        android:id="@+id/profileDetailsTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/icon_person"
-        android:drawablePadding="@dimen/x1"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/profileListItemTopBottomPadding"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/profile_change_personal_details"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView2" />
-
-    <ImageView
-        android:id="@+id/profileDetailsArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:paddingEnd="@dimen/x1"
-        app:layout_constraintBottom_toBottomOf="@+id/profileDetailsTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/profileDetailsTextView"
-        app:srcCompat="@drawable/ic_chevron_right" />
-
-    <View
-        android:id="@+id/projectDetailSeparateLineView3"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:background="@color/profileDividerColor"
-        android:importantForAccessibility="no"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileDetailsTextView" />
-
-    <TextView
-        android:id="@+id/profilePassphraseTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/icon_pass"
-        android:drawablePadding="@dimen/x1"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/profileListItemTopBottomPadding"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/profile_passphrase_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView3" />
-
-    <ImageView
-        android:id="@+id/profilePassphraseArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:paddingEnd="@dimen/margin_padding_content"
-        app:layout_constraintBottom_toBottomOf="@+id/profilePassphraseTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/profilePassphraseTextView"
-        app:srcCompat="@drawable/ic_chevron_right" />
-
-    <View
-        android:id="@+id/projectDetailSeparateLineView4"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:background="@color/profileDividerColor"
-        android:importantForAccessibility="no"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profilePassphraseTextView" />
-
-    <TextView
-        android:id="@+id/profileAboutTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/icon_terms"
-        android:drawablePadding="@dimen/x1"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/profileListItemTopBottomPadding"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/profile_about_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView5" />
-
-    <ImageView
-        android:id="@+id/profileAboutArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:layout_marginBottom="8dp"
-        android:paddingEnd="@dimen/margin_padding_content"
-        android:src="@drawable/ic_chevron_right"
-        app:layout_constraintBottom_toBottomOf="@+id/profileAboutTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView5" />
-
-    <View
-        android:id="@+id/projectDetailSeparateLineView5"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:background="@color/profileDividerColor"
-        android:importantForAccessibility="no"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/profileLanguageTextView" />
-
-    <TextView
-        android:id="@+id/profileLanguageTextView"
-        style="@style/GreenBlueTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/icon_language"
-        android:drawablePadding="@dimen/x1"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingTop="@dimen/profileListItemTopBottomPadding"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:paddingBottom="@dimen/profileListItemTopBottomPadding"
-        android:text="@string/profile_language_title"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView4" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/profileSelectedLanguage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/x2"
-        android:foreground="?selectableItemBackground"
-        android:visibility="visible"
-        app:cardBackgroundColor="@color/oceanBlue"
-        app:cardCornerRadius="@dimen/x2"
-        app:layout_constraintBottom_toBottomOf="@+id/profileLanguageTextView"
-        app:layout_constraintEnd_toStartOf="@+id/profileLanguageArrow"
-        app:layout_constraintTop_toTopOf="@+id/profileLanguageTextView">
-
-        <TextView
-            android:id="@+id/selectedLanguageText"
+        <ImageView
+            android:id="@+id/profileFaqArrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="@dimen/margin_padding_content"
-            android:layout_marginTop="@dimen/x1_2"
-            android:layout_marginEnd="@dimen/margin_padding_content"
-            android:layout_marginBottom="@dimen/x1_2"
-            android:fontFamily="@font/sora_regular"
-            android:paddingBottom="@dimen/x1_4"
-            android:paddingTop="@dimen/x1_4"
-            android:gravity="center"
+            android:layout_marginEnd="@dimen/x3"
+            android:src="@drawable/ic_chevron_right_16"
+            app:layout_constraintBottom_toBottomOf="@+id/profileFaqTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileLanguageTextView" />
+
+        <TextView
+            android:id="@+id/profileAboutTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_info_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
             android:includeFontPadding="false"
-            android:text="@string/common_english"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="14sp" />
+            android:padding="@dimen/x2"
+            android:text="@string/profile_about_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileFaqTextView" />
 
-    </androidx.cardview.widget.CardView>
+        <ImageView
+            android:id="@+id/profileAboutArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x3"
+            android:src="@drawable/ic_chevron_right_16"
+            app:layout_constraintBottom_toBottomOf="@+id/profileAboutTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileFaqTextView" />
 
-    <ImageView
-        android:id="@+id/profileLanguageArrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="@dimen/margin_padding_content"
-        android:layout_marginBottom="8dp"
-        android:paddingEnd="@dimen/margin_padding_content"
-        android:src="@drawable/ic_chevron_right"
-        app:layout_constraintBottom_toBottomOf="@+id/profileLanguageTextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/projectDetailSeparateLineView4" />
+        <TextView
+            android:id="@+id/profileLogoutTextView"
+            style="@style/BlackListItemTitleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:drawableStart="@drawable/ic_logout_24"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:padding="@dimen/x2"
+            android:text="@string/profile_logout_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileAboutTextView" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <ImageView
+            android:id="@+id/profileLogoutArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x3"
+            android:src="@drawable/ic_chevron_right_16"
+            app:layout_constraintBottom_toBottomOf="@+id/profileLogoutTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/profileAboutTextView" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

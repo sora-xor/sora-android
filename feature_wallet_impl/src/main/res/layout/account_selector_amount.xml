@@ -3,63 +3,78 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/x1">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/x1_2"
+        android:layout_marginBottom="@dimen/x1_2"
+        android:background="@drawable/ic_bottom_dialog_pin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
     <TextView
-        android:id="@+id/accountAmountTitleTextView"
-        style="@style/TextAppearance.Soramitsu.Body1"
-        android:layout_width="0dp"
-        android:textColor="@color/subtitleGrey"
+        android:id="@+id/tvAmountSelectorTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/margin_padding_content_by_side"
+        android:padding="@dimen/x2"
         android:text="@string/amount_title"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/subtitleGrey"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <jp.co.soramitsu.feature_wallet_impl.presentation.view.CurrencyEditText
-        android:id="@+id/accountAmountBodyTextView"
-        style="@style/TextAppearance.Soramitsu.Header1"
+        android:id="@+id/etAmountSelector"
+        style="@style/TextAppearance.Soramitsu.Paragraph_1.Bold"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="@dimen/margin_padding_content_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_content_by_side"
-        android:layout_marginBottom="@dimen/margin_padding_content_by_side"
+        android:layout_marginStart="@dimen/x1_2"
         android:background="@android:color/transparent"
-        android:hint="123 000"
+        android:hint="0"
         android:inputType="numberDecimal"
         android:maxLength="13"
         android:maxLines="1"
-        app:layout_constraintBottom_toBottomOf="@+id/btn_keyboard"
+        app:layout_constraintBaseline_toBaselineOf="@id/tvAmountSelectorCurrency"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/currencySymbol"
-        app:layout_constraintTop_toTopOf="@+id/btn_keyboard"
+        app:layout_constraintStart_toEndOf="@id/tvAmountSelectorCurrency"
         tools:text="200 000" />
 
     <TextView
-        android:id="@+id/currencySymbol"
-        style="@style/TextAppearance.Soramitsu.Header1"
+        android:id="@+id/tvAmountSelectorCurrency"
+        style="@style/TextAppearance.Soramitsu.Paragraph_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_padding_content_by_side"
-        android:text="&amp;"
-        app:layout_constraintBottom_toBottomOf="@+id/accountAmountBodyTextView"
+        android:paddingStart="@dimen/x2"
+        android:paddingTop="@dimen/x1"
+        android:paddingBottom="@dimen/x1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/accountAmountBodyTextView" />
+        app:layout_constraintTop_toBottomOf="@id/tvAmountSelectorTitle"
+        tools:text="VAL" />
 
-    <ImageView
-        android:id="@+id/btn_keyboard"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_marginTop="@dimen/margin_padding_content_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_content_by_side"
-        android:padding="@dimen/x1_2"
-        android:scaleType="centerInside"
-        android:src="@drawable/icon_open_keyboard"
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:background="?attr/baseBorderPrimary"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/accountAmountBodyTextView"
-        app:layout_constraintTop_toBottomOf="@+id/accountAmountTitleTextView" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAmountSelectorCurrency" />
+
+    <Button
+        android:id="@+id/btnAmountSelectorDone"
+        style="@style/Widget.Soramitsu.Button.Primary.40"
+        android:layout_width="0dp"
+        android:layout_margin="@dimen/x1"
+        android:text="@string/common_done"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAmountSelectorCurrency" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

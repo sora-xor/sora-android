@@ -13,7 +13,7 @@ data class Transaction(
     val soranetTxHash: String,
     val status: Status,
     val detailedStatus: DetailedStatus,
-    val assetId: String?,
+    val assetId: String,
     val myAddress: String,
     val details: String,
     val peerName: String,
@@ -23,7 +23,10 @@ data class Transaction(
     val reason: String?,
     val type: Type,
     val ethFee: BigDecimal,
-    val soranetFee: BigDecimal
+    val soranetFee: BigDecimal,
+    var peerAddressId: ByteArray? = null,
+    val blockHash: String? = null,
+    val successStatus: Boolean? = null,
 ) {
     enum class Status {
         PENDING,
@@ -55,7 +58,4 @@ data class Transaction(
         DEPOSIT,
         REWARD
     }
-
-    val timestampInMillis: Long
-        get() = timestamp * 1000L
 }

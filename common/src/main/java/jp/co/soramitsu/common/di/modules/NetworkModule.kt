@@ -5,25 +5,28 @@
 
 package jp.co.soramitsu.common.di.modules
 
+import com.google.gson.Gson
+import com.neovisionaries.ws.client.WebSocketFactory
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.data.network.DCApiCreator
-import jp.co.soramitsu.common.data.network.DCApiCreatorImpl
 import jp.co.soramitsu.common.data.network.HttpLoggingInterceptor
 import jp.co.soramitsu.common.data.network.NetworkApiCreator
 import jp.co.soramitsu.common.data.network.NetworkApiCreatorImpl
+import jp.co.soramitsu.common.data.network.Sora2ApiCreator
 import jp.co.soramitsu.common.data.network.SoraCallAdapterFactory
-import jp.co.soramitsu.common.data.network.SoranetApiCreator
-import jp.co.soramitsu.common.data.network.SoranetApiCreatorImpl
-import jp.co.soramitsu.common.data.network.auth.AuthHolder
-import jp.co.soramitsu.common.data.network.auth.DAuthRequestInterceptor
-import jp.co.soramitsu.common.data.network.sse.SseClient
-import jp.co.soramitsu.common.data.network.sse.SseClientImpl
+import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
+import jp.co.soramitsu.common.data.network.substrate.SocketSingleRequestExecutor
+import jp.co.soramitsu.common.data.network.substrate.WsConnectionManager
+import jp.co.soramitsu.common.data.network.substrate.WsLogger
 import jp.co.soramitsu.common.domain.AppLinksProvider
+import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.HealthChecker
-import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
+import jp.co.soramitsu.fearless_utils.wsrpc.logging.Logger
+import jp.co.soramitsu.fearless_utils.wsrpc.recovery.Reconnector
+import jp.co.soramitsu.fearless_utils.wsrpc.request.RequestExecutor
 import okhttp3.OkHttpClient
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -39,6 +42,49 @@ class NetworkModule {
 
     @Provides
     @Singleton
+    fun provideSocketFactory(): WebSocketFactory = WebSocketFactory()
+
+    @Provides
+    @Singleton
+    fun provideWsSocketLogger(): Logger = WsLogger()
+
+    @Provides
+    @Singleton
+    fun provideReconnector(): Reconnector = Reconnector()
+
+    @Provides
+    @Singleton
+    fun provideRequestExecutor(): RequestExecutor = RequestExecutor()
+
+    @Provides
+    @Singleton
+    fun provideSocketService(
+        mapper: Gson,
+        logger: Logger,
+        socketFactory: WebSocketFactory,
+        reconnector: Reconnector,
+        requestExecutor: RequestExecutor,
+    ): SocketService = SocketService(mapper, logger, socketFactory, reconnector, requestExecutor)
+
+    @Provides
+    @Singleton
+    fun provideConnectionManager(
+        socketService: SocketService,
+        appStateProvider: AppStateProvider,
+        healthChecker: HealthChecker,
+    ): ConnectionManager = WsConnectionManager(socketService, appStateProvider, healthChecker)
+
+    @Provides
+    @Singleton
+    fun provideSocketSingleRequestExecutor(
+        mapper: Gson,
+        socketFactory: WebSocketFactory,
+        resourceManager: ResourceManager
+    ): SocketSingleRequestExecutor =
+        SocketSingleRequestExecutor(mapper, socketFactory, resourceManager)
+
+    @Provides
+    @Singleton
     fun provideSSLSocketFactory(sslContext: SSLContext): SSLSocketFactory {
         return sslContext.socketFactory
     }
@@ -48,11 +94,17 @@ class NetworkModule {
     fun provideTrustManager(): Array<TrustManager> {
         return arrayOf(object : X509TrustManager {
             @Throws(CertificateException::class)
-            override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+            override fun checkClientTrusted(
+                chain: Array<java.security.cert.X509Certificate>,
+                authType: String
+            ) {
             }
 
             @Throws(CertificateException::class)
-            override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
+            override fun checkServerTrusted(
+                chain: Array<java.security.cert.X509Certificate>,
+                authType: String
+            ) {
             }
 
             override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
@@ -71,10 +123,6 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAuthHolder(): AuthHolder = AuthHolder()
-
-    @Provides
-    @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         val logging = HttpLoggingInterceptor()
         if (BuildConfig.DEBUG) {
@@ -90,7 +138,6 @@ class NetworkModule {
     @Named("SORA_CLIENT")
     fun provideSoraOkHttpClient(
         logging: HttpLoggingInterceptor,
-        auth: DAuthRequestInterceptor,
         sslSocketFactory: SSLSocketFactory,
         trustManagers: Array<TrustManager>
     ): OkHttpClient {
@@ -100,33 +147,19 @@ class NetworkModule {
             .writeTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-            .addNetworkInterceptor(auth)
             .addInterceptor(logging)
             .build()
     }
 
     @Provides
     @Singleton
-    @Named("SORA_NET_CLIENT")
+    @Named("SORA2_NET_CLIENT")
     fun provideSoraNetOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    @Named("SORA_SSE_CLIENT")
-    fun provideSoraSseOkHttpClient(auth: DAuthRequestInterceptor): OkHttpClient {
-        return OkHttpClient.Builder()
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .addNetworkInterceptor(auth)
             .build()
     }
 
@@ -146,37 +179,14 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    @Named("DC_CLIENT")
-    fun provideDCClient(
-        logging: HttpLoggingInterceptor,
-        auth: DAuthRequestInterceptor,
-        sslSocketFactory: SSLSocketFactory,
-        trustManagers: Array<TrustManager>
-    ): OkHttpClient {
-        return OkHttpClient.Builder()
-            .sslSocketFactory(sslSocketFactory, trustManagers[0] as X509TrustManager)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .addNetworkInterceptor(auth)
-            .addInterceptor(logging)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideSseClient(
-        @Named("SORA_SSE_CLIENT") okHttpClient: OkHttpClient,
-        serializer: Serializer
-    ): SseClient {
-        return SseClientImpl(okHttpClient, serializer)
-    }
-
-    @Provides
-    @Singleton
     @Named("SORA_HOST_URL")
     fun provideSoraHostUrl(): String = BuildConfig.HOST_URL
+
+    @Provides
+    @Singleton
+    fun provideSora2ApiCreator(@Named("SORA2_NET_CLIENT") okHttpClient: OkHttpClient): Sora2ApiCreator {
+        return Sora2ApiCreator(okHttpClient, "https://placeholder.com")
+    }
 
     @Provides
     @Singleton
@@ -188,27 +198,12 @@ class NetworkModule {
         return NetworkApiCreatorImpl(okHttpClient, soraHostUrl, rxCallAdapter)
     }
 
-    @Provides
-    @Singleton
-    fun provideSoranetApiCreator(
-        @Named("SORA_NET_CLIENT") okHttpClient: OkHttpClient,
-        rxCallAdapter: SoraCallAdapterFactory
-    ): SoranetApiCreator {
-        return SoranetApiCreatorImpl(okHttpClient, BuildConfig.SORA_EVENTS_URL, rxCallAdapter)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDCApiCreator(
-        @Named("DC_CLIENT") okHttpClient: OkHttpClient,
-        rxCallAdapter: SoraCallAdapterFactory
-    ): DCApiCreator {
-        return DCApiCreatorImpl(okHttpClient, BuildConfig.DC_HOST_URL, rxCallAdapter)
-    }
-
     @Singleton
     @Provides
-    fun provideSoraCallAdapter(healthChecker: HealthChecker, resourceManager: ResourceManager): SoraCallAdapterFactory {
+    fun provideSoraCallAdapter(
+        healthChecker: HealthChecker,
+        resourceManager: ResourceManager
+    ): SoraCallAdapterFactory {
         return SoraCallAdapterFactory(healthChecker, resourceManager)
     }
 
@@ -224,17 +219,11 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    @Named("BLOCKCHAIN_EXPLORER_URL")
-    fun provideBlockChainExplorerUrl(): String = BuildConfig.BLOCKCHAIN_EXPLORER_URL
-
-    @Singleton
-    @Provides
     fun provideAppLinksProvider(
         @Named("SORA_HOST_URL") soraHostUrl: String,
         @Named("DEFAULT_MARKET_URL") defaultMarketUrl: String,
         @Named("INVITE_LINK_URL") invitekUrl: String,
-        @Named("BLOCKCHAIN_EXPLORER_URL") blockChainExplorerUrl: String
     ): AppLinksProvider {
-        return AppLinksProvider(soraHostUrl, defaultMarketUrl, invitekUrl, blockChainExplorerUrl)
+        return AppLinksProvider(soraHostUrl, defaultMarketUrl, invitekUrl, "")
     }
 }

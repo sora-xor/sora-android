@@ -8,120 +8,86 @@ package jp.co.soramitsu.feature_main_impl.presentation.main
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
-import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentMainBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.AllProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.CompletedProjectsFragment
-import jp.co.soramitsu.feature_main_impl.presentation.main.projects.FavoriteProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.VotedProjectsFragment
 import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog
-import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog.MaxVoteType
 import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog.VotableType
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_main.howItWorksCard
-import kotlinx.android.synthetic.main.fragment_main.projectsTab
-import kotlinx.android.synthetic.main.fragment_main.viewPager
-import kotlinx.android.synthetic.main.fragment_main.votesCard
-import kotlinx.android.synthetic.main.fragment_main.votesText
 import javax.inject.Inject
 
-class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListener {
+class MainFragment :
+    BaseFragment<MainViewModel>(R.layout.fragment_main),
+    KeyboardHelper.KeyboardListener {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
-    @Inject lateinit var numbersFormatter: NumbersFormatter
+    @Inject
+    lateinit var numbersFormatter: NumbersFormatter
 
     private var keyboardHelper: KeyboardHelper? = null
-
+    private val binding by viewBinding(FragmentMainBinding::bind)
     private var voteDialog: VoteBottomSheetDialog? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_main, container, false)
-    }
-
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .projectsComponentBuilder()
             .withFragment(this)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
-        (activity as BottomBarController).showBottomBar()
-
-        howItWorksCard.setOnClickListener(DebounceClickListener(debounceClickHandler) { viewModel.btnHelpClicked() })
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        (activity as BottomBarController).hideBottomBar()
 
         val adapter = ProjectsViewPagerAdapter(childFragmentManager).apply {
-            addPage(getString(R.string.project_all), AllProjectsFragment.newInstance())
+            addPage(getString(R.string.project_mark_new), AllProjectsFragment.newInstance())
             addPage(getString(R.string.project_voted), VotedProjectsFragment.newInstance())
-            addPage(getString(R.string.project_favourites), FavoriteProjectsFragment.newInstance())
-            addPage(getString(R.string.project_completed), CompletedProjectsFragment.newInstance())
+            addPage(
+                getString(R.string.referendum_ended_title),
+                CompletedProjectsFragment.newInstance()
+            )
         }
-        viewPager.adapter = adapter
-        projectsTab.setupWithViewPager(viewPager)
+        binding.viewPager.adapter = adapter
+        binding.projectsTab.setupWithViewPager(binding.viewPager)
 
-        for (i in 0 until projectsTab.tabCount) {
+        for (i in 0 until binding.projectsTab.tabCount) {
             val tabView =
                 LayoutInflater.from(activity).inflate(R.layout.item_project_tab, null) as TextView
             tabView.text = adapter.getPageTitle(i)
-            projectsTab.getTabAt(i)?.customView = tabView
+            binding.projectsTab.getTabAt(i)?.customView = tabView
         }
 
-        votesCard.setOnClickListener(DebounceClickListener(debounceClickHandler) { viewModel.votesClick() })
+        binding.toolbar.setHomeButtonListener { viewModel.backPressed() }
+        initListeners()
     }
 
-    override fun subscribe(viewModel: MainViewModel) {
-        observe(viewModel.votesFormattedLiveData, Observer {
-            votesText.text = it
-        })
-
-        observe(viewModel.showVoteProjectLiveData, EventObserver { maxAllowedVotes ->
-            openVotingSheet(
-                maxAllowedVotes,
-                VotableType.Project(MaxVoteType.VOTABLE_NEED),
-                viewModel::voteForProject
-            )
-        })
-
-        observe(viewModel.showVoteUserLiveData, EventObserver { maxAllowedVotes ->
-            openVotingSheet(
-                maxAllowedVotes,
-                VotableType.Project(MaxVoteType.USER_CAN_GIVE),
-                viewModel::voteForProject
-            )
-        })
-
-        observe(viewModel.showVoteForReferendumLiveData, EventObserver { maxAllowedVotes ->
+    private fun initListeners() {
+        viewModel.showVoteForReferendumLiveData.observe { maxAllowedVotes ->
             openVotingSheet(maxAllowedVotes, VotableType.Referendum(true)) {
                 viewModel.voteOnReferendum(it, true)
             }
-        })
-
-        observe(viewModel.showVoteAgainstReferendumLiveData, EventObserver { maxAllowedVotes ->
+        }
+        viewModel.showVoteAgainstReferendumLiveData.observe { maxAllowedVotes ->
             openVotingSheet(maxAllowedVotes, VotableType.Referendum(false)) {
                 viewModel.voteOnReferendum(it, false)
             }
-        })
-
-        viewModel.onActivityCreated()
+        }
     }
 
     private fun openVotingSheet(
@@ -130,7 +96,7 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
         whenDone: (Long) -> Unit
     ) {
         voteDialog = VoteBottomSheetDialog(
-            activity!!,
+            requireActivity(),
             votableType,
             maxAllowedVotes,
             { whenDone.invoke(it) },
@@ -149,7 +115,7 @@ class MainFragment : BaseFragment<MainViewModel>(), KeyboardHelper.KeyboardListe
 
     override fun onResume() {
         super.onResume()
-        keyboardHelper = KeyboardHelper(view!!, this)
+        keyboardHelper = KeyboardHelper(requireView(), this)
     }
 
     override fun onPause() {

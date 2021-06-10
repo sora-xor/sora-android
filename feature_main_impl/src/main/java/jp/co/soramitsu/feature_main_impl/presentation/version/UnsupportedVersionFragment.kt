@@ -8,21 +8,21 @@ package jp.co.soramitsu.feature_main_impl.presentation.version
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentUnsupportedVersionBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_unsupported_version.googlePlayBtn
 import javax.inject.Inject
 
-class UnsupportedVersionFragment : BaseFragment<UnsupportedVersionViewModel>() {
+class UnsupportedVersionFragment :
+    BaseFragment<UnsupportedVersionViewModel>(R.layout.fragment_unsupported_version) {
 
     companion object {
         private const val KEY_APP_URL = "app_url"
@@ -32,32 +32,26 @@ class UnsupportedVersionFragment : BaseFragment<UnsupportedVersionViewModel>() {
         }
     }
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_unsupported_version, container, false)
-    }
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
+    private val binding by viewBinding(FragmentUnsupportedVersionBinding::bind)
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .unsupportedVersionComponentBuilder()
             .withFragment(this)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        val appUrl = arguments!!.getString(KEY_APP_URL, "")
-        googlePlayBtn.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                openGooglePlay(appUrl)
-            }
-        )
-    }
-
-    override fun subscribe(viewModel: UnsupportedVersionViewModel) {
+        val appUrl = requireArguments().getString(KEY_APP_URL, "")
+        binding.googlePlayBtn.setDebouncedClickListener(debounceClickHandler) {
+            openGooglePlay(appUrl)
+        }
     }
 
     private fun openGooglePlay(appUrl: String) {

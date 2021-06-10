@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/splashContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    app:layoutDescription="@xml/activity_splash_scene">
+
+    <ImageView
+        android:id="@+id/logoSoramitsu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_sora_logo"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:id="@+id/logoSoraText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_sora_text"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:id="@+id/logoSoraSign"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_sora_sign"
+        tools:ignore="ContentDescription" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/splashGuideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <TextView
+        android:id="@+id/logoSoramitsuBottomText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/soramitsu_regular"
+        android:text="@string/splash_from"
+        android:textAllCaps="true"
+        android:textColor="@color/grey_400"
+        android:textSize="@dimen/text_size_b3" />
+
+    <ImageView
+        android:id="@+id/logoSoramitsuBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_soramitsu"
+        tools:ignore="ContentDescription" />
+
+</androidx.constraintlayout.motion.widget.MotionLayout>

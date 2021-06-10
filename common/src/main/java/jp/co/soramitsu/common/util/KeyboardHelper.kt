@@ -8,6 +8,8 @@ package jp.co.soramitsu.common.util
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewTreeObserver
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 const val KEYBOARD_COEFFICIENT = 0.15
 
@@ -56,4 +58,7 @@ class KeyboardHelper(
 
         fun onKeyboardHide()
     }
+
+    val isVisible: Boolean
+        get() = ViewCompat.getRootWindowInsets(contentView)?.isVisible(WindowInsetsCompat.Type.ime()) ?: false
 }

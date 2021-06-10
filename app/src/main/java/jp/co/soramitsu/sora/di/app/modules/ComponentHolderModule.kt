@@ -17,8 +17,6 @@ import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_account_impl.di.AccountFeatureHolder
 import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_ethereum_impl.di.EthereumFeatureHolder
-import jp.co.soramitsu.feature_information_api.di.InformationFeatureApi
-import jp.co.soramitsu.feature_information_impl.di.InformationFeatureHolder
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureHolder
 import jp.co.soramitsu.feature_notification_api.di.NotificationFeatureApi
@@ -27,8 +25,6 @@ import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureHolder
 import jp.co.soramitsu.feature_votable_api.di.VotableFeatureApi
 import jp.co.soramitsu.feature_votable_impl.di.VotableFeatureHolder
-import jp.co.soramitsu.feature_sse_api.di.EventFeatureApi
-import jp.co.soramitsu.feature_sse_impl.di.EventFeatureHolder
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureHolder
 import jp.co.soramitsu.sora.SoraApp
@@ -75,12 +71,6 @@ interface ComponentHolderModule {
 
     @Singleton
     @Binds
-    @ClassKey(InformationFeatureApi::class)
-    @IntoMap
-    fun provideInformationFeature(informationFeatureHolder: InformationFeatureHolder): FeatureApiHolder
-
-    @Singleton
-    @Binds
     @ClassKey(OnboardingFeatureApi::class)
     @IntoMap
     fun provideOnboardingFeature(onboardingFeatureHolder: OnboardingFeatureHolder): FeatureApiHolder
@@ -102,10 +92,4 @@ interface ComponentHolderModule {
     @ClassKey(NotificationFeatureApi::class)
     @IntoMap
     fun provideNotificationFeature(notificationHolder: NotificationFeatureHolder): FeatureApiHolder
-
-    @Singleton
-    @Binds
-    @ClassKey(EventFeatureApi::class)
-    @IntoMap
-    fun provideEventFeature(eventFeatureHolder: EventFeatureHolder): FeatureApiHolder
 }

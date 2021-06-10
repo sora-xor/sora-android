@@ -11,9 +11,15 @@ import com.squareup.picasso.RequestCreator
 
 private typealias LoadImageExtras = RequestCreator.() -> Unit
 
+/**
+ * keep in mind that if [url] is empty you can use [extraConfig] to set placeholder in ImageView
+ *
+ * @param url url to be loaded
+ * @param extraConfig [RequestCreator] that can be used to configure picasso
+ */
 fun ImageView.loadImage(url: String, extraConfig: LoadImageExtras? = null) {
     val requestCreator = Picasso.get()
-        .load(url)
+        .load(if (url.isEmpty()) null else url)
         .fit()
         .centerCrop()
 

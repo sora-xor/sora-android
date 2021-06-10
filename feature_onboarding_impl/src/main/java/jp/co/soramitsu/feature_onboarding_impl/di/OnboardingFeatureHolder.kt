@@ -22,7 +22,6 @@ class OnboardingFeatureHolder @Inject constructor(
     override fun initializeDependencies(): Any {
         val onboardingFeatureDependencies = DaggerOnboardingFeatureComponent_OnboardingFeatureDependenciesComponent.builder()
             .accountFeatureApi(getFeature(AccountFeatureApi::class.java))
-            .didFeatureApi(didApi())
             .mainFeatureApi(getFeature(MainFeatureApi::class.java))
             .walletFeatureApi(getFeature(WalletFeatureApi::class.java))
             .networkApi(networkApi())

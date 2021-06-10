@@ -13,17 +13,13 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
 import jp.co.soramitsu.test_shared.RxSchedulersRule
-import jp.co.soramitsu.test_shared.eqNonNull
-import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -42,57 +38,18 @@ class PersonalInfoViewModelTest {
 
     private val countryIso = "countryIso"
     private val invitationCode = "code"
-    private val firstName = "firstName"
-    private val lastName = "lastName"
+    private val accountName = "accountName"
 
     @Before fun setUp() {
-        given(invitationHandler.observeInvitationApplies()).willReturn(Observable.just(invitationCode))
-        given(interactor.getParentInviteCode()).willReturn(Single.just(invitationCode))
+//        given(invitationHandler.observeInvitationApplies()).willReturn(Observable.just(invitationCode))
+//        given(interactor.getParentInviteCode()).willReturn(Single.just(invitationCode))
 
-        personalInfoViewModel = PersonalInfoViewModel(interactor, router, progress, invitationHandler)
-    }
-
-    @Test fun `init successfull`() {
-        assertEquals(personalInfoViewModel.inviteCodeLiveData.value, invitationCode)
+        personalInfoViewModel = PersonalInfoViewModel(interactor, router, progress)
     }
 
     @Test fun `back button clicked`() {
         personalInfoViewModel.backButtonClick()
 
         verify(router).onBackButtonPressed()
-    }
-
-    @Test fun `register called successfully`() {
-        given(interactor.register(anyString(), anyString(), anyString(), anyString())).willReturn(Single.just(true))
-
-        personalInfoViewModel.setCountryIso(countryIso)
-        personalInfoViewModel.register(firstName, lastName, invitationCode)
-
-        verify(progress).showProgress()
-        verify(progress).hideProgress()
-        verify(router).showMnemonic()
-    }
-
-    @Test fun `register called with wrong code`() {
-        given(interactor.register(anyString(), anyString(), anyString(), eqNonNull(invitationCode))).willReturn(Single.just(false))
-
-        personalInfoViewModel.setCountryIso(countryIso)
-        personalInfoViewModel.register(firstName, lastName, invitationCode)
-
-        verify(progress).showProgress()
-        verify(progress).hideProgress()
-        verify(router, times(0)).showMnemonic()
-        assertEquals(personalInfoViewModel.invitationNotValidEventLiveData.value?.peekContent(), Unit)
-    }
-
-    @Test fun `continue without invitation code called`() {
-        given(interactor.register(anyString(), anyString(), anyString(), eqNonNull(""))).willReturn(Single.just(true))
-
-        personalInfoViewModel.setCountryIso(countryIso)
-        personalInfoViewModel.continueWithoutInvitationCodePressed(firstName, lastName)
-
-        verify(progress).showProgress()
-        verify(progress).hideProgress()
-        verify(router).showMnemonic()
     }
 }

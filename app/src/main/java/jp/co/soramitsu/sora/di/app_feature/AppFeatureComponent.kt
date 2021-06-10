@@ -7,7 +7,6 @@ package jp.co.soramitsu.sora.di.app_feature
 
 import dagger.Component
 import jp.co.soramitsu.common.di.api.CommonApi
-import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_notification_api.di.NotificationFeatureApi
 import jp.co.soramitsu.sora.service.PushNotificationService
@@ -26,7 +25,6 @@ interface AppFeatureComponent {
         dependencies = [
             NotificationFeatureApi::class,
             AccountFeatureApi::class,
-            DidFeatureApi::class,
             CommonApi::class
         ]
     )

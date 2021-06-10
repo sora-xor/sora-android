@@ -31,3 +31,15 @@ fun String.getInitials(): String {
 fun String.isErc20Address(): Boolean {
     return this.split(" ").size == 1 && this.startsWith("0x")
 }
+
+fun String.didToAccountId(): String {
+    return this.replace(":", "_") + "@sora"
+}
+
+fun String.removeHexPrefix(): String = this.removePrefix("0x")
+
+fun String.addHexPrefix(): String = "0x$this"
+
+fun String.truncateHash(): String = if (this.isNotEmpty() && this.length > 10) "${this.substring(0, 5)}...${this.substring(this.lastIndex - 4, this.lastIndex + 1)}" else this
+
+fun String.truncateUserAddress(): String = if (this.isNotEmpty() && this.length > 10) "${this.substring(0, 5)}...${this.substring(this.lastIndex - 4, this.lastIndex + 1)}" else this

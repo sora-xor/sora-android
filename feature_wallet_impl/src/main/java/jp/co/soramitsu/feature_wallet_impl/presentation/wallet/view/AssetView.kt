@@ -8,17 +8,11 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.wallet.view
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
 import androidx.cardview.widget.CardView
 import jp.co.soramitsu.feature_wallet_impl.R
-import kotlinx.android.synthetic.main.view_asset.view.assetFirstNameTv
-import kotlinx.android.synthetic.main.view_asset.view.assetIconView
-import kotlinx.android.synthetic.main.view_asset.view.assetLastNameTv
-import kotlinx.android.synthetic.main.view_asset.view.associatingStateView
-import kotlinx.android.synthetic.main.view_asset.view.balanceTv
-import kotlinx.android.synthetic.main.view_asset.view.errorStateView
-import kotlinx.android.synthetic.main.view_asset.view.iconImg
-import kotlinx.android.synthetic.main.view_asset.view.normalStateView
+import jp.co.soramitsu.feature_wallet_impl.databinding.ViewAssetBinding
 
 class AssetView @JvmOverloads constructor(
     context: Context,
@@ -32,8 +26,9 @@ class AssetView @JvmOverloads constructor(
         ERROR
     }
 
+    private val binding = ViewAssetBinding.inflate(LayoutInflater.from(context), this)
+
     init {
-        View.inflate(context, R.layout.view_asset, this)
         applyAttributes(attrs)
     }
 
@@ -50,10 +45,12 @@ class AssetView @JvmOverloads constructor(
             val assetNameText = typedArray.getString(R.styleable.AssetView_assetName)
             assetNameText?.let { setAssetFirstName(it) }
 
-            val assetBlockChainNameText = typedArray.getString(R.styleable.AssetView_assetBlockChainName)
+            val assetBlockChainNameText =
+                typedArray.getString(R.styleable.AssetView_assetBlockChainName)
             assetBlockChainNameText?.let { setAssetLastName(it) }
 
-            val assetIconViewBackgroundColor = typedArray.getColor(R.styleable.AssetView_assetIconViewBackgroundColor, 0)
+            val assetIconViewBackgroundColor =
+                typedArray.getColor(R.styleable.AssetView_assetIconViewBackgroundColor, 0)
             if (assetIconViewBackgroundColor != 0) {
                 setAssetIconViewBackgroundColor(assetIconViewBackgroundColor)
             }
@@ -63,27 +60,27 @@ class AssetView @JvmOverloads constructor(
     }
 
     fun setBalance(balance: String) {
-        balanceTv.text = balance
+        binding.balanceTv.text = balance
     }
 
     fun setAssetFirstName(assetName: String) {
-        assetFirstNameTv.text = assetName
+        binding.assetFirstNameTv.text = assetName
     }
 
     fun setAssetLastName(blockChainName: String) {
-        assetLastNameTv.text = blockChainName
+        binding.assetLastNameTv.text = blockChainName
     }
 
     fun setAssetIconDrawable(assetIconDrawable: Drawable) {
-        iconImg.setImageDrawable(assetIconDrawable)
+        binding.iconImg.setImageDrawable(assetIconDrawable)
     }
 
     fun setAssetIconResource(assetIconRes: Int) {
-        iconImg.setImageResource(assetIconRes)
+        binding.iconImg.setImageResource(assetIconRes)
     }
 
     fun setAssetIconViewBackgroundColor(color: Int) {
-        assetIconView.setBackgroundColor(color)
+        binding.assetIconView.setBackgroundColor(color)
     }
 
     fun changeState(state: State) {
@@ -95,20 +92,20 @@ class AssetView @JvmOverloads constructor(
     }
 
     private fun showNormalState() {
-        normalStateView.visibility = View.VISIBLE
-        associatingStateView.visibility = View.GONE
-        errorStateView.visibility = View.GONE
+        binding.normalStateView.visibility = View.VISIBLE
+        binding.associatingStateView.visibility = View.GONE
+        binding.errorStateView.visibility = View.GONE
     }
 
     private fun showAssociatingState() {
-        normalStateView.visibility = View.GONE
-        associatingStateView.visibility = View.VISIBLE
-        errorStateView.visibility = View.GONE
+        binding.normalStateView.visibility = View.GONE
+        binding.associatingStateView.visibility = View.VISIBLE
+        binding.errorStateView.visibility = View.GONE
     }
 
     private fun showErrorState() {
-        normalStateView.visibility = View.GONE
-        associatingStateView.visibility = View.GONE
-        errorStateView.visibility = View.VISIBLE
+        binding.normalStateView.visibility = View.GONE
+        binding.associatingStateView.visibility = View.GONE
+        binding.errorStateView.visibility = View.VISIBLE
     }
 }

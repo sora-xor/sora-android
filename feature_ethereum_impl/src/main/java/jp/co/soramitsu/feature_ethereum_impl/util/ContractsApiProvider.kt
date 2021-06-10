@@ -19,7 +19,6 @@ import javax.inject.Singleton
 class ContractsApiProvider @Inject constructor(
     private val web3jProvider: Web3jProvider,
     private val ethereumCredentialsMapper: EthereumCredentialsMapper,
-    private val ethereumConfigProvider: EthereumConfigProvider
 ) {
 
     companion object {
@@ -34,7 +33,7 @@ class ContractsApiProvider @Inject constructor(
 
     fun getSmartContractApi(ethCredentials: EthereumCredentials): SmartContractApi {
         if (smartContractApi == null) {
-            smartContractApi = SmartContractApi(web3jProvider.web3j, getOrCreateFastRawTransactionManager(ethCredentials), gasProvider, ethereumConfigProvider)
+            smartContractApi = SmartContractApi(web3jProvider.web3j, getOrCreateFastRawTransactionManager(ethCredentials), gasProvider)
         }
         return smartContractApi!!
     }

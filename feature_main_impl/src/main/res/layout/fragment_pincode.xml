@@ -1,44 +1,71 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/greyBackground">
+    android:gravity="center"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/pinCodeTitleTv"
-        style="@style/PinCodeTitleStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x1"
-        android:layout_marginEnd="@dimen/x1"
-        android:text="@string/pincode_set_your_pin_code"
-        app:layout_constraintBottom_toTopOf="@id/dotsProgressView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
 
-    <jp.co.soramitsu.sora_ui.pinview.DotsProgressView
-        android:id="@+id/dotsProgressView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginStart="@dimen/x1"
-        android:layout_marginTop="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x1"
-        android:gravity="center_horizontal"
-        app:layout_constraintBottom_toTopOf="@id/pinCodeView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/pinCodeTitleTv" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:paddingTop="@dimen/x8"
+            android:paddingBottom="@dimen/x1">
 
-    <jp.co.soramitsu.sora_ui.pinview.PinCodeView
+            <ImageView
+                android:id="@+id/soraLogo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_sora_vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/pinCodeTitleTv"
+                style="@style/TextAppearance.Soramitsu.Upper_2.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginTop="@dimen/x4"
+                android:layout_marginEnd="@dimen/x1"
+                android:text="@string/pincode_set_your_pin_code"
+                app:layout_constraintBottom_toTopOf="@id/dotsProgressView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/soraLogo" />
+
+            <jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
+                android:id="@+id/dotsProgressView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginTop="@dimen/x3"
+                android:layout_marginEnd="@dimen/x1"
+                android:gravity="center_horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/pinCodeTitleTv" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <jp.co.soramitsu.common.presentation.view.pincode.PinCodeView
         android:id="@+id/pinCodeView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="36dp"
-        android:padding="@dimen/x1"
+        android:layout_marginBottom="@dimen/x3"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

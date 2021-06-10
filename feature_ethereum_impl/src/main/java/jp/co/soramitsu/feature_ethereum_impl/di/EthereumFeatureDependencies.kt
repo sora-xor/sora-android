@@ -7,13 +7,11 @@ package jp.co.soramitsu.feature_ethereum_impl.di
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
-import jp.co.soramitsu.common.data.network.DCApiCreator
 import jp.co.soramitsu.common.data.network.NetworkApiCreator
-import jp.co.soramitsu.common.data.network.SoranetApiCreator
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.Serializer
-import jp.co.soramitsu.common.domain.did.DidRepository
+import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.core_db.AppDatabase
 import okhttp3.OkHttpClient
@@ -21,13 +19,9 @@ import javax.inject.Named
 
 interface EthereumFeatureDependencies {
 
-    fun didRepository(): DidRepository
+    fun credentialsRepository(): CredentialsRepository
 
     fun networkApiCreator(): NetworkApiCreator
-
-    fun soranetApiCreator(): SoranetApiCreator
-
-    fun dcApiCreator(): DCApiCreator
 
     fun healthChecker(): HealthChecker
 

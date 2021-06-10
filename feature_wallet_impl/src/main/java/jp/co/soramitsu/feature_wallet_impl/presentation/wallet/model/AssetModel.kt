@@ -10,11 +10,12 @@ data class AssetModel(
     val assetFirstName: String,
     val assetLastName: String,
     val assetIconResource: Int,
-    val assetIconBackgroundColor: Int,
     val balance: String?,
     val state: State?,
     val roundingPrecision: Int,
-    val position: Int
+    val position: Int,
+    val hidingAllowed: Boolean,
+    val displayed: Boolean,
 ) {
     enum class State {
         NORMAL,

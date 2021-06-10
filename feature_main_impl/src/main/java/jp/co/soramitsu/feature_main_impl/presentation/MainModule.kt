@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
@@ -36,9 +37,10 @@ class MainModule {
         interactor: MainInteractor,
         deviceParamsProvider: DeviceParamsProvider,
         progress: WithProgress,
-        invitationHandler: InvitationHandler
+        invitationHandler: InvitationHandler,
+        runtimeManager: RuntimeManager,
     ): ViewModel {
-        return MainViewModel(healthChecker, interactor, deviceParamsProvider, progress, invitationHandler)
+        return MainViewModel(healthChecker, interactor, deviceParamsProvider, progress, invitationHandler, runtimeManager)
     }
 
     @Provides

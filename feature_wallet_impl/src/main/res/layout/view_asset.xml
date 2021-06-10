@@ -14,38 +14,60 @@
             android:id="@+id/assetIconView"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            tools:background="@color/uikit_lightRed">
+            tools:background="@color/white">
 
             <ImageView
                 android:id="@+id/iconImg"
-                style="@style/TextAppearance.Soramitsu.Header2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="@dimen/x2"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x2"
+                android:layout_marginEnd="@dimen/x1_5"
+                android:layout_marginBottom="@dimen/x2"
                 android:gravity="center"
                 android:textColor="@android:color/white"
-                tools:src="@drawable/ic_val_gold_24" />
+                tools:src="@drawable/ic_val_gold_shadow" />
 
         </FrameLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/white"
+            android:background="@color/white"
             android:orientation="vertical"
-            android:padding="@dimen/x2">
+            android:paddingStart="0dp"
+            android:paddingTop="@dimen/x2"
+            android:paddingEnd="@dimen/x2"
+            android:paddingBottom="@dimen/x2">
 
-            <TextView
-                android:id="@+id/balanceTv"
-                style="@style/TextAppearance.Soramitsu.Header2"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                tools:text="200,000" />
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/assetLastNameTv"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_1.Bold"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:singleLine="true"
+                    tools:text="VAL" />
+
+                <TextView
+                    android:id="@+id/balanceTv"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_1.Bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    tools:text="200,000" />
+            </LinearLayout>
+
 
             <Space
                 android:layout_width="wrap_content"
-                android:layout_height="10dp" />
+                android:layout_height="@dimen/x1" />
 
             <LinearLayout
                 android:id="@+id/normalStateView"
@@ -55,20 +77,13 @@
 
                 <TextView
                     android:id="@+id/assetFirstNameTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/x1"
-                    tools:text="Sora" />
-
-                <TextView
-                    android:id="@+id/assetLastNameTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/subtitleGrey"
-                    tools:text="VAL" />
-
+                    android:layout_marginEnd="@dimen/x1"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    tools:text="Sora" />
             </LinearLayout>
 
             <LinearLayout
@@ -84,7 +99,7 @@
                     android:layout_width="18dp"
                     android:layout_height="18dp"
                     android:layout_gravity="center"
-                    android:indeterminateTint="@color/asset_view_progress_tint_color" />
+                    android:indeterminateTint="@color/grey_700" />
 
                 <Space
                     android:layout_width="8dp"

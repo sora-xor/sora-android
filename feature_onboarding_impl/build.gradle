@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
 
 android {
@@ -10,8 +10,6 @@ android {
     defaultConfig {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
-        versionCode appVersionCode
-        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -20,6 +18,19 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 
     flavorDimensions "default"
@@ -60,6 +71,7 @@ dependencies {
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
+    implementation viewBindingDep
 
     implementation novaCryptoDep
     implementation navigationFragmentDep
@@ -72,8 +84,12 @@ dependencies {
 
     implementation gsonDep
 
+    implementation emojiDep
+
     implementation authApiPhoneDep
     implementation authGmsDep
+
+    implementation insetterDep
 
     implementation lifecycleDep
     kapt lifecycleKapt

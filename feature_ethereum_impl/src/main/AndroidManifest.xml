@@ -3,8 +3,6 @@
 
     <application>
 
-        <service android:name=".presentation.EthereumService" />
-        <service android:name=".presentation.polling.EthereumStatusPollingService" />
 
     </application>
 </manifest>

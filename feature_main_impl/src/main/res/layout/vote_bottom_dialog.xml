@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/rounded_card_view"
     android:orientation="vertical"
     android:paddingTop="@dimen/x2"
     android:paddingBottom="@dimen/x2"
@@ -113,7 +112,7 @@
                 android:paddingTop="@dimen/uikit_button_vertical_padding"
                 android:paddingBottom="@dimen/uikit_button_vertical_padding"
                 android:src="@drawable/ic_thumb_down_16"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:visibility="visible" />
 
             <androidx.constraintlayout.widget.ConstraintLayout

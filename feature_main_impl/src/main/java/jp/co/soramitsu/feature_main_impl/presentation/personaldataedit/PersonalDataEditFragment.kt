@@ -7,83 +7,68 @@ package jp.co.soramitsu.feature_main_impl.presentation.personaldataedit
 
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputFilter
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.common.util.ByteSizeTextWatcher
 import jp.co.soramitsu.common.util.KeyboardHelper
-import jp.co.soramitsu.common.util.ext.disable
-import jp.co.soramitsu.common.util.ext.enable
-import jp.co.soramitsu.common.util.ext.isValidNameChar
+import jp.co.soramitsu.common.util.nameByteSizeTextWatcher
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentPersonalDataEditBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_personal_data_edit.firstNameEt
-import kotlinx.android.synthetic.main.fragment_personal_data_edit.lastNameEt
-import kotlinx.android.synthetic.main.fragment_personal_data_edit.nextBtn
-import kotlinx.android.synthetic.main.fragment_personal_data_edit.phoneNumberEt
-import kotlinx.android.synthetic.main.fragment_personal_data_edit.toolbar
 import javax.inject.Inject
 
-class PersonalDataEditFragment : BaseFragment<PersonalDataEditViewModel>() {
+class PersonalDataEditFragment :
+    BaseFragment<PersonalDataEditViewModel>(R.layout.fragment_personal_data_edit) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var progressDialog: SoraProgressDialog
 
     private var keyboardHelper: KeyboardHelper? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_personal_data_edit, container, false)
-    }
+    private lateinit var nameSizeTextWatcher: ByteSizeTextWatcher
+    private val binding by viewBinding(FragmentPersonalDataEditBinding::bind)
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .personalComponentBuilder()
             .withFragment(this)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        toolbar.setHomeButtonListener { viewModel.backPressed() }
-
-        nextBtn.setText(R.string.common_save)
-
-        nextBtn.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                viewModel.saveData(firstNameEt.text!!.toString(), lastNameEt.text!!.toString())
-            }
-        )
-
-        val inputFilter = InputFilter { source, start, end, _, _, _ ->
-
-            for (i in start until end) {
-                if (!source[i].isValidNameChar()) {
-                    return@InputFilter source.substring(0, i)
-                }
-            }
-            null
+        binding.toolbar.setHomeButtonListener { viewModel.backPressed() }
+        binding.toolbar.setRightTextButtonDisabled()
+        binding.toolbar.setRightActionClickListener {
+            viewModel.saveData(binding.accountNameEt.text!!.toString())
         }
 
-        firstNameEt.filters = arrayOf(inputFilter, InputFilter.LengthFilter(Const.NAME_MAX_LENGTH))
-        lastNameEt.filters = arrayOf(inputFilter, InputFilter.LengthFilter(Const.NAME_MAX_LENGTH))
+        nameSizeTextWatcher = nameByteSizeTextWatcher(
+            binding.accountNameEt
+        ) {
+            Toast.makeText(
+                requireActivity(),
+                R.string.common_personal_info_account_name_invalid,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        binding.accountNameEt.addTextChangedListener(nameSizeTextWatcher)
 
-        progressDialog = SoraProgressDialog(activity!!)
+        progressDialog = SoraProgressDialog(requireContext())
 
         val textWatcher = object : TextWatcher {
 
@@ -92,54 +77,33 @@ class PersonalDataEditFragment : BaseFragment<PersonalDataEditViewModel>() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.firstNameAndLastNameChanged(firstNameEt.text.toString(), lastNameEt.text.toString())
+                viewModel.accountNameChanged(binding.accountNameEt.text.toString())
             }
         }
 
-        firstNameEt.addTextChangedListener(textWatcher)
-        lastNameEt.addTextChangedListener(textWatcher)
+        binding.accountNameEt.addTextChangedListener(textWatcher)
+        initListeners()
     }
-    override fun subscribe(viewModel: PersonalDataEditViewModel) {
-        observe(viewModel.userLiveData, Observer { user ->
-            firstNameEt.setText(user.firstName)
-            lastNameEt.setText(user.lastName)
-            phoneNumberEt.setText(user.phone)
-        })
 
-        observe(viewModel.emptyFirstNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.common_personal_info_first_name_is_empty, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.incorrectFirstNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.common_personal_info_first_name_hyphen_error, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.emptyLastNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.common_personal_info_last_name_is_empty, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.incorrectLastNameLiveData, EventObserver {
-            Toast.makeText(activity!!, R.string.common_personal_info_last_name_hyphen_error, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.getProgressVisibility(), Observer {
+    private fun initListeners() {
+        viewModel.accountNameLiveData.observe {
+            binding.accountNameEt.setText(it)
+        }
+        viewModel.getProgressVisibility().observe {
             if (it) progressDialog.show() else progressDialog.dismiss()
-        })
-
-        observe(viewModel.nextButtonEnableLiveData, Observer {
+        }
+        viewModel.nextButtonEnableLiveData.observe {
             if (it) {
-                nextBtn.enable()
+                binding.toolbar.setRightTextButtonEnabled()
             } else {
-                nextBtn.disable()
+                binding.toolbar.setRightTextButtonDisabled()
             }
-        })
-
-        viewModel.getUserData(false)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        keyboardHelper = KeyboardHelper(view!!)
+        keyboardHelper = KeyboardHelper(requireView())
     }
 
     override fun onPause() {
@@ -148,5 +112,10 @@ class PersonalDataEditFragment : BaseFragment<PersonalDataEditViewModel>() {
             hideSoftKeyboard(activity)
         }
         keyboardHelper?.release()
+    }
+
+    override fun onDestroyView() {
+        nameSizeTextWatcher.destroy()
+        super.onDestroyView()
     }
 }

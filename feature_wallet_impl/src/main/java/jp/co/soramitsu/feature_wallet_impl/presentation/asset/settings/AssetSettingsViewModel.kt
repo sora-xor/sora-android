@@ -6,23 +6,17 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.setValueIfNew
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
-import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.display.model.AssetConfigurableModel
-import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.hide.model.AssetHidingModel
-import java.util.Collections
+import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.display.AssetConfigurableModel
+import java.util.Locale
 
 class AssetSettingsViewModel(
     private val interactor: WalletInteractor,
@@ -31,215 +25,125 @@ class AssetSettingsViewModel(
     private val router: WalletRouter
 ) : BaseViewModel() {
 
-    private val _displayingAssetsLiveData = MutableLiveData<List<AssetConfigurableModel>>()
-    val displayingAssetsLiveData: LiveData<List<AssetConfigurableModel>> = _displayingAssetsLiveData
+    private val _assetsListLiveData = MutableLiveData<List<AssetConfigurableModel>>()
+    val assetsListLiveData: LiveData<List<AssetConfigurableModel>> = _assetsListLiveData
 
-    private val _hidingAssetsLiveData = MutableLiveData<List<AssetHidingModel>>()
-    val hidingAssetsLiveData: LiveData<List<AssetHidingModel>> = _hidingAssetsLiveData
+    private val _assetPositions = MutableLiveData<Pair<Int, Int>>()
+    val assetPositions: LiveData<Pair<Int, Int>> = _assetPositions
 
-    private val _hideButtonEnabledLiveData = MediatorLiveData<Boolean>()
-    val hideButtonEnabledLiveData: LiveData<Boolean> = _hideButtonEnabledLiveData
-
-    private val _addingAccountAvailableLiveData = MediatorLiveData<Boolean>()
-    val addingAccountAvailableLiveData: LiveData<Boolean> = _addingAccountAvailableLiveData
-
-    private val _showHidingAssetsView = MutableLiveData<Event<List<AssetHidingModel>>>()
-    val showHidingAssetsView: LiveData<Event<List<AssetHidingModel>>> = _showHidingAssetsView
-
-    private val _addButtonEnabledLiveData = MediatorLiveData<Boolean>()
-    val addButtonEnabledLiveData: LiveData<Boolean> = _addButtonEnabledLiveData
-
-    private val checkedDisplayingAssetsLiveData = MutableLiveData<MutableSet<AssetConfigurableModel>>()
-    private val checkedHidingAssetsLiveData = MutableLiveData<MutableSet<AssetHidingModel>>()
+    private val changeVisibility = mutableListOf<Pair<String, Boolean>>()
+    private val changePosition = mutableListOf<String>()
+    private val curAssetList = mutableListOf<AssetConfigurableModel>()
+    private var displayedAssetList = mutableListOf<AssetConfigurableModel>()
+    private var curFilter: String = ""
 
     init {
-        _hideButtonEnabledLiveData.value = false
-        _addingAccountAvailableLiveData.value = false
-        _addButtonEnabledLiveData.value = false
+        updateAssetList()
+    }
 
-        _hideButtonEnabledLiveData.addSource(checkedDisplayingAssetsLiveData) {
-            _hideButtonEnabledLiveData.value = it.isNotEmpty()
-        }
-
-        _addingAccountAvailableLiveData.addSource(hidingAssetsLiveData) {
-            _addingAccountAvailableLiveData.value = it.isNotEmpty()
-        }
-
-        _addButtonEnabledLiveData.addSource(checkedHidingAssetsLiveData) {
-            _addButtonEnabledLiveData.value = it.isNotEmpty()
-        }
-
+    private fun updateAssetList() {
         disposables.add(
             interactor.getAssets()
                 .map { mapAssetToAssetModel(it) }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    val displayingAssets = it.first
-                    val hidingAssets = it.second
-                    _displayingAssetsLiveData.setValueIfNew(displayingAssets)
-                    _hidingAssetsLiveData.value = hidingAssets
-                }, {
-                    logException(it)
-                })
+                .subscribe(
+                    {
+                        curAssetList.addAll(it)
+                        displayedAssetList.addAll(it)
+                        changePosition.addAll(it.map { m -> m.id })
+                        _assetsListLiveData.value = displayedAssetList
+                    },
+                    {
+                        logException(it)
+                    }
+                )
         )
     }
 
-    private fun mapAssetToAssetModel(assets: List<Asset>): Pair<List<AssetConfigurableModel>, List<AssetHidingModel>> {
-        val valAsset = assets.first { AssetHolder.SORA_VAL.id == it.id }
-        val valErc20Asset = assets.first { AssetHolder.SORA_VAL_ERC_20.id == it.id }
-
-        val soraAssetState = when (valAsset.state) {
-            Asset.State.NORMAL -> AssetConfigurableModel.State.NORMAL
-            Asset.State.ASSOCIATING -> AssetConfigurableModel.State.ASSOCIATING
-            Asset.State.ERROR -> AssetConfigurableModel.State.ERROR
-            Asset.State.UNKNOWN -> AssetConfigurableModel.State.NORMAL
+    private fun mapAssetToAssetModel(assets: List<Asset>): List<AssetConfigurableModel> =
+        assets.sortedBy { it.position }.map {
+            AssetConfigurableModel(
+                it.id, it.assetName, it.symbol, it.iconShadow,
+                it.hidingAllowed, numbersFormatter.formatBigDecimal(it.balance, it.precision),
+                it.display
+            )
         }
 
-        val valAssetBalance = valAsset.assetBalance?.balance
-        val valErc20AssetBalance = valErc20Asset.assetBalance?.balance
-
-        val totalValBalance = if (valAssetBalance == null) {
-            valErc20AssetBalance
-        } else {
-            if (valErc20AssetBalance == null) {
-                valAssetBalance
-            } else {
-                valAssetBalance + valErc20AssetBalance
-            }
+    private fun filterAssetsList() {
+        val filter = curFilter.toLowerCase(Locale.getDefault())
+        if (filter.isBlank()) {
+            displayedAssetList = curAssetList
+            _assetsListLiveData.value = displayedAssetList
+            return
         }
-
-        val totalValBalanceFormatted = totalValBalance?.let {
-            numbersFormatter.formatBigDecimal(it)
+        displayedAssetList = mutableListOf<AssetConfigurableModel>().apply {
+            addAll(
+                curAssetList.filter {
+                    it.assetFirstName.toLowerCase(Locale.getDefault())
+                        .contains(filter) || it.assetLastName.toLowerCase(Locale.getDefault())
+                        .contains(filter)
+                }
+            )
         }
+        _assetsListLiveData.value = displayedAssetList
+    }
 
-        val valAssetIconResource = R.drawable.ic_val_gold_24
-        val valAssetIconBackground = resourceManager.getColor(R.color.uikit_lightRed)
-
-        val ethAsset = assets.first { AssetHolder.ETHER_ETH.id == it.id }
-
-        val ethAssetState = when (ethAsset.state) {
-            Asset.State.NORMAL -> AssetConfigurableModel.State.NORMAL
-            Asset.State.ASSOCIATING -> AssetConfigurableModel.State.ASSOCIATING
-            Asset.State.ERROR -> AssetConfigurableModel.State.ERROR
-            Asset.State.UNKNOWN -> AssetConfigurableModel.State.NORMAL
-        }
-
-        val ethAssetIconResource = R.drawable.ic_eth_24
-        val ethAssetIconBackground = resourceManager.getColor(R.color.asset_view_eth_background_color)
-        val ethAssetBalance = ethAsset.assetBalance?.balance?.let {
-            numbersFormatter.formatBigDecimal(it)
-        }
-
-        val displayingAssets = mutableListOf<AssetConfigurableModel>().apply {
-            val soraDisplayingAsset = AssetConfigurableModel(valAsset.id, valAsset.assetFirstName, valAsset.assetLastName, valAssetIconResource, valAssetIconBackground,
-                valAsset.hidingAllowed, false, totalValBalanceFormatted, soraAssetState)
-            soraDisplayingAsset.position = valAsset.position
-            add(soraDisplayingAsset)
-        }
-
-        val hidingAssets = mutableListOf<AssetHidingModel>()
-
-        if (ethAsset.displayAsset) {
-            val ethDisplayingAsset = AssetConfigurableModel(ethAsset.id, ethAsset.assetFirstName, ethAsset.assetLastName, ethAssetIconResource, ethAssetIconBackground,
-                ethAsset.hidingAllowed, false, ethAssetBalance, ethAssetState)
-            ethDisplayingAsset.position = ethAsset.position
-            displayingAssets.add(ethDisplayingAsset)
-        } else {
-            hidingAssets.add(AssetHidingModel(ethAsset.id, ethAsset.assetFirstName, ethAsset.assetLastName, ethAssetIconResource, ethAssetBalance))
-        }
-
-        val sortedAssets = displayingAssets.sortedBy { it.position }
-
-        return Pair(sortedAssets, hidingAssets)
+    fun searchAssets(filter: String) {
+        curFilter = filter
+        filterAssetsList()
     }
 
     fun checkChanged(asset: AssetConfigurableModel, checked: Boolean) {
-        if (checked) {
-            val checkedAssetList = checkedDisplayingAssetsLiveData.value ?: mutableSetOf()
-            checkedAssetList.add(asset)
-            checkedDisplayingAssetsLiveData.value = checkedAssetList
-        } else {
-            val checkedAssetList = checkedDisplayingAssetsLiveData.value ?: mutableSetOf()
-            checkedAssetList.remove(asset)
-            checkedDisplayingAssetsLiveData.value = checkedAssetList
+        changeVisibility.indexOfFirst { it.first == asset.id }.let {
+            if (it >= 0) changeVisibility.removeAt(it)
         }
+        changeVisibility.add(asset.id to checked)
     }
 
-    fun doneClicked() {
+    fun backClicked() {
         router.popBackStackFragment()
     }
 
-    fun hideAssetsButtonClicked() {
-        checkedDisplayingAssetsLiveData.value?.let {
-            val assetIds = it.map { it.id }
-            disposables.add(
-                interactor.hideAssets(assetIds)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({
-                        checkedDisplayingAssetsLiveData.value = mutableSetOf()
-                    }, {
-                        it.printStackTrace()
-                    })
+    fun doneClicked() {
+        disposables.add(
+            interactor.updateAssetPositions(
+                changePosition.mapIndexed { index, s -> s to index }.toMap()
             )
-        }
+                .andThen(
+                    interactor.displayAssets(changeVisibility.filter { it.second }.map { it.first })
+                )
+                .andThen(
+                    interactor.hideAssets(changeVisibility.filter { !it.second }.map { it.first })
+                )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        router.popBackStackFragment()
+                    },
+                    {
+                        onError(it)
+                    }
+                )
+        )
     }
 
-    fun addAssetClicked() {
-        hidingAssetsLiveData.value?.let {
-            _showHidingAssetsView.value = Event(it)
+    fun assetPositionChanged(from: Int, to: Int): Boolean {
+        if (!displayedAssetList[from].changeCheckStateEnabled || !displayedAssetList[to].changeCheckStateEnabled) return false
+        val originalFrom =
+            requireNotNull(curAssetList.indexOfFirst { it.id == displayedAssetList[from].id })
+        val originalTo =
+            requireNotNull(curAssetList.indexOfFirst { it.id == displayedAssetList[to].id })
+        with(changePosition) {
+            val item = removeAt(from)
+            add(to, item)
         }
-    }
-
-    fun hidingAssetCheckChanged(asset: AssetHidingModel, checked: Boolean) {
-        if (checked) {
-            val checkedAssetList = checkedHidingAssetsLiveData.value ?: mutableSetOf()
-            checkedAssetList.add(asset)
-            checkedHidingAssetsLiveData.value = checkedAssetList
-        } else {
-            val checkedAssetList = checkedHidingAssetsLiveData.value ?: mutableSetOf()
-            checkedAssetList.remove(asset)
-            checkedHidingAssetsLiveData.value = checkedAssetList
+        with(displayedAssetList) {
+            val item = removeAt(originalFrom)
+            add(originalTo, item)
         }
-    }
-
-    fun displayAssetsButtonClicked() {
-        checkedHidingAssetsLiveData.value?.let {
-            val assetIds = it.map { it.id }
-            disposables.add(
-                interactor.displayAssets(assetIds)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({
-                        checkedHidingAssetsLiveData.value = mutableSetOf()
-                    }, {
-                        it.printStackTrace()
-                    })
-            )
-        }
-    }
-
-    fun assetPositionChanged(from: Int, to: Int) {
-        displayingAssetsLiveData.value?.let {
-            val assets = mutableListOf<AssetConfigurableModel>().apply {
-                addAll(it)
-            }
-            Collections.swap(assets, from, to)
-            val assetsMap = mutableMapOf<String, Int>()
-            assets.forEachIndexed { index, asset ->
-                assetsMap.put(asset.id, index)
-            }
-            disposables.add(
-                interactor.updateAssetPositions(assetsMap)
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({
-                        _displayingAssetsLiveData.value = assets
-                    }, {
-                        it.printStackTrace()
-                    })
-            )
-        }
+        _assetPositions.value = from to to
+        return true
     }
 }

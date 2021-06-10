@@ -6,49 +6,33 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import android.widget.Toast
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransactionConfirmationBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.inputAccountInfo
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.inputAccountLastname
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.inputAccountName
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.minerFeeTv
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.minerFeeView
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.nextBtn
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.outputAccountInfo
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.outputIcon
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.outputInitials
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.outputTitle
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.toolbar
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.totalAmountText
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.transactionAmountText
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.transactionDescriptionText
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.transactionDescription
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.transactionFeeView
-import kotlinx.android.synthetic.main.fragment_transaction_confirmation.transactionFeeText
 import java.math.BigDecimal
 import javax.inject.Inject
 
-class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationViewModel>() {
+class TransactionConfirmationFragment :
+    BaseFragment<TransactionConfirmationViewModel>(R.layout.fragment_transaction_confirmation) {
 
     companion object {
-        private const val DESCRIPTION = "description"
         private const val KEY_AMOUNT = "amount"
         private const val KEY_PARTIAL_AMOUNT = "partial_amount"
         private const val KEY_PEER_FULL_NAME = "peer_full_name"
         private const val KEY_PEER_ID = "account_id"
+        private const val KEY_ASSET_ID = "asset_id"
         private const val KEY_MINER_FEE = "miner_fee"
         private const val KEY_TRANSACTION_FEE = "transaction_fee"
         private const val KEY_TRANSFER_TYPE = "transfer_type"
@@ -59,7 +43,7 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
             peerFullName: String,
             partialAmount: BigDecimal,
             amount: BigDecimal,
-            description: String,
+            assetId: String,
             minerFee: BigDecimal,
             transactionFee: BigDecimal,
             transferType: TransferType
@@ -69,31 +53,7 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
                 putString(KEY_PEER_FULL_NAME, peerFullName)
                 putSerializable(KEY_PARTIAL_AMOUNT, partialAmount)
                 putSerializable(KEY_AMOUNT, amount)
-                putString(DESCRIPTION, description)
-                putSerializable(KEY_MINER_FEE, minerFee)
-                putSerializable(KEY_TRANSACTION_FEE, transactionFee)
-                putSerializable(KEY_TRANSFER_TYPE, transferType)
-            }
-        }
-
-        fun createRetryBundle(
-            soranetHash: String,
-            peerId: String,
-            peerFullName: String,
-            partialAmount: BigDecimal,
-            amount: BigDecimal,
-            description: String,
-            minerFee: BigDecimal,
-            transactionFee: BigDecimal,
-            transferType: TransferType
-        ): Bundle {
-            return Bundle().apply {
-                putString(KEY_RETRY_SORANET_HASH, soranetHash)
-                putString(KEY_PEER_ID, peerId)
-                putString(KEY_PEER_FULL_NAME, peerFullName)
-                putSerializable(KEY_PARTIAL_AMOUNT, partialAmount)
-                putSerializable(KEY_AMOUNT, amount)
-                putString(DESCRIPTION, description)
+                putString(KEY_ASSET_ID, assetId)
                 putSerializable(KEY_MINER_FEE, minerFee)
                 putSerializable(KEY_TRANSACTION_FEE, transactionFee)
                 putSerializable(KEY_TRANSFER_TYPE, transferType)
@@ -106,29 +66,30 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
 
     private lateinit var progressDialog: SoraProgressDialog
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_transaction_confirmation, container, false)
-    }
+    private val viewBinding by viewBinding(FragmentTransactionConfirmationBinding::bind)
 
     override fun inject() {
-        val partialAmount = arguments!!.getSerializable(KEY_PARTIAL_AMOUNT) as BigDecimal
-        val amount = arguments!!.getSerializable(KEY_AMOUNT) as BigDecimal
-        val description = arguments!!.getString(DESCRIPTION, "")
-        val minerFee = arguments!!.getSerializable(KEY_MINER_FEE) as BigDecimal
-        val transactionFee = arguments!!.getSerializable(KEY_TRANSACTION_FEE) as BigDecimal
-        val peerFullName = arguments!!.getString(KEY_PEER_FULL_NAME, "")
-        val peerId = arguments!!.getString(KEY_PEER_ID, "")
-        val transferType = arguments!!.getSerializable(KEY_TRANSFER_TYPE) as TransferType
-        val retrySoranetHash = arguments!!.getString(KEY_RETRY_SORANET_HASH, "")
+        val partialAmount = requireArguments().getSerializable(KEY_PARTIAL_AMOUNT) as BigDecimal
+        val amount = requireArguments().getSerializable(KEY_AMOUNT) as BigDecimal
+        val assetId = requireArguments().getString(KEY_ASSET_ID, "")
+        val minerFee = requireArguments().getSerializable(KEY_MINER_FEE) as BigDecimal
+        val transactionFee = requireArguments().getSerializable(KEY_TRANSACTION_FEE) as BigDecimal
+        val peerFullName = requireArguments().getString(KEY_PEER_FULL_NAME, "")
+        val peerId = requireArguments().getString(KEY_PEER_ID, "")
+        val transferType = requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
+        val retrySoranetHash = requireArguments().getString(KEY_RETRY_SORANET_HASH, "")
 
-        FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
+        FeatureUtils.getFeature<WalletFeatureComponent>(
+            requireContext(),
+            WalletFeatureApi::class.java
+        )
             .transactionConfirmationComponentBuilder()
             .withFragment(this)
             .withPartialAmount(partialAmount)
             .withAmount(amount)
             .withMinerFee(minerFee)
             .withTransactionFee(transactionFee)
-            .withDescription(description)
+            .withDescription(assetId)
             .withPeerFullName(peerFullName)
             .withPeerId(peerId)
             .withTransferType(transferType)
@@ -137,83 +98,59 @@ class TransactionConfirmationFragment : BaseFragment<TransactionConfirmationView
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        with(toolbar) {
+        with(viewBinding.toolbar) {
             setHomeButtonListener { viewModel.backButtonPressed() }
             showHomeButton()
         }
 
-        progressDialog = SoraProgressDialog(activity!!)
+        progressDialog = SoraProgressDialog(requireContext())
 
-        nextBtn.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                viewModel.nextClicked()
-            }
-        )
+        viewBinding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.nextClicked()
+        }
+
+        viewBinding.outputAccountInfo.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.copyAddress()
+        }
+        initListeners()
     }
 
-    override fun subscribe(viewModel: TransactionConfirmationViewModel) {
-        observe(viewModel.outputTitle, Observer {
-            outputTitle.text = it
-        })
-
-        observe(viewModel.inputTokenNameLiveData, Observer {
-            inputAccountName.text = it
-        })
-
-        observe(viewModel.inputTokenLastNameLiveData, Observer {
-            inputAccountLastname.text = it
-        })
-
-        observe(viewModel.inputTokenIconLiveData, Observer {
-            inputAccountName.setCompoundDrawablesWithIntrinsicBounds(it, 0, 0, 0)
-        })
-
-        observe(viewModel.balanceFormattedLiveData, Observer {
-            inputAccountInfo.text = it
-        })
-
-        observe(viewModel.recipientNameLiveData, Observer {
-            outputAccountInfo.text = it
-        })
-
-        observe(viewModel.recipientTextIconLiveData, Observer {
-            outputInitials.show()
-            outputInitials.text = it
-        })
-
-        observe(viewModel.recipientIconLiveData, Observer {
-            outputIcon.show()
-            outputIcon.setImageResource(it)
-        })
-
-        observe(viewModel.getProgressVisibility(), Observer {
+    private fun initListeners() {
+        viewModel.inputTokenLastNameLiveData.observe {
+            viewBinding.inputAccountLastname.text = it
+        }
+        viewModel.inputTokenIconLiveData.observe {
+            viewBinding.ivAssetIcon.setImageResource(it)
+        }
+        viewModel.balanceFormattedLiveData.observe {
+            viewBinding.inputAccountInfo.text = it
+        }
+        viewModel.recipientNameLiveData.observe {
+            viewBinding.outputAccountInfo.text = it
+        }
+        viewModel.getProgressVisibility().observe {
             if (it) progressDialog.show() else progressDialog.dismiss()
-        })
-
-        observe(viewModel.amountFormattedLiveData, Observer {
-            transactionAmountText.text = it
-        })
-
-        observe(viewModel.transactionFeeFormattedLiveData, Observer {
-            transactionFeeView.show()
-            transactionFeeText.text = it
-        })
-
-        observe(viewModel.minerFeeFormattedLiveData, Observer {
-            minerFeeView.show()
-            minerFeeTv.text = it
-        })
-
-        observe(viewModel.totalAmountFormattedLiveData, Observer {
-            totalAmountText.text = it
-        })
-
-        observe(viewModel.descriptionLiveData, Observer {
-            transactionDescriptionText.text = it
-            transactionDescription.show()
-        })
+        }
+        viewModel.amountFormattedLiveData.observe {
+            viewBinding.transactionAmountText.text = it
+        }
+        viewModel.transactionFeeFormattedLiveData.observe {
+            viewBinding.transactionFeeView.show()
+            viewBinding.transactionFeeText.text = it
+        }
+        viewModel.copiedAddressEvent.observe {
+            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        }
+        viewModel.transactionSuccessEvent.observe {
+            Toast.makeText(
+                requireContext(),
+                R.string.wallet_transaction_submitted,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 }

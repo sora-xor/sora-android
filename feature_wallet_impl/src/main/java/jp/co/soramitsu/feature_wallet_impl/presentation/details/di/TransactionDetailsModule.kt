@@ -48,19 +48,15 @@ class TransactionDetailsModule {
         @Named("assetId") assetId: String,
         @Named("myAccountId") myAccountId: String,
         @Named("peerId") peerId: String,
-        @Named("peerFullName") peerFullName: String,
         transactionType: Transaction.Type,
         @Named("soranetTransactionId") soranetTransactionId: String,
-        @Named("ethTransactionId") ethTransactionId: String,
-        @Named("secondEthTransactionId") secondEthTransactionId: String,
+        @Named("soranetBlockId") soranetBlockId: String,
         @Named("status") status: Transaction.Status,
-        @Named("detailedStatus") detailedStatus: Transaction.DetailedStatus,
+        @Named("success") success: Boolean?,
         date: Long,
         @Named("amount") amount: BigDecimal,
         @Named("totalAmount") totalAmount: BigDecimal,
         @Named("transactionFee") transactionFee: BigDecimal,
-        @Named("minerFee") minerFee: BigDecimal,
-        @Named("description") description: String,
         clipboardManager: ClipboardManager
     ): ViewModel {
         return TransactionDetailsViewModel(
@@ -74,19 +70,15 @@ class TransactionDetailsModule {
             myAccountId,
             assetId,
             peerId,
-            peerFullName,
             transactionType,
             soranetTransactionId,
-            ethTransactionId,
-            secondEthTransactionId,
+            soranetBlockId,
             status,
-            detailedStatus,
+            success,
             date,
             amount,
             totalAmount,
             transactionFee,
-            minerFee,
-            description,
             clipboardManager
         )
     }

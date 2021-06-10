@@ -25,11 +25,14 @@ class PassphraseViewModel(
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .compose(preloadCompose())
-                .subscribe({
-                    passphraseLiveData.value = it
-                }, {
-                    it.printStackTrace()
-                })
+                .subscribe(
+                    {
+                        passphraseLiveData.value = it
+                    },
+                    {
+                        it.printStackTrace()
+                    }
+                )
         )
     }
 }

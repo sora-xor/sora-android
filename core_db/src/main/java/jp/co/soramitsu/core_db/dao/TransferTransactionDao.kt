@@ -41,6 +41,16 @@ abstract class TransferTransactionDao {
     @Query("UPDATE transfer_transactions SET status = :newStatus WHERE txHash = :txHash")
     abstract fun updateStatus(txHash: String, newStatus: TransferTransactionLocal.Status)
 
+    @Query("UPDATE transfer_transactions SET eventSuccess = :newValue WHERE txHash = :txHash")
+    abstract fun updateSuccess(txHash: String, newValue: Boolean)
+
     @Query("UPDATE transfer_transactions SET txHash = :newHash WHERE txHash = :currentHash")
     abstract fun updateTxHash(currentHash: String, newHash: String)
+
+    @Query(
+        """
+            SELECT DISTINCT peerId FROM transfer_transactions WHERE (peerId LIKE '%' || :query || '%')
+        """
+    )
+    abstract fun getContacts(query: String): Single<List<String>>
 }

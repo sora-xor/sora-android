@@ -6,37 +6,28 @@
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Single
-import iroha.protocol.TransactionOuterClass
-import jp.co.soramitsu.common.data.network.dto.StatusDto
-import jp.co.soramitsu.common.data.network.response.BaseResponse
+import io.reactivex.Observable
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.TransferTransactionDao
-import jp.co.soramitsu.core_db.dao.WithdrawTransactionDao
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
+import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
+import jp.co.soramitsu.feature_ethereum_api.domain.model.GasEstimation
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthRegisterStateMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.network.ERC20ContractApi
-import jp.co.soramitsu.feature_ethereum_impl.data.network.EthereumNetworkApi
 import jp.co.soramitsu.feature_ethereum_impl.data.network.SmartContractApi
-import jp.co.soramitsu.feature_ethereum_impl.data.network.SoranetApi
 import jp.co.soramitsu.feature_ethereum_impl.data.network.TransactionFactory
-import jp.co.soramitsu.feature_ethereum_impl.data.network.model.KeccakProof
-import jp.co.soramitsu.feature_ethereum_impl.data.network.model.WithdrawalProof
-import jp.co.soramitsu.feature_ethereum_impl.data.network.request.IrohaRequest
-import jp.co.soramitsu.feature_ethereum_impl.data.network.response.WithdrawalProofsResponse
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiConverter
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
-import jp.co.soramitsu.feature_ethereum_impl.util.EthereumConfigProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import jp.co.soramitsu.test_shared.RxSchedulersRule
-import jp.co.soramitsu.test_shared.anyNonNull
-import jp.co.soramitsu.test_shared.eqNonNull
 import org.bouncycastle.util.encoders.Hex
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -48,47 +39,73 @@ import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.web3j.crypto.Bip32ECKeyPair
+import org.web3j.crypto.Credentials
 import org.web3j.protocol.core.RemoteCall
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.security.KeyPair
-import java.util.Base64
 import java.util.concurrent.Callable
 
 @RunWith(MockitoJUnitRunner::class)
 class EthereumRepositoryTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
 
-    @Mock private lateinit var web3jProvider: Web3jProvider
-    @Mock private lateinit var ethereumConfigProvider: EthereumConfigProvider
-    @Mock private lateinit var web3jBip32Crypto: Web3jBip32Crypto
-    @Mock private lateinit var ethereumDatasource: EthereumDatasource
-    @Mock private lateinit var ethereumCredentialsMapper: EthereumCredentialsMapper
-    @Mock private lateinit var api: EthereumNetworkApi
-    @Mock private lateinit var soranetApi: SoranetApi
-    @Mock private lateinit var serializer: Serializer
-    @Mock private lateinit var transactionFactory: TransactionFactory
-    @Mock private lateinit var contractApiProvider: ContractsApiProvider
-    @Mock private lateinit var smartContractApi: SmartContractApi
-    @Mock private lateinit var erc20ContractApi: ERC20ContractApi
-    @Mock private lateinit var etherWeiConverter: EtherWeiConverter
-    @Mock private lateinit var db: AppDatabase
-    @Mock private lateinit var ethRegisterStateMapper: EthRegisterStateMapper
+    @Rule
+    @JvmField
+    val rxSchedulerRule = RxSchedulersRule()
+
+    @Mock
+    private lateinit var web3jProvider: Web3jProvider
+
+    @Mock
+    private lateinit var web3jBip32Crypto: Web3jBip32Crypto
+
+    @Mock
+    private lateinit var ethereumDatasource: EthereumDatasource
+
+    @Mock
+    private lateinit var ethereumCredentialsMapper: EthereumCredentialsMapper
+
+    @Mock
+    private lateinit var serializer: Serializer
+
+    @Mock
+    private lateinit var transactionFactory: TransactionFactory
+
+    @Mock
+    private lateinit var contractApiProvider: ContractsApiProvider
+
+    @Mock
+    private lateinit var smartContractApi: SmartContractApi
+
+    @Mock
+    private lateinit var erc20ContractApi: ERC20ContractApi
+
+    @Mock
+    private lateinit var etherWeiConverter: EtherWeiConverter
+
+    @Mock
+    private lateinit var db: AppDatabase
+
+    @Mock
+    private lateinit var ethRegisterStateMapper: EthRegisterStateMapper
 
     private lateinit var ethereumRepository: EthereumRepository
 
-    private val xorTokenAddress = "xorTokenAddress"
+    private val valTokenAddress = "valTokenAddress"
     private val txHash = "txHash"
     private val srcAccountId = "srcaccountId"
     private val address = "address"
-    private val mnemonic = "ecology power suggest mad rally exit leg guilt entry bid cook boil blame cry grunt"
+    private val mnemonic =
+        "ecology power suggest mad rally exit leg guilt entry bid cook boil blame cry grunt"
     private val amount = BigDecimal.ONE
     private val minerFee = "11.0"
     private val seed = mnemonic.toByteArray()
-    private val ethereumCredentials = EthereumCredentials(BigInteger("4309705105768215758615629237602468660061307779130899782366233796951641406004"))
+    private val ethereumCredentials =
+        EthereumCredentials(BigInteger("4309705105768215758615629237602468660061307779130899782366233796951641406004"))
     private val ecKeyPair = Bip32ECKeyPair.generateKeyPair(seed)
     private val gasPrice = BigInteger.ONE
     private val gasLimit = BigInteger.ONE
@@ -98,10 +115,27 @@ class EthereumRepositoryTest {
         given(contractApiProvider.getGasPrice()).willReturn(gasPrice)
         given(contractApiProvider.getGasLimit()).willReturn(gasLimit)
         given(etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)).willReturn(BigDecimal(minerFee))
-        given(contractApiProvider.getSmartContractApi(ethereumCredentials)).willReturn(smartContractApi)
-        given(contractApiProvider.getErc20ContractApi(ethereumCredentials, xorTokenAddress)).willReturn(erc20ContractApi)
-        ethereumRepository = EthereumRepositoryImpl(ethereumDatasource, ethereumCredentialsMapper, api, soranetApi, web3jProvider, web3jBip32Crypto,
-            serializer, contractApiProvider, transactionFactory, etherWeiConverter, db, ethRegisterStateMapper, ethereumConfigProvider)
+        given(contractApiProvider.getSmartContractApi(ethereumCredentials)).willReturn(
+            smartContractApi
+        )
+        given(
+            contractApiProvider.getErc20ContractApi(
+                ethereumCredentials,
+                valTokenAddress
+            )
+        ).willReturn(erc20ContractApi)
+        ethereumRepository = EthereumRepositoryImpl(
+            ethereumDatasource,
+            ethereumCredentialsMapper,
+            web3jProvider,
+            web3jBip32Crypto,
+            serializer,
+            contractApiProvider,
+            transactionFactory,
+            etherWeiConverter,
+            db,
+            ethRegisterStateMapper,
+        )
     }
 
     @Test
@@ -111,13 +145,18 @@ class EthereumRepositoryTest {
         val transactionReceipt = mock(TransactionReceipt::class.java)
 
         given(etherWeiConverter.fromEtherToWei(amount)).willReturn(amount.toBigInteger())
-        given(erc20ContractApi.transferVal(address, amount.toBigInteger())).willReturn(remoteCall as RemoteCall<TransactionReceipt>?)
-        given(ethereumCredentialsMapper.getAddress(anyNonNull())).willReturn(address)
+        given(
+            erc20ContractApi.transferVal(
+                address,
+                amount.toBigInteger()
+            )
+        ).willReturn(remoteCall as RemoteCall<TransactionReceipt>?)
+        //given(ethereumCredentialsMapper.getAddress(anyNonNull())).willReturn(address)
         given(remoteCall!!.send()).willReturn(transactionReceipt)
         given(transactionReceipt.transactionHash).willReturn(txHash)
         given(db.transactionDao()).willReturn(transactionDao)
 
-        ethereumRepository.transferValErc20(address, amount, ethereumCredentials, xorTokenAddress)
+        ethereumRepository.transferValErc20(address, amount, ethereumCredentials, valTokenAddress)
             .test()
             .assertComplete()
 
@@ -126,117 +165,241 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `register eth account called`() {
-        val serializedValue = "{}"
-        val transactionByteArray = address.toByteArray()
-        val keyPair = mock(KeyPair::class.java)
-        val baseResponse = mock(BaseResponse::class.java)
-        val irohaRequest = IrohaRequest(Base64.getEncoder().encodeToString(transactionByteArray))
+    fun `observer eth registration state`() {
+        val state = EthRegisterState.State.NONE
+        given(ethereumDatasource.observeEthRegisterState()).willReturn(Observable.just(state))
 
-        given(transactionFactory.buildRegisterEthRequest(srcAccountId, serializedValue, keyPair)).willReturn(Single.just(Pair(irohaRequest, address)))
-        given(api.ethRegister(irohaRequest)).willReturn(Single.just(baseResponse))
-
-        ethereumRepository.registerEthAccount(srcAccountId, serializedValue, keyPair)
+        ethereumRepository.observeEthRegisterState()
             .test()
-            .assertComplete()
+            .assertResult(state)
     }
 
     @Test
-    fun `start withdraw`() {
-        val withdrawTransactionDao = mock(WithdrawTransactionDao::class.java)
-        val transactionByteArray = address.toByteArray()
-        val keyPair = mock(KeyPair::class.java)
-        val transaction = mock(TransactionOuterClass.Transaction::class.java)
-        val irohaRequest = IrohaRequest(Base64.getEncoder().encodeToString(transactionByteArray))
-        given(etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)).willReturn(BigDecimal(minerFee))
+    fun `get eth registration state`() {
+        val state = EthRegisterState(EthRegisterState.State.NONE, "")
+        given(ethereumDatasource.getEthRegisterState()).willReturn(state)
 
-        given(db.withdrawTransactionDao()).willReturn(withdrawTransactionDao)
-        given(transactionFactory.buildWithdrawTransaction(amount, srcAccountId, address, minerFee, keyPair)).willReturn(Single.just(Pair(irohaRequest, txHash)))
-        given(api.withdraw(irohaRequest)).willReturn(Single.just(BaseResponse(StatusDto("200", "Ok"))))
-
-        ethereumRepository.startWithdraw(amount, srcAccountId, address, minerFee, keyPair)
-            .test()
-            .assertComplete()
+        val actual = ethereumRepository.getEthRegistrationState()
+        assertEquals(state, actual)
     }
 
     @Test
-    fun `confirm withdraw`() {
-        val toAddress = "toAddress"
+    fun `registration state called`() {
+        val operationId = "operationId"
+        val ethRegisterState = EthRegisterState(EthRegisterState.State.IN_PROGRESS, operationId)
+
+        ethereumRepository.registrationStarted(operationId)
+
+        verify(ethereumDatasource).saveEthRegisterState(ethRegisterState)
+    }
+
+    @Test
+    fun `registration completed called`() {
+        val operationId = "operationId"
+        val ethRegisterState = EthRegisterState(EthRegisterState.State.REGISTERED, operationId)
+
+        ethereumRepository.registrationCompleted(operationId)
+
+        verify(ethereumDatasource).saveEthRegisterState(ethRegisterState)
+    }
+
+    @Test
+    fun `registration failed called`() {
+        val operationId = "operationId"
+        val ethRegisterState = EthRegisterState(EthRegisterState.State.FAILED, operationId)
+
+        ethereumRepository.registrationFailed(operationId)
+
+        verify(ethereumDatasource).saveEthRegisterState(ethRegisterState)
+    }
+
+    @Test
+    fun `set gas limit called`() {
+        val gasLimit = BigInteger.ONE
+        val gasPrice = BigInteger.TEN
+        val etherFee = BigDecimal.TEN
+
+        given(etherWeiConverter.fromWeiToEther(BigInteger.TEN)).willReturn(etherFee)
+
+        given(contractApiProvider.getGasPrice()).willReturn(gasPrice)
+
+        ethereumRepository.setGasLimit(gasLimit)
+            .test()
+            .assertResult(etherFee)
+
+        verify(contractApiProvider).setGasLimit(gasLimit)
+    }
+
+    @Test
+    fun `set gas price called`() {
+        val gasLimit = BigInteger.ONE
+        val gasPriceInWei = BigInteger.TEN
+        val gasPriceInGwei = BigInteger("2")
+        val etherFee = BigDecimal.TEN
+
+        given(etherWeiConverter.fromWeiToEther(BigInteger.TEN)).willReturn(etherFee)
+        given(etherWeiConverter.fromGweiToWei(gasPriceInGwei)).willReturn(gasPriceInWei)
+
+        given(contractApiProvider.getGasLimit()).willReturn(gasLimit)
+
+        ethereumRepository.setGasPrice(gasPriceInGwei)
+            .test()
+            .assertResult(etherFee)
+
+        verify(contractApiProvider).setGasPrice(gasPriceInWei)
+    }
+
+    @Test
+    fun `get eth credentials from cache called`() {
+        given(ethereumDatasource.retrieveEthereumCredentials()).willReturn(ethereumCredentials)
+
+        ethereumRepository.getEthCredentials(mnemonic)
+            .test()
+            .assertResult(ethereumCredentials)
+    }
+
+    @Test
+    fun `get eth credentials called`() {
+        val masterKeypair = Bip32ECKeyPair(BigInteger.ONE, BigInteger.ONE, 0, seed, null)
+        val childKeypair =
+            Bip32ECKeyPair(ethereumCredentials.privateKey, BigInteger.TEN, 1, seed, masterKeypair)
+        val credentials = Credentials.create(childKeypair)
+
+        given(web3jBip32Crypto.generateSeedFromMnemonic(mnemonic)).willReturn(seed)
+        given(web3jBip32Crypto.generateECMasterKeyPair(seed)).willReturn(masterKeypair)
+        given(web3jBip32Crypto.deriveECKeyPairFromMaster(masterKeypair)).willReturn(childKeypair)
+        given(ethereumCredentialsMapper.getCredentialsFromECKeyPair(childKeypair)).willReturn(
+            credentials
+        )
+
+        ethereumRepository.getEthCredentials(mnemonic)
+            .test()
+            .assertResult(ethereumCredentials)
+
+        verify(ethereumDatasource).saveEthereumCredentials(ethereumCredentials)
+    }
+
+    @Test
+    fun `get gas estimations called`() {
+        val slowGasLimit = gasLimit - BigInteger.TEN
+        val slowGasAmount = slowGasLimit * gasPrice
+        val slowGasAmountEth = slowGasAmount.toBigDecimal()
+        given(etherWeiConverter.fromGweiToEther(slowGasAmount)).willReturn(slowGasAmountEth)
+        given(contractApiProvider.getGasPrice()).willReturn(gasPrice)
+        given(etherWeiConverter.fromWeiToGwei(gasPrice)).willReturn(gasPrice)
+
+        val normalGasLimit = gasLimit
+        val normalGasAmount = normalGasLimit * gasPrice
+        val normalGasAmountEth = normalGasAmount.toBigDecimal()
+        given(etherWeiConverter.fromGweiToEther(normalGasAmount)).willReturn(normalGasAmountEth)
+
+        val fastGasLimit = gasLimit + BigInteger.TEN
+        val fastGasAmount = fastGasLimit * gasPrice
+        val fastGasAmountEth = fastGasAmount.toBigDecimal()
+        given(etherWeiConverter.fromGweiToEther(fastGasAmount)).willReturn(fastGasAmountEth)
+
+        val estimations = listOf(
+            GasEstimation(GasEstimation.Type.SLOW, slowGasAmount, slowGasAmountEth, 600),
+            GasEstimation(GasEstimation.Type.REGULAR, normalGasAmount, normalGasAmountEth, 90),
+            GasEstimation(GasEstimation.Type.FAST, fastGasAmount, fastGasAmountEth, 20)
+        )
+
+        ethereumRepository.getGasEstimations(gasLimit, ethereumCredentials)
+            .test()
+            .assertResult(Gas(gasPrice, gasLimit, estimations))
+    }
+
+    @Test
+    fun `is bridge enabled called`() {
         val txHash = Hex.toHexString("irohaTxHash1".toByteArray())
         val txHashBytes = Hex.decode(txHash)
-        val userRemoteCall = RemoteCall<BigInteger>(Callable { BigInteger.ZERO })
-        val v = "1c"
-        val r = "aacab589047daab39a75cf52d9c9188f5e20f9ded20e0b7e7e46908168992d01"
-        val s = "bacab589047daab39a75cf52d9c9188f5e20a9ded20e0b7e7e46908168992d01"
-        val vList = listOf(BigInteger(Hex.decode(v)))
-        val result = mock(RemoteCall::class.java)
-        val transactionReceipt = mock(TransactionReceipt::class.java)
-        val gasPrice = BigInteger.ONE
-        val gasLimit = BigInteger.ONE
+        val userRemoteCall = RemoteCall<ByteArray>(Callable { txHashBytes })
+        given(smartContractApi.proof()).willReturn(userRemoteCall)
 
-        val withdrawalProofsResponse = WithdrawalProofsResponse(StatusDto("200", "Ok"), listOf(
-            WithdrawalProof(
-                "id",
-                100,
-                1,
-                1,
-                "accountId",
-                "tokenContractId",
-                amount,
-                "relay",
-                txHash,
-                toAddress,
-                listOf(KeccakProof(v, r, s))
-            ),
-            WithdrawalProof(
-                "id2",
-                100,
-                1,
-                1,
-                "accountId",
-                "tokenContractId",
-                BigDecimal.TEN,
-                "relay2",
-                "irohaTxHash2",
-                "toId",
-                listOf(KeccakProof("12", "bbcab589047daab39a75cf52d9c9188f5e20f9ded20e0b7e7e46908168992d01", "bbcab589047daab39a75cf52d9c9188f5e20f9ded20e0b7e7e46908168992d01"))
-            )
-        ))
-
-        given(soranetApi.getWithdrawalProofs(srcAccountId)).willReturn(Single.just(withdrawalProofsResponse))
-        given(smartContractApi.used(txHashBytes)).willReturn(userRemoteCall)
-        given(
-            smartContractApi.mintTokensByPeers(
-                eqNonNull(amount),
-                eqNonNull(toAddress),
-                eqNonNull(txHashBytes),
-                eqNonNull(vList),
-                anyNonNull(),
-                anyNonNull(),
-                eqNonNull(toAddress),
-                eqNonNull(xorTokenAddress)
-            )
-        ).willReturn(result as RemoteCall<TransactionReceipt>)
-        given(result.send()).willReturn(transactionReceipt)
-        given(transactionReceipt.transactionHash).willReturn(txHash)
-
-        ethereumRepository.confirmWithdraw(ethereumCredentials, amount, txHash, srcAccountId, gasPrice, gasLimit, xorTokenAddress)
+        ethereumRepository.isBridgeEnabled(ethereumCredentials)
             .test()
-            .assertResult(txHash)
-            .assertNoErrors()
+            .assertResult(true)
+    }
 
-        verify(contractApiProvider).setGasPrice(gasPrice)
-        verify(contractApiProvider).setGasLimit(gasLimit)
+    @Test
+    fun `is bridge enabled called when not enabled`() {
+        val userRemoteCall = RemoteCall<ByteArray>(Callable { ByteArray(32) })
+        given(smartContractApi.proof()).willReturn(userRemoteCall)
 
-        verify(smartContractApi).mintTokensByPeers(
-            eqNonNull(amount),
-            eqNonNull(toAddress),
-            eqNonNull(txHashBytes),
-            eqNonNull(vList),
-            anyNonNull(),
-            anyNonNull(),
-            eqNonNull(toAddress),
-            eqNonNull(xorTokenAddress)
+        ethereumRepository.isBridgeEnabled(ethereumCredentials)
+            .test()
+            .assertResult(false)
+    }
+
+    @Test
+    fun `get val token address called`() {
+        val userRemoteCall = RemoteCall<String>(Callable { valTokenAddress })
+        given(smartContractApi.valTokenInstance()).willReturn(userRemoteCall)
+
+        ethereumRepository.getValTokenAddress(ethereumCredentials)
+            .test()
+            .assertResult(valTokenAddress)
+    }
+
+    @Test
+    fun `get eth address called`() {
+        given(ethereumCredentialsMapper.getAddress(ethereumCredentials.privateKey)).willReturn(
+            address
         )
+
+        ethereumRepository.getEthWalletAddress(ethereumCredentials)
+            .test()
+            .assertResult(address)
+    }
+
+    @Test
+    fun `calculate transfer fee called`() {
+        val feeEther = BigDecimal.TEN
+
+        given(contractApiProvider.fetchGasPrice()).willReturn(gasPrice)
+        given(etherWeiConverter.fromWeiToGwei(gasPrice)).willReturn(gasPrice)
+        given(etherWeiConverter.fromGweiToEther(gasPrice * ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())).willReturn(
+            feeEther
+        )
+
+        ethereumRepository.calculateValErc20TransferFee()
+            .test()
+            .assertResult(feeEther)
+
+        verify(contractApiProvider).setGasLimit(ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())
+    }
+
+    @Test
+    fun `calculate withdraw fee called`() {
+        val feeEther = BigDecimal.TEN
+
+        given(contractApiProvider.fetchGasPrice()).willReturn(gasPrice)
+        given(etherWeiConverter.fromWeiToGwei(gasPrice)).willReturn(gasPrice)
+        given(etherWeiConverter.fromGweiToEther(gasPrice * ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())).willReturn(
+            feeEther
+        )
+
+        ethereumRepository.calculateValErc20WithdrawFee()
+            .test()
+            .assertResult(feeEther)
+
+        verify(contractApiProvider).setGasLimit(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())
+    }
+
+    @Test
+    fun `calculate combined fee called`() {
+        val feeEther = BigDecimal.TEN
+        val gasLimit =
+            ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger() + ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger()
+
+        given(contractApiProvider.fetchGasPrice()).willReturn(gasPrice)
+        given(etherWeiConverter.fromWeiToGwei(gasPrice)).willReturn(gasPrice)
+        given(etherWeiConverter.fromGweiToEther(gasPrice * gasLimit)).willReturn(feeEther)
+
+        ethereumRepository.calculateValErc20CombinedFee()
+            .test()
+            .assertResult(feeEther)
+
+        verify(contractApiProvider).setGasLimit(gasLimit)
     }
 }

@@ -11,9 +11,12 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.functions.Consumer
 import io.reactivex.internal.functions.Functions
 
-inline fun Completable.subscribeToError(crossinline consumer: (Throwable) -> Unit) = subscribe(Functions.EMPTY_ACTION, Consumer {
-    consumer.invoke(it)
-})
+inline fun Completable.subscribeToError(crossinline consumer: (Throwable) -> Unit) = subscribe(
+    Functions.EMPTY_ACTION,
+    Consumer {
+        consumer.invoke(it)
+    }
+)
 
 operator fun CompositeDisposable.plusAssign(disposable: Disposable) {
     add(disposable)

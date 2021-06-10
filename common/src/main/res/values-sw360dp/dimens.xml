@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <dimen name="tab_text_size">14sp</dimen>
-  <dimen name="actionbar_tab_text_size">13sp</dimen>
-
-  <dimen name="greyTextStyleSize">13sp</dimen>
-  <dimen name="subtitle_text_size">13sp</dimen>
+    <dimen name="pin_code_view_spacing">12dp</dimen>
+    <dimen name="pin_code_button_size">64dp</dimen>
+    <dimen name="uikit_pin_code_button_text_size">23sp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_size_default">12dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_margin_default">12dp</dimen>
+    <dimen name="uikit_dot_stroke_width">2dp</dimen>
 </resources>

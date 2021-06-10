@@ -9,7 +9,6 @@ import dagger.BindsInstance
 import dagger.Component
 import jp.co.soramitsu.common.data.network.NetworkApi
 import jp.co.soramitsu.common.di.api.CommonApi
-import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.common.di.modules.CommonModule
 import jp.co.soramitsu.common.di.modules.NetworkModule
 import jp.co.soramitsu.common.resourses.ContextManager
@@ -31,7 +30,7 @@ import javax.inject.Singleton
     ]
 )
 @Singleton
-interface AppComponent : CommonApi, NetworkApi, DidFeatureApi {
+interface AppComponent : CommonApi, NetworkApi {
 
     @Component.Builder
     interface Builder {
