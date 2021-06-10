@@ -6,92 +6,79 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
-import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentAssetSettingsBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.display.AssetConfigurableAdapter
-import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.hide.HidingAssetsBottomSheet
-import kotlinx.android.synthetic.main.fragment_asset_settings.addAssetTv
-import kotlinx.android.synthetic.main.fragment_asset_settings.assetSettingsToolbar
-import kotlinx.android.synthetic.main.fragment_asset_settings.assetsRv
 
-class AssetSettingsFragment : BaseFragment<AssetSettingsViewModel>() {
+class AssetSettingsFragment :
+    BaseFragment<AssetSettingsViewModel>(R.layout.fragment_asset_settings) {
 
-    private val itemTouchHelper = createTouchHelper()
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_asset_settings, container, false)
+    private val itemTouchHelperCallback = CustomItemTouchHelperCallback { from, to ->
+        viewModel.assetPositionChanged(from, to)
     }
+    private val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
 
-    override fun initViews() {
-        assetSettingsToolbar.setLeftActionClickListener { viewModel.doneClicked() }
-        assetSettingsToolbar.setRightActionClickListener { viewModel.hideAssetsButtonClicked() }
-        addAssetTv.setOnClickListener { viewModel.addAssetClicked() }
+    private val binding by viewBinding(FragmentAssetSettingsBinding::bind)
 
-        itemTouchHelper.attachToRecyclerView(assetsRv)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        (activity as BottomBarController).hideBottomBar()
+        binding.tbAssetManagement.setRightActionClickListener { viewModel.doneClicked() }
+        binding.tbAssetManagement.setHomeButtonListener { viewModel.backClicked() }
+        itemTouchHelper.attachToRecyclerView(binding.rvAssetManagementList)
+        binding.svAssetList.setOnQueryTextListener(queryListener)
+        viewModel.assetsListLiveData.observe {
+            if (binding.rvAssetManagementList.adapter == null) {
+                binding.rvAssetManagementList.layoutManager = LinearLayoutManager(requireContext())
+                binding.rvAssetManagementList.adapter =
+                    AssetConfigurableAdapter(itemTouchHelper) { asset, checked ->
+                        viewModel.checkChanged(asset, checked)
+                    }
+            }
+            (binding.rvAssetManagementList.adapter as AssetConfigurableAdapter).submitList(it)
+        }
+        viewModel.assetPositions.observe {
+            (binding.rvAssetManagementList.adapter as AssetConfigurableAdapter).notifyItemMoved(
+                it.first,
+                it.second
+            )
+        }
     }
 
     override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
+        FeatureUtils.getFeature<WalletFeatureComponent>(
+            requireContext(),
+            WalletFeatureApi::class.java
+        )
             .assetSettingsComponentBuilder()
             .withFragment(this)
             .build()
             .inject(this)
     }
 
-    override fun subscribe(viewModel: AssetSettingsViewModel) {
-        observe(viewModel.displayingAssetsLiveData, Observer {
-            if (assetsRv.adapter == null) {
-                assetsRv.layoutManager = LinearLayoutManager(activity!!)
-                assetsRv.adapter = AssetConfigurableAdapter(itemTouchHelper) { asset, checked ->
-                    viewModel.checkChanged(asset, checked)
-                }
-            }
-            (assetsRv.adapter as AssetConfigurableAdapter).submitList(it)
-        })
+    private val queryListener = object : SearchView.OnQueryTextListener {
 
-        observe(viewModel.hideButtonEnabledLiveData, Observer {
-            assetSettingsToolbar.setRightActionEnabled(it)
-        })
-
-        observe(viewModel.addingAccountAvailableLiveData, Observer {
-            addAssetTv.isEnabled = it
-        })
-
-        observe(viewModel.showHidingAssetsView, EventObserver {
-            val bottomSheet = HidingAssetsBottomSheet(activity!!, this, viewModel)
-            bottomSheet.show()
-        })
-    }
-
-    private fun createTouchHelper(): ItemTouchHelper {
-        val callback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-
-            override fun isLongPressDragEnabled() = false
-
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                val from = viewHolder.adapterPosition
-                val to = target.adapterPosition
-                if (from != 0 && to != 0) {
-                    viewModel.assetPositionChanged(from, to)
-                }
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            }
+        override fun onQueryTextSubmit(query: String?): Boolean {
+            hideSoftKeyboard(activity)
+            viewModel.searchAssets(query.orEmpty())
+            return true
         }
 
-        return ItemTouchHelper(callback)
+        override fun onQueryTextChange(newText: String?): Boolean {
+            viewModel.searchAssets(newText.orEmpty())
+            itemTouchHelperCallback.isDraggable = newText.isNullOrBlank()
+            return true
+        }
     }
 }

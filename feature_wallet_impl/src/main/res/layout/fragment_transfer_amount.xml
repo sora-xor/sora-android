@@ -2,9 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/greyBackground"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/brand_white">
 
     <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
         android:id="@+id/toolbar"
@@ -13,457 +13,263 @@
         app:layout_constraintTop_toTopOf="parent"
         app:title="@string/common_send" />
 
+    <View
+        android:id="@+id/vDividerToolbar"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginBottom="@dimen/x1"
+        android:background="?attr/baseBorderPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
     <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:overScrollMode="never"
-        app:layout_constraintBottom_toTopOf="@id/bottomView"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        app:layout_constraintBottom_toTopOf="@id/vDividerNextButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/vDividerToolbar">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/contentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/currency_header"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/inputTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:layout_marginTop="@dimen/x2"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:fontFamily="@font/soramitsu_bold"
-                    android:text="@string/transaction_token"
-                    android:textColor="@color/black"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-
-                <TextView
-                    android:id="@+id/inputAccountName"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:layout_marginTop="@dimen/x2"
-                    android:drawableStart="@drawable/ic_val_gold_24"
-                    android:drawablePadding="@dimen/x1"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:gravity="center_vertical"
-                    android:includeFontPadding="false"
-                    android:textColor="@color/black"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/inputTitle"
-                    tools:text="Sora" />
-
-                <TextView
-                    android:id="@+id/inputAccountLastname"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_marginStart="@dimen/x1_2"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:fontFamily="@font/sora_semibold"
-                    android:textColor="@color/circleBgGrey"
-                    android:gravity="center_vertical"
-                    android:includeFontPadding="false"
-                    app:layout_constraintBottom_toBottomOf="@id/inputAccountName"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@id/inputAccountName"
-                    app:layout_constraintTop_toTopOf="@id/inputAccountName"
-                    tools:text="VAL" />
-
-                <TextView
-                    android:id="@+id/inputAccountInfo"
-                    style="@style/TextAppearance.Soramitsu.Body2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:fontFamily="@font/sora_regular"
-                    android:textSize="@dimen/uikit_text_size_b2"
-                    app:layout_constraintBottom_toBottomOf="@id/inputAccountName"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@id/inputAccountName"
-                    app:layout_constraintTop_toTopOf="@id/inputAccountName"
-                    tools:text="$200,000" />
-
-                <View
-                    android:id="@+id/divider1"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:layout_marginTop="@dimen/x2"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:background="@color/thinBorder"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/inputAccountName" />
-
-                <TextView
-                    android:id="@+id/outputTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:layout_marginTop="@dimen/x2"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:fontFamily="@font/soramitsu_bold"
-                    android:text="@string/filter_to"
-                    android:textColor="@color/black"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/divider1"
-                    app:layout_constraintVertical_bias="0.0" />
-
-                <LinearLayout
-                    android:id="@+id/outputIconLayout"
-                    android:layout_width="@dimen/x3"
-                    android:layout_height="@dimen/x3"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:layout_marginTop="@dimen/x2"
-                    android:orientation="horizontal"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/outputTitle">
-
-                    <TextView
-                        android:id="@+id/outputInitials"
-                        style="@style/TextAppearance.Soramitsu.Body1"
-                        android:layout_width="@dimen/x3"
-                        android:layout_height="@dimen/x3"
-                        android:background="@drawable/circle_background"
-                        android:gravity="center"
-                        android:textAllCaps="true"
-                        android:textSize="12sp"
-                        android:visibility="gone"
-                        tools:text="aa" />
-
-                    <ImageView
-                        android:id="@+id/outputIcon"
-                        style="@style/TextAppearance.Soramitsu.Body1"
-                        android:layout_width="@dimen/x3"
-                        android:layout_height="@dimen/x3"
-                        android:gravity="center" />
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/outputAccountInfo"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x1"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:fontFamily="@font/sora_semibold"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toBottomOf="@id/outputIconLayout"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/outputIconLayout"
-                    app:layout_constraintTop_toTopOf="@id/outputIconLayout" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <View
-                android:id="@+id/currency_divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder" />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:id="@+id/accountAmountTitleTextView"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:layout_marginTop="@dimen/x2"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:fontFamily="@font/soramitsu_bold"
-                    android:text="@string/amount_title"
-                    android:textColor="@color/black"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <jp.co.soramitsu.feature_wallet_impl.presentation.view.CurrencyEditText
-                    android:id="@+id/amountEt"
-                    style="@style/TextAppearance.Soramitsu.Header2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:background="@android:color/transparent"
-                    android:textSize="@dimen/uikit_text_size_h2"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/sora_semibold"
-                    android:hint="0"
-                    android:inputType="numberDecimal"
-                    android:maxLength="13"
-                    android:maxLines="1"
-                    app:layout_constraintBottom_toBottomOf="@+id/keyboardImg"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/currencySymbolTv"
-                    app:layout_constraintTop_toTopOf="@+id/keyboardImg"
-                    tools:text="200 000" />
-
-                <TextView
-                    android:id="@+id/currencySymbolTv"
-                    style="@style/TextAppearance.Soramitsu.Header2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_padding_by_side"
-                    android:text="&amp;"
-                    android:textSize="@dimen/uikit_text_size_h2"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/sora_semibold"
-                    app:layout_constraintBottom_toBottomOf="@+id/amountEt"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/amountEt" />
-
-                <ImageView
-                    android:id="@+id/keyboardImg"
-                    android:layout_width="wrap_content"
-                    android:layout_height="0dp"
-                    android:layout_marginTop="@dimen/x1"
-                    android:layout_marginEnd="@dimen/margin_padding_by_side"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:padding="@dimen/x1_2"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/icon_open_keyboard"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintStart_toEndOf="@+id/amountEt"
-                    app:layout_constraintTop_toBottomOf="@+id/accountAmountTitleTextView" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <View
-                android:id="@+id/currency_divider2"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder"
-                android:visibility="gone" />
+            android:paddingStart="@dimen/x2"
+            android:paddingEnd="@dimen/x2">
 
             <TextView
-                android:id="@+id/errorTextView"
-                style="@style/TextAppearance.Soramitsu.Body1"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:lineSpacingExtra="5sp"
-                android:drawablePadding="@dimen/x1"
-                android:drawableStart="@drawable/ic_error_16"
-                android:drawableEnd="@drawable/ic_red_arrow_right_20"
-                android:gravity="center_vertical"
+                android:id="@+id/inputTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
                 android:includeFontPadding="false"
-                android:padding="@dimen/margin_padding_by_side"
-                android:background="?selectableItemBackground"
-                android:text="@string/transaction_bridge_not_active_error"
-                android:visibility="gone"
-                android:textColor="@color/black" />
+                android:text="@string/common_asset"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/minerFeeTitle"
-                style="@style/TextAppearance.Soramitsu.Body1"
-                android:layout_width="match_parent"
+                android:id="@+id/inputAccountLastname"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x1"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:drawableStart="@drawable/ic_note_grey_16"
+                android:includeFontPadding="false"
+                app:layout_constraintBottom_toBottomOf="@id/inputTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/inputTitle"
+                tools:text="VAL" />
+
+            <ImageView
+                android:id="@+id/ivAssetIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="@dimen/x1"
+                app:layout_constraintBottom_toBottomOf="@id/inputTitle"
+                app:layout_constraintEnd_toStartOf="@id/inputAccountLastname"
+                app:layout_constraintTop_toTopOf="@id/inputTitle"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/ic_polkaswap_pool_shadow" />
+
+            <View
+                android:id="@+id/vDividerAsset"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/inputTitle" />
+
+            <TextView
+                android:id="@+id/tvTransferBalanceTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:includeFontPadding="false"
+                android:text="@string/common_balance"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/vDividerAsset"
+                tools:textColor="@color/grey_500" />
+
+            <TextView
+                android:id="@+id/tvTransferBalance"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvTransferBalanceTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="VAL" />
+
+            <View
+                android:id="@+id/vDividerBalance"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTransferBalanceTitle" />
+
+            <TextView
+                android:id="@+id/tvTransferRecipientTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:includeFontPadding="false"
+                android:text="@string/common_to"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/vDividerBalance"
+                tools:textColor="@color/grey_500" />
+
+            <TextView
+                android:id="@+id/tvTransferRecipient"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="@dimen/x3"
+                android:background="@drawable/text_background"
                 android:drawablePadding="@dimen/x1"
-                android:gravity="center_vertical"
-                android:textColor="@color/informationTextColor"
-                android:textSize="@dimen/uikit_text_size_b2"
-                android:text="@string/transaction_miner_help"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:id="@+id/minerFeeWrapper"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/minerFeeSubtitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/transaction_miner_fee_title"
-                    android:textColor="@color/black" />
-
-                <ProgressBar
-                    android:id="@+id/minerPreloader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_weight="0"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/minerFeeTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:drawablePadding="@dimen/x1_2"
-                    android:drawableEnd="@drawable/ic_edit_red_20"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:lineSpacingExtra="5sp"
-                    android:visibility="visible"
-                    tools:text="100" />
-            </LinearLayout>
+                android:ellipsize="middle"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                app:drawableEndCompat="@drawable/ic_copy_thin_16"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvTransferRecipientTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_default="wrap"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toEndOf="@id/tvTransferRecipientTitle"
+                app:layout_constraintWidth_default="wrap"
+                tools:text="F34hh92ksdf02fk" />
 
             <View
-                android:id="@+id/currency_divider3"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder"
-                android:visibility="gone" />
-
-            <LinearLayout
-                android:id="@+id/transactionFeeWrapper"
-                android:layout_width="match_parent"
+                android:id="@+id/vDividerRecipient"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
                 android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:visibility="gone" >
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTransferRecipientTitle" />
 
-                <TextView
-                    android:id="@+id/transactionFeeTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/amount_default_fee"
-                    android:textColor="@color/black" />
-
-                <ProgressBar
-                    android:id="@+id/preloader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_weight="0" />
-
-                <TextView
-                    android:id="@+id/transactionFeeTextView"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:lineSpacingExtra="5sp"
-                    tools:text="100" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/descriptionWrapper"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tvTransferAmountTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x4"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:orientation="vertical">
+                android:layout_marginTop="@dimen/x2"
+                android:includeFontPadding="false"
+                android:text="@string/amount_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/vDividerRecipient" />
 
-                <TextView
-                    android:id="@+id/accountDescriptionTitleTextView"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableStart="@drawable/ic_note_grey_16"
-                    android:drawablePadding="@dimen/x1"
-                    android:fontFamily="@font/sora_bold"
-                    android:gravity="center_vertical"
-                    android:text="@string/transaction_note"
-                    android:textColor="@color/black" />
-
-                <EditText
-                    android:id="@+id/descriptionEt"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/x2"
-                    android:background="@android:color/transparent"
-                    android:hint="@string/common_description"
-                    android:textColor="@color/black"
-                    android:imeOptions="actionDone"
-                    android:inputType="text"
-                    android:maxLength="64"
-                    tools:text="text" />
-
-            </LinearLayout>
+            <jp.co.soramitsu.feature_wallet_impl.presentation.view.CurrencyEditText
+                android:id="@+id/amountEt"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x1"
+                android:background="@android:color/transparent"
+                android:gravity="end"
+                android:hint="0"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvTransferAmountTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/tvTransferAmountTitle"
+                tools:text="200 000" />
 
             <View
-                android:layout_width="match_parent"
+                android:id="@+id/vDividerAmount"
+                android:layout_width="0dp"
                 android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
                 android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder"  />
+                android:background="?attr/baseBorderPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTransferAmountTitle" />
 
-        </LinearLayout>
+            <TextView
+                android:id="@+id/tvTransferTransactionFeeTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:includeFontPadding="false"
+                android:text="@string/amount_default_fee"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/vDividerAmount"
+                tools:textColor="@color/brand_pmsblack" />
+
+            <TextView
+                android:id="@+id/tvTransferTransactionFee"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:paddingStart="@dimen/x1"
+                android:singleLine="true"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvTransferTransactionFeeTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/tvTransferTransactionFeeTitle"
+                tools:text="VAL" />
+
+            <ImageView
+                android:id="@+id/ivFeeCalculationProgress"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_spinner"
+                app:layout_constraintBottom_toBottomOf="@id/tvTransferTransactionFeeTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvTransferTransactionFeeTitle"
+                tools:ignore="ContentDescription" />
+
+            <View
+                android:id="@+id/vDividerTransactionFee"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTransferTransactionFeeTitle" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <LinearLayout
-        android:id="@+id/bottomView"
+    <View
+        android:id="@+id/vDividerNextButton"
         android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginBottom="@dimen/x1"
+        android:background="?attr/baseBorderPrimary"
+        app:layout_constraintBottom_toTopOf="@id/nextBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/nextBtn"
+        style="@style/Widget.Soramitsu.Button.Primary.48"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/greyBackground"
-        android:paddingTop="@dimen/margin_padding_content"
-        android:paddingBottom="@dimen/margin_padding_content"
-        android:orientation="vertical"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginEnd="@dimen/x1"
+        android:layout_marginBottom="@dimen/x4"
+        android:text="@string/transaction_continue"
+        android:enabled="false"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginBottom="@dimen/margin_padding_content"
-            android:background="@color/thinBorder"  />
-
-        <Button
-            android:id="@+id/nextBtn"
-            style="@style/Widget.Soramitsu.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_padding_content_by_side"
-            android:layout_marginEnd="@dimen/margin_padding_content_by_side"
-            android:text="@string/transaction_continue"
-            android:textSize="14sp" />
-
-    </LinearLayout>
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

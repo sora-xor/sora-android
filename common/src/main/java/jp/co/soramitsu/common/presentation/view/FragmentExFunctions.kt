@@ -15,13 +15,15 @@ fun Fragment.openSoftKeyboard(view: View) {
     val inputMethodManager = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     view.requestFocus()
     inputMethodManager.toggleSoftInput(
-            InputMethodManager.SHOW_IMPLICIT, 0)
+        InputMethodManager.SHOW_IMPLICIT, 0
+    )
 }
 
 fun Fragment.hideSoftKeyboard(activity: FragmentActivity?) {
     if (activity != null) {
         val inputMethodManager = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.toggleSoftInput(
-            InputMethodManager.SHOW_IMPLICIT, 0)
+            InputMethodManager.SHOW_IMPLICIT, 0
+        )
     }
 }

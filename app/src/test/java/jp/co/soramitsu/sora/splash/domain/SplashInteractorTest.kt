@@ -6,7 +6,7 @@
 package jp.co.soramitsu.sora.splash.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.domain.did.DidRepository
+import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.test_shared.RxSchedulersRule
@@ -26,24 +26,18 @@ class SplashInteractorTest {
     @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
 
     @Mock private lateinit var userRepository: UserRepository
-    @Mock private lateinit var didRepository: DidRepository
+    @Mock private lateinit var credentialsRepository: CredentialsRepository
 
     private lateinit var splashInteractor: SplashInteractor
 
     @Before fun setUp() {
-        splashInteractor = SplashInteractor(userRepository, didRepository)
+        splashInteractor = SplashInteractor(userRepository, credentialsRepository)
     }
 
     @Test fun `getRegistrationState calls userRepository getRegistrationState`() {
         splashInteractor.getRegistrationState()
 
         verify(userRepository).getRegistrationState()
-    }
-
-    @Test fun `restoreAuth calls didRepository restoreAuth`() {
-        splashInteractor.restoreAuth()
-
-        verify(didRepository).restoreAuth()
     }
 
     @Test fun `saveRegistrationState calls userRepository saveRegistrationState`() {

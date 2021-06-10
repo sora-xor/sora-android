@@ -9,9 +9,8 @@ import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
-import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
-import java.math.BigDecimal
+import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
 import javax.inject.Named
 
 @Subcomponent(
@@ -32,19 +31,10 @@ interface TransferAmountComponent {
         fun withRecipientId(@Named("recipientId") recipientId: String): Builder
 
         @BindsInstance
-        fun withRetrySoranetHash(@Named("retrySoranetHash") soranetHash: String): Builder
-
-        @BindsInstance
-        fun withRetryEthHash(@Named("retryEthHash") ethHash: String): Builder
-
-        @BindsInstance
-        fun withIsTxFeeNeeded(@Named("isTxFeeNeeded") isTxFeeNeeded: Boolean): Builder
+        fun withAssetId(@Named("assetId") assetId: String): Builder
 
         @BindsInstance
         fun withRecipientFullName(@Named("recipientFullName") recipientFullName: String): Builder
-
-        @BindsInstance
-        fun withInitialAmount(initialAmount: BigDecimal): Builder
 
         @BindsInstance
         fun withTransferType(transferType: TransferType): Builder

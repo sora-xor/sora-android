@@ -1,199 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:orientation="vertical">
 
-    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:title="@string/common_personal_info_title" />
 
-    <View
-        android:id="@+id/shadowView"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="@dimen/shadow_view_height"
-        android:background="@drawable/below_shadow"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:overScrollMode="never">
 
-    <Space
-        android:id="@+id/space1"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/shadowView" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white">
 
-    <EditText
-        android:id="@+id/firstNameEt"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@null"
-        android:fontFamily="@font/sora_regular"
-        android:hint="@string/common_personal_info_first_name_hint"
-        android:inputType="textCapWords"
-        android:maxLength="30"
-        android:paddingTop="@dimen/x1"
-        android:paddingBottom="@dimen/x1"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space1" />
+            <TextView
+                android:id="@+id/title"
+                style="@style/TextAppearance.Soramitsu.Header1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x2"
+                android:text="@string/create_account_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
-    <Space
-        android:id="@+id/space2"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/firstNameEt" />
+            <com.vanniktech.emoji.EmojiEditText
+                android:id="@+id/accountNameEt"
+                android:layout_width="0dp"
+                android:layout_height="?android:actionBarSize"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@null"
+                android:fontFamily="@font/sora_regular"
+                android:hint="@string/personal_info_username_v1"
+                android:maxLength="30"
+                android:paddingTop="@dimen/x1"
+                android:paddingBottom="@dimen/x1"
+                android:singleLine="true"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/title" />
 
-    <View
-        android:id="@+id/divider1"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@color/greyDivider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space2" />
+            <View
+                android:id="@+id/divider1"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@color/greyDivider"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/accountNameEt" />
 
-    <Space
-        android:id="@+id/space3"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider1" />
+            <Space
+                android:id="@+id/space3"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/x1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider1" />
 
-    <EditText
-        android:id="@+id/lastNameEt"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@null"
-        android:fontFamily="@font/sora_regular"
-        android:hint="@string/common_personal_info_last_name_hint"
-        android:inputType="textCapWords"
-        android:maxLength="30"
-        android:paddingTop="@dimen/x1"
-        android:paddingBottom="@dimen/x1"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space3" />
-
-    <Space
-        android:id="@+id/space4"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/lastNameEt" />
-
-    <View
-        android:id="@+id/divider2"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@color/greyDivider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space4" />
-
-    <Space
-        android:id="@+id/space5"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider2" />
-
-    <EditText
-        android:id="@+id/invCodeEt"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@null"
-        android:fontFamily="@font/sora_regular"
-        android:hint="@string/personal_info_inv_code_hint"
-        android:inputType="text"
-        android:maxLength="16"
-        android:digits="@string/invitation_code_alphabet"
-        android:paddingTop="@dimen/x1"
-        android:paddingBottom="@dimen/x1"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space5" />
-
-    <Space
-        android:id="@+id/space6"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/invCodeEt" />
-
-    <View
-        android:id="@+id/divider3"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@color/greyDivider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space6" />
+            <TextView
+                android:id="@+id/accountNameHint"
+                style="@style/TextAppearance.Soramitsu.Body2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1"
+                android:layout_marginEnd="@dimen/x2"
+                android:text="@string/personal_details_info"
+                android:textColor="@color/soonGrey"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/space3" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <TextView
-        android:id="@+id/emptyInvitationLinkTextView"
-        android:layout_width="0dp"
+        android:id="@+id/tutorialTermsCondition"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginTop="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:text="@string/personal_info_invitation_description"
+        android:gravity="center_horizontal"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2"
+        android:paddingBottom="@dimen/x2"
+        app:layout_constraintBottom_toTopOf="@id/nextBtn"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/divider3" />
+        tools:text="By signing up you are agreeing with Terms COnditions and Privacy Policy" />
 
-    <LinearLayout
-        android:layout_width="0dp"
+    <Button
+        android:id="@+id/nextBtn"
+        style="@style/Widget.Soramitsu.Button.Primary.48"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/greyBackground"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/x2_5"
-        android:paddingTop="12dp"
-        android:paddingEnd="@dimen/x2_5"
-        android:paddingBottom="12dp"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginEnd="@dimen/x1"
+        android:layout_marginBottom="@dimen/x4"
+        android:text="@string/transaction_continue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/requestTimeTv"
-            style="@style/DefaultTextStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_weight="1"
-            android:textSize="14sp"
-            android:visibility="invisible" />
-
-        <Button
-            android:id="@+id/nextBtn"
-            style="@style/Widget.Soramitsu.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/common_next"
-            android:textSize="14sp" />
-
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

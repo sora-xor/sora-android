@@ -5,66 +5,58 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info
 
+import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
-import android.text.InputFilter
-import android.text.Spanned
-import android.text.TextWatcher
-import android.view.LayoutInflater
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.method.LinkMovementMethod
+import android.text.style.ForegroundColorSpan
 import android.view.View
-import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.Observer
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.ByteSizeTextWatcher
 import jp.co.soramitsu.common.util.KeyboardHelper
-import jp.co.soramitsu.common.util.ext.disable
-import jp.co.soramitsu.common.util.ext.enable
-import jp.co.soramitsu.common.util.ext.gone
-import jp.co.soramitsu.common.util.ext.isValidNameChar
+import jp.co.soramitsu.common.util.SoraClickableSpan
+import jp.co.soramitsu.common.util.nameByteSizeTextWatcher
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
+import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentPersonalInfoBinding
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
-import kotlinx.android.synthetic.main.fragment_personal_info.emptyInvitationLinkTextView
-import kotlinx.android.synthetic.main.fragment_personal_info.firstNameEt
-import kotlinx.android.synthetic.main.fragment_personal_info.invCodeEt
-import kotlinx.android.synthetic.main.fragment_personal_info.lastNameEt
-import kotlinx.android.synthetic.main.fragment_personal_info.nextBtn
-import kotlinx.android.synthetic.main.fragment_personal_info.toolbar
 import javax.inject.Inject
 
-class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
+class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>(R.layout.fragment_personal_info) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var keyboardHelper: KeyboardHelper
     private lateinit var progressDialog: SoraProgressDialog
+    private lateinit var nameSizeTextWatcher: ByteSizeTextWatcher
+    private val binding by viewBinding(FragmentPersonalInfoBinding::bind)
 
     companion object {
-        private const val KEY_COUNTRY_ISO = "country_iso"
-
-        fun newInstance(navController: NavController, countryIso: String) {
-            val bundle = Bundle().apply {
-                putString(KEY_COUNTRY_ISO, countryIso)
-            }
-            navController.navigate(R.id.personalInfoFragment, bundle)
+        fun newInstance(navController: NavController) {
+            navController.navigate(R.id.personalInfoFragment)
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_personal_info, container, false)
-    }
-
     override fun inject() {
-        FeatureUtils.getFeature<OnboardingFeatureComponent>(context!!, OnboardingFeatureApi::class.java)
+        FeatureUtils.getFeature<OnboardingFeatureComponent>(
+            requireContext(),
+            OnboardingFeatureApi::class.java
+        )
             .personalInfoComponentBuilder()
             .withFragment(this)
             .withRouter(activity as OnboardingRouter)
@@ -72,111 +64,89 @@ class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
             .inject(this)
     }
 
-    override fun initViews() {
-        nextBtn.disable()
-        progressDialog = SoraProgressDialog(activity!!)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        progressDialog = SoraProgressDialog(requireContext())
 
-        toolbar.setHomeButtonListener { viewModel.backButtonClick() }
+        binding.toolbar.setHomeButtonListener { viewModel.backButtonClick() }
 
-        setFirstAndLastNameInputFilters()
-
-        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.register(
-                firstNameEt.text.toString().trim(),
-                lastNameEt.text.toString().trim(),
-                invCodeEt.text.toString().trim()
-            )
-        })
-
-        val textWatcher = object : TextWatcher {
-
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.firstNameAndLastNameChanged(firstNameEt.text.toString(), lastNameEt.text.toString())
-            }
+        nameSizeTextWatcher = nameByteSizeTextWatcher(
+            binding.accountNameEt
+        ) {
+            Toast.makeText(
+                requireActivity(),
+                R.string.common_personal_info_account_name_invalid,
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
-        firstNameEt.addTextChangedListener(textWatcher)
-        lastNameEt.addTextChangedListener(textWatcher)
-    }
+        binding.accountNameEt.addTextChangedListener(nameSizeTextWatcher)
 
-    private fun setFirstAndLastNameInputFilters() {
-        val filter = object : InputFilter {
-            override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned?, dstart: Int, dend: Int): CharSequence? {
-                for (i in start until end) {
-                    if (!source[i].isValidNameChar()) {
-                        return source.substring(0, i)
-                    }
-                }
-                return null
+        binding.nextBtn.setOnClickListener(
+            DebounceClickListener(debounceClickHandler) {
+                viewModel.register(binding.accountNameEt.text.toString().trim())
             }
-        }
+        )
 
-        firstNameEt.filters = arrayOf(filter, InputFilter.LengthFilter(Const.NAME_MAX_LENGTH))
-        lastNameEt.filters = arrayOf(filter, InputFilter.LengthFilter(Const.NAME_MAX_LENGTH))
-    }
+        val termsContent = SpannableString(getString(R.string.tutorial_terms_and_conditions_3))
+        termsContent.setSpan(
+            SoraClickableSpan { viewModel.showTermsScreen() },
+            0,
+            termsContent.length,
+            SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
 
-    override fun subscribe(viewModel: PersonalInfoViewModel) {
-        viewModel.setCountryIso(arguments!!.getString(KEY_COUNTRY_ISO, ""))
-
-        observe(viewModel.firstNameIsEmptyEventLiveData, Observer {
-            Toast.makeText(activity, R.string.common_personal_info_first_name_is_empty, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.firstNameIsNotValidEventLiveData, Observer {
-            Toast.makeText(activity, R.string.common_personal_info_first_name_hyphen_error, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.lastNameIsEmptyEventLiveData, Observer {
-            Toast.makeText(activity, R.string.common_personal_info_last_name_is_empty, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.lastNameIsNotValidEventLiveData, Observer {
-            Toast.makeText(activity, R.string.common_personal_info_last_name_hyphen_error, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.invitationNotValidEventLiveData, Observer {
-            showInvitationNotValidDialog()
-        })
-
-        observe(viewModel.getProgressVisibility(), Observer {
-            if (it) progressDialog.show() else progressDialog.dismiss()
-        })
-
-        observe(viewModel.inviteCodeLiveData, Observer {
-            invCodeEt.setText(it)
-            emptyInvitationLinkTextView.gone()
-        })
-
-        observe(viewModel.nextButtonEnableLiveData, Observer {
-            if (it) {
-                nextBtn.enable()
-            } else {
-                nextBtn.disable()
-            }
-        })
-    }
-
-    private fun showInvitationNotValidDialog() {
-        AlertDialog.Builder(context!!)
-            .setMessage(R.string.personal_info_invitation_is_invalid)
-            .setNegativeButton(R.string.common_skip) { _, _ ->
-                viewModel.continueWithoutInvitationCodePressed(
-                    firstNameEt.text.toString().trim(),
-                    lastNameEt.text.toString().trim()
+        val privacyContent = SpannableString(getString(R.string.tutorial_privacy_policy))
+        privacyContent.setSpan(
+            SoraClickableSpan { viewModel.showPrivacyScreen() },
+            0,
+            privacyContent.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        val builder = SpannableStringBuilder()
+        val firstLine = SpannableString(getString(R.string.tutorial_terms_and_conditions_1))
+        firstLine.setSpan(
+            ForegroundColorSpan(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.grey_400
                 )
-            }
-            .setPositiveButton(R.string.common_try_another) { _, _ ->
-            }
-            .show()
+            ),
+            0, firstLine.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        binding.tutorialTermsCondition.text = firstLine
+        val and = SpannableString(getString(R.string.common_and))
+        and.setSpan(
+            ForegroundColorSpan(ContextCompat.getColor(requireContext(), R.color.grey_400)),
+            0,
+            and.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        builder.append(firstLine)
+        builder.append(termsContent)
+        builder.append(" ")
+        builder.append(and)
+        builder.append(" ")
+        builder.append(privacyContent)
+        binding.tutorialTermsCondition.setText(builder, TextView.BufferType.SPANNABLE)
+        binding.tutorialTermsCondition.movementMethod = LinkMovementMethod.getInstance()
+        binding.tutorialTermsCondition.highlightColor = Color.TRANSPARENT
+
+        viewModel.getProgressVisibility().observe {
+            if (it) progressDialog.show() else progressDialog.dismiss()
+        }
+        viewModel.screenshotAlertDialogEvent.observe {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.screenshot_alert_title)
+                .setMessage(R.string.screenshot_alert_text)
+                .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.screenshotAlertOkClicked() }
+                .show()
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        keyboardHelper = KeyboardHelper(view!!)
+        keyboardHelper = KeyboardHelper(requireView())
     }
 
     override fun onPause() {
@@ -185,5 +155,10 @@ class PersonalInfoFragment : BaseFragment<PersonalInfoViewModel>() {
             hideSoftKeyboard(activity)
         }
         keyboardHelper?.release()
+    }
+
+    override fun onDestroyView() {
+        nameSizeTextWatcher.destroy()
+        super.onDestroyView()
     }
 }

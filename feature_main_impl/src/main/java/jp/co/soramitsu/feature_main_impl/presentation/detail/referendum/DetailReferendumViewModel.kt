@@ -9,10 +9,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.plusAssign
 import jp.co.soramitsu.common.util.ext.subscribeToError
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -31,23 +30,12 @@ class DetailReferendumViewModel(
     private val _referendumLiveData = MutableLiveData<Referendum>()
     val referendumLiveData: LiveData<Referendum> = _referendumLiveData
 
-    private val _showVoteSheet = MutableLiveData<Event<ShowVoteSheetPayload>>()
-    val showVoteSheet: LiveData<Event<ShowVoteSheetPayload>> = _showVoteSheet
-
-    init {
-        startObservingReferendum()
-    }
-
-    private fun startObservingReferendum() {
-        disposables += interactor.observeReferendum(referendumId)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribeWithDefaultError(_referendumLiveData::setValue)
-    }
+    private val _showVoteSheet = SingleLiveEvent<ShowVoteSheetPayload>()
+    val showVoteSheet: LiveData<ShowVoteSheetPayload> = _showVoteSheet
 
     fun voteOnReferendumClicked(toSupport: Boolean) {
         votesLiveData.value?.let {
-            _showVoteSheet.value = Event(ShowVoteSheetPayload(toSupport, it.toInt()))
+            _showVoteSheet.value = ShowVoteSheetPayload(toSupport, it.toInt())
         }
     }
 
@@ -66,11 +54,5 @@ class DetailReferendumViewModel(
     }
 
     fun onDeadline(id: String) {
-        disposables.add(
-            interactor.syncReferendum(id)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe()
-        )
     }
 }

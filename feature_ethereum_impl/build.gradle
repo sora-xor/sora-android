@@ -1,6 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: "kotlin-kapt"
 apply from: '../tests.gradle'
 
@@ -10,8 +9,6 @@ android {
     defaultConfig {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
-        versionCode appVersionCode
-        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -28,7 +25,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     flavorDimensions "default"
@@ -67,14 +64,14 @@ dependencies {
 
     implementation rxCallAdapterDep
 
-    implementation soraDep
+    //implementation soraDep
     implementation birtDep
     implementation web3j
     implementation gsonDep
 
     implementation rxDep
 
-    implementation irohaDep
+    //implementation irohaDep
 
     implementation roomDep
     implementation rxRoomDep
@@ -83,6 +80,7 @@ dependencies {
     implementation retrofitDep
     implementation gsonConvertedDep
     implementation rxCallAdapterDep
+    implementation fearlessLibDep
 
     implementation workerManagerDep
 

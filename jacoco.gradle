@@ -1,11 +1,12 @@
 apply plugin: 'jacoco'
 
 jacoco {
-    toolVersion = "0.8.4"
+    toolVersion = "0.8.6"
 }
 
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
 }
 
 afterEvaluate {
@@ -56,18 +57,36 @@ afterEvaluate {
                           '**/*Test.*',
                           '**/*Activity.*',
                           '**/*Fragment.*',
+                          '**/*Worker.*',
+                          '**/*Worker*/**',
                           '**/*Adapter.*',
+                          '**/*SwipeController.*',
+                          '**/*SwipeController*/**',
+                          '**/adapter/*.*',
                           '**/*Holder.*',
                           '**/*App.*',
                           '**/*Application.*',
                           '**/*Dialog.*',
+                          '**/*BottomSheet.*',
+                          '**/*BottomSheet*/**',
+                          '**/*Request.*',
+                          '**/*Response.*',
+                          '**/*Model.*',
+                          '**/model/*.*',
                           '**/*Ext.*',
+                          '**/*SubstrateApiImpl.*',
+                          '**/*SubstrateApiImpl*/**',
+                          '**/*Extrinsics*/**',
+                          '**/*RxExt*.*',
+                          '**/*QrCodeDecoder*.*',
                           '**/*ViewPager.*',
                           '**/*Module.*',
                           '**/*Dependencies.*',
                           '**/*Router.*',
                           '**/*Component.*',
+                          '**/*Service.*',
                           '**/*ViewModelFactory.*',
+                          '**/*MembersInjector.*',
                           '**/*Api.*',
                           '**/*Dao.*',
                           'android/**/*.*',
@@ -76,15 +95,26 @@ afterEvaluate {
                           '**/data/db/dao/*.*',
                           '**/android/databinding/layouts/*.*',
                           '**/androidx/databinding/library/baseAdapters/*.*',
-                          '**/*Activity.*',
-                          '**/*Fragment.*',
+                          '**/*Activity*',
+                          '**/*Fragment*',
+                          '**/*Navigator*',
+                          '**/*DataBinder*',
+                          '**/*DataBinding*',
+                          '**/databinding/**',
+                          '**/*BR*',
+                          '**/*Factory*',
+                          '**/*EncryptionUtil*',
+                          '**/*Starter*',
+                          '**/*ItemDecoration*',
+                          '**/*DiffCallback*',
+                          '**/*ViewHolder*',
                           '**/di/**',
                           '**/view/**',
         ]
 
-        javaClasses << fileTree(dir: "$buildDir/intermediates/javac/debug", excludes: fileFilter)
+        javaClasses << fileTree(dir: "$buildDir/intermediates/javac/developDebug", excludes: fileFilter)
 
-        kotlinClasses << fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
+        kotlinClasses << fileTree(dir: "$buildDir/tmp/kotlin-classes/developDebug", excludes: fileFilter)
 
         sourceDirs << fileTree(dir: "$projectDir/src/main/java", excludes: fileFilter)
 

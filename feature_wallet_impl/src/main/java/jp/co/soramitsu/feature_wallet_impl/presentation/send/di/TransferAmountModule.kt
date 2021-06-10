@@ -12,20 +12,16 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.interfaces.WithProgress
-import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountViewModel
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
-import java.math.BigDecimal
 import javax.inject.Named
 
 @Module(
@@ -45,23 +41,19 @@ class TransferAmountModule {
     @ViewModelKey(TransferAmountViewModel::class)
     fun provideViewModel(
         walletInteractor: WalletInteractor,
-        etherInteractor: EthereumInteractor,
         router: WalletRouter,
         progress: WithProgress,
         numbersFormatter: NumbersFormatter,
-        dateTimeFormatter: DateTimeFormatter,
-        textFormatter: TextFormatter,
-        resourceManager: ResourceManager,
         @Named("recipientId") recipientId: String,
+        @Named("assetId") assetId: String,
         @Named("recipientFullName") recipientFullName: String,
-        @Named("retrySoranetHash") retrySoranetHash: String,
-        @Named("retryEthHash") retryEthHash: String,
-        @Named("isTxFeeNeeded") isTxFeeNeeded: Boolean,
-        initialAmount: BigDecimal,
-        transferType: TransferType
+        transferType: TransferType,
+        clipboardManager: ClipboardManager,
     ): ViewModel {
-        return TransferAmountViewModel(walletInteractor, etherInteractor, router, progress, numbersFormatter, dateTimeFormatter, textFormatter, resourceManager,
-            recipientId, recipientFullName, retrySoranetHash, retryEthHash, initialAmount, isTxFeeNeeded, transferType)
+        return TransferAmountViewModel(
+            walletInteractor, router, progress, numbersFormatter,
+            recipientId, assetId, recipientFullName, transferType, clipboardManager,
+        )
     }
 
     @Provides

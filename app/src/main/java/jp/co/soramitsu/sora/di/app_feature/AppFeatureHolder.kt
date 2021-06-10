@@ -21,7 +21,6 @@ class AppFeatureHolder @Inject constructor(
         val appFeatureDependencies = DaggerAppFeatureComponent_AppFeatureDependenciesComponent.builder()
             .accountFeatureApi(getFeature(AccountFeatureApi::class.java))
             .notificationFeatureApi(getFeature(NotificationFeatureApi::class.java))
-            .didFeatureApi(didApi())
             .commonApi(commonApi())
             .build()
 

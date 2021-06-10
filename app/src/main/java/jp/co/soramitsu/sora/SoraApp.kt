@@ -14,8 +14,8 @@ import com.orhanobut.logger.PrettyFormatStrategy
 import io.reactivex.internal.functions.Functions.emptyConsumer
 import io.reactivex.plugins.RxJavaPlugins
 import jp.co.soramitsu.common.data.network.NetworkApi
+import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
 import jp.co.soramitsu.common.di.api.CommonApi
-import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.common.di.api.FeatureContainer
 import jp.co.soramitsu.common.logger.DiskLoggerAdapter
 import jp.co.soramitsu.common.logger.LoggerAdapter
@@ -41,7 +41,7 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
         super.attachBaseContext(contextManager.setLocale(base))
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val contextManager = ContextManager.getInstanceOrInit(this, languagesHolder)
         contextManager.setLocale(this)
@@ -64,6 +64,9 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
         FirebaseApp.initializeApp(this)
 
         RxJavaPlugins.setErrorHandler(emptyConsumer())
+
+        // todo refactor in 2.2
+        SubstrateNetworkOptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
     }
 
     private fun initLogger() {
@@ -88,10 +91,6 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
     }
 
     override fun networkApi(): NetworkApi {
-        return appComponent
-    }
-
-    override fun didFeatureApi(): DidFeatureApi {
         return appComponent
     }
 }

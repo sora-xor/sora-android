@@ -18,7 +18,6 @@ class EthereumFeatureHolder @Inject constructor(
 
     override fun initializeDependencies(): Any {
         val ethereumFeatureDependencies = DaggerEthereumFeatureComponent_EthereumFeatureDependenciesComponent.builder()
-            .didFeatureApi(didApi())
             .networkApi(networkApi())
             .commonApi(commonApi())
             .dbApi(getFeature(DbApi::class.java))

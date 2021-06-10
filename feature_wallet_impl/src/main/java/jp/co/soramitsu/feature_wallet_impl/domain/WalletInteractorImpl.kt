@@ -8,227 +8,280 @@ package jp.co.soramitsu.feature_wallet_impl.domain
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
+import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.extensions.toHexString
+import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
-import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
-import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
+import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
+import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
+import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
+import org.bouncycastle.util.encoders.Hex
 import java.math.BigDecimal
 
 class WalletInteractorImpl(
     private val walletRepository: WalletRepository,
     private val ethRepository: EthereumRepository,
-    private val accountSettings: AccountSettings
+    private val userRepository: UserRepository,
+    private val credentialsRepository: CredentialsRepository,
+    private val cryptoAssistant: CryptoAssistant,
 ) : WalletInteractor {
 
-    override fun getAssets(): Observable<List<Asset>> {
-        return Observable.combineLatest(
-            walletRepository.getAssets().subscribeOn(Schedulers.io()),
-            ethRepository.observeEthRegisterState().subscribeOn(Schedulers.io()),
-            BiFunction<List<Asset>, EthRegisterState.State, List<Asset>> { assets, ethRegisterState ->
-                val valAsset = assets[0]
+    override fun saveMigrationStatus(migrationStatus: MigrationStatus): Completable {
+        return walletRepository.saveMigrationStatus(migrationStatus)
+    }
 
-                val ethAssetState = when (ethRegisterState) {
-                    EthRegisterState.State.NONE -> Asset.State.ASSOCIATING
-                    EthRegisterState.State.IN_PROGRESS -> Asset.State.ASSOCIATING
-                    EthRegisterState.State.REGISTERED -> Asset.State.NORMAL
-                    EthRegisterState.State.FAILED -> Asset.State.ERROR
-                }
-                val ethAsset = assets[1].copy(state = ethAssetState)
-                val valErc20Asset = assets[2].copy(state = ethAssetState)
+    override fun observeMigrationStatus(): Observable<MigrationStatus> {
+        return walletRepository.observeMigrationStatus()
+    }
 
-                mutableListOf<Asset>().apply {
-                    add(valAsset)
-                    add(ethAsset)
-                    add(valErc20Asset)
+    override fun needsMigration(): Single<Boolean> {
+        return credentialsRepository.getIrohaAddress()
+            .flatMap { walletRepository.needsMigration(it) }
+            .map { userRepository.saveNeedsMigration(it).blockingAwait(); it }
+    }
+
+    override fun migrate(): Single<Boolean> {
+        return credentialsRepository.getClaimSignature()
+            .flatMap { signature ->
+                credentialsRepository.getIrohaAddress().map { Pair(it, signature) }
+            }
+            .flatMap { pair ->
+                credentialsRepository.retrieveIrohaKeyPair()
+                    .map { Triple(pair.first, Hex.toHexString(it.public.encoded), pair.second) }
+            }
+            .flatMap { triple ->
+                credentialsRepository.retrieveKeyPair()
+                    .flatMap { keypair ->
+                        credentialsRepository.getAddress().flatMap { address ->
+                            walletRepository.migrate(triple.first, triple.second, triple.third, keypair, address)
+                                .map {
+                                    Triple(
+                                        it.first,
+                                        (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
+                                        it.second.subscription
+                                    )
+                                }.lastOrError()
+                        }
+                    }.flatMap {
+                        val txHash = it.first
+                        val blockHash = requireNotNull(it.second)
+                        val subscription = it.third
+
+                        walletRepository.getBlock(blockHash)
+                            .map { blockResponse ->
+                                blockResponse.block.extrinsics.indexOfFirst { s ->
+                                    s.blake2b256String() == txHash
+                                }.toLong()
+                            }.flatMap { extrinsicId ->
+                                walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
+                            }
+                            .map {
+                                it to subscription
+                            }
+                    }.flatMap {
+                        userRepository.saveNeedsMigration(!it.first).toSingleDefault(it)
+                    }.flatMap {
+                        walletRepository.unwatch(it.second).toSingleDefault(it.first)
+                    }
+            }
+    }
+
+    override fun calcTransactionFee(
+        to: String,
+        assetId: String,
+        amount: BigDecimal
+    ): Single<BigDecimal> {
+        return credentialsRepository.getAddress().flatMap {
+            walletRepository.calcTransactionFee(it, to, assetId, amount)
+        }
+    }
+
+    override fun transfer(to: String, assetId: String, amount: BigDecimal): Single<String> =
+        credentialsRepository.getAddress().flatMap { address ->
+            credentialsRepository.retrieveKeyPair().flatMap { keypair ->
+                walletRepository.transfer(keypair, address, to, assetId, amount)
+            }
+        }
+
+    override fun observeTransfer(
+        to: String,
+        assetId: String,
+        amount: BigDecimal,
+        fee: BigDecimal
+    ): Completable {
+        return credentialsRepository.getAddress()
+            .flatMap { address ->
+                credentialsRepository.retrieveKeyPair().map { keypair ->
+                    address to keypair
                 }
             }
-        )
+            .flatMapCompletable {
+                observeTransferInternal(it.second, it.first, to, assetId, amount, fee)
+            }
     }
 
-    override fun updateAssets(): Completable {
-        return walletRepository.updateAssets(accountSettings)
-            .andThen(
-                accountSettings.mnemonic()
-                    .flatMap { ethRepository.getEthCredentials(it) }
-                    .flatMap { ethCredentials ->
-                        ethRepository.getEthWalletAddress(ethCredentials)
-                            .flatMap { ethWalletAddress ->
-                                ethRepository.getValTokenAddress(ethCredentials)
-                                    .map { Triple(ethCredentials, ethWalletAddress, it) }
-                            }
-                    }
-                    .flatMapCompletable { ethRepository.updateValErc20AndEthBalance(it.first, it.second, it.third) }
-
+    private fun observeTransferInternal(
+        keypair: Keypair,
+        addressFrom: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal,
+        fee: BigDecimal,
+    ): Completable {
+        return Completable.create { emitter ->
+            walletRepository.observeTransfer(
+                keypair,
+                addressFrom,
+                to,
+                assetId,
+                amount,
+                fee
             )
+                .map {
+                    walletRepository.saveTransaction(
+                        addressFrom,
+                        to,
+                        assetId,
+                        amount,
+                        it.second,
+                        it.first,
+                        fee,
+                        null
+                    )
+                    if (!emitter.isDisposed) emitter.onComplete()
+                    Triple(
+                        it.first,
+                        (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
+                        it.second.subscription
+                    )
+                }.lastOrError()
+                .flatMap {
+                    val txHash = it.first
+                    val blockHash = requireNotNull(it.second, { "Block hash is null" })
+                    val subscription = it.third
+
+                    walletRepository.getBlock(blockHash)
+                        .map { blockResponse ->
+                            blockResponse.block.extrinsics.indexOfFirst { s ->
+                                s.blake2b256String() == txHash
+                            }.toLong()
+                        }.flatMap { extrinsicId ->
+                            walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
+                        }.map {
+                            Triple(txHash, subscription, it)
+                        }
+                }
+                .map {
+                    walletRepository.updateTransactionSuccess(it.first, it.third); it.second
+                }.flatMapCompletable {
+                    walletRepository.unwatch(it)
+                }
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                    {
+                        if (!emitter.isDisposed) emitter.onComplete()
+                    },
+                    {
+                        if (!emitter.isDisposed) emitter.onError(it)
+                    }
+                )
+        }
     }
+
+    override fun getAssets(forceUpdateBalance: Boolean, forceUpdateAssets: Boolean): Single<List<Asset>> =
+        credentialsRepository.getAddress().flatMap {
+            walletRepository.getAssets(it, forceUpdateBalance, forceUpdateAssets)
+        }
 
     override fun getAccountId(): Single<String> {
-        return accountSettings.getAccountId()
+        return credentialsRepository.getAddress()
     }
 
-    override fun getBalance(assetId: String): Observable<AssetBalance> {
-        return walletRepository.getBalance(assetId)
+    override fun getPublicKey(): Single<ByteArray> {
+        return credentialsRepository.getAddressId()
     }
 
-    override fun getValAndValErcBalanceAmount(): Observable<BigDecimal> {
-        return walletRepository.getBalance(AssetHolder.SORA_VAL.id)
-            .flatMap { valBalance ->
-                walletRepository.getBalance(AssetHolder.SORA_VAL_ERC_20.id)
-                    .map { mutableListOf(valBalance, it) }
-            }
-            .map {
-                it.fold<AssetBalance, BigDecimal>(BigDecimal.ZERO) { amount, assetBalance ->
-                    amount + assetBalance.balance
-                }
-            }
+    override fun getPublicKeyHex(withPrefix: Boolean): Single<String> {
+        return credentialsRepository.getAddressId().map {
+            it.toHexString(withPrefix)
+        }
     }
+
+    override fun getAccountName(): Single<String> = userRepository.getAccountName()
 
     override fun getTransactions(): Observable<List<Transaction>> {
-        return accountSettings.getAccountId()
-            .flatMap { accountId ->
-                accountSettings.mnemonic()
-                    .flatMap {
-                        ethRepository.getEthCredentials(it)
-                            .flatMap {
-                                ethRepository.getEthWalletAddress(it)
-                                    .map { Pair(accountId, it) }
-                            }
+        return credentialsRepository.getAddress()
+            .flatMapObservable {
+                walletRepository.getTransactions(it, "")
+            }.map { list ->
+                list.map {
+                    it.peerId?.let { address ->
+                        it.peerAddressId = address.toAccountId()
                     }
+                    it
+                }
             }
-            .flatMapObservable { walletRepository.getTransactions(it.first, it.second) }
-    }
-
-    override fun updateTransactions(pageSize: Int): Single<Int> {
-        return accountSettings.getAccountId()
-            .flatMap {
-                walletRepository.fetchRemoteTransactions(pageSize, 0, it)
-            }
-    }
-
-    override fun loadMoreTransactions(pageSize: Int, offset: Int): Single<Int> {
-        return accountSettings.getAccountId()
-            .flatMap { walletRepository.fetchRemoteTransactions(pageSize, offset, it) }
     }
 
     override fun findOtherUsersAccounts(search: String): Single<List<Account>> {
-        return accountSettings.getAccountId()
+        return credentialsRepository.getAddress()
             .flatMap { userAccountId ->
-                walletRepository.findAccount(search)
-                    .map { it.filter { !areAccountsSame(userAccountId, it.accountId) } }
+                credentialsRepository.isAddressOk(search).map {
+                    if (it && userAccountId != search) {
+                        listOf(Account("", "", search))
+                    } else {
+                        emptyList()
+                    }
+                }
+            }.flatMap { accounts ->
+                walletRepository.getContacts(search)
+                    .map { set -> set.map { s -> Account("", "", s) } }.map { list ->
+                        listOf(list, accounts).flatten()
+                    }
             }
     }
 
-    private fun areAccountsSame(accountId1: String, accountId2: String): Boolean {
-        return removeDomainFromAccountId(accountId1) == removeDomainFromAccountId(accountId2)
-    }
-
-    private fun removeDomainFromAccountId(accountId: String): String {
-        return accountId.substring(0, accountId.indexOf("@"))
-    }
-
-    override fun getQrCodeAmountString(amount: String): Single<String> {
-        return accountSettings.getAccountId()
-            .flatMap { accountId -> walletRepository.getQrAmountString(accountId, amount) }
-            .subscribeOn(Schedulers.io())
-    }
-
-    override fun transferAmount(amount: String, accountId: String, description: String, fee: String): Single<Pair<String, String>> {
-        return accountSettings.getAccountId()
-            .flatMap { myAccountId ->
-                accountSettings.getKeyPair()
-                    .flatMap { keyPair -> walletRepository.transfer(amount, myAccountId, accountId, description, fee, keyPair) }
-                    .map { Pair(it, myAccountId) }
+    override fun getContacts(query: String): Single<List<Account>> {
+        return walletRepository.getContacts(query).map { set ->
+            set.map {
+                Account("", "", it)
             }
+        }
     }
 
-    override fun getContacts(updateCached: Boolean): Single<List<Account>> {
-        return walletRepository.getContacts(updateCached)
-    }
-
-    override fun getTransferMeta(): Observable<TransferMeta> {
-        return walletRepository.getTransferMeta()
-    }
-
-    override fun getWithdrawMeta(): Observable<TransferMeta> {
-        return walletRepository.getWithdrawMeta()
-    }
-
-    override fun updateTransferMeta(): Completable {
-        return walletRepository.updateTransferMeta()
-    }
-
-    override fun updateWithdrawMeta(): Completable {
-        return walletRepository.updateWithdrawMeta()
-    }
-
-    override fun processQr(contents: String): Single<Pair<BigDecimal, Account>> {
-        return walletRepository.getQrDataFromString(contents)
-            .flatMap { qr ->
-                walletRepository.findAccount(qr.accountId)
-                    .map {
-                        if (it.isEmpty()) {
-                            throw QrException.userNotFoundError()
-                        } else {
-                            it.first()
+    override fun processQr(contents: String): Single<Triple<String, String, BigDecimal>> =
+        credentialsRepository.getAddress().flatMap { myAddress ->
+            val list = contents.split(':')
+            val result = if (list.size == 5) {
+                if (list[0] == SubstrateNetworkOptionsProvider.substrate) {
+                    val address = list[1]
+                    if (address == myAddress) throw QrException.sendingToMyselfError() else
+                        credentialsRepository.isAddressOk(address).map {
+                            if (!it) throw QrException.userNotFoundError() else Triple(
+                                address,
+                                list[4],
+                                BigDecimal.ZERO
+                            )
                         }
-                    }
-                    .flatMap { account ->
-                        checkAccountIsMine(account)
-                            .map { isMine ->
-                                if (isMine) {
-                                    throw QrException.sendingToMyselfError()
-                                } else {
-                                    account
-                                }
-                            }
-                    }
-                    .map { Pair(qr, it) }
+                } else {
+                    throw QrException.decodeError()
+                }
+            } else {
+                throw QrException.decodeError()
             }
-            .flatMap { qrData ->
-                parseAmountFromQr(qrData.first.amount)
-                    .map { Pair(it, qrData.second) }
-            }
-    }
-
-    private fun parseAmountFromQr(amount: String?): Single<BigDecimal> {
-        return Single.fromCallable { amount?.let { BigDecimal(it) } ?: BigDecimal.ZERO }
-            .onErrorResumeNext { Single.just(BigDecimal.ZERO) }
-    }
-
-    private fun checkAccountIsMine(account: Account): Single<Boolean> {
-        return accountSettings.getAccountId()
-            .map { areAccountsSame(account.accountId, it) }
-    }
-
-    override fun getBlockChainExplorerUrl(transactionHash: String): Single<String> {
-        return walletRepository.getBlockChainExplorerUrl(transactionHash)
-    }
-
-    override fun getEtherscanExplorerUrl(transactionHash: String): Single<String> {
-        return ethRepository.getBlockChainExplorerUrl(transactionHash)
-    }
-
-    override fun calculateDefaultMinerFeeInEthWithdraw(): Single<BigDecimal> {
-        return ethRepository.calculateValErc20WithdrawFee()
-    }
-
-    override fun calculateDefaultMinerFeeInEthTransfer(): Single<BigDecimal> {
-        return ethRepository.calculateValErc20TransferFee()
-    }
-
-    override fun calculateDefaultMinerFeeInEthTransferWithWithdraw(): Single<BigDecimal> {
-        return ethRepository.calculateValErc20CombinedFee()
-    }
+            result
+        }
 
     override fun hideAssets(assetIds: List<String>): Completable {
         return walletRepository.hideAssets(assetIds)

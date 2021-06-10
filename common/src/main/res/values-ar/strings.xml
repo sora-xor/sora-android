@@ -5,23 +5,12 @@
   <string name="common_error_general_title">خطأ</string>
   <string name="common_error_not_found_title">المصدر غير متوفر</string>
   <string name="common_error_internal_error_title">خطأ داخلي</string>
-  <string name="projects_title">مشاريع Sora</string>
-  <string name="project_founded_template" formatted="false">%s%%من الاصوات%s</string>
-  <string name="project_votes_template">%s الأصوات</string>
   <string name="project_ended_template">تم الانتهاء %s</string>
-  <string name="project_spent_format">لقد أنفقت %s الأصوات</string>
-  <string name="empty_voted_project_description">قم بالتصويت للمشاريع \n و التي سوف تظهر هنا</string>
-  <string name="empty_completed_project_description">عند اكتمال التصويت،\nستجد المشاريع هنا</string>
-  <string name="project_contacts">جهات الاتصال والمعلومات</string>
-  <string name="project_discussion_template">مناقشة %s</string>
   <string name="project_requires_votes_format">يتطلب المشروع فقط %s الأصوات 🚀</string>
   <string name="common_personal_info_first_name_hint">الاسم الشخصي</string>
   <string name="common_personal_info_last_name_hint">الاسم العائلي</string>
-  <string name="pincode_confirm_your_pin_code">أكد رمزك السري</string>
-  <string name="pincode_set_your_pin_code">تعيين رمز التعريف السري</string>
-  <string name="invite_title">قم بدعوة الأصدقاء للحصول على المزيد من الأصوات يوميًا!</string>
-  <string name="invite_enter_code_description">هل تلقيت دعوتك إلى Sora؟ اضغط على الزر أعلاه وأدخل الرمز.</string>
-  <string name="invite_votes_left_template">%sاليسار</string>
+  <string name="pincode_confirm_your_pin_code">تأكيد رمز الواجهة</string>
+  <string name="pincode_set_your_pin_code">كود دبوس الإعداد</string>
   <string name="invite_code_applied_title">تهانينا!</string>
   <string name="invite_code_applied_body">تم تفعيل الرمز بنجاح</string>
   <string name="invite_enter_confirmation_body_mask">هل تريد تفعيل رمز الدعوة %s؟</string>
@@ -32,34 +21,25 @@
   <string name="common_error_not_enough_invitations">آسف، لكن ليس لديك أي دعوات للمشاركة</string>
   <string name="invite_empty_friends_description">حالة دعواتك \n سيتم عرضها هنا</string>
   <string name="recovery_passphrase">استعادة الدخول</string>
-  <string name="recovery_body_title">أدخل كلمة المرور</string>
+  <string name="recovery_body_title">ادخل جملة الاستذكار</string>
   <string name="common_error_votes_not_enough">عذرًا ، ولكن ليس لديك نقاط كافية للتصويت.</string>
   <string name="common_error_voting_is_not_allowed">عذرًا ،  لكن المشروع لا يمكنه قبول الأصوات بعد الآن.</string>
   <string name="common_error_votes_invalid_format">عذرًا ،  لكن عدد أصواتك لا يمكن تفسيرها. أرجوكِ، حاول التصويت مرة أخرى</string>
   <string name="votes_zero_error_message">عذرًا ، يجب أن يكون لديك نقطة واحدة على الأقل للتصويت</string>
   <string name="common_error_project_not_found">عذراً، ولكن لم يتم العثور على المشروع.</string>
   <string name="startup_verification_title">جارٍ التحقق من امكانية الدخول ...</string>
-  <string name="reputation_total_rank_template" formatted="false">%s من %s</string>
-  <string name="reputation_last_votes_template">%s الاصوات التي تم تلقيها اخر مرة</string>
-  <string name="reputation_timer_format">سيتم تحديث سمعتك في %s</string>
-  <string name="reputation_soon">سيتم تحديث سمعتك قريبا</string>
   <string name="common_error_wrong_user_status">تعذر متابعة العملية لأن حالة المستخدم غير صالحة</string>
   <string name="common_error_user_values_not_found">تعذر متابعة العملية بسبب عدم العثور على بيانات قيم المستخدم</string>
-  <string name="activity_xor_between_users_transferred_type_template">تم استلام XOR</string>
-  <string name="activity_user_rank_changed_title_template" formatted="false">رتبتك الآن %s من أصل %s</string>
-  <string name="activity_project_closed_type_template">تم الوصول إلى الموعد النهائي للمشروع!</string>
-  <string name="activity_voted_friend_added_type_template">صوت صديق لصالح المشروع!</string>
-  <string name="activity_voted_friend_added_description_template" formatted="false">%s أنفق %s التصويت  %sللمشروع</string>
-  <string name="activity_empty_description">ستظهر هنا التحديثات والإشعارات عند \n تلقي المكافأة والدعوات المقبولة</string>
   <string name="phone_number_sms_code_will_be_sent">سيتم ارسال الرمز الى هاتفك عبر رسالة قصيرة</string>
   <string name="phone_verification_too_frequent_message">طلبات متكررة جداً لرمز التحقق . من فضلك، حاول مرة أخرى لاحقاً.</string>
   <string name="common_sms_code_expired">انتهت صلاحية رمز التحقق. من فضلك حاول ادخال واحد آخر.</string>
   <string name="common_sms_code_not_correct">رمز التحقق غير صحيح</string>
   <string name="wallet_empty_description">ستظهر المعاملات الواردة والصادرة هنا \n</string>
-  <string name="wallet_qr_share_message_template" formatted="false">عنوان محفظتي على منصة  Sora  %s%s:</string>
-  <string name="wallet_qr_share_message_empty_template">عنوان محفظتي الخاص بمنصة  Sora  %s:</string>
+  <string name="wallet_transfer_description_hint">الحد الأقصى للرموز %s</string>
+  <string name="wallet_qr_share_message_template" formatted="false">عنوان محفظتي على منصة  %s  %s%s:</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">عنوان محفظتي الخاص بمنصة  %s  %s:</string>
   <string name="tutorial_sign_up">التسجيل</string>
-  <string name="common_terms_title">الشروط والأحكام</string>
+  <string name="common_terms_title">البنود و الظروف</string>
   <string name="invite_link_format">انضم إلى Sora باستخدام الرابط في الاسفل: \n %s</string>
   <string name="language_title">اختيار اللغة</string>
   <string name="common_personal_info_title">المعلومات الشخصية</string>
@@ -67,19 +47,17 @@
   <string name="common_personal_info_first_name_is_empty">خانة الاسم الشخصي فارغة</string>
   <string name="common_personal_info_first_name_hyphen_error">لا يمكن أن يبدأ الاسم الشخصي أو ينتهي بواصلة أو يحتوي على واصلة مزدوجة</string>
   <string name="common_personal_info_last_name_hyphen_error">لا يمكن أن يبدأ الاسم  العائلي أو ينتهي بواصلة أو يحتوي على واصلة مزدوجة</string>
-  <string name="common_passphrase_title">كلمة المرور</string>
+  <string name="common_passphrase_title">جملة الاستذكار</string>
   <string name="common_passphrase_save_or_send">حفظ أو إرسال</string>
-  <string name="common_passphrase_save_mnemonic_title">حفظ أو إرسال كلمة المرور</string>
-  <string name="common_passphrase_header">كلمة المرور هي \n عبارة عن قن سري.</string>
+  <string name="common_passphrase_save_mnemonic_title">حفظ أو إرسال جملة الإستذكار</string>
+  <string name="common_passphrase_header">جملة الإستذكار هي عبارة عن كلمة السر.</string>
   <string name="common_passphrase_body">يتم استخدامها لاستعادة الدخول إلى الحساب. لذا المرجو حفظها ، لاننا نتمكن من استعادة حسابك بدونها!</string>
-  <string name="common_passphrase_your_passphrase">كلمة المرور</string>
-  <string name="common_unsupported_version_title">تحديث تطبيق Sora الخاص بك</string>
+  <string name="common_passphrase_your_passphrase">جملة الاستذكار</string>
+  <string name="common_unsupported_version_title">قم بتحديث تطبيق Sora الخاص بك</string>
   <string name="common_unsupported_version_body">تطبيق Sora المحدث متاح في Google Play. يتوفر على التحسينات و تم فيه إصلاح الثغرات.</string>
   <string name="common_unsupported_version_open_google_play">افتح Google Play</string>
   <string name="common_select_email_app_title">اختيار تطبيق البريد الإلكتروني</string>
-  <string name="ethereum_config_unavailable">عقدة إيثريوم غير متوفرة</string>
   <string name="common_network_unavailable">شبكة الاتصال غير متوفرة</string>
-  <string name="common_privacy_title">سياسة الخصوصية</string>
   <string name="common_save">حفظ</string>
   <string name="common_cancel">إلغاء</string>
   <string name="common_apply">تفعيل</string>
@@ -92,13 +70,13 @@
   <string name="common_try_another">محاولة اخرى</string>
   <string name="common_error_network">الرجاء التحقق من اتصال الإنترنت وإعادة المحاولة لاحقًا.</string>
   <string name="common_error_general_message">نعمل بجد لإصلاح المشكلة. من فضلك، حاول مرة أخرى لاحقاً.</string>
-  <string name="common_error_user_not_found">كلمة المرور غير صحيحة. الرجاء ادخال واحدة أخرى</string>
+  <string name="common_error_user_not_found">جملة الاستذكار غير صحيحة. الرجاء ادخال واحدة أخرى</string>
   <string name="common_error_invitation_code_not_found">رمز الدعوة غير صالح</string>
   <string name="common_error_ambiguous_result">نتيجة مبهمة</string>
   <string name="common_error_invitation_accepting_window_closed">تم إغلاق منفذ قبول الدعوة</string>
-  <string name="common_error_mnemonic_length_error">يجب أن تحتوي كلمة المرور على 15 كلمة</string>
-  <string name="common_error_mnemonic_is_not_valid">كلمة المرور غير صحيحة. الرجاء ادخال واحدة أخرى</string>
-  <string name="common_error_search_string_error">يجب أن يكون حجم البحث بين 3 و 64</string>
+  <string name="common_error_mnemonic_length_error">يجب أن تحتوي جملة الإستذكار على 15 كلمة</string>
+  <string name="common_error_mnemonic_is_not_valid">جملة الإستذكار غير صحيحة. الرجاء ادخال واحدة أخرى</string>
+  <string name="common_error_search_string_error">يجب أن يكون حجم البحث بين 3 و 64 حرفًا</string>
   <string name="common_error_invalid_query_format">الاستعلام الخاص بك خاطئ. حاول مرة اخرى.</string>
   <string name="common_error_phone_already_registered">رقم الهاتف هذا قيد الاستخدام بالفعل اثناء التسجيل سواء مع هذا المستخدم او مستخدم اخر.</string>
   <string name="common_error_fee_rate_not_available">لا يمكن الاتصال بمزود خدمة السحب. الرجاء معاودة المحاولة في وقت لاحق.</string>
@@ -107,64 +85,23 @@
   <string name="common_error_unauthorized_title">محاولة فاشلة للولوج</string>
   <string name="common_error_unauthorized_body">الرجاء التحقق من اتصال الإنترنت وإعادة المحاولة لاحقًا.</string>
   <string name="common_error_pincode_check_error">الرمز الذي تم إدخاله غير صحيح</string>
-  <string name="activity_user_registered_type">تم تسجيل صديق</string>
-  <string name="activity_user_registered_description">ستتم ترقية سمعتك!</string>
-  <string name="activity_voting_rights_credited_type_template">توزيع الأصوات</string>
-  <string name="activity_voting_rights_title_template">الأصوات اليومية</string>
-  <string name="activity_invitation_credited_type_template">توزيع الدعوات</string>
-  <string name="activity_invitation_credited_title_template">تمت إضافة الدعوات</string>
-  <string name="activity_project_funded_type_template">تم الانتهاء من المشروع!</string>
-  <string name="activity_project_funded_description_template">ستتلقى معلومات حول مكافأة XOR قريبًا</string>
-  <string name="activity_project_created_type_template">مشروع جديد!</string>
-  <string name="activity_xor_reward_credited_from_project_type_template">مكافأة XOR للتصويت</string>
-  <string name="activity_user_rank_changed_type_template">تم تغيير الرتبة</string>
   <string name="activity_project">المشروع</string>
-  <string name="activity_user">المستخدم</string>
   <string name="pincode_enter_pin_code">أدخل الرمز السري</string>
   <string name="pincode_repeat_error">خطأ في تكرار الرمز السري</string>
   <string name="pincode_fingerprint_error">أنك غير مخول. جرب إصبع آخر.</string>
   <string name="pincode_touch_fingerprint_scanner">المس الماسح الضوئي لبصمة الإصبع</string>
   <string name="invite_fragment_title">اصدقاء</string>
   <string name="invite_accepted_invitations_title">الدعوات المقبولة</string>
-  <string name="invite_parent_invitation_template" formatted="false">تمت دعوتك من قبل %s %s</string>
   <string name="invite_code_sharing_title">مشاركة رمز الدعوة</string>
-  <string name="invite_send_invite">إرسال دعوة</string>
   <string name="invite_enter_error_already_applied">لقد قمت بالفعل بتفعيل رمز دعوة آخر</string>
   <string name="invite_enter_dialog_title_hint">8 أحرف أبجدية رقمية</string>
   <string name="invite_enter_invitation_code">أدخل رمز الدعوة</string>
-  <plurals name="project_friends_template">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">اخر</item>
-  </plurals>
-  <plurals name="project_details_favorites_format">
-    <item quantity="zero">صفر</item>
-    <item quantity="one">واحد</item>
-    <item quantity="two">اثنان</item>
-    <item quantity="few">قليل</item>
-    <item quantity="many">كثير</item>
-    <item quantity="other">اخر</item>
-  </plurals>
   <string name="project_vote_dialog_title">كم عدد الاصوات</string>
-  <string name="empty_all_project_description">نحن في انتظار ظهور مشاريع جديدة</string>
-  <string name="empty_favorite_project_description">قم بإضافة المشاريع إلى المفضلة و\n وسوف تظهر هنا</string>
-  <string name="project_successful_voting">تصويت  موفق</string>
-  <string name="project_unsuccessful_voting">تصويت غير موفق</string>
-  <string name="project_no_video_app_installed_error">لم يتم تثبيت تطبيق الفيديو</string>
   <string name="project_user_have_not_enough_votes_message">ليس لديك ما يكفي من الأصوات 😔</string>
   <string name="project_you_can_vote_at_least_1_point">يمكنك التصويت بنقطة واحدة على الأقل 😜</string>
-  <string name="project_add_to_favourite">المفضلة</string>
   <string name="project_mark_new">جديد</string>
-  <string name="project_completed">منجز</string>
-  <string name="project_all">جميع</string>
   <string name="project_voted">تم التصويت</string>
-  <string name="project_favourites">المفضلة</string>
-  <string name="project_email">البريد الإلكتروني</string>
-  <string name="project_website">الموقع الإلكتروني</string>
-  <string name="project_gallery">معرض الصور</string>
+  <string name="common_gallery">معرض الصور</string>
   <plurals name="project_date_day_plurals">
     <item quantity="zero">%s صفر</item>
     <item quantity="one">%s واحد</item>
@@ -197,53 +134,31 @@
     <item quantity="many">%s كثير</item>
     <item quantity="other">%s آخر</item>
   </plurals>
-  <string name="activity">النشاط</string>
-  <string name="activity_sora_announcement">إعلان SORA</string>
   <string name="votes_history_title">تاريخ التصويت</string>
   <string name="votes_empty_history_description">كلما تغيرت تصويتاتك ، \n سترى تاريخ ذلك هنا</string>
-  <string name="reputation_title">السمعة</string>
-  <string name="reputation_screen_what_is_reputation">ما هي السمعة؟</string>
-  <string name="reputation_screen_how_to_level_up">كيف ترفع الرتبة؟</string>
-  <string name="reputation_screen_your_current_reputation">رتبة سمعتك</string>
-  <string name="reputation_vote_regularly">التصويت بانتظام</string>
-  <string name="profile_change_personal_details">تغيير المعلومات الشخصية</string>
-  <string name="profile_votes_title">التصويت</string>
-  <string name="profile_my_reputation_title">سمعتي</string>
-  <string name="profile_passphrase_title">عرض كلمة المرور</string>
   <string name="profile_title">الملف الشخصي</string>
   <string name="profile_about_title">حول</string>
   <string name="profile_language_title">اللغة</string>
   <string name="wallet_title">المحفظة</string>
-  <string name="wallet_withdraw">السحب</string>
-  <string name="wallet_receive_xor">استلام XOR</string>
-  <string name="wallet_share_qr_code">مشاركة</string>
-  <string name="wallet_withdrawal_description">السحب إلى</string>
-  <string name="contacts_search_hint">رقم الهاتف أو تعريف الحساب</string>
+  <string name="common_share">مشاركة</string>
   <string name="contacts_search_empty_state_title">لا توجد نتائج بحث</string>
   <string name="contacts_empty_state_title">هنا ستظهر أهم جهات الاتصال</string>
-  <string name="about_software">البرمجيات</string>
-  <string name="about_version">الإصدار</string>
-  <string name="about_source_code">شفرة المصدر</string>
+  <string name="about_source_code">مصدر الرمز</string>
   <string name="about_contact_us">اتصل بنا</string>
-  <string name="about_legal">الشؤون القانونية</string>
   <string name="about_title">حول</string>
   <string name="about_privacy">سياسة الخصوصية</string>
-  <string name="about_terms">الشروط والأحكام</string>
   <string name="faq_title">الأسئلة المتداولة</string>
-  <string name="tabbar_activity_title">النشاط</string>
-  <string name="tabbar_votables_title">التصويت</string>
   <string name="tabbar_wallet_title">المحفظة</string>
   <string name="tabbar_profile_title">الملف الشخصي</string>
   <string name="tabbar_friends_title">اصدقاء</string>
-  <string name="tutorial_restore_account">استعادة الدخول إلى حسابك</string>
-  <string name="tutorial_terms_and_conditions_1">لقد قرأت ووافقت على \n</string>
-  <string name="tutorial_terms_and_conditions_2">الشروط والأحكام</string>
+  <string name="tutorial_restore_account">استعادة الوصول إلى الحساب</string>
+  <string name="tutorial_terms_and_conditions_1">بالتسجيل أنت توافق مع\n</string>
+  <string name="tutorial_terms_and_conditions_2">الأحكام والشروط</string>
   <string name="tutorial_privacy_policy">سياسة الخصوصية</string>
   <string name="tutorial_project_success_desc">إذا نجح المشروع في التصويت ، فسيحصل الجميع على حصتهم</string>
   <string name="tutorial_votes_desc">يصوت المستخدمون لصالح المشاريع ويحددون المشروع الذي ينبغي تمويله</string>
   <string name="tutorial_projects_desc">المشاريع التي أضافها المنتجون إلى Sora وأضيفت إلى التصويت بعد عملية الاختيار</string>
-  <string name="recovery_body_subtitle">للأسف لا توجد طريقة للوصول إلى حسابك إذا نسيت كلمة المرور الخاصة بك.</string>
-  <string name="personal_info_title">التسجيل</string>
+  <string name="recovery_body_subtitle">للأسف لا توجد طريقة للوصول إلى حسابك إذا نسيت كلمات الاستذكار</string>
   <string name="personal_info_invitation_is_invalid">رمز الدعوة غير صحيح</string>
   <string name="personal_info_invitation_description">هل حصلت على رابط دعوة؟ ما عليك سوى النقر عليه لتفعيل الرمز ، أو إدخال الرمز يدويًا.</string>
   <string name="personal_info_inv_code_hint">رمز الدعوة (اختياري)</string>
@@ -264,20 +179,16 @@
   <string name="common_bashkir">بشكير</string>
   <string name="biometric_dialog_title">المصادقة</string>
   <string name="contacts_search_hint_v1">تعريف الحساب، رقم الهاتف، العنوان</string>
-  <string name="wallet_xor_to_my_eth">XOR إلى حساب الإيثريوم الخاص بي</string>
-  <string name="wallet_ethereum">الإيثيريوم</string>
   <string name="wallet_soranet">SORA NET</string>
   <string name="transaction_total">مجموع</string>
   <string name="transaction_token">رمز العملة</string>
   <string name="transaction_note">ملحوظة</string>
   <string name="transaction_miner_fee_title">رسوم المعدن</string>
   <string name="transaction_miner_help">سيتم خصمها من حساب الإيثريوم الخاص بك</string>
-  <string name="transaction_sora_xor">Sora XOR</string>
   <string name="transaction_confirm">تأكيد المعاملة</string>
   <string name="transaction_continue">استمر</string>
   <string name="contacts_search_results">نتائج البحث</string>
-  <string name="transaction_receiver_title">إلى</string>
-  <string name="wallet_transfer_note_hint">اترك ملاحظة ، الحد الأقصى للرموز %s .</string>
+  <string name="amount_title">المبلغ</string>
   <string name="common_min">دقيقة</string>
   <string name="common_sec">ثانية</string>
   <string name="transaction_fee_slow">بطيء</string>
@@ -293,60 +204,63 @@
   <string name="wallet_transfer_to_ethereum">الى حساب محفظة الايثيريوم</string>
   <string name="asset_state_associating">ربط...</string>
   <string name="asset_state_error">خطأ</string>
+  <string name="amount_default_fee">رسوم التحويل</string>
   <string name="common_add">اضافة</string>
   <string name="wallet_history_to_my_soranet_title">الى حسابي في SORA NET</string>
   <string name="wallet_history_to_my_ethereum_title">الى عنواني في محفظة الايثيريوم</string>
   <string name="wallet_history_reward_from_system">مكافأة من النظام</string>
-  <string name="wallet_history_from_ethereum_address_title">من محفظة الايثيريوم</string>
+  <string name="wallet_history_from_ethereum_address_title">من عنوان الايثيريوم</string>
   <string name="wallet_history_from_soranet_address_title">من حساب SORA NET</string>
   <string name="wallet_history_to_soranet_account">الى حساب SORA NET</string>
-  <string name="wallet_history_to_ethereum_address">الى حساب الايثيريوم</string>
+  <string name="wallet_history_to_ethereum_address">الى عنوان الايثيريوم</string>
+  <string name="transaction_send_back">أرسل مرة أخرى</string>
+  <string name="transaction_send_again">أعد الإرسال</string>
+  <string name="common_options_title">تحديد خيار</string>
+  <string name="status_title">الحالة</string>
+  <string name="status_pending">قيد الانتظار</string>
+  <string name="status_rejected">مرفوض</string>
   <string name="common_french">الفرنسية</string>
   <string name="common_ukrainian">الأوكرانية</string>
   <string name="wallet_account_retry_registration">إعادة محاولة التسجيل</string>
-  <string name="common_copy_address">نسخ عنوان المحفظة</string>
-  <string name="limit_dialog_title">الحد المؤقت للتحويل عبر جسر الايثيريوم</string>
-  <string name="limit_dialog_dialy_limit">إجمالي حد التحويل اليومي</string>
-  <string name="limit_dialog_available_limit">متاح للتحويل</string>
-  <string name="limit_dialog_reset">إعادة تعيين الحد في</string>
-  <string name="limit_dialog_set_amount">تحديد المبلغ</string>
-  <string name="common_hour">الساعة</string>
+  <string name="common_copy_address">نسخ العنوان</string>
+  <plurals name="common_hour">
+    <item quantity="zero">ساعة</item>
+    <item quantity="one">ساعة</item>
+    <item quantity="two">ساعتان</item>
+    <item quantity="few">ساعات</item>
+    <item quantity="many">ساعات</item>
+    <item quantity="other">ساعات</item>
+  </plurals>
   <string name="common_japanese">اليابانية</string>
   <string name="common_chinese">الصينية</string>
   <string name="error_miner_fee_title">رصيدك غير كاف لدفع رسوم التعدين</string>
   <string name="error_miner_fee_subtitle">لمتابعة هذه العملية ، تحتاج إلى شحن حساب الايثيريوم الخاص بك.</string>
-  <string name="go_to_ethereum">اذهب الى حساب الايثيريوم</string>
   <string name="error_ethereum_account_title">حساب الايثيريوم غير مرتبط</string>
   <string name="error_ethereum_account_subtitle">لمتابعة هذه العملية ، تحتاج إلى حساب ايثيريوم به بعض الاموال لدفع رسوم التعدين قصد إتمام المعاملة المالية.</string>
-  <string name="check_account_status">التحقق من وضع الحساب\n</string>
   <string name="common_italian">الإيطالية</string>
   <string name="unknown_balance">مجهول</string>
-  <string name="xor_balance_title">XOR Token على شبكات مختلفة</string>
-  <string name="copy_xor_title">انسخ عنوان محفظة Sora (XOR)</string>
-  <string name="copy_eth_title">نسخ عنوان محفظة Ethereum (ETH)</string>
-  <string name="view_balance">عرض تخصيص الرمز المميز Sora (XOR)</string>
-  <string name="referendum_ends_in_title">ينتهي بـ</string>
+  <string name="copy_eth_title">انسخ عنوان محفظة Ethereum (ETH)</string>
+  <string name="referendum_ends_in_title">ينتهي بعد</string>
   <string name="referendum_support_title">نعم</string>
   <string name="referendum_unsupport_title">لا</string>
   <string name="referendum_ended_title">انتهى</string>
   <plurals name="referendum_date_day_plurals_value">
-    <item quantity="zero">%d صفر</item>
-    <item quantity="one">%d واحد</item>
-    <item quantity="two">%d اثنان</item>
-    <item quantity="few">%d قليل</item>
-    <item quantity="many">%d كثير</item>
-    <item quantity="other">%d اخر</item>
+    <item quantity="zero">%d يوم</item>
+    <item quantity="one">%d يوم</item>
+    <item quantity="two">%d يومان</item>
+    <item quantity="few">%d أيام</item>
+    <item quantity="many">%d أيام</item>
+    <item quantity="other">%d أيام</item>
   </plurals>
   <string name="referendum_finishing_soon">ستنتهي قريبا</string>
   <string name="referendum_total_votes">مجموع الأصوات</string>
   <string name="referendum_voting_result">نتيجة التصويت</string>
-  <string name="referendum_vote_no">التصويت | لا</string>
-  <string name="referendum_vote_yes">التصويت | نعم</string>
   <string name="referendum_my_votes_title">أصواتك</string>
-  <string name="about_website">الموقع الإلكتروني</string>
-  <string name="about_telegram">انضم إلى مجموعة Telegram</string>
-  <string name="common_khmer">الإنجليزية</string>
-  <string name="common_chinesetaiwan">تايوان الصينية</string>
+  <string name="referendum_no_votes">لم يصوت أحد</string>
+  <string name="about_website">الموقع الإلكتروني الرسمي</string>
+  <string name="about_telegram">مجموعة التلغرام الرسمية</string>
+  <string name="common_khmer">الخمير</string>
+  <string name="common_chinesetaiwan">الصينية (تايوان)</string>
   <string name="common_croatian">الكرواتية</string>
   <string name="common_spanish_colombia">الإسبانية (كولومبيا)</string>
   <string name="common_filipino">الفلبينية</string>
@@ -357,16 +271,116 @@
   <string name="common_swedish">السويدية</string>
   <string name="common_thai">التايلاندية</string>
   <string name="common_estonian">الإستونية</string>
-  <string name="common_arab">عرب</string>
-  <string name="activity_project_funded_description_template_val">ستتلقى معلومات حول مكافأة VAL قريبًا</string>
+  <string name="common_arab">العربية</string>
   <string name="wallet_val_to_my_eth">VAL إلى حساب الإيثريوم الخاص بي</string>
   <string name="copy_val_title">انسخ عنوان محفظة SORA NET (VAL)</string>
   <string name="val_balance_title">VAL Token على شبكات مختلفة</string>
-  <string name="activity_val_between_users_transferred_type_template">تم استلام VAL</string>
-  <string name="activity_val_reward_credited_from_project_type_template">مكافأة VAL للتصويت</string>
   <string name="wallet_receive_val">استلام VAL</string>
-  <string name="view_balance_val">عرض تخصيص الرمز المميز SORA NET (VAL)</string>
-  <string name="transaction_bridge_not_active_error">حساب الايثيريوم غير مرتبط</string>
+  <string name="view_balance_val">عرض طريقة توزيع عملة  SORA  (VAL)</string>
+  <string name="pincode_enter_current_pin_code">أدخل الرقم السري الحالي</string>
+  <string name="pincode_updated">تم تحديث الرقم السري</string>
+  <string name="pincode_change_success">تم تغيير الرقم السري بنجاح.</string>
+  <string name="pincode_enter_new_pin_code">أدخل  الرقم السري الجديد</string>
+  <string name="pincode_confirm_new_pin_code">قم بتأكيد الرقم السري الجديد</string>
+  <string name="tabbar_staking_title">رهن</string>
+  <string name="coming_soon">قريبا...</string>
+  <string name="staking_coming_soon">سيتمكن حاملو XOR من رهنه ولترشيح validators والحصول على المكافآت.</string>
+  <string name="parliament_coming_soon">الحوكمة على شبكة SORA</string>
+  <string name="polkaswap_coming_soon">DEX لمستقبل التشغيل البيني. Polkaswap هو بروتوكول AMM-DEX غير أمني لمبادلة الرموز بناءً على شبكة Polkadot و Parachains و blockchains المتصلة عبر جسر. يزيل بروتوكول Polkaswap بشكل فعال الوسطاء الموثوق بهم ويوفر فرصة لتداول أسرع.</string>
+  <string name="profile_passphrase_title_v1">عبارات المرور</string>
+  <string name="profile_change_pin_title">تغيير PIN</string>
+  <string name="profile_biometry_title">المصادقة البيومترية</string>
+  <string name="profile_logout_title">تسجيل خروج</string>
+  <string name="transaction_bridge_not_active_error">جسر الايثيريوم غير مفعل</string>
   <string name="transaction_bridge_info">معلومات جسر Ethereum</string>
+  <string name="tabbar_polkaswap_title">Polkaswap</string>
+  <string name="tabbar_parliament_title">البرلمان</string>
+  <string name="referenda_title">الاستفتاءات</string>
+  <string name="referenda_title_vote">التصويت على الاستفتاءات</string>
+  <string name="common_copied">نسخ إلى الحافظة</string>
+  <string name="staking_val_reward">مكافآت SORA Validator</string>
+  <string name="logout_dialog_body">سيؤدي هذا الإجراء إلى حذف الحساب من هذا الجهاز. تأكد من عمل نسخة احتياطية من جملة الإستذكار قبل المتابعة.</string>
+  <string name="personal_info_username">اسم الحساب (اختياري)</string>
+  <string name="invite_title_v1">ادعُ الأصدقاء للحصول على المزيد من المكافآت في المستقبل. سيبدأ توزيع المكافآت عندما يتم إطلاق الميزة.</string>
+  <string name="invite_code">رمز الدعوة</string>
+  <string name="invite_referral_reward">مكافأة الإحالة</string>
+  <string name="invite_rewards">المكافآت</string>
+  <string name="ask_biometry_message">هل ترغب في استخدام القياسات البيومترية للمصادقة؟</string>
+  <string name="personal_info_username_v1">اسم الحساب</string>
+  <string name="common_done">تم انجازها</string>
+  <string name="personal_details_info">اسم هذا الحساب وكيف سيظهر تحت عنوانك. مع هوية على البلوك شاين، يمكن أن تتم اتاحته للآخرين.</string>
+  <string name="common_personal_info_account_name_invalid">يجب أن يحتوي اسم الحساب على ما يصل إلى 32 بايت</string>
+  <string name="invite_link_sharing_title">شارك التطبيق</string>
+  <string name="invite_code_apply">تطبيق رمز الدعوة</string>
+  <string name="invite_accepted_someone">قبل شخص ما الدعوة</string>
+  <string name="invite_accepted_empty_state_title">لا دعوات مقبولة حتى الان.</string>
+  <string name="common_send">إرسال</string>
+  <string name="common_receive">استلام</string>
+  <string name="common_description">الوصف</string>
+  <string name="status_success">ناجح</string>
+  <string name="transaction_details">تفاصيل التحويل</string>
+  <string name="transaction_id">عنوان التحويلة</string>
+  <string name="transaction_date">التاريخ و الوقت</string>
+  <string name="contacts_title">جهات الاتصال</string>
+  <string name="contacts_scan">المسح الضوئي لرمز QR</string>
+  <string name="common_from">من</string>
+  <string name="common_to">إلى</string>
+  <string name="history_title">الأحداث الأخيرة</string>
+  <string name="invoice_scan_error_no_info">لا يمكن فك شفرة QR</string>
+  <string name="invoice_scan_error_match">لا يمكنك الإرسال إلى حسابك</string>
+  <string name="common_copy">نسخ</string>
+  <string name="common_camera">الكاميرا</string>
+  <string name="common_hide">إخفاء</string>
+  <string name="asset_settings_title">حسابات</string>
+  <string name="asset_add">إضافة حساب</string>
+  <string name="invoice_scan_error_user_not_found">لا يمكن العثور على مستخدم من QR</string>
+  <string name="amount_error_no_funds">عذراً ، ليس لديك أموال كافية لتحويل المبلغ المحدد.</string>
+  <string name="wallet_ethereum">الإيثيريوم</string>
+  <string name="referendum_no_active">لا توجد استفتاءات نشطة الآن</string>
+  <string name="referendum_no_voted">لا توجد استفتاءات تم التصويت عليها بعد</string>
+  <string name="referendum_no_ended">لا توجد استفتاءات منتهية بعد</string>
+  <string name="invite_code_left_hours">ه</string>
+  <string name="invite_code_left_minutes">م</string>
+  <string name="invite_code_left_seconds">س</string>
+  <string name="tutorial_one_world">عالم واحد.\n اقتصاد واحد.</string>
+  <string name="tutorial_one_world_desc">تعمل SORA على أن تصبح نظام إقتصادي عالمي لامركزي، وتمول إنشاء تطبيقات جديدة ومثيرة ، تحت الإشراف الديمقراطي لبرلمان SORA. </string>
   <string name="common_retry">أعد المحاولة</string>
+  <string name="set_amount">حدد كمية</string>
+  <string name="common_failed">فشل</string>
+  <string name="ethereum_config_unavailable">عقدة إيثريوم غير متوفرة</string>
+  <string name="asset_val_fullname">SORA Validator Token (VAL)</string>
+  <string name="tutorial_terms_and_conditions_3">الشروط والأحكام</string>
+  <string name="asset_val_name">SORA Validator token</string>
+  <string name="create_account_title">إنشاء حساب</string>
+  <string name="screenshot_alert_title">لا تلتقط صور للشاشة</string>
+  <string name="screenshot_alert_text">لا تلتقط صورة للشاشة فقد تجمعها ثغرات ضارة من جهات خارجية.</string>
+  <string name="mnemonic_title">استعادة جملة الاستذكار</string>
+  <string name="mnemonic_text">استخدم وسائل غير رقمية لحفظ بيانات الاسترجاع، كأن تكتبها على ورقة خارجية.</string>
+  <string name="mnemonic_alert_text">جملة الإستذكار يستخدم لاستعادة الدخول إلى الحساب. اكتبها لديك، فلن نتمكن من استعادة حسابك بدونها!</string>
+  <string name="common_info">المعلومات</string>
+  <string name="account_confirmation_title">تأكيد جملة الاستذكار</string>
+  <string name="mnemonic_confirm_text">قم بالتأكيد باختيار الكلمات بالترتيب الصحيح</string>
+  <string name="recovery_title">استيراد حساب</string>
+  <string name="recovery_source_type">نوع المصدر</string>
+  <string name="recovery_mnemonic_passphrase">جملة الإستذكار</string>
+  <string name="claim_subtitle">نحتاج إلى موافقتك على تحويل أموالك من SORA  حتى تتمكن من استخدامها. ستعمل SORA الآن على شبكة Substrate. يرجى تأكيد الانتقال.</string>
+  <string name="claim_contact_1">إذا كان لديك أي أسئلة أو مخاوف يمكنك</string>
+  <string name="claim_contact_2">اتصل بنا.</string>
+  <string name="common_choose_asset">حدد الأصل</string>
+  <string name="common_confirm">تأكيد</string>
+  <string name="wallet_transaction_submitted">تم إرسال المعاملة</string>
+  <string name="pincode_change_success_v1">تم تغيير رمز PIN</string>
+  <string name="claim_subtitle_v1">نحتاج إلى موافقتك لإجراء نقل لأصولك من SORA v1. سيسمح لك ذلك باستخدام أصولك على SORA v2. \n\nلا تتأثر الأصول الموجودة على شبكة Ethereum ، فلا يزال بإمكانك الوصول إليها عن طريق استيراد عبارة المرور الخاصة بك إلى أي محفظة متوافقة.</string>
+  <string name="common_scan">مسح</string>
+  <string name="details_transferable">قابلة للتحويل</string>
+  <string name="details_total">إجمالي الرصيد</string>
+  <string name="claim_welcome_sora2">مرحبًا بك في SORA v2</string>
+  <string name="claim_error_title">فشل الانتقال</string>
+  <string name="common_error_retry">حاول مرة اخرى</string>
+  <string name="common_donotallow">لا تسمح</string>
+  <string name="mnemonic_invalid">عبارة مرور الذاكرة غير صالحة ، يرجى التحقق مرة أخرى من ترتيب الكلمات.</string>
+  <string name="wallet_balance_locked">المقفل</string>
+  <string name="wallet_balance_reserved">المحجوز</string>
+  <string name="qr_upload">التحميل من المعرض</string>
+  <string name="mnemonic_invalid_title">عبارة مرور الذاكرة غير صالحة</string>
 </resources>

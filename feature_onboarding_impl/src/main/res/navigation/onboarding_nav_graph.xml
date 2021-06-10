@@ -35,14 +35,9 @@
         android:label="MnemonicFragment" />
 
     <fragment
-        android:id="@+id/selectCountryFragment"
-        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.country.SelectCountryFragment"
-        android:label="SelectCountryFragment" />
-
-    <fragment
-        android:id="@+id/phoneNumberFragment"
-        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.phone.PhoneNumberFragment"
-        android:label="PhoneNumberFragment" />
+        android:id="@+id/mnemonicConfirmation"
+        android:name="jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic_confirmation.MnemonicConfirmationFragment"
+        android:label="MnemonicConfirmation" />
 
     <fragment
         android:id="@+id/verificationFragment"

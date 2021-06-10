@@ -11,10 +11,10 @@
         android:id="@+id/projects_recyclerview_placeholder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
+        android:orientation="vertical"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,41 +37,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:listitem="@layout/item_project" />
+        tools:listitem="@layout/item_referendum"
+        tools:visibility="gone" />
 
-    <LinearLayout
+    <TextView
         android:id="@+id/placeholder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="18dp"
-        android:layout_marginBottom="8dp"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
+        android:drawablePadding="@dimen/x2"
+        android:lineSpacingExtra="6sp"
+        android:text="@string/referendum_no_voted"
+        android:textColor="@color/coolGrey"
+        android:textSize="14sp"
         android:visibility="gone"
+        app:drawableTopCompat="@drawable/ic_no_referenda_all"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.3">
-
-        <ImageView
-            android:id="@+id/placeholder_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/x5"
-            app:srcCompat="@drawable/empty_voted_projects" />
-
-        <TextView
-            android:id="@+id/placeholder_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:text="@string/empty_voted_project_description"
-            android:textColor="@color/oceanBlue" />
-
-    </LinearLayout>
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

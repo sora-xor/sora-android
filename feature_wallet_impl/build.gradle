@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-android-extensions'
 apply from: '../tests.gradle'
 
 android {
@@ -10,8 +9,6 @@ android {
     defaultConfig {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
-        versionCode appVersionCode
-        versionName appVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -21,6 +18,19 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        viewBinding true
     }
 
     flavorDimensions "default"
@@ -44,10 +54,6 @@ android {
     }
 }
 
-androidExtensions {
-    experimental = true
-}
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -56,6 +62,7 @@ dependencies {
     implementation project(":core_di")
     implementation project(":feature_wallet_api")
     implementation project(":feature_ethereum_api")
+    implementation project(":feature_account_api")
 
     implementation kotlinDep
 
@@ -65,8 +72,15 @@ dependencies {
     implementation constraintDep
     implementation swipelayoutDep
 
+    implementation insetterDep
+    implementation viewBindingDep
+
     implementation rxDep
     implementation rxAndroidDep
+
+    implementation loggerDep
+
+    implementation workerManagerDep
 
     implementation daggerDep
     kapt daggerKapt
@@ -82,10 +96,12 @@ dependencies {
     implementation rxRoomDep
     kapt roomKapt
 
-    implementation soraDep
+    //implementation soraDep
     implementation birtDep
 
-    implementation irohaDep
+    //implementation irohaDep
+    implementation fearlessLibDep
+    implementation "org.bouncycastle:bcprov-jdk15on:1.60"
 
     implementation rxBindingDep
 
@@ -94,11 +110,18 @@ dependencies {
 
     implementation rxPermissionsDep
 
+    implementation(crashlyticsDep) {
+        transitive = true
+    }
+
     testImplementation jUnitDep
     testImplementation mockitoDep
+    testImplementation mockkDep
     testImplementation robolectricDep
     testImplementation robolectricMultidexDep
     testImplementation archCoreTestDep
     testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
+    testImplementation fearlessLibDep
+    testImplementation webSocketLibDep
 }

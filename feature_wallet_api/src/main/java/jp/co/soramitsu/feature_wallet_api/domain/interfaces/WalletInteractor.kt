@@ -10,60 +10,47 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
-import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
+import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
 import java.math.BigDecimal
 
 interface WalletInteractor {
 
-    fun getAssets(): Observable<List<Asset>>
+    fun saveMigrationStatus(migrationStatus: MigrationStatus): Completable
 
-    fun updateAssets(): Completable
+    fun observeMigrationStatus(): Observable<MigrationStatus>
+
+    fun needsMigration(): Single<Boolean>
+
+    fun migrate(): Single<Boolean>
+
+    fun getAssets(forceUpdateBalance: Boolean = false, forceUpdateAssets: Boolean = false): Single<List<Asset>>
+
+    fun transfer(to: String, assetId: String, amount: BigDecimal): Single<String>
+
+    fun observeTransfer(to: String, assetId: String, amount: BigDecimal, fee: BigDecimal): Completable
+
+    fun calcTransactionFee(to: String, assetId: String, amount: BigDecimal): Single<BigDecimal>
 
     fun getAccountId(): Single<String>
 
-    fun getBalance(assetId: String): Observable<AssetBalance>
+    fun getPublicKey(): Single<ByteArray>
 
-    fun getValAndValErcBalanceAmount(): Observable<BigDecimal>
+    fun getPublicKeyHex(withPrefix: Boolean = false): Single<String>
+
+    fun getAccountName(): Single<String>
 
     fun getTransactions(): Observable<List<Transaction>>
 
-    fun updateTransactions(pageSize: Int): Single<Int>
-
-    fun loadMoreTransactions(pageSize: Int, offset: Int): Single<Int>
-
     fun findOtherUsersAccounts(search: String): Single<List<Account>>
 
-    fun getQrCodeAmountString(amount: String): Single<String>
+    fun getContacts(query: String): Single<List<Account>>
 
-    fun transferAmount(amount: String, accountId: String, description: String, fee: String): Single<Pair<String, String>>
-
-    fun getContacts(updateCached: Boolean): Single<List<Account>>
-
-    fun getTransferMeta(): Observable<TransferMeta>
-
-    fun getWithdrawMeta(): Observable<TransferMeta>
-
-    fun updateTransferMeta(): Completable
-
-    fun updateWithdrawMeta(): Completable
-
-    fun processQr(contents: String): Single<Pair<BigDecimal, Account>>
-
-    fun getBlockChainExplorerUrl(transactionHash: String): Single<String>
-
-    fun getEtherscanExplorerUrl(transactionHash: String): Single<String>
-
-    fun calculateDefaultMinerFeeInEthWithdraw(): Single<BigDecimal>
-
-    fun calculateDefaultMinerFeeInEthTransfer(): Single<BigDecimal>
+    fun processQr(contents: String): Single<Triple<String, String, BigDecimal>>
 
     fun hideAssets(assetIds: List<String>): Completable
 
     fun displayAssets(assetIds: List<String>): Completable
 
     fun updateAssetPositions(assetPositions: Map<String, Int>): Completable
-
-    fun calculateDefaultMinerFeeInEthTransferWithWithdraw(): Single<BigDecimal>
 }

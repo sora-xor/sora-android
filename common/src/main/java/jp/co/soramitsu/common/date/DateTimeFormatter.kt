@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.common.date
 
+import android.content.Context
+import android.text.format.DateUtils
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
 import java.text.SimpleDateFormat
@@ -15,16 +17,23 @@ import java.util.concurrent.TimeUnit
 
 class DateTimeFormatter(
     private val locale: Locale,
-    private val resourceManager: ResourceManager
+    private val resourceManager: ResourceManager,
+    private val context: Context,
 ) {
 
     companion object {
         const val DD_MMM_YYYY = "dd MMM yyyy"
         const val DD_MMM_YYYY_HH_MM_SS = "dd/MM/yy HH:mm:ss"
+        const val DD_MMM_YYYY_HH_MM_SS_2 = "dd.MM.yy, HH:mm:ss"
+        const val MMMM_YYYY = "MMMM YYYY"
         const val HH_mm = "HH:mm"
         const val HH_mm_ss = "HH:mm:ss"
         const val DD_MMMM = "dd MMMM"
     }
+
+    fun formatDateTime(date: Date): String =
+        DateUtils.getRelativeDateTimeString(context, date.time, DateUtils.SECOND_IN_MILLIS, 0, 0)
+            .toString()
 
     fun formatDate(date: Date, dateFormat: String): String {
         return SimpleDateFormat(dateFormat, locale).format(date)
@@ -54,7 +63,12 @@ class DateTimeFormatter(
         return dateToDay(date, todayStr, yesterdayStr, DD_MMM_YYYY)
     }
 
-    private fun dateToDay(date: Date, todayStr: String, yesterdayStr: String, pattern: String): String {
+    private fun dateToDay(
+        date: Date,
+        todayStr: String,
+        yesterdayStr: String,
+        pattern: String
+    ): String {
         val newTime = Date()
 
         val cal = Calendar.getInstance().apply { time = newTime }
@@ -101,7 +115,7 @@ class DateTimeFormatter(
         val hours = (timeInSeconds / 60 / 60).toInt()
         if (hours > 0) {
             result.append(hours)
-            result.append(resourceManager.getString(R.string.common_hour).first())
+            result.append(resourceManager.getQuantityString(R.plurals.common_hour, hours).first())
             result.append(":")
         }
 
@@ -183,11 +197,12 @@ class DateTimeFormatter(
                 val projectCalendar = Calendar.getInstance()
 
                 projectCalendar.timeInMillis = time
-                val pattern = if (currentCalendar.get(Calendar.YEAR) == projectCalendar.get(Calendar.YEAR)) {
-                    DD_MMMM
-                } else {
-                    DD_MMM_YYYY
-                }
+                val pattern =
+                    if (currentCalendar.get(Calendar.YEAR) == projectCalendar.get(Calendar.YEAR)) {
+                        DD_MMMM
+                    } else {
+                        DD_MMM_YYYY
+                    }
 
                 formatDate(Date(time), pattern)
             }

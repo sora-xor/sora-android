@@ -13,7 +13,7 @@ import jp.co.soramitsu.feature_wallet_impl.R
 
 class EventItemDecoration(context: Context) : RecyclerView.ItemDecoration() {
 
-    private val divider: Drawable = context.getDrawable(R.drawable.divider)
+    private val divider: Drawable = context.getDrawable(R.drawable.divider)!!
 
     override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
         super.onDraw(c, parent, state)

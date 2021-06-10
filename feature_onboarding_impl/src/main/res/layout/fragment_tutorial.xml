@@ -4,54 +4,92 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:gravity="center_horizontal"
     android:orientation="vertical">
 
-    <androidx.viewpager.widget.ViewPager
-        android:id="@+id/viewPager"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:overScrollMode="never" />
+        android:overScrollMode="never">
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/indicator"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:paddingBottom="@dimen/x1">
+
+            <ImageView
+                android:id="@+id/tutorialLogoTop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x8"
+                android:src="@drawable/ic_sora_vertical"
+                app:layout_constraintBottom_toTopOf="@id/tutorialOneWorldText"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/tutorialOneWorldText"
+                style="@style/TextAppearance.Soramitsu.Display_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x1"
+                android:gravity="center"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2"
+                android:text="@string/tutorial_one_world"
+                app:layout_constraintBottom_toTopOf="@id/tutorialDescription"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tutorialLogoTop" />
+
+            <TextView
+                android:id="@+id/tutorialDescription"
+                style="@style/TextAppearance.Soramitsu.Paragraph_1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:gravity="center"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2"
+                android:text="@string/tutorial_one_world_desc"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tutorialOneWorldText" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="12dp"
-        android:background="@android:color/white"
-        app:tabBackground="@drawable/indicator_selector"
-        app:tabGravity="center"
-        app:tabIndicatorHeight="0dp"
-        android:layout_marginTop="@dimen/x1"
-        android:layout_marginBottom="@dimen/x1" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/tutorialSignUpButton"
-        style="@style/Widget.Soramitsu.Button"
-        android:layout_width="184dp"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/x1"
-        android:text="@string/tutorial_sign_up" />
+        android:orientation="vertical">
 
-    <Space
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1" />
+        <Button
+            android:id="@+id/tutorialSignUpButton"
+            style="@style/Widget.Soramitsu.Button.Primary.48"
+            android:layout_width="match_parent"
+            android:layout_marginStart="@dimen/x1"
+            android:layout_marginEnd="@dimen/x1"
+            android:layout_marginBottom="@dimen/x1"
+            android:text="@string/create_account_title"
+            app:layout_constraintBottom_toTopOf="@id/tutorialRestoreTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/tutorialRestoreTextView"
-        style="@style/RedTextStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/tutorial_restore_account" />
-
-    <TextView
-        android:id="@+id/tutorialTerms"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/x2"
-        android:gravity="center"
-        android:textSize="12sp"
-        tools:text="@string/tutorial_terms_and_conditions_1" />
-
+        <Button
+            android:id="@+id/tutorialRestoreTextView"
+            style="@style/Widget.Soramitsu.Button.Tertiary.48"
+            android:layout_width="match_parent"
+            android:layout_marginStart="@dimen/x1"
+            android:layout_marginEnd="@dimen/x1"
+            android:layout_marginBottom="@dimen/x4"
+            android:text="@string/recovery_title"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+    </LinearLayout>
 </LinearLayout>
+

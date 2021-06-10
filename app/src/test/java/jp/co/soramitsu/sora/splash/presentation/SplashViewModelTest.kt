@@ -23,39 +23,36 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class SplashViewModelTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
+    @Rule
+    @JvmField
+    val rxSchedulerRule = RxSchedulersRule()
 
-    @Mock private lateinit var interactor: SplashInteractor
-    @Mock private lateinit var router: SplashRouter
+    @Mock
+    private lateinit var interactor: SplashInteractor
+    @Mock
+    private lateinit var router: SplashRouter
 
     private lateinit var splashViewModel: SplashViewModel
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         splashViewModel = SplashViewModel(interactor, router)
     }
 
-    @Test fun `nextScreen with REGISTRATION_FINISHED`() {
+    @Test
+    fun `nextScreen with REGISTRATION_FINISHED`() {
         given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
 
         splashViewModel.nextScreen()
 
-        verify(interactor).restoreAuth()
         verify(router).showMainScreen()
     }
 
-    @Test fun `nextScreen with PHONE_NUMBER_CONFIRMED`() {
-        val state = OnboardingState.PHONE_NUMBER_CONFIRMED
-
-        given(interactor.getRegistrationState()).willReturn(state)
-
-        splashViewModel.nextScreen()
-
-        verify(interactor).restoreAuth()
-        verify(router).showOnBoardingScreen(state)
-    }
-
-    @Test fun `nextScreen with INITIAL`() {
+    @Test
+    fun `nextScreen with INITIAL`() {
         val state = OnboardingState.INITIAL
 
         given(interactor.getRegistrationState()).willReturn(state)
@@ -63,5 +60,31 @@ class SplashViewModelTest {
         splashViewModel.nextScreen()
 
         verify(router).showOnBoardingScreen(state)
+    }
+
+    @Test
+    fun `handleDeepLink before registration called`() {
+        val state = OnboardingState.INITIAL
+        val invitationCode = "INVITATION_CODE"
+
+        given(interactor.getRegistrationState()).willReturn(state)
+
+        splashViewModel.handleDeepLink(invitationCode)
+
+        verify(interactor).saveInviteCode(invitationCode)
+        verify(router).showOnBoardingScreenViaInviteLink()
+    }
+
+    @Test
+    fun `handleDeepLink after registration called`() {
+        val state = OnboardingState.REGISTRATION_FINISHED
+        val invitationCode = "INVITATION_CODE"
+
+        given(interactor.getRegistrationState()).willReturn(state)
+
+        splashViewModel.handleDeepLink(invitationCode)
+
+        verify(interactor).saveInviteCode(invitationCode)
+        verify(router).showMainScreenFromInviteLink()
     }
 }

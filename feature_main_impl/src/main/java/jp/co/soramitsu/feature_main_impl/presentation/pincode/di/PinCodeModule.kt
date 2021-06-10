@@ -19,6 +19,7 @@ import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.MainThreadExecutor
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -43,8 +44,8 @@ class PinCodeModule {
     @Provides
     @IntoMap
     @ViewModelKey(PinCodeViewModel::class)
-    fun provideViewModel(interactor: PinCodeInteractor, mainRouter: MainRouter, progress: WithProgress, maxPinCodeLength: Int): ViewModel {
-        return PinCodeViewModel(interactor, mainRouter, progress, maxPinCodeLength)
+    fun provideViewModel(interactor: PinCodeInteractor, mainRouter: MainRouter, progress: WithProgress, deviceVibrator: DeviceVibrator, maxPinCodeLength: Int): ViewModel {
+        return PinCodeViewModel(interactor, mainRouter, progress, deviceVibrator, maxPinCodeLength)
     }
 
     @Provides

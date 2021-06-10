@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:tools="http://schemas.android.com/tools">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <item android:drawable="@drawable/background_splash_image" />
-
-  <item
-    android:layout_width="95dp"
-    android:layout_height="95dp"
-    android:gravity="center" >
-    <bitmap
-      android:src="@drawable/logo_sora"
-      android:gravity="center" />
-
-  </item>
+    <item android:drawable="@android:color/white" />
 
 </layer-list>

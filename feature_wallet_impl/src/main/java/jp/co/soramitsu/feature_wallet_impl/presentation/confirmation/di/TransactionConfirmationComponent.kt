@@ -9,8 +9,8 @@ import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
-import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
+import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
 import java.math.BigDecimal
 import javax.inject.Named
 

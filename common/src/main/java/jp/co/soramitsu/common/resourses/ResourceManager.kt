@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.common.resourses
 
+import android.util.TypedValue
 import androidx.core.content.ContextCompat
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,4 +30,7 @@ class ResourceManager @Inject constructor(
     fun getQuantityString(id: Int, quantity: Int, value: String): String {
         return contextManager.getContext().resources.getQuantityString(id, quantity).format(value)
     }
+
+    fun dp2px(dp: Int): Int =
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), contextManager.getContext().resources.displayMetrics).toInt()
 }

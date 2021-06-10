@@ -10,16 +10,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.interfaces.WithPreloader
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactListItem
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactMenuItem
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.EthListItem
@@ -34,76 +35,99 @@ class ContactsViewModel(
     private val qrCodeDecoder: QrCodeDecoder,
     private val resourceManager: ResourceManager,
     private val ethereumAddressValidator: EthereumAddressValidator,
-    private val ethereumInteractor: EthereumInteractor
+    private val ethereumInteractor: EthereumInteractor,
+    private val avatarGenerator: AccountAvatarGenerator,
 ) : BaseViewModel(), WithPreloader by preloader {
 
     val contactsLiveData = MutableLiveData<List<Any>>()
     val emptySearchResultVisibilityLiveData = MutableLiveData<Boolean>()
     val emptyContactsVisibilityLiveData = MutableLiveData<Boolean>()
-    val initiateScannerLiveData = MutableLiveData<Event<Unit>>()
-    val initiateGalleryChooserLiveData = MutableLiveData<Event<Unit>>()
-    val showChooserEvent = MutableLiveData<Event<Unit>>()
+
+    private val _initiateScannerLiveData = SingleLiveEvent<Unit>()
+    val initiateScanner: LiveData<Unit> = _initiateScannerLiveData
+
+    private val _initiateGalleryChooserLiveData = SingleLiveEvent<Unit>()
+    val chooseGallery: LiveData<Unit> = _initiateGalleryChooserLiveData
+
+    private val _showChooserEvent = SingleLiveEvent<Unit>()
+    val showChooser: LiveData<Unit> = _showChooserEvent
+
     private val ethereumAddressLiveData = MutableLiveData<String>()
 
-    private val _qrErrorLiveData = MutableLiveData<Event<Int>>()
-    val qrErrorLiveData: LiveData<Event<Int>> = _qrErrorLiveData
+    private val _qrErrorLiveData = SingleLiveEvent<Int>()
+    val qrErrorLiveData: LiveData<Int> = _qrErrorLiveData
 
-    init {
-        disposables.add(
-            ethereumInteractor.getAddress()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    ethereumAddressLiveData.value = it
-                }, {
-                    logException(it)
-                })
-        )
-    }
+//    init {
+//        disposables.add(
+//            ethereumInteractor.getAddress()
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    {
+//                        ethereumAddressLiveData.value = it
+//                    },
+//                    {
+//                        logException(it)
+//                    }
+//                )
+//        )
+//    }
 
     fun backButtonPressed() {
         router.popBackStackFragment()
     }
 
-    fun getContacts(updateCached: Boolean, showLoading: Boolean) {
+    fun getContacts(showLoading: Boolean) {
         disposables.add(
-            interactor.getContacts(updateCached)
+            interactor.getContacts("")
                 .subscribeOn(Schedulers.io())
                 .map { accounts ->
                     mutableListOf<Any>().apply {
-                        add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
-                        add(ContactHeader(resourceManager.getString(R.string.contacts_title)))
-                        addAll(accounts.map { ContactListItem(it) })
+                        // add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
+                        addAll(
+                            accounts.map {
+                                ContactListItem(
+                                    it,
+                                    avatarGenerator.createAvatar(it.address, 35)
+                                )
+                            }
+                        )
                     }
                 }
-                .doOnSuccess { it.lastOrNull { it is ContactListItem }?.let { (it as ContactListItem).isLast = true } }
+                .doOnSuccess {
+                    it.lastOrNull { it is ContactListItem }
+                        ?.let { (it as ContactListItem).isLast = true }
+                }
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe { if (showLoading) preloader.showPreloader() }
                 .doFinally {
                     if (showLoading) preloader.hidePreloader()
-                    if (!updateCached) getContacts(true, false)
                 }
-                .subscribe({
-                    contactsLiveData.value = it
-                    emptyContactsVisibilityLiveData.value = it.size == 2
-                }, {
-                    logException(it)
-                })
+                .subscribe(
+                    {
+                        contactsLiveData.value = it
+                        emptyContactsVisibilityLiveData.value = it.isEmpty()
+                    },
+                    {
+                        logException(it)
+                    }
+                )
         )
     }
 
     fun search(contents: String) {
-        if (ethereumAddressValidator.isAddressValid(contents)) {
-            proccessEthAddress(contents)
-        } else {
-            searchUser(contents)
-        }
+        searchUser(contents)
     }
 
     private fun proccessEthAddress(contents: String) {
         val list = mutableListOf<Any>().apply {
-            add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
-            add(ContactHeader(resourceManager.getString(R.string.contacts_search_results)))
+            add(
+                ContactMenuItem(
+                    R.drawable.ic_val_black_24,
+                    R.string.wallet_val_to_my_eth,
+                    ContactMenuItem.Type.VAL_TO_MY_ETH
+                )
+            )
             add(EthListItem(contents))
         }
         emptySearchResultVisibilityLiveData.value = false
@@ -118,12 +142,20 @@ class ContactsViewModel(
                 .subscribeOn(Schedulers.io())
                 .map { accounts ->
                     mutableListOf<Any>().apply {
-                        add(ContactMenuItem(R.drawable.ic_val_black_24, R.string.wallet_val_to_my_eth, ContactMenuItem.Type.VAL_TO_MY_ETH))
-                        add(ContactHeader(resourceManager.getString(R.string.contacts_title)))
-                        addAll(accounts.map { ContactListItem(it) })
+                        addAll(
+                            accounts.map {
+                                ContactListItem(
+                                    it,
+                                    avatarGenerator.createAvatar(it.address, 35)
+                                )
+                            }
+                        )
                     }
                 }
-                .doOnSuccess { it.lastOrNull { it is ContactListItem }?.let { (it as ContactListItem).isLast = true } }
+                .doOnSuccess {
+                    it.lastOrNull { it is ContactListItem }
+                        ?.let { (it as ContactListItem).isLast = true }
+                }
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe {
                     emptySearchResultVisibilityLiveData.value = false
@@ -131,12 +163,15 @@ class ContactsViewModel(
                     preloader.showPreloader()
                 }
                 .doFinally { preloader.hidePreloader() }
-                .subscribe({
-                    contactsLiveData.value = it
-                    emptySearchResultVisibilityLiveData.value = it.size == 2
-                }, {
-                    onError(it)
-                })
+                .subscribe(
+                    {
+                        contactsLiveData.value = it
+                        emptySearchResultVisibilityLiveData.value = it.isEmpty()
+                    },
+                    {
+                        onError(it)
+                    }
+                )
         )
     }
 
@@ -151,37 +186,27 @@ class ContactsViewModel(
                     preloader.showPreloader()
                 }
                 .doFinally { preloader.hidePreloader() }
-                .subscribe({ pair ->
-                    val amountToTransfer = pair.first
-                    val accountToTransfer = pair.second
-
-                    with(accountToTransfer) {
-                        router.showValTransferAmount(accountId, "$firstName $lastName", amountToTransfer)
+                .subscribe(
+                    { pair ->
+                        router.showValTransferAmount(pair.first, pair.second, BigDecimal.ZERO)
+                    },
+                    {
+                        handleQrErrors(it)
                     }
-                }, {
-                    if (it is QrException) {
-                        when (it.kind) {
-                            QrException.Kind.USER_NOT_FOUND -> _qrErrorLiveData.value = Event(R.string.invoice_scan_error_user_not_found)
-                            QrException.Kind.SENDING_TO_MYSELF -> _qrErrorLiveData.value = Event(R.string.invoice_scan_error_match)
-                            QrException.Kind.DECODE_ERROR -> _qrErrorLiveData.value = Event(R.string.invoice_scan_error_no_info)
-                        }
-                    } else {
-                        onError(it)
-                    }
-                })
+                )
         )
     }
 
-    fun contactClicked(accountId: String, fullName: String) {
-        router.showValTransferAmount(accountId, fullName, BigDecimal.ZERO)
+    fun contactClicked(accountId: String, assetId: String) {
+        router.showValTransferAmount(accountId, assetId, BigDecimal.ZERO)
     }
 
     fun openCamera() {
-        initiateScannerLiveData.value = Event(Unit)
+        _initiateScannerLiveData.trigger()
     }
 
     fun openGallery() {
-        initiateGalleryChooserLiveData.value = Event(Unit)
+        _initiateGalleryChooserLiveData.trigger()
     }
 
     fun decodeTextFromBitmapQr(data: Uri) {
@@ -189,12 +214,33 @@ class ContactsViewModel(
             qrCodeDecoder.decodeQrFromUri(data)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    qrResultProcess(it)
-                }, {
-                    onError(it)
-                })
+                .subscribe(
+                    {
+                        qrResultProcess(it)
+                    },
+                    {
+                        handleQrErrors(it)
+                    }
+                )
         )
+    }
+
+    private fun handleQrErrors(throwable: Throwable) {
+        if (throwable is QrException) {
+            when (throwable.kind) {
+                QrException.Kind.USER_NOT_FOUND ->
+                    _qrErrorLiveData.value =
+                        R.string.invoice_scan_error_user_not_found
+                QrException.Kind.SENDING_TO_MYSELF ->
+                    _qrErrorLiveData.value =
+                        R.string.invoice_scan_error_match
+                QrException.Kind.DECODE_ERROR ->
+                    _qrErrorLiveData.value =
+                        R.string.invoice_scan_error_no_info
+            }
+        } else {
+            onError(throwable)
+        }
     }
 
     fun menuItemClicked(it: ContactMenuItem) {
@@ -210,7 +256,7 @@ class ContactsViewModel(
     }
 
     fun qrMenuItemClicked() {
-        showChooserEvent.value = Event(Unit)
+        _showChooserEvent.trigger()
     }
 
     fun ethItemClicked(item: EthListItem) {

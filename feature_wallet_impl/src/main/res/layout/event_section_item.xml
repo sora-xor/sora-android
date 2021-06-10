@@ -1,105 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootEvent"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?selectableItemBackground"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingTop="@dimen/margin_padding_list_element"
-    android:paddingBottom="@dimen/margin_padding_list_element"
-    android:paddingStart="@dimen/margin_padding_by_side"
-    android:paddingEnd="@dimen/margin_padding_by_side">
+    android:paddingStart="@dimen/x2"
+    android:paddingTop="@dimen/x1"
+    android:paddingEnd="@dimen/x2"
+    android:paddingBottom="@dimen/x1">
 
     <ImageView
         android:id="@+id/eventStatusIconImageView"
-        android:layout_width="@dimen/side_button_icon_size"
-        android:layout_height="@dimen/side_button_icon_size"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:src="@drawable/ic_error_30"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_xor_red_shadow" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/margin_padding_list_element"
-        android:gravity="center_vertical"
-        android:layout_weight="1"
-        android:orientation="vertical">
+    <ImageView
+        android:id="@+id/eventStatusIconImageViewSp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/ic_spinner"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/eventItemTitleTextView"
-            style="@style/TextAppearance.Soramitsu.Body1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            android:textColor="@color/black"
-            android:includeFontPadding="false"
-            app:layout_constraintEnd_toStartOf="@id/eventItemAmountTextView"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="John Smith" />
-
-        <TextView
-            android:id="@+id/eventItemDescriptionTextView"
-            style="@style/TextAppearance.Soramitsu.Body1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            android:textColor="@color/grey"
-            android:textSize="@dimen/text_size_b3"
-            android:visibility="visible"
-            android:includeFontPadding="false"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/eventItemDateTextView"
-            app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
-            app:layout_constraintTop_toBottomOf="@id/eventItemTitleTextView"
-            tools:text="John Smith" />
-    </LinearLayout>
-
-    <LinearLayout
+    <TextView
+        android:id="@+id/eventItemTitleTextView"
+        style="@style/TextAppearance.Soramitsu.Paragraph_3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:layout_marginStart="@dimen/margin_padding_list_element"
-        android:gravity="center_vertical|end"
-        android:orientation="vertical">
+        android:ellipsize="middle"
+        android:includeFontPadding="false"
+        android:paddingStart="@dimen/margin_padding_list_element"
+        android:paddingEnd="@dimen/margin_padding_list_element"
+        android:singleLine="true"
+        app:layout_constraintBottom_toTopOf="@id/eventItemDateTextView"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="spread"
+        tools:text="5EcDo...YpzsR" />
 
-        <TextView
-            android:id="@+id/eventItemAmountTextView"
-            style="@style/TextAppearance.Soramitsu.Body1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:textColor="@color/black"
-            android:includeFontPadding="false"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/eventItemTitleTextView"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="$ 100" />
+    <TextView
+        android:id="@+id/eventItemDateTextView"
+        style="@style/TextAppearance.Soramitsu.Paragraph_4"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:includeFontPadding="false"
+        android:paddingStart="@dimen/margin_padding_list_element"
+        android:paddingEnd="@dimen/margin_padding_list_element"
+        android:singleLine="true"
+        android:textColor="?attr/contentQuaternary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/eventItemAmountFull"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
+        app:layout_constraintTop_toBottomOf="@id/eventItemTitleTextView"
+        tools:text="10/09/2020 10:09:07"
+        tools:textColor="@color/brand_pmsblack" />
 
-        <TextView
-            android:id="@+id/eventItemDateTextView"
-            style="@style/TextAppearance.Soramitsu.Body1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:singleLine="true"
-            android:textColor="@color/grey"
-            android:textSize="@dimen/text_size_b3"
-            android:includeFontPadding="false"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/eventItemAmountTextView"
-            tools:text="10/09/2020 10:09:07" />
-    </LinearLayout>
+    <TextView
+        android:id="@+id/eventItemAmountTextView"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        app:layout_constraintBaseline_toBaselineOf="@id/eventItemTitleTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="$ 100" />
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/eventItemFailedTextView"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:text="@string/common_failed"
+        android:textColor="?attr/statusError"
+        app:layout_constraintBaseline_toBaselineOf="@id/eventItemTitleTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Failed"
+        tools:textColor="@color/brand_soramitsu_red" />
+
+    <TextView
+        android:id="@+id/eventItemAmountFull"
+        style="@style/TextAppearance.Soramitsu.Paragraph_4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:textColor="?attr/contentQuaternary"
+        app:layout_constraintBaseline_toBaselineOf="@id/eventItemDateTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="+200,120,340,898.234535"
+        tools:textColor="@color/brand_pmsblack" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

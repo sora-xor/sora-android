@@ -9,24 +9,24 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat.getColor
+import android.view.animation.AnimationSet
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.color.MaterialColors
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.presentation.view.ViewAnimations
+import jp.co.soramitsu.common.util.ext.doAnimation
 import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.showOrGone
+import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionHeaderBinding
+import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemBinding
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
-import kotlinx.android.extensions.LayoutContainer
-import kotlinx.android.synthetic.main.event_section_header.eventItemDayTextView
-import kotlinx.android.synthetic.main.event_section_item.rootEvent
-import kotlinx.android.synthetic.main.event_section_item.eventStatusIconImageView
-import kotlinx.android.synthetic.main.event_section_item.eventItemTitleTextView
-import kotlinx.android.synthetic.main.event_section_item.eventItemDescriptionTextView
-import kotlinx.android.synthetic.main.event_section_item.eventItemAmountTextView
-import kotlinx.android.synthetic.main.event_section_item.eventItemDateTextView
 
 class RecentEventsAdapter(
     private val debounceClickHandler: DebounceClickHandler,
@@ -44,11 +44,13 @@ class RecentEventsAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
         return when (viewType) {
             R.layout.event_section_item -> {
-                val view = LayoutInflater.from(parent.context).inflate(R.layout.event_section_item, parent, false)
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.event_section_item, parent, false)
                 EventViewHolder.EventItemViewHolder(view)
             }
             R.layout.event_section_header -> {
-                val view = LayoutInflater.from(parent.context).inflate(R.layout.event_section_header, parent, false)
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.event_section_header, parent, false)
                 EventViewHolder.EventHeaderViewHolder(view)
             }
             else -> throw IllegalStateException("Unknown viewType $viewType")
@@ -57,7 +59,11 @@ class RecentEventsAdapter(
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
         when (holder) {
-            is EventViewHolder.EventItemViewHolder -> holder.bind(getItem(position) as SoraTransaction, debounceClickHandler, itemClickedListener)
+            is EventViewHolder.EventItemViewHolder -> holder.bind(
+                getItem(position) as SoraTransaction,
+                debounceClickHandler,
+                itemClickedListener
+            )
             is EventViewHolder.EventHeaderViewHolder -> holder.bind(getItem(position) as EventHeader)
         }
     }
@@ -82,42 +88,75 @@ object DiffCallback : DiffUtil.ItemCallback<Any>() {
     }
 }
 
-sealed class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), LayoutContainer {
+sealed class EventViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    class EventItemViewHolder(override val containerView: View?) : EventViewHolder(containerView!!) {
+    class EventItemViewHolder(containerView: View) : EventViewHolder(containerView) {
 
-        fun bind(soraTransaction: SoraTransaction, debounceClickHandler: DebounceClickHandler, itemClickedListener: (SoraTransaction) -> Unit) {
-            rootEvent.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-                itemClickedListener(soraTransaction)
-            })
+        private val viewBinding = EventSectionItemBinding.bind(containerView)
+        private val rotateAnimation: AnimationSet = ViewAnimations.rotateAnimation
 
-            eventItemTitleTextView.text = soraTransaction.title
-            eventItemDateTextView.text = soraTransaction.dateString
+        fun bind(
+            soraTransaction: SoraTransaction,
+            debounceClickHandler: DebounceClickHandler,
+            itemClickedListener: (SoraTransaction) -> Unit
+        ) {
+            viewBinding.rootEvent.setOnClickListener(
+                DebounceClickListener(debounceClickHandler) {
+                    itemClickedListener(soraTransaction)
+                }
+            )
 
-            if (soraTransaction.description.isEmpty()) {
-                eventItemDescriptionTextView.gone()
+            viewBinding.eventItemTitleTextView.text = soraTransaction.title.truncateUserAddress()
+            viewBinding.eventItemDateTextView.text = soraTransaction.dateString
+
+            if (soraTransaction.amountFormatted.isNotEmpty()) {
+                viewBinding.eventItemFailedTextView.gone()
+                viewBinding.eventItemAmountTextView.show()
+                viewBinding.eventItemAmountFull.show()
+                if (soraTransaction.isIncoming) {
+                    val amountText = "+ ${soraTransaction.amountFormatted}"
+                    viewBinding.eventItemAmountTextView.setTextColor(
+                        MaterialColors.getColor(
+                            viewBinding.eventItemAmountTextView,
+                            R.attr.statusSuccess
+                        )
+                    )
+                    viewBinding.eventItemAmountTextView.text = amountText
+                    viewBinding.eventItemAmountFull.text =
+                        "+ ${soraTransaction.amountFullFormatted}"
+                } else {
+                    val amountText = "− ${soraTransaction.amountFormatted}"
+                    viewBinding.eventItemAmountTextView.setTextColor(
+                        MaterialColors.getColor(
+                            viewBinding.eventItemAmountTextView,
+                            R.attr.contentPrimary
+                        )
+                    )
+                    viewBinding.eventItemAmountTextView.text = amountText
+                    viewBinding.eventItemAmountFull.text =
+                        "- ${soraTransaction.amountFullFormatted}"
+                }
             } else {
-                eventItemDescriptionTextView.text = soraTransaction.description
+                viewBinding.eventItemFailedTextView.show()
+                viewBinding.eventItemAmountTextView.gone()
+                viewBinding.eventItemAmountFull.gone()
             }
 
-            if (soraTransaction.isIncoming) {
-                val amountText = "+ ${soraTransaction.amountFormatted}"
-                eventItemAmountTextView.setTextColor(getColor(eventItemAmountTextView.context, R.color.secondaryGreen))
-                eventItemAmountTextView.text = amountText
-            } else {
-                val amountText = "- ${soraTransaction.amountFormatted}"
-                eventItemAmountTextView.setTextColor(getColor(eventItemAmountTextView.context, R.color.black))
-                eventItemAmountTextView.text = amountText
-            }
-
-            eventStatusIconImageView.setImageResource(soraTransaction.statusIconResource)
+            viewBinding.eventStatusIconImageView.setImageResource(soraTransaction.statusIconResource)
+            viewBinding.eventStatusIconImageViewSp.showOrGone(soraTransaction.pending)
+            viewBinding.eventStatusIconImageViewSp.doAnimation(
+                soraTransaction.pending,
+                rotateAnimation
+            )
         }
     }
 
-    class EventHeaderViewHolder(override val containerView: View?) : EventViewHolder(containerView!!), LayoutContainer {
+    class EventHeaderViewHolder(containerView: View) : EventViewHolder(containerView) {
+
+        private val viewBinding = EventSectionHeaderBinding.bind(containerView)
 
         fun bind(item: EventHeader) {
-            eventItemDayTextView.text = item.title
+            viewBinding.eventItemDayTextView.text = item.title
         }
     }
 }

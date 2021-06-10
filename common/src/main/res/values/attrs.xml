@@ -1,28 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <declare-styleable name="CustomTabView">
-    <attr name="textSize" format="dimension" />
-  </declare-styleable>
+    <declare-styleable name="CustomTabView">
+        <attr name="textSize" format="dimension" />
+    </declare-styleable>
 
-  <attr name="searchViewHeight" format="reference" />
-  
-  <declare-styleable name="VsLineView">
-    <attr name="leftColor" format="color"/>
-    <attr name="rightColor" format="color"/>
+    <attr name="searchViewHeight" format="reference" />
 
-    <attr name="lineHeight" format="dimension" />
-    
-    <attr name="delimiterColor" format="color" />
+    <attr name="statusSuccess" format="color"/>
+    <attr name="statusSuccessBackground" format="color"/>
+    <attr name="statusWarning" format="color"/>
+    <attr name="statusWarningBackground" format="color"/>
+    <attr name="statusError" format="color"/>
+    <attr name="statusErrorBackground" format="color"/>
 
-    <attr name="primaryPercentage" format="float" />
-  </declare-styleable>
+    <attr name="contentPrimary" format="color" />
+    <attr name="contentSecondary" format="color" />
+    <attr name="contentTertiary" format="color" />
+    <attr name="contentQuaternary" format="color" />
 
-  <dimen name="defaultLineHeight">6dp</dimen>
-  <color name="defaultLeftColor">@color/grey</color>
-  <color name="defaultRightColor">@color/uikit_lightRed</color>
-  <color name="defaultDelimiterColor">@color/black</color>
+    <attr name="baseBackground" format="color" />
+    <attr name="baseBackgroundDark" format="color" />
+    <attr name="baseBorderPrimary" format="color" />
+    <attr name="baseBorderSecondary" format="color" />
+    <attr name="baseBackgroundHover" format="color" />
+    <attr name="baseDisabled" format="color" />
+    <attr name="baseOnDisabled" format="color" />
+    <attr name="baseOnAccent" format="color" />
 
-  <dimen name="delimiterExtraSpace">4dp</dimen>
-  <dimen name="delimiterWidth">2dp</dimen>
+    <attr name="secondaryBackground" format="color" />
+    <attr name="secondaryHover" format="color" />
+    <attr name="secondaryPressed" format="color" />
+    <attr name="secondaryFocused" format="color" />
 
+    <declare-styleable name="VsLineView">
+        <attr name="leftColor" format="color" />
+        <attr name="rightColor" format="color" />
+
+        <attr name="lineHeight" format="dimension" />
+
+        <attr name="delimiterColor" format="color" />
+
+        <attr name="primaryPercentage" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="SoraToolbar">
+        <attr name="titleText" format="string" />
+        <attr name="iconRight" format="reference|color" />
+        <attr name="textRight" format="string" />
+        <attr name="homeButtonIcon" format="reference|color" />
+        <attr name="homeButtonVisible" format="boolean" />
+    </declare-styleable>
+
+    <dimen name="defaultLineHeight">6dp</dimen>
+    <color name="defaultLeftColor">@color/grey</color>
+    <color name="defaultRightColor">@color/uikit_lightRed</color>
+    <color name="defaultDelimiterColor">@color/black</color>
+
+    <dimen name="delimiterExtraSpace">4dp</dimen>
+    <dimen name="delimiterWidth">2dp</dimen>
+
+    <!--Pincode-->
+    <attr name="uikit_pinCodeButtonTextColor" format="reference" />
+    <attr name="uikit_pinCodeButtonBackground" format="reference" />
+    <attr name="uikit_pinCodeEmptyDotStrokeColor" format="reference" />
+    <attr name="uikit_pinCodeEmptyDotStrokeWidth" format="reference" />
+    <attr name="uikit_pinCodeButtonTextSize" format="reference" />
+    <!--Pincode-->
 </resources>

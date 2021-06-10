@@ -39,10 +39,6 @@ abstract class FeatureApiHolder(
         return mFeatureContainer.networkApi()
     }
 
-    fun didApi(): DidFeatureApi {
-        return mFeatureContainer.didFeatureApi()
-    }
-
     protected fun <T> getFeature(key: Class<T>): T {
         return mFeatureContainer.getFeature<T>(key) ?: throw RuntimeException()
     }

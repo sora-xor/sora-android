@@ -7,204 +7,350 @@
     android:background="@android:color/white"
     android:orientation="vertical">
 
-    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
+    <ImageView
+        android:id="@+id/icHome"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:title="@string/about_title" />
+        android:src="@drawable/uikit_ic_arrow_back"
+        android:background="?selectableItemBackground"
+        android:layout_margin="@dimen/x1_5"
+        android:padding="@dimen/x1"
+        android:tint="@color/black" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2"
+        style="@style/TextAppearance.Soramitsu.Header1"
+        android:text="@string/about_title" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x3"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/software_text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:lineSpacingExtra="5sp"
-                android:text="@string/about_software"
-                android:textColor="@color/lightGrey"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <View
-                android:id="@+id/border1"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/websiteWrapper"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thickBorder"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/software_text" />
-
-            <TextView
-                android:id="@+id/versionTitleTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginTop="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:lineSpacingExtra="5sp"
-                android:text="@string/about_version"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toStartOf="@+id/versionTv"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/border1" />
-
-            <TextView
-                android:id="@+id/versionTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:gravity="end"
-                android:lineSpacingExtra="5sp"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/versionTitleTv"
-                app:layout_constraintTop_toBottomOf="@+id/border1"
-                tools:text="1.0" />
-
-            <View
-                android:id="@+id/border"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/versionTitleTv" />
-
-            <TextView
-                android:id="@+id/contactUsTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/x7"
                 android:background="?selectableItemBackground"
-                android:drawableEnd="@drawable/ic_chevron_right"
-                android:lineSpacingExtra="5sp"
-                android:padding="@dimen/margin_padding_by_side"
-                android:text="@string/about_contact_us"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/border" />
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2">
 
-            <View
-                android:id="@+id/border2"
+                <ImageView
+                    android:id="@+id/websiteIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_website_24"
+                    app:layout_constraintBottom_toBottomOf="@id/websiteSubtitleTv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/websiteTv" />
+
+                <TextView
+                    android:id="@+id/websiteTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_website"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toTopOf="@+id/websiteSubtitleTv"
+                    app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
+                    app:layout_constraintStart_toEndOf="@id/websiteIcon"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <TextView
+                    android:id="@+id/websiteSubtitleTv"
+                    style="@style/TextAppearance.Soramitsu.Body2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_website"
+                    android:textColor="@color/uikit_lightRed"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
+                    app:layout_constraintStart_toEndOf="@id/websiteIcon"
+                    app:layout_constraintTop_toBottomOf="@+id/websiteTv"
+                    tools:text="@string/about_website" />
+
+                <ImageView
+                    android:id="@+id/wesiteRightIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_top_right_16"
+                    app:layout_constraintBottom_toBottomOf="@id/websiteSubtitleTv"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/websiteTv" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/sourceWrapper"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/contactUsTv" />
-
-            <TextView
-                android:id="@+id/sourceCodeTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/x7"
                 android:background="?selectableItemBackground"
-                android:drawableEnd="@drawable/ic_chevron_right"
-                android:lineSpacingExtra="5sp"
-                android:padding="@dimen/margin_padding_by_side"
-                android:text="@string/about_source_code"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/border2" />
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2">
 
-            <TextView
-                android:id="@+id/legalTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:lineSpacingExtra="5sp"
-                android:text="@string/about_legal"
-                android:textColor="@color/lightGrey"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/sourceCodeTv" />
+                <ImageView
+                    android:id="@+id/sourceIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_github_24"
+                    app:layout_constraintBottom_toBottomOf="@id/sourceSubtitleTv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/sourceTv" />
 
-            <View
-                android:id="@+id/border3"
+                <TextView
+                    android:id="@+id/sourceTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_source_code"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toTopOf="@+id/sourceSubtitleTv"
+                    app:layout_constraintEnd_toStartOf="@id/sourceRightIcon"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@id/sourceIcon"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <TextView
+                    android:id="@+id/sourceSubtitleTv"
+                    style="@style/TextAppearance.Soramitsu.Body2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_website"
+                    android:textColor="@color/uikit_lightRed"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/sourceRightIcon"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@id/sourceIcon"
+                    app:layout_constraintTop_toBottomOf="@+id/sourceTv"
+                    tools:text="@string/about_open_source_url" />
+
+                <ImageView
+                    android:id="@+id/sourceRightIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_top_right_16"
+                    app:layout_constraintBottom_toBottomOf="@id/sourceSubtitleTv"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/sourceTv" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/tgWrapper"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thickBorder"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/legalTv" />
-
-
-            <TextView
-                android:id="@+id/termsTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/x7"
                 android:background="?selectableItemBackground"
-                android:drawableEnd="@drawable/ic_chevron_right"
-                android:lineSpacingExtra="5sp"
-                android:padding="@dimen/margin_padding_by_side"
-                android:text="@string/about_terms"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/border3" />
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2">
 
-            <View
-                android:id="@+id/border4"
+                <ImageView
+                    android:id="@+id/telegramIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_tg_24"
+                    app:layout_constraintBottom_toBottomOf="@id/telegramSubtitleTv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/telegramTv" />
+
+                <TextView
+                    android:id="@+id/telegramTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_telegram"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toTopOf="@+id/telegramSubtitleTv"
+                    app:layout_constraintEnd_toStartOf="@id/telegramRightIcon"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@id/telegramIcon"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <TextView
+                    android:id="@+id/telegramSubtitleTv"
+                    style="@style/TextAppearance.Soramitsu.Body2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_website"
+                    android:textColor="@color/uikit_lightRed"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/telegramRightIcon"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@id/telegramIcon"
+                    app:layout_constraintTop_toBottomOf="@+id/telegramTv"
+                    tools:text="@string/about_open_source_url" />
+
+                <ImageView
+                    android:id="@+id/telegramRightIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_top_right_16"
+                    app:layout_constraintBottom_toBottomOf="@id/telegramSubtitleTv"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/telegramTv" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/contactsWrapper"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:background="@color/thinBorder"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/termsTv" />
-
-            <TextView
-                android:id="@+id/privacyTv"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/x7"
                 android:background="?selectableItemBackground"
-                android:drawableEnd="@drawable/ic_chevron_right"
-                android:lineSpacingExtra="5sp"
-                android:padding="@dimen/margin_padding_by_side"
-                android:text="@string/about_privacy"
-                android:textColor="@color/black"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/border4" />
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <ImageView
+                    android:id="@+id/contactIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_email_24"
+                    app:layout_constraintBottom_toBottomOf="@id/contactSubtitleTv"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/contactTv" />
+
+                <TextView
+                    android:id="@+id/contactTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_contact_us"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toTopOf="@+id/contactSubtitleTv"
+                    app:layout_constraintEnd_toStartOf="@id/contactRightIcon"
+                    app:layout_constraintStart_toEndOf="@id/contactIcon"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_chainStyle="packed" />
+
+                <TextView
+                    android:id="@+id/contactSubtitleTv"
+                    style="@style/TextAppearance.Soramitsu.Body2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:text="@string/about_website"
+                    android:textColor="@color/uikit_lightRed"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/contactRightIcon"
+                    app:layout_constraintStart_toEndOf="@id/contactIcon"
+                    app:layout_constraintTop_toBottomOf="@+id/contactTv"
+                    tools:text="@string/about_open_source_url" />
+
+                <ImageView
+                    android:id="@+id/contactRightIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_top_right_16"
+                    app:layout_constraintBottom_toBottomOf="@id/contactSubtitleTv"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/contactTv" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/termsWrapper"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x7"
+                android:background="?selectableItemBackground"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2"
+                android:orientation="horizontal">
+                <ImageView
+                    android:id="@+id/termsIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_info_24_darkgrey"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/termsTv"
+                    app:layout_constraintBottom_toBottomOf="@id/termsTv" />
+
+                <TextView
+                    android:id="@+id/termsTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/common_terms_title"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/termsRightIcon"
+                    app:layout_constraintStart_toEndOf="@id/termsIcon"
+                    app:layout_constraintTop_toTopOf="parent" />
+                <ImageView
+                    android:id="@+id/termsRightIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_top_right_16"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/termsTv"
+                    app:layout_constraintBottom_toBottomOf="@id/termsTv"
+                    />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/privacyWrapper"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/x7"
+                android:background="?selectableItemBackground"
+                android:paddingStart="@dimen/x2"
+                android:paddingEnd="@dimen/x2"
+                android:orientation="horizontal">
+                <ImageView
+                    android:id="@+id/privacyIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_info_24_darkgrey"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/privacyTv"
+                    app:layout_constraintBottom_toBottomOf="@id/privacyTv" />
+
+                <TextView
+                    android:id="@+id/privacyTv"
+                    style="@style/TextAppearance.Soramitsu.Body1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/x2"
+                    android:lineSpacingExtra="5sp"
+                    android:text="@string/about_privacy"
+                    android:textColor="@color/black"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/privacyRightIcon"
+                    app:layout_constraintStart_toEndOf="@id/privacyIcon"
+                    app:layout_constraintTop_toTopOf="parent" />
+                <ImageView
+                    android:id="@+id/privacyRightIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_arrow_top_right_16"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@id/privacyTv"
+                    app:layout_constraintBottom_toBottomOf="@id/privacyTv"
+                    />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
 
     </androidx.core.widget.NestedScrollView>
 

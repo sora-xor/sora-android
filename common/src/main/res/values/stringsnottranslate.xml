@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <string name="common_russian_native" translatable="false">Русский</string>
+    <string name="common_english_native" translatable="false">English</string>
+    <string name="common_khmer_native" translatable="false">ខ្មែរ</string>
+    <string name="common_chinese_taiwan_native" translatable="false">中國台灣</string>
+    <string name="common_arab_native" translatable="false">عرب</string>
+    <string name="common_croatian_native" translatable="false">Hrvatski</string>
+    <string name="common_spanish_colombia_native" translatable="false">Español (Colombia)</string>
+    <string name="common_estonian_native" translatable="false">Eestlane</string>
+    <string name="common_filipino_native" translatable="false">Pilipino</string>
+    <string name="common_finnish_native" translatable="false">Suomalainen</string>
+    <string name="common_indonesian_native" translatable="false">Indonesia</string>
+    <string name="common_korean_native" translatable="false">한국어</string>
+    <string name="common_malay_native" translatable="false">Bahasa Melayu</string>
+    <string name="common_swedish_native" translatable="false">Svenska</string>
+    <string name="common_thai_native" translatable="false">ไทย</string>
+    <string name="common_spanish_native" translatable="false">Español</string>
+    <string name="common_bashkir_native" translatable="false">Башҡортостан</string>
+    <string name="common_french_native" translatable="false">Français</string>
+    <string name="common_japanese_native" translatable="false">日本語</string>
+    <string name="common_chinese_native" translatable="false">中国語</string>
+    <string name="common_ukrainian_native" translatable="false">Українська</string>
+    <string name="common_italian_native" translatable="false">Italiano</string>
+    <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
+    <string name="transaction_eth_sign" translatable="false">ETH</string>
+    <string name="transaction_fee_gas_hint" translatable="false">GWEI</string>
+    <string name="xor" translatable="false">XOR</string>
+    <string name="val_token" translatable="false">VAL</string>
+    <string name="val_erc20" translatable="false">VAL ERC20</string>
+    <string name="project_votes_k_template" translatable="false">%sK</string>
+    <string name="about_open_source_url" translatable="false">https://github.com/sora-xor/Sora-Android</string>
+    <string name="polkaswap_website" translatable="false">Polkaswap.io</string>
+    <string name="common_sora_support_email" translatable="false">sora@soramitsu.co.jp</string>
+    <string name="brackets_format" translatable="false">(%s)</string>
+    <string name="channel_name" translatable="false">Global channel</string>
+    <string name="channel_description" translatable="false">Notifications sent from the app admin</string>
+    <string name="asset_ether_fullname" translatable="false">Ethereum</string>
+    <string name="asset_sora_fullname" translatable="false">SORA</string>
+    <string name="sora_2" translatable="false">SORA 2</string>
+    <string name="asset_pswap_fullname" translatable="false">PSWAP</string>
+
+</resources>

@@ -7,11 +7,11 @@ package jp.co.soramitsu.feature_onboarding_impl.presentation
 
 interface OnboardingRouter {
 
-    fun showPersonalInfo(countryIso: String)
+    fun showPersonalInfo()
 
     fun showMnemonic()
 
-    fun showVerification(countryIso: String, blockingTime: Int)
+    fun showMnemonicConfirmation()
 
     fun showMainScreen()
 
@@ -22,10 +22,6 @@ interface OnboardingRouter {
     fun onBackButtonPressed()
 
     fun showTermsScreen()
-
-    fun showCountries()
-
-    fun showPhoneNumber(countryIso: String, phoneCode: String)
 
     fun showUnsupportedScreen(appUrl: String)
 

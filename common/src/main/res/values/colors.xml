@@ -18,8 +18,11 @@
     <color name="cardBackground">#408ab3b1</color>
     <color name="seekbarColor">#f0f7f7</color>
     <color name="oceanBlue">#73a8a6</color>
+
+    <!--  should be refactored to brand_pmsblack  -->
     <color name="black">#2D2926</color>
-    <color name="white">#f5f5f5</color>
+
+    <color name="white">#ffffff</color>
     <color name="lightGrey">#799292</color>
     <color name="green">#1c504e</color>
     <color name="secondaryGreen">#00a167</color>
@@ -33,7 +36,54 @@
     <color name="activityDividerColor">#6b73a8a6</color>
     <color name="thinBorder">#40999999</color>
     <color name="thickBorder">#8c999999</color>
+    <color name="dividerColor">#DDDDDD</color>
     <color name="informationTextColor">#898989</color>
     <color name="tertiaryColor">#027ad0</color>
     <color name="shadowBorder">#08000000</color>
+    <color name="successGreen">#009900</color>
+    <color name="successBackgroundStatus">#ccedcc</color>
+    <color name="warningStatus">#ff9900</color>
+    <color name="warningBackgroundStatus">#fff2df</color>
+    <color name="errorStatus">#ff0000</color>
+    <color name="errorBackgroundStatus">#fff9fa</color>
+    <color name="backgroundDarkColor">#4e4e4e</color>
+    <color name="backgroundSecondaryColor">#fae6e8</color>
+    <color name="hoverSecondaryColor">#f6ccd1</color>
+    <color name="pressedSecondaryColor">#f1b3bb</color>
+    <color name="focusedSecondaryColor">#ec9aa4</color>
+
+    <color name="coolGrey">#75787B</color>
+    <color name="soonGrey">#A3A4A8</color>
+
+    <!--  theme independent colors  -->
+    <color name="grey_900">#26262d</color>
+    <color name="grey_800">#2e2e36</color>
+    <color name="grey_700">#53565a</color>
+    <color name="grey_600">#64686d</color>
+    <color name="grey_500">#75787b</color>
+    <color name="grey_400">#a3a4a8</color>
+    <color name="grey_300">#dde0e1</color>
+    <color name="grey_200">#eceff0</color>
+    <color name="grey_100">#f5f7f8</color>
+    
+    <color name="themePrimary_700">#aa0e42</color>
+    <color name="themePrimary_600">#c00f4a</color>
+    <color name="themePrimary_500">#d51252</color>
+    <color name="themePrimary_400">#d0021b</color>
+    <color name="themePrimary_300">#f25b8c</color>
+    <color name="themePrimary_200">#edabc3</color>
+    <color name="themePrimary_150">#f1c0d2</color>
+    <color name="themePrimary_100">#d3ccda</color>
+    <color name="themePrimary_50">#f4e0e8</color>
+
+    <!--  brand colors. in progress....  -->
+    <color name="brand_soramitsu_red">#e3232c</color>
+    <color name="brand_pmsblack">#2d2926</color>
+    <color name="brand_ultrablack">#0d0248</color>
+    <color name="brand_white">#ffffff</color>
+    <color name="brand_pinky">#ed145b</color>
+    <color name="brand_blue">#0d0248</color>
+    <color name="brand_onsurface">#0d0248</color>
+
+
 </resources>

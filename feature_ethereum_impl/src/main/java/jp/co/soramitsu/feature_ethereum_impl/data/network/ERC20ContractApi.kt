@@ -30,9 +30,11 @@ class ERC20ContractApi(
     }
 
     fun valBalance(to: String): RemoteCall<BigInteger> {
-        val function = org.web3j.abi.datatypes.Function(FUNC_BALANCEOF,
+        val function = org.web3j.abi.datatypes.Function(
+            FUNC_BALANCEOF,
             listOf(Address(to)),
-            listOf<TypeReference<Uint256>>(object : TypeReference<Uint256>() {}) as List<TypeReference<*>>?)
+            listOf<TypeReference<Uint256>>(object : TypeReference<Uint256>() {}) as List<TypeReference<*>>?
+        )
         return executeRemoteCallSingleValueReturn(function, BigInteger::class.java)
     }
 
@@ -43,8 +45,11 @@ class ERC20ContractApi(
     private fun getTransferValFunction(to: String, amount: BigInteger): org.web3j.abi.datatypes.Function {
         return org.web3j.abi.datatypes.Function(
             FUNC_TRANSFER,
-            listOf(Address(to),
-                Uint256(amount)),
-            Collections.emptyList())
+            listOf(
+                Address(to),
+                Uint256(amount)
+            ),
+            Collections.emptyList()
+        )
     }
 }

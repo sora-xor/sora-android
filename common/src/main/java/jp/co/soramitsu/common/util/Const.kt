@@ -12,6 +12,12 @@ class Const private constructor() {
     }
 
     companion object {
+        const val WEBSITE = "https://sora.org/"
+        const val SOURCE_LINK = "https://github.com/sora-xor/Sora-Android"
+        const val VAL_REWARD_LINK = "https://medium.com/@sora.xor/sora-validator-rewards-419320e22df8"
+        const val POLKASWAP_WEBSITE = "https://polkaswap.io"
+        const val TELEGRAM_LINK = "https://t.me/sora_xor"
+        const val EMAIL = "sora@soramitsu.co.jp"
         const val SORA_TERMS_PAGE = "https://sora.org/terms"
         const val SORA_PRIVACY_PAGE = "https://sora.org/privacy"
         const val XOR_ASSET_ID = "xor#sora"
@@ -23,12 +29,7 @@ class Const private constructor() {
 
         const val INVITED_USERS = "prefs_invited_users"
 
-        // User reputation
-        const val USER_REPUTATION = "prefs_user_reputation"
-        const val USER_REPUTATION_RANK = "prefs_user_reputation_rank"
-        const val USER_REPUTATION_TOTAL_RANK = "prefs_user_reputation_total_rank"
-
-        const val NAME_MAX_LENGTH = 30
+        const val NAME_MAX_LENGTH = 25
 
         const val NO_ICON_RESOURCE = 0
 

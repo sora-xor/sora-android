@@ -9,22 +9,31 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Build
+import android.os.Vibrator
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.data.AppStateProviderImpl
 import jp.co.soramitsu.common.data.AppVersionProviderImpl
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.GsonSerializerImpl
 import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.network.Sora2ApiCreator
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.common.data.network.substrate.runtime.SubstrateTypesApi
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.domain.Serializer
+import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ContextManager
@@ -34,13 +43,14 @@ import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.DidProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
-import jp.co.soramitsu.common.util.MnemonicProvider
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.TextFormatter
+import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.sora.sdk.crypto.json.JSONEd25519Sha3SignatureSuite
-import jp.co.soramitsu.sora.sdk.json.JsonUtil
+import jp.co.soramitsu.fearless_utils.bip39.Bip39
+import jp.co.soramitsu.fearless_utils.encrypt.KeypairFactory
+import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
@@ -53,7 +63,13 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideAppVersionProvider(appVersionProvider: AppVersionProviderImpl): AppVersionProvider = appVersionProvider
+    fun provideAppVersionProvider(appVersionProvider: AppVersionProviderImpl): AppVersionProvider =
+        appVersionProvider
+
+    @Singleton
+    @Provides
+    fun provideAppStateManager(appStateManager: AppStateProviderImpl): AppStateProvider =
+        appStateManager
 
     @Singleton
     @Provides
@@ -70,8 +86,29 @@ class CommonModule {
     @Singleton
     @Provides
     fun provideQrCodeGenerator(resourceManager: ResourceManager): QrCodeGenerator {
-        return QrCodeGenerator(Color.BLACK, resourceManager.getColor(R.color.qrCodeSecondColor))
+        return QrCodeGenerator(Color.BLACK, resourceManager.getColor(R.color.brand_white))
     }
+
+    @Singleton
+    @Provides
+    fun provideTypesApi(sora2ApiCreator: Sora2ApiCreator): SubstrateTypesApi =
+        sora2ApiCreator.create(SubstrateTypesApi::class.java)
+
+    @Singleton
+    @Provides
+    fun provideRuntimeManager(
+        fileManager: FileManager,
+        gson: Gson,
+        preferences: Preferences,
+        socketService: SocketService,
+        typesApi: SubstrateTypesApi,
+    ): RuntimeManager =
+        RuntimeManager(fileManager, gson, preferences, socketService, typesApi)
+
+    @Singleton
+    @Provides
+    fun provideFileManager(context: Context): FileManager =
+        FileManagerImpl(context)
 
     @Singleton
     @Provides
@@ -89,22 +126,18 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideMnemonicProvider(): MnemonicProvider = MnemonicProvider()
-
-    @Singleton
-    @Provides
     fun provideSecureRandom(): SecureRandom = SecureRandom()
 
     @Singleton
     @Provides
     fun provideCryptoAssistant(secureRandom: SecureRandom): CryptoAssistant {
-        return CryptoAssistant(secureRandom, JsonUtil.buildMapper(), JSONEd25519Sha3SignatureSuite(), Ed25519Sha3())
+        return CryptoAssistant(secureRandom, Ed25519Sha3(), Bip39(), KeypairFactory())
     }
 
     @Provides
     @Singleton
     fun provideDidProvider(): DidProvider {
-        return DidProvider(JsonUtil.buildMapper())
+        return DidProvider(null)
     }
 
     @Provides
@@ -117,7 +150,11 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideSerializer(): Serializer = GsonSerializerImpl(Gson())
+    fun provideJsonMapper(): Gson = Gson()
+
+    @Provides
+    @Singleton
+    fun provideSerializer(gson: Gson): Serializer = GsonSerializerImpl(gson)
 
     @Provides
     @Singleton
@@ -133,7 +170,10 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideEncryptedPreferences(preferences: Preferences, encryptionUtil: EncryptionUtil): EncryptedPreferences {
+    fun provideEncryptedPreferences(
+        preferences: Preferences,
+        encryptionUtil: EncryptionUtil
+    ): EncryptedPreferences {
         return EncryptedPreferences(preferences, encryptionUtil)
     }
 
@@ -151,8 +191,12 @@ class CommonModule {
     }
 
     @Provides
-    fun provideDateTimeFormatter(locale: Locale, resourceManager: ResourceManager): DateTimeFormatter {
-        return DateTimeFormatter(locale, resourceManager)
+    fun provideDateTimeFormatter(
+        locale: Locale,
+        resourceManager: ResourceManager,
+        context: Context,
+    ): DateTimeFormatter {
+        return DateTimeFormatter(locale, resourceManager, context)
     }
 
     @Provides
@@ -171,5 +215,18 @@ class CommonModule {
     @Singleton
     fun provideAssetHolder(): AssetHolder {
         return AssetHolder()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAccountAvatar(rm: ResourceManager): AccountAvatarGenerator {
+        return AccountAvatarGenerator(rm)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDeviceVibrator(context: Context): DeviceVibrator {
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        return DeviceVibrator(vibrator)
     }
 }

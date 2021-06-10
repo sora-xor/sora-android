@@ -8,87 +8,67 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.send
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import androidx.lifecycle.Observer
+import android.widget.Toast
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.view.ViewAnimations
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.disable
-import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.common.util.ext.gone
-import jp.co.soramitsu.common.util.ext.showBrowser
+import jp.co.soramitsu.common.util.ext.doAnimation
+import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransferAmountBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
-import jp.co.soramitsu.feature_wallet_impl.presentation.send.error.BridgeDisabledErrorBottomSheetDialog
-import jp.co.soramitsu.feature_wallet_impl.presentation.send.error.EthereumAccountErrorBottomSheetDialog
-import jp.co.soramitsu.feature_wallet_impl.presentation.send.error.FeeErrorBottomSheetDialog
-import jp.co.soramitsu.feature_wallet_impl.presentation.send.gas.GasSelectBottomSheetDialog
-import kotlinx.android.synthetic.main.fragment_transfer_amount.amountEt
-import kotlinx.android.synthetic.main.fragment_transfer_amount.currencySymbolTv
-import kotlinx.android.synthetic.main.fragment_transfer_amount.currency_divider2
-import kotlinx.android.synthetic.main.fragment_transfer_amount.currency_divider3
-import kotlinx.android.synthetic.main.fragment_transfer_amount.descriptionEt
-import kotlinx.android.synthetic.main.fragment_transfer_amount.descriptionWrapper
-import kotlinx.android.synthetic.main.fragment_transfer_amount.inputAccountInfo
-import kotlinx.android.synthetic.main.fragment_transfer_amount.inputAccountLastname
-import kotlinx.android.synthetic.main.fragment_transfer_amount.inputAccountName
-import kotlinx.android.synthetic.main.fragment_transfer_amount.keyboardImg
-import kotlinx.android.synthetic.main.fragment_transfer_amount.minerFeeTitle
-import kotlinx.android.synthetic.main.fragment_transfer_amount.minerFeeTv
-import kotlinx.android.synthetic.main.fragment_transfer_amount.minerFeeWrapper
-import kotlinx.android.synthetic.main.fragment_transfer_amount.minerPreloader
-import kotlinx.android.synthetic.main.fragment_transfer_amount.nextBtn
-import kotlinx.android.synthetic.main.fragment_transfer_amount.outputAccountInfo
-import kotlinx.android.synthetic.main.fragment_transfer_amount.outputIcon
-import kotlinx.android.synthetic.main.fragment_transfer_amount.outputInitials
-import kotlinx.android.synthetic.main.fragment_transfer_amount.outputTitle
-import kotlinx.android.synthetic.main.fragment_transfer_amount.preloader
-import kotlinx.android.synthetic.main.fragment_transfer_amount.toolbar
-import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeTextView
-import kotlinx.android.synthetic.main.fragment_transfer_amount.transactionFeeWrapper
-import kotlinx.android.synthetic.main.fragment_transfer_amount.errorTextView
 import java.math.BigDecimal
 import javax.inject.Inject
 
-class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
+class TransferAmountFragment :
+    BaseFragment<TransferAmountViewModel>(R.layout.fragment_transfer_amount) {
 
     companion object {
         private const val KEY_TRANSFER_TYPE = "transfer_type"
         private const val KEY_AMOUNT = "amount"
         private const val KEY_FULL_NAME = "full_name"
+        private const val KEY_ASSET_ID = "arg_asset_id"
         private const val KEY_RECIPIENT_ID = "recipient_id"
-        private const val KEY_DESCRIPTION_MAX_BYTES = 64
 
         private const val KEY_IS_TX_FEE_NEEDED = "key_is_tx_fee_needed"
         private const val KEY_RETRY_SORANET_HASH = "key_retry_soranet_hash"
         private const val KEY_RETRY_ETH_HASH = "key_retry_eth_hash"
 
-        fun createBundleForValTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
+        fun createBundleForValTransfer(
+            recipientId: String,
+            assetId: String,
+            amount: BigDecimal
+        ): Bundle {
             return Bundle().apply {
                 putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_TRANSFER)
                 putString(KEY_RECIPIENT_ID, recipientId)
-                putString(KEY_FULL_NAME, fullName)
+                putString(KEY_ASSET_ID, assetId)
                 putString(KEY_AMOUNT, amount.toString())
             }
         }
 
-        fun createBundleForValErcTransfer(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
+        fun createBundleForValErcTransfer(
+            recipientId: String,
+            fullName: String,
+            amount: BigDecimal
+        ): Bundle {
             return Bundle().apply {
                 putSerializable(KEY_TRANSFER_TYPE, TransferType.VALERC_TRANSFER)
                 putString(KEY_RECIPIENT_ID, recipientId)
@@ -97,7 +77,11 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             }
         }
 
-        fun createBundleForWithdraw(recipientId: String, fullName: String, amount: BigDecimal): Bundle {
+        fun createBundleForWithdraw(
+            recipientId: String,
+            fullName: String,
+            amount: BigDecimal
+        ): Bundle {
             return Bundle().apply {
                 putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_WITHDRAW)
                 putString(KEY_RECIPIENT_ID, recipientId)
@@ -106,7 +90,13 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             }
         }
 
-        fun createBundleForWithdrawRetry(soranetTransactionId: String, ethTransactionId: String, peerId: String, amount: BigDecimal, isTxFeeNeeded: Boolean): Bundle {
+        fun createBundleForWithdrawRetry(
+            soranetTransactionId: String,
+            ethTransactionId: String,
+            peerId: String,
+            amount: BigDecimal,
+            isTxFeeNeeded: Boolean
+        ): Bundle {
             return Bundle().apply {
                 putSerializable(KEY_TRANSFER_TYPE, TransferType.VAL_WITHDRAW)
                 putString(KEY_RECIPIENT_ID, peerId)
@@ -121,16 +111,20 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
     @Inject
     lateinit var numbersFormatter: NumbersFormatter
+
     @Inject
     lateinit var resourceManager: ResourceManager
+
     @Inject
     lateinit var dateTimeFormatter: DateTimeFormatter
 
+    private val viewBinding by viewBinding(FragmentTransferAmountBinding::bind)
+
     private lateinit var progressDialog: SoraProgressDialog
     private var keyboardHelper: KeyboardHelper? = null
-    private lateinit var gasDialog: GasSelectBottomSheetDialog
 
     private val amountTextWatcher = object : TextWatcher {
         override fun afterTextChanged(s: Editable?) {
@@ -140,44 +134,37 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
         }
 
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            val currentAmount = amountEt.getBigDecimal() ?: BigDecimal.ZERO
+            val currentAmount = viewBinding.amountEt.getBigDecimal() ?: BigDecimal.ZERO
             viewModel.amountChanged(currentAmount)
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_transfer_amount, container, false)
-    }
-
     override fun inject() {
-        val recipientId = arguments!!.getString(KEY_RECIPIENT_ID, "")
-        val recipientFullName = arguments!!.getString(KEY_FULL_NAME, "")
-        val initialAmount = BigDecimal(arguments!!.getString(KEY_AMOUNT, ""))
-        val transferType = arguments!!.getSerializable(KEY_TRANSFER_TYPE) as TransferType
+        val recipientId = requireArguments().getString(KEY_RECIPIENT_ID, "")
+        val assetId = requireArguments().getString(KEY_ASSET_ID, "")
+        val recipientFullName = requireArguments().getString(KEY_FULL_NAME, "")
+        val transferType = requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
 
-        val retrySoranetHash = arguments!!.getString(KEY_RETRY_SORANET_HASH, "")
-        val retryEthHash = arguments!!.getString(KEY_RETRY_ETH_HASH, "")
-        val isTxFeeNeeded = arguments!!.getBoolean(KEY_IS_TX_FEE_NEEDED, true)
-
-        FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
+        FeatureUtils.getFeature<WalletFeatureComponent>(
+            requireContext(),
+            WalletFeatureApi::class.java
+        )
             .transferAmountComponentBuilder()
             .withFragment(this)
             .withRecipientId(recipientId)
+            .withAssetId(assetId)
             .withRecipientFullName(recipientFullName)
-            .withInitialAmount(initialAmount)
-            .withRetryEthHash(retryEthHash)
-            .withRetrySoranetHash(retrySoranetHash)
-            .withIsTxFeeNeeded(isTxFeeNeeded)
             .withTransferType(transferType)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
-        nextBtn.disable()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewBinding.nextBtn.disable()
         (activity as BottomBarController).hideBottomBar()
 
-        toolbar.setHomeButtonListener {
+        viewBinding.toolbar.setHomeButtonListener {
             if (keyboardHelper?.isKeyboardShowing == true) {
                 hideSoftKeyboard(activity)
             } else {
@@ -185,17 +172,14 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             }
         }
 
-        progressDialog = SoraProgressDialog(activity!!)
+        progressDialog = SoraProgressDialog(requireActivity())
 
-        amountEt.addTextChangedListener(amountTextWatcher)
+        viewBinding.amountEt.addTextChangedListener(amountTextWatcher)
 
-        currencySymbolTv.text = resourceManager.getString(R.string.val_token)
-
-        nextBtn.setOnClickListener(
+        viewBinding.nextBtn.setOnClickListener(
             DebounceClickListener(debounceClickHandler) {
                 viewModel.nextButtonClicked(
-                    amountEt.getBigDecimal(),
-                    descriptionEt.text.toString()
+                    viewBinding.amountEt.getBigDecimal()
                 )
                 if (keyboardHelper?.isKeyboardShowing == true) {
                     hideSoftKeyboard(activity)
@@ -203,232 +187,58 @@ class TransferAmountFragment : BaseFragment<TransferAmountViewModel>() {
             }
         )
 
-        keyboardImg.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                if (keyboardHelper?.isKeyboardShowing == true) {
-                    hideSoftKeyboard(activity)
-                    keyboardImg.setImageResource(R.drawable.icon_open_keyboard)
-                } else {
-                    openSoftKeyboard(amountEt)
-                    keyboardImg.setImageResource(R.drawable.icon_close_keyboard)
-                }
-            }
-        )
-
-        minerFeeTv.setOnClickListener {
-            viewModel.minerFeeEditClicked()
+        viewBinding.tvTransferRecipient.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.copyAddress()
         }
 
-        descriptionEt.filters = arrayOf(DescriptionInputFilter(KEY_DESCRIPTION_MAX_BYTES, "UTF-8"))
-
-        errorTextView.setDebouncedClickListener(debounceClickHandler) {
-            BridgeDisabledErrorBottomSheetDialog(
-                activity!!,
-                debounceClickHandler
-            ) {
-                showBrowser(it)
-            }.show()
-        }
+        initListeners()
     }
 
-    override fun subscribe(viewModel: TransferAmountViewModel) {
-        observe(viewModel.gasLimitErrorLiveData, Observer {
-            if (this::gasDialog.isInitialized) {
-                gasDialog.showGasLimitError(it)
-            }
-        })
+    private fun initListeners() {
+        viewModel.titleStringLiveData.observe(viewLifecycleOwner) {
+            viewBinding.toolbar.setTitle(it)
+        }
 
-        observe(viewModel.gasPriceErrorLiveData, Observer {
-            if (this::gasDialog.isInitialized) {
-                gasDialog.showGasPriceError(it)
-            }
-        })
+        viewModel.inputTokenLastName.observe(viewLifecycleOwner) {
+            viewBinding.inputAccountLastname.text = it
+        }
 
-        observe(viewModel.errorStringLiveData, Observer {
-            errorTextView.text = it
-        })
+        viewModel.recipientIconLiveData.observe(viewLifecycleOwner) {
+            viewBinding.ivAssetIcon.setImageResource(it)
+            viewBinding.ivAssetIcon.show()
+        }
 
-        observe(viewModel.titleStringLiveData, Observer {
-            toolbar.setTitle(it)
-        })
+        viewModel.recipientNameLiveData.observe(viewLifecycleOwner) {
+            viewBinding.tvTransferRecipient.text = it
+        }
 
-        observe(viewModel.inputTokenName, Observer {
-            inputAccountName.text = it
-        })
+        viewModel.balanceFormattedLiveData.observe(viewLifecycleOwner) {
+            viewBinding.tvTransferBalance.text = it
+        }
 
-        observe(viewModel.inputTokenLastName, Observer {
-            inputAccountLastname.text = it
-        })
+        viewModel.transactionFeeFormattedLiveData.observe(viewLifecycleOwner) {
+            viewBinding.tvTransferTransactionFee.text = it
+        }
 
-        observe(viewModel.gasSelectBottomDialogShowLiveData, Observer {
-            if (!this::gasDialog.isInitialized) {
-                gasDialog = GasSelectBottomSheetDialog(
-                    activity!!,
-                    debounceClickHandler,
-                    it,
-                    { gasEstimation, gasPrice ->
-                        viewModel.setGasLimitAndGasPrice(gasEstimation.amount, gasPrice)
-                        gasDialog.dismiss()
-                    },
-                    { gasLimit, gasPrice ->
-                        viewModel.setGasLimitAndGasPrice(gasLimit, gasPrice)
-                    },
-                    {
-                        if (keyboardHelper?.isKeyboardShowing == true) {
-                            hideSoftKeyboard(activity)
-                        }
-                    }
-                )
-            } else {
-                gasDialog.updateEstimations(it)
-            }
+        viewModel.transactionFeeProgressVisibilityLiveData.observe(viewLifecycleOwner) {
+            viewBinding.ivFeeCalculationProgress.showOrGone(it)
+            viewBinding.ivFeeCalculationProgress.doAnimation(it, ViewAnimations.rotateAnimation)
+        }
 
-            gasDialog.show()
-        })
-
-        observe(viewModel.showGasSelectBottomDialogShowLiveData, Observer {
-            gasDialog.show()
-        })
-
-        observe(viewModel.minerFeeErrorLiveData, EventObserver {
-            FeeErrorBottomSheetDialog(
-                activity!!,
-                debounceClickHandler,
-                it
-            ) {}.show()
-        })
-
-        observe(viewModel.ethAccountErrorLiveData, EventObserver {
-            EthereumAccountErrorBottomSheetDialog(
-                activity!!,
-                debounceClickHandler
-            ) {
-                viewModel.ethErrorOkClicked()
-            }.show()
-        })
-
-        observe(viewModel.outputTitle, Observer {
-            outputTitle.text = it
-        })
-
-        observe(viewModel.inputTokenIcon, Observer {
-            inputAccountName.setCompoundDrawablesWithIntrinsicBounds(it, 0, 0, 0)
-        })
-
-        observe(viewModel.recipientNameLiveData, Observer {
-            outputAccountInfo.text = it
-        })
-
-        observe(viewModel.transactionFeeVisibilityLiveData, Observer {
-            if (it) {
-                currency_divider3.show()
-                transactionFeeWrapper.show()
-            } else {
-                currency_divider3.gone()
-                transactionFeeWrapper.gone()
-            }
-        })
-
-        observe(viewModel.recipientTextIconLiveData, Observer {
-            outputInitials.text = it
-            outputInitials.show()
-        })
-
-        observe(viewModel.recipientIconLiveData, Observer {
-            outputIcon.setImageResource(it)
-            outputIcon.show()
-        })
-
-        observe(viewModel.hideDescriptionEventLiveData, Observer {
-            descriptionWrapper.gone()
-        })
-
-        observe(viewModel.descriptionHintLiveData, Observer {
-            descriptionEt.hint = it
-        })
-
-        observe(viewModel.balanceFormattedLiveData, Observer {
-            inputAccountInfo.text = it
-        })
-
-        observe(viewModel.getProgressVisibility(), Observer {
+        viewModel.getProgressVisibility().observe(viewLifecycleOwner) {
             if (it) progressDialog.show() else progressDialog.dismiss()
-        })
-
-        observe(viewModel.transactionFeeFormattedLiveData, Observer {
-            preloader.gone()
-            transactionFeeTextView.text = it
-        })
-
-        observe(viewModel.minerFeeFormattedLiveData, Observer {
-            minerFeeTv.show()
-            minerFeeTv.text = it
-
-            if (this::gasDialog.isInitialized) {
-                gasDialog.submitGasInEth(it)
-            }
-        })
-
-        observe(viewModel.minerFeePreloaderVisibilityLiveData, Observer {
-            if (it) {
-                minerPreloader.show()
-            } else {
-                minerPreloader.gone()
-            }
-        })
-
-        observe(viewModel.minerFeeVisibilityLiveData, Observer {
-            if (it) {
-                minerFeeTitle.show()
-                minerFeeWrapper.show()
-                currency_divider2.show()
-            } else {
-                minerFeeTitle.gone()
-                minerFeeWrapper.gone()
-                currency_divider2.gone()
-            }
-        })
-
-        observe(viewModel.errorVisibilityLiveData, Observer {
-            if (it) {
-                errorTextView.show()
-            } else {
-                errorTextView.gone()
-            }
-        })
-
-        observe(viewModel.initialAmountLiveData, Observer {
-            amountEt.setText(it)
-        })
-
-        observe(viewModel.nextButtonEnableLiveData, Observer {
-            if (it) {
-                nextBtn.enable()
-            } else {
-                nextBtn.disable()
-            }
-        })
-
-        observe(viewModel.retryModeEnabled, Observer {
-            amountEt.isEnabled = !it
-            keyboardImg.setOnClickListener(null)
-            descriptionEt.isEnabled = !it
-        })
-
-        viewModel.updateBalance()
-        viewModel.updateTransferMeta()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (keyboardHelper != null && keyboardHelper!!.isKeyboardShowing) {
-            hideSoftKeyboard(activity)
         }
-        keyboardHelper?.release()
-    }
 
-    override fun onResume() {
-        super.onResume()
-        keyboardHelper = KeyboardHelper(view!!)
+        viewModel.nextButtonEnableLiveData.observe(viewLifecycleOwner) {
+            if (it) viewBinding.nextBtn.enable() else viewBinding.nextBtn.disable()
+        }
+
+        viewModel.decimalLength.observe(viewLifecycleOwner) {
+            viewBinding.amountEt.decimalPartLength = it
+        }
+
+        viewModel.copiedAddressEvent.observe(viewLifecycleOwner) {
+            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        }
     }
 }

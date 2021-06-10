@@ -8,20 +8,20 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.details
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.reactivex.Single
 import jp.co.soramitsu.common.date.DateTimeFormatter
-import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
+import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,55 +36,86 @@ import java.math.BigDecimal
 @RunWith(MockitoJUnitRunner::class)
 class TransactionDetailsTest {
 
-    @Rule @JvmField val rule = InstantTaskExecutorRule()
-    @Rule @JvmField var schedulersRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule = InstantTaskExecutorRule()
 
-    @Mock private lateinit var walletInteractor: WalletInteractor
-    @Mock private lateinit var ethereumInteractor: EthereumInteractor
-    @Mock private lateinit var router: WalletRouter
-    @Mock private lateinit var resourceManager: ResourceManager
-    @Mock private lateinit var numbersFormatter: NumbersFormatter
-    @Mock private lateinit var textFormatter: TextFormatter
-    @Mock private lateinit var dateTimeFormatter: DateTimeFormatter
-    @Mock private lateinit var clipboardManager: ClipboardManager
+    @Rule
+    @JvmField
+    var schedulersRule = RxSchedulersRule()
+
+    @Mock
+    private lateinit var walletInteractor: WalletInteractor
+
+    @Mock
+    private lateinit var ethereumInteractor: EthereumInteractor
+
+    @Mock
+    private lateinit var router: WalletRouter
+
+    @Mock
+    private lateinit var resourceManager: ResourceManager
+
+    @Mock
+    private lateinit var numbersFormatter: NumbersFormatter
+
+    @Mock
+    private lateinit var textFormatter: TextFormatter
+
+    @Mock
+    private lateinit var dateTimeFormatter: DateTimeFormatter
+
+    @Mock
+    private lateinit var clipboardManager: ClipboardManager
 
     private val myAccountId = "myAccountId"
     private val peerId = "recipientId"
-    private val peerName = "recipientFullName"
     private val soranetTransactionId = "soraTransactionId"
-    private val ethTransactionId = "ethTransactionId"
     private val date = 0L
     private val amount = BigDecimal("100")
     private val totalAmount = BigDecimal("100")
     private val transactionFee = BigDecimal.ZERO
-    private val minerFee = BigDecimal.ONE
-    private val transactionDescription = "description"
 
-    @Before fun setup() {
+    @Before
+    fun setup() {
         given(dateTimeFormatter.formatDate(anyNonNull(), anyString())).willReturn("01 Jan")
         given(dateTimeFormatter.formatTimeWithSeconds(anyNonNull())).willReturn("03:00:00")
         given(resourceManager.getString(R.string.status_success)).willReturn("Committed")
-        given(resourceManager.getString(R.string.status_rejected)).willReturn("Rejected")
         given(resourceManager.getString(R.string.status_pending)).willReturn("Pending")
         given(resourceManager.getString(R.string.transaction_send_again)).willReturn("Send again")
-        given(resourceManager.getString(R.string.transaction_send_back)).willReturn("Send back")
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
-        given(resourceManager.getString(R.string.val_token)).willReturn("VAL")
-        given(textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(anyString())).willReturn("MM")
-        given(ethereumInteractor.getAddress()).willReturn(Single.just(ethTransactionId))
+        given(walletInteractor.getAssets()).willReturn(
+            Single.just(
+                listOf(
+                    Asset(
+                        "xor",
+                        "SORA XOR",
+                        "xor",
+                        true,
+                        false,
+                        1,
+                        4,
+                        18,
+                        BigDecimal.ZERO,
+                        0,
+                    )
+                )
+            )
+        )
     }
 
-    @Test fun `show PENDING incoming transaction details opened from list`() {
-        val transactionType = Transaction.Type.INCOMING
+    @Test
+    fun `show PENDING incoming transaction details opened from list`() {
+        val transactionType = Transaction.Type.OUTGOING
         val status = Transaction.Status.PENDING
-        val detailedStatus = Transaction.DetailedStatus.INTENT_PENDING
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
-        given(resourceManager.getString(R.string.transaction_send_back)).willReturn("Send back")
         given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
         given(numbersFormatter.formatBigDecimal(totalAmount)).willReturn("100")
         given(numbersFormatter.formatBigDecimal(transactionFee)).willReturn("0")
-
+        given(numbersFormatter.formatBigDecimal(BigDecimal("100"), 18)).willReturn("100")
+        given(numbersFormatter.formatBigDecimal(BigDecimal("100"), 4)).willReturn("100")
+        given(numbersFormatter.formatBigDecimal(BigDecimal.ZERO, 18)).willReturn("0")
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
@@ -95,48 +126,39 @@ class TransactionDetailsTest {
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_VAL.id,
+            "xor",
             peerId,
-            peerName,
             transactionType,
             soranetTransactionId,
-            ethTransactionId,
-            "",
+            "sora_block_id_hash",
             status,
-            detailedStatus,
+            true,
             date,
             amount,
             totalAmount,
             transactionFee,
-            minerFee,
-            transactionDescription,
             clipboardManager
         )
 
         transactionDetailsViewModel.fromLiveData.observeForever {
-            assertEquals(peerId, it)
+            assertEquals(myAccountId.truncateUserAddress(), it)
         }
-        assertEquals(peerId, transactionDetailsViewModel.fromLiveData.value)
+        assertEquals(myAccountId.truncateUserAddress(), transactionDetailsViewModel.fromLiveData.value)
 
         transactionDetailsViewModel.toLiveData.observeForever {
-            assertEquals(myAccountId, it)
+            assertEquals(peerId.truncateUserAddress(), it)
         }
-        assertEquals(myAccountId, transactionDetailsViewModel.toLiveData.value)
+        assertEquals(peerId.truncateUserAddress(), transactionDetailsViewModel.toLiveData.value)
 
         transactionDetailsViewModel.btnTitleLiveData.observeForever {
-            assertEquals("Send back", it)
+            assertEquals("", it)
         }
-        assertEquals("Send back", transactionDetailsViewModel.btnTitleLiveData.value)
+        assertEquals("", transactionDetailsViewModel.btnTitleLiveData.value)
 
         transactionDetailsViewModel.titleLiveData.observeForever {
             assertEquals("Transaction details", it)
         }
         assertEquals("Transaction details", transactionDetailsViewModel.titleLiveData.value)
-
-        transactionDetailsViewModel.homeBtnVisibilityLiveData.observeForever {
-            assertTrue(it)
-        }
-        assertTrue(transactionDetailsViewModel.homeBtnVisibilityLiveData.value!!)
 
         transactionDetailsViewModel.statusLiveData.observeForever {
             assertEquals("Pending", it)
@@ -146,36 +168,40 @@ class TransactionDetailsTest {
         transactionDetailsViewModel.statusImageLiveData.observeForever {
             assertEquals(R.drawable.ic_pending_grey_18, it)
         }
-        assertEquals(R.drawable.ic_pending_grey_18, transactionDetailsViewModel.statusImageLiveData.value)
+        assertEquals(
+            R.drawable.ic_pending_grey_18,
+            transactionDetailsViewModel.statusImageLiveData.value
+        )
 
         transactionDetailsViewModel.amountLiveData.observeForever {
-            assertEquals("100 VAL", it)
+            assertEquals("- 100 xor" to "100 xor", it)
         }
-        assertEquals("100 VAL", transactionDetailsViewModel.amountLiveData.value)
+        assertEquals("- 100 xor" to "100 xor", transactionDetailsViewModel.amountLiveData.value)
 
-        transactionDetailsViewModel.totalAmountLiveData.observeForever {
-            assertEquals("100 VAL", it)
+        transactionDetailsViewModel.transactionFeeLiveData.observeForever {
+            assertEquals("0 XOR", it)
         }
-        assertEquals("100 VAL", transactionDetailsViewModel.totalAmountLiveData.value)
+        assertEquals("0 XOR", transactionDetailsViewModel.transactionFeeLiveData.value)
 
-        transactionDetailsViewModel.tranasctionFeeLiveData.observeForever {
-            assertEquals("0 VAL", it)
+        transactionDetailsViewModel.transactionHashLiveData.observeForever {
+            assertEquals("soraT...ionId", it)
         }
-        assertEquals("0 VAL", transactionDetailsViewModel.tranasctionFeeLiveData.value)
-
-        transactionDetailsViewModel.transactionDescriptionLiveData.observeForever {
-            assertEquals(transactionDescription, it)
-        }
-        assertEquals(transactionDescription, transactionDetailsViewModel.transactionDescriptionLiveData.value)
+        assertEquals(
+            "soraT...ionId",
+            transactionDetailsViewModel.transactionHashLiveData.value
+        )
     }
 
-    @Test fun `show REJECTED outgoing transaction details`() {
+    @Test
+    fun `show REJECTED outgoing transaction details`() {
         val transactionType = Transaction.Type.OUTGOING
-        val status = Transaction.Status.REJECTED
-        val detailedStatus = Transaction.DetailedStatus.INTENT_FAILED
+        val status = Transaction.Status.COMMITTED
 
         given(numbersFormatter.formatBigDecimal(totalAmount)).willReturn("100")
         given(numbersFormatter.formatBigDecimal(transactionFee)).willReturn("0")
+        given(numbersFormatter.formatBigDecimal(BigDecimal("100"), 18)).willReturn("100")
+        given(numbersFormatter.formatBigDecimal(BigDecimal("100"), 4)).willReturn("100")
+        given(numbersFormatter.formatBigDecimal(BigDecimal.ZERO, 18)).willReturn("0")
 
         val transactionDetailsViewModel = TransactionDetailsViewModel(
             walletInteractor,
@@ -186,33 +212,29 @@ class TransactionDetailsTest {
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_VAL.id,
+            "xor",
             peerId,
-            peerName,
             transactionType,
             soranetTransactionId,
-            ethTransactionId,
-            "",
+            "sora_block_id_hash",
             status,
-            detailedStatus,
+            true,
             date,
-            amount,
+            BigDecimal("100"),
             totalAmount,
-            transactionFee,
-            minerFee,
-            transactionDescription,
+            BigDecimal.ZERO,
             clipboardManager
         )
 
         transactionDetailsViewModel.fromLiveData.observeForever {
-            assertEquals(myAccountId, it)
+            assertEquals(myAccountId.truncateUserAddress(), it)
         }
-        assertEquals(myAccountId, transactionDetailsViewModel.fromLiveData.value)
+        assertEquals(myAccountId.truncateUserAddress(), transactionDetailsViewModel.fromLiveData.value)
 
         transactionDetailsViewModel.toLiveData.observeForever {
-            assertEquals(peerId, it)
+            assertEquals(peerId.truncateUserAddress(), it)
         }
-        assertEquals(peerId, transactionDetailsViewModel.toLiveData.value)
+        assertEquals(peerId.truncateUserAddress(), transactionDetailsViewModel.toLiveData.value)
 
         transactionDetailsViewModel.btnTitleLiveData.observeForever {
             assertEquals("Send again", it)
@@ -224,89 +246,6 @@ class TransactionDetailsTest {
         }
         assertEquals("Transaction details", transactionDetailsViewModel.titleLiveData.value)
 
-        transactionDetailsViewModel.homeBtnVisibilityLiveData.observeForever {
-            assertTrue(it)
-        }
-        assertTrue(transactionDetailsViewModel.homeBtnVisibilityLiveData.value!!)
-
-        transactionDetailsViewModel.statusLiveData.observeForever {
-            assertEquals("Rejected", it)
-        }
-        assertEquals("Rejected", transactionDetailsViewModel.statusLiveData.value)
-
-        transactionDetailsViewModel.statusImageLiveData.observeForever {
-            assertEquals(R.drawable.ic_error_red_18, it)
-        }
-        assertEquals(R.drawable.ic_error_red_18, transactionDetailsViewModel.statusImageLiveData.value)
-
-        transactionDetailsViewModel.amountLiveData.observeForever {
-            assertEquals("100 VAL", it)
-        }
-        assertEquals("100 VAL", transactionDetailsViewModel.amountLiveData.value)
-
-        transactionDetailsViewModel.totalAmountLiveData.observeForever {
-            assertEquals("100 VAL", it)
-        }
-        assertEquals("100 VAL", transactionDetailsViewModel.totalAmountLiveData.value)
-
-        transactionDetailsViewModel.tranasctionFeeLiveData.observeForever {
-            assertEquals("0 VAL", it)
-        }
-        assertEquals("0 VAL", transactionDetailsViewModel.tranasctionFeeLiveData.value)
-
-        transactionDetailsViewModel.transactionDescriptionLiveData.observeForever {
-            assertEquals(transactionDescription, it)
-        }
-        assertEquals(transactionDescription, transactionDetailsViewModel.transactionDescriptionLiveData.value)
-    }
-
-    @Test fun `show COMMITED withdraw transaction details from list`() {
-        val transactionType = Transaction.Type.WITHDRAW
-        val status = Transaction.Status.COMMITTED
-        val detailedStatus = Transaction.DetailedStatus.TRANSFER_COMPLETED
-
-        given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
-        given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
-        given(numbersFormatter.formatBigDecimal(totalAmount)).willReturn("100")
-        given(numbersFormatter.formatBigDecimal(transactionFee)).willReturn("0")
-
-        val transactionDetailsViewModel = TransactionDetailsViewModel(
-            walletInteractor,
-            ethereumInteractor,
-            router,
-            resourceManager,
-            numbersFormatter,
-            textFormatter,
-            dateTimeFormatter,
-            myAccountId,
-            AssetHolder.SORA_VAL.id,
-            peerId,
-            peerName,
-            transactionType,
-            soranetTransactionId,
-            ethTransactionId,
-            "",
-            status,
-            detailedStatus,
-            date,
-            amount,
-            totalAmount,
-            transactionFee,
-            minerFee,
-            transactionDescription,
-            clipboardManager
-        )
-
-        transactionDetailsViewModel.titleLiveData.observeForever {
-            assertEquals("Transaction details", it)
-        }
-        assertEquals("Transaction details", transactionDetailsViewModel.titleLiveData.value)
-
-        transactionDetailsViewModel.homeBtnVisibilityLiveData.observeForever {
-            assertTrue(it)
-        }
-        assertTrue(transactionDetailsViewModel.homeBtnVisibilityLiveData.value!!)
-
         transactionDetailsViewModel.statusLiveData.observeForever {
             assertEquals("Committed", it)
         }
@@ -315,34 +254,34 @@ class TransactionDetailsTest {
         transactionDetailsViewModel.statusImageLiveData.observeForever {
             assertEquals(R.drawable.ic_success_green_18, it)
         }
-        assertEquals(R.drawable.ic_success_green_18, transactionDetailsViewModel.statusImageLiveData.value)
+        assertEquals(
+            R.drawable.ic_success_green_18,
+            transactionDetailsViewModel.statusImageLiveData.value
+        )
 
         transactionDetailsViewModel.amountLiveData.observeForever {
-            assertEquals("100 VAL", it)
+            assertEquals("- 100 xor" to "100 xor", it)
         }
-        assertEquals("100 VAL", transactionDetailsViewModel.amountLiveData.value)
+        assertEquals("- 100 xor" to "100 xor", transactionDetailsViewModel.amountLiveData.value)
 
-        transactionDetailsViewModel.totalAmountLiveData.observeForever {
-            assertEquals("100 VAL", it)
+        transactionDetailsViewModel.transactionFeeLiveData.observeForever {
+            assertEquals("0 XOR", it)
         }
-        assertEquals("100 VAL", transactionDetailsViewModel.totalAmountLiveData.value)
+        assertEquals("0 XOR", transactionDetailsViewModel.transactionFeeLiveData.value)
 
-        transactionDetailsViewModel.tranasctionFeeLiveData.observeForever {
-            assertEquals("0 VAL", it)
+        transactionDetailsViewModel.transactionHashLiveData.observeForever {
+            assertEquals("soraT...ionId", it)
         }
-        assertEquals("0 VAL", transactionDetailsViewModel.tranasctionFeeLiveData.value)
-
-        transactionDetailsViewModel.transactionDescriptionLiveData.observeForever {
-            assertEquals(transactionDescription, it)
-        }
-        assertEquals(transactionDescription, transactionDetailsViewModel.transactionDescriptionLiveData.value)
+        assertEquals(
+            "soraT...ionId",
+            transactionDetailsViewModel.transactionHashLiveData.value
+        )
     }
 
-    @Test fun `click next button calls showTransferAmount if opened from list`() {
-        val isFromList = true
-        val transactionType = Transaction.Type.WITHDRAW
+    @Test
+    fun `click next button calls showTransferAmount if opened from list`() {
+        val transactionType = Transaction.Type.OUTGOING
         val status = Transaction.Status.COMMITTED
-        val detailedStatus = Transaction.DetailedStatus.TRANSFER_COMPLETED
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
         given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
@@ -358,34 +297,29 @@ class TransactionDetailsTest {
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_VAL.id,
+            "xor",
             peerId,
-            peerName,
             transactionType,
             soranetTransactionId,
-            ethTransactionId,
-            "",
+            "sora_block_id_hash",
             status,
-            detailedStatus,
+            true,
             date,
             amount,
             totalAmount,
             transactionFee,
-            minerFee,
-            transactionDescription,
             clipboardManager
         )
 
         transactionDetailsViewModel.btnNextClicked()
 
-        verify(router).showValTransferAmount(peerId, peerName, BigDecimal.ZERO)
+        verify(router).showValTransferAmount(peerId, "xor", BigDecimal.ZERO)
     }
 
-    @Test fun `backpress calls returnToWalletFragment() from wallet`() {
-        val isFromList = true
+    @Test
+    fun `backpress calls returnToWalletFragment() from wallet`() {
         val transactionType = Transaction.Type.WITHDRAW
         val status = Transaction.Status.COMMITTED
-        val detailedStatus = Transaction.DetailedStatus.TRANSFER_COMPLETED
 
         given(resourceManager.getString(R.string.transaction_details)).willReturn("Transaction details")
         given(numbersFormatter.formatBigDecimal(amount)).willReturn("100")
@@ -401,21 +335,17 @@ class TransactionDetailsTest {
             textFormatter,
             dateTimeFormatter,
             myAccountId,
-            AssetHolder.SORA_XOR.id,
+            "AssetHolder.SORA_XOR.id",
             peerId,
-            peerName,
             transactionType,
             soranetTransactionId,
-            ethTransactionId,
-            "",
+            "sora_block_id_hash",
             status,
-            detailedStatus,
+            true,
             date,
             amount,
             totalAmount,
             transactionFee,
-            minerFee,
-            transactionDescription,
             clipboardManager
         )
 

@@ -14,6 +14,6 @@ class ClipboardManager(
 
     fun addToClipboard(label: String, text: String) {
         val clip = ClipData.newPlainText(label, text)
-        clipboardManager.primaryClip = clip
+        clipboardManager.setPrimaryClip(clip)
     }
 }

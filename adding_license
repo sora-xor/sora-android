@@ -1,0 +1,13 @@
+#!/bin/bash
+git ls-files '*.kt' |\
+  xargs -L 1 awk 'BEGIN{state=0} /GPL/ {state=1; exit} END{if (state==0) {print FILENAME; exit}}' |\
+    while FS='\n' read fff; do
+      (
+        echo '/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+';
+        cat $fff
+      ) | sponge $fff;
+    done

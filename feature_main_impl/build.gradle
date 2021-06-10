@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
 
 android {
@@ -10,8 +10,6 @@ android {
     defaultConfig {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
-        versionCode appVersionCode
-        versionName appVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -21,6 +19,15 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     flavorDimensions "default"
@@ -42,10 +49,10 @@ android {
             dimension 'default'
         }
     }
-}
 
-androidExtensions {
-    experimental = true
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
@@ -57,11 +64,9 @@ dependencies {
     implementation project(":feature_account_api")
     implementation project(":feature_notification_api")
     implementation project(":feature_votable_api")
-    implementation project(":feature_information_api")
     implementation project(':feature_ethereum_api')
     implementation project(":feature_wallet_api")
     implementation project(":feature_onboarding_api")
-    implementation project(":feature_sse_api")
 
     implementation kotlinDep
 
@@ -72,8 +77,15 @@ dependencies {
     implementation swipelayoutDep
     implementation biometricDep
 
+    implementation fearlessLibDep
+    implementation loggerDep
+
+    implementation emojiDep
+
     implementation navigationFragmentDep
     implementation navigationUiDep
+    implementation insetterDep
+    implementation viewBindingDep
 
     implementation shimmerDep
 
@@ -82,6 +94,8 @@ dependencies {
     implementation picassoDep
 
     implementation gsonDep
+    implementation fearlessLibDep
+    implementation webSocketLibDep
 
     implementation daggerDep
     kapt daggerKapt
@@ -93,8 +107,10 @@ dependencies {
 
     implementation rxBindingDep
 
-    implementation soraDep
+    //implementation soraDep
     implementation birtDep
+
+    implementation insetterDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep

@@ -13,7 +13,7 @@ class TimerWrapper {
 
     companion object {
         private const val TIME_LEFT_FORMAT = "%02d:%02d:%02d"
-        private const val TIME_LEFT_FORMAT_SHORT = "%02d:%02d"
+        private const val TIME_LEFT_FORMAT_SHORT = "%02dh %02dm"
         private const val UPDATE_INTERVAL_DEFAULT = 1000L
     }
 

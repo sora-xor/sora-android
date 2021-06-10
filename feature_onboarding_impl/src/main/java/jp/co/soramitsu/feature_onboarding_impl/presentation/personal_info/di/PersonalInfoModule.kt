@@ -13,7 +13,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.delegate.WithProgressImpl
-import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
@@ -31,8 +30,8 @@ class PersonalInfoModule {
     @Provides
     @IntoMap
     @ViewModelKey(PersonalInfoViewModel::class)
-    fun provideViewModel(interactor: OnboardingInteractor, router: OnboardingRouter, progress: WithProgress, invitationHandler: InvitationHandler): ViewModel {
-        return PersonalInfoViewModel(interactor, router, progress, invitationHandler)
+    fun provideViewModel(interactor: OnboardingInteractor, router: OnboardingRouter, progress: WithProgress): ViewModel {
+        return PersonalInfoViewModel(interactor, router, progress)
     }
 
     @Provides

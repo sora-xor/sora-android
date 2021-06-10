@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/contentContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/greyBackground"
+    android:background="@color/brand_white"
     android:focusableInTouchMode="true"
     android:orientation="vertical">
 
-    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        app:title="@string/common_send"
+        app:iconRight="@drawable/ic_scan_qr_32"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:titleText="@string/select_recipient"
+        tools:layout_height="40dp" />
 
     <FrameLayout
         android:id="@+id/search_layout"
@@ -36,7 +38,8 @@
             android:layout_marginTop="@dimen/x1"
             android:layout_marginRight="@dimen/x2"
             android:layout_marginBottom="@dimen/x2"
-            app:queryHint="@string/contacts_search_hint_v1" />
+            app:queryHint="@string/select_account_address"
+            tools:layout_height="40dp" />
 
     </FrameLayout>
 
@@ -61,19 +64,21 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/contactsRecyclerView"
-        app:layout_constraintVertical_bias="0.3">
+        app:layout_constraintVertical_bias="0.3"
+        tools:visibility="visible">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/margin_padding_description"
-            android:src="@drawable/empty_contacts_icon" />
+            android:src="@drawable/ic_empty_recent" />
 
         <TextView
             style="@style/TextAppearance.Soramitsu.Body2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/contacts_empty_state_title"
+            android:gravity="center_horizontal"
+            android:text="@string/empty_recent_recipients"
             android:textColor="@color/informationTextColor" />
 
     </LinearLayout>
@@ -84,23 +89,27 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
+        android:paddingStart="@dimen/x4"
+        android:paddingEnd="@dimen/x4"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider">
+        app:layout_constraintTop_toBottomOf="@id/divider"
+        tools:visibility="visible">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/margin_padding_description"
-            android:src="@drawable/empty_search_icon" />
+            android:src="@drawable/ic_empty_state" />
 
         <TextView
             style="@style/TextAppearance.Soramitsu.Body2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/contacts_search_empty_state_title"
+            android:gravity="center_horizontal"
+            android:text="@string/address_not_found"
             android:textColor="@color/informationTextColor" />
 
     </LinearLayout>

@@ -7,11 +7,13 @@ package jp.co.soramitsu.feature_onboarding_impl.presentation.recovery
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.reactivex.Completable
+import io.reactivex.Single
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -39,20 +41,19 @@ class RecoveryViewModelTest {
 
     @Test fun `on back pressed clicked`() {
         privacyViewModel.backButtonClick()
-
         verify(router).onBackButtonPressed()
     }
 
     @Test fun `btn next clicked`() {
-        val mnemonic = "faculty soda zero quote reopen rubber jazz feed casual shed veteran badge grief squeeze apple"
+        val mnemonic = "faculty soda zero quote reopen rubber jazz feed casual shed veteran badge"
 
-        given(interactor.runRecoverFlow(mnemonic)).willReturn(Completable.complete())
+        given(interactor.runRecoverFlow(mnemonic, "")).willReturn(Completable.complete())
+        given(interactor.isMnemonicValid(mnemonic)).willReturn(Single.just(true))
 
-        privacyViewModel.btnNextClick(mnemonic)
+        privacyViewModel.btnNextClick(mnemonic, "")
 
         verify(progress).showProgress()
         verify(progress).hideProgress()
         verify(router).showMainScreen()
     }
-
 }

@@ -11,7 +11,7 @@ import android.graphics.Color
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.resourses.ResourceManager
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.mock

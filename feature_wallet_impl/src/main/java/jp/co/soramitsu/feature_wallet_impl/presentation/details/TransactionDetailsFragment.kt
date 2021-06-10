@@ -6,96 +6,54 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
 import android.os.Bundle
-import android.text.TextUtils
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
-import jp.co.soramitsu.common.presentation.ChooserDialog
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
-import jp.co.soramitsu.common.util.EventObserver
-import jp.co.soramitsu.common.util.ext.gone
-import jp.co.soramitsu.common.util.ext.hide
-import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showBrowser
+import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransactionDetailsBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionIcon
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionTv
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionView
-import kotlinx.android.synthetic.main.fragment_transaction_details.fromInfoTv
-import kotlinx.android.synthetic.main.fragment_transaction_details.minerFeeAmount
-import kotlinx.android.synthetic.main.fragment_transaction_details.minerFeeAmountText
-import kotlinx.android.synthetic.main.fragment_transaction_details.nextBtn
-import kotlinx.android.synthetic.main.fragment_transaction_details.soranetTransactionId
-import kotlinx.android.synthetic.main.fragment_transaction_details.toInfoTv
-import kotlinx.android.synthetic.main.fragment_transaction_details.toolbar
-import kotlinx.android.synthetic.main.fragment_transaction_details.totalAmountView
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionAmountText
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionDateText
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionDescriptionText
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionFeeAmount
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionFeeAmountText
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionStatusIcon
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionStatusText
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionTv
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionIcon
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionTextIcon
-import kotlinx.android.synthetic.main.fragment_transaction_details.transactionTotalAmountText
-import kotlinx.android.synthetic.main.fragment_transaction_details.totalAmountView
-import kotlinx.android.synthetic.main.fragment_transaction_details.descriptionView
-import kotlinx.android.synthetic.main.fragment_transaction_details.ethereumTransactionId
-import kotlinx.android.synthetic.main.fragment_transaction_details.fromView
-import kotlinx.android.synthetic.main.fragment_transaction_details.sidedButtonLayout
-import kotlinx.android.synthetic.main.fragment_transaction_details.toView
 import java.math.BigDecimal
-import java.util.Date
 import javax.inject.Inject
 
-class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
+class TransactionDetailsFragment :
+    BaseFragment<TransactionDetailsViewModel>(R.layout.fragment_transaction_details) {
 
     companion object {
-        private const val DESCRIPTION = "description"
         private const val SORANET_TRANSACTION_ID = "soranet_transaction_id"
-        private const val ETH_TRANSACTION_ID = "eth_transaction_id"
-        private const val SECOND_ETH_TRANSACTION_ID = "second_eth_transaction_id"
+        private const val SORANET_BLOCK_ID = "soranet_block_id"
         private const val KEY_AMOUNT = "amount"
         private const val KEY_MY_ACCOUNT_ID = "my_account_id"
         private const val KEY_PEER_ID = "peer_id"
         private const val KEY_ASSET_ID = "asset_id"
-        private const val KEY_PEER_NAME = "peer_name"
         private const val DATE = "date"
         private const val TYPE = "type"
         private const val STATUS = "status"
-        private const val DETAILED_STATUS = "detailed_status"
+        private const val SUCCESS = "success"
         private const val KEY_TRANSACTION_FEE = "transaction_fee"
-        private const val KEY_MINER_FEE = "miner_fee"
         private const val KEY_TOTAL_AMOUNT = "key_total_amount"
         private const val KEY_TRANSFER_TYPE = "key_transfer_type"
 
         fun createBundleFromList(
             myAccountId: String,
             peerId: String,
-            peerName: String,
-            ethTransactionId: String,
-            secondEthTransactionId: String,
             soranetTransactionId: String,
+            soranetBlockId: String,
             amount: BigDecimal,
             status: Transaction.Status,
-            detailedStatus: Transaction.DetailedStatus,
+            success: Boolean?,
             assetId: String,
-            dateTime: Date,
+            dateTime: Long,
             type: Transaction.Type,
-            description: String,
-            minerFee: BigDecimal,
             transactionFee: BigDecimal,
             totalAmount: BigDecimal
         ): Bundle {
@@ -104,274 +62,126 @@ class TransactionDetailsFragment : BaseFragment<TransactionDetailsViewModel>() {
                 putString(KEY_MY_ACCOUNT_ID, myAccountId)
                 putString(KEY_PEER_ID, peerId)
                 putString(KEY_ASSET_ID, assetId)
-                putString(KEY_PEER_NAME, peerName)
                 putString(SORANET_TRANSACTION_ID, soranetTransactionId)
-                putString(ETH_TRANSACTION_ID, ethTransactionId)
-                putString(SECOND_ETH_TRANSACTION_ID, secondEthTransactionId)
+                putString(SORANET_BLOCK_ID, soranetBlockId)
                 putSerializable(KEY_AMOUNT, amount)
                 putSerializable(KEY_TOTAL_AMOUNT, totalAmount)
                 putSerializable(STATUS, status)
-                putSerializable(DETAILED_STATUS, detailedStatus)
-                putLong(DATE, dateTime.time)
+                success?.let { s -> putBoolean(SUCCESS, s) }
+                putLong(DATE, dateTime)
                 putSerializable(TYPE, type)
-                putString(DESCRIPTION, description)
                 putSerializable(KEY_TRANSACTION_FEE, transactionFee)
-                putSerializable(KEY_MINER_FEE, minerFee)
             }
         }
     }
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_transaction_details, container, false)
-    }
+    private val viewBinding by viewBinding(FragmentTransactionDetailsBinding::bind)
 
     override fun inject() {
-        val transferType = arguments!!.getSerializable(KEY_TRANSFER_TYPE) as TransferType
-        val myAccountId = arguments!!.getString(KEY_MY_ACCOUNT_ID, "")
-        val peerId = arguments!!.getString(KEY_PEER_ID, "")
-        val assetId = arguments!!.getString(KEY_ASSET_ID, "")
-        val peerFullName = arguments!!.getString(KEY_PEER_NAME, "")
-        val soranetTransactionId = arguments!!.getString(SORANET_TRANSACTION_ID, "")
-        val ethTransactionId = arguments!!.getString(ETH_TRANSACTION_ID, "")
-        val secondEthTransactionId = arguments!!.getString(SECOND_ETH_TRANSACTION_ID, "")
-        val status = arguments!!.get(STATUS) as Transaction.Status
-        val detailedStatus = arguments!!.get(DETAILED_STATUS) as Transaction.DetailedStatus
-        val date = arguments!!.getLong(DATE, 0)
-        val type = arguments!!.get(TYPE) as Transaction.Type
-        val amount = arguments!!.getSerializable(KEY_AMOUNT) as BigDecimal
-        val totalAmount = arguments!!.getSerializable(KEY_TOTAL_AMOUNT) as BigDecimal
-        val transactionFee = arguments!!.getSerializable(KEY_TRANSACTION_FEE) as BigDecimal
-        val minerFee = arguments!!.getSerializable(KEY_MINER_FEE) as BigDecimal
-        val description = arguments!!.getString(DESCRIPTION, "")
+        val transferType = requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
+        val myAccountId = requireArguments().getString(KEY_MY_ACCOUNT_ID, "")
+        val peerId = requireArguments().getString(KEY_PEER_ID, "")
+        val assetId = requireArguments().getString(KEY_ASSET_ID, "")
+        val soranetTransactionId = requireArguments().getString(SORANET_TRANSACTION_ID, "")
+        val soranetBlockId = requireArguments().getString(SORANET_BLOCK_ID, "")
+        val status = requireArguments().get(STATUS) as Transaction.Status
+        val success =
+            if (arguments?.containsKey(SUCCESS) == true) arguments?.getBoolean(SUCCESS) else null
+        val date = requireArguments().getLong(DATE, 0)
+        val type = requireArguments().get(TYPE) as Transaction.Type
+        val amount = requireArguments().getSerializable(KEY_AMOUNT) as BigDecimal
+        val totalAmount = requireArguments().getSerializable(KEY_TOTAL_AMOUNT) as BigDecimal
+        val transactionFee = requireArguments().getSerializable(KEY_TRANSACTION_FEE) as BigDecimal
 
-        FeatureUtils.getFeature<WalletFeatureComponent>(context!!, WalletFeatureApi::class.java)
+        FeatureUtils.getFeature<WalletFeatureComponent>(
+            requireContext(),
+            WalletFeatureApi::class.java
+        )
             .transactionDetailsComponentBuilder()
             .withFragment(this)
             .withMyAccountId(myAccountId)
             .withPeerId(peerId)
-            .withPeerFullName(peerFullName)
             .withSoranetTransactionId(soranetTransactionId)
-            .withEthTransactionId(ethTransactionId)
-            .withSecondEthTransactionId(secondEthTransactionId)
+            .withSoranetBlockId(soranetBlockId)
             .withTransactionType(type)
             .withStatus(status)
-            .withDetailedStatus(detailedStatus)
+            .withSuccess(success)
             .withAssetId(assetId)
             .withDate(date)
             .withAmount(amount)
             .withTotalAmount(totalAmount)
             .withTransactionFee(transactionFee)
-            .withMinerFee(minerFee)
-            .withDescription(description)
             .withTransferType(transferType)
             .build()
             .inject(this)
     }
 
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-
-        toolbar.setHomeButtonListener { viewModel.btnBackClicked() }
-
-        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
+        viewBinding.toolbar.setHomeButtonListener { viewModel.btnBackClicked() }
+        viewBinding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
             viewModel.btnNextClicked()
-        })
-
-        fromInfoTv.setOnClickListener {
+        }
+        viewBinding.fromInfoTv.setDebouncedClickListener(debounceClickHandler) {
             viewModel.fromClicked()
         }
-
-        toInfoTv.setOnClickListener {
+        viewBinding.toInfoTv.setDebouncedClickListener(debounceClickHandler) {
             viewModel.toClicked()
         }
-
-        soranetTransactionId.setOnClickListener {
-            viewModel.soranetTransactionIdClicked()
+        viewBinding.tvTransactionHash.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.hashTransactionClicked()
         }
-
-        ethereumTransactionId.setOnClickListener {
-            viewModel.ethereumTransactionIdClicked()
+        viewBinding.tvBlockHash.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.hashBlockClicked()
         }
+        initListeners()
     }
 
-    override fun subscribe(viewModel: TransactionDetailsViewModel) {
-        observe(viewModel.buttonVisibilityLiveData, Observer {
-            if (it) {
-                sidedButtonLayout.show()
-            } else {
-                sidedButtonLayout.hide()
-            }
-        })
-
-        observe(viewModel.hideFromViewEvent, Observer {
-            fromView.gone()
-        })
-
-        observe(viewModel.hideToViewEvent, Observer {
-            toView.gone()
-        })
-
-        observe(viewModel.statusLiveData, Observer {
-            transactionStatusText.text = it
-        })
-
-        observe(viewModel.statusImageLiveData, Observer {
-            transactionStatusIcon.setImageResource(it)
-        })
-
-        observe(viewModel.dateLiveData, Observer {
-            transactionDateText.text = it
-        })
-
-        observe(viewModel.fromLiveData, Observer {
-            fromInfoTv.text = it
-        })
-
-        observe(viewModel.fromIconLiveData, Observer {
-            fromInfoTv.setCompoundDrawablesWithIntrinsicBounds(it, 0, R.drawable.ic_copy_red_18, 0)
-        })
-
-        observe(viewModel.toIconLiveData, Observer {
-            toInfoTv.setCompoundDrawablesWithIntrinsicBounds(it, 0, R.drawable.ic_copy_red_18, 0)
-        })
-
-        observe(viewModel.toLiveData, Observer {
-            toInfoTv.text = it
-        })
-
-        observe(viewModel.amountLiveData, Observer {
-            transactionAmountText.text = it
-        })
-
-        observe(viewModel.tranasctionFeeLiveData, Observer {
-            transactionFeeAmountText.text = it
-        })
-
-        observe(viewModel.tranasctionFeeVisibilityLiveData, Observer {
-            if (it) {
-                transactionFeeAmount.show()
-            } else {
-                transactionFeeAmount.gone()
-            }
-        })
-
-        observe(viewModel.minerFeeLiveData, Observer {
-            minerFeeAmountText.text = it
-        })
-
-        observe(viewModel.minerFeeVisibilityLiveData, Observer {
-            if (it) {
-                minerFeeAmount.show()
-            } else {
-                minerFeeAmount.gone()
-            }
-        })
-
-        observe(viewModel.transactionDescriptionLiveData, Observer {
-            transactionDescriptionText.text = it
-        })
-
-        observe(viewModel.buttonDescriptionLiveData, Observer {
-            descriptionTv.text = it
-        })
-
-        observe(viewModel.buttonDescriptionEllipsizeMiddleLiveData, Observer {
-            descriptionTv.ellipsize = if (it) {
-                TextUtils.TruncateAt.MIDDLE
-            } else {
-                TextUtils.TruncateAt.END
-            }
-        })
-
-        observe(viewModel.buttonDescriptionTextIconLiveData, Observer {
-            descriptionTextIcon.text = it
-        })
-
-        observe(viewModel.buttonDescriptionIconLiveData, Observer {
-            descriptionTextIcon.gone()
-            descriptionIcon.show()
-            descriptionIcon.setImageResource(it)
-        })
-
-        observe(viewModel.btnTitleLiveData, Observer {
-            nextBtn.text = it
-        })
-
-        observe(viewModel.titleLiveData, Observer {
-            toolbar.setTitle(it)
-        })
-
-        observe(viewModel.homeBtnVisibilityLiveData, Observer {
-            if (it) {
-                toolbar.showHomeButton()
-            } else {
-                toolbar.hideHomeButton()
-            }
-        })
-
-        observe(viewModel.totalAmountLiveData, Observer {
-            transactionTotalAmountText.text = it
-        })
-
-        observe(viewModel.totalAmountVisibilityLiveData, Observer {
-            if (it) {
-                totalAmountView.show()
-            } else {
-                totalAmountView.gone()
-            }
-        })
-
-        observe(viewModel.transactionDescriptionLiveData, Observer {
-            transactionDescriptionText.text = it
-        })
-
-        observe(viewModel.transactionDescriptionVisibilityLiveData, Observer {
-            if (it) {
-                descriptionView.show()
-            } else {
-                descriptionView.gone()
-            }
-        })
-
-        observe(viewModel.peerIdBufferEvent, EventObserver {
-            Toast.makeText(activity!!, R.string.common_copied, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.transactionClickEvent, Observer {
-            ChooserDialog(
-                activity!!,
-                R.string.common_options_title,
-                getString(R.string.common_copy),
-                getString(R.string.common_open_explorer),
-                { viewModel.copyTransactionIdClicked(it) },
-                { viewModel.showInBlockChainExplorerClicked(it) }
-            ).show()
-        })
-
-        observe(viewModel.soranetTransactionIdVisibilityLiveData, Observer {
-            if (it) {
-                soranetTransactionId.show()
-            } else {
-                soranetTransactionId.gone()
-            }
-        })
-
-        observe(viewModel.ethTransactionIdVisibilityLiveData, Observer {
-            if (it) {
-                ethereumTransactionId.show()
-            } else {
-                ethereumTransactionId.gone()
-            }
-        })
-
-        observe(viewModel.transactionIdBufferEvent, EventObserver {
-            Toast.makeText(activity!!, R.string.common_copied, Toast.LENGTH_SHORT).show()
-        })
-
-        observe(viewModel.openBlockChainExplorerEvent, EventObserver {
+    private fun initListeners() {
+        viewModel.statusLiveData.observe {
+            viewBinding.transactionStatusText.text = it
+        }
+        viewModel.statusImageLiveData.observe {
+            viewBinding.transactionStatusIcon.setImageResource(it)
+        }
+        viewModel.transactionHashLiveData.observe {
+            viewBinding.tvTransactionHash.text = it
+        }
+        viewModel.blockHashLiveData.observe {
+            viewBinding.tvBlockHash.text = it
+        }
+        viewModel.dateLiveData.observe {
+            viewBinding.transactionDateText.text = it
+        }
+        viewModel.fromLiveData.observe {
+            viewBinding.fromInfoTv.text = it
+        }
+        viewModel.toLiveData.observe {
+            viewBinding.toInfoTv.text = it
+        }
+        viewModel.amountLiveData.observe {
+            viewBinding.transactionAmountText.text = it.second
+            viewBinding.transactionTotalAmountTitle.text = it.first
+        }
+        viewModel.transactionFeeLiveData.observe {
+            viewBinding.transactionFeeAmountText.text = it
+        }
+        viewModel.btnTitleLiveData.observe {
+            viewBinding.nextBtn.text = it
+            viewBinding.nextBtn.showOrHide(it.isNotBlank())
+        }
+        viewModel.titleLiveData.observe {
+            viewBinding.toolbar.setTitle(it)
+        }
+        viewModel.peerIdBufferEvent.observe {
+            Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        }
+        viewModel.openBlockChainExplorerEvent.observe {
             showBrowser(it)
-        })
+        }
     }
 }

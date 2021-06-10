@@ -4,470 +4,378 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/greyBackground" >
+    android:background="@color/brand_white">
 
-    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:homeButtonIcon="@drawable/ic_close"
+        app:homeButtonVisible="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:textRight=""
+        app:titleText="@string/common_receive"
+        tools:layout_height="40dp" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="?attr/baseBorderPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        tools:background="@color/grey_300" />
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/svTransactionDetails"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/sidedButtonLayout"
+        app:layout_constraintBottom_toTopOf="@id/vTransactionDetailsDivider2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:paddingStart="@dimen/x2"
+            android:paddingEnd="@dimen/x2">
 
-            <LinearLayout
-                android:id="@+id/statusView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/transactionTotalAmountTitle"
+                style="@style/TextAppearance.Soramitsu.Display_1"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginTop="@dimen/margin_padding_content"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/margin_padding_by_side"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:layout_marginTop="@dimen/x3"
+                android:ellipsize="end"
+                android:singleLine="true"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="-1,000.1 VAL" />
 
-                <TextView
-                    android:id="@+id/transactionStatusTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:text="@string/status_title"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/transactionStatusText"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="@dimen/x1"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:includeFontPadding="false"
-                    tools:text="Pending" />
-
-                <ImageView
-                    android:id="@+id/transactionStatusIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    tools:src="@drawable/ic_pending_grey_18" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/dateTimeView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/transactionDateText"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/margin_padding_by_side"
-                android:orientation="horizontal">
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionTotalAmountTitle"
+                tools:text="10 Apr 2020, 22:36:45"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionDateTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/transaction_date"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/transactionDateText"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:gravity="end"
-                    tools:text="10 Apr 2020, 22:36:45" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/transactionStatusTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/margin_padding_content"
-                android:orientation="vertical">
+                android:layout_marginTop="@dimen/x5"
+                android:text="@string/status_title"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionDateText"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionIdTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/soramitsu_bold"
-                    android:text="@string/transaction_id"
-                    android:textColor="@color/black" />
-
-                <LinearLayout
-                    android:id="@+id/transactionIdView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/margin_padding_content_by_side"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/ethereumTransactionId"
-                        style="@style/TextAppearance.Soramitsu.Body1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginEnd="@dimen/x1_2"
-                        android:background="@drawable/ethereum_transaction_button_background"
-                        android:drawableStart="@drawable/ic_eth_16"
-                        android:drawablePadding="@dimen/x1"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:paddingStart="@dimen/margin_padding_content"
-                        android:paddingTop="@dimen/x1_2"
-                        android:paddingEnd="@dimen/margin_padding_content"
-                        android:paddingBottom="@dimen/x1_2"
-                        android:visibility="gone"
-                        android:text="@string/wallet_ethereum" />
-
-                    <TextView
-                        android:id="@+id/soranetTransactionId"
-                        style="@style/TextAppearance.Soramitsu.Body1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:background="@drawable/soranet_transaction_button_background"
-                        android:drawableStart="@drawable/ic_xor_red_16"
-                        android:drawablePadding="@dimen/x1"
-                        android:gravity="center"
-                        android:includeFontPadding="false"
-                        android:paddingStart="@dimen/margin_padding_content"
-                        android:paddingTop="@dimen/x1_2"
-                        android:paddingEnd="@dimen/margin_padding_content"
-                        android:paddingBottom="@dimen/x1_2"
-                        android:text="@string/wallet_soranet"
-                        android:textColor="@color/uikit_lightRed" />
-
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/fromView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/transactionStatusText"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/x2"
-                android:orientation="vertical">
+                app:layout_constraintBaseline_toBaselineOf="@id/transactionStatusTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="Pending" />
 
-                <TextView
-                    android:id="@+id/fromTitleTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/soramitsu_bold"
-                    android:text="@string/filter_from"
-                    android:textColor="@color/black" />
+            <ImageView
+                android:id="@+id/transactionStatusIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginEnd="@dimen/x1"
+                app:layout_constraintBottom_toBottomOf="@id/transactionStatusTitle"
+                app:layout_constraintEnd_toStartOf="@id/transactionStatusText"
+                app:layout_constraintTop_toTopOf="@id/transactionStatusTitle"
+                tools:src="@drawable/ic_pending_grey_18" />
 
-                <TextView
-                    android:id="@+id/fromInfoTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/x1"
-                    android:drawableStart="@drawable/ic_val_gold_24"
-                    android:drawableEnd="@drawable/ic_copy_red_18"
-                    android:drawablePadding="@dimen/margin_padding_list_element"
-                    android:gravity="center_vertical"
-                    android:textColor="@color/black"
-                    android:textSize="13sp"
-                    tools:text="did_sora_12312caledlawmdlw@sora" />
+            <View
+                android:id="@+id/vDivider1"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionStatusTitle" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/toView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tvTransactionHashTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/x2"
-                android:orientation="vertical">
+                android:layout_marginTop="@dimen/x4"
+                android:ellipsize="none"
+                android:singleLine="true"
+                android:text="@string/transaction_id"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionStatusTitle"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/toTitleTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/soramitsu_bold"
-                    android:text="@string/filter_to"
-                    android:textColor="@color/black" />
+            <TextView
+                android:id="@+id/tvTransactionHash"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/text_background"
+                android:drawablePadding="@dimen/x1"
+                android:ellipsize="middle"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                app:drawableEndCompat="@drawable/ic_copy_thin_16"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvTransactionHashTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_default="wrap"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toEndOf="@id/tvTransactionHashTitle"
+                app:layout_constraintWidth_default="wrap"
+                tools:text="s9d9asdassdlkdc8vqqwe8s9v7c"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/toInfoTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/x1"
-                    android:drawableStart="@drawable/ic_val_gold_24"
-                    android:drawableEnd="@drawable/ic_copy_red_18"
-                    android:drawablePadding="@dimen/margin_padding_list_element"
-                    android:gravity="center_vertical"
-                    android:textSize="13sp"
-                    android:textColor="@color/black"
-                    tools:text="did_sora_12312caledlawmdlw@sora" />
+            <View
+                android:id="@+id/vDivider3"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTransactionHashTitle" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/transactionAmount"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tvBlockHashTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/margin_padding_by_side"
-                android:orientation="horizontal">
+                android:layout_marginTop="@dimen/x4"
+                android:ellipsize="none"
+                android:singleLine="true"
+                android:text="@string/block_id"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvTransactionHashTitle"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionAmountTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/amount_title"
-                    android:textColor="@color/black" />
+            <TextView
+                android:id="@+id/tvBlockHash"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/text_background"
+                android:drawablePadding="@dimen/x1"
+                android:ellipsize="middle"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                app:drawableEndCompat="@drawable/ic_copy_thin_16"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvBlockHashTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_default="wrap"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toEndOf="@id/tvBlockHashTitle"
+                app:layout_constraintWidth_default="wrap"
+                tools:text="s9d9asdassdlkdc8vqqwe8s9v7c"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionAmountText"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/black"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    tools:text="100" />
+            <View
+                android:id="@+id/vDivider3_2"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvBlockHashTitle" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/transactionFeeAmount"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/fromTitleTv"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/margin_padding_by_side"
-                android:orientation="horizontal">
+                android:layout_marginTop="@dimen/x4"
+                android:ellipsize="none"
+                android:singleLine="true"
+                android:text="@string/common_from"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvBlockHashTitle"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionFeeAmountTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/amount_default_fee"
-                    android:textColor="@color/black" />
+            <TextView
+                android:id="@+id/fromInfoTv"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/text_background"
+                android:drawablePadding="@dimen/x1"
+                android:ellipsize="middle"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                app:drawableEndCompat="@drawable/ic_copy_thin_16"
+                app:layout_constraintBaseline_toBaselineOf="@id/fromTitleTv"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_default="wrap"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toEndOf="@id/fromTitleTv"
+                app:layout_constraintWidth_default="wrap"
+                tools:text="7sdfhksdf6sqwdhksdfsi6d7f"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionFeeAmountText"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:textColor="@color/black"
-                    tools:text="100" />
+            <View
+                android:id="@+id/vDivider4"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fromTitleTv" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/descriptionView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/toTitleTv"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:layout_marginBottom="@dimen/x2"
-                android:orientation="vertical"
-                android:visibility="visible">
+                android:layout_marginTop="@dimen/x4"
+                android:ellipsize="none"
+                android:singleLine="true"
+                android:text="@string/common_to"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fromTitleTv"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawableStart="@drawable/ic_note_grey_16"
-                    android:drawablePadding="@dimen/x1"
-                    android:fontFamily="@font/sora_bold"
-                    android:text="@string/transaction_note"
-                    android:textColor="@color/black" />
+            <TextView
+                android:id="@+id/toInfoTv"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/text_background"
+                android:drawablePadding="@dimen/x1"
+                android:ellipsize="middle"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:singleLine="true"
+                app:drawableEndCompat="@drawable/ic_copy_thin_16"
+                app:layout_constraintBaseline_toBaselineOf="@id/toTitleTv"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_default="wrap"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintStart_toEndOf="@id/toTitleTv"
+                app:layout_constraintWidth_default="wrap"
+                tools:text="did_sora_12312caledlawmdlw@sora"
+                tools:textColor="@color/grey_300" />
 
-                <TextView
-                    android:id="@+id/transactionDescriptionText"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/x1"
-                    android:textColor="@color/black"
-                    tools:text="For cofee" />
+            <View
+                android:id="@+id/vDivider5"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/toTitleTv" />
 
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:id="@+id/totalAmountView"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/transactionAmountTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:orientation="vertical">
+                android:layout_marginTop="@dimen/x4"
+                android:text="@string/common_sent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/toTitleTv" />
 
-                <View
-                    android:id="@+id/divider7"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="@color/thinBorder" />
-
-                <LinearLayout
-                    android:id="@+id/transactionTotalAmount"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/margin_padding_content"
-                    android:layout_marginBottom="@dimen/margin_padding_by_side"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/transactionTotalAmountTitle"
-                        style="@style/TextAppearance.Soramitsu.Body1"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:fontFamily="@font/soramitsu_bold"
-                        android:text="@string/transaction_total"
-                        android:textColor="@color/black" />
-
-
-                    <TextView
-                        android:id="@+id/transactionTotalAmountText"
-                        style="@style/TextAppearance.Soramitsu.Header1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/soramitsu_bold"
-                        android:textColor="@color/black"
-                        android:textSize="20sp"
-                        tools:text="100" />
-
-                </LinearLayout>
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/minerFeeAmount"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/transactionAmountText"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_padding_by_side"
-                android:layout_marginEnd="@dimen/margin_padding_by_side"
-                android:orientation="horizontal"
-                android:visibility="gone">
+                android:ellipsize="end"
+                android:gravity="end"
+                app:layout_constraintBaseline_toBaselineOf="@id/transactionAmountTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/transactionAmountTitle"
+                tools:text="100" />
 
-                <TextView
-                    android:id="@+id/minerFeeAmountTitle"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/transaction_miner_fee_title"
-                    android:textColor="@color/black" />
+            <View
+                android:id="@+id/vDivider6"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionAmountTitle" />
 
-                <TextView
-                    android:id="@+id/minerFeeAmountText"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/soramitsu_semibold"
-                    android:textColor="@color/black"
-                    tools:text="100" />
+            <TextView
+                android:id="@+id/transactionFeeAmountTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x4"
+                android:text="@string/amount_default_fee"
+                android:textColor="?attr/contentTertiary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionAmountTitle" />
 
-            </LinearLayout>
+            <TextView
+                android:id="@+id/transactionFeeAmountText"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:ellipsize="middle"
+                android:gravity="end"
+                app:layout_constraintBaseline_toBaselineOf="@id/transactionFeeAmountTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/transactionFeeAmountTitle"
+                tools:text="100" />
 
-        </LinearLayout>
+            <View
+                android:id="@+id/vDivider2"
+                android:layout_width="0dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/transactionFeeAmountTitle" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/sidedButtonLayout"
+    <View
+        android:id="@+id/vTransactionDetailsDivider2"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/greyBackground"
-        android:paddingTop="@dimen/margin_padding_content"
-        android:paddingBottom="@dimen/margin_padding_content"
+        android:layout_height="1dp"
+        android:layout_marginBottom="@dimen/x1"
+        android:background="?attr/baseBorderPrimary"
+        app:layout_constraintBottom_toTopOf="@id/nextBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/nextBtn"
+        style="@style/Widget.Soramitsu.Button.Secondary.48"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginEnd="@dimen/x1"
+        android:layout_marginBottom="@dimen/x4"
+        android:text="@string/common_send"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <TextView
-            android:id="@+id/descriptionTextIcon"
-            android:layout_width="@dimen/side_button_icon_size"
-            android:layout_height="@dimen/side_button_icon_size"
-            android:layout_marginStart="@dimen/margin_padding_content"
-            android:background="@drawable/circle_background"
-            android:gravity="center"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="AA" />
-
-        <ImageView
-            android:id="@+id/descriptionIcon"
-            android:layout_width="@dimen/side_button_icon_size"
-            android:layout_height="@dimen/side_button_icon_size"
-            android:layout_marginStart="@dimen/margin_padding_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/descriptionTv"
-            android:layout_width="104dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_padding_content"
-            android:layout_marginEnd="@dimen/margin_padding_by_side"
-            android:lineSpacingExtra="5sp"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            android:textSize="18sp"
-            android:textColor="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/nextBtn"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toEndOf="@+id/descriptionIcon"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Processing fee" />
-
-        <Button
-            android:id="@+id/nextBtn"
-            style="@style/Widget.Soramitsu.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/margin_padding_by_side"
-            android:text="@string/common_send"
-            android:textSize="14sp"
-            app:layout_constraintBottom_toBottomOf="@+id/descriptionTv"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/descriptionTv" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

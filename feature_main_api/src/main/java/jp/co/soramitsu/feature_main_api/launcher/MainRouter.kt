@@ -23,11 +23,7 @@ interface MainRouter {
 
     fun showTerms()
 
-    fun showProjectDetails(projectId: String)
-
     fun showReferendumDetails(referendumId: String)
-
-    fun showReputation()
 
     fun showPassphrase()
 
@@ -36,6 +32,8 @@ interface MainRouter {
     fun showFaq()
 
     fun showVotesHistory()
+
+    fun showReferenda()
 
     fun showValTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
 
@@ -51,5 +49,11 @@ interface MainRouter {
 
     fun currentDestinationIsUserVerification(): Boolean
 
+    fun currentDestinationIsClaimFragment(): Boolean
+
     fun showProfile()
+
+    fun showFriends()
+
+    fun showClaim()
 }

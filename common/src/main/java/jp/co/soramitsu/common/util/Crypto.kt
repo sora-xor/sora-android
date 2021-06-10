@@ -5,11 +5,9 @@
 
 package jp.co.soramitsu.common.util
 
-import java.security.Security
-
 object Crypto {
 
     init {
-        Security.insertProviderAt(org.spongycastle.jce.provider.BouncyCastleProvider(), 1)
+        // Security.insertProviderAt(org.spongycastle.jce.provider.BouncyCastleProvider(), 1)
     }
 }

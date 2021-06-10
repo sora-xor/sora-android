@@ -11,7 +11,7 @@ import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
-import junit.framework.Assert.assertEquals
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

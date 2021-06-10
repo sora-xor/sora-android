@@ -5,302 +5,369 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
-import com.google.gson.JsonSyntaxException
+import androidx.annotation.WorkerThread
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.reactivex.Completable
-import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.Single
+import jp.co.soramitsu.common.data.network.dto.AssetInfoDto
+import jp.co.soramitsu.common.data.network.dto.PhaseRecord
+import jp.co.soramitsu.common.data.network.substrate.Events
+import jp.co.soramitsu.common.data.network.substrate.Pallete
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.model.DepositTransactionLocal
 import jp.co.soramitsu.core_db.model.TransferTransactionLocal
-import jp.co.soramitsu.core_db.model.WithdrawTransactionLocal
-import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
+import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.runtime.metadata.event
+import jp.co.soramitsu.fearless_utils.runtime.metadata.module
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
-import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
-import jp.co.soramitsu.feature_wallet_api.domain.model.QrData
+import jp.co.soramitsu.feature_wallet_api.domain.model.BlockEvent
+import jp.co.soramitsu.feature_wallet_api.domain.model.BlockResponse
+import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
+import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithdrawTransaction
 import jp.co.soramitsu.feature_wallet_impl.data.mappers.AssetLocalToAssetMapper
 import jp.co.soramitsu.feature_wallet_impl.data.mappers.AssetToAssetLocalMapper
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapAccountRemoteToAccount
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapDepositTransactionLocalToTransaction
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapQrDataRecordToQrData
 import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapTransactionLocalToTransaction
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapTransactionRemoteToDepositTransactionLocal
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapTransactionRemoteToTransactionLocal
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapTransactionRemoteToWithdrawTransactionLocal
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapWithdrawTransactionLocalToTransaction
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapWithdrawTransactionLocalToWithdrawTransaction
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapWithdrawTransactionStatusToWithdrawTransactionStatusLocal
-import jp.co.soramitsu.feature_wallet_impl.data.network.TransactionFactory
-import jp.co.soramitsu.feature_wallet_impl.data.network.WalletNetworkApi
-import jp.co.soramitsu.feature_wallet_impl.data.network.model.TransactionRemote
-import jp.co.soramitsu.feature_wallet_impl.data.network.request.GetBalanceRequest
-import jp.co.soramitsu.feature_wallet_impl.data.qr.QrDataRecord
-import org.spongycastle.util.encoders.Base64
+import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.SubstrateApi
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.security.KeyPair
+import java.util.Date
 import javax.inject.Inject
+import kotlin.math.pow
 
 class WalletRepositoryImpl @Inject constructor(
-    private val api: WalletNetworkApi,
     private val datasource: WalletDatasource,
     private val db: AppDatabase,
+    private val wsConnection: SubstrateApi,
     private val serializer: Serializer,
     private val appLinksProvider: AppLinksProvider,
-    private val transactionFactory: TransactionFactory,
     private val assetHolder: AssetHolder,
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     private val assetToAssetLocalMapper: AssetToAssetLocalMapper
 ) : WalletRepository {
 
-    override fun getAssets(): Observable<List<Asset>> {
-        return db.assetDao().getAll()
-            .doOnNext {
-                if (it.isEmpty()) {
-                    db.assetDao().insert(assetHolder.getAssets().map { assetToAssetLocalMapper.map(it) })
+    private val assetsCache = mutableListOf<Asset>()
+
+    override fun saveMigrationStatus(migrationStatus: MigrationStatus): Completable {
+        return Completable.fromCallable { datasource.saveMigrationStatus(migrationStatus) }
+    }
+
+    override fun observeMigrationStatus(): Observable<MigrationStatus> {
+        return datasource.observeMigrationStatus()
+    }
+
+    override fun retrieveClaimBlockAndTxHash(): Single<Pair<String, String>> {
+        return Single.fromCallable { datasource.retrieveClaimBlockAndTxHash() }
+    }
+
+    override fun needsMigration(irohaAddress: String): Single<Boolean> {
+        return wsConnection.needsMigration(irohaAddress)
+    }
+
+    override fun unwatch(subscription: String): Completable =
+        wsConnection.unwatchExtrinsic(subscription)
+
+    override fun checkEvents(blockHash: String): Single<List<BlockEvent>> {
+        return wsConnection.checkEvents(RuntimeHolder.getRuntime(), blockHash).map { list ->
+            list.map {
+                BlockEvent(
+                    it.event.moduleIndex,
+                    it.event.eventIndex,
+                    (it.phase as? PhaseRecord.ApplyExtrinsic)?.extrinsicId?.toLong()
+                )
+            }
+        }
+    }
+
+    override fun getBlock(blockHash: String): Single<BlockResponse> {
+        return wsConnection.getBlock(blockHash)
+    }
+
+    override fun isTxSuccessful(
+        extrinsicId: Long,
+        blockHash: String,
+        txHash: String
+    ): Single<Boolean> {
+        return checkEvents(blockHash)
+            .map { events ->
+
+                if (events.isEmpty()) {
+                    FirebaseCrashlytics.getInstance()
+                        .recordException(Throwable("No success or failed evennt in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
+                }
+
+                val (moduleIndexSuccess, eventIndexSuccess) = RuntimeHolder.getRuntime().metadata.module(
+                    Pallete.SYSTEM.palleteName
+                ).event(Events.EXTRINSIC_SUCCESS.eventName).index
+                val (moduleIndexFailed, eventIndexFailed) = RuntimeHolder.getRuntime().metadata.module(
+                    Pallete.SYSTEM.palleteName
+                ).event(Events.EXTRINSIC_FAILED.eventName).index
+                val successEvent = events.find { event ->
+                    event.module == moduleIndexSuccess && event.event == eventIndexSuccess && event.number == extrinsicId
+                }
+                val failedEvent = events.find { event ->
+                    event.module == moduleIndexFailed && event.event == eventIndexFailed && event.number == extrinsicId
+                }
+
+                when {
+                    successEvent != null -> {
+                        true
+                    }
+                    failedEvent != null -> {
+                        false
+                    }
+                    else -> {
+                        FirebaseCrashlytics.getInstance()
+                            .recordException(Throwable("No success or failed evennt in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
+                        false
+                    }
+                }
+            }
+    }
+
+    override fun transfer(
+        keypair: Keypair,
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal
+    ): Single<String> {
+        return getAssets(from).flatMap { assets ->
+            val precision = requireNotNull(assets.find { it.id == assetId }).precision
+            wsConnection.transfer(
+                keypair,
+                from,
+                to,
+                assetId,
+                mapBalance(amount, precision),
+                RuntimeHolder.getRuntime()
+            )
+        }
+    }
+
+    override fun migrate(
+        irohaAddress: String,
+        irohaPublicKey: String,
+        signature: String,
+        keypair: Keypair,
+        address: String
+    ): Observable<Pair<String, ExtrinsicStatusResponse>> {
+        return wsConnection.migrate(
+            irohaAddress,
+            irohaPublicKey,
+            signature,
+            keypair,
+            RuntimeHolder.getRuntime(),
+            address
+        )
+            .map {
+                if (it.second is ExtrinsicStatusResponse.ExtrinsicStatusFinalized) {
+                    datasource.saveClaimBlockAndTxHash(
+                        (it.second as ExtrinsicStatusResponse.ExtrinsicStatusFinalized).inBlock,
+                        it.first
+                    )
+                }
+
+                it
+            }
+    }
+
+    override fun observeTransfer(
+        keypair: Keypair,
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal,
+        fee: BigDecimal
+    ): Observable<Pair<String, ExtrinsicStatusResponse>> {
+        return getAssets(from).flatMapObservable { assets ->
+            val precision = requireNotNull(assets.find { it.id == assetId }).precision
+            wsConnection.observeTransfer(
+                keypair,
+                from,
+                to,
+                assetId,
+                mapBalance(amount, precision),
+                RuntimeHolder.getRuntime()
+            )
+        }
+    }
+
+    override fun calcTransactionFee(
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal
+    ): Single<BigDecimal> {
+        return getAssets(from).flatMap { assets ->
+            val precision = requireNotNull(assets.find { it.id == assetId }).precision
+            wsConnection.calcFee(
+                from,
+                to,
+                assetId,
+                mapBalance(amount, precision),
+                RuntimeHolder.getRuntime()
+            )
+                .map { mapBalance(it, precision) }
+        }
+    }
+
+    override fun getAssets(
+        address: String,
+        forceUpdateBalances: Boolean,
+        forceUpdateAssets: Boolean
+    ): Single<List<Asset>> {
+        return if (!forceUpdateAssets && !forceUpdateBalances && assetsCache.isNotEmpty())
+            Single.just(assetsCache)
+        else db.assetDao().getAll().toSingle(emptyList())
+            .map {
+                it.map { assetLocal ->
+                    assetLocalToAssetMapper.map(assetLocal, assetHolder)
+                }
+            }
+            .map { dbAssets ->
+                if (!forceUpdateAssets && !forceUpdateBalances && dbAssets.isNotEmpty()) {
+                    assetsCache.clear()
+                    assetsCache.addAll(dbAssets)
+                    dbAssets
                 } else {
-                    Observable.just(it)
+                    val curAssets = if (forceUpdateAssets || dbAssets.isEmpty()) {
+                        fetchAssetList()
+                            .filter { dto -> assetHolder.isKnownAsset(dto.id) }
+                            .map { dto ->
+                                val dbAsset = dbAssets.find { a -> dto.id == a.id }
+                                Asset(
+                                    id = dto.id,
+                                    assetName = dto.name,
+                                    symbol = dto.symbol,
+                                    display = dbAsset?.display ?: assetHolder.isDisplay(dto.id),
+                                    hidingAllowed = assetHolder.isHiding(dto.id),
+                                    position = dbAsset?.position ?: assetHolder.position(dto.id),
+                                    roundingPrecision = assetHolder.rounding(dto.id),
+                                    precision = dto.precision,
+                                    balance = dbAsset?.balance ?: BigDecimal.ZERO,
+                                    iconShadow = assetHolder.iconShadow(dto.id),
+                                    isMintable = dto.isMintable,
+                                )
+                            }
+                    } else {
+                        dbAssets
+                    }
+                    val curBalances = if (forceUpdateAssets || forceUpdateBalances) {
+                        fetchBalances(address, curAssets.map { it.id })
+                            .mapIndexed { index, bigInteger ->
+                                curAssets[index].copy(balance = mapBalance(bigInteger, curAssets[index].precision, curAssets[index].balance))
+                            }
+                    } else {
+                        curAssets
+                    }
+                    curBalances
                 }
             }
-            .filter { it.isNotEmpty() }
-            .map { it.map { assetLocalToAssetMapper.map(it) } }
+            .onErrorReturn { listOf() }
+            .doOnSuccess {
+                assetsCache.clear()
+                assetsCache.addAll(it)
+                db.assetDao().insert(it.map { a -> assetToAssetLocalMapper.map(a) })
+            }
     }
 
-    override fun updateAssets(accountSettings: AccountSettings): Completable {
-        return getWalletBalanceRemote(accountSettings)
-            .ignoreElement()
+    @WorkerThread
+    private fun fetchAssetList(): List<AssetInfoDto> {
+        return wsConnection.fetchAssetList(RuntimeHolder.getRuntime()).blockingGet()
     }
 
-    override fun getTransactions(myAddress: String, myEthAddress: String): Observable<List<Transaction>> {
+    @WorkerThread
+    private fun fetchBalances(
+        address: String,
+        assetIdList: List<String>
+    ): List<BigInteger> {
+        return assetIdList.map {
+            wsConnection.fetchBalance(address, it).blockingGet()
+        }
+    }
+
+    private fun mapBalance(
+        bigInteger: BigInteger?,
+        precision: Int,
+        default: BigDecimal? = null
+    ): BigDecimal =
+        bigInteger?.toBigDecimal()?.divide(BigDecimal(10.0.pow(precision)))
+            ?: default ?: BigDecimal.ZERO
+
+    private fun mapBalance(balance: BigDecimal, precision: Int): BigInteger =
+        balance.multiply(BigDecimal(10.0.pow(precision))).toBigInteger()
+
+    override fun updateTransactionSuccess(hash: String, success: Boolean) {
+        db.transactionDao().updateSuccess(hash, success)
+    }
+
+    override fun saveTransaction(
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal,
+        status: ExtrinsicStatusResponse,
+        hash: String,
+        fee: BigDecimal,
+        eventSuccess: Boolean?
+    ): Long {
+        return db.transactionDao().insert(
+            TransferTransactionLocal(
+                hash,
+                status.let {
+                    when (it) {
+                        is ExtrinsicStatusResponse.ExtrinsicStatusPending -> TransferTransactionLocal.Status.PENDING
+                        is ExtrinsicStatusResponse.ExtrinsicStatusFinalized -> TransferTransactionLocal.Status.COMMITTED
+                    }
+                },
+                assetId,
+                from, amount, Date().time, to,
+                TransferTransactionLocal.Type.OUTGOING, fee,
+                (status as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
+                eventSuccess,
+            )
+        )
+    }
+
+    override fun getTransactions(
+        myAddress: String,
+        myEthAddress: String
+    ): Observable<List<Transaction>> {
         return db.transactionDao().getTransactions()
-            .map {
-                val withdrawTxHashes = it.map { it.txHash }
-                val withdrawTxs = db.withdrawTransactionDao().getTransactionsByIntentHashes(withdrawTxHashes)
-
-                val depositTxHashes = it.map { "0x${it.details}" }
-                val depositTxs = db.depositTransactionDao().getTransactionsByDepositHashes(depositTxHashes)
-                Triple(it, withdrawTxs, depositTxs)
-            }
-            .map { pair ->
-                pair.first.map { transferTx ->
-                    when (transferTx.type) {
-                        TransferTransactionLocal.Type.WITHDRAW -> {
-                            val tx = pair.second.first { it.intentTxHash == transferTx.txHash }
-                            mapWithdrawTransactionLocalToTransaction(tx, myAddress, myEthAddress)
-                        }
-
-                        TransferTransactionLocal.Type.DEPOSIT -> {
-                            val tx = pair.third.first { it.depositTxHash == "0x${transferTx.details}" }
-                            mapDepositTransactionLocalToTransaction(tx, myAddress, myEthAddress)
-                        }
-
-                        else -> mapTransactionLocalToTransaction(transferTx)
-                    }
-                }
-            }
-            .map { it.sortedByDescending { it.timestamp } }
-    }
-
-    override fun fetchRemoteTransactions(pageSize: Int, offset: Int, accountId: String): Single<Int> {
-        return api.getTransactions(offset, pageSize)
-            .map {
-                val withdrawTxs = mutableListOf<WithdrawTransactionLocal>()
-                val depositTxs = mutableListOf<DepositTransactionLocal>()
-                val transferTxs = mutableListOf<TransferTransactionLocal>()
-
-                it.transactions.forEach {
-                    transferTxs.add(mapTransactionRemoteToTransactionLocal(it, accountId))
-                    if (it.type == TransactionRemote.Type.WITHDRAW) {
-                        withdrawTxs.add(mapTransactionRemoteToWithdrawTransactionLocal(it))
-                    }
-
-                    if (it.type == TransactionRemote.Type.DEPOSIT) {
-                        db.transactionDao().updateTxHash("0x${it.details}", it.transactionId)
-                        depositTxs.add(mapTransactionRemoteToDepositTransactionLocal(it))
-                    }
-                }
-
-                Triple(withdrawTxs, depositTxs, transferTxs)
-            }
-            .map {
-                db.runInTransaction {
-                    db.withdrawTransactionDao().insertWithoutReplacing(it.first)
-                    db.depositTransactionDao().insertWithoutReplacing(it.second)
-                    db.transactionDao().insert(it.third)
-                }
-                it.first.size
+            .map { list ->
+                list.map { mapTransactionLocalToTransaction(it) }
             }
     }
 
-    override fun transfer(amount: String, myAccountId: String, dstUserId: String, description: String, fee: String, keyPair: KeyPair): Single<String> {
-        return transactionFactory.buildTransferWithFeeTransaction(amount, myAccountId, dstUserId, description, fee, keyPair)
-            .flatMap { pair ->
-                api.transferVal(pair.first).map { pair }
-            }.flatMap {
-                Single.just(it.second)
-            }
-    }
-
-    override fun findAccount(search: String): Single<List<Account>> {
-        return api.findUser(search)
-            .map { it.results.map { mapAccountRemoteToAccount(it) } }
-    }
-
-    override fun getContacts(updateCached: Boolean): Single<List<Account>> {
-        return if (updateCached) {
-            getRemoteContacts()
-        } else {
-            val localContacts = datasource.retrieveContacts()
-            return if (localContacts == null) getRemoteContacts() else Single.just(localContacts)
-        }
-    }
-
-    private fun getRemoteContacts(): Single<List<Account>> {
-        return api.getContacts()
-            .map { it.results.map { mapAccountRemoteToAccount(it) } }
-            .doOnSuccess { datasource.saveContacts(it) }
-    }
-
-    override fun getBalance(assetId: String): Observable<AssetBalance> {
-        return db.assetDao().getAsset(assetId)
-            .filter { it.balance != null }
-            .map { AssetBalance(it.id, it.balance!!) }
-    }
-
-    private fun getWalletBalanceRemote(accountSettings: AccountSettings): Maybe<List<AssetBalance>> {
-        return accountSettings.getKeyPair()
-            .flatMap { keyPair ->
-                accountSettings.getAccountId()
-                    .flatMap { accountId ->
-                        buildGetBalanceRequest(accountId, keyPair)
-                            .flatMap { api.getBalance(it) }
-                            .map {
-                                val asset = AssetHolder.SORA_VAL
-                                it.assets.map { AssetBalance(asset.id, it.balance) }
-                            }
-                            .doOnSuccess {
-                                db.runInTransaction {
-                                    it.forEach { db.assetDao().updateBalance(it.assetId, it.balance) }
-                                }
-                            }
-                    }
-            }
-            .toMaybe()
-    }
-
-    private fun buildGetBalanceRequest(accountId: String, keyPair: KeyPair): Single<GetBalanceRequest> {
-        return transactionFactory.buildGetAccountAssetsQuery(accountId, keyPair)
-            .map { GetBalanceRequest(arrayOf(AssetHolder.SORA_VAL.id), Base64.toBase64String(it.toByteArray())) }
-    }
-
-    override fun getQrAmountString(accountId: String, amount: String): Single<String> {
-        return Single.just(serializer.serialize(QrDataRecord(accountId, if (amount.isEmpty()) null else amount)))
-    }
-
-    override fun getQrDataFromString(content: String): Single<QrData> {
-        return Single.create { emitter ->
-            try {
-                val qrDataRecord = serializer.deserialize(content, QrDataRecord::class.java)
-                emitter.onSuccess(mapQrDataRecordToQrData(qrDataRecord))
-            } catch (e: JsonSyntaxException) {
-                emitter.onError(QrException.decodeError())
-            }
-        }
-    }
-
-    override fun getTransferMeta(): Observable<TransferMeta> {
-        return datasource.observeTransferMeta()
-    }
-
-    override fun updateTransferMeta(): Completable {
-        return api.getTransferMeta(AssetHolder.SORA_VAL.id)
-            .map { TransferMeta(it.feeRate, it.feeType) }
-            .doOnSuccess { datasource.saveTransferMeta(it) }
-            .ignoreElement()
-    }
-
-    override fun getWithdrawMeta(): Observable<TransferMeta> {
-        return datasource.observeWithdrawMeta()
-    }
-
-    override fun updateWithdrawMeta(): Completable {
-        return api.getWithdrawalMeta(AssetHolder.SORA_VAL.id, "ETH")
-            .map { TransferMeta(it.feeRate.toDouble(), it.feeType) }
-            .doOnSuccess { datasource.saveWithdrawMeta(it) }
-            .ignoreElement()
-    }
-
-    override fun getBlockChainExplorerUrl(transactionHash: String): Single<String> {
-        return Single.fromCallable {
-            appLinksProvider.blockChainExplorerUrl + transactionHash
-        }
-    }
-
-    override fun getTransaction(operationId: String): Single<Transaction> {
-        return Single.fromCallable {
-            mapTransactionLocalToTransaction(db.transactionDao().getTransactionByHash(operationId))
-        }
-    }
-
-    override fun getWithdrawTransaction(operationId: String): WithdrawTransaction? {
-        return db.withdrawTransactionDao().getTransactionByIntentHash(operationId)?.let {
-            mapWithdrawTransactionLocalToWithdrawTransaction(it)
-        }
-    }
-
-    override fun saveWithdrawTransaction(operationId: String, amount: Double, peerId: String, peerName: String, timestamp: Long, details: String, fee: Double) {
-        val tx = WithdrawTransactionLocal(operationId, "", "", WithdrawTransactionLocal.Status.INTENT_PENDING,
-            "", details, amount.toBigDecimal(), BigDecimal.ZERO, timestamp, details, "", "", fee.toBigDecimal(), BigDecimal.ZERO, BigInteger.ZERO, BigInteger.ZERO)
-        db.withdrawTransactionDao().insert(tx)
-    }
-
-    override fun updateWithdrawTransactionStatus(operationId: String, status: WithdrawTransaction.Status): Completable {
-        return Completable.fromAction {
-            db.withdrawTransactionDao().updateStatus(operationId, mapWithdrawTransactionStatusToWithdrawTransactionStatusLocal(status))
-
-            if (status == WithdrawTransaction.Status.CONFIRM_COMPLETED) {
-                db.transactionDao().updateStatus(operationId, TransferTransactionLocal.Status.COMMITTED)
-            } else if (status == WithdrawTransaction.Status.CONFIRM_FAILED || status == WithdrawTransaction.Status.INTENT_FAILED || status == WithdrawTransaction.Status.TRANSFER_FAILED) {
-                db.transactionDao().updateStatus(operationId, TransferTransactionLocal.Status.REJECTED)
-            }
-        }
-    }
-
-    override fun updateWithdrawTransactionConfirmHash(operationId: String, confirmTxHash: String): Completable {
-        return Completable.fromAction {
-            db.withdrawTransactionDao().updateConfirmTxHash(operationId, confirmTxHash)
-        }
-    }
-
-    override fun finishDepositTransaction(operationId: String, myAccountId: String, keyPair: KeyPair): Completable {
-        return db.depositTransactionDao().getTransaction(operationId)
-            .flatMap { transactionFactory.buildTransferWithFeeTransaction(it.amount.toString(), myAccountId, it.peerId!!, it.details, it.transferFee.toString(), keyPair) }
-            .flatMap { pair ->
-                api.transferVal(pair.first).map { pair }
-            }
-            .map { db.depositTransactionDao().updateStatus(operationId, DepositTransactionLocal.Status.TRANSFER_COMPLETED) }
-            .ignoreElement()
-    }
+    override fun getContacts(query: String): Single<Set<String>> =
+        db.transactionDao().getContacts(query).map { it.toSet() }
 
     override fun hideAssets(assetIds: List<String>): Completable {
         return Completable.fromAction {
             db.assetDao().hideAssets(assetIds)
+            val newList = assetsCache.map {
+                if (it.id in assetIds) it.copy(display = false) else it
+            }
+            assetsCache.clear()
+            assetsCache.addAll(newList)
         }
     }
 
     override fun displayAssets(assetIds: List<String>): Completable {
         return Completable.fromAction {
             db.assetDao().displayAssets(assetIds)
+            val newList = assetsCache.map {
+                if (it.id in assetIds) it.copy(display = true) else it
+            }
+            assetsCache.clear()
+            assetsCache.addAll(newList)
         }
     }
 

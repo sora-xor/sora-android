@@ -6,65 +6,60 @@
 package jp.co.soramitsu.feature_main_impl.presentation.passphrase
 
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ShareUtil
+import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
+import jp.co.soramitsu.feature_main_impl.databinding.FragmentMyMnemonicBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import kotlinx.android.synthetic.main.fragment_my_mnemonic.btnShare
-import kotlinx.android.synthetic.main.fragment_my_mnemonic.passphraseTv
-import kotlinx.android.synthetic.main.fragment_my_mnemonic.preloaderView
-import kotlinx.android.synthetic.main.fragment_my_mnemonic.toolbar
 import javax.inject.Inject
 
-class PassphraseFragment : BaseFragment<PassphraseViewModel>() {
+class PassphraseFragment : BaseFragment<PassphraseViewModel>(R.layout.fragment_my_mnemonic) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var screenshotBlockHelper: ScreenshotBlockHelper
+    private val binding by viewBinding(FragmentMyMnemonicBinding::bind)
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_my_mnemonic, container, false)
-    }
-
-    override fun initViews() {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        toolbar.setHomeButtonListener { activity!!.onBackPressed() }
+        binding.toolbar.setHomeButtonListener { requireActivity().onBackPressed() }
 
-        btnShare.setOnClickListener(
+        binding.btnShare.setOnClickListener(
             DebounceClickListener(debounceClickHandler) {
-                ShareUtil.openShareDialog((activity as AppCompatActivity?)!!, getString(R.string.common_passphrase_save_mnemonic_title), passphraseTv.text.toString())
+                ShareUtil.openShareDialog(
+                    (activity as AppCompatActivity?)!!,
+                    getString(R.string.common_passphrase_save_mnemonic_title),
+                    binding.passphraseTv.text.toString()
+                )
             }
         )
 
-        screenshotBlockHelper = ScreenshotBlockHelper(activity!!)
-    }
+        screenshotBlockHelper = ScreenshotBlockHelper(requireActivity())
 
-    override fun subscribe(viewModel: PassphraseViewModel) {
-        observe(viewModel.passphraseLiveData, Observer {
-            if (it.isNotEmpty()) passphraseTv.text = it
-        })
-
-        observe(viewModel.getPreloadVisibility(), Observer {
-            if (it) preloaderView.visibility = View.VISIBLE else preloaderView.visibility = View.GONE
-        })
-
+        viewModel.passphraseLiveData.observe {
+            if (it.isNotEmpty()) binding.passphraseTv.text = it
+        }
+        viewModel.getPreloadVisibility().observe {
+            binding.preloaderView.showOrGone(it)
+        }
         viewModel.getPassphrase()
     }
 
     override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(context!!, MainFeatureApi::class.java)
+        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
             .passphraseComponentBuilder()
             .withFragment(this)
             .build()

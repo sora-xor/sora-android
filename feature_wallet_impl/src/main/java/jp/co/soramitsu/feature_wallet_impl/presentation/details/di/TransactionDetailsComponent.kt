@@ -36,22 +36,16 @@ interface TransactionDetailsComponent {
         fun withPeerId(@Named("peerId") peerId: String): Builder
 
         @BindsInstance
-        fun withPeerFullName(@Named("peerFullName") peerFullName: String): Builder
-
-        @BindsInstance
         fun withSoranetTransactionId(@Named("soranetTransactionId") transactionId: String): Builder
 
         @BindsInstance
-        fun withEthTransactionId(@Named("ethTransactionId") transactionId: String): Builder
-
-        @BindsInstance
-        fun withSecondEthTransactionId(@Named("secondEthTransactionId") transactionId: String): Builder
+        fun withSoranetBlockId(@Named("soranetBlockId") blockId: String): Builder
 
         @BindsInstance
         fun withStatus(@Named("status") status: Transaction.Status): Builder
 
         @BindsInstance
-        fun withDetailedStatus(@Named("detailedStatus") status: Transaction.DetailedStatus): Builder
+        fun withSuccess(@Named("success") success: Boolean?): Builder
 
         @BindsInstance
         fun withAssetId(@Named("assetId") assetId: String): Builder
@@ -70,12 +64,6 @@ interface TransactionDetailsComponent {
 
         @BindsInstance
         fun withTransactionFee(@Named("transactionFee") fee: BigDecimal): Builder
-
-        @BindsInstance
-        fun withMinerFee(@Named("minerFee") fee: BigDecimal): Builder
-
-        @BindsInstance
-        fun withDescription(@Named("description") description: String): Builder
 
         @BindsInstance
         fun withTransferType(@Named("transferType") transferType: TransferType): Builder

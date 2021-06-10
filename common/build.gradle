@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'kotlin-android-extensions'
 apply from: '../tests.gradle'
 
 android {
@@ -10,10 +9,13 @@ android {
     defaultConfig {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
-        versionCode appVersionCode
-        versionName appVersionName
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField 'String', 'WEBSITE', "\"https://sora.org\""
+        buildConfigField 'String', 'SOURCE_LINK', "\"https://github.com/sora-xor/Sora-Android\""
+        buildConfigField 'String', 'TELEGRAM_LINK', "\"https://t.me/sora_xor\""
+        buildConfigField 'String', 'EMAIL', "\"sora@soramitsu.co.jp\""
     }
 
     buildTypes {
@@ -23,46 +25,59 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
     flavorDimensions "default"
 
     productFlavors {
         develop {
             buildConfigField "String", "HOST_URL", "\"https://s1.dev.sora.soramitsu.co.jp\""
-            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.dev.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/dev/join/\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/dev/join/\""
-            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.dev.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-1.s1.dev.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "GENESIS_HASH", "\"bf7f611213e15c54023853eed206508be11ce69d8d94937157e44c7b7564714a\""
+            buildConfigField "String", "TYPES_FILE_PATH", "\"dev\""
             dimension 'default'
         }
 
         tst {
             buildConfigField "String", "HOST_URL", "\"https://s1.tst.sora.soramitsu.co.jp\""
-            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.tst.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
-            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/tst/join/\""
-            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.tst.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/stg/join/\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/stg/join/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.stage.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "GENESIS_HASH", "\"cc145a1f96972181accc1785b062ab8c2773ae7c02846ad26d35af9a27571242\""
+            buildConfigField "String", "TYPES_FILE_PATH", "\"stage\""
             dimension 'default'
         }
 
         staging {
             buildConfigField "String", "HOST_URL", "\"https://s4.stg1.sora.soramitsu.co.jp\""
-            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.stg1.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora.stage\""
-            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/stg/join/\""
-            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s4.stg1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/tst/join/\""
+            buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/tst/join/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-1.s1.tst.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "GENESIS_HASH", "\"6f1056d58e73f16a5237e96afab618e9623652fa1cef3e67b0111bd6fd6790a7\""
+            buildConfigField "String", "TYPES_FILE_PATH", "\"test\""
             dimension 'default'
         }
 
         production {
             buildConfigField "String", "HOST_URL", "\"https://s1.sora.soramitsu.co.jp\""
-            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.soranet.soramitsu.co.jp\""
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://play.google.com/store/apps/details?id=jp.co.soramitsu.sora\""
+            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/join/\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
-            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "GENESIS_HASH", "\"7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5\""
+            buildConfigField "String", "TYPES_FILE_PATH", "\"prod\""
             dimension 'default'
         }
     }
@@ -78,20 +93,29 @@ dependencies {
 
     implementation kotlinDep
 
+    implementation ('com.kcthota:emoji4j:6.0') {
+        exclude group: 'org.hamcrest', module: 'hamcrest-all'
+    }
+
+    implementation activityKtxDep
+    implementation coreKtxDep
     implementation androidDep
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
 
-    implementation irohaDep
-
-    implementation soraDep
+    //implementation soraDep
     implementation novaCryptoDep
+    implementation fearlessLibDep
+    implementation webSocketLibDep
+    implementation ed25519Dep
 
     implementation lifecycleDep
     kapt lifecycleKapt
 
     implementation loggerDep
+    implementation svgDep
+    implementation jdenticonDep
 
     implementation shimmerDep
 
@@ -103,7 +127,10 @@ dependencies {
 
     implementation retrofitDep
     implementation gsonConvertedDep
+    implementation scalarsConverterDep
     implementation rxCallAdapterDep
+
+    implementation platform(firebaseBomDep)
 
     implementation(crashlyticsDep) {
         transitive = true

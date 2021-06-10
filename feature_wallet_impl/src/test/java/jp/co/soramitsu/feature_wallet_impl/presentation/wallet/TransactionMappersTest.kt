@@ -6,11 +6,11 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
@@ -29,29 +29,39 @@ import java.util.Date
 @RunWith(MockitoJUnitRunner::class)
 class TransactionMappersTest {
 
-    @Mock private lateinit var resourceManager: ResourceManager
-    @Mock private lateinit var numbersFormatter: NumbersFormatter
-    @Mock private lateinit var dateTimeFormatter: DateTimeFormatter
+    @Mock
+    private lateinit var resourceManager: ResourceManager
+
+    @Mock
+    private lateinit var numbersFormatter: NumbersFormatter
+
+    @Mock
+    private lateinit var dateTimeFormatter: DateTimeFormatter
+
+    @Mock
+    private lateinit var assetHolder: AssetHolder
 
     private lateinit var transactionMappers: TransactionMappers
 
-    private val transactions = mutableListOf(Transaction(
-        "",
-        "",
-        "transactionId",
-        Transaction.Status.COMMITTED,
-        Transaction.DetailedStatus.TRANSFER_COMPLETED,
-        "assetId",
-        "myAddress",
-        "details",
-        "peerName lastname",
-        BigDecimal.ONE,
-        1000,
-        "peerId",
-        "reason",
-        Transaction.Type.INCOMING,
-        BigDecimal.ZERO,
-        BigDecimal(0.5))
+    private val transactions = mutableListOf(
+        Transaction(
+            "",
+            "",
+            "transactionId",
+            Transaction.Status.COMMITTED,
+            Transaction.DetailedStatus.TRANSFER_COMPLETED,
+            "assetId",
+            "myAddress",
+            "details",
+            "peerName lastname",
+            BigDecimal.ONE,
+            1000000,
+            "peerId",
+            "reason",
+            Transaction.Type.INCOMING,
+            BigDecimal.ZERO,
+            BigDecimal(0.5)
+        )
     )
 
     private val transactionsWithHeaders = mutableListOf(
@@ -59,28 +69,44 @@ class TransactionMappersTest {
         SoraTransaction(
             "transactionId",
             true,
-            R.drawable.ic_val_gold_30,
-            "PL",
+            0,
             "peerName lastname",
-            "details",
+            "peerId",
             "01 Jan 1970 00:00",
-            "10.12 VAL"
+            "10.12 VAL",
+            "10.12",
+            false,
+            null
         )
     )
 
-    @Before fun setup() {
-        transactionMappers = TransactionMappers(resourceManager, numbersFormatter, dateTimeFormatter)
+    @Before
+    fun setup() {
+        transactionMappers =
+            TransactionMappers(resourceManager, numbersFormatter, dateTimeFormatter, assetHolder)
     }
 
-    @Test fun `map transactions to SoraTransactions with headers`() {
-        given(resourceManager.getString(R.string.common_today)).willReturn("today")
-        given(resourceManager.getString(R.string.common_yesterday)).willReturn("yesterday")
-        given(resourceManager.getString(R.string.val_token)).willReturn("VAL")
+    @Test
+    fun `map transactions to SoraTransactions with headers`() {
         given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("10.12")
-        given(dateTimeFormatter.formatDate(Date(transactions.first().timestampInMillis), DateTimeFormatter.DD_MMM_YYYY_HH_MM_SS)).willReturn("01 Jan 1970 00:00")
-        given(dateTimeFormatter.dateToDayWithoutCurrentYear(Date(transactions.first().timestampInMillis), "today", "yesterday")).willReturn("today")
+        given(
+            dateTimeFormatter.formatDate(
+                Date(transactions.first().timestamp),
+                DateTimeFormatter.MMMM_YYYY
+            )
+        ).willReturn("today")
+        given(
+            dateTimeFormatter.formatDateTime(
+                Date(transactions.first().timestamp),
+            )
+        ).willReturn("01 Jan 1970 00:00")
 
-        val result = transactionMappers.mapTransactionToSoraTransactionWithHeaders(transactions, "myAddress", "")
+        val result = transactionMappers.mapTransactionToSoraTransactionWithHeaders(
+            transactions,
+            listOf(Asset("assetId", "Validator Token", "VAL", true, false, 1, 4, 18, BigDecimal.ZERO)),
+            "",
+            ""
+        )
 
         assertEquals(transactionsWithHeaders, result)
     }

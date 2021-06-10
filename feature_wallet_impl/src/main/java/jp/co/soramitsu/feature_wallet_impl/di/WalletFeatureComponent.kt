@@ -9,13 +9,15 @@ import dagger.BindsInstance
 import dagger.Component
 import jp.co.soramitsu.common.data.network.NetworkApi
 import jp.co.soramitsu.common.di.api.CommonApi
-import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.core_db.di.DbApi
+import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.AccountSettings
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.di.AssetSettingsComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.di.AssetListComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.claim.di.ClaimComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.claim.di.ClaimWorkerComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.di.TransactionConfirmationComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.di.ContactsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.di.TransactionDetailsComponent
@@ -37,9 +39,15 @@ interface WalletFeatureComponent : WalletFeatureApi {
 
     fun receiveAmountComponentBuilder(): ReceiveComponent.Builder
 
+    fun assetListComponentBuilder(): AssetListComponent.Builder
+
     fun transactionDetailsComponentBuilder(): TransactionDetailsComponent.Builder
 
     fun transactionConfirmationComponentBuilder(): TransactionConfirmationComponent.Builder
+
+    fun claimComponentBuilder(): ClaimComponent.Builder
+
+    fun claimWorkerComponent(): ClaimWorkerComponent.Builder
 
     fun transferAmountComponentBuilder(): TransferAmountComponent.Builder
 
@@ -57,18 +65,15 @@ interface WalletFeatureComponent : WalletFeatureApi {
         @BindsInstance
         fun router(walletRouter: WalletRouter): Builder
 
-        @BindsInstance
-        fun withAccountSettings(accountSettings: AccountSettings): Builder
-
         fun withDependencies(deps: WalletFeatureDependencies): Builder
     }
 
     @Component(
         dependencies = [
+            AccountFeatureApi::class,
             CommonApi::class,
             NetworkApi::class,
             DbApi::class,
-            DidFeatureApi::class,
             EthereumFeatureApi::class
         ]
     )

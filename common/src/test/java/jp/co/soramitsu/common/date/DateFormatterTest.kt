@@ -5,12 +5,15 @@
 
 package jp.co.soramitsu.common.date
 
+import android.content.Context
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
-import junit.framework.Assert.assertEquals
+import jp.co.soramitsu.test_shared.eqNonNull
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
@@ -25,12 +28,13 @@ class DateTimeFormatterTest {
     private val date = Date(0)
 
     @Mock private lateinit var  resourceManager: ResourceManager
+    @Mock private lateinit var  context: Context
 
     @Before
     fun setup() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 
-        dateTimeFormatter = DateTimeFormatter(Locale.ENGLISH, resourceManager)
+        dateTimeFormatter = DateTimeFormatter(Locale.ENGLISH, resourceManager, context)
     }
 
     @Test
@@ -132,7 +136,7 @@ class DateTimeFormatterTest {
 
     @Test
     fun `format Time From Seconds called`() {
-        given(resourceManager.getString(R.string.common_hour)).willReturn("hour")
+        given(resourceManager.getQuantityString(eqNonNull(R.plurals.common_hour), anyInt())).willReturn("hour")
         given(resourceManager.getString(R.string.common_min)).willReturn("min")
         given(resourceManager.getString(R.string.common_sec)).willReturn("sec")
         val seconds = 7400.toLong()

@@ -10,48 +10,45 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
 import android.text.TextWatcher
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowManager.LayoutParams
 import android.view.inputmethod.InputMethodManager
-import androidx.lifecycle.Observer
+import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ext.disable
-import jp.co.soramitsu.common.util.ext.enable
+import jp.co.soramitsu.common.util.ext.enableIf
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
+import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentRecoveryBinding
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
-import kotlinx.android.synthetic.main.fragment_recovery.mnemonic_input
-import kotlinx.android.synthetic.main.fragment_recovery.nextBtn
-import kotlinx.android.synthetic.main.fragment_recovery.toolbar
 import javax.inject.Inject
 
-class RecoveryFragment : BaseFragment<RecoveryViewModel>() {
+class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recovery) {
 
-    @Inject lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var progressDialog: SoraProgressDialog
+    private val viewBinding by viewBinding(FragmentRecoveryBinding::bind)
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_recovery, container, false)
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        progressDialog = SoraProgressDialog(requireContext())
 
-    override fun initViews() {
-        progressDialog = SoraProgressDialog(activity!!)
+        viewBinding.toolbar.setHomeButtonListener { viewModel.backButtonClick() }
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.showSoftInput(viewBinding.mnemonicInput, 0)
 
-        toolbar.setHomeButtonListener { viewModel.backButtonClick() }
-        val imm = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(mnemonic_input, 0)
-
-        mnemonic_input.setOnEditorActionListener { _, _, _ ->
-            val imm = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(mnemonic_input.windowToken, 0)
+        viewBinding.mnemonicInput.setOnEditorActionListener { _, _, _ ->
+            val imm =
+                requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(viewBinding.mnemonicInput.windowToken, 0)
             true
         }
 
@@ -62,42 +59,45 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.onPassphraseChanged(mnemonic_input.text.toString())
+                viewModel.onInputChanged(
+                    viewBinding.mnemonicInput.text.toString(),
+                )
             }
         }
 
-        mnemonic_input.addTextChangedListener(textWatcher)
+        viewBinding.mnemonicInput.addTextChangedListener(textWatcher)
+        viewBinding.accountNameEt.addTextChangedListener(textWatcher)
 
-        nextBtn.disable()
+        viewBinding.nextBtn.disable()
+        viewBinding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.btnNextClick(
+                viewBinding.mnemonicInput.text.toString(),
+                viewBinding.accountNameEt.text.toString()
+            )
+        }
+        initListeners()
     }
 
-    override fun subscribe(viewModel: RecoveryViewModel) {
-        nextBtn.setOnClickListener(DebounceClickListener(debounceClickHandler) {
-            viewModel.btnNextClick(mnemonic_input.text.toString())
-        })
-
-        observe(viewModel.getProgressVisibility(), Observer {
+    private fun initListeners() {
+        viewModel.getProgressVisibility().observe {
             if (it) progressDialog.show() else progressDialog.dismiss()
-        })
-
-        observe(viewModel.mnemonicInputLengthLiveData, Observer {
-            mnemonic_input.filters = arrayOf(
+        }
+        viewModel.mnemonicInputLengthLiveData.observe {
+            viewBinding.mnemonicInput.filters = arrayOf(
                 InputFilter.LengthFilter(it),
                 InputFilter { source, _, _, _, _, _ -> source.toString().toLowerCase() }
             )
-        })
-
-        observe(viewModel.nextButtonEnabledLiveData, Observer {
-            if (it) {
-                nextBtn.enable()
-            } else {
-                nextBtn.disable()
-            }
-        })
+        }
+        viewModel.nextButtonEnabledLiveData.observe {
+            viewBinding.nextBtn.enableIf(it)
+        }
     }
 
     override fun inject() {
-        FeatureUtils.getFeature<OnboardingFeatureComponent>(context!!, OnboardingFeatureApi::class.java)
+        FeatureUtils.getFeature<OnboardingFeatureComponent>(
+            requireContext(),
+            OnboardingFeatureApi::class.java
+        )
             .recoveryComponentBuilder()
             .withFragment(this)
             .withRouter(activity as OnboardingRouter)
@@ -106,7 +106,7 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>() {
     }
 
     override fun onResume() {
-        activity!!.window.setSoftInputMode(LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        requireActivity().window.setSoftInputMode(LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         super.onResume()
     }
 }

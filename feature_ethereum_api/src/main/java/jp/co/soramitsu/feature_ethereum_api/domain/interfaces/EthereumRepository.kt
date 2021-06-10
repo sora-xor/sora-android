@@ -19,8 +19,6 @@ interface EthereumRepository {
 
     fun getValTokenAddress(ethCredentials: EthereumCredentials): Single<String>
 
-    fun registerEthAccount(accountId: String, serializedValue: String, keyPair: KeyPair): Completable
-
     fun getSerializedProof(ethCredentials: EthereumCredentials): Single<String>
 
     fun getEthCredentials(mnemonic: String): Single<EthereumCredentials>
@@ -63,15 +61,7 @@ interface EthereumRepository {
 
     fun getActualEthRegisterState(): Single<EthRegisterState.State>
 
-    fun updateTransactionStatuses(ethCredentials: EthereumCredentials, accountId: String, tokenAddress: String): Completable
-
-    fun processLastCombinedWithdrawTransaction(ethCredentials: EthereumCredentials, tokenAddress: String): Completable
-
-    fun processLastCombinedDepositTransaction(first: EthereumCredentials): Completable
-
     fun isBridgeEnabled(ethCredentials: EthereumCredentials): Single<Boolean>
 
     fun calculateValErc20CombinedFee(): Single<BigDecimal>
-
-    fun retryWithdraw(ethCredentials: EthereumCredentials, soranetHash: String, accountId: String, tokenAddress: String, keyPair: KeyPair): Completable
 }

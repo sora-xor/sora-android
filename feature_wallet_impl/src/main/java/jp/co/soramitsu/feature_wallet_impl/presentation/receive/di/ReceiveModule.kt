@@ -12,11 +12,14 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
+import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveViewModel
 
@@ -30,8 +33,16 @@ class ReceiveModule {
     @Provides
     @IntoMap
     @ViewModelKey(ReceiveViewModel::class)
-    fun provideViewModel(interactor: WalletInteractor, walletRouter: WalletRouter, resourceManager: ResourceManager, qrCodeGenerator: QrCodeGenerator): ViewModel {
-        return ReceiveViewModel(interactor, walletRouter, resourceManager, qrCodeGenerator)
+    fun provideViewModel(
+        interactor: WalletInteractor,
+        walletRouter: WalletRouter,
+        resourceManager: ResourceManager,
+        qrCodeGenerator: QrCodeGenerator,
+        model: ReceiveAssetModel,
+        clipboardManager: ClipboardManager,
+        avatarGenerator: AccountAvatarGenerator,
+    ): ViewModel {
+        return ReceiveViewModel(interactor, walletRouter, resourceManager, qrCodeGenerator, model, clipboardManager, avatarGenerator)
     }
 
     @Provides

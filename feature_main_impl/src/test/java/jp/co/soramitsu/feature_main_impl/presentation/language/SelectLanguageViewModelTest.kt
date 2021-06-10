@@ -14,6 +14,7 @@ import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.language.model.LanguageItem
 import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -29,12 +30,19 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class SelectLanguageViewModelTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule @JvmField val schedulersRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
+    @Rule
+    @JvmField
+    val schedulersRule = RxSchedulersRule()
 
-    @Mock private lateinit var router: MainRouter
-    @Mock private lateinit var interactor: MainInteractor
-    @Mock private lateinit var resourceManager: ResourceManager
+    @Mock
+    private lateinit var router: MainRouter
+    @Mock
+    private lateinit var interactor: MainInteractor
+    @Mock
+    private lateinit var resourceManager: ResourceManager
 
     private lateinit var selectLanguageViewModel: SelectLanguageViewModel
     private val languages = mutableListOf(
@@ -44,7 +52,8 @@ class SelectLanguageViewModelTest {
         LanguageItem("ru", "Русский", "Русский", true)
     )
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         given(interactor.getAvailableLanguagesWithSelected())
             .willReturn(Single.just(Pair(languages, languages.first().iso)))
         given(resourceManager.getString(anyInt())).willReturn("Русский")
@@ -52,23 +61,23 @@ class SelectLanguageViewModelTest {
         selectLanguageViewModel = SelectLanguageViewModel(interactor, router, resourceManager)
     }
 
-    @Test fun `init successful`() {
+    @Test
+    fun `init successful`() {
         assertEquals(languageItems, selectLanguageViewModel.languagesLiveData.value)
     }
 
-    @Test fun `language selected`() {
+    @Test
+    fun `language selected`() {
         given(interactor.changeLanguage(languages.first().iso)).willReturn(Single.just(languages.first().iso))
 
         selectLanguageViewModel.languageSelected(languageItems.first())
 
-        selectLanguageViewModel.languageChangedLiveData.observeForever {
-            assertEquals("ru", it.peekContent())
-        }
-
-        assertEquals("ru", selectLanguageViewModel.languageChangedLiveData.value?.peekContent())
+        val res = selectLanguageViewModel.languageChangedLiveData.getOrAwaitValue()
+        assertEquals("ru", res)
     }
 
-    @Test fun `back pressed`() {
+    @Test
+    fun `back pressed`() {
         selectLanguageViewModel.onBackPressed()
 
         verify(router).popBackStack()

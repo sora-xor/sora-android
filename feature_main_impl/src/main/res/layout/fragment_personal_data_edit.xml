@@ -1,179 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/common_personal_info_title" />
+        app:textRight="@string/common_done"
+        app:titleText="@string/personal_info_username_v1" />
 
-    <View
-        android:id="@+id/shadowView"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/shadow_view_height"
-        android:background="@drawable/below_shadow"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
-
-    <Space
-        android:id="@+id/space1"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/shadowView" />
-
-    <EditText
-        android:id="@+id/firstNameEt"
+    <com.vanniktech.emoji.EmojiEditText
+        android:id="@+id/accountNameEt"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
+        android:layout_height="?android:actionBarSize"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
         android:background="@null"
         android:fontFamily="@font/sora_regular"
-        android:hint="@string/common_personal_info_first_name_hint"
-        android:inputType="textCapWords"
+        android:hint="@string/personal_info_username_v1"
         android:maxLength="30"
         android:paddingTop="@dimen/x1"
         android:paddingBottom="@dimen/x1"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space1" />
-
-    <Space
-        android:id="@+id/space2"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/firstNameEt" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
     <View
         android:id="@+id/divider1"
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
         android:background="@color/greyDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space2" />
+        app:layout_constraintTop_toBottomOf="@id/accountNameEt" />
 
-    <Space
-        android:id="@+id/space3"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider1" />
-
-    <EditText
-        android:id="@+id/lastNameEt"
-        android:layout_width="0dp"
+    <TextView
+        style="@style/TextAppearance.Soramitsu.Body2"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@null"
-        android:fontFamily="@font/sora_regular"
-        android:hint="@string/common_personal_info_last_name_hint"
-        android:inputType="textCapWords"
-        android:maxLength="30"
-        android:paddingTop="@dimen/x1"
-        android:paddingBottom="@dimen/x1"
-        android:textSize="14sp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x1"
+        android:layout_marginEnd="@dimen/x2"
+        android:text="@string/personal_details_info"
+        android:textColor="@color/grey_400"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space3" />
+        app:layout_constraintTop_toBottomOf="@id/accountNameEt" />
 
-    <Space
-        android:id="@+id/space4"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/lastNameEt" />
-
-    <View
-        android:id="@+id/divider2"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@color/greyDivider"
+    <ImageView
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:id="@+id/ivAccountAvatar"
+        android:layout_marginTop="24dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space4" />
-
-    <Space
-        android:id="@+id/space5"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider2" />
-
-    <EditText
-        android:id="@+id/phoneNumberEt"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@null"
-        android:enabled="false"
-        android:fontFamily="@font/sora_regular"
-        android:paddingTop="@dimen/x1"
-        android:paddingBottom="@dimen/x1"
-        android:textSize="14sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space5" />
-
-    <Space
-        android:id="@+id/space6"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/phoneNumberEt" />
-
-    <View
-        android:id="@+id/divider3"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@color/greyDivider"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space6" />
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/greyBackground"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/x2_5"
-        android:paddingTop="12dp"
-        android:paddingEnd="@dimen/x2_5"
-        android:paddingBottom="12dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:visibility="invisible" />
-
-        <Button
-            android:id="@+id/nextBtn"
-            style="@style/Widget.Soramitsu.Button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/common_next"
-            android:textSize="14sp" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@id/divider1"
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

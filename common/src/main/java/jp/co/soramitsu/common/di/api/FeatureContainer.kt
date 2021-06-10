@@ -16,6 +16,4 @@ interface FeatureContainer {
     fun commonApi(): CommonApi
 
     fun networkApi(): NetworkApi
-
-    fun didFeatureApi(): DidFeatureApi
 }

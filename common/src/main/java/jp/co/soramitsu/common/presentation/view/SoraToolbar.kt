@@ -6,64 +6,119 @@
 package jp.co.soramitsu.common.presentation.view
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
-import androidx.appcompat.widget.Toolbar
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
+import androidx.core.view.doOnLayout
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.databinding.ToolBarBinding
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import kotlinx.android.synthetic.main.tool_bar.view.homeImg
-import kotlinx.android.synthetic.main.tool_bar.view.shareImg
-import kotlinx.android.synthetic.main.tool_bar.view.titleTv
-import kotlinx.android.synthetic.main.tool_bar.view.votesTv
 
 class SoraToolbar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : Toolbar(context, attrs, defStyleAttr) {
+) : LinearLayout(context, attrs, defStyleAttr) {
+
+    private val binding = ToolBarBinding.inflate(LayoutInflater.from(context), this)
 
     init {
-        View.inflate(context, R.layout.tool_bar, this)
+        applyAttributes(attrs)
+        binding.titleTv.doOnLayout { t ->
+            binding.vWidthHalf.doOnLayout { h ->
+                (t as? TextView)?.maxWidth = h.width * 2
+            }
+        }
     }
 
-    fun setHomeButtonListener(listener: (View) -> Unit) {
-        homeImg.setOnClickListener(listener)
+    private fun applyAttributes(attrs: AttributeSet?) {
+        attrs?.let {
+            val typedArray = context.obtainStyledAttributes(attrs, R.styleable.SoraToolbar)
+
+            val title = typedArray.getString(R.styleable.SoraToolbar_titleText)
+            title?.let { setTitle(it) }
+
+            val rightIcon = typedArray.getDrawable(R.styleable.SoraToolbar_iconRight)
+            rightIcon?.let { setRightIconDrawable(it) }
+
+            val action = typedArray.getString(R.styleable.SoraToolbar_textRight)
+            action?.let { setTextRight(it) }
+
+            val homeButtonIcon = typedArray.getDrawable(R.styleable.SoraToolbar_homeButtonIcon)
+            homeButtonIcon?.let { setHomeButtonIcon(it) }
+
+            val homeButtonVisible =
+                typedArray.getBoolean(R.styleable.SoraToolbar_homeButtonVisible, true)
+            setHomeButtonVisibility(homeButtonVisible)
+
+            typedArray.recycle()
+        }
     }
 
-    fun setShareButtonListener(listener: (View) -> Unit) {
-        shareImg.setOnClickListener(listener)
+    fun setHomeButtonIcon(icon: Drawable) {
+        binding.backImg.setImageDrawable(icon)
     }
 
-    fun setVotes(votes: String) {
-        votesTv.text = votes
-    }
+    fun setTextRight(action: String) {
+        binding.rightImg.gone()
 
-    fun showVotes() {
-        votesTv.show()
-    }
-
-    fun setOnVotesClickListener(clickListener: () -> Unit) {
-        votesTv.setOnClickListener { clickListener() }
+        binding.rightText.show()
+        binding.rightText.text = action
     }
 
     fun setTitle(title: String) {
-        titleTv.text = title
+        binding.titleTv.text = title
+    }
+
+    fun setTitle(title: Int) {
+        binding.titleTv.setText(title)
     }
 
     fun showHomeButton() {
-        homeImg.show()
+        binding.backImg.show()
     }
 
     fun hideHomeButton() {
-        homeImg.gone()
+        binding.backImg.gone()
     }
 
-    fun showShareButton() {
-        shareImg.show()
+    fun setHomeButtonListener(listener: (View) -> Unit) {
+        binding.backImg.setOnClickListener(listener)
     }
 
-    fun hideShareButton() {
-        shareImg.gone()
+    fun setRightIconDrawable(assetIconDrawable: Drawable) {
+        binding.rightText.gone()
+
+        binding.rightImg.show()
+        binding.rightImg.setImageDrawable(assetIconDrawable)
+    }
+
+    fun setRightActionClickListener(listener: (View) -> Unit) {
+        binding.rightImg.setOnClickListener(listener)
+        binding.rightText.setOnClickListener(listener)
+    }
+
+    fun setHomeButtonVisibility(visible: Boolean) {
+        binding.backImg.visibility = if (visible) View.VISIBLE else View.GONE
+    }
+
+    fun setRightTextButtonEnabled() {
+        binding.rightText.isEnabled = true
+        binding.rightText.setTextColor(ContextCompat.getColor(context, R.color.black))
+    }
+
+    fun setRightTextButtonDisabled() {
+        binding.rightText.isEnabled = false
+        binding.rightText.setTextColor(ContextCompat.getColor(context, R.color.grey_400))
+    }
+
+    fun setTitleIcon(@DrawableRes res: Int) {
+        binding.titleTv.setCompoundDrawablesRelativeWithIntrinsicBounds(res, 0, 0, 0)
     }
 }

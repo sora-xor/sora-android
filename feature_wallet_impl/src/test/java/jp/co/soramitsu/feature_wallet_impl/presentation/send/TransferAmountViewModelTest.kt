@@ -7,21 +7,15 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.reactivex.Completable
-import io.reactivex.Observable
-import jp.co.soramitsu.common.date.DateTimeFormatter
-import jp.co.soramitsu.common.domain.AssetHolder
+import io.reactivex.Single
+import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
 import jp.co.soramitsu.common.interfaces.WithProgress
-import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.TextFormatter
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
-import jp.co.soramitsu.feature_wallet_api.domain.model.FeeType
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
+import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertEquals
@@ -31,7 +25,6 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -53,9 +46,6 @@ class TransferAmountViewModelTest {
     private lateinit var walletInteractor: WalletInteractor
 
     @Mock
-    private lateinit var ethereumInteractor: EthereumInteractor
-
-    @Mock
     private lateinit var router: WalletRouter
 
     @Mock
@@ -65,79 +55,88 @@ class TransferAmountViewModelTest {
     private lateinit var numbersFormatter: NumbersFormatter
 
     @Mock
-    private lateinit var dateTimeFormatter: DateTimeFormatter
-
-    @Mock
-    private lateinit var textFormatter: TextFormatter
-
-    @Mock
-    private lateinit var resourceManager: ResourceManager
+    private lateinit var clipboardManager: ClipboardManager
 
     private lateinit var transferAmountViewModel: TransferAmountViewModel
 
-    private val fixedFee = 0.6
     private val fixedFeeStr = "0.6"
     private val recipientId = "recipientId"
     private val recipientFullName = "recipientFull Name"
-    private val recipientInitials = "RN"
-    private val initialAmount = BigDecimal.TEN
     private val transferType = TransferType.VAL_TRANSFER
 
     @Before
     fun setUp() {
-        given(resourceManager.getString(R.string.common_input_validator_max_hint))
-            .willReturn("Maximum %s symbols")
-        given(textFormatter.getFirstLetterFromFirstAndLastWordCapitalized(anyString()))
-            .willReturn(recipientInitials)
-        given(walletInteractor.getBalance(AssetHolder.SORA_VAL.id)).willReturn(Observable.just(AssetBalance(AssetHolder.SORA_VAL.id, BigDecimal.TEN)))
-        given(walletInteractor.getBalance(AssetHolder.SORA_VAL_ERC_20.id)).willReturn(Observable.just(AssetBalance(AssetHolder.SORA_VAL_ERC_20.id, BigDecimal.TEN)))
-        given(walletInteractor.getBalance(AssetHolder.ETHER_ETH.id)).willReturn(Observable.just(AssetBalance(AssetHolder.ETHER_ETH.id, BigDecimal.TEN)))
-        given(walletInteractor.getValAndValErcBalanceAmount()).willReturn(Observable.just(BigDecimal.TEN))
-        given(walletInteractor.getTransferMeta()).willReturn(Observable.just(TransferMeta(0.6, FeeType.FIXED)))
         given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt()))
             .willReturn(fixedFeeStr)
+        given(walletInteractor.getAssets()).willReturn(
+            Single.just(
+                listOf(
+                    Asset(
+                        "asset_id",
+                        "Asset",
+                        SubstrateNetworkOptionsProvider.feeAssetSymbol,
+                        true,
+                        true,
+                        1,
+                        2,
+                        2,
+                        BigDecimal.TEN
+                    )
+                )
+            )
+        )
+        given(
+            walletInteractor.calcTransactionFee(
+                recipientId,
+                "asset_id",
+                BigDecimal.ZERO
+            )
+        ).willReturn(
+            Single.just(
+                BigDecimal.ZERO
+            )
+        )
 
-        transferAmountViewModel = TransferAmountViewModel(walletInteractor, ethereumInteractor, router,
-            progress, numbersFormatter, dateTimeFormatter, textFormatter, resourceManager, recipientId, recipientFullName, "", "", initialAmount, true, transferType)
+        transferAmountViewModel = TransferAmountViewModel(
+            walletInteractor, router,
+            progress, numbersFormatter,
+            recipientId, "asset_id", recipientFullName,
+            transferType, clipboardManager
+        )
     }
 
     @Test
     fun `initialized correctly`() {
         transferAmountViewModel.recipientNameLiveData.observeForever {
-            assertEquals(recipientFullName, it)
-        }
-        transferAmountViewModel.recipientTextIconLiveData.observeForever {
-            assertEquals(recipientInitials, it)
-        }
-        transferAmountViewModel.initialAmountLiveData.observeForever {
-            assertEquals("10", it)
+            assertEquals("recip...entId", it)
         }
     }
 
     @Test
     fun `backButtonPressed() calls router popBackStackFragment()`() {
         transferAmountViewModel.backButtonPressed()
-
         verify(router).popBackStackFragment()
     }
 
     @Test
     fun `next button click calls router showTransactionConfirmation()`() {
-        val formattedFeeStr = "0.6 VAL"
-
-        given(walletInteractor.updateTransferMeta()).willReturn(Completable.complete())
-        given(resourceManager.getString(R.string.val_token)).willReturn("VAL")
-        given(walletInteractor.updateAssets()).willReturn(Completable.complete())
-
-        transferAmountViewModel.updateBalance()
-        transferAmountViewModel.updateTransferMeta()
+        val formattedFeeStr = "0.6 XOR"
 
         transferAmountViewModel.transactionFeeFormattedLiveData.observeForever {
             assertEquals(formattedFeeStr, it)
         }
 
-        transferAmountViewModel.nextButtonClicked(BigDecimal.ONE, "test")
+        transferAmountViewModel.nextButtonClicked(BigDecimal.ONE)
 
-        verify(router).showTransactionConfirmation(recipientId, recipientFullName, BigDecimal.ZERO, BigDecimal.ONE, "test", BigDecimal.ZERO, fixedFee.toBigDecimal(), transferType)
+        verify(router).showTransactionConfirmation(
+            recipientId,
+            recipientFullName,
+            BigDecimal.ZERO,
+            BigDecimal.ONE,
+            "asset_id",
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            transferType
+        )
     }
 }

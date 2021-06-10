@@ -19,10 +19,6 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.project.gallery.GalleryActivity"
-            android:theme="@style/AppTheme" />
-
-        <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
             android:theme="@style/AppTheme"

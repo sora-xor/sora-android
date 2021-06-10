@@ -42,9 +42,11 @@ class LanguageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             languageNameTv.text = language.displayName
             languageNativeNameTv.text = language.nativeDisplayName
 
-            setOnClickListener(DebounceClickListener(debounceClickHandler) {
-                itemClickListener(language)
-            })
+            setOnClickListener(
+                DebounceClickListener(debounceClickHandler) {
+                    itemClickListener(language)
+                }
+            )
 
             if (language.isSelected) {
                 languageNameTv.setTextColor(ContextCompat.getColor(context, R.color.uikit_lightRed))

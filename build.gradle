@@ -1,8 +1,7 @@
 buildscript {
 
     ext.versions = [
-            kotlin            : '1.3.11',
-            androidSupport    : '28.0.0-alpha3',
+            kotlin            : '1.5.0',
             dagger            : '2.17',
             rxJava2           : '2.2.7',
             rxBinding         : '2.1.1',
@@ -15,15 +14,16 @@ buildscript {
             support           : '1.0.0',
             material          : '1.2.1',
             swipe             : '1.1.0',
-            constraint        : '1.1.3',
+            constraint        : '2.0.4',
             multidex          : '2.0.0',
-            crashlytics       : '17.2.1',
+            firebaseBom       : '26.8.0',
+            crashlytics       : '17.4.1',
             iroha             : '5.1.2',
             shimmer           : '0.4.0',
             novaCrypto        : '0.1.9',
             navigationFragment: '2.0.0-rc02',
             zXing             : '3.3.3',
-            zXingEmbedded     : '3.5.0@aar',
+            zXingEmbedded     : '3.6.0@aar',
             birt              : '2.9.0',
             phoenix           : '2.0.0',
             navigation        : '2.0.0-rc02',
@@ -43,12 +43,24 @@ buildscript {
             googleAuthApi     : '17.0.0',
             biometric         : '1.0.1',
             web3j             : '4.2.0-android',
-            workerManager     : '2.4.0'
+            workerManager     : '2.4.0',
+            emoji             : '0.3.0',
+            activityKtx       : '1.1.0',
+            coreKtx           : '1.5.0-beta02',
+            fearlessLib       : '1.0.70',
+            webSocketLib      : '2.10',
+			ed25519           : '2.0.1',
+            svgVersion        : '1.4',
+            jdenticonVersion  : '1.0',
+            insetter          : '0.5.0',
+            viewBinding       : '1.4.5'
     ]
 
     ext {
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 32)
-        appVersionName = '1.6.3'
+        // soralution 39 2.0.0 2021.05.21
+        // sora dae 43 2.1.0 2021.06.02
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 43)
+        appVersionName = '2.1.0'
 
         compileVersion = 29
         minVersion = 21
@@ -61,10 +73,14 @@ buildscript {
         cardViewDep = "androidx.cardview:cardview:$versions.support"
         constraintDep = "androidx.constraintlayout:constraintlayout:$versions.constraint"
         swipelayoutDep = "androidx.swiperefreshlayout:swiperefreshlayout:$versions.swipe"
+        activityKtxDep = "androidx.activity:activity-ktx:$versions.activityKtx"
+        coreKtxDep = "androidx.core:core-ktx:$versions.coreKtx"
 
         workerManagerDep = "androidx.work:work-runtime-ktx:$versions.workerManager"
 
         loggerDep = "com.orhanobut:logger:$versions.logger"
+        svgDep = "com.caverock:androidsvg-aar:$versions.svgVersion"
+        jdenticonDep = "org.wycliffeassociates:jdenticon-kotlin:$versions.jdenticonVersion"
 
         daggerDep = "com.google.dagger:dagger:$versions.dagger"
         daggerKapt = "com.google.dagger:dagger-compiler:$versions.dagger"
@@ -75,6 +91,9 @@ buildscript {
         roomDep = "androidx.room:room-runtime:$versions.room"
         rxRoomDep = "androidx.room:room-rxjava2:$versions.room"
 
+        insetterDep = "dev.chrisbanes.insetter:insetter:$versions.insetter"
+        viewBindingDep = "com.github.kirich1409:viewbindingpropertydelegate-noreflection:$versions.viewBinding"
+
         roomKapt = "androidx.room:room-compiler:$versions.room"
 
         rxDep = "io.reactivex.rxjava2:rxjava:$versions.rxJava2"
@@ -82,18 +101,19 @@ buildscript {
 
         irohaDep = "com.github.hyperledger.iroha-java:client:$versions.iroha"
         soraDep = "com.github.soramitsu:sora-sdk:$versions.soraSdk"
+        fearlessLibDep = "jp.co.soramitsu.fearless-utils:fearless-utils:$versions.fearlessLib"
+        webSocketLibDep = "com.neovisionaries:nv-websocket-client:$versions.webSocketLib"
 
         gsonDep = "com.google.code.gson:gson:$versions.gson"
 
         rxBindingDep = "com.jakewharton.rxbinding2:rxbinding:$versions.rxBinding"
 
-        firebaseCoreDep = "com.google.firebase:firebase-core:$versions.firebaseCore"
-        firebaseMessagingDep = "com.google.firebase:firebase-messaging:$versions.firebaseMessaging"
+        firebaseMessagingDep = "com.google.firebase:firebase-messaging"
 
         multidexDep = "androidx.multidex:multidex:$versions.multidex"
 
-        googleAnalyticsDep = "com.google.firebase:firebase-analytics-ktx:$versions.firebaseCore"
-        crashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx:$versions.crashlytics"
+        googleAnalyticsDep = "com.google.firebase:firebase-analytics-ktx"
+        crashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
 
         shimmerDep = "com.facebook.shimmer:shimmer:$versions.shimmer"
 
@@ -107,7 +127,10 @@ buildscript {
 
         retrofitDep = "com.squareup.retrofit2:retrofit:$versions.retrofit"
         gsonConvertedDep = "com.squareup.retrofit2:converter-gson:$versions.retrofit"
+        scalarsConverterDep = "com.squareup.retrofit2:converter-scalars:$versions.retrofit"
         rxCallAdapterDep = "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
+
+        firebaseBomDep = "com.google.firebase:firebase-bom:$versions.firebaseBom"
 
         birtDep = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:$versions.birt"
 
@@ -115,7 +138,11 @@ buildscript {
 
         roundedImageViewDep = "com.makeramen:roundedimageview:$versions.roundedImage"
 
+        ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
+
         picassoDep = "com.squareup.picasso:picasso:$versions.picasso"
+
+        emojiDep = "com.vanniktech:emoji:$versions.emoji"
 
         rxPermissionsDep = "com.github.tbruyelle:rxpermissions:$versions.rxPermissions"
 
@@ -126,11 +153,13 @@ buildscript {
 
         jUnitDep = "junit:junit:$versions.jUnit"
         mockitoDep = "org.mockito:mockito-inline:$versions.mockito"
+        mockkDep = "io.mockk:mockk:1.10.6"
+        powerMockDep = "org.powermock:powermock-module-junit4:2.0.2"
+        powerMockMockitoDep = "org.powermock:powermock-api-mockito2:2.0.2"
         robolectricDep = "org.robolectric:robolectric:$versions.robolectric"
         robolectricMultidexDep = "org.robolectric:shadows-multidex:$versions.robolectric"
         archCoreTestDep = "androidx.arch.core:core-testing:$versions.archCoreTest"
         archFragmentTestDep = "androidx.fragment:fragment-testing:$versions.archFragmentTest"
-        kotlin_version = '1.3.71'
     }
 
     repositories {
@@ -139,10 +168,10 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:3.4.2'
-        classpath 'com.google.gms:google-services:4.3.3'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.2.1'
-        classpath 'com.google.firebase:firebase-appdistribution-gradle:2.0.1'
+        classpath 'com.android.tools.build:gradle:7.0.0-beta03'
+        classpath 'com.google.gms:google-services:4.3.5'
+        classpath 'com.google.firebase:firebase-appdistribution-gradle:2.1.1'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.5.2'
     }
 }
 
@@ -155,10 +184,11 @@ allprojects {
         maven {
             url "https://nexus.iroha.tech/repository/maven-capital/"
             credentials {
-                username = "aabdulmadzhidov"
-                password = "szgYTSO0hdJehWkQT06T"
+                username = System.getenv("SORAMITSU_MAVEN_USR") ?: "SORAMITSU_MAVEN_USER_NAME"
+                password = System.getenv("SORAMITSU_MAVEN_PSW") ?: "SORAMITSU_MAVEN_USER_PASSWORD"
             }
         }
+        maven { url "https://nexus.iroha.tech/repository/maven-soramitsu/" }
         google()
         jcenter()
         maven {
@@ -175,13 +205,24 @@ configurations {
     ktlint
 }
 
-dependencies {
-    ktlint 'com.github.shyiko:ktlint:0.31.0'
+repositories {
+    jcenter()
 }
 
-task ktlint(type: Exec, group: "verification") {
-    commandLine 'java', '-cp', configurations.ktlint.join(System.getProperty('path.separator')),
-            'com.github.shyiko.ktlint.Main',
-            "--reporter=html,artifact=me.cassiano:ktlint-html-reporter:0.2.0,output=${project.buildDir}/reports/checkstyle/ktlint.html",
-            "$project.rootDir/**/src/main/**/*.kt"
+dependencies {
+    ktlint "com.pinterest:ktlint:0.40.0"
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "$project.rootDir/**/src/main/**/*.kt", "--reporter=plain", "--reporter=checkstyle,output=${buildDir}/reports/checkstyle/kotlin-checkstyle-report.xml"
+}
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    main = "com.pinterest.ktlint.Main"
+    args "-F", "$project.rootDir/**/src/main/**/*.kt"
 }

@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
+import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.delegate.WithPreloaderImpl
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -34,8 +35,8 @@ class ContactsModule {
     @Provides
     @IntoMap
     @ViewModelKey(ContactsViewModel::class)
-    fun provideViewModel(interactor: WalletInteractor, ethereumInteractor: EthereumInteractor, router: WalletRouter, preloader: WithPreloader, qrCodeDecoder: QrCodeDecoder, resourceManager: ResourceManager, ethereumAddressValidator: EthereumAddressValidator): ViewModel {
-        return ContactsViewModel(interactor, router, preloader, qrCodeDecoder, resourceManager, ethereumAddressValidator, ethereumInteractor)
+    fun provideViewModel(interactor: WalletInteractor, ethereumInteractor: EthereumInteractor, router: WalletRouter, preloader: WithPreloader, qrCodeDecoder: QrCodeDecoder, resourceManager: ResourceManager, ethereumAddressValidator: EthereumAddressValidator, avatarGenerator: AccountAvatarGenerator): ViewModel {
+        return ContactsViewModel(interactor, router, preloader, qrCodeDecoder, resourceManager, ethereumAddressValidator, ethereumInteractor, avatarGenerator)
     }
 
     @Provides

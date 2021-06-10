@@ -9,34 +9,31 @@ import dagger.BindsInstance
 import dagger.Component
 import jp.co.soramitsu.common.data.network.NetworkApi
 import jp.co.soramitsu.common.di.api.CommonApi
-import jp.co.soramitsu.common.di.api.DidFeatureApi
 import jp.co.soramitsu.core_di.holder.scope.FeatureScope
 import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
-import jp.co.soramitsu.feature_information_api.di.InformationFeatureApi
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.presentation.MainComponent
 import jp.co.soramitsu.feature_main_impl.presentation.about.di.AboutComponent
-import jp.co.soramitsu.feature_main_impl.presentation.activity.di.ActivityFeedComponent
-import jp.co.soramitsu.feature_main_impl.presentation.detail.project.di.DetailProjectComponent
 import jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.di.DetailReferendumComponent
 import jp.co.soramitsu.feature_main_impl.presentation.faq.di.FaqComponent
 import jp.co.soramitsu.feature_main_impl.presentation.invite.di.InviteComponent
 import jp.co.soramitsu.feature_main_impl.presentation.language.di.SelectLanguageComponent
 import jp.co.soramitsu.feature_main_impl.presentation.main.di.ProjectsComponent
+import jp.co.soramitsu.feature_main_impl.presentation.parliament.di.ParliamentComponent
 import jp.co.soramitsu.feature_main_impl.presentation.passphrase.di.PassphraseComponent
 import jp.co.soramitsu.feature_main_impl.presentation.personaldataedit.di.PersonalDataEditComponent
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.di.PinCodeComponent
+import jp.co.soramitsu.feature_main_impl.presentation.polkaswap.di.PolkaSwapComponent
 import jp.co.soramitsu.feature_main_impl.presentation.privacy.di.PrivacyComponent
 import jp.co.soramitsu.feature_main_impl.presentation.profile.di.ProfileComponent
-import jp.co.soramitsu.feature_main_impl.presentation.reputation.di.ReputationComponent
+import jp.co.soramitsu.feature_main_impl.presentation.staking.di.StakingComponent
 import jp.co.soramitsu.feature_main_impl.presentation.terms.di.TermsComponent
 import jp.co.soramitsu.feature_main_impl.presentation.userverification.di.UserVerificationComponent
 import jp.co.soramitsu.feature_main_impl.presentation.version.di.UnsupportedVersionComponent
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.di.VotesHistoryComponent
 import jp.co.soramitsu.feature_notification_api.di.NotificationFeatureApi
-import jp.co.soramitsu.feature_sse_api.di.EventFeatureApi
 import jp.co.soramitsu.feature_votable_api.di.VotableFeatureApi
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 
@@ -55,19 +52,13 @@ interface MainFeatureComponent : MainFeatureApi {
 
     fun inviteComponentBuilder(): InviteComponent.Builder
 
-    fun activityFeedComponentBuilder(): ActivityFeedComponent.Builder
-
     fun projectsComponentBuilder(): ProjectsComponent.Builder
-
-    fun detailProjectComponentBuilder(): DetailProjectComponent.Builder
 
     fun detailReferendumComponentBuilder(): DetailReferendumComponent.Builder
 
     fun votesHistoryComponentBuilder(): VotesHistoryComponent.Builder
 
     fun passphraseComponentBuilder(): PassphraseComponent.Builder
-
-    fun reputationComponentBuilder(): ReputationComponent.Builder
 
     fun personalComponentBuilder(): PersonalDataEditComponent.Builder
 
@@ -89,6 +80,12 @@ interface MainFeatureComponent : MainFeatureApi {
 
     fun selectLanguageComponentBuilder(): SelectLanguageComponent.Builder
 
+    fun stakingComponentBuilder(): StakingComponent.Builder
+
+    fun parliamentComponentBuilder(): ParliamentComponent.Builder
+
+    fun polkaswapComponentBuilder(): PolkaSwapComponent.Builder
+
     @Component.Builder
     interface Builder {
 
@@ -105,13 +102,10 @@ interface MainFeatureComponent : MainFeatureApi {
             AccountFeatureApi::class,
             NotificationFeatureApi::class,
             VotableFeatureApi::class,
-            DidFeatureApi::class,
             EthereumFeatureApi::class,
             WalletFeatureApi::class,
             CommonApi::class,
-            InformationFeatureApi::class,
             NetworkApi::class,
-            EventFeatureApi::class
         ]
     )
     interface MainFeatureDependenciesComponent : MainFeatureDependencies

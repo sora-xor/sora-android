@@ -65,7 +65,7 @@ class HttpLoggingInterceptor : Interceptor {
          * <pre>`--> POST /greeting http/1.1 (3-byte body)
          *
          * <-- 200 OK (22ms, 6-byte body)
-        `</pre> *
+         `</pre> *
          */
         BASIC,
         /**
@@ -83,7 +83,7 @@ class HttpLoggingInterceptor : Interceptor {
          * Content-Type: plain/text
          * Content-Length: 6
          * <-- END HTTP
-        `</pre> *
+         `</pre> *
          */
         HEADERS,
         /**
@@ -105,7 +105,7 @@ class HttpLoggingInterceptor : Interceptor {
          *
          * Hello!
          * <-- END HTTP
-        `</pre> *
+         `</pre> *
          */
         BODY
     }
@@ -228,9 +228,11 @@ class HttpLoggingInterceptor : Interceptor {
         val responseBody = response.body()
         val contentLength = responseBody!!.contentLength()
         val bodySize = if (contentLength != -1L) "$contentLength-byte" else "unknown-length"
-        logMessage.append("\n<-- " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) +
-            ' '.toString() + response.request().url() +
-            " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
+        logMessage.append(
+            "\n<-- " + response.code() + (if (response.message().isEmpty()) "" else ' ' + response.message()) +
+                ' '.toString() + response.request().url() +
+                " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString()
+        )
 
         if (logHeaders) {
             val headers = response.headers()

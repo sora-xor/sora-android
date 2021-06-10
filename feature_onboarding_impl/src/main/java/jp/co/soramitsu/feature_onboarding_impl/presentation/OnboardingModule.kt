@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
@@ -26,8 +27,8 @@ class OnboardingModule {
     @Provides
     @IntoMap
     @ViewModelKey(OnboardingViewModel::class)
-    fun provideViewModel(invitationHandler: InvitationHandler): ViewModel {
-        return OnboardingViewModel(invitationHandler)
+    fun provideViewModel(invitationHandler: InvitationHandler, runtimeManager: RuntimeManager): ViewModel {
+        return OnboardingViewModel(invitationHandler, runtimeManager)
     }
 
     @Provides
