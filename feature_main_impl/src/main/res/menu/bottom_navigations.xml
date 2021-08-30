@@ -3,35 +3,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/walletFragment"
+        android:id="@+id/wallet_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_menu_wallet_24"
         android:title="@string/tabbar_wallet_title"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/polkaswapFragment"
+        android:id="@+id/polkaswap_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_polkaswap_black_24"
         android:title="@string/tabbar_polkaswap_title"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/parliamentFragment"
+        android:id="@+id/parliament_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_parliament_24"
         android:title="@string/tabbar_parliament_title"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/stakingFragment"
+        android:id="@+id/staking_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_staking_black_24"
         android:title="@string/tabbar_staking_title"
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/profileFragment"
+        android:id="@+id/profile_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_menu_user_24"
         android:title="@string/tabbar_profile_title"

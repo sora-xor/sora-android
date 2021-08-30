@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_notification_impl.data.repository.datasource
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -10,7 +5,6 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.util.Const.Companion.DEVICE_TOKEN
 import jp.co.soramitsu.common.util.Const.Companion.IS_PUSH_UPDATE_NEEDED
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -26,10 +20,6 @@ class PrefsNotificationDatasourceTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var preferences: Preferences

@@ -107,7 +107,10 @@ class MnemonicConfirmationFragment :
                 measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
             }
         }
-        binding.wordsMnemonicView.populateWithMnemonic(words)
+
+        binding.wordsMnemonicView.post {
+            binding.wordsMnemonicView.populateWithMnemonic(words)
+        }
 
         val containerHeight = binding.wordsMnemonicView.getMinimumMeasuredHeight()
         binding.wordsMnemonicView.minimumHeight = containerHeight

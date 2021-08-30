@@ -1,33 +1,31 @@
 package jp.co.soramitsu.common.domain.credentials
 
-import io.reactivex.Completable
-import io.reactivex.Single
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
 import java.security.KeyPair
 
 interface CredentialsRepository {
 
-    fun isMnemonicValid(mnemonic: String): Single<Boolean>
+    suspend fun isMnemonicValid(mnemonic: String): Boolean
 
-    fun generateUserCredentials(): Completable
+    suspend fun generateUserCredentials()
 
-    fun restoreUserCredentials(mnemonic: String): Completable
+    suspend fun restoreUserCredentials(mnemonic: String)
 
     fun saveMnemonic(mnemonic: String)
 
-    fun retrieveMnemonic(): Single<String>
+    suspend fun retrieveMnemonic(): String
 
-    fun retrieveIrohaKeyPair(): Single<KeyPair>
+    suspend fun retrieveIrohaKeyPair(): KeyPair
 
-    fun retrieveKeyPair(): Single<Keypair>
+    suspend fun retrieveKeyPair(): Keypair
 
-    fun getIrohaAddress(): Single<String>
+    suspend fun getIrohaAddress(): String
 
-    fun getClaimSignature(): Single<String>
+    suspend fun getClaimSignature(): String
 
-    fun getAddress(): Single<String>
+    fun getAddress(): String
 
-    fun getAddressId(): Single<ByteArray>
+    fun getAccountId(): ByteArray
 
-    fun isAddressOk(address: String): Single<Boolean>
+    suspend fun isAddressOk(address: String): Boolean
 }

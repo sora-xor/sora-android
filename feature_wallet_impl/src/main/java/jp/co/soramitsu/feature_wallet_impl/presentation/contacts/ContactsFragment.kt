@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
 import android.Manifest
@@ -14,12 +9,13 @@ import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.github.florent37.runtimepermission.RuntimePermission.askPermission
 import com.google.zxing.integration.android.IntentIntegrator
-import com.tbruyelle.rxpermissions2.RxPermissions
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
-import jp.co.soramitsu.common.presentation.ChooserDialog
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserBottomSheet
+import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserItem
 import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.gone
@@ -67,11 +63,15 @@ class ContactsFragment :
             }
         }
         viewBinding.contactsSearchView.setOnQueryTextListener(this)
+        integrator = IntentIntegrator.forSupportFragment(this).apply {
+            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+            setPrompt(getString(R.string.contacts_scan))
+            setBeepEnabled(false)
+        }
         initListeners()
     }
 
     private fun initListeners() {
-        configureClicks()
         viewModel.contactsLiveData.observe {
             if (viewBinding.contactsRecyclerView.adapter == null) {
                 viewBinding.contactsRecyclerView.layoutManager =
@@ -97,14 +97,15 @@ class ContactsFragment :
         viewModel.initiateScanner.observe {
             initiateScan()
         }
+
         viewModel.showChooser.observe {
-            ChooserDialog(
-                requireContext(),
-                R.string.contacts_scan,
-                getString(R.string.common_camera),
-                getString(R.string.common_gallery),
-                { viewModel.openCamera() },
-                { viewModel.openGallery() }
+            ChooserBottomSheet(
+                requireActivity(),
+                R.string.qr_code,
+                listOf(
+                    ChooserItem(R.string.qr_upload, R.drawable.ic_gallery_24) { viewModel.openGallery() },
+                    ChooserItem(R.string.contacts_scan, R.drawable.ic_scan_24) { viewModel.openCamera() }
+                )
             ).show()
         }
         viewModel.emptyContactsVisibilityLiveData.observe {
@@ -121,16 +122,6 @@ class ContactsFragment :
         viewModel.qrErrorLiveData.observe {
             showErrorFromResponse(it)
         }
-    }
-
-    private fun configureClicks() {
-        integrator = IntentIntegrator.forSupportFragment(this).apply {
-            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
-            setPrompt(getString(R.string.contacts_scan))
-            setBeepEnabled(false)
-        }
-
-        viewModel.getContacts(true)
     }
 
     override fun inject() {
@@ -181,11 +172,9 @@ class ContactsFragment :
     }
 
     private fun initiateScan() {
-        RxPermissions(this)
-            .request(Manifest.permission.CAMERA)
-            .subscribe {
-                if (it) integrator.initiateScan()
-            }
+        askPermission(this, Manifest.permission.CAMERA).onAccepted {
+            integrator.initiateScan()
+        }.ask()
     }
 
     private fun selectQrFromGallery() {

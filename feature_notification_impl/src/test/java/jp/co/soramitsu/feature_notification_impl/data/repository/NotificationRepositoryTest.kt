@@ -1,14 +1,8 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_notification_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationDatasource
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -24,9 +18,6 @@ class NotificationRepositoryTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var notificationDatasource: NotificationDatasource

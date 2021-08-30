@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.di.modules
 
 import com.google.gson.Gson
@@ -11,17 +6,15 @@ import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.data.network.HttpLoggingInterceptor
-import jp.co.soramitsu.common.data.network.NetworkApiCreator
-import jp.co.soramitsu.common.data.network.NetworkApiCreatorImpl
-import jp.co.soramitsu.common.data.network.Sora2ApiCreator
-import jp.co.soramitsu.common.data.network.SoraCallAdapterFactory
+import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
 import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.data.network.substrate.SocketSingleRequestExecutor
 import jp.co.soramitsu.common.data.network.substrate.WsConnectionManager
 import jp.co.soramitsu.common.data.network.substrate.WsLogger
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.HealthChecker
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.logging.Logger
@@ -71,8 +64,8 @@ class NetworkModule {
     fun provideConnectionManager(
         socketService: SocketService,
         appStateProvider: AppStateProvider,
-        healthChecker: HealthChecker,
-    ): ConnectionManager = WsConnectionManager(socketService, appStateProvider, healthChecker)
+        coroutineManager: CoroutineManager,
+    ): ConnectionManager = WsConnectionManager(socketService, appStateProvider, coroutineManager)
 
     @Provides
     @Singleton
@@ -154,7 +147,9 @@ class NetworkModule {
     @Provides
     @Singleton
     @Named("SORA2_NET_CLIENT")
-    fun provideSoraNetOkHttpClient(): OkHttpClient {
+    fun provideSoraNetOkHttpClient(
+        logging: HttpLoggingInterceptor,
+    ): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
@@ -184,27 +179,8 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideSora2ApiCreator(@Named("SORA2_NET_CLIENT") okHttpClient: OkHttpClient): Sora2ApiCreator {
-        return Sora2ApiCreator(okHttpClient, "https://placeholder.com")
-    }
-
-    @Provides
-    @Singleton
-    fun provideApiCreator(
-        @Named("SORA_CLIENT") okHttpClient: OkHttpClient,
-        rxCallAdapter: SoraCallAdapterFactory,
-        @Named("SORA_HOST_URL") soraHostUrl: String
-    ): NetworkApiCreator {
-        return NetworkApiCreatorImpl(okHttpClient, soraHostUrl, rxCallAdapter)
-    }
-
-    @Singleton
-    @Provides
-    fun provideSoraCallAdapter(
-        healthChecker: HealthChecker,
-        resourceManager: ResourceManager
-    ): SoraCallAdapterFactory {
-        return SoraCallAdapterFactory(healthChecker, resourceManager)
+    fun provideSora2CoroutineApiCreator(@Named("SORA2_NET_CLIENT") okHttpClient: OkHttpClient): Sora2CoroutineApiCreator {
+        return Sora2CoroutineApiCreator(okHttpClient, OptionsProvider.soraScanUrl)
     }
 
     @Singleton
@@ -222,8 +198,8 @@ class NetworkModule {
     fun provideAppLinksProvider(
         @Named("SORA_HOST_URL") soraHostUrl: String,
         @Named("DEFAULT_MARKET_URL") defaultMarketUrl: String,
-        @Named("INVITE_LINK_URL") invitekUrl: String,
+        @Named("INVITE_LINK_URL") inviteUrl: String
     ): AppLinksProvider {
-        return AppLinksProvider(soraHostUrl, defaultMarketUrl, invitekUrl, "")
+        return AppLinksProvider(soraHostUrl, defaultMarketUrl, inviteUrl, "")
     }
 }

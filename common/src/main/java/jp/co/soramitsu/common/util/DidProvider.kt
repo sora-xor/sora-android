@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -22,7 +17,7 @@ class DidProvider(
 //            .build()
 //    }
 //
-//    fun generateDDO(owner: DID, publicKey: ByteArray): Single<DDO> {
+//    fun generateDDO(owner: DID, publicKey: ByteArray): DDO {
 //        return Single.fromCallable {
 //            DDO.builder()
 //                .id(owner)

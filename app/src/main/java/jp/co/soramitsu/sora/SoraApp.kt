@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora
 
 import android.content.Context
@@ -11,10 +6,9 @@ import androidx.multidex.MultiDexApplication
 import com.google.firebase.FirebaseApp
 import com.orhanobut.logger.Logger
 import com.orhanobut.logger.PrettyFormatStrategy
-import io.reactivex.internal.functions.Functions.emptyConsumer
-import io.reactivex.plugins.RxJavaPlugins
 import jp.co.soramitsu.common.data.network.NetworkApi
-import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
+import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.di.api.CommonApi
 import jp.co.soramitsu.common.di.api.FeatureContainer
 import jp.co.soramitsu.common.logger.DiskLoggerAdapter
@@ -30,7 +24,11 @@ const val TAG = "SORA"
 
 class SoraApp : MultiDexApplication(), FeatureContainer {
 
-    @Inject lateinit var featureHolderManager: FeatureHolderManager
+    @Inject
+    lateinit var featureHolderManager: FeatureHolderManager
+
+    @Inject
+    lateinit var connectionManager: ConnectionManager
 
     private lateinit var appComponent: AppComponent
 
@@ -63,10 +61,7 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
 
         FirebaseApp.initializeApp(this)
 
-        RxJavaPlugins.setErrorHandler(emptyConsumer())
-
-        // todo refactor in 2.2
-        SubstrateNetworkOptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
+        OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
     }
 
     private fun initLogger() {
@@ -75,7 +70,9 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
             .build()
 
         Logger.addLogAdapter(LoggerAdapter(formatStrategy))
-        Logger.addLogAdapter(DiskLoggerAdapter())
+        applicationContext.externalCacheDir?.absolutePath?.let {
+            Logger.addLogAdapter(DiskLoggerAdapter(it))
+        }
     }
 
     override fun <T> getFeature(key: Class<*>): T {

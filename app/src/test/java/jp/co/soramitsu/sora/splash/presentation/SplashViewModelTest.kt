@@ -1,15 +1,10 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.splash.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -26,20 +21,21 @@ class SplashViewModelTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var interactor: SplashInteractor
+
     @Mock
     private lateinit var router: SplashRouter
+
+    @Mock
+    private lateinit var runtime: RuntimeManager
 
     private lateinit var splashViewModel: SplashViewModel
 
     @Before
     fun setUp() {
-        splashViewModel = SplashViewModel(interactor, router)
+        splashViewModel = SplashViewModel(interactor, router, runtime)
     }
 
     @Test

@@ -1,33 +1,28 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.common.domain.HealthChecker
-import jp.co.soramitsu.common.domain.InvitationHandler
-import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.ext.setValueIfNew
-import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class MainViewModel(
     healthChecker: HealthChecker,
-    private val interactor: MainInteractor,
-    private val deviceParamsProvider: DeviceParamsProvider,
-    private val progress: WithProgress,
-    private val invitationHandler: InvitationHandler,
+    private val walletInteractor: WalletInteractor,
     private val runtimeManager: RuntimeManager,
-) : BaseViewModel(), WithProgress by progress {
+) : BaseViewModel() {
 
+    private var job: Job? = null
     private val _showInviteErrorTimeIsUpLiveData = MutableLiveData<Event<Unit>>()
     val showInviteErrorTimeIsUpLiveData: LiveData<Event<Unit>> = _showInviteErrorTimeIsUpLiveData
 
@@ -42,29 +37,32 @@ class MainViewModel(
     val invitationCodeAppliedSuccessful: LiveData<Event<Unit>> = _invitationCodeAppliedSuccessful
 
     init {
-        disposables.add(
-            healthChecker.observeHealthState()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
+        viewModelScope.launch {
+            tryCatch {
+                runtimeManager.start()
+
+                healthChecker.observeHealthState()
+                    .collectLatest {
+                        if (it) {
+                            subscribeToAccountStorage()
+                        }
                         _badConnectionVisibilityLiveData.setValueIfNew(!it)
-                    },
-                    {
-                        it.printStackTrace()
                     }
-                )
-        )
-        disposables.add(
-            runtimeManager.start()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {},
-                    {
-                        logException(it)
-                    }
-                )
-        )
+            }
+        }
+    }
+
+    private fun subscribeToAccountStorage() {
+        viewModelScope.launch {
+            job?.cancel()
+            job = walletInteractor.observeCurAccountStorage()
+                .catch {
+                    onError(it)
+                }
+                .onEach {
+                    walletInteractor.updateBalancesVisibleAssets()
+                }
+                .launchIn(viewModelScope)
+        }
     }
 }

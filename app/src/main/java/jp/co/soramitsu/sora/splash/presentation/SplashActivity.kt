@@ -1,16 +1,11 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.splash.presentation
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
 import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
@@ -76,12 +71,9 @@ class SplashActivity : AppCompatActivity(), SplashRouter {
 
             override fun onTransitionTrigger(p0: MotionLayout?, p1: Int, p2: Boolean, p3: Float) {}
         })
-        Handler().postDelayed(
-            {
-                viewBinding.splashContainer.transitionToEnd()
-            },
-            delay
-        )
+        runDelayed(delay) {
+            viewBinding.splashContainer.transitionToEnd()
+        }
     }
 
     override fun showOnBoardingScreen(onBoardingState: OnboardingState) {

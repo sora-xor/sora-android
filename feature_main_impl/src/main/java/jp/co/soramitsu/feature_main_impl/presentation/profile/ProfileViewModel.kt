@@ -1,19 +1,14 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import kotlinx.coroutines.launch
 
 class ProfileViewModel(
     private val interactor: MainInteractor,
@@ -28,29 +23,12 @@ class ProfileViewModel(
     val biometryAvailabledLiveData: LiveData<Boolean> = _biometryAvailabledLiveData
 
     init {
-        disposables.add(
-            interactor.isBiometryAvailable()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        _biometryAvailabledLiveData.value = it
-                    },
-                    ::onError
-                )
-        )
-
-        disposables.add(
-            interactor.isBiometryEnabled()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        _biometryEnabledLiveData.value = it
-                    },
-                    ::onError
-                )
-        )
+        viewModelScope.launch {
+            tryCatch {
+                _biometryAvailabledLiveData.value = interactor.isBiometryAvailable()
+                _biometryEnabledLiveData.value = interactor.isBiometryEnabled()
+            }
+        }
     }
 
     fun onVotesClick() {
@@ -78,18 +56,12 @@ class ProfileViewModel(
     }
 
     fun biometryIsChecked(isChecked: Boolean) {
-        disposables.add(
-            interactor.setBiometryEnabled(isChecked)
-                .andThen(interactor.isBiometryEnabled())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        _biometryEnabledLiveData.value = it
-                    },
-                    ::onError
-                )
-        )
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryEnabled(isChecked)
+                _biometryEnabledLiveData.value = interactor.isBiometryEnabled()
+            }
+        }
     }
 
     fun profileFriendsClicked() {

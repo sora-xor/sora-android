@@ -1,44 +1,39 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.domain
-
-import jp.co.soramitsu.common.R
 
 class AssetHolder {
 
     companion object {
+        const val DEFAULT_WHITE_LIST_NAME = "tokens_white_list"
+        const val ROUNDING = 4
         private val knownAssets: Map<String, AssetDefault> = mapOf(
             // xor
             "0x0200000000000000000000000000000000000000000000000000000000000000" to
                 AssetDefault(
+                    "SORA", "XOR",
                     true, false,
-                    1, 4,
-                    R.drawable.ic_xor_red_shadow
+                    1,
                 ),
             // val
             "0x0200040000000000000000000000000000000000000000000000000000000000" to
                 AssetDefault(
+                    "SORA Validator Token", "VAL",
                     true, true,
-                    2, 4,
-                    R.drawable.ic_val_gold_shadow
+                    2,
                 ),
             // pswap
             "0x0200050000000000000000000000000000000000000000000000000000000000" to
                 AssetDefault(
+                    "Polkaswap", "PSWAP",
                     true, true,
-                    3, 4,
-                    R.drawable.ic_polkaswap_shadow
+                    3,
                 )
         )
         private val defaultAsset: AssetDefault = AssetDefault(
-            isDisplay = true,
+            name = "",
+            symbol = "",
+            isDisplay = false,
             isHidingAllowed = true,
             position = 4,
-            roundingPrecision = 4,
-            iconShadow = R.drawable.ic_asset_24
         )
     }
 
@@ -46,15 +41,16 @@ class AssetHolder {
     fun isDisplay(id: String): Boolean = getAsset(id).isDisplay
     fun isHiding(id: String): Boolean = getAsset(id).isHidingAllowed
     fun position(id: String): Int = getAsset(id).position
-    fun rounding(id: String): Int = getAsset(id).roundingPrecision
-    fun iconShadow(id: String): Int = getAsset(id).iconShadow
     fun isKnownAsset(id: String): Boolean = knownAssets[id] != null
+    fun getIds(): List<String> = knownAssets.keys.toList()
+    fun getName(id: String): String = getAsset(id).name
+    fun getSymbol(id: String): String = getAsset(id).symbol
 
     internal data class AssetDefault(
+        val name: String,
+        val symbol: String,
         val isDisplay: Boolean,
         val isHidingAllowed: Boolean,
         val position: Int,
-        val roundingPrecision: Int,
-        val iconShadow: Int,
     )
 }

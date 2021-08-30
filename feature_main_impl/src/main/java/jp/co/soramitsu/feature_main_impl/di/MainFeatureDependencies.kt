@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.di
 
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -25,6 +20,7 @@ import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 
 interface MainFeatureDependencies {
@@ -36,6 +32,8 @@ interface MainFeatureDependencies {
     fun credentialsRepository(): CredentialsRepository
 
     fun ethRepository(): EthereumRepository
+
+    fun walletInteractor(): WalletInteractor
 
     fun walletRepository(): WalletRepository
 

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pageContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:overScrollMode="never"
+        android:background="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/contentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/x1">
+
+            <jp.co.soramitsu.common.presentation.view.SoraToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:textRight=""
+                app:titleText=""
+                tools:layout_height="50dp" />
+
+            <TextView
+                android:id="@+id/title"
+                style="@style/TextAppearance.Soramitsu.Title_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x4"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/toolbar" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x4"
+                android:layout_marginEnd="@dimen/x2"
+                android:layerType="software"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/title"
+                tools:background="@color/grey_300" />
+
+            <TextView
+                android:id="@+id/tvTransferableTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
+                android:text="@string/details_transferable"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider" />
+
+            <TextView
+                android:id="@+id/tvTransferableValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/divider" />
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                android:visibility="gone"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvTransferableTitle"
+                tools:background="@color/grey_300" />
+
+            <TextView
+                android:id="@+id/tvFrozenTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/x2"
+                android:paddingTop="@dimen/x1_5"
+                android:paddingBottom="@dimen/x1_5"
+                android:background="?selectableItemBackground"
+                android:drawableStart="@drawable/ic_lock_16"
+                android:visibility="gone"
+                android:drawablePadding="@dimen/x1"
+                android:text="@string/details_frozen"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider2" />
+
+            <TextView
+                android:id="@+id/tvFrozenValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                android:text="100"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider2" />
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvFrozenTitle"
+                tools:background="@color/grey_300" />
+
+            <TextView
+                android:id="@+id/tvTotalTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
+                android:text="@string/details_total"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider3" />
+
+            <TextView
+                android:id="@+id/tvTotalValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider3" />
+
+            <View
+                android:id="@+id/divider4"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvTotalTitle"
+                tools:background="@color/grey_300" />
+
+            <LinearLayout
+                android:id="@+id/assetCards"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginEnd="@dimen/x1"
+                app:layout_constraintTop_toBottomOf="@+id/divider4" >
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/scanCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_margin="@dimen/x1"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="@dimen/x1"
+                    app:cardElevation="@dimen/x1_2"
+                    app:layout_constraintTop_toBottomOf="@+id/divider4">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="@dimen/x2"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="@dimen/x3"
+                            android:layout_height="@dimen/x3"
+                            android:src="@drawable/ic_scan_qr_24" />
+
+                        <TextView
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/x2"
+                            android:ellipsize="end"
+                            android:lines="1"
+                            android:text="@string/common_scan" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/sendCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginTop="@dimen/x1"
+                    android:layout_marginBottom="@dimen/x1"
+                    app:cardCornerRadius="@dimen/x1"
+                    app:cardElevation="@dimen/x1_2"
+                    app:layout_constraintStart_toEndOf="@id/scanCard"
+                    app:layout_constraintTop_toBottomOf="@+id/divider4">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="@dimen/x2"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="@dimen/x3"
+                            android:layout_height="@dimen/x3"
+                            android:src="@drawable/ic_send_24" />
+
+                        <TextView
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/x2"
+                            android:ellipsize="end"
+                            android:text="@string/common_send" />
+
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/receiveCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_weight="1"
+                    android:layout_margin="@dimen/x1"
+                    app:cardCornerRadius="@dimen/x1"
+                    app:cardElevation="@dimen/x1_2"
+                    app:layout_constraintStart_toEndOf="@id/sendCard"
+                    app:layout_constraintTop_toBottomOf="@+id/divider4">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="@dimen/x2"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="@dimen/x3"
+                            android:layout_height="@dimen/x3"
+                            android:src="@drawable/ic_receive_24" />
+
+                        <TextView
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/x2"
+                            android:ellipsize="end"
+                            android:text="@string/common_receive" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/recentEventsBottomSheet"
+        style="@style/BottomSheetDialog"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/rounded_card_view"
+        android:clickable="true"
+        android:elevation="@dimen/x3"
+        android:focusable="true"
+        app:behavior_peekHeight="@dimen/x10"
+        android:orientation="vertical"
+        app:behavior_hideable="false"
+        app:layout_behavior="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior"
+        tools:behavior_peekHeight="50dp">
+
+        <ImageView
+            android:id="@+id/bottomSheetPin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_2"
+            android:src="@drawable/ic_bottomsheet_pin"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Paragraph_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x2"
+            android:layout_marginTop="@dimen/x1_2"
+            android:paddingTop="@dimen/x1_5"
+            android:paddingBottom="@dimen/x1_5"
+            android:text="@string/history_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:background="@color/thinBorder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTv" />
+
+        <LinearLayout
+            android:id="@+id/placeholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTv"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/placeholder_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/x2"
+                app:srcCompat="@drawable/ic_empty_state" />
+
+            <TextView
+                android:id="@+id/placeholder_text"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x10"
+                android:layout_marginEnd="@dimen/x10"
+                android:gravity="center_horizontal"
+                android:text="@string/wallet_empty_description"
+                android:textColor="?attr/contentTertiary" />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/eventRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/titleTv" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

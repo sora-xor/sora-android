@@ -1,16 +1,8 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation
 
-import android.app.ActivityManager
-import android.app.ActivityManager.RunningAppProcessInfo
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
-import android.os.Handler
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -19,8 +11,8 @@ import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
 import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
 import com.google.android.material.color.MaterialColors
 import dev.chrisbanes.insetter.Insetter
@@ -47,7 +39,7 @@ import javax.inject.Inject
 class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), BottomBarController {
 
     companion object {
-        const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
+        private const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
 
         private const val ACTION_CHANGE_LANGUAGE =
             "jp.co.soramitsu.feature_main_impl.ACTION_CHANGE_LANGUAGE"
@@ -55,7 +47,6 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
         private const val ANIM_DURATION = 150L
-        private const val SERVICE_START_DELAY = 500L
 
         fun start(context: Context) {
             val intent = Intent(context, MainActivity::class.java).apply {
@@ -97,12 +88,6 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
             .inject(this)
     }
 
-    override fun onPause() {
-        super.onPause()
-//        eventsObservingStarter.stopObserver()
-//        ethStatusPollingServiceStarter.stopEthStatusPollingServiceService()
-    }
-
     override fun initViews() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigationView) { _, insets ->
             insets
@@ -113,18 +98,23 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
         Insetter.builder()
             .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
             .applyToView(binding.clMainContainer)
-        binding.bottomNavigationView.show()
+
         binding.bottomNavigationView.inflateMenu(R.menu.bottom_navigations)
 
-        navController = Navigation.findNavController(this, R.id.fragmentNavHostMain)
-        mainRouter.attachNavController(navController!!)
-        NavigationUI.setupWithNavController(binding.bottomNavigationView, navController!!)
+        binding.fragmentNavHostMain.post {
+            navController = supportFragmentManager.findFragmentById(R.id.fragmentNavHostMain)
+                ?.findNavController()
+            mainRouter.attachNavController(navController!!)
 
-        if (ACTION_CHANGE_LANGUAGE == intent.action) {
-            mainRouter.showProfile()
-        } else {
-            showPin(PinCodeAction.TIMEOUT_CHECK)
+            NavigationUI.setupWithNavController(binding.bottomNavigationView, navController!!)
+
+            if (ACTION_CHANGE_LANGUAGE == intent.action) {
+                chooseBottomNavigationItem(R.id.profile_nav_graph)
+            } else {
+                showPin(PinCodeAction.TIMEOUT_CHECK)
+            }
         }
+
         binding.badConnectionView.applyInsetter {
             type(statusBars = true) {
                 padding(top = true)
@@ -184,9 +174,9 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.let {
-            if (ACTION_INVITE == it.action) {
-                // viewModel.startedWithInviteAction()
-            }
+//            if (ACTION_INVITE == it.action) {
+//                viewModel.startedWithInviteAction()
+//            }
         }
     }
 
@@ -235,17 +225,17 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
     }
 
     fun checkInviteAction() {
-        if (ACTION_INVITE == intent.action) {
-            // viewModel.startedWithInviteAction()
-        }
+//        if (ACTION_INVITE == intent.action) {
+//            viewModel.startedWithInviteAction()
+//        }
     }
 
     override fun showBottomBar() {
-        binding.bottomNavigationView.show()
+        requireBinding()?.bottomNavigationView?.show()
     }
 
     override fun hideBottomBar() {
-        binding.bottomNavigationView.gone()
+        requireBinding()?.bottomNavigationView?.gone()
     }
 
     fun restartAfterLanguageChange() {
@@ -274,26 +264,6 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
         }
         timeInBackground = null
         super.onResume()
-
-        // runServices()
-    }
-
-    private fun runServices() {
-        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val runningAppProcesses = activityManager.runningAppProcesses
-        if (runningAppProcesses != null) {
-            val importance = runningAppProcesses[0].importance
-
-            if (importance <= RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-                Handler().postDelayed(
-                    {
-                        // eventsObservingStarter.startObserver()
-                        // ethStatusPollingServiceStarter.startEthStatusPollingServiceService()
-                    },
-                    SERVICE_START_DELAY
-                )
-            }
-        }
     }
 
     private fun idleTimePassedFrom(timeInBackground: Date): Boolean {
@@ -332,5 +302,9 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
             return super.onKeyUp(keyCode, event)
         }
         return super.onKeyUp(keyCode, event)
+    }
+
+    private fun chooseBottomNavigationItem(itemId: Int) {
+        (binding.bottomNavigationView.findViewById(itemId) as View).performClick()
     }
 }

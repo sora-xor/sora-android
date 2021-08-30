@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 
 android {
     compileSdkVersion compileVersion
@@ -27,12 +28,36 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        tst {
+            dimension 'default'
+        }
+
+        staging {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation project(":common")
+
     implementation kotlinDep
-    implementation rxDep
     implementation fearlessLibDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation pagingLibraryDep
 }

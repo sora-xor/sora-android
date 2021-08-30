@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/x2"
+    android:paddingEnd="@dimen/x2"
+    android:paddingBottom="@dimen/x3"
+    android:background="@drawable/rounded_card_view"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/bottomSheetPin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1_2"
+        android:src="@drawable/ic_bottomsheet_pin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvFrozenTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/details_frozen_total"
+        android:layout_marginTop="@dimen/x4"
+        android:textColor="@color/black"
+        android:drawableStart="@drawable/ic_lock_16"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvFrozenValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvFrozenTitle"
+        tools:text="100.000.00" />
+
+    <View
+        android:id="@+id/divider1"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvFrozenTitle"
+        tools:background="@color/grey_300" />
+
+    <TextView
+        android:id="@+id/tvLockedTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wallet_balance_locked"
+        android:layout_marginTop="@dimen/x1_5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+    <TextView
+        android:id="@+id/tvLockedValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvLockedTitle"
+        tools:text="100.000.00" />
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvLockedTitle"
+        tools:background="@color/grey_300" />
+
+    <TextView
+        android:id="@+id/tvBondedTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wallet_bonded"
+        android:layout_marginTop="@dimen/x1_5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider2" />
+
+    <TextView
+        android:id="@+id/tvBondedValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvBondedTitle"
+        tools:text="100.000.00" />
+
+    <View
+        android:id="@+id/divider3"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvBondedTitle"
+        tools:background="@color/grey_300" />
+
+    <TextView
+        android:id="@+id/tvReservedTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wallet_balance_reserved"
+        android:layout_marginTop="@dimen/x1_5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider3" />
+
+    <TextView
+        android:id="@+id/tvReservedValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvReservedTitle"
+        tools:text="100.000.00" />
+
+    <View
+        android:id="@+id/divider4"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvReservedTitle"
+        tools:background="@color/grey_300" />
+
+    <TextView
+        android:id="@+id/tvRedeemableTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wallet_redeemable"
+        android:layout_marginTop="@dimen/x1_5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider4" />
+
+    <TextView
+        android:id="@+id/tvRedeemableValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvRedeemableTitle"
+        tools:text="100.000.00" />
+
+    <View
+        android:id="@+id/divider5"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvRedeemableTitle"
+        tools:background="@color/grey_300" />
+
+    <TextView
+        android:id="@+id/tvUnbondingTitle"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/wallet_unbonding"
+        android:layout_marginTop="@dimen/x1_5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider5" />
+
+    <TextView
+        android:id="@+id/tvUnbondingValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvUnbondingTitle"
+        tools:text="100.000.00" />
+
+    <View
+        android:id="@+id/divider6"
+        android:layout_width="0dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvUnbondingTitle"
+        tools:background="@color/grey_300" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.service
 
 import android.annotation.TargetApi
@@ -37,7 +32,8 @@ class PushNotificationService : FirebaseMessagingService() {
     override fun onCreate() {
         super.onCreate()
 
-        val component: AppFeatureComponent = FeatureUtils.getFeature(this, AppFeatureComponent::class.java)
+        val component: AppFeatureComponent =
+            FeatureUtils.getFeature(this, AppFeatureComponent::class.java)
         component.inject(this)
     }
 
@@ -46,13 +42,15 @@ class PushNotificationService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
 
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT)
+        val pendingIntent =
+            PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT)
 
         val notificationId = Random().nextInt(60000)
 
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setupChannels(notificationManager)
@@ -85,7 +83,11 @@ class PushNotificationService : FirebaseMessagingService() {
         val channelName = getString(R.string.channel_name)
         val channelDescription = getString(R.string.channel_description)
 
-        val adminChannel = NotificationChannel(ADMIN_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_LOW).apply {
+        val adminChannel = NotificationChannel(
+            ADMIN_CHANNEL_ID,
+            channelName,
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
             description = channelDescription
             enableLights(true)
             lightColor = Color.RED

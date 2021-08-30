@@ -1,20 +1,14 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_account_impl.data.repository
 
-import io.reactivex.Completable
-import io.reactivex.Single
+import androidx.room.withTransaction
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
+import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_account_api.domain.model.Language
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import javax.inject.Inject
 
@@ -27,11 +21,11 @@ class UserRepositoryImpl @Inject constructor(
     private val languagesHolder: LanguagesHolder
 ) : UserRepository {
 
-    override fun getAppVersion(): Single<String> {
-        return Single.just(appVersionProvider.getVersionName())
+    override suspend fun getAppVersion(): String {
+        return appVersionProvider.getVersionName()
     }
 
-    override fun savePin(pin: String) {
+    override suspend fun savePin(pin: String) {
         userDatasource.savePin(pin)
     }
 
@@ -39,11 +33,11 @@ class UserRepositoryImpl @Inject constructor(
         return userDatasource.retrievePin()
     }
 
-    override fun getInvitationLink(): Single<String> {
-        return Single.fromCallable { appLinksProvider.defaultMarketUrl }
+    override suspend fun getInvitationLink(): String {
+        return appLinksProvider.defaultMarketUrl
     }
 
-    override fun saveRegistrationState(onboardingState: OnboardingState) {
+    override suspend fun saveRegistrationState(onboardingState: OnboardingState) {
         userDatasource.saveRegistrationState(onboardingState)
     }
 
@@ -51,79 +45,71 @@ class UserRepositoryImpl @Inject constructor(
         return userDatasource.retrieveRegistratrionState()
     }
 
-    override fun clearUserData(): Completable {
-        return Completable.fromCallable {
-            userDatasource.clearUserData()
-            db.clearAllTables()
-        }
+    override suspend fun clearUserData() {
+        userDatasource.clearUserData()
+        db.withTransaction { db.clearAllTables() }
     }
 
     override fun saveParentInviteCode(inviteCode: String) {
         userDatasource.saveParentInviteCode(inviteCode)
     }
 
-    override fun getParentInviteCode(): Single<String> {
-        return Single.just(userDatasource.getParentInviteCode())
+    override suspend fun getParentInviteCode(): String {
+        return userDatasource.getParentInviteCode()
     }
 
-    override fun getAvailableLanguages(): Single<Pair<List<Language>, String>> {
-        return Single.just(languagesHolder.getLanguages())
-            .map { languages ->
-                val currentLanguage = userDatasource.getCurrentLanguage()
-                Pair(languages, currentLanguage)
-            }
+    override suspend fun getAvailableLanguages(): Pair<List<Language>, String> {
+        return languagesHolder.getLanguages() to userDatasource.getCurrentLanguage()
     }
 
-    override fun changeLanguage(language: String): Single<String> {
-        return Single.fromCallable { userDatasource.changeLanguage(language) }
-            .map { language }
+    override suspend fun changeLanguage(language: String): String {
+        userDatasource.changeLanguage(language)
+        return language
     }
 
-    override fun getSelectedLanguage(): Single<Language> {
-        return Single.just(languagesHolder.getLanguages())
-            .map { languages ->
-                val currentLanguage = userDatasource.getCurrentLanguage()
-                languages.first { it.iso == currentLanguage }
-            }
+    override suspend fun getSelectedLanguage(): Language {
+        return languagesHolder.getLanguages().first {
+            it.iso == userDatasource.getCurrentLanguage()
+        }
     }
 
-    override fun setBiometryEnabled(isEnabled: Boolean): Completable {
-        return Completable.fromCallable { userDatasource.setBiometryEnabled(isEnabled) }
+    override suspend fun setBiometryEnabled(isEnabled: Boolean) {
+        userDatasource.setBiometryEnabled(isEnabled)
     }
 
-    override fun isBiometryEnabled(): Single<Boolean> {
-        return Single.fromCallable { userDatasource.isBiometryEnabled() }
+    override suspend fun isBiometryEnabled(): Boolean {
+        return userDatasource.isBiometryEnabled()
     }
 
-    override fun setBiometryAvailable(biometryAvailable: Boolean): Completable {
-        return Completable.fromCallable { userDatasource.setBiometryAvailable(biometryAvailable) }
+    override suspend fun setBiometryAvailable(biometryAvailable: Boolean) {
+        userDatasource.setBiometryAvailable(biometryAvailable)
     }
 
-    override fun isBiometryAvailable(): Single<Boolean> {
-        return Single.fromCallable { userDatasource.isBiometryAvailable() }
+    override suspend fun isBiometryAvailable(): Boolean {
+        return userDatasource.isBiometryAvailable()
     }
 
-    override fun saveAccountName(accountName: String): Completable {
-        return Completable.fromCallable { userDatasource.saveAccountName(accountName) }
+    override suspend fun saveAccountName(accountName: String) {
+        userDatasource.saveAccountName(accountName)
     }
 
-    override fun getAccountName(): Single<String> {
-        return Single.fromCallable { userDatasource.getAccountName() }
+    override suspend fun getAccountName(): String {
+        return userDatasource.getAccountName()
     }
 
-    override fun saveNeedsMigration(it: Boolean): Completable {
-        return Completable.fromCallable { userDatasource.saveNeedsMigration(it) }
+    override suspend fun saveNeedsMigration(it: Boolean) {
+        userDatasource.saveNeedsMigration(it)
     }
 
-    override fun needsMigration(): Single<Boolean> {
-        return Single.fromCallable { userDatasource.needsMigration() }
+    override suspend fun needsMigration(): Boolean {
+        return userDatasource.needsMigration()
     }
 
-    override fun saveIsMigrationFetched(it: Boolean): Completable {
-        return Completable.fromCallable { userDatasource.saveIsMigrationFetched(it) }
+    override suspend fun saveIsMigrationFetched(it: Boolean) {
+        userDatasource.saveIsMigrationFetched(it)
     }
 
-    override fun isMigrationFetched(): Single<Boolean> {
-        return Single.fromCallable { userDatasource.isMigrationStatusFetched() && !userDatasource.needsMigration() }
+    override suspend fun isMigrationFetched(): Boolean {
+        return userDatasource.isMigrationStatusFetched() && !userDatasource.needsMigration()
     }
 }

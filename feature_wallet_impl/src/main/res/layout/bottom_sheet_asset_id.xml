@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_card_view"
+    android:paddingStart="@dimen/x2"
+    android:paddingEnd="@dimen/x1_5"
+    tools:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/bottomSheetPin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1_2"
+        android:src="@drawable/ic_bottomsheet_pin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/assetId"
+        style="@style/TextAppearance.Soramitsu.Paragraph_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="@string/wallet_asset_id"
+        tools:text="Asset id" />
+
+
+    <TextView
+        android:id="@+id/assetIdValue"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/text_background"
+        android:drawablePadding="@dimen/x1"
+        android:drawableEnd="@drawable/ic_copy_thin_16"
+        android:ellipsize="middle"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        app:drawableEndCompat="@drawable/ic_copy_thin_16"
+        app:layout_constraintBottom_toBottomOf="@+id/assetId"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_default="wrap"
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintStart_toEndOf="@+id/assetId"
+        app:layout_constraintTop_toTopOf="@+id/assetId"
+        app:layout_constraintWidth_default="wrap"
+        tools:text="s9d9asdassdlkdc8vqqwe8s9v7c"
+        tools:textColor="@color/grey_300" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginBottom="@dimen/x4"
+        android:background="@drawable/bg_dash_divider"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/assetId" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

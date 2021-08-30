@@ -1,23 +1,17 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.recovery
 
-import android.content.Context
 import android.os.Bundle
-import android.text.Editable
 import android.text.InputFilter
-import android.text.TextWatcher
 import android.view.View
 import android.view.WindowManager.LayoutParams
-import android.view.inputmethod.InputMethodManager
+import androidx.core.widget.doOnTextChanged
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
+import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.enableIf
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
@@ -41,32 +35,21 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
         progressDialog = SoraProgressDialog(requireContext())
 
         viewBinding.toolbar.setHomeButtonListener { viewModel.backButtonClick() }
-        val imm =
-            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(viewBinding.mnemonicInput, 0)
+
+        viewBinding.cardView.setOnClickListener {
+            viewBinding.mnemonicInput.requestFocus()
+            openSoftKeyboard(it)
+        }
+
+        openSoftKeyboard(viewBinding.mnemonicInput)
 
         viewBinding.mnemonicInput.setOnEditorActionListener { _, _, _ ->
-            val imm =
-                requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.hideSoftInputFromWindow(viewBinding.mnemonicInput.windowToken, 0)
+            hideSoftKeyboard(requireActivity())
             true
         }
 
-        val textWatcher = object : TextWatcher {
-
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.onInputChanged(
-                    viewBinding.mnemonicInput.text.toString(),
-                )
-            }
-        }
-
-        viewBinding.mnemonicInput.addTextChangedListener(textWatcher)
-        viewBinding.accountNameEt.addTextChangedListener(textWatcher)
+        viewBinding.mnemonicInput.doOnTextChanged { _, _, _, _ -> viewModel.onInputChanged(viewBinding.mnemonicInput.text.toString()) }
+        viewBinding.accountNameEt.doOnTextChanged { _, _, _, _ -> viewModel.onInputChanged(viewBinding.mnemonicInput.text.toString()) }
 
         viewBinding.nextBtn.disable()
         viewBinding.nextBtn.setDebouncedClickListener(debounceClickHandler) {

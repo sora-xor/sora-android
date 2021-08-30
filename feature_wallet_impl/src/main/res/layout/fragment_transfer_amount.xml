@@ -170,7 +170,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/vDividerRecipient" />
 
-            <jp.co.soramitsu.feature_wallet_impl.presentation.view.CurrencyEditText
+            <jp.co.soramitsu.common.presentation.view.CurrencyEditText
                 android:id="@+id/amountEt"
                 style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="0dp"

@@ -169,6 +169,13 @@
         "DispatchResultWithPostInfo": "Result<PostDispatchInfo, DispatchErrorWithPostInfoTPostDispatchInfo>",
         "DistributionAccounts": "Null",
         "Duration": "Null",
+        "EthBridgeStorageVersion": {
+          "type": "enum",
+          "value_list": [
+            "V1",
+            "V2RemovePendingTransfers"
+          ]
+        },
         "EthPeersSync": {
           "type": "struct",
           "type_mapping": [
@@ -674,6 +681,19 @@
           ]
         },
         "LookupSource": "AccountId",
+        "MarketMakerInfo": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "count",
+              "u32"
+            ],
+            [
+              "volume",
+              "Balance"
+            ]
+          ]
+        },
         "Mode": {
           "type": "enum",
           "value_list": [
@@ -1301,11 +1321,30 @@
             "Done"
           ]
         },
+        "RewardInfo": {
+          "type": "struct",
+          "type_mapping": [
+            [
+              "limit",
+              "Balance"
+            ],
+            [
+              "total_available",
+              "Balance"
+            ],
+            [
+              "rewards",
+              "BTreeMap<RewardReason, Balance>"
+            ]
+          ]
+        },
         "RewardReason": {
           "type": "enum",
           "value_list": [
             "Unspecified",
-            "BuyOnBondingCurve"
+            "BuyOnBondingCurve",
+            "LiquidityProvisionFarming",
+            "MarketMakerVolume"
           ]
         },
         "Scope": {
@@ -1339,6 +1378,7 @@
           ]
         },
         "SmoothPriceState": "Null",
+        "StorageVersion": "Null",
         "SwapAction": "Null",
         "SwapAmount": {
           "type": "enum",

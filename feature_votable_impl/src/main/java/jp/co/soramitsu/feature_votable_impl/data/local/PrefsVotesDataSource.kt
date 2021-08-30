@@ -1,14 +1,11 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_votable_impl.data.local
 
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.feature_votable_api.domain.interfaces.VotesDataSource
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
 
 class PrefsVotesDataSource @Inject constructor(
@@ -20,20 +17,16 @@ class PrefsVotesDataSource @Inject constructor(
         private const val KEY_LAST_VOTES = "key_projects_last_voted"
     }
 
-    private val votesObserver = BehaviorSubject.createDefault(retrieveVotes())
+    private val votesObserver = MutableStateFlow<String>("0")
 
-    override fun observeVotes(): Observable<String> {
-        return if (hasLocalCopy()) {
-            votesObserver
-        } else {
-            Observable.just("0")
-        }
+    override fun observeVotes(): Flow<String> {
+        return votesObserver.asStateFlow().filterNotNull()
     }
 
     override fun saveVotes(votes: String) {
         preferences.putString(KEY_VOTES, votes)
 
-        votesObserver.onNext(votes)
+        votesObserver.value = votes
     }
 
     override fun retrieveVotes(): String {

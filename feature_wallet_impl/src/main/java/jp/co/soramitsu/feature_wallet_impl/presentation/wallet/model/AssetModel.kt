@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model
 
 data class AssetModel(
@@ -16,6 +11,7 @@ data class AssetModel(
     val position: Int,
     val hidingAllowed: Boolean,
     val displayed: Boolean,
+    val showMainBalance: Boolean,
 ) {
     enum class State {
         NORMAL,

@@ -1,16 +1,16 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_ethereum_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
@@ -19,6 +19,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.web3j.crypto.Credentials
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class PrefsEthereumDatasourceTest {
 
@@ -27,6 +28,9 @@ class PrefsEthereumDatasourceTest {
         private const val PREFS_XOR_ADDRESS = "prefs_xor_address_key"
         private const val PREFS_ETH_REGISTER_STATE = "prefs_eth_register_state"
     }
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var encryptedPreferences: EncryptedPreferences
@@ -89,21 +93,19 @@ class PrefsEthereumDatasourceTest {
     }
 
     @Test
-    fun `save eth registered state called`() {
+    fun `save eth registered state called`() = runBlockingTest {
         val ethTxHashKey = "prefs_eth_register_transaction_hash"
         val ethRegistrationStateKey = "prefs_eth_register_state"
         val txHash = "txHash"
         val state = EthRegisterState(EthRegisterState.State.IN_PROGRESS, txHash)
 
-        prefsEthereumDatasource.observeEthRegisterState()
-            .test()
-            .assertValue(EthRegisterState.State.NONE)
+        val value = prefsEthereumDatasource.observeEthRegisterState().first()
+        assertEquals(EthRegisterState.State.NONE, value)
 
         prefsEthereumDatasource.saveEthRegisterState(state)
 
-        prefsEthereumDatasource.observeEthRegisterState()
-            .test()
-            .assertValue(state.state)
+        val nvalue = prefsEthereumDatasource.observeEthRegisterState().first()
+        assertEquals(state.state, nvalue)
 
         verify(preferences).putString(ethTxHashKey, txHash)
         verify(preferences).putString(ethRegistrationStateKey, state.state.toString())

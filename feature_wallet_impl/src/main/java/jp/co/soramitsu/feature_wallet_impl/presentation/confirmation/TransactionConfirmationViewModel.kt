@@ -1,15 +1,12 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
+import androidx.lifecycle.viewModelScope
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
@@ -21,9 +18,9 @@ import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 class TransactionConfirmationViewModel(
@@ -70,36 +67,22 @@ class TransactionConfirmationViewModel(
     private val _transactionSuccessEvent = SingleLiveEvent<Unit>()
     val transactionSuccessEvent: LiveData<Unit> = _transactionSuccessEvent
 
-    private val assetList = mutableListOf<Asset>()
-    private val curAsset: Asset by lazy {
-        requireNotNull(
-            assetList.find { it.id == assetId },
-            { "Asset not found" }
-        )
-    }
+    private lateinit var curAsset: Asset
+    private lateinit var feeToken: Token
 
     init {
-        disposables.add(
-            walletInteractor.getAssets()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        assetList.clear()
-                        assetList.addAll(it)
-                        _balanceFormattedLiveData.value =
-                            numbersFormatter.formatBigDecimal(
-                                curAsset.balance,
-                                curAsset.roundingPrecision
-                            )
-                        _inputTokenLastNameLiveData.value = curAsset.symbol
-                        configureScreen()
-                    },
-                    {
-                        it.printStackTrace()
-                    }
+        viewModelScope.launch {
+            curAsset = walletInteractor.getAsset(assetId)
+            feeToken = walletInteractor.getAsset(OptionsProvider.feeAssetId).token
+
+            _balanceFormattedLiveData.value =
+                numbersFormatter.formatBigDecimal(
+                    curAsset.balance.transferable,
+                    AssetHolder.ROUNDING,
                 )
-        )
+            _inputTokenLastNameLiveData.value = curAsset.token.symbol
+            configureScreen()
+        }
     }
 
     fun backButtonPressed() {
@@ -119,19 +102,19 @@ class TransactionConfirmationViewModel(
         when (transferType) {
             TransferType.VAL_TRANSFER -> {
                 _amountFormattedLiveData.value =
-                    numbersFormatter.formatBigDecimal(amount, curAsset.precision)
+                    numbersFormatter.formatBigDecimal(amount, curAsset.token.precision)
 
                 if (transactionFee != BigDecimal.ZERO) {
                     _transactionFeeFormattedLiveData.value = "${
                     numbersFormatter.formatBigDecimal(
                         transactionFee,
-                        curAsset.precision
+                        feeToken.precision
                     )
-                    } ${SubstrateNetworkOptionsProvider.feeAssetSymbol}"
+                    } ${feeToken.symbol}"
                 }
 
                 _recipientNameLiveData.value = peerId.truncateUserAddress()
-                _inputTokenIconLiveData.value = curAsset.iconShadow
+                _inputTokenIconLiveData.value = curAsset.token.icon
             }
             else -> {
             }
@@ -139,22 +122,17 @@ class TransactionConfirmationViewModel(
     }
 
     private fun soraNetTransferToRecipient() {
-        disposables.add(
-            walletInteractor.observeTransfer(peerId, curAsset.id, amount, transactionFee)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { showProgress() }
-                .doOnTerminate { hideProgress() }
-                .subscribe(
-                    {
-                        _transactionSuccessEvent.trigger()
-                        router.returnToWalletFragment()
-                    },
-                    {
-                        onError(it)
-                        router.returnToWalletFragment()
-                    }
-                )
-        )
+        viewModelScope.launch {
+            showProgress()
+            try {
+                val success = walletInteractor.observeTransfer(peerId, curAsset.token.id, amount, transactionFee)
+                if (success) _transactionSuccessEvent.trigger()
+            } catch (t: Throwable) {
+                onError(t)
+            } finally {
+                hideProgress()
+                router.returnToWalletFragment()
+            }
+        }
     }
 }

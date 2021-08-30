@@ -1,16 +1,9 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.Completable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
@@ -21,7 +14,8 @@ import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class PinCodeViewModel(
     private val interactor: PinCodeInteractor,
@@ -57,6 +51,9 @@ class PinCodeViewModel(
     private val _closeAppLiveData = SingleLiveEvent<Unit>()
     val closeAppLiveData: LiveData<Unit> = _closeAppLiveData
 
+    private val _fingerPrintCanceledFromPromptEvent = SingleLiveEvent<Unit>()
+    val fingerPrintCanceledFromPromptEvent: LiveData<Unit> = _fingerPrintCanceledFromPromptEvent
+
     private val _checkInviteLiveData = SingleLiveEvent<Unit>()
     val checkInviteLiveData: LiveData<Unit> = _checkInviteLiveData
 
@@ -76,16 +73,11 @@ class PinCodeViewModel(
     val resetApplicationEvent: LiveData<Unit> = _resetApplicationEvent
 
     init {
-        disposables.add(
-            interactor.isBiometryEnabled()
-                .subscribe(
-                    {
-                        isBiometryEnabled = it
-                    },
-                    ::onError
-                )
-
-        )
+        viewModelScope.launch {
+            tryCatch {
+                isBiometryEnabled = interactor.isBiometryEnabled()
+            }
+        }
 
         pinCodeProgressLiveData.addSource(inputCodeLiveData) {
             pinCodeProgressLiveData.value = it.length
@@ -99,18 +91,9 @@ class PinCodeViewModel(
     }
 
     fun startAuth(pinCodeAction: PinCodeAction) {
-        disposables.add(
-            interactor.needsMigration()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        needsMigration = it
-                    },
-                    ::onError
-                )
-
-        )
+        viewModelScope.launch {
+            needsMigration = interactor.needsMigration()
+        }
 
         action = pinCodeAction
         when (action) {
@@ -132,30 +115,24 @@ class PinCodeViewModel(
                 backButtonVisibilityLiveData.value = true
             }
             PinCodeAction.TIMEOUT_CHECK -> {
-                disposables.add(
-                    interactor.isCodeSet()
-                        .subscribe(
-                            {
-                                if (it) {
-                                    _logoVisibilityLiveData.value = true
-                                    toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
-                                    showFingerPrintEventLiveData.value = isBiometryEnabled
-                                    backButtonVisibilityLiveData.value = false
-                                } else {
-                                    _logoVisibilityLiveData.value = false
-                                    toolbarTitleResLiveData.value =
-                                        R.string.pincode_set_your_pin_code
-                                    backButtonVisibilityLiveData.value = false
-                                    action = PinCodeAction.CREATE_PIN_CODE
-                                }
-                            },
-                            {
-                                onError(it)
-                                _logoVisibilityLiveData.value = false
-                                action = PinCodeAction.CREATE_PIN_CODE
-                            }
-                        )
-                )
+                try {
+                    if (interactor.isCodeSet()) {
+                        _logoVisibilityLiveData.value = true
+                        toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
+                        showFingerPrintEventLiveData.value = isBiometryEnabled
+                        backButtonVisibilityLiveData.value = false
+                    } else {
+                        _logoVisibilityLiveData.value = false
+                        toolbarTitleResLiveData.value =
+                            R.string.pincode_set_your_pin_code
+                        backButtonVisibilityLiveData.value = false
+                        action = PinCodeAction.CREATE_PIN_CODE
+                    }
+                } catch (t: Throwable) {
+                    onError(t)
+                    _logoVisibilityLiveData.value = false
+                    action = PinCodeAction.CREATE_PIN_CODE
+                }
             }
         }
     }
@@ -183,32 +160,24 @@ class PinCodeViewModel(
     }
 
     private fun pinCodeEntered(pin: String) {
-        disposables.add(
-            Completable.complete()
-                .delay(COMPLETE_PIN_CODE_DELAY, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        if (PinCodeAction.CREATE_PIN_CODE == action) {
-                            if (tempCode.isEmpty()) {
-                                tempCode = pin
-                                inputCodeLiveData.value = ""
-                                toolbarTitleResLiveData.value =
-                                    if (isChanging) R.string.pincode_confirm_new_pin_code else R.string.pincode_confirm_your_pin_code
-                                backButtonVisibilityLiveData.value = true
-                            } else {
-                                pinCodeEnterComplete(pin)
-                            }
-                        } else {
-                            checkPinCode(pin)
-                        }
-                    },
-                    {
-                        logException(it)
+        viewModelScope.launch {
+            tryCatch {
+                delay(COMPLETE_PIN_CODE_DELAY)
+                if (PinCodeAction.CREATE_PIN_CODE == action) {
+                    if (tempCode.isEmpty()) {
+                        tempCode = pin
+                        inputCodeLiveData.value = ""
+                        toolbarTitleResLiveData.value =
+                            if (isChanging) R.string.pincode_confirm_new_pin_code else R.string.pincode_confirm_your_pin_code
+                        backButtonVisibilityLiveData.value = true
+                    } else {
+                        pinCodeEnterComplete(pin)
                     }
-                )
-        )
+                } else {
+                    checkPinCode(pin)
+                }
+            }
+        }
     }
 
     private fun pinCodeEnterComplete(pinCode: String) {
@@ -226,73 +195,54 @@ class PinCodeViewModel(
     }
 
     private fun registerPinCode(code: String) {
-        disposables.add(
-            interactor.savePin(code)
-                .subscribe(
-                    {
-                        if (isChanging) {
-                            _pincodeChangedEvent.trigger()
-                            mainRouter.popBackStack()
-                        } else {
-                            disposables.add(
-                                interactor.isBiometryAvailable()
-                                    .subscribeOn(Schedulers.io())
-                                    .observeOn(AndroidSchedulers.mainThread())
-                                    .subscribe(
-                                        {
-                                            if (it) {
-                                                _biometryInitialDialogEvent.trigger()
-                                            } else {
-                                                proceed()
-                                            }
-                                        },
-                                        {}
-                                    )
-                            )
-                        }
-                    },
-                    {
-                        it.printStackTrace()
+        viewModelScope.launch {
+            tryCatch {
+                interactor.savePin(code)
+                if (isChanging) {
+                    _pincodeChangedEvent.trigger()
+                    mainRouter.popBackStack()
+                } else {
+                    val available = interactor.isBiometryAvailable()
+                    if (available) {
+                        _biometryInitialDialogEvent.trigger()
+                    } else {
+                        proceed()
                     }
-                )
-        )
+                }
+            }
+        }
     }
 
     private fun checkPinCode(code: String) {
-        disposables.add(
-            interactor.checkPin(code)
-                .subscribe(
-                    {
-                        when (action) {
-                            PinCodeAction.OPEN_PASSPHRASE -> {
-                                mainRouter.popBackStack()
-                                mainRouter.showPassphrase()
-                            }
-                            PinCodeAction.LOGOUT -> {
-                                _logoutEvent.trigger()
-                            }
-                            PinCodeAction.TIMEOUT_CHECK, PinCodeAction.CREATE_PIN_CODE -> {
-                                proceed()
-                            }
-                            PinCodeAction.CHANGE_PIN_CODE -> {
-                                action = PinCodeAction.CREATE_PIN_CODE
-                                isChanging = true
-                                isBiometryEnabled = false
-                                needsMigration = false
-                                showFingerPrintEventLiveData.value = isBiometryEnabled
-                                toolbarTitleResLiveData.value = R.string.pincode_enter_new_pin_code
-                                inputCodeLiveData.value = ""
-                            }
-                        }
-                    },
-                    {
-                        it.printStackTrace()
-                        inputCodeLiveData.value = ""
-                        wrongPinCodeEventLiveData.trigger()
-                        deviceVibrator.makeShortVibration()
-                    }
-                )
-        )
+        val result = interactor.checkPin(code)
+
+        if (result) {
+            when (action) {
+                PinCodeAction.OPEN_PASSPHRASE -> {
+                    mainRouter.popBackStack()
+                    mainRouter.showPassphrase()
+                }
+                PinCodeAction.LOGOUT -> {
+                    _logoutEvent.trigger()
+                }
+                PinCodeAction.TIMEOUT_CHECK, PinCodeAction.CREATE_PIN_CODE -> {
+                    proceed()
+                }
+                PinCodeAction.CHANGE_PIN_CODE -> {
+                    action = PinCodeAction.CREATE_PIN_CODE
+                    isChanging = true
+                    isBiometryEnabled = false
+                    needsMigration = false
+                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    toolbarTitleResLiveData.value = R.string.pincode_enter_new_pin_code
+                    inputCodeLiveData.value = ""
+                }
+            }
+        } else {
+            inputCodeLiveData.value = ""
+            wrongPinCodeEventLiveData.trigger()
+            deviceVibrator.makeShortVibration()
+        }
     }
 
     fun backPressed() {
@@ -357,48 +307,38 @@ class PinCodeViewModel(
     }
 
     fun setBiometryAvailable(isAuthReady: Boolean) {
-        disposables.add(
-            interactor.setBiometryAvailable(isAuthReady)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe()
-        )
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryAvailable(isAuthReady)
+            }
+        }
     }
 
     fun logoutOkPressed() {
-        disposables.add(
+        progress.showProgress()
+        viewModelScope.launch {
             interactor.resetUser()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { progress.showProgress() }
-                .doFinally { progress.hideProgress() }
-                .subscribe(
-                    {
-                        _resetApplicationEvent.trigger()
-                    },
-                    {
-                        it.printStackTrace()
-                    }
-                )
-        )
+            progress.hideProgress()
+            _resetApplicationEvent.trigger()
+        }
     }
 
     fun biometryDialogYesClicked() {
-        disposables.add(
-            interactor.setBiometryEnabled(true)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { proceed() }
-        )
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryEnabled(true)
+                proceed()
+            }
+        }
     }
 
     fun biometryDialogNoClicked() {
-        disposables.add(
-            interactor.setBiometryEnabled(false)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { proceed() }
-        )
+        viewModelScope.launch {
+            tryCatch {
+                interactor.setBiometryEnabled(false)
+                proceed()
+            }
+        }
     }
 
     private fun proceed() {
@@ -409,5 +349,9 @@ class PinCodeViewModel(
                 mainRouter.popBackStack()
             }
         }
+    }
+
+    fun canceledFromPrompt() {
+        _fingerPrintCanceledFromPromptEvent.trigger()
     }
 }

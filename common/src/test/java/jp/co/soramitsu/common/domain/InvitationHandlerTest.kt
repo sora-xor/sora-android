@@ -1,36 +1,38 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.domain
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class InvitationHandlerTest {
 
     private lateinit var invitationHandler: InvitationHandler
 
-    @Before fun setup() {
+    private val dispatcher = TestCoroutineDispatcher()
+
+    @Before
+    fun setup() {
         invitationHandler = InvitationHandler()
     }
 
-    @Test fun `invitations handler test`() {
-        var invitationsCount = 0
-
-        invitationHandler.observeInvitationApplies()
-            .subscribe { invitationsCount++ }
-
-        assertEquals(0, invitationsCount)
-
-        invitationHandler.invitationApplied()
-        assertEquals(1, invitationsCount)
-
+    @Test
+    fun `invitations handler test`() = runBlocking {
+        val actual = mutableListOf<String>()
+        launch(dispatcher) {
+            invitationHandler.observeInvitationApplies().take(3).collect { actual.add(it) }
+        }
         invitationHandler.invitationApplied()
         invitationHandler.invitationApplied()
-        assertEquals(3, invitationsCount)
+        invitationHandler.invitationApplied()
+
+        assertEquals(listOf("", "", ""), actual)
     }
 
 }

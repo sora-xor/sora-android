@@ -1,17 +1,12 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.personaldataedit
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Completable
-import io.reactivex.Single
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -23,20 +18,23 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class PersonalDataEditViewModelTest {
 
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val schedulersRule = RxSchedulersRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     lateinit var interactor: MainInteractor
+
     @Mock
     lateinit var router: MainRouter
+
     @Mock
     lateinit var progress: WithProgress
 
@@ -45,9 +43,8 @@ class PersonalDataEditViewModelTest {
     private val accountName = "AccountName"
 
     @Before
-    fun setUp() {
-        given(interactor.getAccountName()).willReturn(Single.just(accountName))
-        given(interactor.saveAccountName(accountName)).willReturn(Completable.complete())
+    fun setUp() = runBlockingTest {
+        given(interactor.getAccountName()).willReturn(accountName)
         personalDataEditViewModel = PersonalDataEditViewModel(interactor, router, progress)
     }
 

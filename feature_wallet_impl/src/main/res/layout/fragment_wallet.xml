@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/swipeLayout"
+    android:id="@+id/pageContainer"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/pageContainer"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/white">
+        android:layout_height="wrap_content">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/contentContainer"
@@ -96,110 +98,99 @@
                 tools:listitem="@layout/item_asset" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/recentEventsBottomSheet"
-            style="@style/BottomSheetDialog"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/recentEventsBottomSheet"
+        style="@style/BottomSheetDialog"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/rounded_card_view"
+        android:clickable="true"
+        android:elevation="@dimen/x2"
+        android:focusable="true"
+        android:orientation="vertical"
+        app:behavior_hideable="false"
+        app:layout_behavior="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior"
+        tools:behavior_peekHeight="190dp">
+
+        <ImageView
+            android:id="@+id/bottomSheetPin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_2"
+            android:src="@drawable/ic_bottomsheet_pin"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/titleTv"
+            style="@style/TextAppearance.Soramitsu.Paragraph_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x2"
+            android:layout_marginTop="@dimen/x1_2"
+            android:paddingTop="@dimen/x1_5"
+            android:paddingBottom="@dimen/x1_5"
+            android:text="@string/history_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <View
+            android:id="@+id/view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/rounded_card_view"
-            android:clickable="true"
-            android:elevation="@dimen/x2"
-            android:focusable="true"
+            android:layout_height="0.5dp"
+            android:background="@color/thinBorder"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTv" />
+
+        <LinearLayout
+            android:id="@+id/placeholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            app:behavior_hideable="false"
-            app:layout_behavior="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior"
-            tools:behavior_peekHeight="190dp">
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleTv"
+            tools:visibility="visible">
 
             <ImageView
-                android:id="@+id/bottomSheetPin"
+                android:id="@+id/placeholder_image"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x1_2"
-                android:src="@drawable/ic_bottomsheet_pin"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:layout_marginBottom="@dimen/x2"
+                app:srcCompat="@drawable/ic_empty_state" />
 
             <TextView
-                android:id="@+id/titleTv"
-                style="@style/TextAppearance.Soramitsu.Paragraph_1"
+                android:id="@+id/placeholder_text"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x1_2"
-                android:paddingTop="@dimen/x1_5"
-                android:paddingBottom="@dimen/x1_5"
-                android:text="@string/history_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <ImageView
-                android:id="@+id/historyHelp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_question_circle_24"
-                android:background="?selectableItemBackground"
-                app:layout_constraintBottom_toBottomOf="@+id/titleTv"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:layout_marginEnd="@dimen/x2"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toEndOf="@+id/titleTv"
-                app:layout_constraintTop_toTopOf="@+id/titleTv" />
-
-            <View
-                android:id="@+id/view"
-                android:layout_width="match_parent"
-                android:layout_height="0.5dp"
-                android:background="@color/thinBorder"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/titleTv" />
-
-            <LinearLayout
-                android:id="@+id/placeholder"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x4"
+                android:layout_marginStart="@dimen/x10"
+                android:layout_marginEnd="@dimen/x10"
                 android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:visibility="gone"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/titleTv"
-                tools:visibility="visible">
+                android:text="@string/wallet_empty_description"
+                android:textColor="?attr/contentTertiary" />
 
-                <ImageView
-                    android:id="@+id/placeholder_image"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/x2"
-                    app:srcCompat="@drawable/ic_empty_state" />
+        </LinearLayout>
 
-                <TextView
-                    android:id="@+id/placeholder_text"
-                    style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x10"
-                    android:layout_marginEnd="@dimen/x10"
-                    android:gravity="center_horizontal"
-                    android:text="@string/wallet_empty_description"
-                    android:textColor="?attr/contentTertiary" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/eventRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:scrollbars="vertical"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/titleTv" />
 
-            </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/eventRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/titleTv" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

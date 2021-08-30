@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.sora.di.app.modules
 
 import android.app.Application
@@ -10,6 +5,7 @@ import android.content.Context
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.data.credentials.repository.CredentialsRepositoryImpl
 import jp.co.soramitsu.common.data.credentials.repository.datasource.PrefsCredentialsDatasource
 import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
@@ -42,11 +38,15 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideCredentialsRepository(credentialsRepositoryImpl: CredentialsRepositoryImpl): CredentialsRepository = credentialsRepositoryImpl
+    fun provideCredentialsRepository(credentialsRepositoryImpl: CredentialsRepositoryImpl): CredentialsRepository =
+        credentialsRepositoryImpl
 
     @Provides
     @Singleton
-    fun provideCredentialsDatasource(encryptedPreferences: EncryptedPreferences): CredentialsDatasource {
-        return PrefsCredentialsDatasource(encryptedPreferences)
+    fun provideCredentialsDatasource(
+        encryptedPreferences: EncryptedPreferences,
+        preferences: Preferences
+    ): CredentialsDatasource {
+        return PrefsCredentialsDatasource(encryptedPreferences, preferences)
     }
 }

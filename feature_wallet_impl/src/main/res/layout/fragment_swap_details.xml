@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/svTransactionDetails"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:overScrollMode="never"
+    android:background="@color/brand_white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2">
+
+        <TextView
+            android:id="@+id/tvSwapAmount"
+            style="@style/TextAppearance.Soramitsu.Display_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x3"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="?attr/statusSuccess"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="-1,000.1 VAL"
+            tools:textColor="@color/green" />
+
+        <TextView
+            android:id="@+id/tvSwapData"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapAmount"
+            tools:text="Swap XOR for VAL"
+            tools:textColor="@color/grey_700" />
+
+        <TextView
+            android:id="@+id/tvSwapDate"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapData"
+            tools:text="10 Apr 2020, 22:36:45"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapStatusTitle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x5"
+            android:text="@string/status_title"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapDate"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapStatus"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapStatusTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="Pending" />
+
+        <ImageView
+            android:id="@+id/ivSwapStatus"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginEnd="@dimen/x1"
+            app:layout_constraintBottom_toBottomOf="@id/tvSwapStatusTitle"
+            app:layout_constraintEnd_toStartOf="@id/tvSwapStatus"
+            app:layout_constraintTop_toTopOf="@id/tvSwapStatusTitle"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/ic_pending_grey_18" />
+
+        <View
+            android:id="@+id/vDivider1"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@drawable/dashed_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapStatusTitle" />
+
+        <TextView
+            android:id="@+id/tvSwapHashTitle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:ellipsize="none"
+            android:singleLine="true"
+            android:text="@string/transaction_id"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapStatusTitle"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapHash"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/text_background"
+            android:drawablePadding="@dimen/x1"
+            android:ellipsize="middle"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            app:drawableEndCompat="@drawable/ic_copy_thin_16"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapHashTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvSwapHashTitle"
+            app:layout_constraintWidth_default="wrap"
+            tools:text="s9d9asdassdlkdc8vqqwe8s9v7c"
+            tools:textColor="@color/grey_300" />
+
+        <View
+            android:id="@+id/vDivider3"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@drawable/dashed_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapHashTitle" />
+
+        <TextView
+            android:id="@+id/tvFromAccountTitle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:ellipsize="none"
+            android:singleLine="true"
+            android:text="@string/from_account"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapHashTitle"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvFromAccount"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/text_background"
+            android:drawablePadding="@dimen/x1"
+            android:ellipsize="middle"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            app:drawableEndCompat="@drawable/ic_copy_thin_16"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvFromAccountTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvFromAccountTitle"
+            app:layout_constraintWidth_default="wrap"
+            tools:text="s9d9asdassdlkdc8vqqwe8s9v7c"
+            tools:textColor="@color/grey_300" />
+
+        <View
+            android:id="@+id/vDivider3_2"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@drawable/dashed_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvFromAccountTitle" />
+
+        <TextView
+            android:id="@+id/tvSwapMarketTitle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:ellipsize="none"
+            android:singleLine="true"
+            android:text="@string/polkaswap_market_title"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvFromAccountTitle"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapMarket"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="middle"
+            android:gravity="end"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapMarketTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvSwapMarketTitle"
+            app:layout_constraintWidth_default="wrap"
+            tools:text="7sdfhksdf6sqwdhksdfsi6d7f"
+            tools:textColor="@color/grey_300" />
+
+        <View
+            android:id="@+id/vDivider4"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@drawable/dashed_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapMarketTitle" />
+
+        <TextView
+            android:id="@+id/tvSwapNetworkFeeTitle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:ellipsize="none"
+            android:singleLine="true"
+            android:text="@string/polkaswap_network_fee"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapMarketTitle"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapNetworkFee"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="middle"
+            android:gravity="end"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapNetworkFeeTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvSwapNetworkFeeTitle"
+            app:layout_constraintWidth_default="wrap"
+            tools:text="0.0007 XOR"
+            tools:textColor="@color/grey_300" />
+
+        <View
+            android:id="@+id/vDivider5"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@drawable/dashed_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapNetworkFeeTitle" />
+
+        <TextView
+            android:id="@+id/tvSwapAmount2Title"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:ellipsize="none"
+            android:singleLine="true"
+            android:text="@string/polkaswap_swapped"
+            android:textColor="?attr/contentTertiary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider5"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapAmount2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:ellipsize="middle"
+            android:gravity="end"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapAmount2Title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_default="wrap"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvSwapAmount2Title"
+            app:layout_constraintWidth_default="wrap"
+            tools:text="- 12.453 DAI"
+            tools:textColor="@color/grey_300" />
+
+        <View
+            android:id="@+id/vDivider52"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="@dimen/x2"
+            android:background="@drawable/dashed_line"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapAmount2Title" />
+
+        <TextView
+            android:id="@+id/tvSwapReceivedTitle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:text="@string/common_received"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider52" />
+
+        <ImageView
+            android:id="@+id/ivSwapToken"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginTop="@dimen/x3"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSwapReceivedTitle"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/ic_0x0200040000000000000000000000000000000000000000000000000000000000" />
+
+        <TextView
+            android:id="@+id/tvSwapReceivedSymbol"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x1"
+            android:includeFontPadding="false"
+            android:text="@string/amount_default_fee"
+            app:layout_constraintBottom_toBottomOf="@id/ivSwapToken"
+            app:layout_constraintStart_toEndOf="@id/ivSwapToken"
+            app:layout_constraintTop_toTopOf="@id/ivSwapToken"
+            tools:textColor="@color/grey_300" />
+
+        <TextView
+            android:id="@+id/tvSwapReceivedAmount"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:gravity="end"
+            android:textColor="?attr/statusSuccess"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapReceivedSymbol"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvSwapReceivedSymbol"
+            tools:text="+ 100.84345 PSWAP"
+            tools:textColor="@color/green" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.core.widget.NestedScrollView>

@@ -2,8 +2,7 @@ package jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic_confirmati
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
@@ -13,6 +12,7 @@ import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
+import kotlinx.coroutines.launch
 
 class MnemonicConfirmationViewModel(
     private val interactor: OnboardingInteractor,
@@ -44,21 +44,12 @@ class MnemonicConfirmationViewModel(
     val matchingMnemonicErrorAnimationEvent: LiveData<Unit> = _matchingMnemonicErrorAnimationEvent
 
     init {
-        disposables.add(
-            interactor.getMnemonic()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .map { it.split(" ").toList() }
-                .subscribe(
-                    {
-                        mnemonicList = it
-                        _shuffledMnemonicLiveData.value = it.shuffled()
-                    },
-                    {
-                        it.printStackTrace()
-                    }
-                )
-        )
+        viewModelScope.launch {
+            mnemonicList = interactor.getMnemonic().run {
+                split(" ").toList()
+            }
+            _shuffledMnemonicLiveData.value = mnemonicList.shuffled()
+        }
     }
 
     fun homeButtonClicked() {
@@ -111,19 +102,10 @@ class MnemonicConfirmationViewModel(
     }
 
     private fun proceed() {
-        disposables.add(
+        viewModelScope.launch {
             interactor.saveRegistrationStateFinished()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        router.showMainScreen()
-                    },
-                    {
-                        it.printStackTrace()
-                    }
-                )
-        )
+            router.showMainScreen()
+        }
     }
 
     fun matchingErrorAnimationCompleted() {

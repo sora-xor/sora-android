@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.di.api
 
 import android.content.Context
@@ -18,11 +13,13 @@ import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ContextManager
@@ -47,6 +44,8 @@ interface CommonApi {
     fun encryptedPreferences(): EncryptedPreferences
 
     fun resourceManager(): ResourceManager
+
+    fun coroutineManager(): CoroutineManager
 
     fun appVersionProvider(): AppVersionProvider
 
@@ -81,6 +80,8 @@ interface CommonApi {
     fun serializer(): Serializer
 
     fun gson(): Gson
+
+    fun fileManager(): FileManager
 
     fun languagesHolder(): LanguagesHolder
 

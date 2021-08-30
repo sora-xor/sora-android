@@ -2,8 +2,6 @@ package jp.co.soramitsu.feature_wallet_impl.data.substrate
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.AccountInfo
-import jp.co.soramitsu.test_shared.RxSchedulersRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -15,13 +13,13 @@ import org.mockito.junit.MockitoJUnitRunner
 class ExtrinsicTest {
 
     @Rule
-    @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField val rxSchedulerRule = RxSchedulersRule()
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
 
     @Test
     fun `state getStorage method`() {
-        val account = AccountInfo.read("0x03000000020000000100000000f8dcd274f60c7b0000000000000000000000000000000000000000000000000000f4448291634500000000000000000000f444829163450000000000000000")
+        val account =
+            AccountInfo.read("0x03000000020000000100000000f8dcd274f60c7b0000000000000000000000000000000000000000000000000000f4448291634500000000000000000000f444829163450000000000000000")
         assert(account[AccountInfo.nonce] == 3.toUInt())
     }
 }

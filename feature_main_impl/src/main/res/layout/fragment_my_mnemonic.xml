@@ -5,148 +5,118 @@
     android:layout_height="match_parent"
     android:background="@android:color/white">
 
-    <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
+        app:iconRight="@drawable/ic_info_24_black"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/common_passphrase_title" />
-
-    <View
-        android:id="@+id/shadowView"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:background="@drawable/below_shadow"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
-
-    <Space
-        android:id="@+id/space1"
-        android:layout_width="wrap_content"
-        android:layout_height="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/shadowView" />
+        app:title="" />
 
     <TextView
         android:id="@+id/passphraseTitleTv"
+        style="@style/TextAppearance.Soramitsu.Display_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:fontFamily="@font/sora_bold"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:text="@string/common_passphrase_header"
-        android:textColor="@color/black"
-        android:textSize="20sp"
+        android:padding="@dimen/x2"
+        android:text="@string/common_passphrase_title"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space1" />
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
-    <Space
-        android:id="@+id/space2"
+    <ImageView
+        android:id="@+id/warning"
         android:layout_width="wrap_content"
-        android:layout_height="14dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x2"
+        android:src="@drawable/ic_alert_triangle_24"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/passphraseTitleTv" />
+        app:layout_constraintTop_toBottomOf="@id/passphraseTitleTv"
+        tools:ignore="ContentDescription" />
 
     <TextView
         android:id="@+id/passphraseBodyTv"
+        style="@style/TextAppearance.Soramitsu.Paragraph_1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:fontFamily="@font/sora_regular"
-        android:text="@string/common_passphrase_body"
-        android:textColor="@color/black"
-        android:textSize="14sp"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:includeFontPadding="false"
+        android:paddingBottom="@dimen/x2"
+        android:text="@string/mnemonic_text"
+        android:textColor="?attr/contentTertiary"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space2" />
+        app:layout_constraintStart_toEndOf="@id/warning"
+        app:layout_constraintTop_toBottomOf="@id/passphraseTitleTv"
+        tools:textColor="@color/grey_500" />
 
     <View
         android:id="@+id/divider1"
         android:layout_width="0dp"
         android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@color/greyDivider"
-        app:layout_constraintBottom_toTopOf="@id/yourPassphraseTv"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:background="?attr/baseBorderPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/passphraseBodyTv" />
+        app:layout_constraintTop_toBottomOf="@id/passphraseBodyTv"
+        tools:background="@color/grey_300" />
 
-    <TextView
-        android:id="@+id/yourPassphraseTv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginEnd="20dp"
-        android:fontFamily="@font/sora_bold"
-        android:text="@string/common_passphrase_your_passphrase"
-        android:textColor="@color/black"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/passphraseTv"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider1" />
-
-    <Space
-        android:id="@+id/space3"
-        android:layout_width="wrap_content"
-        android:layout_height="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/yourPassphraseTv" />
-
-    <TextView
-        android:id="@+id/passphraseTv"
+    <LinearLayout
+        android:id="@+id/llPassphrase"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:background="@drawable/background_rounded_grey"
-        android:fontFamily="@font/sora_regular"
-        android:padding="@dimen/x2"
-        android:textColor="@color/black"
-        android:textSize="14sp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/space3"
-        tools:text="@string/common_passphrase_body" />
+        app:layout_constraintTop_toBottomOf="@id/divider1"
+        tools:layout_height="100dp" />
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:background="?attr/baseBorderPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/llPassphrase"
+        tools:background="@color/grey_300" />
 
     <TextView
-        android:id="@+id/btnShare"
+        android:id="@+id/tvMnemonicHint"
+        style="@style/TextAppearance.Soramitsu.Paragraph_3"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/x2_5"
-        android:layout_marginTop="@dimen/x1"
-        android:layout_marginEnd="@dimen/x2_5"
-        android:layout_marginBottom="@dimen/x1"
-        android:clickable="true"
-        android:drawableStart="@drawable/icon_save"
-        android:drawablePadding="@dimen/x2"
-        android:focusable="true"
-        android:gravity="center_vertical"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
         android:paddingTop="@dimen/x1"
         android:paddingBottom="@dimen/x1"
-        android:text="@string/common_passphrase_save_or_send"
-        android:textColor="@color/uikit_lightRed"
-        android:textSize="17sp"
+        android:text="@string/common_passphrase_body"
+        android:textColor="?attr/contentQuaternary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/passphraseTv" />
+        app:layout_constraintTop_toBottomOf="@id/divider2"
+        tools:textColor="@color/grey_400" />
 
-    <ProgressBar
-        android:id="@+id/preloaderView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone"
+    <ImageButton
+        android:id="@+id/ibMnemonicShare"
+        style="@style/Widget.Soramitsu.ImageButton.Primary.48"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginEnd="@dimen/x1"
+        android:layout_marginBottom="@dimen/x4"
+        android:src="@drawable/ic_share"
+        android:tint="@color/brand_white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnShare"
-        app:layout_constraintVertical_bias="0.25" />
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

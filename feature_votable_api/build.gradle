@@ -32,7 +32,10 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation kotlinDep
-    implementation rxDep
+
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
 
     implementation gsonDep
 

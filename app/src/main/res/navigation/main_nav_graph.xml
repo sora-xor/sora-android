@@ -3,37 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_nav_graph"
-    app:startDestination="@id/walletFragment">
-
-    <fragment
-        android:id="@+id/inviteFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.invite.InviteFragment"
-        tools:layout="@layout/fragment_invite" />
-
-    <fragment
-        android:id="@+id/stakingFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.staking.StakingFragment"
-        tools:layout="@layout/fragment_staking" />
-
-    <fragment
-        android:id="@+id/polkaswapFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.polkaswap.PolkaSwapFragment"
-        tools:layout="@layout/fragment_polka_swap" />
-
-    <fragment
-        android:id="@+id/votesFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.voteshistory.VotesHistoryFragment"
-        tools:layout="@layout/fragment_votes_history" />
-
-    <fragment
-        android:id="@+id/termsFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.terms.TermsFragment"
-        tools:layout="@layout/fragment_terms" />
-
-    <fragment
-        android:id="@+id/privacyFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.privacy.PrivacyFragment"
-        tools:layout="@layout/fragment_terms" />
+    app:startDestination="@id/wallet_nav_graph">
 
     <fragment
         android:id="@+id/pincodeFragment"
@@ -45,98 +15,20 @@
         android:name="jp.co.soramitsu.feature_main_impl.presentation.userverification.UserVerificationFragment"
         tools:layout="@layout/fragment_user_verification" />
 
-    <fragment android:id="@+id/referendumDetailFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment"
-        tools:layout="@layout/fragment_referendum_detail" />
-
-    <fragment
-        android:id="@+id/personalDataEditFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.personaldataedit.PersonalDataEditFragment"
-        tools:layout="@layout/fragment_personal_data_edit" />
-
-    <fragment
-        android:id="@+id/passphraseFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.passphrase.PassphraseFragment"
-        tools:layout="@layout/fragment_my_mnemonic" />
-
-    <fragment
-        android:id="@+id/selectLanguageFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.language.SelectLanguageFragment"
-        tools:layout="@layout/fragment_select_language" />
-
-    <fragment
-        android:id="@+id/profileFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.ProfileFragment"
-        tools:layout="@layout/fragment_profile" />
-
-    <fragment
-        android:id="@+id/parliamentFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.parliament.ParliamentFragment"
-        tools:layout="@layout/fragment_parliament" />
-
-    <fragment
-        android:id="@+id/faqFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.faq.FaqFragment"
-        tools:layout="@layout/fragment_terms" />
-
-    <fragment
-        android:id="@+id/walletFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.WalletFragment"
-        tools:layout="@layout/fragment_wallet" />
-
-    <fragment
-        android:id="@+id/contactsFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment"
-        tools:layout="@layout/fragment_contacts" />
-
-    <fragment
-        android:id="@+id/transferAmountFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment"
-        tools:layout="@layout/fragment_transfer_amount" />
-
-    <fragment
-        android:id="@+id/transactionDetails"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment"
-        tools:layout="@layout/fragment_transaction_details" />
-
-    <fragment
-        android:id="@+id/transactionConfirmation"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment"
-        tools:layout="@layout/fragment_transaction_confirmation" />
-
-    <fragment
-        android:id="@+id/receiveFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment"
-        tools:layout="@layout/fragment_receive" />
-
-    <fragment
-        android:id="@+id/assetListFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment"
-        tools:layout="@layout/fragment_asset_list" />
-
-    <fragment
-        android:id="@+id/mainFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment"
-        tools:layout="@layout/fragment_main" />
-
     <fragment
         android:id="@+id/unsupportedVersionFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment"
         tools:layout="@layout/fragment_unsupported_version" />
 
     <fragment
-        android:id="@+id/aboutFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.about.AboutFragment"
-        tools:layout="@layout/fragment_about" />
-
-    <fragment
-        android:id="@+id/assetSettingsFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.AssetSettingsFragment"
-        tools:layout="@layout/fragment_about" />
-
-    <fragment
         android:id="@+id/claimFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment"
         tools:layout="@layout/fragment_claim" />
+
+    <include app:graph="@navigation/parliament_nav_graph"/>
+    <include app:graph="@navigation/polkaswap_nav_graph"/>
+    <include app:graph="@navigation/profile_nav_graph"/>
+    <include app:graph="@navigation/staking_nav_graph"/>
+    <include app:graph="@navigation/wallet_nav_graph"/>
 
 </navigation>

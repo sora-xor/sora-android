@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/polkaswap_nav_graph"
+    app:startDestination="@id/polkaswapFragment">
+    <fragment
+        android:id="@+id/polkaswapFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaSwapFragment"
+        tools:layout="@layout/fragment_polka_swap" />
+
+    <fragment
+        android:id="@+id/polkaswapInfoFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaSwapInfoFragment"
+        tools:layout="@layout/fragment_polka_swap_info" />
+
+    <fragment
+        android:id="@+id/swapConfirmationFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.SwapConfirmationFragment"
+        android:label="SwapConfirmationFragment"
+        tools:layout="@layout/fragment_swap_confirmation" />
+
+</navigation>

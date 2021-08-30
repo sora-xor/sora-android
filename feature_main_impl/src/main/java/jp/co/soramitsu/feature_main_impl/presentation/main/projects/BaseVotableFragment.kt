@@ -1,12 +1,6 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.main.projects
 
 import android.os.Bundle
-import android.os.Handler
 import android.os.Parcelable
 import android.view.View
 import androidx.annotation.LayoutRes
@@ -32,8 +26,6 @@ import javax.inject.Inject
 abstract class BaseVotableFragment(@LayoutRes layoutRes: Int) :
     BaseFragment<MainViewModel>(layoutRes),
     VotablesAdapter.ReferendumHandler {
-
-    private val RECYCLERVIEW_UPDATE_DELAY = 300L
 
     @Inject
     lateinit var numbersFormatter: NumbersFormatter
@@ -81,14 +73,6 @@ abstract class BaseVotableFragment(@LayoutRes layoutRes: Int) :
             showPlaceholderIfNeeded(it)
         }
         provideProjectsResyncEvent(viewModel).observe {
-            Handler().postDelayed(
-                {
-                    (provideLayoutId() as? FragmentAllProjectsBinding)?.projectsRecyclerview?.scrollToPosition(
-                        0
-                    )
-                },
-                RECYCLERVIEW_UPDATE_DELAY
-            )
         }
     }
 

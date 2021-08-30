@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.send.di
 
 import androidx.fragment.app.Fragment
@@ -12,8 +7,6 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.delegate.WithProgressImpl
-import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
@@ -32,17 +25,11 @@ import javax.inject.Named
 class TransferAmountModule {
 
     @Provides
-    fun provideProgress(): WithProgress {
-        return WithProgressImpl()
-    }
-
-    @Provides
     @IntoMap
     @ViewModelKey(TransferAmountViewModel::class)
     fun provideViewModel(
         walletInteractor: WalletInteractor,
         router: WalletRouter,
-        progress: WithProgress,
         numbersFormatter: NumbersFormatter,
         @Named("recipientId") recipientId: String,
         @Named("assetId") assetId: String,
@@ -51,7 +38,7 @@ class TransferAmountModule {
         clipboardManager: ClipboardManager,
     ): ViewModel {
         return TransferAmountViewModel(
-            walletInteractor, router, progress, numbersFormatter,
+            walletInteractor, router, numbersFormatter,
             recipientId, assetId, recipientFullName, transferType, clipboardManager,
         )
     }

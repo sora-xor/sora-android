@@ -3,5 +3,4 @@ apply plugin: 'kotlin'
 
 dependencies {
     implementation kotlinDep
-    implementation rxDep
 }

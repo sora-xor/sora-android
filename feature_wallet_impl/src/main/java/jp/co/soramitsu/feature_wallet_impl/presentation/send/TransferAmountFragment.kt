@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import android.os.Bundle
@@ -223,10 +218,6 @@ class TransferAmountFragment :
         viewModel.transactionFeeProgressVisibilityLiveData.observe(viewLifecycleOwner) {
             viewBinding.ivFeeCalculationProgress.showOrGone(it)
             viewBinding.ivFeeCalculationProgress.doAnimation(it, ViewAnimations.rotateAnimation)
-        }
-
-        viewModel.getProgressVisibility().observe(viewLifecycleOwner) {
-            if (it) progressDialog.show() else progressDialog.dismiss()
         }
 
         viewModel.nextButtonEnableLiveData.observe(viewLifecycleOwner) {

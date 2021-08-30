@@ -1,16 +1,11 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.os.Handler
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -23,6 +18,7 @@ import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.ext.hide
+import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
@@ -61,6 +57,9 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
+
+        runDelayed(1) { binding.scrollWrapper.fullScroll(ScrollView.FOCUS_DOWN) }
+        binding.scrollWrapper.setOnTouchListener { _, _ -> true }
 
         progressDialog = SoraProgressDialog(requireContext())
 
@@ -112,18 +111,21 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
                 .show()
         }
         viewModel.resetApplicationEvent.observe {
-            Handler().postDelayed(
-                {
-                    ProcessPhoenix.triggerRebirth(activity)
-                },
-                DATA_CLEAR_DELAY
-            )
+            runDelayed(DATA_CLEAR_DELAY) {
+                ProcessPhoenix.triggerRebirth(activity)
+            }
         }
+
         viewModel.startFingerprintScannerEventLiveData.observe {
             if (fingerprintWrapper.isAuthReady() && it) {
                 fingerprintWrapper.startAuth()
             }
         }
+
+        viewModel.fingerPrintCanceledFromPromptEvent.observe {
+            fingerprintWrapper.cancel()
+        }
+
         viewModel.showFingerPrintEventLiveData.observe {
             if (!it) {
                 fingerprintWrapper.cancel()

@@ -80,7 +80,10 @@ dependencies {
     implementation daggerDep
     kapt daggerKapt
 
-    implementation rxBindingDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
+    implementation viewmodelKtxDep
 
     implementation gsonDep
 
@@ -92,7 +95,7 @@ dependencies {
     implementation insetterDep
 
     implementation lifecycleDep
-    kapt lifecycleKapt
+    kapt lifecycleKaptDep
 
     testImplementation jUnitDep
     testImplementation mockitoDep

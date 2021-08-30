@@ -1,19 +1,22 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.assetlist
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Single
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
-import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.adapter.AssetListItemModel
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.anyNonNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -21,12 +24,13 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.Mockito.verify
 import org.mockito.BDDMockito.given
+import org.mockito.Mock
+import org.mockito.Mockito.verify
+import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class AssetListViewModelTest {
 
@@ -34,9 +38,8 @@ class AssetListViewModelTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
@@ -56,37 +59,39 @@ class AssetListViewModelTest {
     private lateinit var viewModel: AssetListViewModel
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
         given(numbersFormatter.formatBigDecimal(anyNonNull(), ArgumentMatchers.anyInt()))
             .willReturn("0.6")
-        given(walletInteractor.getAssets()).willReturn(
-            Single.just(
-                listOf(
-                    Asset(
-                        "id",
-                        "sora",
-                        "val",
-                        true,
-                        true,
-                        1,
-                        4,
-                        18,
-                        BigDecimal.TEN,
-                        0,
-                        true
+        given(walletInteractor.getVisibleAssets()).willReturn(
+            listOf(
+                Asset(
+                    Token("token_id", "token name", "token symbol", 18, true, 0),
+                    true,
+                    true,
+                    1,
+                    AssetBalance(
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE
                     ),
-                    Asset(
-                        "id2",
-                        "polkaswap",
-                        "pswap",
-                        true,
-                        true,
-                        2,
-                        4,
-                        18,
-                        BigDecimal.TEN,
-                        0,
-                        true
+                ),
+                Asset(
+                    Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
+                    true,
+                    true,
+                    2,
+                    AssetBalance(
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE
                     )
                 )
             )
@@ -94,13 +99,11 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test back click`() {
+    fun `test back click`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.RECEIVE
         )
         viewModel.backClicked()
@@ -108,13 +111,11 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test router receive mode`() {
+    fun `test router receive mode`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.RECEIVE
         )
         viewModel.itemClicked(AssetListItemModel(0, "title", "1", "sora", 1, "id"))
@@ -122,13 +123,11 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test router send mode`() {
+    fun `test router send mode`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.SEND
         )
         viewModel.itemClicked(AssetListItemModel(0, "title", "1", "sora", 1, "id"))
@@ -136,29 +135,25 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `set filter value`() {
+    fun `set filter value`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.SEND
         )
-        viewModel.searchAssets("so")
+        viewModel.searchAssets("token name")
         viewModel.displayingAssetsLiveData.observeForever {
             Assert.assertEquals(1, it.size)
         }
     }
 
     @Test
-    fun `set filter value empty`() {
+    fun `set filter value empty`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.SEND
         )
         viewModel.searchAssets("")
@@ -168,13 +163,11 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test init send`() {
+    fun `test init send`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.SEND
         )
         viewModel.title.observeForever {
@@ -183,13 +176,11 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test init receive`() {
+    fun `test init receive`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.RECEIVE
         )
         viewModel.title.observeForever {
@@ -198,32 +189,15 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test init receive asset`() {
+    fun `test init receive asset`() = runBlockingTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            ethInteractor,
             numbersFormatter,
             router,
-            resourceManager,
             AssetListMode.RECEIVE
         )
         viewModel.displayingAssetsLiveData.observeForever {
             Assert.assertEquals(2, it.size)
         }
-    }
-
-    @Test(expected = ExceptionInInitializerError::class)
-    fun `check exception`() {
-        val e = IllegalArgumentException("")
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), ArgumentMatchers.anyInt()))
-            .willThrow(e)
-        viewModel = AssetListViewModel(
-            walletInteractor,
-            ethInteractor,
-            numbersFormatter,
-            router,
-            resourceManager,
-            AssetListMode.RECEIVE
-        )
     }
 }

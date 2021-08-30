@@ -1,18 +1,13 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.personaldataedit
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import kotlinx.coroutines.launch
 
 class PersonalDataEditViewModel(
     private val interactor: MainInteractor,
@@ -27,19 +22,13 @@ class PersonalDataEditViewModel(
     val nextButtonEnableLiveData: LiveData<Boolean> = _nextButtonEnableLiveData
 
     init {
-        disposables.add(
-            interactor.getAccountName()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        _accountNameLiveData.value = it
-                    },
-                    {
-                        logException(it)
-                    }
-                )
-        )
+        viewModelScope.launch {
+            try {
+                _accountNameLiveData.value = interactor.getAccountName()
+            } catch (t: Throwable) {
+                onError(t)
+            }
+        }
     }
 
     fun backPressed() {
@@ -47,22 +36,17 @@ class PersonalDataEditViewModel(
     }
 
     fun saveData(accountName: String) {
-        disposables.add(
-            interactor.saveAccountName(accountName)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { showProgress() }
-                .subscribe(
-                    {
-                        hideProgress()
-                        router.popBackStack()
-                    },
-                    {
-                        hideProgress()
-                        onError(it)
-                    }
-                )
-        )
+        viewModelScope.launch {
+            showProgress()
+            try {
+                interactor.saveAccountName(accountName)
+                router.popBackStack()
+            } catch (t: Throwable) {
+                onError(t)
+            } finally {
+                hideProgress()
+            }
+        }
     }
 
     fun accountNameChanged(accountName: String) {

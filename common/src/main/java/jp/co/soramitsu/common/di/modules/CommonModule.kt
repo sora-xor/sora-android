@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.di.modules
 
 import android.content.Context
@@ -20,14 +15,16 @@ import jp.co.soramitsu.common.data.AppVersionProviderImpl
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.GsonSerializerImpl
 import jp.co.soramitsu.common.data.Preferences
-import jp.co.soramitsu.common.data.network.Sora2ApiCreator
+import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
+import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.common.data.network.substrate.runtime.SubstrateTypesApi
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
@@ -73,11 +70,16 @@ class CommonModule {
 
     @Singleton
     @Provides
+    fun provideCoroutineManager(): CoroutineManager =
+        CoroutineManager()
+
+    @Singleton
+    @Provides
     fun providesPushHandler(): PushHandler = PushHandler()
 
     @Singleton
     @Provides
-    fun provideHealthChecker(): HealthChecker = HealthChecker()
+    fun provideHealthChecker(cm: ConnectionManager): HealthChecker = HealthChecker(cm)
 
     @Singleton
     @Provides
@@ -91,8 +93,8 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideTypesApi(sora2ApiCreator: Sora2ApiCreator): SubstrateTypesApi =
-        sora2ApiCreator.create(SubstrateTypesApi::class.java)
+    fun provideTypesApi(sora2CoroutineApiCreator: Sora2CoroutineApiCreator): SubstrateTypesApi =
+        sora2CoroutineApiCreator.create(SubstrateTypesApi::class.java)
 
     @Singleton
     @Provides

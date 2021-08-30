@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 apply from: '../tests.gradle'
 
 android {
@@ -75,40 +76,45 @@ dependencies {
     implementation insetterDep
     implementation viewBindingDep
 
-    implementation rxDep
-    implementation rxAndroidDep
-
     implementation loggerDep
 
     implementation workerManagerDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
+    implementation viewmodelKtxDep
+    implementation fragmentKtxDep
+    implementation livecycleKtxDep
+
+    implementation runtimePermissionsDep
 
     implementation daggerDep
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt daggerKapt
 
     implementation retrofitDep
     implementation gsonConvertedDep
-    implementation rxCallAdapterDep
 
     implementation lifecycleDep
-    kapt lifecycleKapt
+    kapt lifecycleKaptDep
 
     implementation roomDep
-    implementation rxRoomDep
-    kapt roomKapt
+    implementation roomKtxDep
+    kapt roomKaptDep
+
+    implementation pagingLibraryDep
 
     //implementation soraDep
     implementation birtDep
 
     //implementation irohaDep
     implementation fearlessLibDep
-    implementation "org.bouncycastle:bcprov-jdk15on:1.60"
-
-    implementation rxBindingDep
+    implementation bouncyCastleDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 
-    implementation rxPermissionsDep
+    implementation progressButtonDep
 
     implementation(crashlyticsDep) {
         transitive = true
@@ -124,4 +130,5 @@ dependencies {
     testImplementation project(":test_shared")
     testImplementation fearlessLibDep
     testImplementation webSocketLibDep
+    testImplementation truthDep
 }

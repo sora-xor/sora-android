@@ -1,29 +1,21 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.main
 
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.interfaces.WithPreloader
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.ext.subscribeToError
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_votable_api.domain.model.Votable
 import jp.co.soramitsu.feature_votable_api.domain.model.referendum.Referendum
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 class MainViewModel(
     private val interactor: MainInteractor,
-    private val router: MainRouter,
-    private val preloader: WithPreloader
-) : BaseViewModel(), WithPreloader by preloader {
+    private val router: MainRouter
+) : BaseViewModel() {
 
     val allProjectsLiveData = MutableLiveData<List<Votable>>()
     val allProjectsResyncEvent = SingleLiveEvent<Unit>()
@@ -98,29 +90,21 @@ class MainViewModel(
     }
 
     private fun syncVotes() {
-        disposables.add(
+        viewModelScope.launch {
             interactor.syncVotes()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeToError(::onError)
-        )
+        }
     }
 
     fun voteOnReferendum(votes: Long, toSupport: Boolean) {
         val selectedReferendum = selectedVotable as? Referendum ?: return
 
-        val action = if (toSupport) {
-            interactor.voteForReferendum(selectedReferendum.id, votes)
-        } else {
-            interactor.voteAgainstReferendum(selectedReferendum.id, votes)
+        viewModelScope.launch {
+            if (toSupport) {
+                interactor.voteForReferendum(selectedReferendum.id, votes)
+            } else {
+                interactor.voteAgainstReferendum(selectedReferendum.id, votes)
+            }
         }
-
-        disposables.add(
-            action.subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .compose(preloadCompletableCompose())
-                .subscribeToError(::onError)
-        )
     }
 
     fun backPressed() {

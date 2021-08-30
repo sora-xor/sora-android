@@ -66,17 +66,20 @@ dependencies {
     kapt daggerKapt
 
     implementation roomDep
-    implementation rxRoomDep
-    kapt roomKapt
+    implementation roomKtxDep
+    kapt roomKaptDep
+
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
+    implementation viewmodelKtxDep
 
     implementation retrofitDep
     implementation gsonConvertedDep
-    implementation rxCallAdapterDep
-
-    implementation rxDep
 
     testImplementation jUnitDep
     testImplementation mockitoDep
+    testImplementation mockkDep
     testImplementation robolectricDep
     testImplementation robolectricMultidexDep
     testImplementation archCoreTestDep

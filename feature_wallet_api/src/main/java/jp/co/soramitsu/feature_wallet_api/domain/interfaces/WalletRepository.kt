@@ -1,61 +1,110 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
+import androidx.paging.PagingData
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.BlockEvent
 import jp.co.soramitsu.feature_wallet_api.domain.model.BlockResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
+import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 
 interface WalletRepository {
 
-    fun saveMigrationStatus(migrationStatus: MigrationStatus): Completable
+    fun getTransactionsFlow(address: String, assetId: String = ""): Flow<PagingData<Transaction>>
 
-    fun observeMigrationStatus(): Observable<MigrationStatus>
+    suspend fun getTransaction(txHash: String): Transaction
 
-    fun retrieveClaimBlockAndTxHash(): Single<Pair<String, String>>
+    suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
 
-    fun needsMigration(irohaAddress: String): Single<Boolean>
+    fun observeMigrationStatus(): Flow<MigrationStatus>
 
-    fun checkEvents(blockHash: String): Single<List<BlockEvent>>
+    suspend fun retrieveClaimBlockAndTxHash(): Pair<String, String>
 
-    fun unwatch(subscription: String): Completable
+    suspend fun needsMigration(irohaAddress: String): Boolean
 
-    fun getBlock(blockHash: String): Single<BlockResponse>
+    suspend fun checkEvents(blockHash: String): List<BlockEvent>
 
-    fun isTxSuccessful(extrinsicId: Long, blockHash: String, txHash: String): Single<Boolean>
+    suspend fun getBlock(blockHash: String): BlockResponse
 
-    fun migrate(irohaAddress: String, irohaPublicKey: String, signature: String, keypair: Keypair, address: String): Observable<Pair<String, ExtrinsicStatusResponse>>
+    suspend fun isTxSuccessful(extrinsicId: Long, blockHash: String, txHash: String): Boolean
 
-    fun getAssets(address: String, forceUpdateBalances: Boolean = false, forceUpdateAssets: Boolean = false): Single<List<Asset>>
+    suspend fun migrate(
+        irohaAddress: String,
+        irohaPublicKey: String,
+        signature: String,
+        keypair: Keypair
+    ): Flow<Pair<String, ExtrinsicStatusResponse>>
 
-    fun transfer(keypair: Keypair, from: String, to: String, assetId: String, amount: BigDecimal): Single<String>
+    suspend fun getAssetsWhitelist(address: String, updateBalances: Boolean = false): List<Asset>
 
-    fun observeTransfer(keypair: Keypair, from: String, to: String, assetId: String, amount: BigDecimal, fee: BigDecimal): Observable<Pair<String, ExtrinsicStatusResponse>>
+    suspend fun updateWhitelistBalances(address: String)
 
-    fun saveTransaction(from: String, to: String, assetId: String, amount: BigDecimal, status: ExtrinsicStatusResponse, hash: String, fee: BigDecimal, eventSuccess: Boolean?): Long
+    suspend fun getAssetsVisible(
+        address: String,
+    ): List<Asset>
 
-    fun updateTransactionSuccess(hash: String, success: Boolean)
+    fun subscribeVisibleAssets(
+        address: String
+    ): Flow<List<Asset>>
 
-    fun calcTransactionFee(from: String, to: String, assetId: String, amount: BigDecimal): Single<BigDecimal>
+    suspend fun updateTokens(address: String)
 
-    fun getTransactions(myAddress: String, myEthAddress: String): Observable<List<Transaction>>
+    suspend fun updateBalancesVisibleAssets(address: String)
 
-    fun getContacts(query: String): Single<Set<String>>
+    suspend fun transfer(
+        keypair: Keypair,
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal
+    ): String
 
-    fun hideAssets(assetIds: List<String>): Completable
+    suspend fun observeTransfer(
+        keypair: Keypair,
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal,
+        fee: BigDecimal
+    ): Flow<Pair<String, ExtrinsicStatusResponse>>
 
-    fun displayAssets(assetIds: List<String>): Completable
+    suspend fun saveTransfer(
+        to: String,
+        assetId: String,
+        amount: BigDecimal,
+        status: ExtrinsicStatusResponse,
+        hash: String,
+        fee: BigDecimal,
+        eventSuccess: Boolean?
+    )
 
-    fun updateAssetPositions(assetPositions: Map<String, Int>): Completable
+    suspend fun updateTransactionSuccess(hash: String, success: Boolean)
+
+    suspend fun calcTransactionFee(
+        from: String,
+        to: String,
+        assetId: String,
+        amount: BigDecimal
+    ): BigDecimal
+
+    suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance
+
+    suspend fun getContacts(query: String): Set<String>
+
+    suspend fun hideAssets(assetIds: List<String>)
+
+    suspend fun displayAssets(assetIds: List<String>)
+
+    suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
+
+    suspend fun getAsset(assetId: String, address: String): Asset
+
+    suspend fun getToken(tokenId: String): Token
+
+    fun observeStorageAccount(account: Any): Flow<String>
 }

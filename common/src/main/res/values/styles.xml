@@ -24,7 +24,7 @@
         <item name="contentSecondary">@color/grey_700</item>
         <item name="contentTertiary">@color/grey_500</item>
         <item name="contentQuaternary">@color/grey_400</item>
-        <item name="baseBackground">@color/grey_100</item>
+        <item name="baseBackground">@color/white</item>
         <item name="baseBackgroundDark">@color/backgroundDarkColor</item>
         <item name="baseBorderPrimary">@color/grey_300</item>
         <item name="baseBorderSecondary">@color/grey_200</item>
@@ -33,7 +33,7 @@
         <item name="baseOnDisabled">@color/grey_400</item>
         <item name="baseOnAccent">@color/brand_white</item>
 
-        <item name="secondaryBackground">@color/backgroundSecondaryColor</item>
+        <item name="secondaryBackground">@color/grey_100</item>
         <item name="secondaryHover">@color/hoverSecondaryColor</item>
         <item name="secondaryPressed">@color/pressedSecondaryColor</item>
         <item name="secondaryFocused">@color/focusedSecondaryColor</item>
@@ -43,6 +43,7 @@
         <item name="bottomSheetStyle">@style/bottomSheetStyleWrapper</item>
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
     <style name="bottomSheetStyleWrapper" parent="Widget.MaterialComponents.BottomSheet.Modal">
@@ -130,7 +131,7 @@
     <style name="Widget.Soramitsu.Button.Secondary.48" parent="Widget.MaterialComponents.Button.TextButton">
         <item name="android:layout_height">48dp</item>
         <item name="cornerRadius">12dp</item>
-        <item name="backgroundTint">?attr/baseBackground</item>
+        <item name="backgroundTint">?attr/secondaryBackground</item>
         <item name="rippleColor">?attr/baseBackgroundHover</item>
         <item name="android:textColor">@color/brand_pmsblack</item>
         <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
@@ -154,6 +155,15 @@
         <item name="backgroundTint">@color/themePrimary_400</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <style name="Widget.Soramitsu.ImageButton.Primary.48" parent="Widget.AppCompat.ImageButton">
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/background_image_button_primary</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:elevation">0dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>

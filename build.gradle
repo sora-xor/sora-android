@@ -1,11 +1,10 @@
 buildscript {
 
     ext.versions = [
-            kotlin            : '1.5.0',
+            kotlin            : '1.5.21',
+            coroutines        : '1.5.0',
             dagger            : '2.17',
-            rxJava2           : '2.2.7',
-            rxBinding         : '2.1.1',
-            retrofit          : '2.4.0',
+            retrofit          : '2.9.0',
             soraSdk           : '0.3.10',
             logger            : '2.2.0',
             gson              : '2.8.5',
@@ -21,12 +20,13 @@ buildscript {
             iroha             : '5.1.2',
             shimmer           : '0.4.0',
             novaCrypto        : '0.1.9',
-            navigationFragment: '2.0.0-rc02',
+            navigationFragment: '2.4.0-alpha03',
+            bouncyCastle      : '1.60',
             zXing             : '3.3.3',
             zXingEmbedded     : '3.6.0@aar',
             birt              : '2.9.0',
             phoenix           : '2.0.0',
-            navigation        : '2.0.0-rc02',
+            navigation        : '2.4.0-alpha03',
             roundedImage      : '2.3.0',
             picasso           : '2.71828',
             capital           : '1.0.21-SNAPSHOT',
@@ -35,10 +35,9 @@ buildscript {
             robolectric       : '4.1',
             archCoreTest      : '2.0.0',
             archFragmentTest  : '1.1.0-beta01',
-            rxPermissions     : '0.10.2',
-            rxAndroid         : '2.1.0',
             archComponents    : '2.2.0',
-            room              : '2.2.0-alpha02',
+            room              : '2.3.0',
+            pagingLibrary     : '3.0.1',
             googleAuthApiPhone: '17.1.0',
             googleAuthApi     : '17.0.0',
             biometric         : '1.0.1',
@@ -46,21 +45,25 @@ buildscript {
             workerManager     : '2.4.0',
             emoji             : '0.3.0',
             activityKtx       : '1.1.0',
+            fragmentKtx       : '1.3.4',
             coreKtx           : '1.5.0-beta02',
-            fearlessLib       : '1.0.70',
+            fearlessLib       : '1.0.75',
             webSocketLib      : '2.10',
 			ed25519           : '2.0.1',
             svgVersion        : '1.4',
             jdenticonVersion  : '1.0',
-            insetter          : '0.5.0',
-            viewBinding       : '1.4.5'
+            insetter          : '0.6.0',
+            viewBinding       : '1.4.7',
+            runtimePermissions: '1.1.2',
+            progressButton    : '2.1.0',
+            truth             : '1.1.3'
     ]
 
     ext {
-        // soralution 39 2.0.0 2021.05.21
-        // sora dae 43 2.1.0 2021.06.02
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 43)
-        appVersionName = '2.1.0'
+        // soralution 45 3.0.0 2021.08.25
+        // sora dae 53 2.2.3 2021.08.19
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 45)
+        appVersionName = '3.0.0'
 
         compileVersion = 29
         minVersion = 21
@@ -74,9 +77,13 @@ buildscript {
         constraintDep = "androidx.constraintlayout:constraintlayout:$versions.constraint"
         swipelayoutDep = "androidx.swiperefreshlayout:swiperefreshlayout:$versions.swipe"
         activityKtxDep = "androidx.activity:activity-ktx:$versions.activityKtx"
+        fragmentKtxDep = "androidx.fragment:fragment-ktx:$versions.fragmentKtx"
         coreKtxDep = "androidx.core:core-ktx:$versions.coreKtx"
 
         workerManagerDep = "androidx.work:work-runtime-ktx:$versions.workerManager"
+        coroutineDep = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.coroutines"
+        coroutineAndroidDep = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.coroutines"
+        coroutineTestDep = "org.jetbrains.kotlinx:kotlinx-coroutines-test:$versions.coroutines"
 
         loggerDep = "com.orhanobut:logger:$versions.logger"
         svgDep = "com.caverock:androidsvg-aar:$versions.svgVersion"
@@ -86,18 +93,19 @@ buildscript {
         daggerKapt = "com.google.dagger:dagger-compiler:$versions.dagger"
 
         lifecycleDep = "androidx.lifecycle:lifecycle-extensions:$versions.archComponents"
-        lifecycleKapt = "androidx.lifecycle:lifecycle-compiler:$versions.archComponents"
+        lifecycleKaptDep = "androidx.lifecycle:lifecycle-compiler:$versions.archComponents"
+        viewmodelKtxDep = "androidx.lifecycle:lifecycle-viewmodel-ktx:$versions.archComponents"
+        livedataKtxDep = "androidx.lifecycle:lifecycle-livedata-ktx:$versions.archComponents"
+        livecycleKtxDep = "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-alpha01"
 
         roomDep = "androidx.room:room-runtime:$versions.room"
-        rxRoomDep = "androidx.room:room-rxjava2:$versions.room"
+        roomKaptDep = "androidx.room:room-compiler:$versions.room"
+        roomKtxDep = "androidx.room:room-ktx:$versions.room"
+
+        pagingLibraryDep = "androidx.paging:paging-runtime:$versions.pagingLibrary"
 
         insetterDep = "dev.chrisbanes.insetter:insetter:$versions.insetter"
         viewBindingDep = "com.github.kirich1409:viewbindingpropertydelegate-noreflection:$versions.viewBinding"
-
-        roomKapt = "androidx.room:room-compiler:$versions.room"
-
-        rxDep = "io.reactivex.rxjava2:rxjava:$versions.rxJava2"
-        rxAndroidDep = "io.reactivex.rxjava2:rxandroid:$versions.rxAndroid"
 
         irohaDep = "com.github.hyperledger.iroha-java:client:$versions.iroha"
         soraDep = "com.github.soramitsu:sora-sdk:$versions.soraSdk"
@@ -105,8 +113,6 @@ buildscript {
         webSocketLibDep = "com.neovisionaries:nv-websocket-client:$versions.webSocketLib"
 
         gsonDep = "com.google.code.gson:gson:$versions.gson"
-
-        rxBindingDep = "com.jakewharton.rxbinding2:rxbinding:$versions.rxBinding"
 
         firebaseMessagingDep = "com.google.firebase:firebase-messaging"
 
@@ -118,9 +124,10 @@ buildscript {
         shimmerDep = "com.facebook.shimmer:shimmer:$versions.shimmer"
 
         novaCryptoDep = "io.github.novacrypto:BIP39:$versions.novaCrypto"
+        bouncyCastleDep = "org.bouncycastle:bcprov-jdk15on:$versions.bouncyCastle"
 
-        navigationFragmentDep = "androidx.navigation:navigation-fragment:$versions.navigationFragment"
-        navigationUiDep = "androidx.navigation:navigation-ui:$versions.navigationFragment"
+        navigationFragmentDep = "androidx.navigation:navigation-fragment-ktx:$versions.navigationFragment"
+        navigationUiDep = "androidx.navigation:navigation-ui-ktx:$versions.navigationFragment"
 
         zXingCoreDep = "com.google.zxing:core:$versions.zXing"
         zXingEmbeddedDep = "com.journeyapps:zxing-android-embedded:$versions.zXingEmbedded"
@@ -128,7 +135,7 @@ buildscript {
         retrofitDep = "com.squareup.retrofit2:retrofit:$versions.retrofit"
         gsonConvertedDep = "com.squareup.retrofit2:converter-gson:$versions.retrofit"
         scalarsConverterDep = "com.squareup.retrofit2:converter-scalars:$versions.retrofit"
-        rxCallAdapterDep = "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
+        retrofitCoroutineAdapterDep = "com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2"
 
         firebaseBomDep = "com.google.firebase:firebase-bom:$versions.firebaseBom"
 
@@ -137,6 +144,7 @@ buildscript {
         phoenixDep = "com.jakewharton:process-phoenix:$versions.phoenix"
 
         roundedImageViewDep = "com.makeramen:roundedimageview:$versions.roundedImage"
+        progressButtonDep = "com.github.razir.progressbutton:progressbutton:$versions.progressButton"
 
         ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
 
@@ -144,12 +152,12 @@ buildscript {
 
         emojiDep = "com.vanniktech:emoji:$versions.emoji"
 
-        rxPermissionsDep = "com.github.tbruyelle:rxpermissions:$versions.rxPermissions"
-
         authApiPhoneDep = "com.google.android.gms:play-services-auth-api-phone:$versions.googleAuthApiPhone"
         authGmsDep = "com.google.android.gms:play-services-auth:$versions.googleAuthApi"
 
         web3j = "org.web3j:core:$versions.web3j"
+
+        runtimePermissionsDep = "com.github.florent37:runtime-permission-kotlin:$versions.runtimePermissions"
 
         jUnitDep = "junit:junit:$versions.jUnit"
         mockitoDep = "org.mockito:mockito-inline:$versions.mockito"
@@ -160,6 +168,7 @@ buildscript {
         robolectricMultidexDep = "org.robolectric:shadows-multidex:$versions.robolectric"
         archCoreTestDep = "androidx.arch.core:core-testing:$versions.archCoreTest"
         archFragmentTestDep = "androidx.fragment:fragment-testing:$versions.archFragmentTest"
+        truthDep = "com.google.truth:truth:$versions.truth"
     }
 
     repositories {
@@ -168,10 +177,10 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:7.0.0-beta03'
-        classpath 'com.google.gms:google-services:4.3.5'
-        classpath 'com.google.firebase:firebase-appdistribution-gradle:2.1.1'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.5.2'
+        classpath 'com.android.tools.build:gradle:7.0.1'
+        classpath 'com.google.gms:google-services:4.3.8'
+        classpath 'com.google.firebase:firebase-appdistribution-gradle:2.1.3'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
     }
 }
 

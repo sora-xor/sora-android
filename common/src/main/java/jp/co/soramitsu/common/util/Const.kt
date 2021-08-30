@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.util
 
 class Const private constructor() {
@@ -16,8 +11,8 @@ class Const private constructor() {
         const val SOURCE_LINK = "https://github.com/sora-xor/Sora-Android"
         const val VAL_REWARD_LINK = "https://medium.com/@sora.xor/sora-validator-rewards-419320e22df8"
         const val POLKASWAP_WEBSITE = "https://polkaswap.io"
+        const val POLKASWAP_FAQ = "https://wiki.sora.org/polkaswap/polkaswap-faq"
         const val TELEGRAM_LINK = "https://t.me/sora_xor"
-        const val EMAIL = "sora@soramitsu.co.jp"
         const val SORA_TERMS_PAGE = "https://sora.org/terms"
         const val SORA_PRIVACY_PAGE = "https://sora.org/privacy"
         const val XOR_ASSET_ID = "xor#sora"

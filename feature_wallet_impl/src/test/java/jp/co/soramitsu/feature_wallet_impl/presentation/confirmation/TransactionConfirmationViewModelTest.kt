@@ -2,8 +2,9 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
-import io.reactivex.Completable
-import io.reactivex.Single
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -11,27 +12,24 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
-import jp.co.soramitsu.test_shared.anyNonNull
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyInt
-import org.mockito.BDDMockito.anyString
-import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.times
 import org.mockito.Mock
-import org.mockito.Mockito.anyString
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class TransactionConfirmationViewModelTest {
 
@@ -39,9 +37,8 @@ class TransactionConfirmationViewModelTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
@@ -73,9 +70,7 @@ class TransactionConfirmationViewModelTest {
     private lateinit var viewModel: TransactionConfirmationViewModel
 
     @Before
-    fun setUp() {
-        given(walletInteractor.getAssets()).willReturn(Single.just(assetList()))
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("0.34")
+    fun setUp() = runBlockingTest {
         viewModel = TransactionConfirmationViewModel(
             walletInteractor,
             ethInteractor,
@@ -121,47 +116,41 @@ class TransactionConfirmationViewModelTest {
     }
 
     @Test
-    fun `next click`() {
-        given(
-            walletInteractor.observeTransfer(
-                anyString(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull()
-            )
-        ).willReturn(
-            Completable.complete()
-        )
+    fun `next click`() = runBlockingTest {
         viewModel.nextClicked()
         verify(router).returnToWalletFragment()
     }
 
     private fun assetList() = listOf(
         Asset(
-            "id",
-            "sora",
-            "val",
+            Token("token_id", "token name", "token symbol", 18, true, 0),
             true,
             true,
             1,
-            4,
-            18,
-            BigDecimal.TEN,
-            0,
-            true
+            AssetBalance(
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE
+            ),
         ),
         Asset(
-            "id2",
-            "polkaswap",
-            "pswap",
+            Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
             true,
             true,
             2,
-            4,
-            18,
-            BigDecimal.TEN,
-            0,
-            true
+            AssetBalance(
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE
+            )
         )
     )
 }

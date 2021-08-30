@@ -24,6 +24,7 @@ class StakingFragment : BaseFragment<StakingViewModel>(R.layout.fragment_staking
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         (activity as BottomBarController).showBottomBar()
         binding.stakingSubtitleTv.text = Const.VAL_REWARD_LINK
 

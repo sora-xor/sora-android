@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint
 
 import androidx.biometric.BiometricConstants
@@ -44,6 +39,6 @@ class FingerprintCallbackTest {
     @Test fun `onAuthenticationError called with error from list`() {
         fingerprintCallback.onAuthenticationError(BiometricConstants.ERROR_CANCELED,"")
 
-        verifyNoMoreInteractions(pinCodeViewModel)
+        verify(pinCodeViewModel).canceledFromPrompt()
     }
 }

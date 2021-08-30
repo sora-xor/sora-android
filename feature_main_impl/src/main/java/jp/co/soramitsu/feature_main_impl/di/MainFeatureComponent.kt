@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_main_impl.di
 
 import dagger.BindsInstance
@@ -25,7 +20,6 @@ import jp.co.soramitsu.feature_main_impl.presentation.parliament.di.ParliamentCo
 import jp.co.soramitsu.feature_main_impl.presentation.passphrase.di.PassphraseComponent
 import jp.co.soramitsu.feature_main_impl.presentation.personaldataedit.di.PersonalDataEditComponent
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.di.PinCodeComponent
-import jp.co.soramitsu.feature_main_impl.presentation.polkaswap.di.PolkaSwapComponent
 import jp.co.soramitsu.feature_main_impl.presentation.privacy.di.PrivacyComponent
 import jp.co.soramitsu.feature_main_impl.presentation.profile.di.ProfileComponent
 import jp.co.soramitsu.feature_main_impl.presentation.staking.di.StakingComponent
@@ -83,8 +77,6 @@ interface MainFeatureComponent : MainFeatureApi {
     fun stakingComponentBuilder(): StakingComponent.Builder
 
     fun parliamentComponentBuilder(): ParliamentComponent.Builder
-
-    fun polkaswapComponentBuilder(): PolkaSwapComponent.Builder
 
     @Component.Builder
     interface Builder {

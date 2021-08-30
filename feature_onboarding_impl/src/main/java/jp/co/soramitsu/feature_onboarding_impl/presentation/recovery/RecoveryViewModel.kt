@@ -1,21 +1,15 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.recovery
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.Completable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
+import kotlinx.coroutines.launch
 
 class RecoveryViewModel(
     private val interactor: OnboardingInteractor,
@@ -34,29 +28,22 @@ class RecoveryViewModel(
     val nextButtonEnabledLiveData: LiveData<Boolean> = _nextButtonEnabledLiveData
 
     fun btnNextClick(mnemonic: String, accountName: String) {
-        disposables.add(
-            interactor.isMnemonicValid(mnemonic)
-                .flatMapCompletable {
-                    if (it) {
-                        interactor.runRecoverFlow(mnemonic, accountName)
-                    } else {
-                        Completable.error(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
-                    }
+        viewModelScope.launch {
+            progress.showProgress()
+            try {
+                val valid = interactor.isMnemonicValid(mnemonic)
+                if (valid) {
+                    interactor.runRecoverFlow(mnemonic, accountName)
+                    router.showMainScreen()
+                } else {
+                    throw SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID)
                 }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { progress.showProgress() }
-                .subscribe(
-                    {
-                        progress.hideProgress()
-                        router.showMainScreen()
-                    },
-                    {
-                        progress.hideProgress()
-                        onError(it)
-                    }
-                )
-        )
+            } catch (t: Throwable) {
+                onError(t)
+            } finally {
+                progress.hideProgress()
+            }
+        }
     }
 
     fun backButtonClick() {

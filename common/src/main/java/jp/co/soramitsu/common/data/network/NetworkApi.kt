@@ -1,8 +1,3 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.common.data.network
 
 import jp.co.soramitsu.common.domain.AppLinksProvider
@@ -11,7 +6,7 @@ import javax.inject.Named
 
 interface NetworkApi {
 
-    fun provideNetworkApiCreator(): NetworkApiCreator
+    fun provideSora2CoroutineApiCreator(): Sora2CoroutineApiCreator
 
     fun appLinksProvider(): AppLinksProvider
 

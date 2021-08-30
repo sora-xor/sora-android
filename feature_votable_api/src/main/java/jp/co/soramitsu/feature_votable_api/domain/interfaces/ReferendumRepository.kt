@@ -1,19 +1,14 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_votable_api.domain.interfaces
 
-import io.reactivex.Observable
 import jp.co.soramitsu.feature_votable_api.domain.model.referendum.Referendum
+import kotlinx.coroutines.flow.Flow
 
 interface ReferendumRepository {
-    fun observeReferendum(referendumId: String): Observable<Referendum>
+    fun observeReferendum(referendumId: String): Flow<Referendum>
 
-    fun observeOpenedReferendums(): Observable<List<Referendum>>
+    fun observeOpenedReferendums(): Flow<List<Referendum>>
 
-    fun observeVotedReferendums(): Observable<List<Referendum>>
+    fun observeVotedReferendums(): Flow<List<Referendum>>
 
-    fun observeFinishedReferendums(): Observable<List<Referendum>>
+    fun observeFinishedReferendums(): Flow<List<Referendum>>
 }

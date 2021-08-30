@@ -33,11 +33,11 @@ dependencies {
 
     implementation kotlinDep
 
-    implementation rxDep
-    implementation rxAndroidDep
+    implementation coroutineTestDep
 
     implementation jUnitDep
     implementation mockitoDep
     implementation archCoreTestDep
     implementation archFragmentTestDep
+    implementation truthDep
 }

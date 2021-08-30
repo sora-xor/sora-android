@@ -1,13 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_ethereum_impl.di
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
-import jp.co.soramitsu.common.data.network.NetworkApiCreator
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.Serializer
@@ -20,8 +14,6 @@ import javax.inject.Named
 interface EthereumFeatureDependencies {
 
     fun credentialsRepository(): CredentialsRepository
-
-    fun networkApiCreator(): NetworkApiCreator
 
     fun healthChecker(): HealthChecker
 

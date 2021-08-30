@@ -1,13 +1,7 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
-
 package jp.co.soramitsu.feature_onboarding_impl.presentation.terms
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,18 +14,22 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class TermsViewModelTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
 
-    @Mock private lateinit var router: OnboardingRouter
+    @Mock
+    private lateinit var router: OnboardingRouter
 
     private lateinit var termsViewModel: TermsViewModel
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         termsViewModel = TermsViewModel(router)
     }
 
-    @Test fun `on back pressed clicked`() {
+    @Test
+    fun `on back pressed clicked`() {
         termsViewModel.onBackPressed()
 
         verify(router).onBackButtonPressed()

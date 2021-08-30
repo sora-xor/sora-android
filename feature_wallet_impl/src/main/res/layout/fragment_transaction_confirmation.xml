@@ -260,6 +260,7 @@
         android:layout_width="0dp"
         android:layout_marginStart="@dimen/x1"
         android:layout_marginEnd="@dimen/x1"
+        android:enabled="false"
         android:layout_marginBottom="@dimen/x4"
         android:text="@string/transaction_confirm"
         app:layout_constraintBottom_toBottomOf="parent"
