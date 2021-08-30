@@ -16,7 +16,6 @@ import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthRegisterStateMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
-import jp.co.soramitsu.feature_ethereum_impl.data.network.TransactionFactory
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.EthereumRepositoryImpl
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.datasource.PrefsEthereumDatasource
 import jp.co.soramitsu.feature_ethereum_impl.domain.EthereumInteractorImpl
@@ -43,10 +42,6 @@ class EthereumFeatureModule {
     ): EthereumDatasource {
         return PrefsEthereumDatasource(encryptedPreferences, preferences)
     }
-
-    @Singleton
-    @Provides
-    fun provideTransactionFactory(): TransactionFactory = TransactionFactory()
 
     @Singleton
     @Provides

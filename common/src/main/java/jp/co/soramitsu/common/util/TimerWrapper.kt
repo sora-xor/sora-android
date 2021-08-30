@@ -6,8 +6,8 @@
 package jp.co.soramitsu.common.util
 
 import android.os.CountDownTimer
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class TimerWrapper {
 
@@ -17,13 +17,12 @@ class TimerWrapper {
         private const val UPDATE_INTERVAL_DEFAULT = 1000L
     }
 
-    private lateinit var timerTickSubject: BehaviorSubject<Long>
+    private var timerTickSubject = MutableStateFlow<Long>(0)
     private lateinit var timer: Timer
 
     private var isStarted = false
 
-    fun start(millisInFuture: Long, interval: Long = UPDATE_INTERVAL_DEFAULT): Observable<Long> {
-        timerTickSubject = BehaviorSubject.create()
+    fun start(millisInFuture: Long, interval: Long = UPDATE_INTERVAL_DEFAULT): Flow<Long> {
         timer = Timer(millisInFuture, interval)
         timer.start()
         isStarted = true
@@ -57,13 +56,13 @@ class TimerWrapper {
 
     fun isStarted() = isStarted
 
-    private inner class Timer(millisInFuture: Long, interval: Long) : CountDownTimer(millisInFuture, interval) {
+    private inner class Timer(millisInFuture: Long, interval: Long) :
+        CountDownTimer(millisInFuture, interval) {
         override fun onTick(millisUntilFinished: Long) {
-            timerTickSubject.onNext(millisUntilFinished)
+            timerTickSubject.value = millisUntilFinished
         }
 
         override fun onFinish() {
-            timerTickSubject.onComplete()
         }
     }
 }

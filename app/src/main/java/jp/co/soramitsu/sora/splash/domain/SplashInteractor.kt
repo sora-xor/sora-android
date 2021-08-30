@@ -17,7 +17,7 @@ class SplashInteractor @Inject constructor(
 
     fun getRegistrationState() = userRepository.getRegistrationState()
 
-    fun saveRegistrationState(onboardingState: OnboardingState) {
+    suspend fun saveRegistrationState(onboardingState: OnboardingState) {
         userRepository.saveRegistrationState(onboardingState)
     }
 

@@ -3,5 +3,7 @@ apply plugin: 'kotlin'
 
 dependencies {
     implementation kotlinDep
-    implementation rxDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
 }

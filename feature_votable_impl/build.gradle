@@ -59,11 +59,13 @@ dependencies {
     implementation project(":core_db")
 
     implementation kotlinDep
-    implementation rxDep
+
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
 
     implementation roomDep
-    implementation rxRoomDep
-    kapt roomKapt
+    kapt roomKaptDep
 
     implementation androidDep
 
@@ -72,7 +74,6 @@ dependencies {
 
     implementation retrofitDep
     implementation gsonConvertedDep
-    implementation rxCallAdapterDep
 
     testImplementation jUnitDep
     testImplementation mockitoDep

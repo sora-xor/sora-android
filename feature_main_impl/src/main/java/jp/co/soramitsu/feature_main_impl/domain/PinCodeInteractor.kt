@@ -5,10 +5,6 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import io.reactivex.Completable
-import io.reactivex.Single
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
@@ -20,56 +16,46 @@ class PinCodeInteractor @Inject constructor(
     private val walletRepository: WalletRepository
 ) {
 
-    fun savePin(pin: String): Completable {
-        return Completable.fromAction { userRepository.savePin(pin) }
+    suspend fun savePin(pin: String) {
+        return userRepository.savePin(pin)
     }
 
-    fun checkPin(code: String): Completable {
-        return Completable.create { emitter ->
-            if (userRepository.retrievePin() == code) {
-                emitter.onComplete()
-            } else {
-                emitter.onError(SoraException.businessError(ResponseCode.WRONG_PIN_CODE))
-            }
-        }
+    fun checkPin(code: String) = userRepository.retrievePin() == code
+
+    fun isCodeSet(): Boolean {
+        return userRepository.retrievePin().isNotEmpty()
     }
 
-    fun isCodeSet(): Single<Boolean> {
-        return Single.just(userRepository.retrievePin().isNotEmpty())
+    suspend fun resetUser() {
+        userRepository.clearUserData()
     }
 
-    fun resetUser(): Completable {
-        return userRepository.clearUserData()
+    suspend fun setBiometryAvailable(isBiometryAvailable: Boolean) {
+        userRepository.setBiometryAvailable(isBiometryAvailable)
     }
 
-    fun setBiometryAvailable(isBiometryAvailable: Boolean): Completable {
-        return userRepository.setBiometryAvailable(isBiometryAvailable)
-    }
-
-    fun isBiometryAvailable(): Single<Boolean> {
+    suspend fun isBiometryAvailable(): Boolean {
         return userRepository.isBiometryAvailable()
     }
 
-    fun isBiometryEnabled(): Single<Boolean> {
+    suspend fun isBiometryEnabled(): Boolean {
         return userRepository.isBiometryEnabled()
     }
 
-    fun needsMigration(): Single<Boolean> {
-        return userRepository.isMigrationFetched()
-            .flatMapCompletable {
-                if (it) {
-                    Completable.complete()
-                } else {
-                    credentialsRepository.getIrohaAddress()
-                        .flatMap { walletRepository.needsMigration(it) }
-                        .flatMapCompletable { userRepository.saveNeedsMigration(it) }
-                        .andThen(userRepository.saveIsMigrationFetched(true))
-                }
-            }
-            .andThen(userRepository.needsMigration())
+    suspend fun needsMigration(): Boolean {
+        val isFetched = userRepository.isMigrationFetched()
+        return if (isFetched) {
+            userRepository.needsMigration()
+        } else {
+            val irohaAddress = credentialsRepository.getIrohaAddress()
+            val needs = walletRepository.needsMigration(irohaAddress)
+            userRepository.saveNeedsMigration(needs)
+            userRepository.saveIsMigrationFetched(true)
+            userRepository.needsMigration()
+        }
     }
 
-    fun setBiometryEnabled(isEnabled: Boolean): Completable {
-        return userRepository.setBiometryEnabled(isEnabled)
+    suspend fun setBiometryEnabled(isEnabled: Boolean) {
+        userRepository.setBiometryEnabled(isEnabled)
     }
 }

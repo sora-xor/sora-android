@@ -11,10 +11,12 @@ import jp.co.soramitsu.feature_main_impl.presentation.pincode.PinCodeViewModel
 
 class FingerprintCallback(private val pinCodeViewModel: PinCodeViewModel) : BiometricPrompt.AuthenticationCallback() {
     override fun onAuthenticationError(errMsgId: Int, errString: CharSequence) {
-        if (errMsgId != BiometricConstants.ERROR_CANCELED &&
-            errMsgId != BiometricConstants.ERROR_NEGATIVE_BUTTON &&
-            errMsgId != BiometricConstants.ERROR_USER_CANCELED
+        if (errMsgId == BiometricConstants.ERROR_CANCELED ||
+            errMsgId == BiometricConstants.ERROR_NEGATIVE_BUTTON ||
+            errMsgId == BiometricConstants.ERROR_USER_CANCELED
         ) {
+            pinCodeViewModel.canceledFromPrompt()
+        } else {
             pinCodeViewModel.onAuthenticationError(errString.toString())
         }
     }

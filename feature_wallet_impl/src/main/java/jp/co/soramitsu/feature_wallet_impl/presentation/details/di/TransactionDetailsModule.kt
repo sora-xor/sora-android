@@ -21,11 +21,8 @@ import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsViewModel
-import java.math.BigDecimal
-import javax.inject.Named
+import jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsViewModel
 
 @Module(
     includes = [
@@ -36,7 +33,7 @@ class TransactionDetailsModule {
 
     @Provides
     @IntoMap
-    @ViewModelKey(TransactionDetailsViewModel::class)
+    @ViewModelKey(ExtrinsicDetailsViewModel::class)
     fun provideViewModel(
         walletInteractor: WalletInteractor,
         ethereumInteractor: EthereumInteractor,
@@ -45,46 +42,26 @@ class TransactionDetailsModule {
         numbersFormatter: NumbersFormatter,
         textFormatter: TextFormatter,
         dateTimeFormatter: DateTimeFormatter,
-        @Named("assetId") assetId: String,
-        @Named("myAccountId") myAccountId: String,
-        @Named("peerId") peerId: String,
-        transactionType: Transaction.Type,
-        @Named("soranetTransactionId") soranetTransactionId: String,
-        @Named("soranetBlockId") soranetBlockId: String,
-        @Named("status") status: Transaction.Status,
-        @Named("success") success: Boolean?,
-        date: Long,
-        @Named("amount") amount: BigDecimal,
-        @Named("totalAmount") totalAmount: BigDecimal,
-        @Named("transactionFee") transactionFee: BigDecimal,
+        txHash: String,
         clipboardManager: ClipboardManager
     ): ViewModel {
-        return TransactionDetailsViewModel(
+        return ExtrinsicDetailsViewModel(
+            txHash,
             walletInteractor,
-            ethereumInteractor,
             walletRouter,
-            resourceManager,
             numbersFormatter,
-            textFormatter,
             dateTimeFormatter,
-            myAccountId,
-            assetId,
-            peerId,
-            transactionType,
-            soranetTransactionId,
-            soranetBlockId,
-            status,
-            success,
-            date,
-            amount,
-            totalAmount,
-            transactionFee,
-            clipboardManager
+            resourceManager,
+            clipboardManager,
         )
     }
 
     @Provides
-    fun provideViewModelCreator(fragment: Fragment, viewModelFactory: ViewModelProvider.Factory): TransactionDetailsViewModel {
-        return ViewModelProviders.of(fragment, viewModelFactory).get(TransactionDetailsViewModel::class.java)
+    fun provideViewModelCreator(
+        fragment: Fragment,
+        viewModelFactory: ViewModelProvider.Factory
+    ): ExtrinsicDetailsViewModel {
+        return ViewModelProviders.of(fragment, viewModelFactory)
+            .get(ExtrinsicDetailsViewModel::class.java)
     }
 }

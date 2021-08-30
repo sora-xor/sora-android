@@ -6,15 +6,16 @@
 package jp.co.soramitsu.feature_main_impl.presentation.language
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Single
+import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.feature_account_api.domain.model.Language
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.language.model.LanguageItem
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,20 +28,23 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class SelectLanguageViewModelTest {
 
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val schedulersRule = RxSchedulersRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var router: MainRouter
+
     @Mock
     private lateinit var interactor: MainInteractor
+
     @Mock
     private lateinit var resourceManager: ResourceManager
 
@@ -53,9 +57,13 @@ class SelectLanguageViewModelTest {
     )
 
     @Before
-    fun setUp() {
-        given(interactor.getAvailableLanguagesWithSelected())
-            .willReturn(Single.just(Pair(languages, languages.first().iso)))
+    fun setUp() = runBlockingTest {
+        given(interactor.getAvailableLanguagesWithSelected()).willReturn(
+            Pair(
+                languages,
+                languages.first().iso
+            )
+        )
         given(resourceManager.getString(anyInt())).willReturn("Русский")
 
         selectLanguageViewModel = SelectLanguageViewModel(interactor, router, resourceManager)
@@ -67,8 +75,8 @@ class SelectLanguageViewModelTest {
     }
 
     @Test
-    fun `language selected`() {
-        given(interactor.changeLanguage(languages.first().iso)).willReturn(Single.just(languages.first().iso))
+    fun `language selected`() = runBlockingTest {
+        given(interactor.changeLanguage(languages.first().iso)).willReturn(languages.first().iso)
 
         selectLanguageViewModel.languageSelected(languageItems.first())
 

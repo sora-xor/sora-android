@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.di
 
 import androidx.fragment.app.Fragment
@@ -7,11 +12,9 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -29,13 +32,11 @@ class AssetListModule {
     @ViewModelKey(AssetListViewModel::class)
     fun provideViewModel2(
         interactor: WalletInteractor,
-        ethInteractor: EthereumInteractor,
         nf: NumbersFormatter,
         walletRouter: WalletRouter,
-        rm: ResourceManager,
         mode: AssetListMode
     ): ViewModel {
-        return AssetListViewModel(interactor, ethInteractor, nf, walletRouter, rm, mode)
+        return AssetListViewModel(interactor, nf, walletRouter, mode)
     }
 
     @Provides

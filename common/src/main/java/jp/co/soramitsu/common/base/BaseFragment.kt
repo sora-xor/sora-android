@@ -32,7 +32,7 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
         viewModel.errorLiveData.observe(
             viewLifecycleOwner,
             EventObserver {
-                AlertDialog.Builder(activity!!)
+                AlertDialog.Builder(requireActivity())
                     .setTitle(R.string.common_error_general_title)
                     .setMessage(it)
                     .setPositiveButton(android.R.string.ok) { _, _ -> }
@@ -43,7 +43,7 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
         viewModel.alertDialogLiveData.observe(
             viewLifecycleOwner,
             EventObserver {
-                AlertDialog.Builder(activity!!)
+                AlertDialog.Builder(requireActivity())
                     .setTitle(it.first)
                     .setMessage(it.second)
                     .setPositiveButton(android.R.string.ok) { _, _ -> }
@@ -60,7 +60,7 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
     }
 
     protected fun showErrorFromResponse(resId: Int) {
-        AlertDialog.Builder(activity!!)
+        AlertDialog.Builder(requireActivity())
             .setTitle(R.string.common_error_general_title)
             .setMessage(resId)
             .setPositiveButton(android.R.string.ok) { _, _ -> }

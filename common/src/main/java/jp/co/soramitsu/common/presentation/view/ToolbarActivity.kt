@@ -35,7 +35,8 @@ abstract class ToolbarActivity<T : BaseViewModel, VB : ViewBinding> : AppCompatA
         inject()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContentView(layoutResource().also { binding = it }.root)
+        binding = layoutResource()
+        setContentView(binding.root)
         initViews()
         subscribe(viewModel)
 
@@ -73,6 +74,10 @@ abstract class ToolbarActivity<T : BaseViewModel, VB : ViewBinding> : AppCompatA
                     .show()
             }
         )
+    }
+
+    protected fun requireBinding(): VB? {
+        return if (::binding.isInitialized) binding else null
     }
 
     abstract fun layoutResource(): VB

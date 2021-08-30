@@ -7,7 +7,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.receive
 
 import android.graphics.Bitmap
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Single
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -15,8 +14,10 @@ import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -31,6 +32,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class ReceiveAmountViewModelTest {
 
@@ -38,9 +40,8 @@ class ReceiveAmountViewModelTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var interactor: WalletInteractor
@@ -66,10 +67,10 @@ class ReceiveAmountViewModelTest {
     private val qrCodeBitmap = mock(Bitmap::class.java)
 
     @Before
-    fun setUp() {
-        given(interactor.getAccountId()).willReturn(Single.just("0x123123"))
-        given(interactor.getPublicKeyHex(true)).willReturn(Single.just("0xabc"))
-        given(interactor.getAccountName()).willReturn(Single.just("0x98765"))
+    fun setUp() = runBlockingTest {
+        given(interactor.getAddress()).willReturn("0x123123")
+        given(interactor.getPublicKeyHex(true)).willReturn("0xabc")
+        given(interactor.getAccountName()).willReturn("0x98765")
         given(qrCodeGenerator.generateQrBitmap(anyString())).willReturn(qrCodeBitmap)
         receiveAmountViewModel = ReceiveViewModel(
             interactor,

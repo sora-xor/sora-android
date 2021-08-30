@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_main_impl.presentation.userverification
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -24,12 +23,10 @@ class UserVerificationViewModelTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var router: MainRouter
+
     @Mock
     private lateinit var interactor: PinCodeInteractor
 

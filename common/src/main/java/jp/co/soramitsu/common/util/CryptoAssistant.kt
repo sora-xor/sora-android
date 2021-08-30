@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.common.util
 
-import io.reactivex.Single
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.fearless_utils.bip39.Bip39
 import jp.co.soramitsu.fearless_utils.encrypt.KeypairFactory
@@ -28,14 +27,6 @@ class CryptoAssistant(
         }
     }
 
-    fun getSecureRandom(length: Int): Single<ByteArray> {
-        return Single.fromCallable {
-            val e = ByteArray(length)
-            secureRandom.nextBytes(e)
-            e
-        }
-    }
-
     private fun sha3_256(byteArray: ByteArray): ByteArray {
         return SHA3.DigestSHA3(256).digest(byteArray)
     }
@@ -44,7 +35,12 @@ class CryptoAssistant(
         return ed25519Sha3.rawSign(sha3_256(message), keyPair)
     }
 
-    fun generateScryptSeedForEd25519(entropy: ByteArray, project: String, purpose: String, password: String): ByteArray {
+    fun generateScryptSeedForEd25519(
+        entropy: ByteArray,
+        project: String,
+        purpose: String,
+        password: String
+    ): ByteArray {
         val salt = StringBuilder()
             .append(project)
             .append("|")

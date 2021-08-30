@@ -5,54 +5,52 @@
 
 package jp.co.soramitsu.feature_account_api.domain.interfaces
 
-import io.reactivex.Completable
-import io.reactivex.Single
-import jp.co.soramitsu.feature_account_api.domain.model.Language
+import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 
 interface UserRepository {
 
     fun getRegistrationState(): OnboardingState
 
-    fun savePin(pin: String)
+    suspend fun savePin(pin: String)
 
     fun retrievePin(): String
 
-    fun saveRegistrationState(onboardingState: OnboardingState)
+    suspend fun saveRegistrationState(onboardingState: OnboardingState)
 
-    fun clearUserData(): Completable
+    suspend fun clearUserData()
 
-    fun getAppVersion(): Single<String>
+    suspend fun getAppVersion(): String
 
     fun saveParentInviteCode(inviteCode: String)
 
-    fun getParentInviteCode(): Single<String>
+    suspend fun getParentInviteCode(): String
 
-    fun getAvailableLanguages(): Single<Pair<List<Language>, String>>
+    suspend fun getAvailableLanguages(): Pair<List<Language>, String>
 
-    fun changeLanguage(language: String): Single<String>
+    suspend fun changeLanguage(language: String): String
 
-    fun getInvitationLink(): Single<String>
+    suspend fun getInvitationLink(): String
 
-    fun getSelectedLanguage(): Single<Language>
+    suspend fun getSelectedLanguage(): Language
 
-    fun setBiometryEnabled(isEnabled: Boolean): Completable
+    suspend fun setBiometryEnabled(isEnabled: Boolean)
 
-    fun isBiometryEnabled(): Single<Boolean>
+    suspend fun isBiometryEnabled(): Boolean
 
-    fun setBiometryAvailable(biometryAvailable: Boolean): Completable
+    suspend fun setBiometryAvailable(biometryAvailable: Boolean)
 
-    fun isBiometryAvailable(): Single<Boolean>
+    suspend fun isBiometryAvailable(): Boolean
 
-    fun saveAccountName(accountName: String): Completable
+    suspend fun saveAccountName(accountName: String)
 
-    fun getAccountName(): Single<String>
+    suspend fun getAccountName(): String
 
-    fun saveNeedsMigration(it: Boolean): Completable
+    suspend fun saveNeedsMigration(it: Boolean)
 
-    fun needsMigration(): Single<Boolean>
+    suspend fun needsMigration(): Boolean
 
-    fun saveIsMigrationFetched(it: Boolean): Completable
+    suspend fun saveIsMigrationFetched(it: Boolean)
 
-    fun isMigrationFetched(): Single<Boolean>
+    suspend fun isMigrationFetched(): Boolean
 }

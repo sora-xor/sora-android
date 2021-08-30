@@ -29,7 +29,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <jp.co.soramitsu.feature_wallet_impl.presentation.view.CurrencyEditText
+    <jp.co.soramitsu.common.presentation.view.CurrencyEditText
         android:id="@+id/etAmountSelector"
         style="@style/TextAppearance.Soramitsu.Paragraph_1.Bold"
         android:layout_width="0dp"

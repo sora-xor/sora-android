@@ -7,12 +7,12 @@ package jp.co.soramitsu.feature_main_impl.presentation.invite
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.InvitationInteractor
+import kotlinx.coroutines.launch
 
 class InviteViewModel(
     private val interactor: InvitationInteractor,
@@ -24,20 +24,13 @@ class InviteViewModel(
     val shareCodeLiveData: LiveData<String> = _shareCodeLiveData
 
     fun sendInviteClick() {
-        disposables.add(
-            interactor.getInviteLink()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .compose(progressCompose())
-                .subscribe(
-                    {
-                        _shareCodeLiveData.value = it
-                    },
-                    {
-                        onError(it)
-                    }
-                )
-        )
+        viewModelScope.launch {
+            showProgress()
+            tryCatch {
+                _shareCodeLiveData.value = interactor.getInviteLink()
+            }
+            hideProgress()
+        }
     }
 
     fun backButtonPressed() {

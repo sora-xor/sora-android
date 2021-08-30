@@ -36,6 +36,7 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         (activity as BottomBarController).showBottomBar()
 
         binding.profileFriendsTextView.setDebouncedClickListener(debounceClickHandler) {

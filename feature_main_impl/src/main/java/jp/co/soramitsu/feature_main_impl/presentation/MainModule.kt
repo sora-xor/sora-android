@@ -13,14 +13,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.HealthChecker
-import jp.co.soramitsu.common.domain.InvitationHandler
-import jp.co.soramitsu.common.interfaces.WithProgress
-import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
-import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 
 @Module(
     includes = [
@@ -34,22 +30,14 @@ class MainModule {
     @ViewModelKey(MainViewModel::class)
     fun provideViewModel(
         healthChecker: HealthChecker,
-        interactor: MainInteractor,
-        deviceParamsProvider: DeviceParamsProvider,
-        progress: WithProgress,
-        invitationHandler: InvitationHandler,
+        walletInteractor: WalletInteractor,
         runtimeManager: RuntimeManager,
     ): ViewModel {
-        return MainViewModel(healthChecker, interactor, deviceParamsProvider, progress, invitationHandler, runtimeManager)
+        return MainViewModel(healthChecker, walletInteractor, runtimeManager)
     }
 
     @Provides
     fun provideViewModelCreator(activity: AppCompatActivity, viewModelFactory: ViewModelProvider.Factory): MainViewModel {
         return ViewModelProviders.of(activity, viewModelFactory).get(MainViewModel::class.java)
-    }
-
-    @Provides
-    fun provideProgress(): WithProgress {
-        return WithProgressImpl()
     }
 }

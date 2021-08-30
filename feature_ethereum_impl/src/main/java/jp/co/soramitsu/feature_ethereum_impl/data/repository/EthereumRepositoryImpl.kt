@@ -5,14 +5,10 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.functions.BiFunction
+import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.model.TransferTransactionLocal
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
@@ -21,14 +17,13 @@ import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import jp.co.soramitsu.feature_ethereum_api.domain.model.GasEstimation
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthRegisterStateMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
-import jp.co.soramitsu.feature_ethereum_impl.data.network.TransactionFactory
 import jp.co.soramitsu.feature_ethereum_impl.data.network.model.EthPublicKeyWithProof
 import jp.co.soramitsu.feature_ethereum_impl.data.network.model.KeccakProof
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiConverter
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
-import jp.co.soramitsu.feature_wallet_api.domain.model.AssetBalance
+import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
@@ -36,7 +31,6 @@ import org.web3j.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.KeyPair
-import java.util.Date
 import javax.inject.Inject
 
 class EthereumRepositoryImpl @Inject constructor(
@@ -46,7 +40,6 @@ class EthereumRepositoryImpl @Inject constructor(
     private val web3jBip32Crypto: Web3jBip32Crypto,
     private val serializer: Serializer,
     private val contractApiProvider: ContractsApiProvider,
-    private val transactionFactory: TransactionFactory,
     private val etherWeiConverter: EtherWeiConverter,
     private val db: AppDatabase,
     private val ethRegisterStateMapper: EthRegisterStateMapper,
@@ -56,10 +49,8 @@ class EthereumRepositoryImpl @Inject constructor(
         private val EMPTY_PROOF_HASH = ByteArray(32)
     }
 
-    override fun getValTokenAddress(ethCredentials: EthereumCredentials): Single<String> {
-        return Single.fromCallable {
-            contractApiProvider.getSmartContractApi(ethCredentials).valTokenInstance().send()
-        }
+    override fun getValTokenAddress(ethCredentials: EthereumCredentials): String {
+        return contractApiProvider.getSmartContractApi(ethCredentials).valTokenInstance().send()
     }
 
     override fun transferValErc20(
@@ -67,165 +58,144 @@ class EthereumRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         ethCredentials: EthereumCredentials,
         tokenAddress: String
-    ): Completable {
-        return Single.fromCallable { etherWeiConverter.fromEtherToWei(amount) }
-            .map {
-                contractApiProvider.getErc20ContractApi(ethCredentials, tokenAddress)
-                    .transferVal(to, it).send()
-            }
-            .onErrorResumeNext { Single.error(SoraException.unexpectedError(it)) }
-            .doOnSuccess {
-                val gasPrice = contractApiProvider.getGasPrice()
-                val gasLimit = contractApiProvider.getGasLimit()
+    ) {
+        try {
+            val receipt = contractApiProvider.getErc20ContractApi(ethCredentials, tokenAddress)
+                .transferVal(to, etherWeiConverter.fromEtherToWei(amount)).send()
+            val gasPrice = contractApiProvider.getGasPrice()
+            val gasLimit = contractApiProvider.getGasLimit()
 
-                val fee = etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)
-                val transaction = TransferTransactionLocal(
-                    it.transactionHash,
-                    TransferTransactionLocal.Status.PENDING,
-                    "AssetHolder.SORA_VAL_ERC_20.id",
-                    "",
-                    amount,
-                    Date().time / 1000,
-                    to,
-                    TransferTransactionLocal.Type.OUTGOING,
-                    fee,
-                    null,
-                    null
-                )
+            val fee = etherWeiConverter.fromWeiToEther(gasLimit * gasPrice)
 
-                db.transactionDao().insert(transaction)
-            }
-            .ignoreElement()
+            // db.transactionDao().insert(transaction)
+        } catch (t: Throwable) {
+            throw SoraException.unexpectedError(t)
+        }
     }
 
     override fun updateValErc20AndEthBalance(
         ethCredentials: EthereumCredentials,
         ethWalletAddress: String,
         tokenAddress: String
-    ): Completable {
-        return getValErc20BalanceRemote(ethCredentials, ethWalletAddress, tokenAddress)
-            .zipWith(
-                getEthereumBalanceRemote(ethCredentials),
-                BiFunction<AssetBalance, AssetBalance, List<AssetBalance>> { valErc20Asset, ethereumAsset ->
-                    mutableListOf(valErc20Asset, ethereumAsset)
-                }
-            )
-            .doOnSuccess {
-                db.runInTransaction {
-                    it.forEach { db.assetDao().updateBalance(it.assetId, it.balance) }
-                }
-            }
-            .ignoreElement()
+    ) {
+        val a = getValErc20BalanceRemote(ethCredentials, ethWalletAddress, tokenAddress)
+        val b = getEthereumBalanceRemote(ethCredentials)
+        mutableListOf(a, b)
+//                db.runInTransaction {
+//                    it.forEach { db.assetDao().updateBalance(it.assetId, it.balance) }
+//                }
     }
 
     private fun getValErc20BalanceRemote(
         ethCredentials: EthereumCredentials,
         ethWalletAddress: String,
         tokenAddress: String
-    ): Single<AssetBalance> {
-        return Single.fromCallable {
-            contractApiProvider.getErc20ContractApi(
-                ethCredentials,
-                tokenAddress
-            ).valBalance(ethWalletAddress).send()
-        }
-            .map { etherWeiConverter.fromWeiToEther(it) }
-            .map { AssetBalance("AssetHolder.SORA_VAL_ERC_20.id", it) }
+    ): AssetBalance {
+        val c = contractApiProvider.getErc20ContractApi(
+            ethCredentials,
+            tokenAddress
+        ).valBalance(ethWalletAddress).send()
+            .let { etherWeiConverter.fromWeiToEther(it) }
+        return AssetBalance(
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+        )
     }
 
-    private fun getEthereumBalanceRemote(ethCredentials: EthereumCredentials): Single<AssetBalance> {
-        return Single.fromCallable { ethereumCredentialsMapper.getAddress(ethCredentials.privateKey) }
-            .map {
+    private fun getEthereumBalanceRemote(ethCredentials: EthereumCredentials): AssetBalance {
+        ethereumCredentialsMapper.getAddress(ethCredentials.privateKey)
+            .let {
                 web3jProvider.web3j.ethGetBalance(it, DefaultBlockParameterName.LATEST)
                     .send().balance
             }
-            .map { etherWeiConverter.fromWeiToEther(it) }
-            .map { AssetBalance("AssetHolder.ETHER_ETH.id", it) }
+            .let { etherWeiConverter.fromWeiToEther(it) }
+        return AssetBalance(
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+        )
     }
 
-    override fun setGasPrice(gasPriceInGwei: BigInteger): Single<BigDecimal> {
-        return setGasPriceRemote(gasPriceInGwei)
-            .andThen(getGasLimit())
-            .map { etherWeiConverter.fromGweiToWei(gasPriceInGwei) * it }
-            .map { etherWeiConverter.fromWeiToEther(it) }
+    override fun setGasPrice(gasPriceInGwei: BigInteger): BigDecimal {
+        setGasPriceRemote(gasPriceInGwei)
+        return getGasLimit()
+            .let { etherWeiConverter.fromGweiToWei(gasPriceInGwei) * it }
+            .let { etherWeiConverter.fromWeiToEther(it) }
     }
 
-    private fun setGasPriceRemote(gasPriceInGwei: BigInteger): Completable {
-        return Completable.fromAction {
-            val gasPrice = etherWeiConverter.fromGweiToWei(gasPriceInGwei)
-            contractApiProvider.setGasPrice(gasPrice)
-        }
+    private fun setGasPriceRemote(gasPriceInGwei: BigInteger) {
+        val gasPrice = etherWeiConverter.fromGweiToWei(gasPriceInGwei)
+        contractApiProvider.setGasPrice(gasPrice)
     }
 
-    override fun setGasLimit(gasLimit: BigInteger): Single<BigDecimal> {
-        return setGasLimitRemote(gasLimit)
-            .andThen(getGasPrice())
-            .map { gasLimit * it }
-            .map { etherWeiConverter.fromWeiToEther(it) }
+    override fun setGasLimit(gasLimit: BigInteger): BigDecimal {
+        setGasLimitRemote(gasLimit)
+        return getGasPrice()
+            .let { gasLimit * it }
+            .let { etherWeiConverter.fromWeiToEther(it) }
     }
 
-    private fun getGasPrice(): Single<BigInteger> {
-        return Single.fromCallable {
-            contractApiProvider.getGasPrice()
-        }
+    private fun getGasPrice(): BigInteger {
+        return contractApiProvider.getGasPrice()
     }
 
-    private fun getGasLimit(): Single<BigInteger> {
-        return Single.fromCallable {
-            contractApiProvider.getGasLimit()
-        }
+    private fun getGasLimit(): BigInteger {
+        return contractApiProvider.getGasLimit()
     }
 
-    private fun setGasLimitRemote(gasLimit: BigInteger): Completable {
-        return Completable.fromAction {
-            contractApiProvider.setGasLimit(gasLimit)
-        }
+    private fun setGasLimitRemote(gasLimit: BigInteger) {
+        contractApiProvider.setGasLimit(gasLimit)
     }
 
-    override fun calculateValErc20TransferFee(): Single<BigDecimal> {
+    override fun calculateValErc20TransferFee(): BigDecimal {
         return calculateValErc20Fee(ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())
     }
 
-    override fun calculateValErc20WithdrawFee(): Single<BigDecimal> {
+    override fun calculateValErc20WithdrawFee(): BigDecimal {
         return calculateValErc20Fee(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())
     }
 
-    override fun calculateValErc20CombinedFee(): Single<BigDecimal> {
+    override fun calculateValErc20CombinedFee(): BigDecimal {
         return calculateValErc20Fee(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger() + ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())
     }
 
-    private fun calculateValErc20Fee(gasLimit: BigInteger): Single<BigDecimal> {
-        return Single.fromCallable { contractApiProvider.setGasLimit(gasLimit) }
-            .map { contractApiProvider.fetchGasPrice() }
-            .map { etherWeiConverter.fromWeiToGwei(it) * gasLimit }
-            .map { etherWeiConverter.fromGweiToEther(it) }
+    private fun calculateValErc20Fee(gasLimit: BigInteger): BigDecimal {
+        return contractApiProvider.setGasLimit(gasLimit)
+            .let { contractApiProvider.fetchGasPrice() }
+            .let { etherWeiConverter.fromWeiToGwei(it) * gasLimit }
+            .let { etherWeiConverter.fromGweiToEther(it) }
     }
 
-    override fun getEthWalletAddress(ethCredentials: EthereumCredentials): Single<String> {
-        return Single.fromCallable {
-            ethereumCredentialsMapper.getAddress(ethCredentials.privateKey)
-        }
+    override fun getEthWalletAddress(ethCredentials: EthereumCredentials): String {
+        return ethereumCredentialsMapper.getAddress(ethCredentials.privateKey)
     }
 
-    override fun getSerializedProof(ethCredentials: EthereumCredentials): Single<String> {
-        return Single.fromCallable {
-            val privateKey = ethCredentials.privateKey
-            val publicKey = ethereumCredentialsMapper.getPublicKey(privateKey)
-            val address = ethereumCredentialsMapper.getAddress(privateKey)
-            val dataToSign = prepareDataToSign(address)
-            val signature = sign(dataToSign, privateKey)
+    override fun getSerializedProof(ethCredentials: EthereumCredentials): String {
+        val privateKey = ethCredentials.privateKey
+        val publicKey = ethereumCredentialsMapper.getPublicKey(privateKey)
+        val address = ethereumCredentialsMapper.getAddress(privateKey)
+        val dataToSign = prepareDataToSign(address)
+        val signature = sign(dataToSign, privateKey)
 
-            val proof = EthPublicKeyWithProof(
-                publicKey.toString(),
-                KeccakProof(
-                    signature.v.toString(charset("UTF-16")),
-                    Hex.toHexString(signature.r),
-                    Hex.toHexString(signature.s)
-                )
+        val proof = EthPublicKeyWithProof(
+            publicKey.toString(),
+            KeccakProof(
+                signature.v.toString(charset("UTF-16")),
+                Hex.toHexString(signature.r),
+                Hex.toHexString(signature.s)
             )
+        )
 
-            serializer.serialize(proof)
-        }
+        return serializer.serialize(proof)
     }
 
     private fun sign(message: ByteArray, privateKey: BigInteger): Sign.SignatureData {
@@ -238,17 +208,15 @@ class EthereumRepositoryImpl @Inject constructor(
         return ("\u0019Ethereum Signed Message:\n" + (dat.size)).toByteArray() + dat
     }
 
-    override fun getEthCredentials(mnemonic: String): Single<EthereumCredentials> {
-        return Single.fromCallable {
-            val credentials = ethDataSource.retrieveEthereumCredentials()
-            if (credentials == null) {
-                val ethCredentials = generateEthCredentials(mnemonic)
-                ethDataSource.saveEthereumCredentials(ethCredentials)
+    override fun getEthCredentials(mnemonic: String): EthereumCredentials {
+        val credentials = ethDataSource.retrieveEthereumCredentials()
+        return if (credentials == null) {
+            val ethCredentials = generateEthCredentials(mnemonic)
+            ethDataSource.saveEthereumCredentials(ethCredentials)
 
-                ethCredentials
-            } else {
-                credentials
-            }
+            ethCredentials
+        } else {
+            credentials
         }
     }
 
@@ -266,8 +234,7 @@ class EthereumRepositoryImpl @Inject constructor(
         ethAddress: String,
         transactionFee: String,
         keyPair: KeyPair
-    ): Completable {
-        return Completable.complete()
+    ) {
     }
 
     override fun startCombinedValErcTransfer(
@@ -279,8 +246,7 @@ class EthereumRepositoryImpl @Inject constructor(
         transactionFee: String,
         ethCredentials: EthereumCredentials,
         keyPair: KeyPair
-    ): Completable {
-        return Completable.complete()
+    ) {
     }
 
     override fun startCombinedValTransfer(
@@ -293,8 +259,7 @@ class EthereumRepositoryImpl @Inject constructor(
         ethCredentials: EthereumCredentials,
         keyPair: KeyPair,
         tokenAddress: String
-    ): Completable {
-        return Completable.complete()
+    ) {
     }
 
     override fun getEthRegistrationState(): EthRegisterState {
@@ -324,8 +289,8 @@ class EthereumRepositoryImpl @Inject constructor(
         gasPrice: BigInteger,
         gasLimit: BigInteger,
         tokenAddress: String
-    ): Single<String> {
-        return Single.fromCallable { "" }
+    ): String {
+        return ""
     }
 
     private fun mintTokensByPeers(
@@ -338,26 +303,24 @@ class EthereumRepositoryImpl @Inject constructor(
         s: List<ByteArray>,
         from: String,
         tokenAddress: String
-    ): Single<String> {
-        return Single.fromCallable {
-            val txHashBytes = Hex.decode(txHash)
-            val result = contractApiProvider.getSmartContractApi(ethCredentials)
-                .mintTokensByPeers(amount, beneficiary, txHashBytes, v, r, s, from, tokenAddress)
-                .send()
-            result.transactionHash
-        }
+    ): String {
+        val txHashBytes = Hex.decode(txHash)
+        val result = contractApiProvider.getSmartContractApi(ethCredentials)
+            .mintTokensByPeers(amount, beneficiary, txHashBytes, v, r, s, from, tokenAddress)
+            .send()
+        return result.transactionHash
     }
 
-    override fun observeEthRegisterState(): Observable<EthRegisterState.State> {
+    override fun observeEthRegisterState(): Flow<EthRegisterState.State> {
         return ethDataSource.observeEthRegisterState()
     }
 
     override fun getGasEstimations(
         gasLimit: BigInteger,
         ethCredentials: EthereumCredentials
-    ): Single<Gas> {
+    ): Gas {
         return getGasPrice()
-            .map { gasPrice ->
+            .let { gasPrice ->
                 val estimations = listOf(
                     getSlowEstimations(gasLimit, gasPrice),
                     getRegularEstimations(gasLimit, gasPrice),
@@ -397,21 +360,17 @@ class EthereumRepositoryImpl @Inject constructor(
         return GasEstimation(GasEstimation.Type.FAST, amount, amountInEth, 20)
     }
 
-    override fun getBlockChainExplorerUrl(transactionHash: String): Single<String> {
-        return Single.fromCallable {
-            ""
-        }
+    override fun getBlockChainExplorerUrl(transactionHash: String): String {
+        return ""
     }
 
-    override fun getActualEthRegisterState(): Single<EthRegisterState.State> {
-        return Single.fromCallable { EthRegisterState.State.NONE }
+    override fun getActualEthRegisterState(): EthRegisterState.State {
+        return EthRegisterState.State.NONE
     }
 
-    override fun isBridgeEnabled(ethCredentials: EthereumCredentials): Single<Boolean> {
-        return Single.fromCallable {
-            val hash = contractApiProvider.getSmartContractApi(ethCredentials).proof().send()
-            !EMPTY_PROOF_HASH.contentEquals(hash)
-        }
+    override fun isBridgeEnabled(ethCredentials: EthereumCredentials): Boolean {
+        val hash = contractApiProvider.getSmartContractApi(ethCredentials).proof().send()
+        return !EMPTY_PROOF_HASH.contentEquals(hash)
     }
 
     private fun finishCombinedWithdrawTransaction(
@@ -419,43 +378,11 @@ class EthereumRepositoryImpl @Inject constructor(
         amount: BigDecimal,
         ethCredentials: EthereumCredentials,
         tokenAddress: String
-    ): Single<String> {
-        return Single.fromCallable { etherWeiConverter.fromEtherToWei(amount) }
-            .map {
+    ): String {
+        return etherWeiConverter.fromEtherToWei(amount)
+            .let {
                 contractApiProvider.getErc20ContractApi(ethCredentials, tokenAddress)
                     .transferVal(ethAddress, it).send()
-            }
-            .onErrorResumeNext {
-                Single.error(SoraException.unexpectedError(it))
-            }
-            .map { it.transactionHash }
-    }
-
-    private fun updateTransferTransactionStatuses(): Completable {
-        return db.transactionDao().getPendingEthereumTransactions()
-            .doOnSuccess {
-                db.runInTransaction {
-                    it.forEach {
-                        val status = getTransactionStatus(it.txHash)
-                        db.transactionDao().updateStatus(it.txHash, status)
-                    }
-                }
-            }
-            .ignoreElement()
-    }
-
-    private fun getTransactionStatus(txHash: String): TransferTransactionLocal.Status {
-        val receipt = web3jProvider.web3j.ethGetTransactionReceipt(txHash).send()
-        val blockNumberRaw = receipt.transactionReceipt.get().blockNumberRaw
-
-        return if (blockNumberRaw == null) {
-            TransferTransactionLocal.Status.PENDING
-        } else {
-            if (receipt.hasError()) {
-                TransferTransactionLocal.Status.REJECTED
-            } else {
-                TransferTransactionLocal.Status.COMMITTED
-            }
-        }
+            }.transactionHash
     }
 }

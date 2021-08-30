@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 import android.graphics.drawable.PictureDrawable
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Single
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -19,51 +18,60 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactListItem
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
 import jp.co.soramitsu.feature_wallet_impl.presentation.util.EthereumAddressValidator
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyInt
-import org.mockito.BDDMockito.anyString
-import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.*
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class ContactsViewModelTest {
 
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
+
     @Mock
     private lateinit var ethereumInteractor: EthereumInteractor
+
     @Mock
     private lateinit var router: WalletRouter
+
     @Mock
     private lateinit var preloader: WithPreloader
+
     @Mock
     private lateinit var avatar: AccountAvatarGenerator
+
     @Mock
     private lateinit var drawable: PictureDrawable
+
     @Mock
     private lateinit var resourceManager: ResourceManager
+
     @Mock
     private lateinit var ethereumAddressValidator: EthereumAddressValidator
 
     @Mock
     private lateinit var qrCodeDecoder: QrCodeDecoder
+
     @Mock
     private lateinit var uri: Uri
 
@@ -111,17 +119,15 @@ class ContactsViewModelTest {
     }
 
     @Test
-    fun `decode text from qr method and proccess result`() {
+    fun `decode text from qr method and proccess result`() = runBlockingTest {
         val qrResponse = "response"
 
-        given(qrCodeDecoder.decodeQrFromUri(uri)).willReturn(Single.just(qrResponse))
+        given(qrCodeDecoder.decodeQrFromUri(uri)).willReturn(qrResponse)
         given(walletInteractor.processQr(qrResponse)).willReturn(
-            Single.just(
-                Triple(
-                    "accountId",
-                    "firstName lastName",
-                    BigDecimal.ZERO
-                )
+            Triple(
+                "accountId",
+                "firstName lastName",
+                BigDecimal.ZERO
             )
         )
 
@@ -131,15 +137,12 @@ class ContactsViewModelTest {
     }
 
     @Test
-    fun `fetch contacts`() {
-        given(walletInteractor.getContacts("")).willReturn(Single.just(accounts))
+    fun `fetch contacts`() = runBlockingTest {
+        given(walletInteractor.getContacts("")).willReturn(accounts)
         val expected = mutableListOf(
             ContactListItem(account, drawable, true)
         )
         contactsViewModel.getContacts(true)
-
-        verify(preloader).showPreloader()
-        verify(preloader).hidePreloader()
 
         contactsViewModel.contactsLiveData.observeForever {
             assertEquals(expected, it)
@@ -147,12 +150,12 @@ class ContactsViewModelTest {
     }
 
     @Test
-    fun `search event`() {
+    fun `search event`() = runBlockingTest {
         val query = "query"
         val expected = mutableListOf(
             ContactListItem(account, drawable, true)
         )
-        given(walletInteractor.findOtherUsersAccounts(query)).willReturn(Single.just(accounts))
+        given(walletInteractor.findOtherUsersAccounts(query)).willReturn(accounts)
 
         contactsViewModel.search(query)
 

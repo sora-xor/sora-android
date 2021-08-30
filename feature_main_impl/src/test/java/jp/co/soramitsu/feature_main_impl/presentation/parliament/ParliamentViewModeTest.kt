@@ -1,8 +1,12 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_main_impl.presentation.parliament
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,10 +22,6 @@ class ParliamentViewModeTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var router: MainRouter

@@ -13,6 +13,7 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -125,6 +126,7 @@ class TransactionConfirmationFragment :
         }
         viewModel.inputTokenIconLiveData.observe {
             viewBinding.ivAssetIcon.setImageResource(it)
+            viewBinding.nextBtn.enable()
         }
         viewModel.balanceFormattedLiveData.observe {
             viewBinding.inputAccountInfo.text = it

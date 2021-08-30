@@ -14,6 +14,7 @@ import jp.co.soramitsu.feature_account_api.di.AccountFeatureApi
 import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.presentation.asset.details.di.AssetDetailsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.di.AssetSettingsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.di.AssetListComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.claim.di.ClaimComponent
@@ -21,6 +22,8 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.claim.di.ClaimWorkerComp
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.di.TransactionConfirmationComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.di.ContactsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.di.TransactionDetailsComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.di.PolkaSwapComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.di.SwapConfirmationComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.di.ReceiveComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.di.TransferAmountComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.di.WalletComponent
@@ -56,6 +59,12 @@ interface WalletFeatureComponent : WalletFeatureApi {
     fun contactsComponentBuilder(): ContactsComponent.Builder
 
     fun assetSettingsComponentBuilder(): AssetSettingsComponent.Builder
+
+    fun assetDetailsComponentBuilder(): AssetDetailsComponent.Builder
+
+    fun polkaswapComponentBuilder(): PolkaSwapComponent.Builder
+
+    fun swapConfirmationComponentBuilder(): SwapConfirmationComponent.Builder
 
     @Component.Builder
     interface Builder {

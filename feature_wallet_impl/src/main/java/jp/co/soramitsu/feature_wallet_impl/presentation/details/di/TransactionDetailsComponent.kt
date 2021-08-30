@@ -9,11 +9,9 @@ import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
-import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
+import jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.details.SwapDetailsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment
-import java.math.BigDecimal
-import javax.inject.Named
 
 @Subcomponent(
     modules = [
@@ -30,46 +28,14 @@ interface TransactionDetailsComponent {
         fun withFragment(fragment: Fragment): Builder
 
         @BindsInstance
-        fun withMyAccountId(@Named("myAccountId") myAccountId: String): Builder
-
-        @BindsInstance
-        fun withPeerId(@Named("peerId") peerId: String): Builder
-
-        @BindsInstance
-        fun withSoranetTransactionId(@Named("soranetTransactionId") transactionId: String): Builder
-
-        @BindsInstance
-        fun withSoranetBlockId(@Named("soranetBlockId") blockId: String): Builder
-
-        @BindsInstance
-        fun withStatus(@Named("status") status: Transaction.Status): Builder
-
-        @BindsInstance
-        fun withSuccess(@Named("success") success: Boolean?): Builder
-
-        @BindsInstance
-        fun withAssetId(@Named("assetId") assetId: String): Builder
-
-        @BindsInstance
-        fun withTransactionType(transcationType: Transaction.Type): Builder
-
-        @BindsInstance
-        fun withDate(date: Long): Builder
-
-        @BindsInstance
-        fun withAmount(@Named("amount") amount: BigDecimal): Builder
-
-        @BindsInstance
-        fun withTotalAmount(@Named("totalAmount") totalAmount: BigDecimal): Builder
-
-        @BindsInstance
-        fun withTransactionFee(@Named("transactionFee") fee: BigDecimal): Builder
-
-        @BindsInstance
-        fun withTransferType(@Named("transferType") transferType: TransferType): Builder
+        fun withTxHash(amount: String): Builder
 
         fun build(): TransactionDetailsComponent
     }
 
-    fun inject(transactionDetailsFragment: TransactionDetailsFragment)
+    fun inject(fragment: ExtrinsicDetailsFragment)
+
+    fun inject(fragment: TransactionDetailsFragment)
+
+    fun inject(fragment: SwapDetailsFragment)
 }

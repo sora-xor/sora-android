@@ -7,8 +7,8 @@ package jp.co.soramitsu.common.data.did.repository.datasource
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.data.credentials.repository.datasource.PrefsCredentialsDatasource
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -23,15 +23,21 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class PrefsDidDatasourceTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
 
-    @Mock private lateinit var encryptedPreferences: EncryptedPreferences
+    @Mock
+    private lateinit var encryptedPreferences: EncryptedPreferences
+
+    @Mock
+    private lateinit var preferences: Preferences
 
     private lateinit var prefsCredentialsDatasource: PrefsCredentialsDatasource
 
-    @Before fun setUp() {
-        prefsCredentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences)
+    @Before
+    fun setUp() {
+        prefsCredentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences, preferences)
     }
 
 //    @Test fun `save keys called`() {
@@ -91,7 +97,8 @@ class PrefsDidDatasourceTest {
 //        assertEquals(ddo, prefsDidDatasource.retrieveDdo())
 //    }
 
-    @Test fun `save mnemonic called`() {
+    @Test
+    fun `save mnemonic called`() {
         val keyMnemonic = "prefs_mnemonic"
         val mnemonic = "mnemonic"
 
@@ -100,7 +107,8 @@ class PrefsDidDatasourceTest {
         verify(encryptedPreferences).putEncryptedString(keyMnemonic, mnemonic)
     }
 
-    @Test fun `retrieve mnemonic called`() {
+    @Test
+    fun `retrieve mnemonic called`() {
         val keyMnemonic = "prefs_mnemonic"
         val mnemonic = "mnemonic"
         given(encryptedPreferences.getDecryptedString(keyMnemonic)).willReturn(mnemonic)

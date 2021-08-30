@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?baseBackground">
+
+    <ImageView
+        android:id="@+id/titleLogo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x1"
+        android:src="@drawable/polkaswap_logo"
+        android:text="@string/tabbar_polkaswap_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/marketTitleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.Soramitsu.Paragraph_4"
+        android:layout_marginEnd="@dimen/x1"
+        android:text="@string/polkaswap_market"
+        android:textColor="?contentTertiary"
+        app:layout_constraintEnd_toStartOf="@+id/settingsButton"
+        app:layout_constraintTop_toTopOf="@+id/settingsButton" />
+
+    <TextView
+        android:id="@+id/marketValueText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/TextAppearance.Soramitsu.Paragraph_4"
+        android:layout_marginEnd="@dimen/x1"
+        android:text="@string/polkaswap_smart"
+        android:textColor="@color/brand_pmsblack"
+        app:layout_constraintBottom_toBottomOf="@+id/settingsButton"
+        app:layout_constraintEnd_toStartOf="@+id/settingsButton"
+        app:layout_constraintTop_toBottomOf="@+id/marketTitleText" />
+
+    <ImageView
+        android:id="@+id/settingsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:src="@drawable/ic_settings_32"
+        android:text="@string/tabbar_polkaswap_title"
+        app:layout_constraintBottom_toBottomOf="@+id/titleLogo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@id/titleLogo"
+        app:layout_constraintTop_toTopOf="@+id/titleLogo" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2"
+        app:tabIndicatorColor="@color/brand_pmsblack"
+        app:tabTextColor="?contentQuaternary"
+        app:tabTextAppearance="@style/TextAppearance.Soramitsu.Upper_2.Bold"
+        app:tabSelectedTextColor="@color/brand_pmsblack"
+        app:layout_constraintTop_toBottomOf="@+id/titleLogo" />
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewpager"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tabsLayout" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

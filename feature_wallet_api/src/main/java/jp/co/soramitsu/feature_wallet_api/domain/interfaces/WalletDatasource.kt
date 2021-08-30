@@ -5,25 +5,16 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import io.reactivex.Observable
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.InvitedUser
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
+import kotlinx.coroutines.flow.Flow
 
 interface WalletDatasource {
 
     fun saveContacts(results: List<Account>)
 
     fun retrieveContacts(): List<Account>?
-
-    fun saveTransferMeta(transferMeta: TransferMeta)
-
-    fun observeTransferMeta(): Observable<TransferMeta>
-
-    fun saveWithdrawMeta(transferMeta: TransferMeta)
-
-    fun observeWithdrawMeta(): Observable<TransferMeta>
 
     fun saveInvitedUsers(invitedUsers: Array<InvitedUser>)
 
@@ -39,5 +30,5 @@ interface WalletDatasource {
 
     fun saveMigrationStatus(migrationStatus: MigrationStatus)
 
-    fun observeMigrationStatus(): Observable<MigrationStatus>
+    fun observeMigrationStatus(): Flow<MigrationStatus>
 }

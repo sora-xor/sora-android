@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 apply from: '../tests.gradle'
 
 android {
@@ -15,7 +16,7 @@ android {
         buildConfigField 'String', 'WEBSITE', "\"https://sora.org\""
         buildConfigField 'String', 'SOURCE_LINK', "\"https://github.com/sora-xor/Sora-Android\""
         buildConfigField 'String', 'TELEGRAM_LINK', "\"https://t.me/sora_xor\""
-        buildConfigField 'String', 'EMAIL', "\"sora@soramitsu.co.jp\""
+        buildConfigField 'String', 'EMAIL', "\"support@sora.org\""
     }
 
     buildTypes {
@@ -43,9 +44,13 @@ android {
     productFlavors {
         develop {
             buildConfigField "String", "HOST_URL", "\"https://s1.dev.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.dev.soranet.soramitsu.co.jp\""
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/dev/join/\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/dev/join/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-1.s1.dev.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.dev.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-3.s3.dev.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"https://explorer.s2.dev.sora2.soramitsu.co.jp\""
             buildConfigField "String", "GENESIS_HASH", "\"bf7f611213e15c54023853eed206508be11ce69d8d94937157e44c7b7564714a\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"dev\""
             dimension 'default'
@@ -53,9 +58,13 @@ android {
 
         tst {
             buildConfigField "String", "HOST_URL", "\"https://s1.tst.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.tst.soranet.soramitsu.co.jp\""
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/stg/join/\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/stg/join/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.tst.soranet.soramitsu.co.jp/#/transactions/transaction/\""
             buildConfigField "String", "WS_HOST_URL", "\"wss://ws.stage.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"https://test.sorascan.com\""
             buildConfigField "String", "GENESIS_HASH", "\"cc145a1f96972181accc1785b062ab8c2773ae7c02846ad26d35af9a27571242\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"stage\""
             dimension 'default'
@@ -63,9 +72,13 @@ android {
 
         staging {
             buildConfigField "String", "HOST_URL", "\"https://s4.stg1.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.stg1.soranet.soramitsu.co.jp\""
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/tst/join/\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/tst/join/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-1.s1.tst.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s4.stg1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.stage.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"https://explorer.s2.dev.sora2.soramitsu.co.jp\""
             buildConfigField "String", "GENESIS_HASH", "\"6f1056d58e73f16a5237e96afab618e9623652fa1cef3e67b0111bd6fd6790a7\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"test\""
             dimension 'default'
@@ -73,9 +86,13 @@ android {
 
         production {
             buildConfigField "String", "HOST_URL", "\"https://s1.sora.soramitsu.co.jp\""
+            buildConfigField "String", "DC_HOST_URL", "\"https://dc.s1.dev.soranet.soramitsu.co.jp\""
+            buildConfigField "String", "SORA_EVENTS_URL", "\"https://sora-events.s1.soranet.soramitsu.co.jp\""
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://ref.sora.org/join/\""
             buildConfigField "String", "INVITE_LINK_URL", "\"https://ref.sora.org/join/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "BLOCKCHAIN_EXPLORER_URL", "\"https://explorer.s1.soranet.soramitsu.co.jp/#/transactions/transaction/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.alb.sora.org/\""
+            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"https://sorascan.com\""
             buildConfigField "String", "GENESIS_HASH", "\"7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"prod\""
             dimension 'default'
@@ -87,8 +104,6 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(':core_di')
-    implementation project(':feature_account_api')
-    implementation project(':feature_wallet_api')
     api project(':uikit')
 
     implementation kotlinDep
@@ -104,6 +119,10 @@ dependencies {
     implementation cardViewDep
     implementation constraintDep
 
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
+
     //implementation soraDep
     implementation novaCryptoDep
     implementation fearlessLibDep
@@ -111,7 +130,7 @@ dependencies {
     implementation ed25519Dep
 
     implementation lifecycleDep
-    kapt lifecycleKapt
+    kapt lifecycleKaptDep
 
     implementation loggerDep
     implementation svgDep
@@ -125,10 +144,11 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
+    implementation progressButtonDep
+
     implementation retrofitDep
     implementation gsonConvertedDep
     implementation scalarsConverterDep
-    implementation rxCallAdapterDep
 
     implementation platform(firebaseBomDep)
 
@@ -141,6 +161,7 @@ dependencies {
 
     testImplementation jUnitDep
     testImplementation mockitoDep
+    testImplementation mockkDep
     testImplementation robolectricDep
     testImplementation robolectricMultidexDep
     testImplementation archCoreTestDep

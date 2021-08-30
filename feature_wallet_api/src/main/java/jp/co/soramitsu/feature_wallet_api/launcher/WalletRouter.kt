@@ -5,27 +5,18 @@
 
 package jp.co.soramitsu.feature_wallet_api.launcher
 
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
-import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
+import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import java.math.BigDecimal
 
 interface WalletRouter {
 
-    fun showTransactionDetailsFromList(
-        myAccountId: String,
-        peerId: String,
-        soranetTransactionId: String,
-        soranetBlockId: String,
-        amount: BigDecimal,
-        status: Transaction.Status,
-        success: Boolean? = null,
-        assetId: String,
-        dateTime: Long,
-        type: Transaction.Type,
-        transactionFee: BigDecimal,
-        totalAmount: BigDecimal
+    fun showTransactionDetails(
+        txHash: String
     )
 
     fun showValTransferAmount(recipientId: String, assetId: String, amount: BigDecimal)
@@ -34,9 +25,20 @@ interface WalletRouter {
 
     fun returnToWalletFragment()
 
+    fun returnToPolkaswap()
+
     fun popBackStackFragment()
 
-    fun showTransactionConfirmation(peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, assetId: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType)
+    fun showTransactionConfirmation(
+        peerId: String,
+        fullName: String,
+        partialAmount: BigDecimal,
+        amount: BigDecimal,
+        assetId: String,
+        minerFee: BigDecimal,
+        transactionFee: BigDecimal,
+        transferType: TransferType
+    )
 
     fun showContacts(assetId: String)
 
@@ -48,7 +50,28 @@ interface WalletRouter {
 
     fun showAssetList(mode: AssetListMode)
 
+    fun showAssetDetails(assetId: String)
+
     fun showValWithdrawToErc(etherAddress: String, amount: BigDecimal)
 
-    fun showWithdrawRetryFragment(soranetTransactionId: String, ethTransactionId: String, peerId: String, amount: BigDecimal, isTxFeeNeeded: Boolean)
+    fun showWithdrawRetryFragment(
+        soranetTransactionId: String,
+        ethTransactionId: String,
+        peerId: String,
+        amount: BigDecimal,
+        isTxFeeNeeded: Boolean
+    )
+
+    fun showPolkaswapInfoFragment()
+
+    fun showSwapConfirmation(
+        inputToken: Token,
+        inputAmount: BigDecimal,
+        outputToken: Token,
+        outputAmount: BigDecimal,
+        desired: WithDesired,
+        details: SwapDetails,
+        feeToken: Token,
+        slippage: Float,
+    )
 }

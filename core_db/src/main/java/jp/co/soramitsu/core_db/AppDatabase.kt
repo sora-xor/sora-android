@@ -14,14 +14,18 @@ import jp.co.soramitsu.core_db.converters.BigDecimalConverter
 import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.dao.TransferTransactionDao
 import jp.co.soramitsu.core_db.model.AssetLocal
-import jp.co.soramitsu.core_db.model.TransferTransactionLocal
+import jp.co.soramitsu.core_db.model.ExtrinsicLocal
+import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
+import jp.co.soramitsu.core_db.model.TokenLocal
 
 @TypeConverters(BigDecimalConverter::class)
 @Database(
-    version = 40,
+    version = 44,
     entities = [
-        TransferTransactionLocal::class,
-        AssetLocal::class
+        ExtrinsicParamLocal::class,
+        ExtrinsicLocal::class,
+        AssetLocal::class,
+        TokenLocal::class,
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

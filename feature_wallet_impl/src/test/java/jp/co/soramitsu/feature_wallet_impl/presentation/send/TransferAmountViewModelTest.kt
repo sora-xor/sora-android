@@ -6,18 +6,20 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Completable
-import io.reactivex.Single
-import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.anyNonNull
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -31,6 +33,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class TransferAmountViewModelTest {
 
@@ -38,9 +41,8 @@ class TransferAmountViewModelTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
@@ -65,42 +67,57 @@ class TransferAmountViewModelTest {
     private val transferType = TransferType.VAL_TRANSFER
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
         given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt()))
             .willReturn(fixedFeeStr)
-        given(walletInteractor.getAssets()).willReturn(
-            Single.just(
-                listOf(
-                    Asset(
-                        "asset_id",
-                        "Asset",
-                        SubstrateNetworkOptionsProvider.feeAssetSymbol,
-                        true,
-                        true,
-                        1,
-                        2,
-                        2,
-                        BigDecimal.TEN
-                    )
+        given(walletInteractor.getAsset("token_id")).willReturn(
+                Asset(
+                    Token("token_id", "token name", "XOR", 18, true, 0),
+                    true,
+                    true,
+                    1,
+                    AssetBalance(
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE,
+                        BigDecimal.ONE
+                    ),
                 )
-            )
         )
-        given(
-            walletInteractor.calcTransactionFee(
-                recipientId,
-                "asset_id",
-                BigDecimal.ZERO
-            )
-        ).willReturn(
-            Single.just(
-                BigDecimal.ZERO
+
+        given(walletInteractor.getAsset(OptionsProvider.feeAssetId)).willReturn(
+            Asset(
+                Token("token_id2", "token name2", "XOR", 18, true, 0),
+                true,
+                true,
+                1,
+                AssetBalance(
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE
+                ),
             )
         )
 
+        given(
+            walletInteractor.calcTransactionFee(
+                recipientId,
+                "token_id",
+                BigDecimal.ZERO
+            )
+        ).willReturn(BigDecimal.ZERO)
+
         transferAmountViewModel = TransferAmountViewModel(
             walletInteractor, router,
-            progress, numbersFormatter,
-            recipientId, "asset_id", recipientFullName,
+            numbersFormatter,
+            recipientId, "token_id", recipientFullName,
             transferType, clipboardManager
         )
     }
@@ -119,7 +136,7 @@ class TransferAmountViewModelTest {
     }
 
     @Test
-    fun `next button click calls router showTransactionConfirmation()`() {
+    fun `next button click calls router showTransactionConfirmation()`() = runBlockingTest {
         val formattedFeeStr = "0.6 XOR"
 
         transferAmountViewModel.transactionFeeFormattedLiveData.observeForever {
@@ -133,7 +150,7 @@ class TransferAmountViewModelTest {
             recipientFullName,
             BigDecimal.ZERO,
             BigDecimal.ONE,
-            "asset_id",
+            "token_id",
             BigDecimal.ZERO,
             BigDecimal.ZERO,
             transferType

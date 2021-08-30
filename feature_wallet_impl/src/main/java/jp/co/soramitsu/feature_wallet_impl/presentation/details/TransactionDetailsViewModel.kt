@@ -7,42 +7,37 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
-import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
+import androidx.lifecycle.viewModelScope
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.util.ext.truncateHash
-import jp.co.soramitsu.common.util.ext.truncateUserAddress
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Date
 
 class TransactionDetailsViewModel(
-    walletInteractor: WalletInteractor,
-    private val ethereumInteractor: EthereumInteractor,
     private val router: WalletRouter,
+    private val interactor: WalletInteractor,
     resourceManager: ResourceManager,
     private val numbersFormatter: NumbersFormatter,
-    private val textFormatter: TextFormatter,
     dateTimeFormatter: DateTimeFormatter,
     myAccountId: String,
     private val assetId: String,
+    private val assetSymbol: String,
+    private val assetPrecision: Int,
     private val peerId: String,
-    private val transactionType: Transaction.Type,
     private val soranetTransactionId: String,
     private val soranetBlockId: String,
-    private val transactionStatus: Transaction.Status,
     private val success: Boolean?,
     date: Long,
     private val amount: BigDecimal,
@@ -99,76 +94,31 @@ class TransactionDetailsViewModel(
     init {
         _titleLiveData.value = resourceManager.getString(R.string.transaction_details)
 
-        disposables.add(
-            walletInteractor.getAssets()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { assets ->
-                        val cur = requireNotNull(assets.find { it.id == assetId })
-                        val sign = if (transactionType == Transaction.Type.OUTGOING) "-" else ""
+        // val sign = if (transactionType == Transaction.Type.OUTGOING) "-" else ""
+        val sign = ""
 
-                        _amountLiveData.value = "$sign ${
-                        numbersFormatter.formatBigDecimal(
-                            amount,
-                            cur.roundingPrecision
-                        )
-                        } ${cur.symbol}" to "${
-                        numbersFormatter.formatBigDecimal(
-                            amount,
-                            cur.precision
-                        )
-                        } ${cur.symbol}"
-                        _transactionFeeLiveData.value = "${
-                        numbersFormatter.formatBigDecimal(
-                            transactionFee,
-                            cur.precision
-                        )
-                        } ${SubstrateNetworkOptionsProvider.feeAssetSymbol}"
-                    },
-                    {
-                        logException(it)
-                    }
-                )
+        _amountLiveData.value = "$sign ${
+        numbersFormatter.formatBigDecimal(
+            amount,
+            AssetHolder.ROUNDING
         )
+        } $assetSymbol" to "${
+        numbersFormatter.formatBigDecimal(
+            amount,
+            assetPrecision
+        )
+        } $assetSymbol"
 
-        _fromLiveData.value = when (transactionType) {
-            Transaction.Type.INCOMING -> peerId.truncateUserAddress()
-            Transaction.Type.OUTGOING -> myAccountId.truncateUserAddress()
-            else -> peerId.truncateUserAddress()
-        }
-        _toLiveData.value = when (transactionType) {
-            Transaction.Type.INCOMING -> myAccountId.truncateUserAddress()
-            Transaction.Type.OUTGOING -> peerId.truncateUserAddress()
-            else -> peerId.truncateUserAddress()
-        }
-        _btnTitleLiveData.value = when {
-            transactionType == Transaction.Type.INCOMING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
-                resourceManager.getString(R.string.transaction_send_back)
-            }
-            transactionType == Transaction.Type.OUTGOING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
-                resourceManager.getString(R.string.transaction_send_again)
-            }
-            transactionType == Transaction.Type.OUTGOING && (transactionStatus == Transaction.Status.REJECTED || (transactionStatus == Transaction.Status.COMMITTED && success == false)) -> {
-                resourceManager.getString(R.string.common_retry)
-            }
-            else -> ""
-        }
+        viewModelScope.launch {
+            val feeAssetSymbol =
+                interactor.getAsset(OptionsProvider.feeAssetId).token.symbol
 
-        val transactionStatusResource = when (transactionStatus) {
-            Transaction.Status.REJECTED -> R.string.status_error
-            Transaction.Status.PENDING -> R.string.status_pending
-            Transaction.Status.COMMITTED -> if (success == true) R.string.status_success else R.string.status_error
-        }
-        _statusLiveData.value =
-            if (transactionStatus == Transaction.Status.COMMITTED && success == null) "" else resourceManager.getString(
-                transactionStatusResource
+            _transactionFeeLiveData.value = "${
+            numbersFormatter.formatBigDecimal(
+                transactionFee,
+                assetPrecision
             )
-
-        _statusImageLiveData.value = when (transactionStatus) {
-            Transaction.Status.REJECTED -> R.drawable.ic_error_red_18
-            Transaction.Status.PENDING -> R.drawable.ic_pending_grey_18
-            Transaction.Status.COMMITTED -> if (success == true) R.drawable.ic_success_green_18 else R.drawable.ic_error_red_18
+            } $feeAssetSymbol"
         }
 
         val dateTime = Date(date)
@@ -184,22 +134,7 @@ class TransactionDetailsViewModel(
     }
 
     fun btnNextClicked() {
-        when {
-            transactionType == Transaction.Type.INCOMING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
-                // send back
-                // todo
-            }
-
-            transactionType == Transaction.Type.OUTGOING && transactionStatus == Transaction.Status.COMMITTED && success == true -> {
-                // send again
-                router.showValTransferAmount(peerId, assetId, BigDecimal.ZERO)
-            }
-
-            transactionType == Transaction.Type.OUTGOING && (transactionStatus == Transaction.Status.REJECTED || (transactionStatus == Transaction.Status.COMMITTED && success == false)) -> {
-                // retry
-                router.showValTransferAmount(peerId, assetId, BigDecimal.ZERO)
-            }
-        }
+        router.showValTransferAmount(peerId, assetId, BigDecimal.ZERO)
     }
 
     fun btnBackClicked() {

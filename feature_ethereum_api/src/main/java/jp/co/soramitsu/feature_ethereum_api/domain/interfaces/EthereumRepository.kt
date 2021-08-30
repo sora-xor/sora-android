@@ -5,41 +5,69 @@
 
 package jp.co.soramitsu.feature_ethereum_api.domain.interfaces
 
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
+import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.KeyPair
 
 interface EthereumRepository {
 
-    fun getValTokenAddress(ethCredentials: EthereumCredentials): Single<String>
+    fun getValTokenAddress(ethCredentials: EthereumCredentials): String
 
-    fun getSerializedProof(ethCredentials: EthereumCredentials): Single<String>
+    fun getSerializedProof(ethCredentials: EthereumCredentials): String
 
-    fun getEthCredentials(mnemonic: String): Single<EthereumCredentials>
+    fun getEthCredentials(mnemonic: String): EthereumCredentials
 
-    fun startWithdraw(amount: BigDecimal, srcAccountId: String, ethAddress: String, transactionFee: String, keyPair: KeyPair): Completable
+    fun startWithdraw(
+        amount: BigDecimal,
+        srcAccountId: String,
+        ethAddress: String,
+        transactionFee: String,
+        keyPair: KeyPair
+    )
 
-    fun startCombinedValErcTransfer(partialAmount: BigDecimal, amount: BigDecimal, srcAccountId: String, withdrawEthAddress: String, transferEthAddress: String, transactionFee: String, ethCredentials: EthereumCredentials, keyPair: KeyPair): Completable
+    fun startCombinedValErcTransfer(
+        partialAmount: BigDecimal,
+        amount: BigDecimal,
+        srcAccountId: String,
+        withdrawEthAddress: String,
+        transferEthAddress: String,
+        transactionFee: String,
+        ethCredentials: EthereumCredentials,
+        keyPair: KeyPair
+    )
 
-    fun startCombinedValTransfer(partialAmount: BigDecimal, amount: BigDecimal, transferAccountId: String, transferName: String, transactionFee: BigDecimal, description: String, ethCredentials: EthereumCredentials, keyPair: KeyPair, tokenAddress: String): Completable
+    fun startCombinedValTransfer(
+        partialAmount: BigDecimal,
+        amount: BigDecimal,
+        transferAccountId: String,
+        transferName: String,
+        transactionFee: BigDecimal,
+        description: String,
+        ethCredentials: EthereumCredentials,
+        keyPair: KeyPair,
+        tokenAddress: String
+    )
 
-    fun getEthWalletAddress(ethCredentials: EthereumCredentials): Single<String>
+    fun getEthWalletAddress(ethCredentials: EthereumCredentials): String
 
-    fun calculateValErc20TransferFee(): Single<BigDecimal>
+    fun calculateValErc20TransferFee(): BigDecimal
 
-    fun calculateValErc20WithdrawFee(): Single<BigDecimal>
+    fun calculateValErc20WithdrawFee(): BigDecimal
 
-    fun setGasPrice(gasPriceInGwei: BigInteger): Single<BigDecimal>
+    fun setGasPrice(gasPriceInGwei: BigInteger): BigDecimal
 
-    fun setGasLimit(gasLimit: BigInteger): Single<BigDecimal>
+    fun setGasLimit(gasLimit: BigInteger): BigDecimal
 
-    fun transferValErc20(to: String, amount: BigDecimal, ethCredentials: EthereumCredentials, tokenAddress: String): Completable
+    fun transferValErc20(
+        to: String,
+        amount: BigDecimal,
+        ethCredentials: EthereumCredentials,
+        tokenAddress: String
+    )
 
     fun getEthRegistrationState(): EthRegisterState
 
@@ -49,19 +77,31 @@ interface EthereumRepository {
 
     fun registrationFailed(operationId: String)
 
-    fun observeEthRegisterState(): Observable<EthRegisterState.State>
+    fun observeEthRegisterState(): Flow<EthRegisterState.State>
 
-    fun getGasEstimations(gasLimit: BigInteger, ethCredentials: EthereumCredentials): Single<Gas>
+    fun getGasEstimations(gasLimit: BigInteger, ethCredentials: EthereumCredentials): Gas
 
-    fun getBlockChainExplorerUrl(transactionHash: String): Single<String>
+    fun getBlockChainExplorerUrl(transactionHash: String): String
 
-    fun updateValErc20AndEthBalance(ethCredentials: EthereumCredentials, ethWalletAddress: String, tokenAddress: String): Completable
+    fun updateValErc20AndEthBalance(
+        ethCredentials: EthereumCredentials,
+        ethWalletAddress: String,
+        tokenAddress: String
+    )
 
-    fun confirmWithdraw(ethCredentials: EthereumCredentials, amount: BigDecimal, txHash: String, accountId: String, gasPrice: BigInteger, gasLimit: BigInteger, tokenAddress: String): Single<String>
+    fun confirmWithdraw(
+        ethCredentials: EthereumCredentials,
+        amount: BigDecimal,
+        txHash: String,
+        accountId: String,
+        gasPrice: BigInteger,
+        gasLimit: BigInteger,
+        tokenAddress: String
+    ): String
 
-    fun getActualEthRegisterState(): Single<EthRegisterState.State>
+    fun getActualEthRegisterState(): EthRegisterState.State
 
-    fun isBridgeEnabled(ethCredentials: EthereumCredentials): Single<Boolean>
+    fun isBridgeEnabled(ethCredentials: EthereumCredentials): Boolean
 
-    fun calculateValErc20CombinedFee(): Single<BigDecimal>
+    fun calculateValErc20CombinedFee(): BigDecimal
 }

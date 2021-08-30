@@ -97,15 +97,18 @@ dependencies {
     implementation fearlessLibDep
     implementation webSocketLibDep
 
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
+    implementation viewmodelKtxDep
+
     implementation daggerDep
     kapt daggerKapt
 
     implementation lifecycleDep
-    kapt lifecycleKapt
+    kapt lifecycleKaptDep
 
     implementation phoenixDep
-
-    implementation rxBindingDep
 
     //implementation soraDep
     implementation birtDep
@@ -114,8 +117,6 @@ dependencies {
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
-
-    implementation rxPermissionsDep
 
     testImplementation jUnitDep
     testImplementation mockitoDep

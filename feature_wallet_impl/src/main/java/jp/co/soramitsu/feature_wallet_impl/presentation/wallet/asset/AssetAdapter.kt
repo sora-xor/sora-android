@@ -35,6 +35,7 @@ class AssetAdapter(
     fun isHideIcon(pos: Int): Boolean = getItem(pos).let {
         it.hidingAllowed || (!it.hidingAllowed && it.displayed)
     }
+    fun getAsset(pos: Int): AssetModel = getItem(pos)
 }
 
 class AssetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -45,7 +46,7 @@ class AssetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             setAssetIconResource(asset.assetIconResource)
             setAssetLastName(asset.assetLastName)
 
-            setBalance(if (asset.displayed) asset.balance.orEmpty() else "")
+            setBalance(if (asset.showMainBalance) asset.balance.orEmpty() else "")
 
             asset.state?.let {
                 val state = when (it) {

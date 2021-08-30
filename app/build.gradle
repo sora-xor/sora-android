@@ -82,6 +82,8 @@ android {
         exclude 'META-INF/NOTICE.txt'
         exclude 'META-INF/notice.txt'
         exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/AL2.0'
+        exclude 'META-INF/LGPL2.1'
         exclude 'META-INF/INDEX.LIST'
         exclude 'META-INF/io.netty.versions.properties'
     }
@@ -166,9 +168,11 @@ dependencies {
     kapt daggerKapt
 
     implementation lifecycleDep
-    kapt lifecycleKapt
+    kapt lifecycleKaptDep
 
-    implementation rxDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
 
     implementation platform(firebaseBomDep)
     implementation firebaseMessagingDep
@@ -191,7 +195,6 @@ dependencies {
 
     implementation retrofitDep
     implementation gsonConvertedDep
-    implementation rxCallAdapterDep
 
     implementation (crashlyticsDep) {
         transitive = true

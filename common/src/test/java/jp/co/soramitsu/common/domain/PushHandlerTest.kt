@@ -5,24 +5,37 @@
 
 package jp.co.soramitsu.common.domain
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class PushHandlerTest {
 
     private lateinit var pushHandler: PushHandler
 
-    @Before fun setup() {
+    private val dispatcher = TestCoroutineDispatcher()
+
+    @Before
+    fun setup() {
         pushHandler = PushHandler()
     }
 
-    @Test fun `invitations handler test`() {
+    @Test
+    fun `invitations handler test`() = runBlocking {
         var pushesCount = 0
 
-        pushHandler.observeNewPushes()
-            .subscribe { pushesCount++ }
-
+        launch(dispatcher) {
+            pushHandler.observeNewPushes().take(3).collect {
+                pushesCount++
+            }
+        }
         assertEquals(0, pushesCount)
 
         pushHandler.pushReceived()

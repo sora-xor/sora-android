@@ -5,57 +5,52 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.model
 
+import jp.co.soramitsu.common.domain.Token
 import java.math.BigDecimal
 
-data class Transaction(
-    val ethTxHash: String,
-    val secondTxHash: String,
-    val soranetTxHash: String,
-    val status: Status,
-    val detailedStatus: DetailedStatus,
-    val assetId: String,
-    val myAddress: String,
-    val details: String,
-    val peerName: String,
-    val amount: BigDecimal,
-    val timestamp: Long,
-    val peerId: String?,
-    val reason: String?,
-    val type: Type,
-    val ethFee: BigDecimal,
-    val soranetFee: BigDecimal,
-    var peerAddressId: ByteArray? = null,
+sealed class Transaction(
+    val txHash: String,
     val blockHash: String? = null,
+    val fee: BigDecimal,
+    val status: TransactionStatus,
+    val timestamp: Long,
     val successStatus: Boolean? = null,
 ) {
-    enum class Status {
-        PENDING,
-        COMMITTED,
-        REJECTED
-    }
 
-    enum class DetailedStatus {
-        INTENT_STARTED,
-        INTENT_PENDING,
-        INTENT_COMPLETED,
-        INTENT_FAILED,
-        CONFIRM_PENDING,
-        CONFIRM_COMPLETED,
-        CONFIRM_FAILED,
-        TRANSFER_PENDING,
-        TRANSFER_FAILED,
-        TRANSFER_COMPLETED,
-        DEPOSIT_PENDING,
-        DEPOSIT_FAILED,
-        DEPOSIT_COMPLETED,
-        DEPOSIT_RECEIVED,
-    }
+    class Transfer(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        timestamp: Long,
+        successStatus: Boolean?,
+        val amount: BigDecimal,
+        val peer: String,
+        val transferType: TransactionTransferType,
+        val token: Token
+    ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
 
-    enum class Type {
-        INCOMING,
-        OUTGOING,
-        WITHDRAW,
-        DEPOSIT,
-        REWARD
-    }
+    class Swap(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        timestamp: Long,
+        successStatus: Boolean?,
+        val tokenFrom: Token,
+        val tokenTo: Token,
+        val amountFrom: BigDecimal,
+        val amountTo: BigDecimal,
+        val market: Market,
+    ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
+}
+
+enum class TransactionStatus {
+    PENDING,
+    COMMITTED,
+    REJECTED
+}
+
+enum class TransactionTransferType {
+    OUTGOING, INCOMING
 }

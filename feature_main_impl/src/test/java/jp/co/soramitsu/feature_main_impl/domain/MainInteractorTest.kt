@@ -5,13 +5,13 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import io.reactivex.Single
-import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
@@ -19,12 +19,9 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class MainInteractorTest {
-
-    @Rule
-    @JvmField
-    var schedulersRule = RxSchedulersRule()
 
     @Mock
     private lateinit var userRepository: UserRepository
@@ -43,52 +40,40 @@ class MainInteractorTest {
     }
 
     @Test
-    fun `getMnemonic() function returns not empty mnemonic`() {
+    fun `getMnemonic() function returns not empty mnemonic`() = runBlockingTest {
         val mnemonic = "test mnemonic"
-        given(credentialsRepository.retrieveMnemonic()).willReturn(Single.just(mnemonic))
-
-        interactor.getMnemonic()
-            .test()
-            .assertNoErrors()
-            .assertComplete()
-            .assertValue(mnemonic)
-
+        given(credentialsRepository.retrieveMnemonic()).willReturn(mnemonic)
+        val mnemonicActual = interactor.getMnemonic()
         verify(credentialsRepository).retrieveMnemonic()
+        assertEquals(mnemonic, mnemonicActual)
     }
 
     @Test
-    fun `getMnemonic() function returns empty mnemonic`() {
+    fun `getMnemonic() function returns empty mnemonic`() = runBlockingTest {
         val mnemonic = ""
-        given(credentialsRepository.retrieveMnemonic()).willReturn(Single.just(mnemonic))
-
-        interactor.getMnemonic()
-            .test()
-            .assertErrorMessage(ResponseCode.GENERAL_ERROR.toString())
-
+        given(credentialsRepository.retrieveMnemonic()).willReturn(mnemonic)
+        val result = runCatching {
+            interactor.getMnemonic()
+        }
+        assertTrue(result.isFailure)
         verify(credentialsRepository).retrieveMnemonic()
     }
 
     @Test
-    fun `getInviteCode() calls userRepository getParentInviteCode()`() {
+    fun `getInviteCode() calls userRepository getParentInviteCode()`() = runBlockingTest {
         val expectedResult = "parentInviteCode"
-        given(userRepository.getParentInviteCode()).willReturn(Single.just(expectedResult))
+        given(userRepository.getParentInviteCode()).willReturn(expectedResult)
 
-        interactor.getInviteCode()
-            .test()
-            .assertResult(expectedResult)
-
+        assertEquals(expectedResult, interactor.getInviteCode())
         verify(userRepository).getParentInviteCode()
     }
 
     @Test
-    fun `getAppVersion() calls userRepository getAppVersion()`() {
+    fun `getAppVersion() calls userRepository getAppVersion()`() = runBlockingTest {
         val expectedResult = "version"
-        given(userRepository.getAppVersion()).willReturn(Single.just(expectedResult))
+        given(userRepository.getAppVersion()).willReturn(expectedResult)
 
-        interactor.getAppVersion()
-            .test()
-            .assertResult(expectedResult)
-
+        assertEquals(expectedResult, interactor.getAppVersion())
         verify(userRepository).getAppVersion()
     }
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/background_rounded_grey_100"
+    android:gravity="center"
+    android:orientation="horizontal"
+    tools:parentTag="android.widget.LinearLayout">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="@dimen/x1"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/text"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="@dimen/x1"
+        android:includeFontPadding="false"
+        android:text="@string/common_select_asset"
+        tools:text="@string/common_select_asset"
+        tools:textColor="@color/grey_500" />
+
+    <ImageView
+        android:id="@+id/chevronIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_chevron_down_rounded_16" />
+</merge>

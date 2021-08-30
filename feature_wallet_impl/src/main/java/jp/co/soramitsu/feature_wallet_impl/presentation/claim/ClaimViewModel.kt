@@ -1,10 +1,15 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
+import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -12,6 +17,8 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class ClaimViewModel(
     private val router: WalletRouter,
@@ -26,40 +33,27 @@ class ClaimViewModel(
     val openSendEmailEvent: LiveData<String> = _openSendEmailEvent
 
     init {
-        disposables.add(
-            walletInteractor.observeMigrationStatus()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe {
-                    _buttonPendingStatusLiveData.value = false
-                    when (it) {
-                        MigrationStatus.NOT_INITIATED -> {
-                        }
-                        MigrationStatus.FAILED -> onError(R.string.common_error_general_message)
-                        MigrationStatus.SUCCESS -> router.popBackStackFragment()
+        viewModelScope.launch {
+            walletInteractor.observeMigrationStatus().collectLatest {
+                _buttonPendingStatusLiveData.value = false
+                when (it) {
+                    MigrationStatus.NOT_INITIATED -> {
                     }
+                    MigrationStatus.FAILED -> onError(R.string.common_error_general_message)
+                    MigrationStatus.SUCCESS -> router.popBackStackFragment()
                 }
-        )
+            }
+        }
     }
 
     fun checkMigrationIsAlreadyFinished() {
-        disposables.add(
-            walletInteractor.needsMigration()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        if (!it) {
-                            router.popBackStackFragment()
-                        }
-                    },
-                    {}
-                )
-        )
+        viewModelScope.launch {
+            if (!walletInteractor.needsMigration()) router.popBackStackFragment()
+        }
     }
 
     fun contactsUsClicked() {
-        _openSendEmailEvent.postValue(resourceManager.getString(R.string.common_sora_support_email))
+        _openSendEmailEvent.postValue(BuildConfig.EMAIL)
     }
 
     fun nextButtonClicked(context: Context) {

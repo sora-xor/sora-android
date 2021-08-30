@@ -51,6 +51,14 @@
         <attr name="homeButtonVisible" format="boolean" />
     </declare-styleable>
 
+    <declare-styleable name="AssetCardView">
+        <attr name="hintText" format="string" />
+<!--        <attr name="" format="reference|color" />-->
+<!--        <attr name="textRight" format="string" />-->
+<!--        <attr name="homeButtonIcon" format="reference|color" />-->
+<!--        <attr name="homeButtonVisible" format="boolean" />-->
+    </declare-styleable>
+
     <dimen name="defaultLineHeight">6dp</dimen>
     <color name="defaultLeftColor">@color/grey</color>
     <color name="defaultRightColor">@color/uikit_lightRed</color>

@@ -307,6 +307,23 @@
         ]
       ]
     },
+    "RawSolutionWith16": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "compact",
+          "CompactAssignmentsWith16"
+        ],
+        [
+          "score",
+          "ElectionScore"
+        ],
+        [
+          "round",
+          "u32"
+        ]
+      ]
+    },
     "ReadySolution": {
       "type": "struct",
       "type_mapping": [
@@ -492,6 +509,40 @@
     },
     "LockIdentifier": "[u8; 8]",
     "TransactionPriority": "u64",
+    "TransactionInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "chunkRoot",
+          "H256"
+        ],
+        [
+          "contentHash",
+          "H256"
+        ],
+        [
+          "dataSize",
+          "u32"
+        ],
+        [
+          "blockChunks",
+          "u32"
+        ]
+      ]
+    },
+    "TransactionStorageProof": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "chunk",
+          "Vec<u8>"
+        ],
+        [
+          "proof",
+          "Vec<Vec<u8>>"
+        ]
+      ]
+    },
     "BalanceLock": {
       "type": "struct",
       "type_mapping": [
@@ -549,6 +600,20 @@
         "All"
       ]
     },
+    "ReserveData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "id",
+          "ReserveIdentifier"
+        ],
+        [
+          "amount",
+          "Balance"
+        ]
+      ]
+    },
+    "ReserveIdentifier": "[u8; 8]",
     "RoundNumber": "U64",
     "SessionIndex": "u32",
     "AuctionIndex": "u32",
@@ -582,6 +647,7 @@
         ]
       ]
     },
+    "BeefyId": "[u8; 33]",
     "BeefySignedCommitment": {
       "type": "struct",
       "type_mapping": [
@@ -1643,6 +1709,7 @@
       ]
     },
     "xcm::v0::Outcome": "XcmOutcome",
+    "Outcome": "XcmOutcome",
     "DoubleEncoded": {
       "type": "struct",
       "type_mapping": [
@@ -1867,7 +1934,7 @@
           "NetworkId"
         ],
         [
-          "index",
+          "key",
           "[u8; 20]"
         ]
       ]
@@ -2601,6 +2668,62 @@
     "BridgedBlockHash": "H256",
     "BridgedBlockNumber": "BlockNumber",
     "BridgedHeader": "Header",
+    "CallOrigin": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "SourceRoot",
+          "Null"
+        ],
+        [
+          "TargetAccount",
+          "(AccountId, MultiSigner, MultiSignature)"
+        ],
+        [
+          "SourceAccount",
+          "AccountId"
+        ]
+      ]
+    },
+    "ChainId": "[u8; 4]",
+    "DeliveredMessages": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "begin",
+          "MessageNonce"
+        ],
+        [
+          "end",
+          "MessageNonce"
+        ],
+        [
+          "dispatchResults",
+          "BitVec"
+        ]
+      ]
+    },
+    "DispatchFeePayment": {
+      "type": "enum",
+      "value_list": [
+        "AtSourceChain",
+        "AtTargetChain"
+      ]
+    },
+    "InboundLaneData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "relayers",
+          "Vec<UnrewardedRelayer>"
+        ],
+        [
+          "lastConfirmedNonce",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "InboundRelayer": "AccountId",
     "Precommit": {
       "type": "struct",
       "type_mapping": [
@@ -3465,7 +3588,6 @@
         ]
       ]
     },
-    "CompactAssignments": "CompactAssignmentsFrom258",
     "DeferredOffenceOf": {
       "type": "struct",
         "type_mapping": [
@@ -3548,7 +3670,7 @@
         ],
         [
           "statements",
-          "Vec<(DisputeStatement, ValidatorIndex, ValidatorSignature)>"
+          "Vec<(DisputeStatement, ParaValidatorIndex, ValidatorSignature)>"
         ]
       ]
     },
@@ -3568,11 +3690,23 @@
     },
     "ValidDisputeStatementKind": {
       "type": "enum",
-      "value_list": [
-        "Explicit",
-        "BackingSeconded",
-        "BackingValid",
-        "ApprovalChecking"
+      "type_mapping": [
+        [
+          "Explicit",
+          "Null"
+        ],
+        [
+          "BackingSeconded",
+          "Hash"
+        ],
+        [
+          "BackingValid",
+          "Hash"
+        ],
+        [
+          "ApprovalChecking",
+          "Null"
+        ]
       ]
     },
     "InvalidDisputeStatementKind": {
@@ -3768,6 +3902,7 @@
       ]
     },
     "ValidationCode": "Bytes",
+    "ValidationCodeHash": "Hash",
     "ValidationData": {
       "type": "struct",
       "type_mapping": [
@@ -3812,7 +3947,7 @@
       "type_mapping": [
         [
           "upgradeTimes",
-          "Vec<BlockNumber>"
+          "Vec<ReplacementTimes>"
         ],
         [
           "lastPruned",
@@ -3955,6 +4090,28 @@
       ]
     },
     "ElectionScore": "[u128; 3]",
+    "SubmissionIndicesOf": "BoundedBTreeMap<ElectionScore, u32>",
+    "SignedSubmissionOf": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ],
+        [
+          "solution",
+          "RawSolution"
+        ],
+        [
+          "reward",
+          "Balance"
+        ]
+      ]
+    },
     "ElectionSize": {
       "type": "struct",
       "type_mapping": [
@@ -4451,6 +4608,15 @@
         [
           "message",
           "Xcm"
+        ]
+      ]
+    },
+    "XcmOrigin": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Xcm",
+          "MultiLocation"
         ]
       ]
     },
@@ -4956,6 +5122,44 @@
         ]
       ]
     },
+    "ContractExecResultTo267": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "gasConsumed",
+          "u64"
+        ],
+        [
+          "debugMessage",
+          "Text"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
+        ]
+      ]
+    },
+    "ContractExecResultFrom268": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "gasConsumed",
+          "u64"
+        ],
+        [
+          "gasRequired",
+          "u64"
+        ],
+        [
+          "debugMessage",
+          "Text"
+        ],
+        [
+          "result",
+          "ContractExecResultResult"
+        ]
+      ]
+    },
     "ContractExecResultErrModule": {
       "type": "struct",
       "type_mapping": [
@@ -5022,6 +5226,7 @@
     },
     "ContractExecResult": "ContractExecResultTo260",
     "ContractStorageKey": "[u8; 32]",
+    "exec::StorageKey": "ContractStorageKey",
     "DeletedContract": {
       "type": "struct",
       "type_mapping": [
@@ -6039,6 +6244,159 @@
         ]
       ]
     },
+    "LaneId": "[u8; 4]",
+    "MessageData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "payload",
+          "Bytes"
+        ],
+        [
+          "fee",
+          "Balance"
+        ]
+      ]
+    },
+    "MessagesDeliveryProofOf": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "bridgedHeaderHash",
+          "BlockHash"
+        ],
+        [
+          "storageProof",
+          "Vec<Bytes>"
+        ],
+        [
+          "lane",
+          "LaneId"
+        ]
+      ]
+    },
+    "MessageKey": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "laneId",
+          "LaneId"
+        ],
+        [
+          "nonce",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "MessageNonce": "u64",
+    "MessagesProofOf": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "bridgedHeaderHash",
+          "BridgedBlockHash"
+        ],
+        [
+          "storageProof",
+          "Vec<Bytes>"
+        ],
+        [
+          "lane",
+          "LaneId"
+        ],
+        [
+          "noncesStart",
+          "MessageNonce"
+        ],
+        [
+          "noncesEnd",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "OperatingMode": {
+      "type": "enum",
+      "value_list": [
+        "Normal",
+        "RejectingOutboundMessages",
+        "Halted"
+      ]
+    },
+    "OutboundLaneData": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "latestGeneratedNonce",
+          "MessageNonce"
+        ],
+        [
+          "latestReceivedNonce",
+          "MessageNonce"
+        ],
+        [
+          "oldestUnprunedNonce",
+          "MessageNonce"
+        ]
+      ]
+    },
+    "OutboundMessageFee": "Balance",
+    "OutboundPayload": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "specVersion",
+          "u32"
+        ],
+        [
+          "weight",
+          "Weight"
+        ],
+        [
+          "origin",
+          "CallOrigin"
+        ],
+        [
+          "dispatchFeePayment",
+          "DispatchFeePayment"
+        ],
+        [
+          "call",
+          "Bytes"
+        ]
+      ]
+    },
+    "Parameter": "Null",
+    "RelayerId": "AccountId",
+    "UnrewardedRelayer": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "relayer",
+          "RelayerId"
+        ],
+        [
+          "messages",
+          "DeliveredMessages"
+        ]
+      ]
+    },
+    "UnrewardedRelayersState": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "unrewardedRelayer_Entries",
+          "MessageNonce"
+        ],
+        [
+          "messagesInOldestEntry",
+          "MessageNonce"
+        ],
+        [
+          "totalMessages",
+          "MessageNonce"
+        ]
+      ]
+    },
     "FundIndex": "u32",
     "LastContribution": {
       "type": "enum",
@@ -6292,6 +6650,23 @@
         [
           "PendingResume",
           "PendingResume"
+        ]
+      ]
+    },
+    "AccountInfoWithRefCountU8": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "nonce",
+          "Index"
+        ],
+        [
+          "refcount",
+          "u8"
+        ],
+        [
+          "data",
+          "AccountData"
         ]
       ]
     },
@@ -6589,6 +6964,231 @@
         ]
       ]
     },
+    "EraPoints": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "total",
+          "Points"
+        ],
+        [
+          "individual",
+          "Vec<Points>"
+        ]
+      ]
+    },
+    "CompactAssignmentsWith16": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "votes1",
+          "Vec<(NominatorIndexCompact, ValidatorIndexCompact)>"
+        ],
+        [
+          "votes2",
+          "Vec<(NominatorIndexCompact, CompactScoreCompact, ValidatorIndexCompact)>"
+        ],
+        [
+          "votes3",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 2], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes4",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 3], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes5",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 4], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes6",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 5], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes7",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 6], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes8",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 7], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes9",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 8], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes10",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 9], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes11",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 10], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes12",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 11], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes13",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 12], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes14",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 13], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes15",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 14], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes16",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 15], ValidatorIndexCompact)>"
+        ]
+      ]
+    },
+    "CompactAssignmentsWith24": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "votes1",
+          "Vec<(NominatorIndexCompact, ValidatorIndexCompact)>"
+        ],
+        [
+          "votes2",
+          "Vec<(NominatorIndexCompact, CompactScoreCompact, ValidatorIndexCompact)>"
+        ],
+        [
+          "votes3",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 2], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes4",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 3], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes5",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 4], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes6",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 5], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes7",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 6], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes8",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 7], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes9",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 8], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes10",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 9], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes11",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 10], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes12",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 11], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes13",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 12], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes14",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 13], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes15",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 14], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes16",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 15], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes17",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 16], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes18",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 17], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes19",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 18], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes20",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 19], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes21",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 20], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes22",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 21], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes23",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 22], ValidatorIndexCompact)>"
+        ],
+        [
+          "votes24",
+          "Vec<(NominatorIndexCompact, [CompactScoreCompact; 23], ValidatorIndexCompact)>"
+        ]
+      ]
+    },
+    "CompactAssignments": "CompactAssignmentsWith24",
+    "CompactAssignmentsTo265": "CompactAssignmentsWith16",
+    "ElectionPhase": {
+      "type": "enum",
+      "type_mapping": [
+        [
+          "Off",
+          "Null"
+        ],
+        [
+          "Signed",
+          "Null"
+        ],
+        [
+          "Unsigned",
+          "(bool, BlockNumber)"
+        ],
+        [
+          "Emergency",
+          "Null"
+        ]
+      ]
+    },
+    "RawSolutionWith24": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "compact",
+          "CompactAssignmentsWith24"
+        ],
+        [
+          "score",
+          "ElectionScore"
+        ],
+        [
+          "round",
+          "u32"
+        ]
+      ]
+    },
+    "RawSolutionTo265": "RawSolutionWith16",
+    "VoteWeight": "u64",
     "EraIndex": "u32",
     "EraRewards": {
       "type": "struct",
@@ -6847,7 +7447,7 @@
           "AccountId"
         ],
         [
-          "totalTeposit",
+          "totalDeposit",
           "DepositBalance"
         ],
         [
@@ -6860,6 +7460,10 @@
         ],
         [
           "instanceMetadatas",
+          "u32"
+        ],
+        [
+          "attributes",
           "u32"
         ],
         [
@@ -6877,6 +7481,10 @@
         ],
         [
           "instanceMetadatas",
+          "Compact<u32>"
+        ],
+        [
+          "attributes",
           "Compact<u32>"
         ]
       ]
@@ -6910,11 +7518,7 @@
           "DepositBalance"
         ],
         [
-          "name",
-          "Vec<u8>"
-        ],
-        [
-          "information",
+          "data",
           "Vec<u8>"
         ],
         [
@@ -6931,11 +7535,7 @@
           "DepositBalance"
         ],
         [
-          "name",
-          "Vec<u8>"
-        ],
-        [
-          "information",
+          "data",
           "Vec<u8>"
         ],
         [
@@ -7843,11 +8443,24 @@
         ],
         [
           "validationCodeHash",
-          "Hash"
+          "ValidationCodeHash"
         ]
       ]
     },
     "CandidateHash": "Hash",
+    "CandidateInfo": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "who",
+          "AccountId"
+        ],
+        [
+          "deposit",
+          "Balance"
+        ]
+      ]
+    },
     "CandidatePendingAvailability": {
       "type": "struct",
       "type_mapping": [
@@ -8520,6 +9133,19 @@
       ]
     },
     "Remark": "[u8; 32]",
+    "ReplacementTimes": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "expectedAt",
+          "BlockNumber"
+        ],
+        [
+          "activatedAt",
+          "BlockNumber"
+        ]
+      ]
+    },
     "Retriable": {
       "type": "enum",
       "type_mapping": [
@@ -8604,6 +9230,19 @@
       ]
     },
     "SignedAvailabilityBitfields": "Vec<SignedAvailabilityBitfield>",
+    "UpgradeGoAhead": {
+      "type": "enum",
+      "value_list": [
+        "Abort",
+        "GoAhead"
+      ]
+    },
+    "UpgradeRestriction": {
+      "type": "enum",
+      "value_list": [
+        "Present"
+      ]
+    },
     "UpwardMessage": "Bytes",
     "CallIndex": "(u8, u8)",
     "LotteryConfig": {
@@ -8765,6 +9404,46 @@
         ]
       ]
     },
-    "Approval<Balance, DepositBalanceOf<T, I>>": "AssetApproval"
+    "ProxyDefinition": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "delegate",
+          "AccountId"
+        ],
+        [
+          "proxyType",
+          "ProxyType"
+        ],
+        [
+          "delay",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "ProxyAnnouncement": {
+      "type": "struct",
+      "type_mapping": [
+        [
+          "real",
+          "AccountId"
+        ],
+        [
+          "callHash",
+          "Hash"
+        ],
+        [
+          "height",
+          "BlockNumber"
+        ]
+      ]
+    },
+    "WeakBoundedVec": "BoundedVec",
+    "MaxProxies": "u32",
+    "MaxPending": "u32",
+    "(BoundedVec<ProxyDefinition<AccountId, ProxyType,  BlockNumber>, MaxProxies,>, BalanceOf)": "(BoundedVec<ProxyDefinition, MaxProxies>, BalanceOf)",
+    "(BoundedVec<Announcement<AccountId, CallHashOf,  BlockNumber>, MaxPending,>, BalanceOf,)": "(BoundedVec<ProxyAnnouncement, MaxPending>, BalanceOf)",
+    "Approval<Balance, DepositBalanceOf<T, I>>": "AssetApproval",
+    "Asset.Balance": "TAssetBalance"
   }
 }

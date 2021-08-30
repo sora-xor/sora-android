@@ -6,18 +6,18 @@
 package jp.co.soramitsu.feature_wallet_impl.data.repository.datasource
 
 import com.google.gson.reflect.TypeToken
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
-import jp.co.soramitsu.feature_wallet_api.domain.model.FeeType
 import jp.co.soramitsu.feature_wallet_api.domain.model.InvitedUser
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransferMeta
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
 
 class PrefsWalletDatasource @Inject constructor(
@@ -29,32 +29,13 @@ class PrefsWalletDatasource @Inject constructor(
     companion object {
         private const val PREFS_PARENT_INVITATION = "parent_invitation"
 
-        private const val KEY_BALANCE = "key_balance"
         private const val KEY_CONTACTS = "key_contacts"
-        private const val KEY_TRANSFER_META_FEE_RATE = "key_transfer_meta_rate"
-        private const val KEY_TRANSFER_META_FEE_TYPE = "key_transfer_meta_type"
-        private const val KEY_WITHDRAW_META_FEE_RATE = "key_withdraw_meta_rate"
-        private const val KEY_WITHDRAW_META_FEE_TYPE = "key_withdraw_meta_type"
         private const val KEY_CLAIM_BLOCK_HASH = "key_claim_block_hash"
         private const val KEY_CLAIM_TX_HASH = "key_claim_tx_hash"
         private const val KEY_MIGRATION_STATUS = "key_migration_status"
     }
 
-    private val transferMetaSubject = BehaviorSubject.create<TransferMeta>()
-    private val withdrawMetaSubject = BehaviorSubject.create<TransferMeta>()
-    private val migrationStatusSubject = BehaviorSubject.create<MigrationStatus>()
-
-    init {
-        val transferMeta = retrieveTransferMeta()
-        if (transferMeta != null) {
-            transferMetaSubject.onNext(transferMeta)
-        }
-
-        val withdrawMeta = retrieveWithdrawMeta()
-        if (withdrawMeta != null) {
-            withdrawMetaSubject.onNext(withdrawMeta)
-        }
-    }
+    private val migrationStatusFlow = MutableStateFlow<MigrationStatus?>(null)
 
     override fun saveContacts(results: List<Account>) {
         preferences.putString(KEY_CONTACTS, serializer.serialize(results))
@@ -71,52 +52,6 @@ class PrefsWalletDatasource @Inject constructor(
                 object : TypeToken<List<Account>>() {}.type
             )
         }
-    }
-
-    override fun saveTransferMeta(transferMeta: TransferMeta) {
-        transferMetaSubject.onNext(transferMeta)
-        preferences.putDouble(KEY_TRANSFER_META_FEE_RATE, transferMeta.feeRate)
-        preferences.putString(KEY_TRANSFER_META_FEE_TYPE, transferMeta.feeType.toString())
-    }
-
-    private fun retrieveTransferMeta(): TransferMeta? {
-        val feeRate = preferences.getDouble(KEY_TRANSFER_META_FEE_RATE, -1.0)
-
-        if (feeRate != -1.0) {
-            return TransferMeta(
-                feeRate,
-                FeeType.valueOf(preferences.getString(KEY_TRANSFER_META_FEE_TYPE))
-            )
-        }
-
-        return null
-    }
-
-    override fun observeTransferMeta(): Observable<TransferMeta> {
-        return transferMetaSubject
-    }
-
-    override fun saveWithdrawMeta(transferMeta: TransferMeta) {
-        withdrawMetaSubject.onNext(transferMeta)
-        preferences.putDouble(KEY_WITHDRAW_META_FEE_RATE, transferMeta.feeRate)
-        preferences.putString(KEY_WITHDRAW_META_FEE_TYPE, transferMeta.feeType.toString())
-    }
-
-    private fun retrieveWithdrawMeta(): TransferMeta? {
-        val feeRate = preferences.getDouble(KEY_WITHDRAW_META_FEE_RATE, -1.0)
-
-        if (feeRate != -1.0) {
-            return TransferMeta(
-                feeRate,
-                FeeType.valueOf(preferences.getString(KEY_WITHDRAW_META_FEE_TYPE))
-            )
-        }
-
-        return null
-    }
-
-    override fun observeWithdrawMeta(): Observable<TransferMeta> {
-        return withdrawMetaSubject
     }
 
     override fun saveInvitationParent(parentInfo: InvitedUser) {
@@ -142,12 +77,11 @@ class PrefsWalletDatasource @Inject constructor(
 
     override fun saveMigrationStatus(migrationStatus: MigrationStatus) {
         preferences.putString(KEY_MIGRATION_STATUS, migrationStatus.toString())
-
-        migrationStatusSubject.onNext(migrationStatus)
+        migrationStatusFlow.value = migrationStatus
     }
 
-    override fun observeMigrationStatus(): Observable<MigrationStatus> {
-        return migrationStatusSubject
+    override fun observeMigrationStatus(): Flow<MigrationStatus> {
+        return migrationStatusFlow.asStateFlow().filterNotNull()
     }
 
     override fun retrieveClaimBlockAndTxHash(): Pair<String, String> {

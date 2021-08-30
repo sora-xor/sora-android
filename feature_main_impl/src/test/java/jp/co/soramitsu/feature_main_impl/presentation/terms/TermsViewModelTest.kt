@@ -7,7 +7,6 @@ package jp.co.soramitsu.feature_main_impl.presentation.terms
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,10 +19,12 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class TermsViewModelTest {
 
-    @Rule @JvmField val rule: TestRule = InstantTaskExecutorRule()
-    @Rule @JvmField val rxSchedulerRule = RxSchedulersRule()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
 
-    @Mock private lateinit var router: MainRouter
+    @Mock
+    private lateinit var router: MainRouter
 
     private lateinit var termsViewModel: TermsViewModel
 

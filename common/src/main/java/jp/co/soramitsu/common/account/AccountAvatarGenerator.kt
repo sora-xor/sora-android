@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.common.account
 
 import android.graphics.drawable.PictureDrawable
@@ -12,7 +17,7 @@ import javax.inject.Singleton
 class AccountAvatarGenerator(
     private val resourceManager: ResourceManager,
 ) {
-    fun createAvatarFromKey(publicKey: String, sizeInDp: Int): PictureDrawable {
+    private fun createAvatarFromKey(publicKey: String, sizeInDp: Int): PictureDrawable {
         val icon = Jdenticon.toSvg(publicKey, resourceManager.dp2px(sizeInDp))
         val svg = SVG.getFromString(icon)
         return PictureDrawable(svg.renderToPicture())

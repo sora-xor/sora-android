@@ -6,14 +6,14 @@
 package jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info
 
 import androidx.lifecycle.LiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_onboarding_impl.domain.OnboardingInteractor
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
+import kotlinx.coroutines.launch
 
 class PersonalInfoViewModel(
     private val interactor: OnboardingInteractor,
@@ -25,21 +25,12 @@ class PersonalInfoViewModel(
     val screenshotAlertDialogEvent: LiveData<Unit> = _screenshotAlertDialogEvent
 
     fun register(accountName: String) {
-        disposables.add(
+        viewModelScope.launch {
+            showProgress()
             interactor.createUser(accountName)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { showProgress() }
-                .doFinally { hideProgress() }
-                .subscribe(
-                    {
-                        _screenshotAlertDialogEvent.trigger()
-                    },
-                    {
-                        onError(it)
-                    }
-                )
-        )
+            hideProgress()
+            _screenshotAlertDialogEvent.trigger()
+        }
     }
 
     fun backButtonClick() {

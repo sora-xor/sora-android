@@ -61,7 +61,12 @@ dependencies {
     implementation daggerDep
     kapt daggerKapt
 
+    implementation coroutineDep
+    implementation coroutineAndroidDep
+
     implementation roomDep
-    implementation rxRoomDep
-    kapt roomKapt
+    implementation roomKtxDep
+    kapt roomKaptDep
+
+    implementation pagingLibraryDep
 }

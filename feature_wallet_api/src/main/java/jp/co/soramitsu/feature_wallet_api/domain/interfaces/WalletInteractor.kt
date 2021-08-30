@@ -5,52 +5,71 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import io.reactivex.Completable
-import io.reactivex.Observable
-import io.reactivex.Single
+import androidx.paging.PagingData
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
+import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 
 interface WalletInteractor {
 
-    fun saveMigrationStatus(migrationStatus: MigrationStatus): Completable
+    fun observeCurAccountStorage(): Flow<String>
 
-    fun observeMigrationStatus(): Observable<MigrationStatus>
+    suspend fun getFeeToken(): Token
 
-    fun needsMigration(): Single<Boolean>
+    fun getEventsFlow(assetId: String = ""): Flow<PagingData<Transaction>>
 
-    fun migrate(): Single<Boolean>
+    suspend fun getTransaction(txHash: String): Transaction
 
-    fun getAssets(forceUpdateBalance: Boolean = false, forceUpdateAssets: Boolean = false): Single<List<Asset>>
+    suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
 
-    fun transfer(to: String, assetId: String, amount: BigDecimal): Single<String>
+    fun observeMigrationStatus(): Flow<MigrationStatus>
 
-    fun observeTransfer(to: String, assetId: String, amount: BigDecimal, fee: BigDecimal): Completable
+    suspend fun needsMigration(): Boolean
 
-    fun calcTransactionFee(to: String, assetId: String, amount: BigDecimal): Single<BigDecimal>
+    suspend fun migrate(): Boolean
 
-    fun getAccountId(): Single<String>
+    suspend fun getVisibleAssets(): List<Asset>
 
-    fun getPublicKey(): Single<ByteArray>
+    suspend fun updateWhitelistBalances()
 
-    fun getPublicKeyHex(withPrefix: Boolean = false): Single<String>
+    suspend fun getWhitelistAssets(updateBalances: Boolean = false): List<Asset>
 
-    fun getAccountName(): Single<String>
+    fun subscribeVisibleAssets(): Flow<List<Asset>>
 
-    fun getTransactions(): Observable<List<Transaction>>
+    suspend fun updateBalancesVisibleAssets()
 
-    fun findOtherUsersAccounts(search: String): Single<List<Account>>
+    suspend fun transfer(to: String, assetId: String, amount: BigDecimal): String
 
-    fun getContacts(query: String): Single<List<Account>>
+    suspend fun observeTransfer(to: String, assetId: String, amount: BigDecimal, fee: BigDecimal): Boolean
 
-    fun processQr(contents: String): Single<Triple<String, String, BigDecimal>>
+    suspend fun calcTransactionFee(to: String, assetId: String, amount: BigDecimal): BigDecimal
 
-    fun hideAssets(assetIds: List<String>): Completable
+    suspend fun getAddress(): String
 
-    fun displayAssets(assetIds: List<String>): Completable
+    suspend fun getPublicKey(): ByteArray
 
-    fun updateAssetPositions(assetPositions: Map<String, Int>): Completable
+    suspend fun getPublicKeyHex(withPrefix: Boolean = false): String
+
+    suspend fun getAccountName(): String
+
+    suspend fun findOtherUsersAccounts(search: String): List<Account>
+
+    suspend fun getContacts(query: String): List<Account>
+
+    suspend fun getXorBalance(precision: Int): XorAssetBalance
+
+    suspend fun processQr(contents: String): Triple<String, String, BigDecimal>
+
+    suspend fun hideAssets(assetIds: List<String>)
+
+    suspend fun displayAssets(assetIds: List<String>)
+
+    suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
+
+    suspend fun getAsset(assetId: String): Asset
 }

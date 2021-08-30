@@ -6,12 +6,10 @@
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Single
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -32,10 +30,6 @@ class EthereumInteractorTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
-
     @Mock
     private lateinit var ethereumRepository: EthereumRepository
 
@@ -55,8 +49,8 @@ class EthereumInteractorTest {
     fun setUp() {
         ethereumInteractorImpl =
             EthereumInteractorImpl(ethereumRepository, credentialsRepository, healthChecker)
-        given(credentialsRepository.getAddress()).willReturn(Single.just(accountId))
-        given(credentialsRepository.retrieveKeyPair()).willReturn(Single.just(keyPair))
+        given(credentialsRepository.getAddress()).willReturn(accountId)
+        //given(credentialsRepository.retrieveKeyPair()).willReturn(Single.just(keyPair))
     }
 
     @Test
@@ -68,10 +62,6 @@ class EthereumInteractorTest {
         //given(ethereumRepository.startWithdraw(amount, accountId, ethAddress, minerFee, keyPair)).willReturn(Completable.complete())
 
         ethereumInteractorImpl.startWithdraw(amount, ethAddress, minerFee)
-            .test()
-            .assertComplete()
-            .assertNoErrors()
-
         //verify(ethereumRepository).startWithdraw(amount, accountId, ethAddress, minerFee, keyPair)
     }
 }

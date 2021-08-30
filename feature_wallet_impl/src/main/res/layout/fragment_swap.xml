@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/x7"
+            android:background="?baseBackground">
+
+            <TextView
+                android:id="@+id/from"
+                style="@style/TextAppearance.Soramitsu.Paragraph_3.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x2"
+                android:text="@string/common_from"
+                android:textColor="?attr/contentPrimary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:textColor="@color/grey_500" />
+
+            <TextView
+                android:id="@+id/fromBalance"
+                style="@style/TextAppearance.Soramitsu.Paragraph_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x1_2"
+                android:text="@string/common_balance"
+                app:layout_constraintEnd_toStartOf="@id/fromBalanceValue"
+                app:layout_constraintTop_toTopOf="@+id/from" />
+
+            <TextView
+                android:id="@+id/fromBalanceValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:text="-"
+                android:textColor="?attr/contentPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:textColor="@color/grey_500" />
+
+            <jp.co.soramitsu.common.presentation.view.AssetCardView
+                android:id="@+id/fromCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/from" />
+
+            <jp.co.soramitsu.common.presentation.view.CurrencyEditText
+                android:id="@+id/fromInput"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@android:color/transparent"
+                android:enabled="false"
+                android:gravity="end"
+                android:hint="0.0"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                app:layout_constraintBottom_toBottomOf="@+id/fromCard"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/fromCard"
+                app:layout_constraintTop_toTopOf="@+id/fromCard"
+                tools:text="200 000" />
+
+            <View
+                android:id="@+id/fromDivider"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:background="?baseBorderPrimary"
+                app:layout_constraintEnd_toEndOf="@+id/fromInput"
+                app:layout_constraintStart_toStartOf="@+id/fromInput"
+                app:layout_constraintTop_toBottomOf="@+id/fromInput" />
+
+            <ImageView
+                android:id="@+id/reverseButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:src="@drawable/ic_reverse_32"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/fromCard" />
+
+            <TextView
+                android:id="@+id/to"
+                style="@style/TextAppearance.Soramitsu.Paragraph_3.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1"
+                android:text="@string/common_to"
+                android:textColor="?attr/contentPrimary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/reverseButton"
+                tools:textColor="@color/grey_500" />
+
+            <TextView
+                android:id="@+id/toBalance"
+                style="@style/TextAppearance.Soramitsu.Paragraph_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x1_2"
+                android:text="@string/common_balance"
+                app:layout_constraintEnd_toStartOf="@id/toBalanceValue"
+                app:layout_constraintTop_toTopOf="@+id/to" />
+
+            <TextView
+                android:id="@+id/toBalanceValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x2"
+                android:text="-"
+                android:textColor="?attr/contentPrimary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/toBalance"
+                tools:textColor="@color/grey_500" />
+
+            <jp.co.soramitsu.common.presentation.view.AssetCardView
+                android:id="@+id/toCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/to" />
+
+            <jp.co.soramitsu.common.presentation.view.CurrencyEditText
+                android:id="@+id/toInput"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="@dimen/x1"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@android:color/transparent"
+                android:enabled="false"
+                android:gravity="end"
+                android:hint="0.0"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                app:layout_constraintBottom_toBottomOf="@+id/toCard"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/toCard"
+                app:layout_constraintTop_toTopOf="@+id/toCard"
+                tools:text="200 000" />
+
+            <View
+                android:id="@+id/toDivider"
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:background="?baseBorderPrimary"
+                app:layout_constraintEnd_toEndOf="@+id/toInput"
+                app:layout_constraintStart_toStartOf="@+id/toInput"
+                app:layout_constraintTop_toBottomOf="@+id/toInput" />
+
+            <Button
+                android:id="@+id/nextBtn"
+                style="@style/Widget.Soramitsu.Button.Primary.48"
+                android:layout_width="0dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:enabled="false"
+                android:hint="@string/common_select_asset"
+                android:text="@string/common_select_asset"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/toCard" />
+
+            <TextView
+                android:id="@+id/slippageTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x2"
+                android:background="?selectableItemBackground"
+                android:paddingStart="@dimen/x2"
+                android:paddingTop="@dimen/margin_padding_content"
+                android:paddingEnd="@dimen/x2"
+                android:paddingBottom="@dimen/margin_padding_content"
+                android:text="@string/polkaswap_slippage_tolerance"
+                android:textColor="?attr/contentSecondary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/nextBtn"
+                tools:textColor="@color/grey_500" />
+
+            <TextView
+                android:id="@+id/slippageValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x1"
+                android:text="0.5%"
+                android:textColor="?attr/contentSecondary"
+                app:layout_constraintBottom_toBottomOf="@+id/slippageTitle"
+                app:layout_constraintEnd_toStartOf="@+id/slippageOptions"
+                app:layout_constraintTop_toTopOf="@+id/slippageTitle"
+                tools:textColor="@color/grey_500" />
+
+            <ImageView
+                android:id="@+id/slippageOptions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x2"
+                android:src="@drawable/ic_options_32"
+                app:layout_constraintBottom_toBottomOf="@+id/slippageTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/slippageTitle"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/detailsTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x3"
+                android:background="?selectableItemBackground"
+                android:paddingStart="@dimen/x2"
+                android:paddingTop="@dimen/margin_padding_content"
+                android:paddingEnd="@dimen/x2"
+                android:paddingBottom="@dimen/margin_padding_content"
+                android:text="@string/polkaswap_details"
+                android:textColor="?attr/contentSecondary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/slippageTitle"
+                tools:textColor="@color/grey_500" />
+
+            <ImageView
+                android:id="@+id/detailsIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x2"
+                android:src="@drawable/ic_chevron_down_circled_32"
+                app:layout_constraintBottom_toBottomOf="@+id/detailsTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/detailsTitle"
+                tools:ignore="ContentDescription" />
+
+            <TextView
+                android:id="@+id/firstPerSecondTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x3"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/detailsTitle"
+                tools:textColor="@color/grey_500"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/firstPerSecondValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x2"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/firstPerSecondTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/firstPerSecondTitle"
+                tools:text="100.000.00"
+                tools:visibility="visible" />
+
+            <View
+                android:id="@+id/divider1"
+                android:layout_width="0dp"
+                android:layout_height="3dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/firstPerSecondTitle"
+                tools:background="@color/grey_300"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/secondPerFirstTitle"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x3"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/firstPerSecondTitle"
+                tools:textColor="@color/grey_500"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/secondPerFirstValue"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/x2"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/secondPerFirstTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/secondPerFirstTitle"
+                tools:text="100.000.00"
+                tools:visibility="visible" />
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="0dp"
+                android:layout_height="3dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/secondPerFirstTitle"
+                tools:background="@color/grey_300"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/receiveSoldWrapper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/x2"
+                android:paddingTop="@dimen/margin_padding_list_element"
+                android:paddingEnd="@dimen/x2"
+                android:paddingBottom="@dimen/margin_padding_list_element"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider2"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/receivedSoldTitle"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableEnd="@drawable/ic_questionmark_16"
+                    android:drawablePadding="@dimen/x1"
+                    android:text="@string/polkaswap_minimum_received"
+                    android:visibility="visible"
+                    tools:textColor="@color/grey_500" />
+
+                <TextView
+                    android:id="@+id/receivedSoldValue"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="@+id/receivedSoldTitle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/receivedSoldTitle"
+                    tools:text="100.000.00" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="0dp"
+                android:layout_height="3dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/receiveSoldWrapper"
+                tools:background="@color/grey_300"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/liqudityProviderWrapper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/x2"
+                android:paddingTop="@dimen/margin_padding_list_element"
+                android:paddingEnd="@dimen/x2"
+                android:paddingBottom="@dimen/margin_padding_list_element"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider3"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/liqudityProviderTitle"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableEnd="@drawable/ic_questionmark_16"
+                    android:drawablePadding="@dimen/x1"
+                    android:text="@string/polkaswap_liqudity_fee"
+                    tools:textColor="@color/grey_500" />
+
+                <TextView
+                    android:id="@+id/liqudityProviderValue"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    app:layout_constraintBottom_toBottomOf="@+id/liqudityProviderTitle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/liqudityProviderTitle"
+                    tools:text="100.000.00" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider4"
+                android:layout_width="0dp"
+                android:layout_height="3dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/liqudityProviderWrapper"
+                tools:background="@color/grey_300"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/networkFeeWrapper"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/x2"
+                android:paddingTop="@dimen/margin_padding_list_element"
+                android:paddingEnd="@dimen/x2"
+                android:paddingBottom="@dimen/margin_padding_list_element"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/divider4"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/networkFeeTitle"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableEnd="@drawable/ic_questionmark_16"
+                    android:drawablePadding="@dimen/x1"
+                    android:text="@string/polkaswap_network_fee"
+                    tools:textColor="@color/grey_500" />
+
+                <TextView
+                    android:id="@+id/networkFeeValue"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    app:layout_constraintBottom_toBottomOf="@+id/networkFeeTitle"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/networkFeeTitle"
+                    tools:text="100.000.00" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider5"
+                android:layout_width="0dp"
+                android:layout_height="3dp"
+                android:layout_marginStart="@dimen/x2"
+                android:layout_marginEnd="@dimen/x2"
+                android:background="@drawable/dashed_line"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/networkFeeWrapper"
+                tools:visibility="visible" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/infoButtonWrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="@dimen/x2"
+        android:foreground="?selectableItemBackground"
+        android:src="@drawable/ic_info_button_42"
+        app:cardBackgroundColor="?attr/secondaryBackground"
+        app:cardCornerRadius="@dimen/x3"
+        tools:background="@color/grey_500">
+
+        <TextView
+            style="@style/TextAppearance.Soramitsu.Upper_3.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/margin_padding_content"
+            android:layout_marginEnd="@dimen/x1_5"
+            android:drawableStart="@drawable/ic_info_negative_16"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_vertical"
+            android:includeFontPadding="false"
+            android:paddingTop="@dimen/x1"
+            android:paddingBottom="@dimen/x1"
+            android:text="@string/polkaswap_info_title" />
+    </androidx.cardview.widget.CardView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/amountPercentage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="?baseBackground"
+        android:paddingStart="@dimen/x1"
+        android:paddingTop="@dimen/x1_2"
+        android:paddingEnd="@dimen/x1"
+        android:paddingBottom="@dimen/x1_2"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/percent100"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:padding="@dimen/x1"
+            android:text="100%"
+            android:textColor="?colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:textColor="@color/brand_soramitsu_red" />
+
+        <TextView
+            android:id="@+id/percent75"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:padding="@dimen/x1"
+            android:text="75%"
+            android:textColor="?colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/percent100"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:textColor="@color/brand_soramitsu_red" />
+
+        <TextView
+            android:id="@+id/percent50"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:padding="@dimen/x1"
+            android:text="50%"
+            android:textColor="?colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/percent75"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:textColor="@color/brand_soramitsu_red" />
+
+        <TextView
+            android:id="@+id/percent25"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:padding="@dimen/x1"
+            android:text="25%"
+            android:textColor="?colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/percent50"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:textColor="@color/brand_soramitsu_red" />
+
+        <TextView
+            android:id="@+id/doneButton"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:padding="@dimen/x1"
+            android:text="@string/common_done"
+            android:textColor="?colorPrimary"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:textColor="@color/brand_soramitsu_red" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

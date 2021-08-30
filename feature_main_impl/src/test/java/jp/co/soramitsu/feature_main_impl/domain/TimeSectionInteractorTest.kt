@@ -9,11 +9,9 @@ import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.anyString
@@ -21,19 +19,20 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
-import java.util.Date
+import java.util.*
 
 @RunWith(MockitoJUnitRunner::class)
 class TimeSectionInteractorTest {
 
-    @Rule @JvmField var schedulersRule = RxSchedulersRule()
-
-    @Mock private lateinit var resourceManager: ResourceManager
-    @Mock private lateinit var dateTimeFormatter: DateTimeFormatter
+    @Mock
+    private lateinit var resourceManager: ResourceManager
+    @Mock
+    private lateinit var dateTimeFormatter: DateTimeFormatter
 
     private lateinit var interactor: TimeSectionInteractor
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         given(resourceManager.getString(R.string.common_yesterday)).willReturn("Yesterday")
         given(resourceManager.getString(R.string.common_today)).willReturn("Today")
         given(dateTimeFormatter.formatDate(anyNonNull(), anyString())).willReturn("01 January")
@@ -41,7 +40,8 @@ class TimeSectionInteractorTest {
         interactor = TimeSectionInteractor(resourceManager, dateTimeFormatter)
     }
 
-    @Test fun `insertDateSections called`() {
+    @Test
+    fun `insertDateSections called`() {
         val votesHistoryItems = mutableListOf(
             VotesHistoryItem(
                 "message",

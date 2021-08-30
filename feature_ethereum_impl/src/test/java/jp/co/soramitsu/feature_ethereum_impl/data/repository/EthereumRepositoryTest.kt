@@ -6,7 +6,6 @@
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.reactivex.Observable
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.TransferTransactionDao
@@ -20,12 +19,14 @@ import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthRegisterStateMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.network.ERC20ContractApi
 import jp.co.soramitsu.feature_ethereum_impl.data.network.SmartContractApi
-import jp.co.soramitsu.feature_ethereum_impl.data.network.TransactionFactory
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiConverter
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
-import jp.co.soramitsu.test_shared.RxSchedulersRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.runBlockingTest
 import org.bouncycastle.util.encoders.Hex
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -46,16 +47,13 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.concurrent.Callable
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class EthereumRepositoryTest {
 
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var web3jProvider: Web3jProvider
@@ -71,9 +69,6 @@ class EthereumRepositoryTest {
 
     @Mock
     private lateinit var serializer: Serializer
-
-    @Mock
-    private lateinit var transactionFactory: TransactionFactory
 
     @Mock
     private lateinit var contractApiProvider: ContractsApiProvider
@@ -131,7 +126,6 @@ class EthereumRepositoryTest {
             web3jBip32Crypto,
             serializer,
             contractApiProvider,
-            transactionFactory,
             etherWeiConverter,
             db,
             ethRegisterStateMapper,
@@ -153,25 +147,21 @@ class EthereumRepositoryTest {
         ).willReturn(remoteCall as RemoteCall<TransactionReceipt>?)
         //given(ethereumCredentialsMapper.getAddress(anyNonNull())).willReturn(address)
         given(remoteCall!!.send()).willReturn(transactionReceipt)
-        given(transactionReceipt.transactionHash).willReturn(txHash)
-        given(db.transactionDao()).willReturn(transactionDao)
+        //given(transactionReceipt.transactionHash).willReturn(txHash)
 
         ethereumRepository.transferValErc20(address, amount, ethereumCredentials, valTokenAddress)
-            .test()
-            .assertComplete()
 
         verify(erc20ContractApi).transferVal(address, amount.toBigInteger())
         verify(remoteCall).send()
     }
 
     @Test
-    fun `observer eth registration state`() {
+    fun `observer eth registration state`() = runBlockingTest {
         val state = EthRegisterState.State.NONE
-        given(ethereumDatasource.observeEthRegisterState()).willReturn(Observable.just(state))
+        given(ethereumDatasource.observeEthRegisterState()).willReturn(flow { emit(state) })
 
-        ethereumRepository.observeEthRegisterState()
-            .test()
-            .assertResult(state)
+        val value = ethereumRepository.observeEthRegisterState().toList()
+        assertEquals(state, value[0])
     }
 
     @Test
@@ -223,9 +213,7 @@ class EthereumRepositoryTest {
 
         given(contractApiProvider.getGasPrice()).willReturn(gasPrice)
 
-        ethereumRepository.setGasLimit(gasLimit)
-            .test()
-            .assertResult(etherFee)
+        assertEquals(etherFee, ethereumRepository.setGasLimit(gasLimit))
 
         verify(contractApiProvider).setGasLimit(gasLimit)
     }
@@ -242,9 +230,7 @@ class EthereumRepositoryTest {
 
         given(contractApiProvider.getGasLimit()).willReturn(gasLimit)
 
-        ethereumRepository.setGasPrice(gasPriceInGwei)
-            .test()
-            .assertResult(etherFee)
+        assertEquals(etherFee, ethereumRepository.setGasPrice(gasPriceInGwei))
 
         verify(contractApiProvider).setGasPrice(gasPriceInWei)
     }
@@ -253,9 +239,7 @@ class EthereumRepositoryTest {
     fun `get eth credentials from cache called`() {
         given(ethereumDatasource.retrieveEthereumCredentials()).willReturn(ethereumCredentials)
 
-        ethereumRepository.getEthCredentials(mnemonic)
-            .test()
-            .assertResult(ethereumCredentials)
+        assertEquals(ethereumCredentials, ethereumRepository.getEthCredentials(mnemonic))
     }
 
     @Test
@@ -272,9 +256,7 @@ class EthereumRepositoryTest {
             credentials
         )
 
-        ethereumRepository.getEthCredentials(mnemonic)
-            .test()
-            .assertResult(ethereumCredentials)
+        assertEquals(ethereumCredentials, ethereumRepository.getEthCredentials(mnemonic))
 
         verify(ethereumDatasource).saveEthereumCredentials(ethereumCredentials)
     }
@@ -304,9 +286,10 @@ class EthereumRepositoryTest {
             GasEstimation(GasEstimation.Type.FAST, fastGasAmount, fastGasAmountEth, 20)
         )
 
-        ethereumRepository.getGasEstimations(gasLimit, ethereumCredentials)
-            .test()
-            .assertResult(Gas(gasPrice, gasLimit, estimations))
+        assertEquals(
+            Gas(gasPrice, gasLimit, estimations),
+            ethereumRepository.getGasEstimations(gasLimit, ethereumCredentials)
+        )
     }
 
     @Test
@@ -316,9 +299,7 @@ class EthereumRepositoryTest {
         val userRemoteCall = RemoteCall<ByteArray>(Callable { txHashBytes })
         given(smartContractApi.proof()).willReturn(userRemoteCall)
 
-        ethereumRepository.isBridgeEnabled(ethereumCredentials)
-            .test()
-            .assertResult(true)
+        assertEquals(true, ethereumRepository.isBridgeEnabled(ethereumCredentials))
     }
 
     @Test
@@ -326,9 +307,7 @@ class EthereumRepositoryTest {
         val userRemoteCall = RemoteCall<ByteArray>(Callable { ByteArray(32) })
         given(smartContractApi.proof()).willReturn(userRemoteCall)
 
-        ethereumRepository.isBridgeEnabled(ethereumCredentials)
-            .test()
-            .assertResult(false)
+        assertEquals(false, ethereumRepository.isBridgeEnabled(ethereumCredentials))
     }
 
     @Test
@@ -336,9 +315,7 @@ class EthereumRepositoryTest {
         val userRemoteCall = RemoteCall<String>(Callable { valTokenAddress })
         given(smartContractApi.valTokenInstance()).willReturn(userRemoteCall)
 
-        ethereumRepository.getValTokenAddress(ethereumCredentials)
-            .test()
-            .assertResult(valTokenAddress)
+        assertEquals(valTokenAddress, ethereumRepository.getValTokenAddress(ethereumCredentials))
     }
 
     @Test
@@ -347,9 +324,7 @@ class EthereumRepositoryTest {
             address
         )
 
-        ethereumRepository.getEthWalletAddress(ethereumCredentials)
-            .test()
-            .assertResult(address)
+        assertEquals(address, ethereumRepository.getEthWalletAddress(ethereumCredentials))
     }
 
     @Test
@@ -362,9 +337,7 @@ class EthereumRepositoryTest {
             feeEther
         )
 
-        ethereumRepository.calculateValErc20TransferFee()
-            .test()
-            .assertResult(feeEther)
+        assertEquals(feeEther, ethereumRepository.calculateValErc20TransferFee())
 
         verify(contractApiProvider).setGasLimit(ContractsApiProvider.DEFAULT_GAS_LIMIT_TRANSFER.toBigInteger())
     }
@@ -379,9 +352,7 @@ class EthereumRepositoryTest {
             feeEther
         )
 
-        ethereumRepository.calculateValErc20WithdrawFee()
-            .test()
-            .assertResult(feeEther)
+        assertEquals(feeEther, ethereumRepository.calculateValErc20WithdrawFee())
 
         verify(contractApiProvider).setGasLimit(ContractsApiProvider.DEFAULT_GAS_LIMIT_WITHDRAW.toBigInteger())
     }
@@ -396,9 +367,7 @@ class EthereumRepositoryTest {
         given(etherWeiConverter.fromWeiToGwei(gasPrice)).willReturn(gasPrice)
         given(etherWeiConverter.fromGweiToEther(gasPrice * gasLimit)).willReturn(feeEther)
 
-        ethereumRepository.calculateValErc20CombinedFee()
-            .test()
-            .assertResult(feeEther)
+        assertEquals(feeEther, ethereumRepository.calculateValErc20CombinedFee())
 
         verify(contractApiProvider).setGasLimit(gasLimit)
     }

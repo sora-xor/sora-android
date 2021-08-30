@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parliament_nav_graph"
+    app:startDestination="@id/parliamentFragment">
+    <fragment
+        android:id="@+id/parliamentFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.parliament.ParliamentFragment"
+        tools:layout="@layout/fragment_parliament" />
+
+    <fragment
+        android:id="@+id/referendumDetailFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment"
+        tools:layout="@layout/fragment_referendum_detail" />
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment"
+        tools:layout="@layout/fragment_main" />
+
+</navigation>

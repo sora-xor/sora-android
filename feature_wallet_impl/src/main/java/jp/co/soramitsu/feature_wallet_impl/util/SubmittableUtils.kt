@@ -1,6 +1,11 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_wallet_impl.util
 
-import jp.co.soramitsu.common.data.network.substrate.SubstrateNetworkOptionsProvider
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import kotlin.math.ceil
 import kotlin.math.log2
 import kotlin.math.max
@@ -14,7 +19,7 @@ object SubmittableUtils {
         class Mortal(val period: Byte, val phase: Byte) : Era()
     }
 
-    fun getMortalEraPeriodAndPhase(currentBlockNumber: Int, periodInBlocks: Int = SubstrateNetworkOptionsProvider.mortalEraLength): Pair<Int, Int> {
+    fun getMortalEraPeriodAndPhase(currentBlockNumber: Int, periodInBlocks: Int = OptionsProvider.mortalEraLength): Pair<Int, Int> {
         var calPeriod = 2.0.pow(ceil(log2(periodInBlocks.toDouble()))).toInt()
         calPeriod = min(1 shl 16, max(calPeriod, 4))
         val phase = currentBlockNumber % calPeriod

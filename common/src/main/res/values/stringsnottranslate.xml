@@ -31,7 +31,6 @@
     <string name="project_votes_k_template" translatable="false">%sK</string>
     <string name="about_open_source_url" translatable="false">https://github.com/sora-xor/Sora-Android</string>
     <string name="polkaswap_website" translatable="false">Polkaswap.io</string>
-    <string name="common_sora_support_email" translatable="false">sora@soramitsu.co.jp</string>
     <string name="brackets_format" translatable="false">(%s)</string>
     <string name="channel_name" translatable="false">Global channel</string>
     <string name="channel_description" translatable="false">Notifications sent from the app admin</string>

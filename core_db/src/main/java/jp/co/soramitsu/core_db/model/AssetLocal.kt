@@ -5,21 +5,36 @@
 
 package jp.co.soramitsu.core_db.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.ForeignKey
 import java.math.BigDecimal
 
-@Entity(tableName = "assets")
+@Entity(
+    tableName = "assets",
+    primaryKeys = ["tokenId", "accountAddress"],
+    foreignKeys = [
+        ForeignKey(
+            entity = TokenLocal::class,
+            parentColumns = ["id"],
+            childColumns = ["tokenId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.NO_ACTION,
+        )
+    ]
+)
 data class AssetLocal(
-    @PrimaryKey val id: String,
-    val name: String,
-    val symbol: String,
+    val tokenId: String,
+    @ColumnInfo(index = true)
+    val accountAddress: String,
     val displayAsset: Boolean,
+    val showMainBalance: Boolean,
     val position: Int,
-    val precision: Int,
-    val isMintable: Boolean,
     val free: BigDecimal,
     val reserved: BigDecimal,
     val miscFrozen: BigDecimal,
     val feeFrozen: BigDecimal,
+    val bonded: BigDecimal,
+    val redeemable: BigDecimal,
+    val unbonding: BigDecimal,
 )

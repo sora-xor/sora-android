@@ -7,15 +7,15 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
+import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Asset
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.display.AssetConfigurableModel
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class AssetSettingsViewModel(
@@ -42,36 +42,30 @@ class AssetSettingsViewModel(
     }
 
     private fun updateAssetList() {
-        disposables.add(
-            interactor.getAssets()
-                .map { mapAssetToAssetModel(it) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        curAssetList.addAll(it)
-                        displayedAssetList.addAll(it)
-                        changePosition.addAll(it.map { m -> m.id })
-                        _assetsListLiveData.value = displayedAssetList
-                    },
-                    {
-                        logException(it)
-                    }
-                )
-        )
+        viewModelScope.launch {
+            val list = mapAssetToAssetModel(interactor.getWhitelistAssets())
+            curAssetList.addAll(list)
+            displayedAssetList.addAll(list)
+            changePosition.addAll(list.map { m -> m.id })
+            _assetsListLiveData.value = displayedAssetList
+        }
     }
 
     private fun mapAssetToAssetModel(assets: List<Asset>): List<AssetConfigurableModel> =
         assets.sortedBy { it.position }.map {
             AssetConfigurableModel(
-                it.id, it.assetName, it.symbol, it.iconShadow,
-                it.hidingAllowed, numbersFormatter.formatBigDecimal(it.balance, it.precision),
-                it.display
+                it.token.id,
+                it.token.name,
+                it.token.symbol,
+                it.token.icon,
+                it.token.isHidable,
+                numbersFormatter.formatBigDecimal(it.balance.transferable, it.token.precision),
+                it.isDisplaying
             )
         }
 
     private fun filterAssetsList() {
-        val filter = curFilter.toLowerCase(Locale.getDefault())
+        val filter = curFilter.lowercase(Locale.getDefault())
         if (filter.isBlank()) {
             displayedAssetList = curAssetList
             _assetsListLiveData.value = displayedAssetList
@@ -80,8 +74,8 @@ class AssetSettingsViewModel(
         displayedAssetList = mutableListOf<AssetConfigurableModel>().apply {
             addAll(
                 curAssetList.filter {
-                    it.assetFirstName.toLowerCase(Locale.getDefault())
-                        .contains(filter) || it.assetLastName.toLowerCase(Locale.getDefault())
+                    it.assetFirstName.lowercase(Locale.getDefault())
+                        .contains(filter) || it.assetLastName.lowercase(Locale.getDefault())
                         .contains(filter)
                 }
             )
@@ -106,42 +100,34 @@ class AssetSettingsViewModel(
     }
 
     fun doneClicked() {
-        disposables.add(
-            interactor.updateAssetPositions(
-                changePosition.mapIndexed { index, s -> s to index }.toMap()
-            )
-                .andThen(
-                    interactor.displayAssets(changeVisibility.filter { it.second }.map { it.first })
+        viewModelScope.launch {
+            tryCatch {
+                interactor.updateAssetPositions(
+                    changePosition.mapIndexed { index, s -> s to index }
+                        .toMap()
                 )
-                .andThen(
-                    interactor.hideAssets(changeVisibility.filter { !it.second }.map { it.first })
-                )
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        router.popBackStackFragment()
-                    },
-                    {
-                        onError(it)
-                    }
-                )
-        )
+                interactor.displayAssets(changeVisibility.filter { it.second }.map { it.first })
+                interactor.hideAssets(changeVisibility.filter { !it.second }.map { it.first })
+                changePosition.clear()
+                changeVisibility.clear()
+                router.popBackStackFragment()
+            }
+        }
     }
 
     fun assetPositionChanged(from: Int, to: Int): Boolean {
         if (!displayedAssetList[from].changeCheckStateEnabled || !displayedAssetList[to].changeCheckStateEnabled) return false
         val originalFrom =
-            requireNotNull(curAssetList.indexOfFirst { it.id == displayedAssetList[from].id })
+            requireNotNull(changePosition.indexOfFirst { it == displayedAssetList[from].id })
         val originalTo =
-            requireNotNull(curAssetList.indexOfFirst { it.id == displayedAssetList[to].id })
+            requireNotNull(changePosition.indexOfFirst { it == displayedAssetList[to].id })
         with(changePosition) {
-            val item = removeAt(from)
-            add(to, item)
-        }
-        with(displayedAssetList) {
             val item = removeAt(originalFrom)
             add(originalTo, item)
+        }
+        with(displayedAssetList) {
+            val item = removeAt(from)
+            add(to, item)
         }
         _assetPositions.value = from to to
         return true

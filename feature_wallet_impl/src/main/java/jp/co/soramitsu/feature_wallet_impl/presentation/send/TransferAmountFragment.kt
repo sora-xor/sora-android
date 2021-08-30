@@ -225,10 +225,6 @@ class TransferAmountFragment :
             viewBinding.ivFeeCalculationProgress.doAnimation(it, ViewAnimations.rotateAnimation)
         }
 
-        viewModel.getProgressVisibility().observe(viewLifecycleOwner) {
-            if (it) progressDialog.show() else progressDialog.dismiss()
-        }
-
         viewModel.nextButtonEnableLiveData.observe(viewLifecycleOwner) {
             if (it) viewBinding.nextBtn.enable() else viewBinding.nextBtn.disable()
         }

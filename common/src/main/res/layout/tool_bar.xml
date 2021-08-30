@@ -36,6 +36,7 @@
             android:maxLines="1"
             android:paddingStart="@dimen/x1"
             android:paddingEnd="@dimen/x1"
+            android:drawablePadding="@dimen/x1_2"
             android:textColor="?attr/contentPrimary"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

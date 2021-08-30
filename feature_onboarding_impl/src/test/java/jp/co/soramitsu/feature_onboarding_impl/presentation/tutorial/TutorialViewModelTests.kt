@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_onboarding_impl.presentation.tutorial
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -24,10 +23,6 @@ class TutorialViewModelTests {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var router: OnboardingRouter

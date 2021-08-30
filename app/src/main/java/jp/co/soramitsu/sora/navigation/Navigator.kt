@@ -8,6 +8,7 @@ package jp.co.soramitsu.sora.navigation
 import android.os.Bundle
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -15,16 +16,20 @@ import jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailRe
 import jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
-import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
+import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.presentation.asset.details.AssetDetailsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment
-import jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.SwapConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
 import jp.co.soramitsu.sora.R
+import kotlinx.coroutines.FlowPreview
 import java.math.BigDecimal
 
 class Navigator : MainRouter, WalletRouter {
@@ -62,7 +67,10 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showReferendumDetails(referendumId: String) {
-        navController?.navigate(R.id.referendumDetailFragment, DetailReferendumFragment.createBundle(referendumId))
+        navController?.navigate(
+            R.id.referendumDetailFragment,
+            DetailReferendumFragment.createBundle(referendumId)
+        )
     }
 
     override fun showPassphrase() {
@@ -85,6 +93,13 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.assetListFragment, AssetListFragment.createBundle(mode))
     }
 
+    override fun showAssetDetails(assetId: String) {
+        navController?.navigate(
+            R.id.assetDetailsFragment,
+            AssetDetailsFragment.createBundle(assetId)
+        )
+    }
+
     override fun showVotesHistory() {
         navController?.navigate(R.id.votesFragment)
     }
@@ -102,27 +117,105 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showValTransferAmount(recipientId: String, assetId: String, amount: BigDecimal) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForValTransfer(recipientId, assetId, amount))
+        navController?.navigate(
+            R.id.transferAmountFragment,
+            TransferAmountFragment.createBundleForValTransfer(recipientId, assetId, amount)
+        )
     }
 
     override fun showValERCTransferAmount(address: String, amount: BigDecimal) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForValErcTransfer(address, "", amount))
+        navController?.navigate(
+            R.id.transferAmountFragment,
+            TransferAmountFragment.createBundleForValErcTransfer(address, "", amount)
+        )
     }
 
     override fun showValWithdrawToErc(etherAddress: String, amount: BigDecimal) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForWithdraw(etherAddress, "", amount))
+        navController?.navigate(
+            R.id.transferAmountFragment,
+            TransferAmountFragment.createBundleForWithdraw(etherAddress, "", amount)
+        )
     }
 
-    override fun showWithdrawRetryFragment(soranetTransactionId: String, ethTransactionId: String, peerId: String, amount: BigDecimal, isTxFeeNeeded: Boolean) {
-        navController?.navigate(R.id.transferAmountFragment, TransferAmountFragment.createBundleForWithdrawRetry(soranetTransactionId, ethTransactionId, peerId, amount, isTxFeeNeeded))
+    override fun showWithdrawRetryFragment(
+        soranetTransactionId: String,
+        ethTransactionId: String,
+        peerId: String,
+        amount: BigDecimal,
+        isTxFeeNeeded: Boolean
+    ) {
+        navController?.navigate(
+            R.id.transferAmountFragment,
+            TransferAmountFragment.createBundleForWithdrawRetry(
+                soranetTransactionId,
+                ethTransactionId,
+                peerId,
+                amount,
+                isTxFeeNeeded
+            )
+        )
     }
 
-    override fun showTransactionConfirmation(peerId: String, fullName: String, partialAmount: BigDecimal, amount: BigDecimal, assetId: String, minerFee: BigDecimal, transactionFee: BigDecimal, transferType: TransferType) {
-        navController?.navigate(R.id.transactionConfirmation, TransactionConfirmationFragment.createBundle(peerId, fullName, partialAmount, amount, assetId, minerFee, transactionFee, transferType))
+    override fun showTransactionConfirmation(
+        peerId: String,
+        fullName: String,
+        partialAmount: BigDecimal,
+        amount: BigDecimal,
+        assetId: String,
+        minerFee: BigDecimal,
+        transactionFee: BigDecimal,
+        transferType: TransferType
+    ) {
+        navController?.navigate(
+            R.id.transactionConfirmation,
+            TransactionConfirmationFragment.createBundle(
+                peerId,
+                fullName,
+                partialAmount,
+                amount,
+                assetId,
+                minerFee,
+                transactionFee,
+                transferType
+            )
+        )
+    }
+
+    override fun showPolkaswapInfoFragment() {
+        navController?.navigate(R.id.polkaswapInfoFragment)
+    }
+
+    @FlowPreview
+    override fun showSwapConfirmation(
+        inputToken: Token,
+        inputAmount: BigDecimal,
+        outputToken: Token,
+        outputAmount: BigDecimal,
+        desired: WithDesired,
+        details: SwapDetails,
+        feeToken: Token,
+        slippage: Float,
+    ) {
+        navController?.navigate(
+            R.id.swapConfirmationFragment,
+            SwapConfirmationFragment.createSwapData(
+                inputToken,
+                inputAmount,
+                outputToken,
+                outputAmount,
+                desired,
+                details,
+                feeToken,
+                slippage,
+            )
+        )
     }
 
     override fun showUnsupportedScreen(appUrl: String) {
-        navController?.navigate(R.id.unsupportedVersionFragment, UnsupportedVersionFragment.createBundle(appUrl))
+        navController?.navigate(
+            R.id.unsupportedVersionFragment,
+            UnsupportedVersionFragment.createBundle(appUrl)
+        )
     }
 
     override fun showAbout() {
@@ -137,8 +230,16 @@ class Navigator : MainRouter, WalletRouter {
         navController?.popBackStack(R.id.walletFragment, false)
     }
 
+    override fun returnToPolkaswap() {
+        navController?.popBackStack(R.id.polkaswapFragment, false)
+    }
+
     override fun showVerification() {
-        navController?.navigate(R.id.userVerificationFragment, null, NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build())
+        navController?.navigate(
+            R.id.userVerificationFragment,
+            null,
+            NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build()
+        )
     }
 
     override fun currentDestinationIsPincode(): Boolean {
@@ -153,28 +254,15 @@ class Navigator : MainRouter, WalletRouter {
         return navController?.currentDestination != null && navController?.currentDestination!!.id == R.id.claimFragment
     }
 
-    override fun showTransactionDetailsFromList(
-        myAccountId: String,
-        peerId: String,
-        soranetTransactionId: String,
-        soranetBlockId: String,
-        amount: BigDecimal,
-        status: Transaction.Status,
-        success: Boolean?,
-        assetId: String,
-        dateTime: Long,
-        type: Transaction.Type,
-        transactionFee: BigDecimal,
-        totalAmount: BigDecimal
+    override fun showTransactionDetails(
+        txHash: String
     ) {
-        val bundle = TransactionDetailsFragment.createBundleFromList(
-            myAccountId, peerId, soranetTransactionId, soranetBlockId, amount, status, success, assetId, dateTime, type, transactionFee, totalAmount
-        )
-        navController?.navigate(R.id.transactionDetails, bundle)
+        val bundle = ExtrinsicDetailsFragment.createBundle(txHash)
+        navController?.navigate(R.id.extrinsicDetails, bundle)
     }
 
     override fun showProfile() {
-        navController?.navigate(R.id.profileFragment)
+        navController?.navigate(R.id.profile_nav_graph)
     }
 
     override fun showFriends() {
@@ -182,7 +270,11 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showClaim() {
-        navController?.navigate(R.id.claimFragment, null, NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build())
+        navController?.navigate(
+            R.id.claimFragment,
+            null,
+            NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build()
+        )
     }
 
     override fun popBackStackFragment() {

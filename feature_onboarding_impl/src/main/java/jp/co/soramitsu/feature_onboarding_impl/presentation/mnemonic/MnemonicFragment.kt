@@ -14,7 +14,6 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
@@ -52,11 +51,9 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_mnemo
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.nextBtn.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                viewModel.btnNextClicked()
-            }
-        )
+        binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.btnNextClicked()
+        }
 
         binding.ibMnemonicShare.setDebouncedClickListener(debounceClickHandler) {
             viewModel.shareMnemonicClicked()

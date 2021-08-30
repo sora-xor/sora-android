@@ -5,13 +5,15 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository.datasource
 
-import io.reactivex.Observable
-import io.reactivex.subjects.BehaviorSubject
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import java.math.BigInteger
 import javax.inject.Inject
 
@@ -27,11 +29,11 @@ class PrefsEthereumDatasource @Inject constructor(
         private const val PREFS_VAL_ADDRESS = "prefs_val_address"
     }
 
-    private val ethRegisterStateSubject = BehaviorSubject.create<EthRegisterState.State>()
+    private val ethRegisterStateSubject = MutableStateFlow<EthRegisterState.State?>(null)
 
     init {
         val currentEthRegisterState = getEthRegisterState()
-        ethRegisterStateSubject.onNext(currentEthRegisterState.state)
+        ethRegisterStateSubject.value = currentEthRegisterState.state
     }
 
     override fun retrieveVALAddress(): String {
@@ -68,12 +70,12 @@ class PrefsEthereumDatasource @Inject constructor(
     }
 
     override fun saveEthRegisterState(state: EthRegisterState) {
-        ethRegisterStateSubject.onNext(state.state)
+        ethRegisterStateSubject.value = state.state
         state.transactionHash?.let { preferences.putString(PREFS_ETH_REGISTER_TRANSACTION_HASH, it) }
         preferences.putString(PREFS_ETH_REGISTER_STATE, state.state.toString())
     }
 
-    override fun observeEthRegisterState(): Observable<EthRegisterState.State> {
-        return ethRegisterStateSubject
+    override fun observeEthRegisterState(): Flow<EthRegisterState.State> {
+        return ethRegisterStateSubject.asStateFlow().filterNotNull()
     }
 }

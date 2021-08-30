@@ -11,7 +11,7 @@ import javax.inject.Named
 
 interface NetworkApi {
 
-    fun provideNetworkApiCreator(): NetworkApiCreator
+    fun provideSora2CoroutineApiCreator(): Sora2CoroutineApiCreator
 
     fun appLinksProvider(): AppLinksProvider
 

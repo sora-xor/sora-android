@@ -16,6 +16,7 @@ data class AssetModel(
     val position: Int,
     val hidingAllowed: Boolean,
     val displayed: Boolean,
+    val showMainBalance: Boolean,
 ) {
     enum class State {
         NORMAL,

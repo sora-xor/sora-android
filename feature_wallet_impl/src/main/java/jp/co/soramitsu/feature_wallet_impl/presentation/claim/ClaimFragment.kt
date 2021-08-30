@@ -1,12 +1,13 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
-import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -16,8 +17,8 @@ import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.util.SoraClickableSpan
 import jp.co.soramitsu.common.util.ext.createSendEmailIntent
+import jp.co.soramitsu.common.util.ext.highlightWords
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -78,30 +79,16 @@ class ClaimFragment : BaseFragment<ClaimViewModel>(R.layout.fragment_claim) {
     }
 
     private fun configureContactUsView() {
-        val contactUsContent = SpannableString(getString(R.string.claim_contact_2))
-        contactUsContent.setSpan(
-            SoraClickableSpan { viewModel.contactsUsClicked() },
-            0,
-            contactUsContent.length,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-
-        val builder = SpannableStringBuilder()
-        val firstLine = SpannableString(getString(R.string.claim_contact_1))
-        firstLine.setSpan(
-            ForegroundColorSpan(
+        val contactUsContent = getString(R.string.claim_contact).highlightWords(
+            listOf(
                 ContextCompat.getColor(
                     requireContext(),
                     R.color.grey_400
                 )
             ),
-            0, firstLine.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            listOf { viewModel.contactsUsClicked() }
         )
-        viewBinding.claimContactUs.text = firstLine
-        builder.append(firstLine)
-        builder.append(" ")
-        builder.append(contactUsContent)
-        viewBinding.claimContactUs.setText(builder, TextView.BufferType.SPANNABLE)
+        viewBinding.claimContactUs.setText(contactUsContent, TextView.BufferType.SPANNABLE)
         viewBinding.claimContactUs.movementMethod = LinkMovementMethod.getInstance()
         viewBinding.claimContactUs.highlightColor = Color.TRANSPARENT
     }

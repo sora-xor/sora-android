@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.switchmaterial.SwitchMaterial
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.feature_wallet_impl.R
 
 class AssetConfigurableAdapter(
@@ -52,12 +53,17 @@ class AssetViewHolder(itemView: View, touchHelper: ItemTouchHelper) :
         asset: AssetConfigurableModel,
         checkedChangeListener: (AssetConfigurableModel, Boolean) -> Unit
     ) {
-        assetIcon.setImageResource(asset.assetIconResource)
+        try {
+            assetIcon.setImageResource(asset.assetIconResource)
+        } catch (t: Throwable) {
+            assetIcon.setImageResource(OptionsProvider.DEFAULT_ICON)
+        }
         title.text = "${asset.assetFirstName} (${asset.assetLastName})"
         amount.text = asset.balance
         switch.isChecked = asset.visible
-        switch.setOnCheckedChangeListener { _, b ->
-            checkedChangeListener.invoke(asset, b)
+        switch.setOnCheckedChangeListener { v, b ->
+            if (v.isPressed)
+                checkedChangeListener.invoke(asset, b)
         }
         dragIcon.isEnabled = asset.changeCheckStateEnabled
         switch.isEnabled = asset.changeCheckStateEnabled

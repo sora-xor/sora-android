@@ -22,7 +22,7 @@ class DidProvider(
 //            .build()
 //    }
 //
-//    fun generateDDO(owner: DID, publicKey: ByteArray): Single<DDO> {
+//    fun generateDDO(owner: DID, publicKey: ByteArray): DDO {
 //        return Single.fromCallable {
 //            DDO.builder()
 //                .id(owner)

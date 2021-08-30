@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_wallet_impl.data.substrate
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
@@ -6,7 +11,6 @@ import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.SubstrateApiImpl
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -23,26 +27,16 @@ class SubstrateApiTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
-
     @Mock
     private lateinit var socket: SocketService
 
     @Mock
     private lateinit var crypto: CryptoAssistant
 
-    @Mock
-    private lateinit var gson: Gson
-
-    @Mock
-    private lateinit var runtime: RuntimeSnapshot
-
     private lateinit var api: SubstrateApiImpl
 
     @Before
     fun setUp() {
-        api = SubstrateApiImpl(socket, crypto, gson)
+        api = SubstrateApiImpl(socket, crypto)
     }
 }

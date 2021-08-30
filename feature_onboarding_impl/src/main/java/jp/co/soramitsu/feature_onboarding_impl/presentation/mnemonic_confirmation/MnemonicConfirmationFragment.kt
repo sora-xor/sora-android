@@ -1,3 +1,8 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
 package jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic_confirmation
 
 import android.os.Bundle
@@ -107,7 +112,10 @@ class MnemonicConfirmationFragment :
                 measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
             }
         }
-        binding.wordsMnemonicView.populateWithMnemonic(words)
+
+        binding.wordsMnemonicView.post {
+            binding.wordsMnemonicView.populateWithMnemonic(words)
+        }
 
         val containerHeight = binding.wordsMnemonicView.getMinimumMeasuredHeight()
         binding.wordsMnemonicView.minimumHeight = containerHeight

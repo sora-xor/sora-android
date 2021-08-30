@@ -62,24 +62,21 @@ dependencies {
     implementation daggerDep
     kapt daggerKapt
 
-    implementation rxCallAdapterDep
-
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
     //implementation soraDep
     implementation birtDep
     implementation web3j
     implementation gsonDep
 
-    implementation rxDep
-
     //implementation irohaDep
 
     implementation roomDep
-    implementation rxRoomDep
-    kapt roomKapt
+    kapt roomKaptDep
 
     implementation retrofitDep
     implementation gsonConvertedDep
-    implementation rxCallAdapterDep
     implementation fearlessLibDep
 
     implementation workerManagerDep

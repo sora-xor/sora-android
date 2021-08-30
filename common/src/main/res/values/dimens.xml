@@ -50,4 +50,6 @@
     <dimen name="uikit_dot_stroke_width">1dp</dimen>
     <dimen name="uikit_pin_code_button_text_size">16sp</dimen>
     <!--Pincode-->
+
+    <dimen name="round_corner_radius">16dp</dimen>
 </resources>

@@ -1,26 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/header"
-    android:paddingStart="@dimen/x2"
-    android:paddingEnd="@dimen/x2"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/x2"
+    android:paddingEnd="@dimen/x2">
 
     <TextView
         android:id="@+id/eventItemDayTextView"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Upper_3.Bold"
         android:layout_width="wrap_content"
-        android:textColor="@color/subtitleGrey"
         android:layout_height="wrap_content"
         android:maxLines="1"
         android:paddingTop="@dimen/x1_5"
+        android:paddingEnd="@dimen/x2"
         android:paddingBottom="@dimen/x1_5"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="Today" />
+        android:textColor="?attr/contentQuaternary"
+        tools:text="Today"
+        tools:textColor="@color/grey_400" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <View
+        android:id="@+id/vDividerAsset"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@drawable/dashed_line_dark" />
+
+</LinearLayout>

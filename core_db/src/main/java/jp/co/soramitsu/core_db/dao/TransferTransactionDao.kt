@@ -5,52 +5,65 @@
 
 package jp.co.soramitsu.core_db.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.TypeConverters
-import io.reactivex.Observable
-import io.reactivex.Single
-import jp.co.soramitsu.core_db.converters.TransactionStatusConverter
-import jp.co.soramitsu.core_db.converters.TransactionTypeConverter
-import jp.co.soramitsu.core_db.model.TransferTransactionLocal
+import jp.co.soramitsu.core_db.converters.ExtrinsicStatusConverter
+import jp.co.soramitsu.core_db.converters.ExtrinsicTypeConverter
+import jp.co.soramitsu.core_db.model.ExtrinsicLocal
+import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
 
 @Dao
-@TypeConverters(TransactionStatusConverter::class, TransactionTypeConverter::class)
-abstract class TransferTransactionDao {
-
-    @Query("DELETE FROM transfer_transactions")
-    abstract fun clearTable()
+@TypeConverters(ExtrinsicTypeConverter::class, ExtrinsicStatusConverter::class)
+interface TransferTransactionDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insert(transaction: TransferTransactionLocal): Long
+    suspend fun insert(transaction: ExtrinsicLocal)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insert(transactions: List<TransferTransactionLocal>)
-
-    @Query("SELECT * FROM transfer_transactions ORDER BY timestamp DESC")
-    abstract fun getTransactions(): Observable<List<TransferTransactionLocal>>
-
-    @Query("SELECT * FROM transfer_transactions WHERE txHash == :txHash")
-    abstract fun getTransactionByHash(txHash: String): TransferTransactionLocal
-
-    @Query("SELECT * FROM transfer_transactions WHERE assetId IS 'val_erc20#sora' AND status == 0")
-    abstract fun getPendingEthereumTransactions(): Single<List<TransferTransactionLocal>>
-
-    @Query("UPDATE transfer_transactions SET status = :newStatus WHERE txHash = :txHash")
-    abstract fun updateStatus(txHash: String, newStatus: TransferTransactionLocal.Status)
-
-    @Query("UPDATE transfer_transactions SET eventSuccess = :newValue WHERE txHash = :txHash")
-    abstract fun updateSuccess(txHash: String, newValue: Boolean)
-
-    @Query("UPDATE transfer_transactions SET txHash = :newHash WHERE txHash = :currentHash")
-    abstract fun updateTxHash(currentHash: String, newHash: String)
+    @Query("UPDATE extrinsics SET eventSuccess = :txSuccess WHERE txHash = :txHash")
+    suspend fun updateSuccess(txHash: String, txSuccess: Boolean)
 
     @Query(
         """
-            SELECT DISTINCT peerId FROM transfer_transactions WHERE (peerId LIKE '%' || :query || '%')
+            SELECT DISTINCT paramValue FROM extrinsics inner join extrinsic_params 
+            WHERE extrinsics.txHash == extrinsic_params.extrinsicId and type == 1 and extrinsic_params.paramName == 'peerId' and (paramValue LIKE '%' || :query || '%')
         """
     )
-    abstract fun getContacts(query: String): Single<List<String>>
+    suspend fun getContacts(query: String): List<String>
+
+    @Query("DELETE FROM extrinsics")
+    suspend fun clearTable()
+
+    @Query("DELETE FROM extrinsics where localPending == 0")
+    suspend fun clearNotLocal()
+
+    @Query("SELECT COUNT(txHash) from extrinsics")
+    suspend fun countAll(): Long
+
+    @Query("SELECT COUNT(txHash) from extrinsics where type == 1 and localPending == 0 and eventSuccess == 1")
+    suspend fun countTransferNotLocalSuccess(): Long
+
+    @Query("SELECT COUNT(txHash) from extrinsics where type == 1 and localPending == 0 and eventSuccess == 0")
+    suspend fun countTransferNotLocalError(): Long
+
+    @Query("SELECT COUNT(txHash) from extrinsics where type == 0 and localPending == 0")
+    suspend fun countSwapNotLocal(): Long
+
+    @Query("SELECT * FROM extrinsics ORDER BY timestamp DESC")
+    fun getExtrinsicPaging(): PagingSource<Int, ExtrinsicLocal>
+
+    @Query("SELECT * FROM extrinsics WHERE txHash == :txHash")
+    suspend fun getExtrinsic(txHash: String): ExtrinsicLocal
+
+    @Query("SELECT * from extrinsic_params where extrinsicId == :txHash")
+    suspend fun getParamsOfExtrinsic(txHash: String): List<ExtrinsicParamLocal>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(transactions: List<ExtrinsicLocal>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertParams(transactions: List<ExtrinsicParamLocal>)
 }

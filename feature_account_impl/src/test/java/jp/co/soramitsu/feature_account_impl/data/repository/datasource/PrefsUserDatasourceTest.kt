@@ -9,7 +9,6 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.test_shared.RxSchedulersRule
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,12 +26,10 @@ class PrefsUserDatasourceTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
-    @Rule
-    @JvmField
-    val rxSchedulerRule = RxSchedulersRule()
 
     @Mock
     private lateinit var preferences: Preferences
+
     @Mock
     private lateinit var encryptedPreferences: EncryptedPreferences
 

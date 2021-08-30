@@ -10,8 +10,7 @@ import android.graphics.drawable.Drawable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
@@ -23,6 +22,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import kotlinx.coroutines.launch
 
 class ReceiveViewModel(
     private val interactor: WalletInteractor,
@@ -49,33 +49,14 @@ class ReceiveViewModel(
     private var userPublicKey: String? = null
 
     init {
-        disposables.add(
-            interactor.getAccountId()
-                .flatMap { address ->
-                    interactor.getPublicKeyHex(true)
-                        .flatMap { pk ->
-                            interactor.getAccountName().map { an ->
-                                Triple(address, pk, an)
-                            }
-                        }
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        userAddress = it.first
-                        userPublicKey = it.second
-                        userName = it.third
-                        generateQr()
-                        _userNameAddress.value = userAddress.orEmpty() to userName.orEmpty()
-                        _userAvatar.value = avatarGenerator.createAvatar(userAddress.orEmpty(), 32)
-                    },
-                    {
-                        logException(it)
-                    }
-                )
-
-        )
+        viewModelScope.launch {
+            userAddress = interactor.getAddress()
+            userPublicKey = interactor.getPublicKeyHex(true)
+            userName = interactor.getAccountName()
+            generateQr()
+            _userNameAddress.value = userAddress.orEmpty() to userName.orEmpty()
+            _userAvatar.value = avatarGenerator.createAvatar(userAddress.orEmpty(), 32)
+        }
     }
 
     fun backButtonPressed() {

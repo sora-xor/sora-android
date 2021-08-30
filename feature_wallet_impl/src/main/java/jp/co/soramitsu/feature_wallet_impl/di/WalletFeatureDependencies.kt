@@ -10,14 +10,17 @@ import com.google.gson.Gson
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.Preferences
-import jp.co.soramitsu.common.data.network.NetworkApiCreator
+import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
 import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -37,15 +40,19 @@ interface WalletFeatureDependencies {
 
     fun encryptedPreferences(): EncryptedPreferences
 
-    fun networkApiCreator(): NetworkApiCreator
+    fun sora2CoroutineApiCreator(): Sora2CoroutineApiCreator
 
     fun socketService(): SocketService
+
+    fun coroutineManager(): CoroutineManager
 
     fun cryptAssistant(): CryptoAssistant
 
     fun avatarGenerator(): AccountAvatarGenerator
 
     fun connectionManager(): ConnectionManager
+
+    fun fileManager(): FileManager
 
     fun serializer(): Serializer
 
@@ -82,4 +89,6 @@ interface WalletFeatureDependencies {
     fun ethereumRepository(): EthereumRepository
 
     fun assetHolder(): AssetHolder
+
+    fun healthCheker(): HealthChecker
 }

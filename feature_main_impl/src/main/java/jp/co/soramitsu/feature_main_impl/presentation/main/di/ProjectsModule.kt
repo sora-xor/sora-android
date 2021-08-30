@@ -12,8 +12,6 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.delegate.WithPreloaderImpl
-import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -30,15 +28,12 @@ class ProjectsModule {
     @Provides
     @IntoMap
     @ViewModelKey(MainViewModel::class)
-    fun provideViewModel(interactor: MainInteractor, router: MainRouter, preloader: WithPreloader): ViewModel {
-        return MainViewModel(interactor, router, preloader)
+    fun provideViewModel(interactor: MainInteractor, router: MainRouter): ViewModel {
+        return MainViewModel(interactor, router)
     }
 
     @Provides
     fun provideViewModelCreator(fragment: Fragment, viewModelFactory: ViewModelProvider.Factory): MainViewModel {
         return ViewModelProviders.of(fragment, viewModelFactory).get(MainViewModel::class.java)
     }
-
-    @Provides
-    fun providePreloader(withPreloader: WithPreloaderImpl): WithPreloader = withPreloader
 }

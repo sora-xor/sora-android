@@ -7,8 +7,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.about
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.schedulers.Schedulers
+import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -16,6 +15,7 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import kotlinx.coroutines.launch
 
 class AboutViewModel(
     private val interactor: MainInteractor,
@@ -56,23 +56,13 @@ class AboutViewModel(
     }
 
     fun getAppVersion() {
-        disposables.add(
-            interactor.getAppVersion()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        _sourceTitleLiveData.value =
-                            "${resourceManager.getString(R.string.about_source_code)} (v$it)"
-                    },
-                    {
-                        logException(it)
-                    }
-                )
-        )
+        viewModelScope.launch {
+            val appVersion = interactor.getAppVersion()
+            _sourceTitleLiveData.value = "${resourceManager.getString(R.string.about_source_code)} (v$appVersion)"
+        }
     }
 
     fun contactsClicked() {
-        openSendEmailEvent.value = resourceManager.getString(R.string.common_sora_support_email)
+        openSendEmailEvent.value = BuildConfig.EMAIL
     }
 }
