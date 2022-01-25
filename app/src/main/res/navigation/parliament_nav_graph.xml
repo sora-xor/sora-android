@@ -15,8 +15,8 @@
         tools:layout="@layout/fragment_referendum_detail" />
 
     <fragment
-        android:id="@+id/mainFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment"
-        tools:layout="@layout/fragment_main" />
+        android:id="@+id/referendaFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.main.ReferendaFragment"
+        tools:layout="@layout/fragment_referenda" />
 
 </navigation>

@@ -74,4 +74,6 @@ interface WalletRouter {
         feeToken: Token,
         slippage: Float,
     )
+
+    fun showSwapTab(tokenFrom: Token, tokenTo: Token, amountFrom: BigDecimal)
 }

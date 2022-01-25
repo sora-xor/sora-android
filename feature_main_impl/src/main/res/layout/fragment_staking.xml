@@ -4,116 +4,83 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="?attr/baseBackground">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/image_staking"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:ignore="ContentDescription" />
 
     <TextView
         android:id="@+id/title"
-        style="@style/TitleTextStyle"
-        android:layout_width="0dp"
+        style="@style/TextAppearance.Soramitsu.Neu.Bold.24"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
+        android:layout_marginStart="@dimen/x3"
         android:layout_marginTop="@dimen/x2"
-        android:layout_marginEnd="@dimen/x1"
         android:text="@string/tabbar_staking_title"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/comingSoon"
-        style="@style/TextAppearance.Soramitsu.Body2"
-        android:layout_width="0dp"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.12"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x3"
-        android:layout_marginEnd="@dimen/x1"
+        android:background="@drawable/rounded_rectangle_grey"
+        android:backgroundTint="?attr/hintBackground"
+        android:paddingStart="@dimen/x1"
+        android:paddingTop="@dimen/x1_2"
+        android:paddingEnd="@dimen/x1"
+        android:paddingBottom="@dimen/x1_2"
         android:text="@string/coming_soon"
-        android:textSize="@dimen/text_size_b3"
         android:textAllCaps="true"
-        android:textColor="@color/grey_400"
-        android:fontFamily="@font/soramitsu_semibold"
+        android:textColor="?attr/pureWhiteOnDay"
+        app:layout_constraintBottom_toBottomOf="@id/title"
+        app:layout_constraintStart_toEndOf="@id/title"
+        app:layout_constraintTop_toTopOf="@id/title" />
+
+    <TextView
+        android:id="@+id/comingSoonSubtitle"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x3"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x3"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="@dimen/x1_2"
+        android:text="@string/staking_description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title" />
 
     <TextView
-        android:id="@+id/comingSoonSubtitle"
-        style="@style/TextAppearance.Soramitsu.Header3"
+        android:id="@+id/tvStakingMore"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x1_5"
-        android:layout_marginEnd="@dimen/x1"
-        android:text="@string/staking_coming_soon"
-        android:textColor="@color/grey_500"
-        android:fontFamily="@font/sora_regular"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="@dimen/x3"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x3"
+        android:letterSpacing="-0.02"
+        android:text="@string/common_learn_more"
+        android:textColor="?attr/pureRedOnDay"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/comingSoon" />
+        app:layout_constraintTop_toBottomOf="@id/comingSoonSubtitle" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/stakingWrapper"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/x7"
-        android:background="?selectableItemBackground"
-        android:orientation="horizontal"
-        android:layout_marginTop="@dimen/x4"
-        android:paddingStart="@dimen/x3"
-        android:paddingEnd="@dimen/x3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/comingSoonSubtitle">
+    <ImageView
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_marginStart="@dimen/x1"
+        android:src="@drawable/ic_neu_arrow_top_right_12"
+        app:layout_constraintBottom_toBottomOf="@id/tvStakingMore"
+        app:layout_constraintStart_toEndOf="@id/tvStakingMore"
+        app:layout_constraintTop_toTopOf="@id/tvStakingMore"
+        tools:ignore="ContentDescription" />
 
-        <ImageView
-            android:id="@+id/stakingIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_val_gold_28"
-            app:layout_constraintBottom_toBottomOf="@id/stakingSubtitleTv"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/stakingTv" />
-
-        <TextView
-            android:id="@+id/stakingTv"
-            style="@style/TextAppearance.Soramitsu.Body1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/x2"
-            android:lineSpacingExtra="5sp"
-            android:text="@string/staking_val_reward"
-            android:textColor="@color/black"
-            app:layout_constraintBottom_toTopOf="@+id/stakingSubtitleTv"
-            app:layout_constraintEnd_toStartOf="@id/stakingRightIcon"
-            app:layout_constraintStart_toEndOf="@id/stakingIcon"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_chainStyle="packed" />
-
-        <TextView
-            android:id="@+id/stakingSubtitleTv"
-            style="@style/TextAppearance.Soramitsu.Body2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/x3"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:lines="1"
-            android:layout_marginStart="@dimen/x2"
-            android:lineSpacingExtra="5sp"
-            android:text="@string/about_website"
-            android:textColor="@color/uikit_lightRed"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/stakingRightIcon"
-            app:layout_constraintStart_toEndOf="@id/stakingIcon"
-            app:layout_constraintTop_toBottomOf="@+id/stakingTv"
-            tools:text="@string/about_website" />
-
-        <ImageView
-            android:id="@+id/stakingRightIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_arrow_top_right_16"
-            app:layout_constraintBottom_toBottomOf="@id/stakingSubtitleTv"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/stakingTv" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

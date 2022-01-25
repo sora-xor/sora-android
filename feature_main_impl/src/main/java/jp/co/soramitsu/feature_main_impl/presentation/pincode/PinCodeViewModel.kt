@@ -99,44 +99,45 @@ class PinCodeViewModel(
         viewModelScope.launch {
             needsMigration = interactor.needsMigration()
         }
-
-        action = pinCodeAction
-        when (action) {
-            PinCodeAction.CREATE_PIN_CODE -> {
-                _logoVisibilityLiveData.value = false
-                toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
-                backButtonVisibilityLiveData.value = false
-            }
-            PinCodeAction.OPEN_PASSPHRASE, PinCodeAction.LOGOUT -> {
-                _logoVisibilityLiveData.value = false
-                toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
-                showFingerPrintEventLiveData.value = isBiometryEnabled
-                backButtonVisibilityLiveData.value = true
-            }
-            PinCodeAction.CHANGE_PIN_CODE -> {
-                _logoVisibilityLiveData.value = false
-                toolbarTitleResLiveData.value = R.string.pincode_enter_current_pin_code
-                showFingerPrintEventLiveData.value = isBiometryEnabled
-                backButtonVisibilityLiveData.value = true
-            }
-            PinCodeAction.TIMEOUT_CHECK -> {
-                try {
-                    if (interactor.isCodeSet()) {
-                        _logoVisibilityLiveData.value = true
-                        toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
-                        showFingerPrintEventLiveData.value = isBiometryEnabled
-                        backButtonVisibilityLiveData.value = false
-                    } else {
+        viewModelScope.launch {
+            action = pinCodeAction
+            when (action) {
+                PinCodeAction.CREATE_PIN_CODE -> {
+                    _logoVisibilityLiveData.value = false
+                    toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
+                    backButtonVisibilityLiveData.value = false
+                }
+                PinCodeAction.OPEN_PASSPHRASE, PinCodeAction.LOGOUT -> {
+                    _logoVisibilityLiveData.value = false
+                    toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
+                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    backButtonVisibilityLiveData.value = true
+                }
+                PinCodeAction.CHANGE_PIN_CODE -> {
+                    _logoVisibilityLiveData.value = false
+                    toolbarTitleResLiveData.value = R.string.pincode_enter_current_pin_code
+                    showFingerPrintEventLiveData.value = isBiometryEnabled
+                    backButtonVisibilityLiveData.value = true
+                }
+                PinCodeAction.TIMEOUT_CHECK -> {
+                    try {
+                        if (interactor.isCodeSet()) {
+                            _logoVisibilityLiveData.value = true
+                            toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
+                            showFingerPrintEventLiveData.value = isBiometryEnabled
+                            backButtonVisibilityLiveData.value = false
+                        } else {
+                            _logoVisibilityLiveData.value = false
+                            toolbarTitleResLiveData.value =
+                                R.string.pincode_set_your_pin_code
+                            backButtonVisibilityLiveData.value = false
+                            action = PinCodeAction.CREATE_PIN_CODE
+                        }
+                    } catch (t: Throwable) {
+                        onError(t)
                         _logoVisibilityLiveData.value = false
-                        toolbarTitleResLiveData.value =
-                            R.string.pincode_set_your_pin_code
-                        backButtonVisibilityLiveData.value = false
                         action = PinCodeAction.CREATE_PIN_CODE
                     }
-                } catch (t: Throwable) {
-                    onError(t)
-                    _logoVisibilityLiveData.value = false
-                    action = PinCodeAction.CREATE_PIN_CODE
                 }
             }
         }
@@ -218,7 +219,7 @@ class PinCodeViewModel(
         }
     }
 
-    private fun checkPinCode(code: String) {
+    private suspend fun checkPinCode(code: String) {
         val result = interactor.checkPin(code)
 
         if (result) {

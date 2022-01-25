@@ -8,6 +8,8 @@ package jp.co.soramitsu.feature_account_impl.data.repository
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.withTransaction
 import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import jp.co.soramitsu.common.domain.AppLinksProvider
@@ -19,6 +21,7 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_impl.R
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
@@ -39,6 +42,9 @@ class UserRepositoryTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var userDatasource: UserDatasource
@@ -68,8 +74,8 @@ class UserRepositoryTest {
             db,
             appLinkProvider,
             deviceParamsProvider,
-            languagesHolder
         )
+        mockkObject(LanguagesHolder)
     }
 
     @Test
@@ -78,7 +84,7 @@ class UserRepositoryTest {
             Language("ru", R.string.common_russian, R.string.common_russian_native),
             Language("en", R.string.common_english, R.string.common_english_native)
         )
-        given(languagesHolder.getLanguages()).willReturn(languages)
+        every { LanguagesHolder.getLanguages() } returns languages
         given(userDatasource.getCurrentLanguage()).willReturn(languages.first().iso)
 
         assertEquals(languages.first(), userRepository.getSelectedLanguage())
@@ -143,7 +149,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `retrieve pin called`() {
+    fun `retrieve pin called`() = runBlockingTest {
         val pin = "1234"
         given(userDatasource.retrievePin()).willReturn(pin)
 
@@ -159,7 +165,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `get registration state called`() {
+    fun `get registration state called`() = runBlockingTest {
         val registrationState = OnboardingState.REGISTRATION_FINISHED
         given(userDatasource.retrieveRegistratrionState()).willReturn(registrationState)
 
@@ -179,7 +185,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `save parent invite code called`() {
+    fun `save parent invite code called`() = runBlockingTest {
         val parentInviteCode = "parentInviteCode"
 
         userRepository.saveParentInviteCode(parentInviteCode)
@@ -203,7 +209,7 @@ class UserRepositoryTest {
             Language("es", R.string.common_spanish, R.string.common_spanish_native),
             Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
         )
-        given(languagesHolder.getLanguages()).willReturn(languages)
+        every { LanguagesHolder.getLanguages() } returns languages
         given(userDatasource.getCurrentLanguage()).willReturn(languages[0].iso)
 
         assertEquals(languages to languages[0].iso, userRepository.getAvailableLanguages())

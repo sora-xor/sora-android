@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/pageContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="?attr/baseBackground"
+    tools:background="@color/neu_color_100">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeLayout"
@@ -18,7 +17,6 @@
             android:id="@+id/contentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
             android:paddingBottom="@dimen/x1">
 
             <TextView
@@ -28,72 +26,76 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
                 android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/x1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:singleLine="true"
                 android:text="@string/wallet_title"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/ibWalletSend"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <ImageButton
                 android:id="@+id/ibWalletSend"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/x1"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_send_32"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="1dp"
+                android:background="@drawable/background_wallet_buttons"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_send_wrapped"
                 app:layout_constraintBottom_toBottomOf="@id/title"
                 app:layout_constraintEnd_toStartOf="@id/ibWalletReceive"
-                app:layout_constraintTop_toTopOf="@id/title"
                 tools:ignore="ContentDescription" />
 
             <ImageButton
                 android:id="@+id/ibWalletReceive"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/x1"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_receive_32"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="1dp"
+                android:background="@drawable/background_wallet_buttons"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_receive_wrapped"
                 app:layout_constraintBottom_toBottomOf="@id/title"
                 app:layout_constraintEnd_toStartOf="@id/ibWalletScan"
-                app:layout_constraintTop_toTopOf="@id/title"
                 tools:ignore="ContentDescription" />
 
             <ImageButton
                 android:id="@+id/ibWalletScan"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/x1"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_scan_qr_32"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="1dp"
+                android:background="@drawable/background_wallet_buttons"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_scan_wrapped"
                 app:layout_constraintBottom_toBottomOf="@id/title"
                 app:layout_constraintEnd_toStartOf="@id/ibWalletMore"
-                app:layout_constraintTop_toTopOf="@id/title"
                 tools:ignore="ContentDescription" />
 
             <ImageButton
                 android:id="@+id/ibWalletMore"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginEnd="@dimen/x2"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_options_32"
+                android:background="@drawable/background_wallet_buttons"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_neu_options_wrapped"
                 app:layout_constraintBottom_toBottomOf="@id/title"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/title"
                 tools:ignore="ContentDescription" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/assetsRv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/x1"
+                android:clipChildren="false"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2"
+                android:paddingStart="@dimen/x1"
+                android:paddingEnd="@dimen/x1"
                 android:paddingBottom="@dimen/x1_2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/title"
+                app:layout_constraintTop_toBottomOf="@id/title"
                 tools:itemCount="2"
                 tools:listitem="@layout/item_asset" />
 
@@ -105,90 +107,82 @@
         style="@style/BottomSheetDialog"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/rounded_card_view"
+        android:background="@drawable/rounded_card_view_history"
         android:clickable="true"
-        android:elevation="@dimen/x2"
+        android:elevation="@dimen/x1"
         android:focusable="true"
         android:orientation="vertical"
         app:behavior_hideable="false"
         app:layout_behavior="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior"
-        tools:behavior_peekHeight="190dp">
-
-        <ImageView
-            android:id="@+id/bottomSheetPin"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x1_2"
-            android:src="@drawable/ic_bottomsheet_pin"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/titleTv"
-            style="@style/TextAppearance.Soramitsu.Paragraph_1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/x2"
-            android:layout_marginTop="@dimen/x1_2"
-            android:paddingTop="@dimen/x1_5"
-            android:paddingBottom="@dimen/x1_5"
-            android:text="@string/history_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        tools:behavior_peekHeight="290dp">
 
         <View
-            android:id="@+id/view"
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp"
-            android:background="@color/thinBorder"
+            android:id="@+id/bottomSheetPin"
+            android:layout_width="64dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="@dimen/x1_2"
+            android:background="@drawable/drag_indicator"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/titleTv" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription" />
 
-        <LinearLayout
-            android:id="@+id/placeholder"
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/grEmptyHistoryWallet"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x4"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:visibility="gone"
+            app:constraint_referenced_ids="tvEmptyHistoryTitle,placeholder_image,placeholder_text" />
+
+        <TextView
+            android:id="@+id/tvEmptyHistoryTitle"
+            style="@style/TextAppearance.Soramitsu.Neu.Semibold.11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1"
+            android:text="@string/wallet_empty_history_title"
+            android:textAllCaps="true"
+            android:textColor="?attr/onBackgroundColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/titleTv"
-            tools:visibility="visible">
+            app:layout_constraintTop_toBottomOf="@id/bottomSheetPin" />
 
-            <ImageView
-                android:id="@+id/placeholder_image"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/x2"
-                app:srcCompat="@drawable/ic_empty_state" />
+        <ImageView
+            android:id="@+id/placeholder_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1"
+            android:src="@drawable/ic_neu_dots"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/placeholder_text"
+            tools:ignore="ContentDescription" />
 
-            <TextView
-                android:id="@+id/placeholder_text"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x10"
-                android:layout_marginEnd="@dimen/x10"
-                android:gravity="center_horizontal"
-                android:text="@string/wallet_empty_description"
-                android:textColor="?attr/contentTertiary" />
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/placeholder_text"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="100dp"
+            android:gravity="center_horizontal"
+            android:text="@string/wallet_empty_description"
+            android:textColor="?attr/onBackgroundColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvEmptyHistoryTitle" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/eventRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_marginTop="@dimen/x1"
             android:scrollbars="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/titleTv" />
+            app:layout_constraintTop_toBottomOf="@id/bottomSheetPin"
+            tools:itemCount="2"
+            tools:listitem="@layout/event_section_liquidity_swap" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

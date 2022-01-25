@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.showOrGone
 
 class AssetListAdapter(
@@ -23,7 +24,8 @@ class AssetListAdapter(
 ) : ListAdapter<AssetListItemModel, AssetListItemViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): AssetListItemViewHolder {
-        val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_asset_list, viewGroup, false)
+        val view = LayoutInflater.from(viewGroup.context)
+            .inflate(R.layout.item_asset_list, viewGroup, false)
         return AssetListItemViewHolder(view)
     }
 
@@ -34,26 +36,38 @@ class AssetListAdapter(
 
 class AssetListItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-    private val itemName: TextView = itemView.findViewById(R.id.tvAssetListItemName)
+    private val tokenSymbol: TextView = itemView.findViewById(R.id.tvAssetListItemName)
+    private val tokenName: TextView = itemView.findViewById(R.id.tvAssetListItemName2)
     private val itemAmount: TextView = itemView.findViewById(R.id.tvAssetListItemAmount)
     private val itemIcon: ImageView = itemView.findViewById(R.id.ivAssetListItem)
 
     @SuppressLint("SetTextI18n")
-    fun bind(asset: AssetListItemModel, show: Boolean, clickListener: (AssetListItemModel) -> Unit) {
+    fun bind(
+        asset: AssetListItemModel,
+        show: Boolean,
+        clickListener: (AssetListItemModel) -> Unit
+    ) {
         itemView.setOnClickListener { clickListener.invoke(asset) }
-        itemName.text = "${asset.title} (${asset.tokenName})"
-        itemAmount.text = asset.amount
+        tokenSymbol.text = asset.tokenName
+        tokenName.text = asset.title
+        itemAmount.setBalance(asset.amount)
         itemAmount.showOrGone(show)
         itemIcon.setImageResource(asset.icon)
     }
 }
 
 object DiffCallback : DiffUtil.ItemCallback<AssetListItemModel>() {
-    override fun areItemsTheSame(oldItem: AssetListItemModel, newItem: AssetListItemModel): Boolean {
+    override fun areItemsTheSame(
+        oldItem: AssetListItemModel,
+        newItem: AssetListItemModel
+    ): Boolean {
         return oldItem == newItem
     }
 
-    override fun areContentsTheSame(oldItem: AssetListItemModel, newItem: AssetListItemModel): Boolean {
+    override fun areContentsTheSame(
+        oldItem: AssetListItemModel,
+        newItem: AssetListItemModel
+    ): Boolean {
         return oldItem == newItem
     }
 }

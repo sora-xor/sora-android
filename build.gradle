@@ -1,32 +1,31 @@
 buildscript {
 
     ext.versions = [
-            kotlin            : '1.5.21',
-            coroutines        : '1.5.0',
+            kotlin            : '1.6.10',
+            coroutines        : '1.5.2',
             dagger            : '2.17',
             retrofit          : '2.9.0',
             soraSdk           : '0.3.10',
             logger            : '2.2.0',
             gson              : '2.8.5',
             firebaseCore      : '17.5.0',
+            googlePlayCore    : '1.10.1',
             firebaseMessaging : '19.0.1',
             support           : '1.0.0',
             material          : '1.2.1',
             swipe             : '1.1.0',
-            constraint        : '2.0.4',
+            constraint        : '2.1.1',
             multidex          : '2.0.0',
             firebaseBom       : '26.8.0',
             crashlytics       : '17.4.1',
             iroha             : '5.1.2',
             shimmer           : '0.4.0',
             novaCrypto        : '0.1.9',
-            navigationFragment: '2.4.0-alpha03',
+            navigationFragment: '2.4.0-alpha08',
             bouncyCastle      : '1.60',
             zXing             : '3.3.3',
             zXingEmbedded     : '3.6.0@aar',
             birt              : '2.9.0',
-            phoenix           : '2.0.0',
-            navigation        : '2.4.0-alpha03',
             roundedImage      : '2.3.0',
             picasso           : '2.71828',
             capital           : '1.0.21-SNAPSHOT',
@@ -36,18 +35,19 @@ buildscript {
             archCoreTest      : '2.0.0',
             archFragmentTest  : '1.1.0-beta01',
             archComponents    : '2.2.0',
-            room              : '2.3.0',
-            pagingLibrary     : '3.0.1',
+            room              : '2.4.0-beta02',
+            pagingLibrary     : '3.1.0',
+            datastore         : '1.0.0',
             googleAuthApiPhone: '17.1.0',
             googleAuthApi     : '17.0.0',
             biometric         : '1.0.1',
             web3j             : '4.2.0-android',
-            workerManager     : '2.4.0',
+            workManager       : '2.7.1',
             emoji             : '0.3.0',
             activityKtx       : '1.1.0',
-            fragmentKtx       : '1.3.4',
+            fragmentKtx       : '1.4.0',
             coreKtx           : '1.5.0-beta02',
-            fearlessLib       : '1.0.75',
+            fearlessLib       : '1.0.79',
             webSocketLib      : '2.10',
 			ed25519           : '2.0.1',
             svgVersion        : '1.4',
@@ -56,18 +56,21 @@ buildscript {
             viewBinding       : '1.4.7',
             runtimePermissions: '1.1.2',
             progressButton    : '2.1.0',
-            truth             : '1.1.3'
+            truth             : '1.1.3',
+            neumorphism       : '0.3.0',
+            swipeButton       : '0.9.0',
+            lottie            : '4.2.0'
     ]
 
     ext {
-        // soralution 45 3.0.0 2021.08.25
-        // sora dae 53 2.2.3 2021.08.19
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 45)
-        appVersionName = '3.0.0'
+        // soralution 53 2.3.2 2022.1.20
+        // sora dae 58 2.3.2 2022.1.21
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 58)
+        appVersionName = '2.3.2'
 
-        compileVersion = 29
+        compileVersion = 31
         minVersion = 21
-        targetVersion = 29
+        targetVersion = 31
 
         kotlinDep = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
         androidDep = "androidx.appcompat:appcompat:$versions.support"
@@ -80,7 +83,7 @@ buildscript {
         fragmentKtxDep = "androidx.fragment:fragment-ktx:$versions.fragmentKtx"
         coreKtxDep = "androidx.core:core-ktx:$versions.coreKtx"
 
-        workerManagerDep = "androidx.work:work-runtime-ktx:$versions.workerManager"
+        workManagerDep = "androidx.work:work-runtime-ktx:$versions.workManager"
         coroutineDep = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.coroutines"
         coroutineAndroidDep = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.coroutines"
         coroutineTestDep = "org.jetbrains.kotlinx:kotlinx-coroutines-test:$versions.coroutines"
@@ -101,8 +104,13 @@ buildscript {
         roomDep = "androidx.room:room-runtime:$versions.room"
         roomKaptDep = "androidx.room:room-compiler:$versions.room"
         roomKtxDep = "androidx.room:room-ktx:$versions.room"
+        roomPagingDep = "androidx.room:room-paging:$versions.room"
+        roomTestHelpersDep = "androidx.room:room-testing:$versions.room"
+
+        lottieDep = "com.airbnb.android:lottie:$versions.lottie"
 
         pagingLibraryDep = "androidx.paging:paging-runtime:$versions.pagingLibrary"
+        datastoreDep = "androidx.datastore:datastore-preferences:$versions.datastore"
 
         insetterDep = "dev.chrisbanes.insetter:insetter:$versions.insetter"
         viewBindingDep = "com.github.kirich1409:viewbindingpropertydelegate-noreflection:$versions.viewBinding"
@@ -120,8 +128,10 @@ buildscript {
 
         googleAnalyticsDep = "com.google.firebase:firebase-analytics-ktx"
         crashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
+        googlePlayCoreDep = "com.google.android.play:core:$versions.googlePlayCore"
 
         shimmerDep = "com.facebook.shimmer:shimmer:$versions.shimmer"
+        swipeButtonDep = "com.ncorti:slidetoact:$versions.swipeButton"
 
         novaCryptoDep = "io.github.novacrypto:BIP39:$versions.novaCrypto"
         bouncyCastleDep = "org.bouncycastle:bcprov-jdk15on:$versions.bouncyCastle"
@@ -141,8 +151,6 @@ buildscript {
 
         birtDep = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:$versions.birt"
 
-        phoenixDep = "com.jakewharton:process-phoenix:$versions.phoenix"
-
         roundedImageViewDep = "com.makeramen:roundedimageview:$versions.roundedImage"
         progressButtonDep = "com.github.razir.progressbutton:progressbutton:$versions.progressButton"
 
@@ -151,6 +159,7 @@ buildscript {
         picassoDep = "com.squareup.picasso:picasso:$versions.picasso"
 
         emojiDep = "com.vanniktech:emoji:$versions.emoji"
+        neumorphismDep = "com.github.fornewid:neumorphism:$versions.neumorphism"
 
         authApiPhoneDep = "com.google.android.gms:play-services-auth-api-phone:$versions.googleAuthApiPhone"
         authGmsDep = "com.google.android.gms:play-services-auth:$versions.googleAuthApi"
@@ -177,10 +186,10 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:7.0.1'
-        classpath 'com.google.gms:google-services:4.3.8'
-        classpath 'com.google.firebase:firebase-appdistribution-gradle:2.1.3'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.7.1'
+        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.google.gms:google-services:4.3.10'
+        classpath 'com.google.firebase:firebase-appdistribution-gradle:2.2.0'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
     }
 }
 

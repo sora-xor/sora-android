@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">Contáctenos</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">Política de privacidad</string>
   <string name="about_source_code">Código fuente</string>
   <string name="about_telegram">Grupo oficial de Telegram</string>
   <string name="about_title">Acerca de</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">Página web oficial</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">Confirmar frase semilla</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Proyecto</string>
   <string name="address_not_found">Dirección no encontrada, asegúrese de que la dirección pertenece a la red correcta</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Tarifa de transacción</string>
   <string name="amount_error_no_funds">Lo sentimos, no tiene fondos suficientes para transferir la cantidad especificada.</string>
   <string name="amount_title">Cantidad</string>
   <string name="ask_biometry_message">¿Le gustaría utilizar la biometría para la autenticación?</string>
   <string name="asset_add">Añadir cuenta</string>
+  <string name="asset_details_title">Asset Details</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">Cuentas</string>
   <string name="asset_state_associating">Asociando ...</string>
   <string name="asset_state_error">Error</string>
@@ -21,20 +32,29 @@
   <string name="asset_val_name">SORA Validator Token</string>
   <string name="biometric_dialog_title">Autentificar</string>
   <string name="block_id">Hash del bloque</string>
-  <string name="claim_contact">Si tiene alguna pregunta o inquietud, puede %% contáctenos.%%</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
+  <string name="claim_contact">Si tienes alguna pregunta o inquietud, puedes %% contáctarnos%%.</string>
   <string name="claim_contact_1">Si tiene alguna pregunta o inquietud, puede</string>
   <string name="claim_contact_2">contáctenos.</string>
+  <string name="claim_contact_us">%%Contact us%% for any questions or concerns</string>
   <string name="claim_error_title">Transición fallida</string>
+  <string name="claim_error_title_v1">Transition of assets failed. Please try again later.</string>
   <string name="claim_notification_text">Transición en curso ...</string>
   <string name="claim_skip">Omitir proceso</string>
   <string name="claim_subtitle">Necesitamos su consentimiento para hacer una transición de sus fondos de SORA para que pueda usarlos. SORA ahora operará en la red Substrate. Confirme la transición.</string>
+  <string name="claim_subtitle_confirmed">Thank you for the confirmation!</string>
+  <string name="claim_subtitle_confirmed_2">Transition of assets is in progress.\nPlease wait.</string>
   <string name="claim_subtitle_v1">Necesitamos su consentimiento para realizar una transición de sus activos de SORA v1. Esto le permitirá utilizar sus activos en SORA v2 basado en Substrate. \n\nLos Activos en la red Ethereum no se ven afectados, aún puede acceder a ellos importando su frase semilla a cualquier billetera compatible.</string>
+  <string name="claim_subtitle_v2">• We need consent to transition your assets from SORA v1 to SORA v2\n\n• The SORA v2 network is built with Substrate, which is natively compatible with the Polkadot and Kusama ecosystem\n\n• Assets on Ethereum are not affected, you can still access them by importing your passphrase to any compatible wallet</string>
   <string name="claim_welcome_sora2">Bienvenido a SORA v2</string>
+  <string name="claim_welcome_sora2_v1">Welcome to\n%%SORA v2%%</string>
   <string name="coming_soon">Próximamente...</string>
   <string name="common_account">Cuenta</string>
   <string name="common_add">Añadir</string>
   <string name="common_advanced_settings">Configuración avanzada</string>
   <string name="common_and">y</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">Aplicar</string>
   <string name="common_arab">Árabe</string>
   <string name="common_asset">Activo</string>
@@ -61,7 +81,6 @@
   <string name="common_error_fee_rate_not_available">No se ha podido contactar con el proveedor de la retirada. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="common_error_gas_limit_low">El límite de gas debe ser al menos %s</string>
   <string name="common_error_general_message">Estamos trabajando para solucionar el problema. Por favor, inténtelo de nuevo más tarde.</string>
-  <!-- Error -->
   <string name="common_error_general_title">Error</string>
   <string name="common_error_internal_error_title">Error interno</string>
   <string name="common_error_invalid_parameters">Parámetros inválidos</string>
@@ -73,7 +92,6 @@
   <string name="common_error_inviter_registered_after_invitee">El código de invitación proporcionado no se puede aplicar porque es del usuario que se registró después de usted</string>
   <string name="common_error_mnemonic_is_not_valid">Por favor, asegúrate de que tu contraseña sea de 12 o 15 palabras y que sean correctas.</string>
   <string name="common_error_mnemonic_length_error">La frase semilla debe contener 15 palabras</string>
-  <!-- Errors -->
   <string name="common_error_network">Por favor, compruebe la conexión a Internet e inténtelo nuevamente más tarde.</string>
   <string name="common_error_not_enough_invitations">Lo sentimos, pero no tienes invitaciones para compartir</string>
   <string name="common_error_not_found_title">Recurso no disponible</string>
@@ -81,7 +99,6 @@
   <string name="common_error_phone_already_registered">Número de teléfono ya usado durante el registro de este o de otro usuario</string>
   <string name="common_error_pincode_check_error">El código ingresado es incorrecto</string>
   <string name="common_error_price_is_to_low">El precio es demasiado bajo</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">Lo sentimos, pero no se ha encontrado el proyecto.</string>
   <string name="common_error_retry">Inténtalo de nuevo</string>
   <string name="common_error_search_string_error">El tamaño de la búsqueda debe estar entre 3 y 64 caracteres</string>
@@ -91,7 +108,6 @@
   <string name="common_error_user_not_found">Tu frase semilla no es válida. Por favor, inténtelo con otra.</string>
   <string name="common_error_user_values_not_found">No se puede continuar la operación porque no se encuentran los datos de valores de usuario</string>
   <string name="common_error_votes_invalid_format">Lo sentimos, pero su cantidad de votos no se puede interpretar. Por favor, intente votar de nuevo.</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">Lo sentimos, pero no tienes suficientes puntos para votar.</string>
   <string name="common_error_voting_is_not_allowed">Lo sentimos, pero el proyecto ya no puede recibir votos.</string>
   <string name="common_error_wrong_user_status">No se puede continuar la operación porque el estado del usuario no es válido</string>
@@ -103,6 +119,7 @@
   <string name="common_french">Francés</string>
   <string name="common_from">De</string>
   <string name="common_gallery">Galería</string>
+  <string name="common_german">Alemán</string>
   <string name="common_hide">Esconder</string>
   <plurals name="common_hour">
     <item quantity="one">hora</item>
@@ -114,11 +131,14 @@
   <string name="common_japanese">Japonés</string>
   <string name="common_khmer">Jemer</string>
   <string name="common_korean">Coreano</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">Malayo</string>
   <string name="common_manage">Gestionar</string>
   <string name="common_min">Min</string>
   <string name="common_network_unavailable">La conexión a la red no está disponible</string>
   <string name="common_next">Siguiente</string>
+  <string name="common_norwegian">Noruego</string>
+  <string name="common_notsent">Not sent</string>
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Ver en el explorador Blockchain</string>
   <string name="common_options_title">Seleccione una opción</string>
@@ -126,7 +146,6 @@
   <string name="common_passphrase_header">La frase semilla es \n un tipo de contraseña.</string>
   <string name="common_passphrase_save_mnemonic_title">Guarde o envíe la frase semilla</string>
   <string name="common_passphrase_save_or_send">Guardar o enviar</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">Frase semilla</string>
   <string name="common_passphrase_your_passphrase">Tu frase semilla</string>
   <string name="common_per">por</string>
@@ -137,11 +156,11 @@
   <string name="common_personal_info_last_name_hint">Apellido</string>
   <string name="common_personal_info_last_name_hyphen_error">El apellido no puede comenzar o terminar en guión o tener doble guión</string>
   <string name="common_personal_info_last_name_is_empty">El apellido está vacío</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">Información personal</string>
   <string name="common_please_wait">Por favor espera</string>
   <string name="common_receive">Recibir</string>
   <string name="common_received">Recibido</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">Reintentar</string>
   <string name="common_russian">Ruso</string>
   <string name="common_save">Guardar</string>
@@ -149,11 +168,13 @@
   <string name="common_search">Buscar</string>
   <string name="common_sec">segundo</string>
   <string name="common_select_asset">Escoja un activo</string>
-  <!-- Other common stuff -->
   <string name="common_select_email_app_title">Selecciona la aplicación de correo electrónico</string>
   <string name="common_send">Enviar</string>
+  <string name="common_sender">Sender</string>
   <string name="common_sent">Enviado</string>
+  <string name="common_settings">Configuraciones</string>
   <string name="common_share">Compartir</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">Omitir</string>
   <string name="common_sms_code_expired">El código de verificación ha caducado. Por favor intente con otro.</string>
   <string name="common_sms_code_not_correct">El código de verificación es incorrecto</string>
@@ -163,13 +184,15 @@
   <string name="common_terms_title">Términos y condiciones</string>
   <string name="common_thai">Tailandés</string>
   <string name="common_to">A</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">Hoy</string>
   <string name="common_try_another">Intenta con otro</string>
+  <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ucraniano</string>
   <string name="common_unsupported_version_body">La actualización de la aplicación de Sora está disponible en Google Play. Incluye mejoras y correcciones de errores.</string>
   <string name="common_unsupported_version_open_google_play">Abre Google Play</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">Actualiza la aplicación de Sora</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">Vota</string>
   <string name="common_yesterday">Ayer</string>
   <string name="contacts_empty_state_title">Los contactos más importantes aparecerán aquí</string>
@@ -181,7 +204,6 @@
   <string name="copy_eth_title">Copiar la dirección de la billetera Ethereum (ETH)</string>
   <string name="copy_val_title">Copiar la dirección de la billetera SORA NET (VAL)</string>
   <string name="countries_country_not_found">No hay países que coincidan con su consulta.</string>
-  <!-- Countries -->
   <string name="countries_title">Selecciona tu país</string>
   <string name="create_account_title">Crear una cuenta</string>
   <string name="details_frozen">Congelado</string>
@@ -189,16 +211,19 @@
   <string name="details_total">Balance total</string>
   <string name="details_transferable">Transferible</string>
   <string name="empty_recent_recipients">No hay destinatarios recientes.\nLas direcciones que se han enviado serán mostradas aquí</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">Para continuar con esta operación, necesita una cuenta de Ethereum asociada, con algunos fondos para la tarifa del Minero, y así completar la transacción.</string>
   <string name="error_ethereum_account_title">La cuenta de Ethereum no está asociada</string>
   <string name="error_miner_fee_subtitle">Para continuar con esta operación, debe recargar su cuenta de Ethereum.</string>
   <string name="error_miner_fee_title">No hay fondos suficientes para la tarifa del minero</string>
   <string name="error_transaction_fee_title">No hay fondos suficientes para la comisión de la transacción</string>
   <string name="ethereum_config_unavailable">Nodo de Ethereum no disponible</string>
-  <!-- FAQ -->
   <string name="faq_title">FAQ</string>
   <string name="friends_spread_word">Corra la voz, comparta la aplicación con sus amigos</string>
   <string name="from_account">De la cuenta</string>
+  <string name="history_receive">Receive</string>
+  <string name="history_send">Send</string>
+  <string name="history_swap">Swap</string>
   <string name="history_title">Historial</string>
   <string name="invite_accepted_empty_state_title">Aún no se han aceptado invitaciones</string>
   <string name="invite_accepted_invitations_title">Invitaciones aceptadas</string>
@@ -217,7 +242,6 @@
   <string name="invite_enter_error_already_applied">Ya has aplicado otro código de invitación</string>
   <string name="invite_enter_error_time_is_up">Se acabó el tiempo de aplicar el código de invitación</string>
   <string name="invite_enter_invitation_code">Ingresa el código de invitación</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">Amigos</string>
   <string name="invite_link_format">Únase a Sora usando el siguiente enlace: \n %s</string>
   <string name="invite_link_sharing_title">Compartir la aplicación</string>
@@ -231,6 +255,7 @@
   <string name="logout_dialog_body">Esta acción resultará en la eliminación de la cuenta de este dispositivo. Asegúrese de haber realizado una copia de seguridad de su frase semilla antes de continuar.</string>
   <string name="mnemonic_alert_text">La frase semilla se utiliza para recuperar el acceso a la cuenta. Anótela, ¡no podremos recuperar su cuenta sin ella!</string>
   <string name="mnemonic_confirm_text">Confirme eligiendo las palabras en el orden correcto</string>
+  <string name="mnemonic_confirm_text_v2">Confirme la frase de contraseña eligiendo palabras en el orden correcto</string>
   <string name="mnemonic_invalid">Frase de contraseña mnemotécnica no válida, verifique una vez más el orden de las palabras.</string>
   <string name="mnemonic_invalid_title">Frase de contraseña mnemotécnica no válida</string>
   <string name="mnemonic_text">Recomendamos usar formas no digitales para hacer copias de seguridad, como escribirlo en una hoja de papel.</string>
@@ -244,7 +269,6 @@
   <string name="personal_info_username_v1">Nombre de la cuenta</string>
   <string name="phone_number_mobile">Número de teléfono</string>
   <string name="phone_number_sms_code_will_be_sent">Se enviará el código SMS \n a su teléfono</string>
-  <!-- Phone number -->
   <string name="phone_number_title">Registrate</string>
   <string name="phone_verification_too_frequent_message">Demasiadas solicitudes de códigos de verificación. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="pincode_change_success">El código PIN se cambió correctamente.</string>
@@ -259,19 +283,34 @@
   <string name="pincode_set_your_pin_code">Configurar código pin</string>
   <string name="pincode_touch_fingerprint_scanner">Toca el sensor de huellas digitales</string>
   <string name="pincode_updated">Código PIN actualizado</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">El DEX para el futuro interoperable. Polkaswap es un protocolo AMM-DEX sin custodia para intercambiar Tokens basado en la red Polkadot, Parachains y blockchains conectadas a través de un Puente. El protocolo Polkaswap elimina eficazmente a los intermediarios de confianza y brinda la oportunidad de realizar transacciones más rápidas.</string>
   <string name="polkaswap_confirm_swap">Confirmar el intercambio</string>
   <string name="polkaswap_details">Detalles</string>
+  <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Preguntas frecuentes sobre Polkaswap</string>
-  <string name="polkaswap_info_text">Polkaswap es mantenido por la comunidad SORA. Antes de usar la funcionalidad de Polkaswap, revise las %%Preguntas frecuentes de Polkaswap%% y la documentación, que incluye una explicación detallada sobre cómo funciona Polkaswap, así como el Memorando y los Términos de servicio de Polkaswap, y la Política de privacidad. Estos documentos son cruciales para una experiencia de usuario segura y positiva. Al utilizar Polkaswap, reconoce haber leído y comprendido estos documentos. \n\n También reconoce lo siguiente: \n\n 1) su única responsabilidad por el cumplimiento de todas las leyes que puedan aplicarse a su uso particular de Polkaswap en su jurisdicción legal;\n 2) su comprensión de que la versión actual de Polkaswap es una versión alfa: no se ha probado completamente y es posible que algunas funciones no funcionen como se diseñaron;\n 3) su comprensión y aceptación voluntaria de los riesgos involucrados en el uso de Polkaswap, incluido, entre otros, el riesgo de perder tokens. Una vez más, no continúe sin leer las preguntas frecuentes, el memorando de Polkaswap y los términos de servicio y la política de privacidad.</string>
+  <string name="polkaswap_info_text_1">Polkaswap es mantenido por la comunidad SORA. Antes de continuar usando Polkaswap, por favor revise las %%Preguntas frecuentes (FAQ) de Polkaswap%% y la documentación, que incluye una explicación detallada sobre cómo funciona Polkaswap, así como el %%Memorandum de Polkaswap y los Términos de servicio de Polkaswap%%, y la %%Política de privacidad%%.\n\nEstos documentos son cruciales para una experiencia de usuario segura y positiva. Al utilizar Polkaswap, reconoce haber leído y comprendido estos documentos.</string>
+  <string name="polkaswap_info_text_2">También reconoce lo siguiente:</string>
+  <string name="polkaswap_info_text_3">Usted es la única persona responsable de cumplir con todas las leyes que puedan aplicarse al uso particular de Polkaswap en su jurisdicción legal;</string>
+  <string name="polkaswap_info_text_4">Su comprensión de que la versión actual de Polkaswap es una versión alfa: no ha sido completamente probada, y algunas funciones pueden no funcionar como están diseñadas;</string>
+  <string name="polkaswap_info_text_5">Su comprensión y aceptación voluntaria de los riesgos que conlleva el uso de Polkaswap, incluyendo, pero sin limitarse a ello, el riesgo de perder Tokens.</string>
+  <string name="polkaswap_info_text_6">¡Una vez más, por favor no continúe sin leer las %%Preguntas frecuentes (FAQ) de Polkaswap%%, el %%Polkaswap Memorándum y los términos de servicio%%, y la %%Política de privacidad%%!</string>
+  <string name="polkaswap_info_text_7">Para ocultar la notificación de exención de responsabilidad de la pestaña Intercambiar, deslice el botón de abajo. ¡Sólo hágalo si entiende y ha leído todos los documentos mencionados!</string>
+  <string name="polkaswap_info_text_8">Deslizar para ocultar</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
   <string name="polkaswap_info_title">Descargo de responsabilidad</string>
+  <string name="polkaswap_info_title_main">Descargo de responsabilidad: ¡por favor lea antes de continuar usando Polkaswap!</string>
   <string name="polkaswap_input_estimated">Se estima la entrada. Venderás un máximo de %s o la transacción se revertirá.</string>
   <string name="polkaswap_insufficient_balance">Saldo insuficiente de %s</string>
-  <string name="polkaswap_liqudity_fee">Comisión del proveedor de Liquidez</string>
+  <string name="polkaswap_insufficient_liqudity">Liquidez insuficiente</string>
+  <string name="polkaswap_liqudity_fee">Tarifa LP</string>
   <string name="polkaswap_liqudity_fee_info">Una porción de cada trade (0.3%) va a los proveedores de liquidez como incentivo del protocolo</string>
   <string name="polkaswap_market">Mercado</string>
   <string name="polkaswap_market_info">Algoritmo de mercado - opción a elegir entre el Mercado primario (TBC) y el Mercado secundario (XYK) o una combinación inteligente de el algoritmo para garantizar el mejor precio para cada transacción dada.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
   <string name="polkaswap_market_title">Algoritmo de mercado</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
   <string name="polkaswap_maximum_sold">Máximo vendido</string>
   <string name="polkaswap_maximum_sold_info">Su transacción será devuelta si hay un largo y desfavorable movimiento del precio antes de ser confirmada</string>
   <string name="polkaswap_minimum_received">Mínimo recibido</string>
@@ -281,13 +320,23 @@
   <string name="polkaswap_output_estimated">Se estima la salida. Recibirás al menos %s o la transacción se revertirá.</string>
   <string name="polkaswap_pool_not_created">La pool no se ha creado</string>
   <string name="polkaswap_pool_title">Pool \"Fondo común\"</string>
-  <string name="polkaswap_slippage_info">La tolerancia de deslizamiento (slippage) es un umbral establecido en porcentaje a la cantidad final que afecta a la cantidad mínima recibida</string>
+  <string name="polkaswap_slippage_frontrun">Su transacción puede ser adelantada</string>
+  <string name="polkaswap_slippage_info">Sus transacciones pueden ser revertidas si el precio cambia desfavorablemente en más de este porcentaje</string>
+  <string name="polkaswap_slippage_mayfail">Su transacción puede fallar</string>
   <string name="polkaswap_slippage_tolerance">Tolerancia de deslizamiento</string>
   <string name="polkaswap_smart">Inteligente</string>
   <string name="polkaswap_swap_title">Intercambiar</string>
   <string name="polkaswap_swapped">Intercambiado</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Add</string>
+  <string name="pool_button_remove">Remove</string>
+  <string name="pool_liqudity_title">Your liquidity</string>
+  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_share_title">Share of Pool</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">Pooled</string>
   <string name="profile_about_title">Acerca de</string>
   <string name="profile_biometry_title">Autenticación de biometría</string>
   <string name="profile_change_pin_title">Cambiar el código PIN</string>
@@ -321,10 +370,8 @@
   <string name="qr_code">Código QR</string>
   <string name="qr_upload">Subir desde la galería</string>
   <string name="recovery_body_subtitle">Desafortunadamente no hay forma de acceder a su cuenta si ha olvidado su frase semilla.</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">Ingresa tu frase semillas</string>
   <string name="recovery_mnemonic_passphrase">Frase semilla</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">Restablecer acceso</string>
   <string name="recovery_source_type">Tipo de fuente</string>
   <string name="recovery_title">Importar cuenta</string>
@@ -346,21 +393,26 @@
   <string name="referendum_total_votes">Total de votos</string>
   <string name="referendum_unsupport_title">No</string>
   <string name="referendum_voting_result">Resultado de la votación</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">No tome capturas de pantalla, que pueden ser recopiladas por malware de terceros</string>
   <string name="screenshot_alert_title">No tome capturas de pantalla</string>
   <string name="search_asset_by_name">Buscar por nombre del activo o símbolo</string>
   <string name="select_account_address">Buscar dirección de la cuenta</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Seleccionar el destinatario</string>
   <string name="set_amount">Fijar cantidad</string>
   <string name="staking_coming_soon">Los poseedores de XOR podrán poner en staking su XOR para nominar validadores y obtener recompensas.</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Recompensas de SORA VALidator</string>
-  <!-- Startup -->
   <string name="startup_verification_title">Verificando autorización ...</string>
   <string name="status_error">Error</string>
   <string name="status_pending">Pendiente</string>
   <string name="status_rejected">Rechazada</string>
   <string name="status_success">Exitoso</string>
   <string name="status_title">Estado</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">Amigos</string>
   <string name="tabbar_parliament_title">Parlamento</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -388,28 +440,33 @@
   <string name="transaction_send_back">Enviar de vuelta</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_total">Total</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">Muchos mundos.\nUna economía.</string>
+  <string name="tutorial_many_world_desc">SORA está trabajando para convertirse en un sistema económico multiverso descentralizado, financiando la creación de aplicaciones nuevas y emocionantes, bajo la supervisión democrática del Parlamento de SORA.</string>
   <string name="tutorial_one_world">Un Mundo.\nUna Economía.</string>
   <string name="tutorial_one_world_desc">SORA está trabajando para convertirse en un sistema económico mundial descentralizado, financiando la creación de nuevas e interesantes aplicaciones, bajo la supervisión democrática del Parlamento de SORA.</string>
   <string name="tutorial_privacy_policy">Política de privacidad</string>
   <string name="tutorial_project_success_desc">Si el proyecto tiene éxito en la votación, entonces todos obtienen su parte</string>
   <string name="tutorial_projects_desc">Los proyectos son añadidos a Sora por los productores, y añadidos a la votación después del proceso de selección</string>
   <string name="tutorial_restore_account">Reestablecer el acceso a tu cuenta</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">Regístrate</string>
+  <string name="tutorial_terms_and_conditions">Al crear una cuenta, acepta los %%Términos y condiciones%% y la %%Política de privacidad%%.</string>
   <string name="tutorial_terms_and_conditions_1">Al registrarse, está de acuerdo con\n</string>
   <string name="tutorial_terms_and_conditions_2">Términos y Condiciones</string>
   <string name="tutorial_terms_and_conditions_3">Términos y condiciones</string>
+  <string name="tutorial_terms_and_conditions_recovery">Al importar una cuenta, acepta los %% Términos y condiciones %% y %% Política de privacidad %%</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">Los usuarios votan por los proyectos decidiendo qué proyectos deben ser financiados</string>
   <string name="unknown_balance">Desconocido</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">VAL Token en diferentes redes</string>
   <string name="verification_enter_code_from_sms">Ingrese el código del SMS</string>
   <string name="verification_request_new_code_time" formatted="false">Solicitar nuevo código en %s : %s</string>
-  <!-- Verification -->
   <string name="verification_resend_code">Reenviar el código</string>
   <string name="verification_title">Verificación del teléfono</string>
   <string name="view_balance_val">Ver balance de Tokens de SORA NET (VAL)</string>
   <string name="votes_empty_history_description">Cada vez que cambies tus votos, \nverás el historial aquí</string>
-  <!-- Votes -->
   <string name="votes_history_title">Historial de votos</string>
   <string name="votes_zero_error_message">Lo sentimos, pero debes tener al menos 1 punto para votar</string>
   <string name="wallet_account_retry_registration">Reintentar el registro</string>
@@ -418,6 +475,7 @@
   <string name="wallet_balance_reserved">Reservado</string>
   <string name="wallet_bonded">Vinculado</string>
   <string name="wallet_empty_description">Las transacciones aparecerán aquí</string>
+  <string name="wallet_empty_history_title">No transactions</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_history_from_ethereum_address_title">Desde la dirección de Ethereum</string>
   <string name="wallet_history_from_soranet_address_title">Desde la cuenta de SORA NET</string>
@@ -429,15 +487,17 @@
   <string name="wallet_history_to_my_soranet_title">A mi cuenta de SORA NET</string>
   <string name="wallet_history_to_soranet_account">A la cuenta de SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Mi %s dirección de red para recibir %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_template" formatted="false">Mi %s dirección de red para recibir %s %s:</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
   <string name="wallet_receive_val">Recibir VAL</string>
   <string name="wallet_redeemable">Canjeable</string>
   <string name="wallet_send_existential_warning_message">Su transferencia eliminará la cuenta del blockstore, ya que hará que el saldo total sea menor que el depósito existente</string>
   <string name="wallet_soranet">SORA NET</string>
-  <!-- Wallet -->
   <string name="wallet_title">Cartera</string>
   <string name="wallet_transaction_rejected">Transacción rechazada</string>
   <string name="wallet_transaction_submitted">Transacción enviada</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">Máximo %s símbolos</string>
   <string name="wallet_transfer_to_ethereum">A la dirección de Ethereum</string>
   <string name="wallet_unbonding">Desvinculando</string>

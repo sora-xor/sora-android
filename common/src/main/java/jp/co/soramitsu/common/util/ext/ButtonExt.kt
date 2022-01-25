@@ -5,7 +5,11 @@
 
 package jp.co.soramitsu.common.util.ext
 
+import android.view.MotionEvent
 import android.widget.Button
+import soup.neumorphism.NeumorphButton
+import soup.neumorphism.NeumorphImageButton
+import soup.neumorphism.ShapeType
 
 fun Button.enable() {
     this.isEnabled = true
@@ -19,4 +23,32 @@ fun Button.disable() {
 
 fun Button.enableIf(f: Boolean) {
     if (f) this.enable() else this.disable()
+}
+
+fun NeumorphButton.setShapeTypeTouchListener() {
+    this.setOnTouchListener { view, motionEvent ->
+        this.setShapeType(
+            when (motionEvent.action) {
+                MotionEvent.ACTION_DOWN -> ShapeType.PRESSED
+                MotionEvent.ACTION_UP -> ShapeType.DEFAULT
+                else -> ShapeType.PRESSED
+            }
+        )
+
+        return@setOnTouchListener false
+    }
+}
+
+fun NeumorphImageButton.setShapeTypeTouchListener() {
+    this.setOnTouchListener { view, motionEvent ->
+        this.setShapeType(
+            when (motionEvent.action) {
+                MotionEvent.ACTION_DOWN -> ShapeType.PRESSED
+                MotionEvent.ACTION_UP -> ShapeType.DEFAULT
+                else -> ShapeType.PRESSED
+            }
+        )
+
+        return@setOnTouchListener false
+    }
 }

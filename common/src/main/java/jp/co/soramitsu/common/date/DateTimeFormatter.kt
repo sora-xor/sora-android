@@ -23,12 +23,14 @@ class DateTimeFormatter(
 
     companion object {
         const val DD_MMM_YYYY = "dd MMM yyyy"
+        const val DD_MMMM_YYYY = "dd MMMM yyyy"
         const val DD_MMM_YYYY_HH_MM_SS = "dd/MM/yy HH:mm:ss"
         const val DD_MMM_YYYY_HH_MM_SS_2 = "dd.MM.yy, HH:mm:ss"
         const val MMMM_YYYY = "MMMM YYYY"
         const val HH_mm = "HH:mm"
         const val HH_mm_ss = "HH:mm:ss"
         const val DD_MMMM = "dd MMMM"
+        const val MMMM_DD_YYYY = "MMMM dd, YYYY"
     }
 
     fun formatDateTime(date: Date): String =

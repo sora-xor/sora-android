@@ -5,9 +5,11 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation
 
+import android.app.ActivityOptions
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
@@ -15,17 +17,19 @@ import android.view.animation.TranslateAnimation
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
-import com.google.android.material.color.MaterialColors
 import dev.chrisbanes.insetter.Insetter
 import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
@@ -35,13 +39,16 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.ActivityMainBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
+import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
-class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), BottomBarController {
+class MainActivity :
+    ToolbarActivity<MainViewModel, ActivityMainBinding>(),
+    BottomBarController,
+    InAppUpdateManager.UpdateManagerListener {
 
     companion object {
         private const val ACTION_INVITE = "jp.co.soramitsu.feature_main_impl.ACTION_INVITE"
@@ -52,19 +59,30 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
         private const val ANIM_DURATION = 150L
+        private const val REQUEST_CODE_UPDATE = 1233
 
         fun start(context: Context) {
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
-            context.startActivity(intent)
+            val options = ActivityOptions.makeCustomAnimation(
+                context,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            context.startActivity(intent, options.toBundle())
         }
 
         fun startWithInvite(context: Context) {
             val intent = Intent(context, MainActivity::class.java).apply {
                 action = ACTION_INVITE
             }
-            context.startActivity(intent)
+            val options = ActivityOptions.makeCustomAnimation(
+                context,
+                android.R.anim.fade_in,
+                android.R.anim.fade_out
+            )
+            context.startActivity(intent, options.toBundle())
         }
 
         fun restartAfterLanguageChange(context: Context) {
@@ -79,6 +97,9 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
     @Inject
     lateinit var mainRouter: MainRouter
 
+    @Inject
+    lateinit var inAppUpdateManager: InAppUpdateManager
+
     private var timeInBackground: Date? = null
 
     private var navController: NavController? = null
@@ -91,6 +112,33 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
             .withActivity(this)
             .build()
             .inject(this)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycleScope.launch {
+            inAppUpdateManager.start(this@MainActivity)
+        }
+    }
+
+    override fun askUserToInstall() {
+        findNavController(R.id.fragmentNavHostMain)
+            .currentBackStackEntry?.savedStateHandle
+            ?.getLiveData<Boolean?>(FlexibleUpdateDialog.UPDATE_REPLY)?.observe(this) {
+                if (it == true) inAppUpdateManager.startUpdateFlexible()
+            }
+        mainRouter.showFlexibleUpdateScreen()
+    }
+
+    override fun readyToShowFlexible(): Int? {
+        return REQUEST_CODE_UPDATE
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_UPDATE) {
+            inAppUpdateManager.flexibleDesire(resultCode)
+        }
     }
 
     override fun initViews() {
@@ -109,9 +157,11 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
         binding.fragmentNavHostMain.post {
             navController = supportFragmentManager.findFragmentById(R.id.fragmentNavHostMain)
                 ?.findNavController()
-            mainRouter.attachNavController(navController!!)
 
-            NavigationUI.setupWithNavController(binding.bottomNavigationView, navController!!)
+            navController?.let {
+                mainRouter.attachNavController(it)
+                NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
+            }
 
             if (ACTION_CHANGE_LANGUAGE == intent.action) {
                 chooseBottomNavigationItem(R.id.profile_nav_graph)
@@ -128,8 +178,10 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
     }
 
     override fun onDestroy() {
+        navController?.let {
+            mainRouter.detachNavController(it)
+        }
         super.onDestroy()
-        mainRouter.detachNavController(navController!!)
     }
 
     override fun subscribe(viewModel: MainViewModel) {
@@ -187,7 +239,7 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
 
     private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
         if (View.GONE == binding.badConnectionView.visibility) {
-            val errorColor = MaterialColors.getColor(binding.badConnectionView, R.attr.statusError)
+            val errorColor = binding.badConnectionView.getColorAttr(R.attr.statusError)
             binding.badConnectionView.setText(content)
             binding.badConnectionView.setBackgroundColor(errorColor)
             val animation = TranslateAnimation(0f, 0f, -ANIM_START_POSITION, 0f)
@@ -200,8 +252,7 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
 
     private fun hideBadConnectionView(@StringRes content: Int = R.string.common_connected) {
         if (View.VISIBLE == binding.badConnectionView.visibility) {
-            val successColor =
-                MaterialColors.getColor(binding.badConnectionView, R.attr.statusSuccess)
+            val successColor = binding.badConnectionView.getColorAttr(R.attr.statusSuccess)
             binding.badConnectionView.setText(content)
             binding.badConnectionView.setBackgroundColor(successColor)
             window.statusBarColor = successColor
@@ -215,7 +266,7 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
                 override fun onAnimationEnd(p0: Animation?) {
                     binding.badConnectionView.gone()
                     window.statusBarColor =
-                        MaterialColors.getColor(binding.badConnectionView, R.attr.baseOnAccent)
+                        binding.badConnectionView.getColorAttr(R.attr.baseBackground)
                 }
 
                 override fun onAnimationStart(p0: Animation?) {
@@ -241,6 +292,10 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
 
     override fun hideBottomBar() {
         requireBinding()?.bottomNavigationView?.gone()
+    }
+
+    override fun navigateTabToSwap() {
+        chooseBottomNavigationItem(R.id.polkaswap_nav_graph)
     }
 
     fun restartAfterLanguageChange() {
@@ -281,32 +336,6 @@ class MainActivity : ToolbarActivity<MainViewModel, ActivityMainBinding>(), Bott
             return true
         }
         return super.onKeyDown(keyCode, event)
-    }
-
-    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK && event.isTracking && !event.isCanceled) {
-            if (mainRouter.currentDestinationIsPincode()) {
-                val navHostFragment = supportFragmentManager.fragments[0] as NavHostFragment?
-
-                if (navHostFragment != null) {
-                    (navHostFragment.childFragmentManager.fragments[navHostFragment.childFragmentManager.fragments.size - 1] as PincodeFragment)
-                        .onBackPressed()
-                }
-                return true
-            }
-
-            if (mainRouter.currentDestinationIsUserVerification()) {
-                closeApp()
-                return true
-            }
-
-            if (mainRouter.currentDestinationIsClaimFragment()) {
-                closeApp()
-                return true
-            }
-            return super.onKeyUp(keyCode, event)
-        }
-        return super.onKeyUp(keyCode, event)
     }
 
     private fun chooseBottomNavigationItem(itemId: Int) {

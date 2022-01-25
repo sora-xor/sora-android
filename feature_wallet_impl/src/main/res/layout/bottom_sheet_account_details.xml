@@ -4,82 +4,68 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingStart="@dimen/x2"
-    android:paddingEnd="@dimen/x1_5"
     android:background="@drawable/rounded_card_view"
-    tools:layout_height="wrap_content">
+    android:paddingStart="@dimen/x3"
+    android:paddingBottom="@dimen/x4"
+    android:paddingEnd="@dimen/x3">
 
-    <ImageView
+    <View
         android:id="@+id/bottomSheetPin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64dp"
+        android:layout_height="4dp"
         android:layout_marginTop="@dimen/x1_2"
-        android:src="@drawable/ic_bottomsheet_pin"
+        android:background="@drawable/drag_indicator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvAccountAddress"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        android:text="@string/common_account"
+        android:textAllCaps="true"
+        android:textColor="?attr/onBackgroundColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottomSheetPin" />
 
     <ImageView
         android:id="@+id/userIcon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/x4"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        app:layout_constraintBottom_toBottomOf="@id/address"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@id/address"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_0x00a99f39d40faab010fb4164ff617f2d0f10ba34d1ee37f1ae9acd537489c932" />
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/address"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.13"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x1"
-        android:orientation="vertical"
-        android:layout_marginEnd="@dimen/x4"
-        app:layout_constraintBottom_toBottomOf="@+id/userIcon"
-        app:layout_constraintEnd_toStartOf="@+id/copyIcon"
-        app:layout_constraintStart_toEndOf="@+id/userIcon"
-        app:layout_constraintTop_toTopOf="@+id/userIcon">
-
-        <TextView
-            android:id="@+id/accountNameText"
-            style="@style/TextAppearance.Soramitsu.Paragraph_3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@+id/userIcon"
-            app:layout_constraintTop_toTopOf="@+id/userIcon" />
-
-        <TextView
-            android:id="@+id/address"
-            style="@style/TextAppearance.Soramitsu.Paragraph_3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            android:textColor="@color/grey_400"
-            app:layout_constraintBottom_toBottomOf="@+id/userIcon"
-            app:layout_constraintStart_toEndOf="@+id/userIcon"
-            app:layout_constraintTop_toBottomOf="@+id/accountNameText" />
-    </LinearLayout>
-
+        android:layout_marginTop="@dimen/x3"
+        android:ellipsize="middle"
+        android:paddingStart="@dimen/x1"
+        android:paddingEnd="@dimen/x1"
+        android:singleLine="true"
+        app:layout_constraintEnd_toStartOf="@id/copyIcon"
+        app:layout_constraintStart_toEndOf="@id/userIcon"
+        app:layout_constraintTop_toTopOf="@id/tvAccountAddress"
+        tools:text="cnOIWfosijfowij...lsdfkjlsjf" />
 
     <ImageView
         android:id="@+id/copyIcon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginTop="@dimen/x4"
-        android:src="@drawable/ic_copy_32"
-        app:layout_constraintBottom_toBottomOf="@+id/userIcon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_neu_copy_wrapped"
+        app:layout_constraintBottom_toBottomOf="@id/address"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@drawable/bg_dash_divider"
-        android:layout_marginTop="@dimen/x1_5"
-        android:layout_marginBottom="@dimen/x4"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/userIcon" />
+        app:layout_constraintTop_toTopOf="@id/address"
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

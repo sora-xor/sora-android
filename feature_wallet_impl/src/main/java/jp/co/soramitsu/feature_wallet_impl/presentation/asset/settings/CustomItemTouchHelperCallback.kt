@@ -8,7 +8,8 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 
-class CustomItemTouchHelperCallback(private val draggedListener: (from: Int, to: Int) -> Boolean) : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+class CustomItemTouchHelperCallback(private val draggedListener: (from: Int, to: Int) -> Boolean) :
+    ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
 
     var isDraggable = true
 

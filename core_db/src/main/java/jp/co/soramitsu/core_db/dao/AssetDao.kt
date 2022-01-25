@@ -10,6 +10,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.AssetNTokenLocal
 import jp.co.soramitsu.core_db.model.AssetTokenLocal
@@ -21,11 +22,11 @@ interface AssetDao {
 
     companion object {
         private const val QUERY_ASSET_TOKEN_VISIBLE =
-            """select * from assets inner join tokens 
-                where assets.tokenId = tokens.id and assets.accountAddress = :address 
-                and assets.displayAsset = 1"""
+            """select * from assets inner join tokens on tokens.id = assets.tokenId
+                where assets.tokenId = tokens.id and assets.accountAddress = :address and tokens.whitelistName = :whitelist
+                and (assets.displayAsset = 1 or (assets.displayAsset = 0 and tokens.isHidable = 0))"""
         private const val QUERY_ASSET_TOKEN =
-            """select * from assets inner join tokens 
+            """select * from assets inner join tokens on tokens.id = assets.tokenId
                 where assets.tokenId = tokens.id and assets.accountAddress = :address"""
     }
 
@@ -33,16 +34,19 @@ interface AssetDao {
     suspend fun clearTable()
 
     @Query(QUERY_ASSET_TOKEN_VISIBLE)
-    fun flowAssetsVisible(address: String): Flow<List<AssetTokenLocal>>
+    fun flowAssetsVisible(address: String, whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME): Flow<List<AssetTokenLocal>>
 
     @Query(QUERY_ASSET_TOKEN_VISIBLE)
-    suspend fun getAssetsVisible(address: String): List<AssetTokenLocal>
+    suspend fun getAssetsVisible(address: String, whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME): List<AssetTokenLocal>
 
     @Query(QUERY_ASSET_TOKEN)
     suspend fun getAssets(address: String): List<AssetTokenLocal>
 
     @Query("select precision from tokens where tokens.id = :tokenId")
     suspend fun getPrecisionOfToken(tokenId: String): Int?
+
+    @Query("select whitelistName from tokens where tokens.id = :tokenId")
+    suspend fun getWhitelistOfToken(tokenId: String): String?
 
     @Query(
         """
@@ -58,7 +62,7 @@ interface AssetDao {
         where tokens.id = :assetId and assets.accountAddress = :address
     """
     )
-    suspend fun getAssetWithToken(address: String, assetId: String): AssetTokenLocal
+    suspend fun getAssetWithToken(address: String, assetId: String): AssetTokenLocal?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAssets(assets: List<AssetLocal>)

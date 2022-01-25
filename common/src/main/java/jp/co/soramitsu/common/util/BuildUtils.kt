@@ -14,7 +14,7 @@ object BuildUtils {
 
 enum class Flavor(val flavorName: String) {
     DEVELOP("develop"),
-    STAGE("staging"),
+    TESTING("testing"),
     PROD("production"),
-    SORALUTION("tst")
+    SORALUTION("soralution")
 }

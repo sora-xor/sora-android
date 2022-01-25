@@ -16,49 +16,9 @@ class TutorialViewModel(
 
     fun onSignUpClicked() {
         router.showPersonalInfo()
-//        disposables.add(
-//            interactor.runRegisterFlow()
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnSubscribe { progress.showProgress() }
-//                .subscribe(
-//                    {
-//                        progress.hideProgress()
-//                        if (it.supported) {
-//                            router.showPersonalInfo()
-//                        } else {
-//                            router.showUnsupportedScreen(it.downloadUrl)
-//                        }
-//                    },
-//                    {
-//                        progress.hideProgress()
-//                        onError(it)
-//                    }
-//                )
-//        )
     }
 
     fun onRecoveryClicked() {
         router.showRecovery()
-//        disposables.add(
-//            interactor.checkVersionIsSupported()
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .doOnSubscribe { progress.showProgress() }
-//                .subscribe(
-//                    {
-//                        progress.hideProgress()
-//                        if (it.supported) {
-//                            router.showRecovery()
-//                        } else {
-//                            router.showUnsupportedScreen(it.downloadUrl)
-//                        }
-//                    },
-//                    {
-//                        progress.hideProgress()
-//                        onError(it)
-//                    }
-//                )
-//        )
     }
 }

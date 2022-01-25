@@ -8,12 +8,15 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.assetlist
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListAdapter
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
@@ -47,8 +50,23 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
                     },
                     mode == AssetListMode.SEND
                 )
+                ContextCompat.getDrawable(
+                    viewBinding.rvAssetList.context,
+                    R.drawable.line_ver_divider
+                )?.let {
+                    viewBinding.rvAssetList.addItemDecoration(
+                        DividerItemDecoration(
+                            viewBinding.rvAssetList.context,
+                            DividerItemDecoration.VERTICAL
+                        ).apply {
+                            setDrawable(it)
+                        }
+                    )
+                }
             }
+
             (viewBinding.rvAssetList.adapter as AssetListAdapter).submitList(it)
+            viewBinding.grAssetNotFound.showOrGone(it.isEmpty())
         }
         viewModel.title.observe {
             viewBinding.tbAssetList.setTitle(it)
@@ -70,7 +88,7 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
     private val queryListener = object : SearchView.OnQueryTextListener {
 
         override fun onQueryTextSubmit(query: String?): Boolean {
-            hideSoftKeyboard(activity)
+            hideSoftKeyboard()
             viewModel.searchAssets(query.orEmpty())
             return true
         }

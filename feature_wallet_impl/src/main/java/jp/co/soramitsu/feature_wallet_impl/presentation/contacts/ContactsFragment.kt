@@ -19,11 +19,9 @@ import com.google.zxing.integration.android.IntentIntegrator
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserBottomSheet
-import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserItem
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
@@ -31,6 +29,7 @@ import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentContactsBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactsAdapter
+import jp.co.soramitsu.feature_wallet_impl.presentation.util.ScanQrBottomSheetDialog
 import javax.inject.Inject
 
 @SuppressLint("CheckResult")
@@ -61,7 +60,7 @@ class ContactsFragment :
             }
             setHomeButtonListener {
                 if (keyboardHelper?.isKeyboardShowing == true) {
-                    hideSoftKeyboard(activity)
+                    hideSoftKeyboard()
                 } else {
                     viewModel.backButtonPressed()
                 }
@@ -104,13 +103,10 @@ class ContactsFragment :
         }
 
         viewModel.showChooser.observe {
-            ChooserBottomSheet(
-                requireActivity(),
-                R.string.qr_code,
-                listOf(
-                    ChooserItem(R.string.qr_upload, R.drawable.ic_gallery_24) { viewModel.openGallery() },
-                    ChooserItem(R.string.contacts_scan, R.drawable.ic_scan_24) { viewModel.openCamera() }
-                )
+            ScanQrBottomSheetDialog(
+                context = requireActivity(),
+                uploadListener = { viewModel.openGallery() },
+                cameraListener = { viewModel.openCamera() }
             ).show()
         }
         viewModel.emptyContactsVisibilityLiveData.observe {
@@ -166,13 +162,13 @@ class ContactsFragment :
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
-        hideSoftKeyboard(activity)
+        hideSoftKeyboard()
         viewModel.search(query.orEmpty())
         return true
     }
 
     override fun onQueryTextChange(newText: String?): Boolean {
-        if (newText?.isEmpty() == true) viewModel.search("")
+        viewModel.search(newText.orEmpty())
         return true
     }
 

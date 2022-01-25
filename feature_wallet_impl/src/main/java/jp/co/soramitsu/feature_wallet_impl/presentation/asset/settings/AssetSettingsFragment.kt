@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
@@ -34,8 +34,8 @@ class AssetSettingsFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-        binding.tbAssetManagement.setRightActionClickListener { viewModel.doneClicked() }
         binding.tbAssetManagement.setHomeButtonListener { viewModel.backClicked() }
+        binding.tbAssetManagement.setRightActionClickListener { viewModel.backClicked() }
         itemTouchHelper.attachToRecyclerView(binding.rvAssetManagementList)
         binding.svAssetList.setOnQueryTextListener(queryListener)
         viewModel.assetsListLiveData.observe {
@@ -70,7 +70,7 @@ class AssetSettingsFragment :
     private val queryListener = object : SearchView.OnQueryTextListener {
 
         override fun onQueryTextSubmit(query: String?): Boolean {
-            hideSoftKeyboard(activity)
+            hideSoftKeyboard()
             viewModel.searchAssets(query.orEmpty())
             return true
         }

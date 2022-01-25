@@ -5,20 +5,23 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.recovery
 
+import android.graphics.Color
 import android.os.Bundle
 import android.text.InputFilter
+import android.text.method.LinkMovementMethod
 import android.view.View
-import android.view.WindowManager.LayoutParams
 import androidx.core.widget.doOnTextChanged
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
+import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.enableIf
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.highlightWords
+import jp.co.soramitsu.common.util.ext.openSoftKeyboard
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
@@ -41,15 +44,22 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
 
         viewBinding.toolbar.setHomeButtonListener { viewModel.backButtonClick() }
 
-        viewBinding.cardView.setOnClickListener {
-            viewBinding.mnemonicInput.requestFocus()
-            openSoftKeyboard(it)
-        }
+        val termsContent = getString(R.string.tutorial_terms_and_conditions_recovery).highlightWords(
+            listOf(
+                requireContext().attrColor(R.attr.onBackgroundColor),
+                requireContext().attrColor(R.attr.onBackgroundColor)
+            ),
+            listOf({ viewModel.showTermsScreen() }, { viewModel.showPrivacyScreen() }),
+            true
+        )
+        viewBinding.tutorialTermsCondition.text = termsContent
+        viewBinding.tutorialTermsCondition.movementMethod = LinkMovementMethod.getInstance()
+        viewBinding.tutorialTermsCondition.highlightColor = Color.TRANSPARENT
 
         openSoftKeyboard(viewBinding.mnemonicInput)
 
         viewBinding.mnemonicInput.setOnEditorActionListener { _, _, _ ->
-            hideSoftKeyboard(requireActivity())
+            hideSoftKeyboard()
             true
         }
 
@@ -91,10 +101,5 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
             .withRouter(activity as OnboardingRouter)
             .build()
             .inject(this)
-    }
-
-    override fun onResume() {
-        requireActivity().window.setSoftInputMode(LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
-        super.onResume()
     }
 }

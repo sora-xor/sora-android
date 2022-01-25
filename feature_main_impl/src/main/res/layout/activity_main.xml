@@ -43,16 +43,17 @@
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
+        android:background="?attr/baseBackground"
         android:visibility="gone"
-        app:itemIconTint="@drawable/bottom_navigation_view_color_selector"
-        app:itemTextAppearanceActive="@style/TextAppearance.Soramitsu.Paragraph_4.Bold"
-        app:itemTextAppearanceInactive="@style/TextAppearance.Soramitsu.Paragraph_4.Bold"
-        app:itemTextColor="@drawable/bottom_navigation_view_color_selector"
+        app:itemIconTint="@drawable/bottom_navigation_icon_color_selector"
+        app:itemTextAppearanceActive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
+        app:itemTextAppearanceInactive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
+        app:itemTextColor="@drawable/bottom_navigation_text_color_selector"
         app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        tools:background="@color/neu_color_100"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

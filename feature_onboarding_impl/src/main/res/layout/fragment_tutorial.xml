@@ -1,95 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:background="?attr/baseBackground">
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:overScrollMode="never">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:paddingBottom="@dimen/x1">
-
-            <ImageView
-                android:id="@+id/tutorialLogoTop"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x8"
-                android:src="@drawable/ic_sora_vertical"
-                app:layout_constraintBottom_toTopOf="@id/tutorialOneWorldText"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_chainStyle="packed"
-                tools:ignore="ContentDescription" />
-
-            <TextView
-                android:id="@+id/tutorialOneWorldText"
-                style="@style/TextAppearance.Soramitsu.Display_1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x1"
-                android:gravity="center"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2"
-                android:text="@string/tutorial_one_world"
-                app:layout_constraintBottom_toTopOf="@id/tutorialDescription"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tutorialLogoTop" />
-
-            <TextView
-                android:id="@+id/tutorialDescription"
-                style="@style/TextAppearance.Soramitsu.Paragraph_1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
-                android:gravity="center"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2"
-                android:text="@string/tutorial_one_world_desc"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tutorialOneWorldText" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.core.widget.NestedScrollView>
+    <ImageView
+        android:id="@+id/tutorialLogoTop"
+        android:layout_width="168dp"
+        android:layout_height="168dp"
+        android:src="@drawable/ic_sora_logo_big"
+        app:layout_constraintBottom_toTopOf="@id/llTutorialTexts"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/llTutorialTexts"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_marginBottom="@dimen/x2"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/tutorialDescription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/tutorialSignUpButton"
-            style="@style/Widget.Soramitsu.Button.Primary.48"
-            android:layout_width="match_parent"
-            android:layout_marginStart="@dimen/x1"
-            android:layout_marginEnd="@dimen/x1"
-            android:layout_marginBottom="@dimen/x1"
-            android:text="@string/create_account_title"
-            app:layout_constraintBottom_toTopOf="@id/tutorialRestoreTextView"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/tutorialOneWorldText"
+            style="@style/TextAppearance.Soramitsu.Neu.Bold.34"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/tutorial_many_world" />
 
-        <Button
-            android:id="@+id/tutorialRestoreTextView"
-            style="@style/Widget.Soramitsu.Button.Tertiary.48"
-            android:layout_width="match_parent"
-            android:layout_marginStart="@dimen/x1"
-            android:layout_marginEnd="@dimen/x1"
-            android:layout_marginBottom="@dimen/x4"
-            android:text="@string/recovery_title"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/tutorialOneWorldTextSora"
+            style="@style/TextAppearance.Soramitsu.Neu.Bold.34"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SORA"
+            android:textColor="?attr/selectedPrimaryColor" />
     </LinearLayout>
-</LinearLayout>
+
+    <TextView
+        android:id="@+id/tutorialDescription"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/x7"
+        android:gravity="center"
+        android:letterSpacing="-0.02"
+        android:lineSpacingExtra="@dimen/x1_4"
+        android:lineSpacingMultiplier="1"
+        android:paddingStart="@dimen/x1"
+        android:paddingEnd="@dimen/x1"
+        android:text="@string/tutorial_many_world_desc"
+        app:layout_constraintBottom_toTopOf="@id/tutorialSignUpButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/tutorialSignUpButton"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:text="@string/create_account_title"
+        android:textAllCaps="true"
+        app:layout_constraintBottom_toTopOf="@id/tutorialRestoreTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <soup.neumorphism.NeumorphButton
+        android:id="@+id/tutorialRestoreTextView"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56.Shadow"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x1_2"
+        android:layout_marginEnd="@dimen/x1_2"
+        android:layout_marginBottom="@dimen/x2"
+        android:text="@string/recovery_title"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -13,8 +13,8 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentMnemonicConfirmationBinding
@@ -46,11 +46,9 @@ class MnemonicConfirmationFragment :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.confirmBtn.setOnClickListener(
-            DebounceClickListener(debounceClickHandler) {
-                viewModel.nextButtonClicked()
-            }
-        )
+        binding.confirmBtn.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.nextButtonClicked()
+        }
 
         binding.toolbar.setHomeButtonListener { viewModel.homeButtonClicked() }
 

@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Ta emot Meddelanden</string>
+  <string name="about_ask_support">Be om Support</string>
   <string name="about_contact_us">Kontakta oss</string>
+  <string name="about_instagram">Gilla på Instagram</string>
+  <string name="about_medium">Läs på Medium</string>
   <string name="about_privacy">Integritetspolicy</string>
-  <string name="about_source_code">Källkod</string>
+  <string name="about_source_code">Github Källkod</string>
   <string name="about_telegram">Officiell Telegram-grupp</string>
   <string name="about_title">Om</string>
+  <string name="about_twitter">Följ på Twitter</string>
   <string name="about_website">Webbplats</string>
+  <string name="about_wiki">Lärdom på Wiki</string>
+  <string name="about_youtube">Prenumerera på YouTube</string>
   <string name="account_confirmation_title">Bekräfta återställningsfras</string>
+  <string name="account_confirmation_title_v2">Bekräfta Lösenfras</string>
   <string name="activity_project">Projekt</string>
   <string name="address_not_found">Adress hittades inte, kontrollera att adress tillhör det korrekta nätverket.</string>
+  <string name="address_not_found_1">Mottagare hittades ej</string>
   <string name="amount_default_fee">Transaktionsavgift</string>
   <string name="amount_error_no_funds">Tyvärr, du har inte tillräckligt med medel för att överföra angivet belopp.</string>
   <string name="amount_title">Belopp</string>
   <string name="ask_biometry_message">Vill du använda biometri för autentisering?</string>
   <string name="asset_add">Lägg till konto</string>
+  <string name="asset_details_title">Tillgångsdetaljer</string>
+  <string name="asset_not_found">Tillgången hittades ej</string>
   <string name="asset_settings_title">Konton</string>
   <string name="asset_state_associating">Kopplar...</string>
   <string name="asset_state_error">Error</string>
@@ -21,20 +32,29 @@
   <string name="asset_val_name">SORA Validator Token</string>
   <string name="biometric_dialog_title">Autentisera</string>
   <string name="block_id">Block-hash</string>
-  <string name="claim_contact">Om du har några frågor eller funderingar så kan du %%kontakta oss.%%</string>
+  <string name="choose_token">Välj\ntoken</string>
+  <string name="choose_tokens">Välj tokens</string>
+  <string name="claim_contact">Om du har frågor eller funderingar är du välkommen att %%kontakta oss.%%</string>
   <string name="claim_contact_1">Om du har några frågor eller funderingar så kan du</string>
   <string name="claim_contact_2">kontakta oss.</string>
+  <string name="claim_contact_us">%%Kontakta oss%% för frågor eller funderingar</string>
   <string name="claim_error_title">Övergång misslyckades</string>
+  <string name="claim_error_title_v1">Överföring av tillgångar misslyckades. Vänligen försök igen senare.</string>
   <string name="claim_notification_text">Övergång pågår...</string>
   <string name="claim_skip">Hoppa över process</string>
   <string name="claim_subtitle">Vi behöver ditt samtycke för att överföra dina tillgångar från SORA så att du kan använda dem. SORA kommer nu att verka på Substrate-nätverk. Vänligen bekräfta övergången.</string>
+  <string name="claim_subtitle_confirmed">Tack för bekräftelsen!</string>
+  <string name="claim_subtitle_confirmed_2">Överföring av tillgångar pågår. Vänligen vänta.</string>
   <string name="claim_subtitle_v1">Vi behöver ditt samtycke för att överföra dina tillgångar från SORA v1. Detta gör att du kan använda dina tillgångar på substratbaserad SORA v2. \n\nTillgångar i Ethereum-nätverket påverkas inte, du kan fortfarande komma åt dem genom att importera din lösenfras till en kompatibel plånbok.</string>
+  <string name="claim_subtitle_v2">• Vi behöver samtycke för att överföra dina tillgångar från SORA v1 till SORA v2 \n\n • SORA v2-nätverket är byggt med Substrate som är urspringligt kompatibelt med Polkadot och Kusamas ekosystem\n\n • Tillgångar på Ethereum påverkas inte, du kan fortfarande komma åt dem genom att importera din lösenfras till en kompatibel plånbok</string>
   <string name="claim_welcome_sora2">Välkommen till SORA v2</string>
+  <string name="claim_welcome_sora2_v1">Välkommen till\n%%SORA v2%%%</string>
   <string name="coming_soon">Kommer snart...</string>
   <string name="common_account">Konto</string>
   <string name="common_add">Lägg till</string>
   <string name="common_advanced_settings">Avancerade inställningar</string>
   <string name="common_and">och</string>
+  <string name="common_app_version">App-version</string>
   <string name="common_apply">Tillämpa</string>
   <string name="common_arab">Arabiska</string>
   <string name="common_asset">Tillgång</string>
@@ -61,7 +81,6 @@
   <string name="common_error_fee_rate_not_available">Det gick inte att kontakta uttagsleverantör. Vänligen försök igen senare.</string>
   <string name="common_error_gas_limit_low">Gasgränsen måste vara minst %s</string>
   <string name="common_error_general_message">Vi arbetar hårt för att lösa problemet. Vänligen försök igen senare.</string>
-  <!-- Error -->
   <string name="common_error_general_title">Error</string>
   <string name="common_error_internal_error_title">Internt fel</string>
   <string name="common_error_invalid_parameters">Ogiltiga parametrar</string>
@@ -71,9 +90,8 @@
   <string name="common_error_invitation_already_accepted">Du har redan använt en annan inbjudningskod</string>
   <string name="common_error_invitation_code_not_found">Inbjudningskoden är ogiltig</string>
   <string name="common_error_inviter_registered_after_invitee">Den angivna inbjudningskoden kan inte tillämpas eftersom den är från en användare som registrerade sig efter dig</string>
-  <string name="common_error_mnemonic_is_not_valid">Din återställningsfras är ogiltig. Vänligen prova en annan.</string>
+  <string name="common_error_mnemonic_is_not_valid">Din återställningsfras är ogiltig. Den bör bestå av 12 eller 15 ord. Vänligen prova en annan.</string>
   <string name="common_error_mnemonic_length_error">Återställningsfrasen måste innehålla 15 ord</string>
-  <!-- Errors -->
   <string name="common_error_network">Vänligen kontrollera internetanslutningen och försök igen senare.</string>
   <string name="common_error_not_enough_invitations">Tyvärr, du har inga inbjudningar att dela</string>
   <string name="common_error_not_found_title">Resursen är inte tillgänglig</string>
@@ -81,7 +99,6 @@
   <string name="common_error_phone_already_registered">Telefonnumret är redan registrerat med denna eller en annan användare</string>
   <string name="common_error_pincode_check_error">Angivna koden är fel</string>
   <string name="common_error_price_is_to_low">Priset är för lågt</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">Tyvärr, projektet hittades inte.</string>
   <string name="common_error_retry">Var god försök igen</string>
   <string name="common_error_search_string_error">Sökningen måste innehålla mellan 3 och 64 tecken</string>
@@ -91,7 +108,6 @@
   <string name="common_error_user_not_found">Din återställningsfras är ogiltig. Vänligen prova en annan.</string>
   <string name="common_error_user_values_not_found">Det gick inte att fortsätta åtgärden eftersom \nanvändarvärdes-data inte hittas</string>
   <string name="common_error_votes_invalid_format">Tyvärr, antalet röster kan inte tydas. Försök rösta igen.</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">Tyvärr, du har inte tillräckligt med poäng för att rösta</string>
   <string name="common_error_voting_is_not_allowed">Tyvärr, det går inte längre att rösta på projektet</string>
   <string name="common_error_wrong_user_status">Det går inte att fortsätta med åtgärden eftersom användarens status är ogiltig</string>
@@ -103,6 +119,7 @@
   <string name="common_french">Franska</string>
   <string name="common_from">Från</string>
   <string name="common_gallery">Galleri</string>
+  <string name="common_german">Tyska</string>
   <string name="common_hide">Dölj</string>
   <plurals name="common_hour">
     <item quantity="one">timme</item>
@@ -114,19 +131,21 @@
   <string name="common_japanese">Japanska</string>
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Koreanska</string>
+  <string name="common_learn_more">Lär dig mer</string>
   <string name="common_malay">Malajiska</string>
   <string name="common_manage">Hantera</string>
   <string name="common_min">min</string>
   <string name="common_network_unavailable">Nätverksanslutning inte tillgänglig</string>
   <string name="common_next">Nästa</string>
+  <string name="common_norwegian">Norska</string>
+  <string name="common_notsent">Ej skickad</string>
   <string name="common_ok">Ok</string>
   <string name="common_open_explorer">Visa i Blockchain Explorer</string>
   <string name="common_options_title">Välj ett alternativ</string>
-  <string name="common_passphrase_body">Används för att återställa kontoåtkomst. Skriv ned det, vi kan inte återställa ditt konto utan det!</string>
+  <string name="common_passphrase_body">När du registrerar ett nytt konto i SORA skapas en återställningsfras bestående av 12 ord. Används för att återställa kontoåtkomst. Skriv ned den, SORA kan inte återställa ditt konto utan det! Om du redan har en återställningsfras bestående av 15 ord, kan du importera ditt konto med den.</string>
   <string name="common_passphrase_header">Återställningsfras är \nen typ av lösenord.</string>
   <string name="common_passphrase_save_mnemonic_title">Spara eller skicka återställningsfras</string>
   <string name="common_passphrase_save_or_send">Spara eller skicka</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">Återställningsfras</string>
   <string name="common_passphrase_your_passphrase">Din återställningsfras</string>
   <string name="common_per">per</string>
@@ -137,11 +156,11 @@
   <string name="common_personal_info_last_name_hint">Efternamn</string>
   <string name="common_personal_info_last_name_hyphen_error">Efternamnet kan inte starta eller sluta med bindestreck eller innehålla dubbla bindestreck</string>
   <string name="common_personal_info_last_name_is_empty">Efternamn är tomt</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">Personuppgifter</string>
   <string name="common_please_wait">Vänligen vänta</string>
   <string name="common_receive">Ta emot</string>
   <string name="common_received">Mottagen</string>
+  <string name="common_recipient">Mottagare</string>
   <string name="common_retry">Försök igen</string>
   <string name="common_russian">Ryska</string>
   <string name="common_save">Spara</string>
@@ -149,11 +168,13 @@
   <string name="common_search">Sök</string>
   <string name="common_sec">sek</string>
   <string name="common_select_asset">Välj en tillgång</string>
-  <!-- Other common stuff -->
   <string name="common_select_email_app_title">Välj e-post app</string>
   <string name="common_send">Skicka</string>
+  <string name="common_sender">Avsändare</string>
   <string name="common_sent">Skickat</string>
+  <string name="common_settings">Inställningar</string>
   <string name="common_share">Dela</string>
+  <string name="common_show">Visa</string>
   <string name="common_skip">Hoppa över</string>
   <string name="common_sms_code_expired">Verifieringskoden har upphört att gälla. Försök med en annan.</string>
   <string name="common_sms_code_not_correct">Verifieringskoden är inkorrekt</string>
@@ -163,13 +184,15 @@
   <string name="common_terms_title">Allmänna Villkor</string>
   <string name="common_thai">Thai</string>
   <string name="common_to">Till</string>
+  <string name="common_to_estimated">Till (uppskattat)</string>
   <string name="common_today">I dag</string>
   <string name="common_try_another">Prova ett annat</string>
+  <string name="common_turkish">Turkiska</string>
   <string name="common_ukrainian">Ukrainska</string>
   <string name="common_unsupported_version_body">Uppdatering för Sora-applikationen är tillgänglig i Google Play. Den innehåller förbättringar och buggfixar.</string>
   <string name="common_unsupported_version_open_google_play">Öppna Google Play</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">Uppdatera din Sora-app</string>
+  <string name="common_update">Uppdatera</string>
   <string name="common_vote">Rösta</string>
   <string name="common_yesterday">I går</string>
   <string name="contacts_empty_state_title">Viktigaste kontakterna kommer att visas här</string>
@@ -181,7 +204,6 @@
   <string name="copy_eth_title">Kopiera Ethereum (ETH) plånboksadress</string>
   <string name="copy_val_title">Kopiera SORA NET (VAL) plånboksadress</string>
   <string name="countries_country_not_found">Inga länder matchar din sökning</string>
-  <!-- Countries -->
   <string name="countries_title">Välj ditt land</string>
   <string name="create_account_title">Skapa konto</string>
   <string name="details_frozen">Frusen</string>
@@ -189,16 +211,19 @@
   <string name="details_total">Totalt saldo</string>
   <string name="details_transferable">Överförbar</string>
   <string name="empty_recent_recipients">Inga mottagare nyligen.\nSkickade adresser kommer att visas här.</string>
+  <string name="empty_recent_recipients_2">Mottagare kommer att visas här</string>
   <string name="error_ethereum_account_subtitle">För att fortsätta med åtgärden behöver du ett Ethereum-konto med medel till Miner-avgiften för att slutföra transaktionen.</string>
   <string name="error_ethereum_account_title">Ethereum-konto är inte kopplat</string>
   <string name="error_miner_fee_subtitle">För att fortsätta med åtgärden behöver du fylla på ditt Ethereum-konto.</string>
   <string name="error_miner_fee_title">Inte tillräckligt med medel för Miner-avgiften</string>
   <string name="error_transaction_fee_title">Otillräckligt saldo för transaktionsavgift</string>
   <string name="ethereum_config_unavailable">Ethereum-noden är inte tillgänglig</string>
-  <!-- FAQ -->
   <string name="faq_title">FAQ</string>
-  <string name="friends_spread_word">Sprid ordet och dela appen med dina vänner.</string>
+  <string name="friends_spread_word">Dela SORA med dina vänner och bekanta.</string>
   <string name="from_account">Från konto</string>
+  <string name="history_receive">Mottag</string>
+  <string name="history_send">Skicka</string>
+  <string name="history_swap">Byt</string>
   <string name="history_title">Historik</string>
   <string name="invite_accepted_empty_state_title">Inga inbjudningar accepterade än</string>
   <string name="invite_accepted_invitations_title">Godkända inbjudningar</string>
@@ -217,13 +242,12 @@
   <string name="invite_enter_error_already_applied">Du har redan använt en inbjudningskod</string>
   <string name="invite_enter_error_time_is_up">Inbjudningskoden har utgått</string>
   <string name="invite_enter_invitation_code">Ange inbjudningskod</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">Vänner</string>
   <string name="invite_link_format">Gå med Sora via länken nedan:\n%s</string>
   <string name="invite_link_sharing_title">Dela appen</string>
   <string name="invite_referral_reward">Hänvisnings-belöning</string>
-  <string name="invite_rewards">Belöningar</string>
-  <string name="invite_title_v1">Bjud in vänner att få fler belöningar i framtiden. Utdelningen av belöningarna börjar när funktionen startas.</string>
+  <string name="invite_rewards">Rewards</string>
+  <string name="invite_title_v1">Bjud in vänner att få fler rewards i framtiden. Utdelningen av rewards börjar när funktionen startas.</string>
   <string name="invoice_scan_error_match">Du kan inte skicka till dig själv</string>
   <string name="invoice_scan_error_no_info">QR kan inte avläsas</string>
   <string name="invoice_scan_error_user_not_found">Det går inte att hitta en användare från QR</string>
@@ -231,9 +255,10 @@
   <string name="logout_dialog_body">Den här åtgärden kommer att leda till att kontot tas bort från den här enheten. Se till att du har säkerhetskopierat återställningsfrasen innan du fortsätter.</string>
   <string name="mnemonic_alert_text">Återställningsfrasen används för att återställa tillgång till konto. Skriv ner den eftersom vi inte kan återställa ditt konto utan den!</string>
   <string name="mnemonic_confirm_text">Bekräfta genom att välja ord i rätt ordning</string>
+  <string name="mnemonic_confirm_text_v2">Bekräfta lösenfrasen genom att välja ord i rätt ordning</string>
   <string name="mnemonic_invalid">Ogiltig lösenordsfras för minnesmärke, kontrollera en gång till ordens ordning.</string>
   <string name="mnemonic_invalid_title">Ogiltigt lösenfras för mnemonic</string>
-  <string name="mnemonic_text">Använd ett icke-digitalt sätt för att göra backup, som till exempel att skriva ner det på papper.</string>
+  <string name="mnemonic_text">Vi rekommenderar att du använder ett icke-digitalt sätt att säkerhetskopiera, t.ex. genom att skriva ned på papper och förvara det på ett säkert sätt.</string>
   <string name="mnemonic_title">Backup återställningsfras</string>
   <string name="parliament_coming_soon">En beslutsprocess för SORA-nätverket</string>
   <string name="personal_details_info">Namnet på det här kontot och hur det kommer att visas under din adress. Med en kedjeidentitet kan den göras tillgänglig för andra.</string>
@@ -244,11 +269,10 @@
   <string name="personal_info_username_v1">Kontonamn</string>
   <string name="phone_number_mobile">Mobiltelefonnummer</string>
   <string name="phone_number_sms_code_will_be_sent">SMS-kod kommer att skickas\ntill din telefon</string>
-  <!-- Phone number -->
   <string name="phone_number_title">Registrera</string>
   <string name="phone_verification_too_frequent_message">För frekvent återkommande begäran av verifieringskod. Försök igen senare.</string>
   <string name="pincode_change_success">PIN-koden har med framgång ändrats</string>
-  <string name="pincode_change_success_v1">PIN-koden har med framgång ändrats</string>
+  <string name="pincode_change_success_v1">PIN-koden har ändrats</string>
   <string name="pincode_confirm_new_pin_code">Bekräfta ny pinkod</string>
   <string name="pincode_confirm_your_pin_code">Bekräfta PIN-kod</string>
   <string name="pincode_enter_current_pin_code">Ange aktuell PIN-kod</string>
@@ -259,41 +283,66 @@
   <string name="pincode_set_your_pin_code">Lägg till PIN-kod</string>
   <string name="pincode_touch_fingerprint_scanner">Rör vid fingeravtrycksläsaren</string>
   <string name="pincode_updated">PIN-kod har uppdaterats</string>
+  <string name="polkaswap_button_swap_again">Swap igen</string>
   <string name="polkaswap_coming_soon">DEX (Decentraliserad Kryptobörs) för den interkompatibla framtiden. Polkaswap är ett användarförvaltat AMM-DEX-protokoll för byteshandel av tokens som är baserade på Polkadot-nätverket, para-kedjor samt blockkedjor anslutna genom en brygga. Polkaswap-protokollet tar effektivt bort mellanhänder och ger möjlighet till snabbare byteshandel.</string>
-  <string name="polkaswap_confirm_swap">Bekräfta byte</string>
+  <string name="polkaswap_confirm_swap">Bekräfta swap</string>
   <string name="polkaswap_details">Detaljer</string>
+  <string name="polkaswap_error_noswap">Ingen swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ (Vanliga Frågor och Svar)</string>
-  <string name="polkaswap_info_text">Polkaswap underhålls av SORA -communityn. Innan du använder Polkaswap -funktionaliteten, vänligen läs %%Polkaswap FAQ%% och dokumentationen, som innehåller en detaljerad förklaring om hur Polkaswap fungerar, samt Polkaswap -memorandumet och användarvillkoren och sekretesspolicyn. Dessa dokument är avgörande för en säker och positiv användarupplevelse. Genom att använda Polkaswap erkänner du att du har läst och förstått dessa dokument. \n\n Du erkänner också följande: \n\n 1) ditt enda ansvar för att följa alla lagar som kan gälla för din speciella användning av Polkaswap i din juridiska jurisdiktion;\n 2) din förståelse för att den nuvarande versionen av Polkaswap är en alfa -version: den har inte testats fullständigt och vissa funktioner kanske inte fungerar som de ska;\n 3) din förståelse och frivilliga accept av riskerna med att använda Polkaswap, inklusive men inte begränsat till risken att förlora tokens. Återigen, fortsätt inte utan att läsa FAQ, Polkaswap -memorandum och användarvillkor och sekretesspolicy!</string>
+  <string name="polkaswap_info_text_1">Polkaswap underhålls av SORA communityn. Innan du använder Polkaswap, vänligen läs %%Polkaswap FAQ%% och dokumentation, som innehåller en detaljerad förklaring om hur Polkaswap fungerar, %%Polkaswap memorandum och användarvillkor%%, samt %%integritetspolicy%%.\n\nDessa dokument är avgörande för en säker och positiv användarupplevelse. Genom att använda Polkaswap bekräftar du att du har läst och förstått dessa dokument.</string>
+  <string name="polkaswap_info_text_2">Du bekräftar också följande:</string>
+  <string name="polkaswap_info_text_3">Du bär själv ansvaret för att följa de gällande lagar i förbindelse med din användning av Polkaswap i din juridiska jurisdiktion;</string>
+  <string name="polkaswap_info_text_4">Din förståelse för att den nuvarande versionen av Polkaswap är i ALFAversion: den har inte testats fullständigt och vissa funktioner kanske inte fungerar som de ska;</string>
+  <string name="polkaswap_info_text_5">Din förståelse och godtagande av riskerna i förbindelse med användandet av Polkaswap, inklusive men inte begränsat till risken att förlora tokens.</string>
+  <string name="polkaswap_info_text_6">Än en gång, fortsätt inte utan att läsa %%Polkaswap FAQ%%, %%Polkaswap Memorandum och villkor för tjänster%%, samt %%integritetspolicy%%!</string>
+  <string name="polkaswap_info_text_7">För att dölja notisen om ansvarsfriskrivning från Swap-fliken, svep knappen nedan. Gör det endast om du fullt förstår och har läst alla nämnda dokument!</string>
+  <string name="polkaswap_info_text_8">Svep för att dölja</string>
+  <string name="polkaswap_info_text_9">Ansvarsfriskrivnings-notis är dolt från Polkaswap-fliken. Svep på knappen nedan om du vill aktivera notisen.</string>
   <string name="polkaswap_info_title">Ansvarsfriskrivning</string>
+  <string name="polkaswap_info_title_main">Friskrivningsklausul: läs innan du använder polkaswap!</string>
   <string name="polkaswap_input_estimated">Indata är uppskattad. Du kommer att få minst %s eller så återgår transaktionen.</string>
   <string name="polkaswap_insufficient_balance">Otillräckligt %s saldo</string>
-  <string name="polkaswap_liqudity_fee">Avgift till Tillhandahållare av Likviditet</string>
+  <string name="polkaswap_insufficient_liqudity">Otillräcklig likviditet</string>
+  <string name="polkaswap_liqudity_fee">LP -avgift</string>
   <string name="polkaswap_liqudity_fee_info">En del av varje handel (0,3%) går till likviditets-tillhandahållare som ett protokollsincitament.</string>
   <string name="polkaswap_market">Marknad</string>
   <string name="polkaswap_market_info">Marknadsalgoritm - alternativ att välja mellan Primärmarknad (TBC), Sekundärmarknad (XYK) eller en kombinerad smart algoritm för garanterat bästa pris för vilken transaktion som helst.</string>
+  <string name="polkaswap_market_smart_description">SMART likviditets-routing säkerställer det bästa priset för vilken transaktion som helst genom att endast kombinera de bästa prisalternativen från alla tillgängliga marknader. Token Bonding Curve (TBC) kommer att användas för likviditet när den är tillgänglig så länge tillgångspriset är mer prisvärt än från andra källor, på vilken XYK-poolen då används.</string>
+  <string name="polkaswap_market_tbc_description">TBC — köp endast från Token Bonding Curve (Primärmarknad). Det finns en möjlighet att priset kan bli ogynnsamt jämfört med XYK-poolen (Sekundärmarknad), men värdet som erhålls från de bestående rewards visa sig vara mycket mer fördelaktiga i framtiden.</string>
   <string name="polkaswap_market_title">Marknadsalgoritm</string>
-  <string name="polkaswap_maximum_sold">Maximalt Sålt</string>
+  <string name="polkaswap_market_xyk_description">XYK — att köpa  endast från XYK-poolen (Sekundärmarknad). Traditionella XYK-pool byte där vem som helst kan köpa eller sälja tillgångar genom att flytta marknadsgarantens position på x*y=k-kurvan.</string>
+  <string name="polkaswap_maximum_sold">Max såld</string>
   <string name="polkaswap_maximum_sold_info">Din transaktion kommer att återgå om det finns en stor och ogynnsam prisrörelse innan den bekräftas.</string>
-  <string name="polkaswap_minimum_received">Minimum Mottaget</string>
+  <string name="polkaswap_minimum_received">Min mottagna</string>
   <string name="polkaswap_minimum_received_info">Din transaktion kommer att återgå om det finns en stor och ogynnsam prisrörelse innan den bekräftas.</string>
   <string name="polkaswap_network_fee">Nätverksavgift</string>
   <string name="polkaswap_network_fee_info">Nätverksavgift används för att säkerställa SORA-systemets tillväxt och stabila prestanda.</string>
-  <string name="polkaswap_output_estimated">Utdata är uppskattad. Du kommer att få minst %s eller så återgår transaktionen.</string>
+  <string name="polkaswap_output_estimated">Resultatet av swappen är en uppskattning. Du kommer att få minst %s eller så återgår transaktionen.</string>
   <string name="polkaswap_pool_not_created">Poolen är inte skapad</string>
   <string name="polkaswap_pool_title">Sammanslå</string>
-  <string name="polkaswap_slippage_info">Prisförskjutnings tolerans är ett accepteradt tröskelvärde angivet i procent för det slutliga beloppet som påverkar det Minsta Mottagna beloppet.</string>
+  <string name="polkaswap_slippage_frontrun">Din transaktion kan bli \"frontrun\"</string>
+  <string name="polkaswap_slippage_info">Dina transaktioner kommer att återgå om priset ändras ogynnsamt med mer än denna procentsats</string>
+  <string name="polkaswap_slippage_mayfail">Din transaktion kan misslyckas</string>
   <string name="polkaswap_slippage_tolerance">Prisförskjutnings Tolerans</string>
   <string name="polkaswap_smart">Smart</string>
   <string name="polkaswap_swap_title">Byt</string>
-  <string name="polkaswap_swapped">Bytt</string>
+  <string name="polkaswap_swapped">Swapped</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Lägg till</string>
+  <string name="pool_button_remove">Ta bort</string>
+  <string name="pool_liqudity_title">Din likviditet</string>
+  <string name="pool_liquidity_placeholder">Din likviditet kommer att visas här</string>
+  <string name="pool_share_title">Andel av Pool</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">\"Pooled\"</string>
   <string name="profile_about_title">Om</string>
   <string name="profile_biometry_title">Biometri-aut</string>
   <string name="profile_change_pin_title">Ändra PIN</string>
   <string name="profile_language_title">Språk</string>
   <string name="profile_logout_title">Logga ut</string>
-  <string name="profile_passphrase_title_v1">Återställningsfraser</string>
+  <string name="profile_passphrase_title_v1">Lösenord</string>
   <string name="profile_title">Profil</string>
   <plurals name="project_date_day_plurals">
     <item quantity="one">%s dag kvar</item>
@@ -321,10 +370,8 @@
   <string name="qr_code">QR-kod</string>
   <string name="qr_upload">Ladda upp från bilder</string>
   <string name="recovery_body_subtitle">Tyvärr finns det inget sätt att komma åt ditt konto om du har glömt din återställningsfras.</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">Ange din återställningsfras</string>
   <string name="recovery_mnemonic_passphrase">Återställningsfras</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">Återställ åtkomst</string>
   <string name="recovery_source_type">Källtyp</string>
   <string name="recovery_title">Importera konto</string>
@@ -346,21 +393,26 @@
   <string name="referendum_total_votes">Totalt antal röster</string>
   <string name="referendum_unsupport_title">Nej</string>
   <string name="referendum_voting_result">Valresultat</string>
+  <string name="restart_required">Omstart krävs</string>
   <string name="screenshot_alert_text">Ta inte skärmdumpar, dom kan samlas in av skadlig programvara från tredje part</string>
   <string name="screenshot_alert_title">Ta inte skärmdumpar</string>
   <string name="search_asset_by_name">Sök efter tillgångsnamn eller symbol</string>
   <string name="select_account_address">Sök kontoadress</string>
+  <string name="select_account_address_1">Sök eller lägg till en ny adress</string>
+  <string name="select_asset_receive">Välj Tillgång att mottaga</string>
+  <string name="select_asset_send">Välj Tillgång att Skicka</string>
   <string name="select_recipient">Välj mottagare</string>
   <string name="set_amount">Ange belopp</string>
-  <string name="staking_coming_soon">XOR-innehavare kommer att kunna låsa in sin XOR för att nominera validerare och få belöningar.</string>
-  <string name="staking_val_reward">SORA VALidator-belöningar</string>
-  <!-- Startup -->
+  <string name="staking_coming_soon">XOR-innehavare kommer att kunna stake sina XOR för att nominera validerare och få rewards.</string>
+  <string name="staking_description">Att nominera validators är en viktig del av SORA-ekosystemet eftersom det hjälper till att säkra och decentralisera nätverket. VAL-tokens kommer att ges till validators och nominators som en belöning för staking.</string>
+  <string name="staking_val_reward">SORA VALidator-rewards</string>
   <string name="startup_verification_title">Verifierar auktorisering...</string>
   <string name="status_error">Fel</string>
   <string name="status_pending">Behandlas</string>
   <string name="status_rejected">Avvisad</string>
   <string name="status_success">Framgång</string>
   <string name="status_title">Status</string>
+  <string name="swap_input_title">Swap-inmatning</string>
   <string name="tabbar_friends_title">Vänner</string>
   <string name="tabbar_parliament_title">Parlament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -388,36 +440,42 @@
   <string name="transaction_send_back">Skicka tillbaka</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_total">Totalt</string>
+  <string name="transfer_amount_title">Ange Belopp som ska Skickas</string>
+  <string name="tutorial_many_world">Många världar.\n En ekonomi.</string>
+  <string name="tutorial_many_world_desc">SORA arbetar för att bli ett decentraliserat ekonomiskt system för flera universer som finansierar skapandet av nya och spännande applikationer, under demokratisk övervakning av SORA -parlamentet.</string>
   <string name="tutorial_one_world">En Värld.\nEn Ekonomi.</string>
-  <string name="tutorial_one_world_desc">SORA arbetar för att bli den decentraliserade centralbanken för hela världen och finansierar skapandet av nya och spännande applikationer, under demokratisk tillsyn av SORA-parlamentet.</string>
+  <string name="tutorial_one_world_desc">SORA arbetar för att bliva en världsomspännande decentraliserad centralbank, som finansierar skapandet av nya och spännande applikationer under SORA-parlamentet demokratiska tillsyn.</string>
   <string name="tutorial_privacy_policy">Integritetspolicy</string>
   <string name="tutorial_project_success_desc">Om projektet är framgångsrikt i omröstningen får alla sin andel</string>
   <string name="tutorial_projects_desc">Projekt som läggs till i Sora läggs ut för omröstning efter urvalsprocessen</string>
   <string name="tutorial_restore_account">Återställ kontoåtkomst</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">Registrera</string>
+  <string name="tutorial_terms_and_conditions">Genom att skapa ett konto så godkänner du %%Regler &amp; Villkoren%% samt %%Sekretesspolicyn%%</string>
   <string name="tutorial_terms_and_conditions_1">Genom att registrera dig godkänner du\n</string>
   <string name="tutorial_terms_and_conditions_2">Användarvillkor</string>
   <string name="tutorial_terms_and_conditions_3">Allmänna Villkor</string>
+  <string name="tutorial_terms_and_conditions_recovery">Genom att importera ett konto så godkänner du %%Regler &amp; Villkoren%% samt %%Sekretesspolicyn%%</string>
+  <string name="tutorial_terms_and_conditions_v4">Genom att skapa ett konto så godkänner du \n Regler och Villkor samt Sekretesspolicy</string>
   <string name="tutorial_votes_desc">Användarna röstar på projekt för att avgöra vilket projekt som ska finansieras</string>
   <string name="unknown_balance">Okänd</string>
+  <string name="update_downloaded">En uppdatering för SORA-applikationen har laddats ner och är redo att installeras. \n\nDet är viktigt att använda den senaste versionen av applikationen. \n\nFör att uppdatera appen så krävs en omstart.</string>
+  <string name="update_install_now">Vill du installera uppdateringen nu?</string>
   <string name="val_balance_title">VAL-token i olika nätverk</string>
   <string name="verification_enter_code_from_sms">Ange kod från SMS</string>
   <string name="verification_request_new_code_time" formatted="false">Begär ny kod om %s:%s</string>
-  <!-- Verification -->
   <string name="verification_resend_code">Skicka kod igen</string>
   <string name="verification_title">Verifiera telefon</string>
   <string name="view_balance_val">Visa SORA NET (VAL) tokenallokering</string>
   <string name="votes_empty_history_description">När dina röster ändras \nkommer historiken visas här</string>
-  <!-- Votes -->
   <string name="votes_history_title">Röstningshistorik</string>
   <string name="votes_zero_error_message">Tyvärr, du måste ha minst 1 poäng att rösta</string>
   <string name="wallet_account_retry_registration">Försök registrera igen</string>
   <string name="wallet_asset_id">Tillgångs-id</string>
   <string name="wallet_balance_locked">Låst</string>
   <string name="wallet_balance_reserved">Reserverad</string>
-  <string name="wallet_bonded">Bundna</string>
+  <string name="wallet_bonded">Bonded</string>
   <string name="wallet_empty_description">Transaktioner kommer att visas här</string>
+  <string name="wallet_empty_history_title">Inga transaktioner</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_history_from_ethereum_address_title">Från Ethereum-adress</string>
   <string name="wallet_history_from_soranet_address_title">Från SORA NET-konto</string>
@@ -428,18 +486,20 @@
   <string name="wallet_history_to_my_ethereum_title">Till mitt Ethereum-konto</string>
   <string name="wallet_history_to_my_soranet_title">Till Mitt SORA NET-konto</string>
   <string name="wallet_history_to_soranet_account">Till SORA NET-kontot</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Min %s Nätverksadress för att ta emot %s:</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">Min %s Nätverksadress för att mottaga %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Nätverksadress för att ta Mottaga %s :</string>
   <string name="wallet_qr_share_message_template" formatted="false">Min %s Nätverksadress för att ta emot %s %s:</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">Min %s Nätverksadress för att Mottaga %s %s:</string>
   <string name="wallet_receive_val">Ta emot VAL</string>
   <string name="wallet_redeemable">Inlösbara</string>
   <string name="wallet_send_existential_warning_message">Din överföring kommer att ta bort kontot från \"blockstore\" eftersom det kommer att göra det sammanlagda saldot lägre än den existentiella insättningen.</string>
   <string name="wallet_soranet">SORA NET</string>
-  <!-- Wallet -->
   <string name="wallet_title">Plånbok</string>
   <string name="wallet_transaction_rejected">Transaktion avvisad</string>
   <string name="wallet_transaction_submitted">Transaktion inlämnad</string>
+  <string name="wallet_transaction_submitted_1">Transaktion\ninskickad</string>
   <string name="wallet_transfer_description_hint">Max %s symboler</string>
   <string name="wallet_transfer_to_ethereum">Till Ethereum-adress</string>
-  <string name="wallet_unbonding">Obindande</string>
+  <string name="wallet_unbonding">Unbonding</string>
   <string name="wallet_val_to_my_eth">VAL till Mitt Ethereum-konto</string>
 </resources>

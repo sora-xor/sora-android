@@ -5,8 +5,12 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.mappers
 
+import com.google.gson.Gson
+import com.orhanobut.logger.Logger
+import jp.co.soramitsu.common.data.network.substrate.Method
+import jp.co.soramitsu.common.data.network.substrate.Pallete
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.util.ext.unsafeCast
+import jp.co.soramitsu.common.domain.getByIdOrEmpty
 import jp.co.soramitsu.core_db.model.ExtrinsicLocal
 import jp.co.soramitsu.core_db.model.ExtrinsicParam
 import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
@@ -17,139 +21,136 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.ExtrinsicRemote
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.TransactionRemote
+import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItem
+import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItemSwap
+import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItemTransfer
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.math.pow
-import kotlin.math.roundToLong
 
 fun mapRemoteTransfersToLocal(
-    txs: List<TransactionRemote>,
+    txs: List<HistoryResponseItem>,
     myAddress: String,
     tokens: List<Token>,
+    gson: Gson
 ): Pair<List<ExtrinsicLocal>, List<ExtrinsicParamLocal>> {
     val params = mutableListOf<ExtrinsicParamLocal>()
-    val extrinsics = txs.map { remote ->
-        val curToken = requireNotNull(
-            tokens.find { it.id == remote.attributes.assetId },
-            { "Asset not found in mapping" }
-        )
-        val (type, peer) = if (remote.attributes.sender.attributes.address == myAddress)
-            ExtrinsicTransferTypes.OUT to remote.attributes.destination.attributes.address
-        else
-            ExtrinsicTransferTypes.IN to remote.attributes.sender.attributes.address
-        params.add(
-            ExtrinsicParamLocal(
-                remote.attributes.transaction_hash,
-                ExtrinsicParam.TOKEN.paramName,
-                remote.attributes.assetId
+    val extrinsic = mutableListOf<ExtrinsicLocal>()
+
+    txs.forEach { historyItem ->
+
+        var type: ExtrinsicType? = null
+
+        if (historyItem.module.lowercase() == Pallete.ASSETS.palleteName.lowercase() &&
+            historyItem.method.lowercase() == Method.TRANSFER.methodName.lowercase()
+        ) {
+            val transfer = gson.fromJson(historyItem.data, HistoryResponseItemTransfer::class.java)
+            val curToken: Token? = tokens.find { it.id == transfer.assetId }
+
+            if (curToken != null) {
+                val (transferType, peer) = if (transfer.from == myAddress)
+                    ExtrinsicTransferTypes.OUT to transfer.to
+                else
+                    ExtrinsicTransferTypes.IN to transfer.from
+                params.add(
+                    ExtrinsicParamLocal(
+                        historyItem.id,
+                        ExtrinsicParam.TOKEN.paramName,
+                        transfer.assetId
+                    )
+                )
+                params.add(
+                    ExtrinsicParamLocal(
+                        historyItem.id,
+                        ExtrinsicParam.PEER.paramName,
+                        peer
+                    )
+                )
+                params.add(
+                    ExtrinsicParamLocal(
+                        historyItem.id,
+                        ExtrinsicParam.TRANSFER_TYPE.paramName,
+                        transferType.name
+                    )
+                )
+                params.add(
+                    ExtrinsicParamLocal(
+                        historyItem.id,
+                        ExtrinsicParam.AMOUNT.paramName,
+                        transfer.amount
+                    )
+                )
+                type = ExtrinsicType.TRANSFER
+            }
+        } else if (historyItem.module.lowercase() == Pallete.LIQUIDITY_PROXY.palleteName.lowercase() &&
+            historyItem.method.lowercase() == Method.SWAP.methodName.lowercase()
+        ) {
+            val swap = gson.fromJson(historyItem.data, HistoryResponseItemSwap::class.java)
+            params.add(
+                ExtrinsicParamLocal(
+                    historyItem.id,
+                    ExtrinsicParam.TOKEN.paramName,
+                    swap.baseAssetId,
+                )
             )
-        )
-        params.add(
-            ExtrinsicParamLocal(
-                remote.attributes.transaction_hash,
-                ExtrinsicParam.PEER.paramName,
-                peer
+            params.add(
+                ExtrinsicParamLocal(
+                    historyItem.id,
+                    ExtrinsicParam.TOKEN2.paramName,
+                    swap.targetAssetId,
+                )
             )
-        )
-        params.add(
-            ExtrinsicParamLocal(
-                remote.attributes.transaction_hash,
-                ExtrinsicParam.TRANSFER_TYPE.paramName,
-                type.name
+            params.add(
+                ExtrinsicParamLocal(
+                    historyItem.id,
+                    ExtrinsicParam.AMOUNT.paramName,
+                    swap.baseAssetAmount.takeIf { it.isNotEmpty() }
+                        ?: "0.0",
+                )
             )
-        )
-        params.add(
-            ExtrinsicParamLocal(
-                remote.attributes.transaction_hash,
-                ExtrinsicParam.AMOUNT.paramName,
-                mapBalance(remote.attributes.value.toBigInteger(), curToken.precision).toString()
+            params.add(
+                ExtrinsicParamLocal(
+                    historyItem.id,
+                    ExtrinsicParam.AMOUNT2.paramName,
+                    swap.targetAssetAmount.takeIf { it.isNotEmpty() }
+                        ?: "0.0",
+                )
             )
-        )
-        mapRemoteTransferToLocal(remote, curToken)
+            params.add(
+                ExtrinsicParamLocal(
+                    historyItem.id,
+                    ExtrinsicParam.AMOUNT3.paramName,
+                    swap.liquidityProviderFee,
+                )
+            )
+            params.add(
+                ExtrinsicParamLocal(
+                    historyItem.id,
+                    ExtrinsicParam.SWAP_MARKET.paramName,
+                    swap.selectedMarket,
+                )
+            )
+            type = ExtrinsicType.SWAP
+        }
+        if (type != null) {
+            val e = ExtrinsicLocal(
+                txHash = historyItem.id,
+                blockHash = historyItem.blockHash,
+                fee = BigDecimal(historyItem.networkFee),
+                status = ExtrinsicStatus.COMMITTED,
+                timestamp = (
+                    historyItem.timestamp.substringBefore(".").toLongOrNull()
+                        ?: 0
+                    ) * 1000,
+                type = type,
+                eventSuccess = historyItem.execution.success,
+                localPending = false,
+            )
+            extrinsic.add(e)
+        }
     }
-    return extrinsics to params
-}
 
-private fun mapRemoteTransferToLocal(
-    tx: TransactionRemote,
-    curToken: Token,
-): ExtrinsicLocal {
-    return ExtrinsicLocal(
-        tx.attributes.transaction_hash,
-        tx.attributes.block_hash,
-        mapBalance(tx.attributes.fee.toBigInteger(), curToken.precision),
-        ExtrinsicStatus.COMMITTED,
-        tx.attributes.transaction_timestamp.roundToLong() * 1000,
-        ExtrinsicType.TRANSFER,
-        eventSuccess = true,
-        localPending = false,
-    )
-}
-
-fun mapRemoteErrorTransfersToLocal(
-    txs: List<ExtrinsicRemote>,
-    tokens: List<Token>,
-): Pair<List<ExtrinsicLocal>, List<ExtrinsicParamLocal>> {
-    val params = mutableListOf<ExtrinsicParamLocal>()
-    val extrinsics = txs.map { remote ->
-        val (extrinsic, prms) = mapRemoteErrorTransferToLocal(remote, tokens)
-        params.addAll(prms)
-        extrinsic
-    }
-    return extrinsics to params
-}
-
-private fun mapRemoteErrorTransferToLocal(
-    tx: ExtrinsicRemote,
-    tokens: List<Token>
-): Pair<ExtrinsicLocal, List<ExtrinsicParamLocal>> {
-    fun <T> getParam(paramName: String): T {
-        return requireNotNull(
-            tx.attributes.params.find { p -> p.name == paramName },
-            { "[$paramName] param not found in mapping" }
-        ).value.unsafeCast()
-    }
-
-    val assetId = getParam<String>("asset_id")
-    val to = getParam<String>("to")
-    val amount = getParam<Double>("amount").toBigDecimal().toBigInteger()
-    val curToken = requireNotNull(
-        tokens.find { it.id == assetId },
-        { "Asset not found in mapping" }
-    )
-    return ExtrinsicLocal(
-        tx.attributes.extrinsic_hash,
-        tx.attributes.block_hash,
-        mapBalance(tx.attributes.fee, curToken.precision),
-        ExtrinsicStatus.COMMITTED,
-        tx.attributes.transaction_timestamp.roundToLong() * 1000,
-        ExtrinsicType.TRANSFER,
-        eventSuccess = false,
-        localPending = false,
-    ) to listOf(
-        ExtrinsicParamLocal(
-            tx.attributes.extrinsic_hash,
-            ExtrinsicParam.TRANSFER_TYPE.paramName,
-            ExtrinsicTransferTypes.OUT.name
-        ),
-        ExtrinsicParamLocal(
-            tx.attributes.extrinsic_hash,
-            ExtrinsicParam.TOKEN.paramName,
-            assetId
-        ),
-        ExtrinsicParamLocal(
-            tx.attributes.extrinsic_hash,
-            ExtrinsicParam.AMOUNT.paramName,
-            mapBalance(amount, curToken.precision).toString()
-        ),
-        ExtrinsicParamLocal(
-            tx.attributes.extrinsic_hash,
-            ExtrinsicParam.PEER.paramName,
-            to
-        ),
-    )
+    return extrinsic to params
 }
 
 fun mapBalance(
@@ -175,12 +176,19 @@ fun mapTransactionLocalToTransaction(
                 mapTransactionStatusLocalToTransactionStatus(status),
                 timestamp,
                 eventSuccess,
-                BigDecimal(extrinsicParamLocal.first { it.paramName == ExtrinsicParam.AMOUNT.paramName }.paramValue),
-                extrinsicParamLocal.first { it.paramName == ExtrinsicParam.PEER.paramName }.paramValue,
-                mapTransactionTransferType(extrinsicParamLocal),
-                extrinsicParamLocal.first { it.paramName == ExtrinsicParam.TOKEN.paramName }.paramValue.let { tokenId ->
-                    tokens.first { token -> token.id == tokenId }
-                },
+                BigDecimal(
+                    extrinsicParamLocal.valueOrDefault(
+                        ExtrinsicParam.AMOUNT.paramName,
+                        "0.0",
+                        txHash
+                    )
+                ),
+                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.PEER.paramName, "", txHash),
+                mapTransactionTransferType(extrinsicParamLocal, txHash),
+                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN.paramName, "", txHash)
+                    .let { tokenId ->
+                        tokens.getByIdOrEmpty(tokenId)
+                    },
             )
             ExtrinsicType.SWAP -> Transaction.Swap(
                 txHash,
@@ -189,33 +197,80 @@ fun mapTransactionLocalToTransaction(
                 mapTransactionStatusLocalToTransactionStatus(status),
                 timestamp,
                 eventSuccess,
-                extrinsicParamLocal.first { it.paramName == ExtrinsicParam.TOKEN.paramName }.paramValue.let { tokenId ->
-                    tokens.first { token -> token.id == tokenId }
-                },
-                extrinsicParamLocal.first { it.paramName == ExtrinsicParam.TOKEN2.paramName }.paramValue.let { tokenId ->
-                    tokens.first { token -> token.id == tokenId }
-                },
-                BigDecimal(extrinsicParamLocal.first { it.paramName == ExtrinsicParam.AMOUNT.paramName }.paramValue),
-                BigDecimal(extrinsicParamLocal.first { it.paramName == ExtrinsicParam.AMOUNT2.paramName }.paramValue),
-                extrinsicParamLocal.first { it.paramName == ExtrinsicParam.SWAP_MARKET.paramName }.paramValue.let {
-                    Market.values().find { m -> m.backString == it } ?: Market.SMART
-                }
+                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN.paramName, "", txHash)
+                    .let { tokenId ->
+                        tokens.getByIdOrEmpty(tokenId)
+                    },
+                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN2.paramName, "", txHash)
+                    .let { tokenId ->
+                        tokens.getByIdOrEmpty(tokenId)
+                    },
+                BigDecimal(
+                    extrinsicParamLocal.valueOrDefault(
+                        ExtrinsicParam.AMOUNT.paramName,
+                        "0.0",
+                        txHash
+                    )
+                ),
+                BigDecimal(
+                    extrinsicParamLocal.valueOrDefault(
+                        ExtrinsicParam.AMOUNT2.paramName,
+                        "0.0",
+                        txHash
+                    )
+                ),
+                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.SWAP_MARKET.paramName, "", txHash)
+                    .let {
+                        Market.values().find { m -> m.backString == it } ?: Market.SMART
+                    },
+                BigDecimal(
+                    extrinsicParamLocal.valueOrDefault(
+                        ExtrinsicParam.AMOUNT3.paramName,
+                        "0.0",
+                        txHash
+                    )
+                )
             )
         }
     }
 }
 
-fun mapTransactionTransferType(extrinsicParamLocal: List<ExtrinsicParamLocal>): TransactionTransferType {
-    return when (ExtrinsicTransferTypes.valueOf(extrinsicParamLocal.first { it.paramName == ExtrinsicParam.TRANSFER_TYPE.paramName }.paramValue)) {
+private fun mapTransactionTransferType(
+    extrinsicParamLocal: List<ExtrinsicParamLocal>,
+    txHash: String
+): TransactionTransferType {
+    return when (
+        ExtrinsicTransferTypes.valueOf(
+            extrinsicParamLocal.valueOrDefault(
+                ExtrinsicParam.TRANSFER_TYPE.paramName,
+                "IN",
+                txHash
+            )
+        )
+    ) {
         ExtrinsicTransferTypes.OUT -> TransactionTransferType.OUTGOING
         ExtrinsicTransferTypes.IN -> TransactionTransferType.INCOMING
     }
 }
 
-fun mapTransactionStatusLocalToTransactionStatus(statusRemote: ExtrinsicStatus): TransactionStatus {
+private fun mapTransactionStatusLocalToTransactionStatus(statusRemote: ExtrinsicStatus): TransactionStatus {
     return when (statusRemote) {
         ExtrinsicStatus.COMMITTED -> TransactionStatus.COMMITTED
         ExtrinsicStatus.PENDING -> TransactionStatus.PENDING
         ExtrinsicStatus.REJECTED -> TransactionStatus.REJECTED
+    }
+}
+
+private fun List<ExtrinsicParamLocal>.valueOrDefault(
+    paramName: String,
+    default: String,
+    txHash: String
+): String {
+    val v = this.find { it.paramName == paramName }?.paramValue
+    return if (v == null) {
+        Logger.d("Extrinsic [$paramName] param not found in ${this.size} params in $txHash")
+        default
+    } else {
+        v
     }
 }

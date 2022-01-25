@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_ethereum_api.domain.interfaces
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
-import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.KeyPair
@@ -19,7 +18,7 @@ interface EthereumRepository {
 
     fun getSerializedProof(ethCredentials: EthereumCredentials): String
 
-    fun getEthCredentials(mnemonic: String): EthereumCredentials
+    suspend fun getEthCredentials(mnemonic: String): EthereumCredentials
 
     fun startWithdraw(
         amount: BigDecimal,
@@ -69,15 +68,13 @@ interface EthereumRepository {
         tokenAddress: String
     )
 
-    fun getEthRegistrationState(): EthRegisterState
+    suspend fun getEthRegistrationState(): EthRegisterState
 
-    fun registrationStarted(operationId: String)
+    suspend fun registrationStarted(operationId: String)
 
-    fun registrationCompleted(operationId: String)
+    suspend fun registrationCompleted(operationId: String)
 
-    fun registrationFailed(operationId: String)
-
-    fun observeEthRegisterState(): Flow<EthRegisterState.State>
+    suspend fun registrationFailed(operationId: String)
 
     fun getGasEstimations(gasLimit: BigInteger, ethCredentials: EthereumCredentials): Gas
 

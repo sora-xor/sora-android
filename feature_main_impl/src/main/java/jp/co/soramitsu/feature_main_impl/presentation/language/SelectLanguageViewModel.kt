@@ -55,8 +55,7 @@ class SelectLanguageViewModel(
 
     fun languageSelected(language: LanguageItem) {
         viewModelScope.launch {
-            val language = interactor.changeLanguage(language.iso)
-            _languageChangedLiveData.value = language
+            _languageChangedLiveData.value = interactor.changeLanguage(language.iso)
         }
     }
 }

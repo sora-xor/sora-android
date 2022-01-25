@@ -36,11 +36,11 @@ android {
             dimension 'default'
         }
 
-        tst {
+        soralution {
             dimension 'default'
         }
 
-        staging {
+        tsting {
             dimension 'default'
         }
 
@@ -66,6 +66,7 @@ dependencies {
 
     implementation roomDep
     implementation roomKtxDep
+    implementation roomPagingDep
     kapt roomKaptDep
 
     implementation pagingLibraryDep

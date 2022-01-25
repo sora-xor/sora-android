@@ -7,7 +7,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository.datasource
 
 import com.google.gson.reflect.TypeToken
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
 
 class PrefsWalletDatasource @Inject constructor(
-    private val preferences: Preferences,
+    private val soraPreferences: SoraPreferences,
     private val encryptedPreferences: EncryptedPreferences,
     private val serializer: Serializer
 ) : WalletDatasource {
@@ -29,6 +29,7 @@ class PrefsWalletDatasource @Inject constructor(
     companion object {
         private const val PREFS_PARENT_INVITATION = "parent_invitation"
 
+        private const val KEY_DISCLAIMER_VISIBILITY = "key_disclaimer_visibility"
         private const val KEY_CONTACTS = "key_contacts"
         private const val KEY_CLAIM_BLOCK_HASH = "key_claim_block_hash"
         private const val KEY_CLAIM_TX_HASH = "key_claim_tx_hash"
@@ -37,12 +38,20 @@ class PrefsWalletDatasource @Inject constructor(
 
     private val migrationStatusFlow = MutableStateFlow<MigrationStatus?>(null)
 
-    override fun saveContacts(results: List<Account>) {
-        preferences.putString(KEY_CONTACTS, serializer.serialize(results))
+    override fun getDisclaimerVisibility(): Flow<Boolean> {
+        return soraPreferences.getBooleanFlow(KEY_DISCLAIMER_VISIBILITY, true)
     }
 
-    override fun retrieveContacts(): List<Account>? {
-        val contactsJson = preferences.getString(KEY_CONTACTS)
+    override suspend fun saveDisclaimerVisibility(v: Boolean) {
+        soraPreferences.putBoolean(KEY_DISCLAIMER_VISIBILITY, v)
+    }
+
+    override suspend fun saveContacts(results: List<Account>) {
+        soraPreferences.putString(KEY_CONTACTS, serializer.serialize(results))
+    }
+
+    override suspend fun retrieveContacts(): List<Account>? {
+        val contactsJson = soraPreferences.getString(KEY_CONTACTS)
 
         return if (contactsJson.isEmpty()) {
             null
@@ -54,14 +63,14 @@ class PrefsWalletDatasource @Inject constructor(
         }
     }
 
-    override fun saveInvitationParent(parentInfo: InvitedUser) {
+    override suspend fun saveInvitationParent(parentInfo: InvitedUser) {
         encryptedPreferences.putEncryptedString(
             PREFS_PARENT_INVITATION,
             serializer.serialize(parentInfo)
         )
     }
 
-    override fun retrieveInvitationParent(): InvitedUser? {
+    override suspend fun retrieveInvitationParent(): InvitedUser? {
         val parentInfoString = encryptedPreferences.getDecryptedString(PREFS_PARENT_INVITATION)
         return if (parentInfoString.isEmpty()) {
             null
@@ -70,13 +79,13 @@ class PrefsWalletDatasource @Inject constructor(
         }
     }
 
-    override fun saveClaimBlockAndTxHash(inBlock: String, txHash: String) {
+    override suspend fun saveClaimBlockAndTxHash(inBlock: String, txHash: String) {
         encryptedPreferences.putEncryptedString(KEY_CLAIM_BLOCK_HASH, inBlock)
         encryptedPreferences.putEncryptedString(KEY_CLAIM_TX_HASH, txHash)
     }
 
-    override fun saveMigrationStatus(migrationStatus: MigrationStatus) {
-        preferences.putString(KEY_MIGRATION_STATUS, migrationStatus.toString())
+    override suspend fun saveMigrationStatus(migrationStatus: MigrationStatus) {
+        soraPreferences.putString(KEY_MIGRATION_STATUS, migrationStatus.toString())
         migrationStatusFlow.value = migrationStatus
     }
 
@@ -84,18 +93,18 @@ class PrefsWalletDatasource @Inject constructor(
         return migrationStatusFlow.asStateFlow().filterNotNull()
     }
 
-    override fun retrieveClaimBlockAndTxHash(): Pair<String, String> {
+    override suspend fun retrieveClaimBlockAndTxHash(): Pair<String, String> {
         return encryptedPreferences.getDecryptedString(KEY_CLAIM_BLOCK_HASH) to encryptedPreferences.getDecryptedString(
             KEY_CLAIM_TX_HASH
         )
     }
 
-    override fun saveInvitedUsers(invitedUsers: Array<InvitedUser>) {
-        preferences.putString(Const.INVITED_USERS, serializer.serialize(invitedUsers))
+    override suspend fun saveInvitedUsers(invitedUsers: Array<InvitedUser>) {
+        soraPreferences.putString(Const.INVITED_USERS, serializer.serialize(invitedUsers))
     }
 
-    override fun retrieveInvitedUsers(): Array<InvitedUser>? {
-        val invitedUsersJson = preferences.getString(Const.INVITED_USERS)
+    override suspend fun retrieveInvitedUsers(): Array<InvitedUser>? {
+        val invitedUsersJson = soraPreferences.getString(Const.INVITED_USERS)
 
         return if (invitedUsersJson.isEmpty()) {
             null

@@ -9,22 +9,20 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
-import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
+import jp.co.soramitsu.common.util.ext.getColorAttr
+import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.ViewAssetBinding
 
 class AssetView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : CardView(context, attrs, defStyleAttr) {
-
-    enum class State {
-        NORMAL,
-        ASSOCIATING,
-        ERROR
-    }
+    defStyleAttr: Int = 0,
+    defStyleRes: Int = 0,
+) : ConstraintLayout(context, attrs, defStyleAttr, defStyleRes) {
 
     private val binding = ViewAssetBinding.inflate(LayoutInflater.from(context), this)
 
@@ -52,15 +50,24 @@ class AssetView @JvmOverloads constructor(
             val assetIconViewBackgroundColor =
                 typedArray.getColor(R.styleable.AssetView_assetIconViewBackgroundColor, 0)
             if (assetIconViewBackgroundColor != 0) {
-                setAssetIconViewBackgroundColor(assetIconViewBackgroundColor)
+                // setAssetIconViewBackgroundColor(assetIconViewBackgroundColor)
             }
 
             typedArray.recycle()
+            setBackgroundColor(getColorAttr(R.attr.baseBackground))
         }
     }
 
     fun setBalance(balance: String) {
-        binding.balanceTv.text = balance
+        binding.balanceTv.setBalance(
+            AssetBalanceData(
+                amount = balance,
+                style = AssetBalanceStyle(
+                    intStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_18,
+                    decStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_13
+                )
+            )
+        )
     }
 
     fun setAssetFirstName(assetName: String) {
@@ -77,35 +84,5 @@ class AssetView @JvmOverloads constructor(
 
     fun setAssetIconResource(assetIconRes: Int) {
         binding.iconImg.setImageResource(assetIconRes)
-    }
-
-    fun setAssetIconViewBackgroundColor(color: Int) {
-        binding.assetIconView.setBackgroundColor(color)
-    }
-
-    fun changeState(state: State) {
-        when (state) {
-            State.NORMAL -> showNormalState()
-            State.ASSOCIATING -> showAssociatingState()
-            State.ERROR -> showErrorState()
-        }
-    }
-
-    private fun showNormalState() {
-        binding.normalStateView.visibility = View.VISIBLE
-        binding.associatingStateView.visibility = View.GONE
-        binding.errorStateView.visibility = View.GONE
-    }
-
-    private fun showAssociatingState() {
-        binding.normalStateView.visibility = View.GONE
-        binding.associatingStateView.visibility = View.VISIBLE
-        binding.errorStateView.visibility = View.GONE
-    }
-
-    private fun showErrorState() {
-        binding.normalStateView.visibility = View.GONE
-        binding.associatingStateView.visibility = View.GONE
-        binding.errorStateView.visibility = View.VISIBLE
     }
 }

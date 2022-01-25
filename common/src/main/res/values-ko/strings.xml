@@ -1,37 +1,64 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">문의하기</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">개인정보보호정책</string>
   <string name="about_source_code">소스 코드</string>
   <string name="about_telegram">공식 텔레 그램 그룹</string>
   <string name="about_title">소개</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">웹사이트</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">니모닉 확인</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">프로젝트</string>
+  <string name="address_not_found">Address not found, make sure that address belongs to the right network.</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">거래수수료</string>
   <string name="amount_error_no_funds">죄송합니다만, 귀하는 지정된 금액을 전송하기에 충분한 잔액이 없습니다.</string>
   <string name="amount_title">양</string>
   <string name="ask_biometry_message">인증에 생체 측정을 사용 하시겠습니까?</string>
   <string name="asset_add">계정 추가</string>
+  <string name="asset_details_title">Asset Details</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">계정</string>
   <string name="asset_state_associating">연결중...</string>
   <string name="asset_state_error">오류</string>
   <string name="asset_val_fullname">SORA 검증 자 토큰 (VAL)</string>
   <string name="asset_val_name">SORA 검증 자 토큰</string>
   <string name="biometric_dialog_title">인증</string>
+  <string name="block_id">Block hash</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">질문이나 우려 사항이있는 경우 %%문의하기%%</string>
   <string name="claim_contact_1">질문이나 우려 사항이있는 경우</string>
   <string name="claim_contact_2">문의하기</string>
+  <string name="claim_contact_us">%%Contact us%% for any questions or concerns</string>
   <string name="claim_error_title">전환 실패</string>
+  <string name="claim_error_title_v1">Transition of assets failed. Please try again later.</string>
+  <string name="claim_notification_text">Transition in progress...</string>
+  <string name="claim_skip">Skip process</string>
   <string name="claim_subtitle">귀하가 SORA에서 자금을 사용할 수 있도록 전환하려면 귀하의 동의가 필요합니다. SORA는 이제 Substrate 네트워크에서 작동합니다. 전환을 확인하십시오.</string>
+  <string name="claim_subtitle_confirmed">Thank you for the confirmation!</string>
+  <string name="claim_subtitle_confirmed_2">Transition of assets is in progress.\nPlease wait.</string>
   <string name="claim_subtitle_v1">SORA v1에서 자산을 전환하려면 귀하의 동의가 필요합니다. 이를 통해 Substrate 기반 SORA v2에서 자산을 사용할 수 있습니다. \n\n이더 리움 네트워크의 자산은 영향을받지 않으며 호환되는 지갑으로 암호를 가져 와서 계속 액세스 할 수 있습니다.</string>
+  <string name="claim_subtitle_v2">• We need consent to transition your assets from SORA v1 to SORA v2\n\n• The SORA v2 network is built with Substrate, which is natively compatible with the Polkadot and Kusama ecosystem\n\n• Assets on Ethereum are not affected, you can still access them by importing your passphrase to any compatible wallet</string>
   <string name="claim_welcome_sora2">SORA v2에 오신 것을 환영합니다</string>
+  <string name="claim_welcome_sora2_v1">Welcome to\n%%SORA v2%%</string>
   <string name="coming_soon">곧 출시됩니다 ...</string>
+  <string name="common_account">Account</string>
   <string name="common_add">추가</string>
   <string name="common_advanced_settings">고급 설정</string>
   <string name="common_and">그리고</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">적용</string>
   <string name="common_arab">아라비아 사람</string>
+  <string name="common_asset">Asset</string>
+  <string name="common_balance">Balance</string>
   <string name="common_bashkir">바쉬키르</string>
   <string name="common_camera">카메라</string>
   <string name="common_cancel">취소</string>
@@ -39,6 +66,8 @@
   <string name="common_chinesetaiwan">Сhinese Taiwan</string>
   <string name="common_choose_asset">자산 선택</string>
   <string name="common_confirm">확인하십시오</string>
+  <string name="common_connected">Connected</string>
+  <string name="common_connecting">Connecting...</string>
   <string name="common_copied">클립보드에 복사됨</string>
   <string name="common_copy">복사</string>
   <string name="common_copy_address">주소 복사</string>
@@ -47,11 +76,11 @@
   <string name="common_done">완료</string>
   <string name="common_donotallow">허용 안함</string>
   <string name="common_english">영어</string>
+  <string name="common_enter_amount">Enter amount</string>
   <string name="common_error_ambiguous_result">모호한 결과</string>
   <string name="common_error_fee_rate_not_available">출금 공급자에게 연락할 수 없습니다. 나중에 다시 시도하십시오.</string>
   <string name="common_error_gas_limit_low">가스 한도는 최소 %s가 있어야 합니다.</string>
   <string name="common_error_general_message">우리는 문제를 해결하기 위해 열심히 노력하고 있습니다. 나중에 다시 시도하십시오.</string>
-  <!-- Error -->
   <string name="common_error_general_title">오류</string>
   <string name="common_error_internal_error_title">내부 오류</string>
   <string name="common_error_invalid_parameters">잘못된 매개 변수</string>
@@ -63,7 +92,6 @@
   <string name="common_error_inviter_registered_after_invitee">초대 코드는 귀하의 이름을 따서 등록한 사용자로부터 제공되었기 때문에 적용할 수 없습니다</string>
   <string name="common_error_mnemonic_is_not_valid">비밀번호 문구가 유효하지 않습니다. 다른 것을 시도하십시오.</string>
   <string name="common_error_mnemonic_length_error">비밀번호는 15 단어를 포함해야 합니다.</string>
-  <!-- Errors -->
   <string name="common_error_network">인터넷 연결을 확인하고 나중에 다시 시도하십시오.</string>
   <string name="common_error_not_enough_invitations">죄송합니다만, 공유할 초대장이 없습니다</string>
   <string name="common_error_not_found_title">리소스를 사용할 수 없음</string>
@@ -71,7 +99,6 @@
   <string name="common_error_phone_already_registered">이 또는 다른 사용자가 등록하는 데 이미 사용된 전화번호</string>
   <string name="common_error_pincode_check_error">입력된 코드가 잘못되었습니다.</string>
   <string name="common_error_price_is_to_low">가격이 너무 낮습니다.</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">죄송합니다.프로젝트를 찾을 수 없습니다.</string>
   <string name="common_error_retry">다시 시도하십시오</string>
   <string name="common_error_search_string_error">검색 크기는 3에서 64글자 사이여야 합니다.</string>
@@ -81,7 +108,6 @@
   <string name="common_error_user_not_found">비밀번호 문구가 유효하지 않습니다. 다른 것을 시도하십시오.</string>
   <string name="common_error_user_values_not_found">사용자 값 데이터를 찾을 수 없기 때문에 작업을 계속할 수 없습니다.</string>
   <string name="common_error_votes_invalid_format">죄송합니다,하지만 투표의 양을 해석 할 수 없습니다. 다시 투표해주세요</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">미안하지만, 투표할 점수가 충분하지 않네요.</string>
   <string name="common_error_voting_is_not_allowed">미안하지만,이 프로젝트는 더 이상 투표를받을 수 없습니다.</string>
   <string name="common_error_wrong_user_status">사용자 상태가 잘못되었기 때문에 작업을 계속할 수 없습니다.</string>
@@ -89,9 +115,11 @@
   <string name="common_failed">실패한</string>
   <string name="common_filipino">필리핀어</string>
   <string name="common_finnish">핀란드어</string>
+  <string name="common_for">for</string>
   <string name="common_french">프랑스어</string>
   <string name="common_from">부터</string>
   <string name="common_gallery">갤러리</string>
+  <string name="common_german">German</string>
   <string name="common_hide">숨기기</string>
   <plurals name="common_hour">
     <item quantity="other">시간</item>
@@ -102,10 +130,14 @@
   <string name="common_japanese">일본어</string>
   <string name="common_khmer">크메르</string>
   <string name="common_korean">한국어</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">말레이 사람</string>
+  <string name="common_manage">Manage</string>
   <string name="common_min">분</string>
   <string name="common_network_unavailable">네트워크 연결을 사용할 수 없음</string>
   <string name="common_next">다음</string>
+  <string name="common_norwegian">Norwegian</string>
+  <string name="common_notsent">Not sent</string>
   <string name="common_ok">알겠습니다</string>
   <string name="common_open_explorer">블록체인 탐색기에서 보기</string>
   <string name="common_options_title">옵션을 선택하세요</string>
@@ -113,9 +145,9 @@
   <string name="common_passphrase_header">비밀번호 문구는\n비밀번호의 유형입니다.</string>
   <string name="common_passphrase_save_mnemonic_title">비밀번호 문구 저장 또는 전송</string>
   <string name="common_passphrase_save_or_send">저장 또는 전송</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">비밀번호 문구</string>
   <string name="common_passphrase_your_passphrase">귀하의 비밀번호 문구</string>
+  <string name="common_per">per</string>
   <string name="common_personal_info_account_name_invalid">계정 이름은 최대 32 바이트를 포함해야합니다.</string>
   <string name="common_personal_info_first_name_hint">이름</string>
   <string name="common_personal_info_first_name_hyphen_error">이름은 하이픈에서 시작하거나 끝날 수 없거나 이중 하이픈을 포함할 수 없습니다.</string>
@@ -123,21 +155,25 @@
   <string name="common_personal_info_last_name_hint">성</string>
   <string name="common_personal_info_last_name_hyphen_error">성은 하이픈에서 시작하거나 끝날 수 없거나 이중 하이픈을 포함할 수 없습니다.</string>
   <string name="common_personal_info_last_name_is_empty">성이 비어 있습니다.</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">개인 정보</string>
   <string name="common_please_wait">기다려주세요.</string>
   <string name="common_receive">받기</string>
   <string name="common_received">받은</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">다시 해 보다</string>
   <string name="common_russian">러시아어</string>
   <string name="common_save">저장</string>
   <string name="common_scan">주사</string>
   <string name="common_search">검색</string>
   <string name="common_sec">초</string>
-  <!-- Other common stuff -->
+  <string name="common_select_asset">Select an asset</string>
   <string name="common_select_email_app_title">이메일 앱 선택</string>
   <string name="common_send">보내기</string>
+  <string name="common_sender">Sender</string>
+  <string name="common_sent">Sent</string>
+  <string name="common_settings">설정 </string>
   <string name="common_share">공유</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">건너뜀</string>
   <string name="common_sms_code_expired">인증 코드가 만료되었습니다. 다른 걸로 시도해보십시오.</string>
   <string name="common_sms_code_not_correct">확인 코드가 올바르지 않습니다.</string>
@@ -147,13 +183,15 @@
   <string name="common_terms_title">이용 약관</string>
   <string name="common_thai">태국어</string>
   <string name="common_to">에</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">오늘</string>
   <string name="common_try_another">다시 시도하기</string>
+  <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">우크라이나어</string>
   <string name="common_unsupported_version_body">업데이트된 소라 응용 프로그램은 구글 플레이에서 사용할 수 있습니다. 여기에는 개선 및 버그 수정이 포함되어 있습니다.</string>
   <string name="common_unsupported_version_open_google_play">구글 플레이 열기</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">소라 앱 업데이트</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">투표</string>
   <string name="common_yesterday">어제</string>
   <string name="contacts_empty_state_title">가장 중요한 연락처가 여기에 표시됩니다.</string>
@@ -165,17 +203,26 @@
   <string name="copy_eth_title">이더 리움 (ETH) 지갑 주소 복사</string>
   <string name="copy_val_title">SORA NET (VAL) 지갑 주소 복사</string>
   <string name="countries_country_not_found">쿼리와 일치하는 국가가 없습니다</string>
-  <!-- Countries -->
   <string name="countries_title">국가 선택</string>
   <string name="create_account_title">계정 생성</string>
+  <string name="details_frozen">Frozen</string>
+  <string name="details_frozen_total">Frozen (Total)</string>
   <string name="details_total">전체 균형</string>
+  <string name="details_transferable">Transferable</string>
+  <string name="empty_recent_recipients">No recent recipients.\nSent addresses will be shown here.</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">이 작업을 계속하려면 거래를 완료하기 위해 채굴자 수수료로 일부 이더리움 계정이 필요합니다.</string>
   <string name="error_ethereum_account_title">이더리움 계정이 연결되어있지 않습니다.</string>
   <string name="error_miner_fee_subtitle">이 작업을 계속하려면 이더리움 계정을 충전해야 합니다.</string>
   <string name="error_miner_fee_title">채굴 수수료에 대한 자금이 부족합니다.</string>
+  <string name="error_transaction_fee_title">Not enough funds for transaction fee</string>
   <string name="ethereum_config_unavailable">이더 리움 노드를 사용할 수 없음</string>
-  <!-- FAQ -->
   <string name="faq_title">FAQ</string>
+  <string name="friends_spread_word">Share SORA with friends.</string>
+  <string name="from_account">From account</string>
+  <string name="history_receive">Receive</string>
+  <string name="history_send">Send</string>
+  <string name="history_swap">Swap</string>
   <string name="history_title">최근 이벤트</string>
   <string name="invite_accepted_empty_state_title">아직 수락 된 초대가 없습니다</string>
   <string name="invite_accepted_invitations_title">수락된 초대장</string>
@@ -184,6 +231,9 @@
   <string name="invite_code_applied_body">코드가 성공적으로 적용되었습니다</string>
   <string name="invite_code_applied_title">축하합니다!</string>
   <string name="invite_code_apply">초대 코드 적용</string>
+  <string name="invite_code_left_hours">h</string>
+  <string name="invite_code_left_minutes">m</string>
+  <string name="invite_code_left_seconds">s</string>
   <string name="invite_code_sharing_title">초대 코드 공유</string>
   <string name="invite_empty_friends_description">초대장 상태\n여기에 표시됩니다</string>
   <string name="invite_enter_confirmation_body_mask">초대 코드 을 적용하시겠습니까?%s</string>
@@ -191,7 +241,6 @@
   <string name="invite_enter_error_already_applied">다른 초대 코드를 이미 적용하셨습니다.</string>
   <string name="invite_enter_error_time_is_up">초대 코드 적용 시간이 경과됨</string>
   <string name="invite_enter_invitation_code">초대 코드 입력</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">친구</string>
   <string name="invite_link_format">아래 링크를 사용하여 소라에 가입하세요:%s</string>
   <string name="invite_link_sharing_title">초대 링크 공유</string>
@@ -205,6 +254,7 @@
   <string name="logout_dialog_body">이 작업을 수행하면이 장치에서 계정이 삭제됩니다. 계속하기 전에 암호를 백업했는지 확인하십시오.</string>
   <string name="mnemonic_alert_text">계정 액세스를 복구하는 데 사용됩니다. 그것이 없는 경우 계정을 복수할 수 없으니, 반드시 기록해주시기 바랍니다!</string>
   <string name="mnemonic_confirm_text">올바른 순서로 단어를 선택하여 확인합니다. </string>
+  <string name="mnemonic_confirm_text_v2">올바른 순서로 단어를 선택하여 암호 확인</string>
   <string name="mnemonic_invalid">니모닉 암호가 잘못되었습니다. 단어 순서를 한 번 더 확인하십시오.</string>
   <string name="mnemonic_invalid_title">니모닉 암호가 잘못되었습니다.</string>
   <string name="mnemonic_text">종이에 기록하는 것과 같이 비 디지털 방식으로 백업하십시오.</string>
@@ -218,7 +268,6 @@
   <string name="personal_info_username_v1">계정 이름</string>
   <string name="phone_number_mobile">휴대폰 번호</string>
   <string name="phone_number_sms_code_will_be_sent">귀하의 전화로\nSMS 코드가 전송됩니다.</string>
-  <!-- Phone number -->
   <string name="phone_number_title">가입하기</string>
   <string name="phone_verification_too_frequent_message">확인 코드이 너무 자주 요청되었습니다. 나중에 다시 시도하십시오.</string>
   <string name="pincode_change_success">PIN 코드가 성공적으로 변경되었습니다.</string>
@@ -233,7 +282,60 @@
   <string name="pincode_set_your_pin_code">핀코드를 만들어주세요 </string>
   <string name="pincode_touch_fingerprint_scanner">지문 스캐너 터치</string>
   <string name="pincode_updated">PIN 코드가 업데이트되었습니다.</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">상호 운용 가능한 미래를위한 DEX. Polkaswap은 브리지를 통해 연결된 Polkadot 네트워크, Parachain 및 블록 체인을 기반으로 토큰을 교환하기위한 비 양육권 AMM-DEX 프로토콜입니다. Polkaswap 프로토콜은 신뢰할 수있는 중개자를 효과적으로 제거하고 더 빠른 거래를위한 기회를 제공합니다.</string>
+  <string name="polkaswap_confirm_swap">Confirm Swap</string>
+  <string name="polkaswap_details">Details</string>
+  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
+  <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
+  <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
+  <string name="polkaswap_info_text_4">Your understanding that the current version of Polkaswap is an alpha version: it has not been fully tested, and some functions may not perform as designed;</string>
+  <string name="polkaswap_info_text_5">Your understanding and voluntary acceptance of the risks involved in using Polkaswap, including, but not limited to, the risk of losing tokens.</string>
+  <string name="polkaswap_info_text_6">Once more, please do not continue without reading the %%Polkaswap FAQ%%, %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%!</string>
+  <string name="polkaswap_info_text_7">In order to hide the disclaimer notification from the Swap tab please swipe the button below. Only do so if you fully understand and have read all of the documents mentioned!</string>
+  <string name="polkaswap_info_text_8">Swipe to hide</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_title">Disclaimer</string>
+  <string name="polkaswap_info_title_main">면책 조항: polkaswap을 계속 사용하기 전에 읽으십시오!</string>
+  <string name="polkaswap_input_estimated">Input is estimated. You will sell maximum %s or the transaction will revert.</string>
+  <string name="polkaswap_insufficient_balance">Insufficient %s balance</string>
+  <string name="polkaswap_insufficient_liqudity">Insufficient liquidity</string>
+  <string name="polkaswap_liqudity_fee">LP Fee</string>
+  <string name="polkaswap_liqudity_fee_info">A portion of each trade (0.3%) goes to liquidity providers as a protocol incentive.</string>
+  <string name="polkaswap_market">Market</string>
+  <string name="polkaswap_market_info">Market algorithm - option to choose between Primary Market (TBC), Secondary Market (XYK) or a combined smart algorithm for guaranteed best price for any given transaction.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_title">Market algorithm</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_maximum_sold">Max Sold</string>
+  <string name="polkaswap_maximum_sold_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_minimum_received">Min Received</string>
+  <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_network_fee">Network Fee</string>
+  <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
+  <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
+  <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
+  <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
+  <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
+  <string name="polkaswap_slippage_tolerance">Slippage Tolerance</string>
+  <string name="polkaswap_smart">Smart</string>
+  <string name="polkaswap_swap_title">Swap</string>
+  <string name="polkaswap_swapped">Swapped</string>
+  <string name="polkaswap_tbc">TBC</string>
+  <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Add</string>
+  <string name="pool_button_remove">Remove</string>
+  <string name="pool_liqudity_title">Your liquidity</string>
+  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_share_title">Share of Pool</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">Pooled</string>
   <string name="profile_about_title">소개</string>
   <string name="profile_biometry_title">생체 측정 인증</string>
   <string name="profile_change_pin_title">PIN 변경</string>
@@ -260,13 +362,13 @@
   <string name="project_vote_dialog_title">얼마나 많은 투표 점수</string>
   <string name="project_voted">투표됨</string>
   <string name="project_you_can_vote_at_least_1_point">귀하는 적어도 1점을 투표할 수 있습니다😜</string>
+  <string name="qr_code">QR code</string>
   <string name="qr_upload">갤러리에서 업로드</string>
   <string name="recovery_body_subtitle">안타깝게도 비밀번호 문구를 잊어버린다면 귀하의 계정에 접근할 수 없습니다.</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">비밀번호 문구입력</string>
   <string name="recovery_mnemonic_passphrase">니모닉 암호</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">액세스 복원</string>
+  <string name="recovery_source_type">Source type</string>
   <string name="recovery_title">계정 가져 오기</string>
   <string name="referenda_title">국민 투표</string>
   <string name="referenda_title_vote">국민 투표에 투표</string>
@@ -285,17 +387,26 @@
   <string name="referendum_total_votes">총 투표수</string>
   <string name="referendum_unsupport_title">아니요</string>
   <string name="referendum_voting_result">투표 결과</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">제 3 자 멀웨어에 의해 수집 될 수있는 스크린 샷을 찍지 마십시오.</string>
   <string name="screenshot_alert_title">스크린 샷을 찍지 마십시오</string>
+  <string name="search_asset_by_name">Search by asset name or symbol</string>
+  <string name="select_account_address">Search account address</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
+  <string name="select_recipient">Select recipient</string>
   <string name="set_amount">금액 설정</string>
   <string name="staking_coming_soon">XOR 보유자는 XOR을 스테이 킹하여 검증자를 지명하고 보상을받을 수 있습니다.</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA VALidator 보상</string>
-  <!-- Startup -->
   <string name="startup_verification_title">권한 부여확인…</string>
+  <string name="status_error">Error</string>
   <string name="status_pending">대기중</string>
   <string name="status_rejected">거부됨</string>
   <string name="status_success">성공</string>
   <string name="status_title">상태</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">친구</string>
   <string name="tabbar_parliament_title">의회</string>
   <string name="tabbar_polkaswap_title">폴카 스왑</string>
@@ -323,50 +434,66 @@
   <string name="transaction_send_back">되돌려 보내기</string>
   <string name="transaction_token">토큰</string>
   <string name="transaction_total">합계</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">많은 세계.\n 하나의 경제.</string>
+  <string name="tutorial_many_world_desc">SORA는 SORA 의회의 민주적 감독 하에 새롭고 흥미로운 응용 프로그램을 만드는 데 자금을 지원하는 분산형 다중 우주 경제 시스템이 되기 위해 노력하고 있습니다.</string>
   <string name="tutorial_one_world">하나의 세계.\n 하나의 경제.</string>
   <string name="tutorial_one_world_desc">SORA는 SORA 의회의 민주적 감독하에 새롭고 흥미로운 응용 프로그램을 만드는 데 자금을 지원하면서 전 세계를위한 분산 형 중앙 은행이되기 위해 노력하고 있습니다.</string>
   <string name="tutorial_privacy_policy">개인정보보호정책</string>
   <string name="tutorial_project_success_desc">만약 프로젝트가 투표에서 성공한다면, 모든 사람들은 그들의 몫을 얻게 됩니다.</string>
   <string name="tutorial_projects_desc">공급자가 소라에 추가하고 선정 과정 후 투표에 추가된 프로젝트</string>
   <string name="tutorial_restore_account">계정 액세스 복원</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">가입하기</string>
+  <string name="tutorial_terms_and_conditions">By creating an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
   <string name="tutorial_terms_and_conditions_1">가입하면 다음에 동의하게됩니다.\n</string>
   <string name="tutorial_terms_and_conditions_2">이용 약관</string>
   <string name="tutorial_terms_and_conditions_3">이용 약관</string>
+  <string name="tutorial_terms_and_conditions_recovery">By importing an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">사용자는 어떤 프로젝트에 자금을 지원해야 하는지를 결정하는 프로젝트에 투표합니다.</string>
   <string name="unknown_balance">알 수 없음</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">다른 네트워크의 VAL 토큰</string>
   <string name="verification_enter_code_from_sms">SMS에서 코드 입력</string>
   <string name="verification_request_new_code_time" formatted="false">%s:%s 후 새 코드를 요청합니다</string>
-  <!-- Verification -->
   <string name="verification_resend_code">코드 재전송</string>
   <string name="verification_title">전화 인증</string>
   <string name="view_balance_val">SORA NET (VAL) 토큰 할당보기</string>
   <string name="votes_empty_history_description">투표가 바뀔 때마다\n여기에서 그 기록을 확인할 수 있습니다.</string>
-  <!-- Votes -->
   <string name="votes_history_title">투표 기록</string>
   <string name="votes_zero_error_message">죄송합니다. 하지만 귀하는 최소 1점이 있어야 합니다.</string>
   <string name="wallet_account_retry_registration">등록 재시도</string>
+  <string name="wallet_asset_id">Asset id</string>
   <string name="wallet_balance_locked">잠긴</string>
   <string name="wallet_balance_reserved">보유한</string>
+  <string name="wallet_bonded">Bonded</string>
   <string name="wallet_empty_description">송수신 거래가 \n여기에 표시됩니다.</string>
+  <string name="wallet_empty_history_title">No transactions</string>
   <string name="wallet_ethereum">이더리움</string>
   <string name="wallet_history_from_ethereum_address_title">이더리움 주소에서</string>
   <string name="wallet_history_from_soranet_address_title">소라넷 계좌에서</string>
+  <string name="wallet_history_limitations_text">At the moment, the history of transactions is stored locally, which means if you import the account on another device, log out or reinstall the application on current device, the history of transactions wouldn’t be available any more. Also we can’t show any incoming transactions. We apologize for any inconvenience caused, we are working to resolve the issue.</string>
+  <string name="wallet_history_limitations_title">History limitations</string>
   <string name="wallet_history_reward_from_system">시스템으로부터의 보상</string>
   <string name="wallet_history_to_ethereum_address">이더리움 주소로</string>
   <string name="wallet_history_to_my_ethereum_title">내 이더리움 주소로</string>
   <string name="wallet_history_to_my_soranet_title">내 소라넷 계좌로</string>
   <string name="wallet_history_to_soranet_account">소라넷 계좌로</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">수신할 내 소라%s 네트워크 주소 %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_template" formatted="false">수신할 내 소라 네트워크 주소 %s %s:</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
   <string name="wallet_receive_val">수신 VAL</string>
+  <string name="wallet_redeemable">Redeemable</string>
+  <string name="wallet_send_existential_warning_message">Your transfer will remove account from blockstore since it will make total balance lower than existential deposit.</string>
   <string name="wallet_soranet">소라넷</string>
-  <!-- Wallet -->
   <string name="wallet_title">지갑</string>
+  <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">제출 된 거래</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">최대 %s 글자</string>
   <string name="wallet_transfer_to_ethereum">이더리움 주소로</string>
+  <string name="wallet_unbonding">Unbonding</string>
   <string name="wallet_val_to_my_eth">내 이더리움 계좌로</string>
 </resources>

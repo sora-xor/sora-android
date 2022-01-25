@@ -31,10 +31,8 @@ class AssetSettingsViewModel(
     private val _assetPositions = MutableLiveData<Pair<Int, Int>>()
     val assetPositions: LiveData<Pair<Int, Int>> = _assetPositions
 
-    private val changeVisibility = mutableListOf<Pair<String, Boolean>>()
-    private val changePosition = mutableListOf<String>()
     private val curAssetList = mutableListOf<AssetConfigurableModel>()
-    private var displayedAssetList = mutableListOf<AssetConfigurableModel>()
+    private var positions = mutableListOf<String>()
     private var curFilter: String = ""
 
     init {
@@ -45,9 +43,8 @@ class AssetSettingsViewModel(
         viewModelScope.launch {
             val list = mapAssetToAssetModel(interactor.getWhitelistAssets())
             curAssetList.addAll(list)
-            displayedAssetList.addAll(list)
-            changePosition.addAll(list.map { m -> m.id })
-            _assetsListLiveData.value = displayedAssetList
+            positions.addAll(curAssetList.map { it.id })
+            _assetsListLiveData.value = curAssetList
         }
     }
 
@@ -66,21 +63,20 @@ class AssetSettingsViewModel(
 
     private fun filterAssetsList() {
         val filter = curFilter.lowercase(Locale.getDefault())
-        if (filter.isBlank()) {
-            displayedAssetList = curAssetList
-            _assetsListLiveData.value = displayedAssetList
-            return
+        val list = if (filter.isBlank()) {
+            curAssetList
+        } else {
+            mutableListOf<AssetConfigurableModel>().apply {
+                addAll(
+                    curAssetList.filter {
+                        it.assetFirstName.lowercase(Locale.getDefault())
+                            .contains(filter) || it.assetLastName.lowercase(Locale.getDefault())
+                            .contains(filter)
+                    }
+                )
+            }
         }
-        displayedAssetList = mutableListOf<AssetConfigurableModel>().apply {
-            addAll(
-                curAssetList.filter {
-                    it.assetFirstName.lowercase(Locale.getDefault())
-                        .contains(filter) || it.assetLastName.lowercase(Locale.getDefault())
-                        .contains(filter)
-                }
-            )
-        }
-        _assetsListLiveData.value = displayedAssetList
+        _assetsListLiveData.value = list
     }
 
     fun searchAssets(filter: String) {
@@ -89,43 +85,35 @@ class AssetSettingsViewModel(
     }
 
     fun checkChanged(asset: AssetConfigurableModel, checked: Boolean) {
-        changeVisibility.indexOfFirst { it.first == asset.id }.let {
-            if (it >= 0) changeVisibility.removeAt(it)
+        if (checked) {
+            curAssetList.find { it.id == asset.id }?.visible = true
+            viewModelScope.launch {
+                interactor.displayAssets(listOf(asset.id))
+            }
+        } else {
+            curAssetList.find { it.id == asset.id }?.visible = false
+            viewModelScope.launch {
+                interactor.hideAssets(listOf(asset.id))
+            }
         }
-        changeVisibility.add(asset.id to checked)
     }
 
     fun backClicked() {
         router.popBackStackFragment()
     }
 
-    fun doneClicked() {
-        viewModelScope.launch {
-            tryCatch {
-                interactor.updateAssetPositions(
-                    changePosition.mapIndexed { index, s -> s to index }
-                        .toMap()
-                )
-                interactor.displayAssets(changeVisibility.filter { it.second }.map { it.first })
-                interactor.hideAssets(changeVisibility.filter { !it.second }.map { it.first })
-                changePosition.clear()
-                changeVisibility.clear()
-                router.popBackStackFragment()
-            }
-        }
-    }
-
     fun assetPositionChanged(from: Int, to: Int): Boolean {
-        if (!displayedAssetList[from].changeCheckStateEnabled || !displayedAssetList[to].changeCheckStateEnabled) return false
-        val originalFrom =
-            requireNotNull(changePosition.indexOfFirst { it == displayedAssetList[from].id })
-        val originalTo =
-            requireNotNull(changePosition.indexOfFirst { it == displayedAssetList[to].id })
-        with(changePosition) {
-            val item = removeAt(originalFrom)
-            add(originalTo, item)
+        if (!curAssetList[from].hideAllowed || !curAssetList[to].hideAllowed) return false
+        with(positions) {
+            val item = removeAt(from)
+            add(to, item)
         }
-        with(displayedAssetList) {
+        viewModelScope.launch {
+            interactor.updateAssetPositions(
+                positions.mapIndexed { index, s -> s to index }.toMap()
+            )
+        }
+        with(curAssetList) {
             val item = removeAt(from)
             add(to, item)
         }

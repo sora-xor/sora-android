@@ -7,8 +7,8 @@ package jp.co.soramitsu.common.presentation.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.Event
 
 open class BaseViewModel : ViewModel() {
@@ -18,7 +18,8 @@ open class BaseViewModel : ViewModel() {
     val alertDialogLiveData = MutableLiveData<Event<Pair<String, String>>>()
 
     fun onError(throwable: Throwable) {
-        logException(throwable)
+        FirebaseWrapper.recordException(throwable)
+
         if (throwable is SoraException) {
             when (throwable.kind) {
                 SoraException.Kind.BUSINESS -> {
@@ -61,12 +62,6 @@ open class BaseViewModel : ViewModel() {
         } catch (t: Throwable) {
             onError(t)
         }
-    }
-
-    fun logException(throwable: Throwable) {
-        print(throwable.localizedMessage)
-        FirebaseCrashlytics.getInstance().recordException(throwable)
-        throwable.printStackTrace()
     }
 
     protected open fun onError(errorMessageResource: Int) {

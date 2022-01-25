@@ -30,7 +30,6 @@ class AssetLocalToAssetMapper @Inject constructor() {
             ),
             position = asset.assetLocal.position,
             isDisplaying = asset.assetLocal.displayAsset,
-            isDisplayingBalance = asset.assetLocal.showMainBalance,
         )
 
     fun map(tokenLocal: TokenLocal, res: ResourceManager): Token =
@@ -40,8 +39,10 @@ class AssetLocalToAssetMapper @Inject constructor() {
             symbol = tokenLocal.symbol,
             precision = tokenLocal.precision,
             isHidable = tokenLocal.isHidable,
-            icon = runCatching { res.getResByName("ic_${tokenLocal.id}") }.getOrDefault(
-                OptionsProvider.DEFAULT_ICON
-            )
+            icon = (
+                runCatching { res.getResByName("ic_${tokenLocal.id}") }.getOrDefault(
+                    OptionsProvider.DEFAULT_ICON
+                ).takeIf { it != 0 }
+                ) ?: OptionsProvider.DEFAULT_ICON
         )
 }

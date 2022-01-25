@@ -91,7 +91,6 @@ class TransactionDetailsTest {
             0,
         ),
         false,
-        false,
         0,
         AssetBalance(
             BigDecimal.TEN,

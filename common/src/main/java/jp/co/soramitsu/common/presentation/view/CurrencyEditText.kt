@@ -10,6 +10,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatEditText
+import jp.co.soramitsu.common.util.ext.decimalPartSized
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -19,6 +20,7 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
     private val doubleZero = "00"
     private var decimalSymbol = '.'
     private var groupingSymbol = ' '
+    var listenerEnabled = true
 
     val integerPartLength: Int = 27
     var decimalPartLength: Int = 2
@@ -43,7 +45,7 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
 
             if (newAmount.startsWith(decimalSymbol)) {
                 newAmount = "$zero$newAmount"
-                setText(newAmount)
+                setText(newAmount.decimalPartSized(decimalSymbol.toString()))
                 setSelection(newAmount.length)
                 addTextChangedListener(this)
                 return
@@ -52,20 +54,20 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
             val newAmountComponents = newAmount.split(decimalSymbol)
 
             if (newAmountComponents.isNotEmpty() && newAmountComponents[0].replace(" ", "").length > integerPartLength && !newAmount.endsWith(decimalSymbol)) {
-                setText(lastEdited)
+                setText(lastEdited.decimalPartSized(decimalSymbol.toString()))
                 setSelection(getSelection(start, count, 0))
                 addTextChangedListener(this)
                 return
             }
 
             if (newAmountComponents.size > 2 || newAmountComponents.size == 2 && newAmountComponents[1].length > decimalPartLength) {
-                setText(lastEdited)
+                setText(lastEdited.decimalPartSized(decimalSymbol.toString()))
                 setSelection(getSelection(start, count, 0))
                 addTextChangedListener(this)
                 return
             }
 
-            val formattedString = format(newAmount)
+            val formattedString = format(newAmount).decimalPartSized(decimalSymbol.toString())
 
             setText(formattedString)
 
@@ -132,7 +134,7 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
 
     fun setValue(s: String) {
         removeTextChangedListener(textWatcherListener)
-        setText(s)
+        setText(s.decimalPartSized(decimalSymbol.toString()))
         addTextChangedListener(textWatcherListener)
     }
 }

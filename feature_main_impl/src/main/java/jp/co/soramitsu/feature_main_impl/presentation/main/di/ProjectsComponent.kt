@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
-import jp.co.soramitsu.feature_main_impl.presentation.main.MainFragment
+import jp.co.soramitsu.feature_main_impl.presentation.main.ReferendaFragment
 import jp.co.soramitsu.feature_main_impl.presentation.main.projects.BaseVotableFragment
 
 @Subcomponent(
@@ -29,7 +29,7 @@ interface ProjectsComponent {
         fun build(): ProjectsComponent
     }
 
-    fun inject(mainFragment: MainFragment)
+    fun inject(mainFragment: ReferendaFragment)
 
     fun inject(votableFragment: BaseVotableFragment)
 }

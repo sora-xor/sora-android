@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/item_contact"
+    android:paddingTop="@dimen/x1"
+    android:paddingBottom="@dimen/x1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/selectablePartWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/x1"
+        android:paddingBottom="@dimen/x1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/token1Icon"
+            android:layout_width="@dimen/x3"
+            android:layout_height="@dimen/x3"
+            android:src="@drawable/ic_0x009b72ff44208336b7700dcf85dd4bcce06fe691d875e5d949870337d383b26a"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/token2Icon"
+            android:layout_width="@dimen/x3"
+            android:layout_height="@dimen/x3"
+            android:layout_marginStart="@dimen/x1_4"
+            android:src="@drawable/ic_0x009be848df92a400da2f217256c88d1a9b1a0304f9b3e90991a67418e1d3b08c"
+            app:layout_constraintStart_toEndOf="@+id/token1"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/poolText"
+            style="@style/TextAppearance.Soramitsu.Neu.Bold.14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x1"
+            android:layout_weight="1"
+            android:text="XOR-DAI"
+            app:layout_constraintBottom_toBottomOf="@+id/token2"
+            app:layout_constraintStart_toEndOf="@+id/token2"
+            app:layout_constraintTop_toTopOf="@+id/token2" />
+
+        <ImageView
+            android:id="@+id/chevronIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_chevron_down_circled_32"
+            app:layout_constraintBottom_toBottomOf="@+id/token2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/token2" />
+
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/grPooledItemExpandedState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="shareText,shareValue,divider1,token1Pooled,token1PooledIcon,token1PooledValue,divider2,token2Pooled,token2PooledIcon,token2PooledValue,divider3,addButton,removeButton" />
+
+    <TextView
+        android:id="@+id/shareText"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        android:text="Share of Pool"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/selectablePartWrapper" />
+
+    <TextView
+        android:id="@+id/shareValue"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="XOR-DAI"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/shareText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/shareText" />
+
+    <View
+        android:id="@id/divider1"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="@dimen/x1"
+        android:visibility="gone"
+        android:background="@drawable/dashed_line"
+        app:layout_constraintTop_toBottomOf="@id/shareText"
+        tools:layout_editor_absoluteX="20dp" />
+
+    <ImageView
+        android:id="@+id/token1PooledIcon"
+        android:layout_width="@dimen/x3"
+        android:layout_height="@dimen/x3"
+        android:layout_marginTop="@dimen/x1"
+        android:visibility="gone"
+        android:src="@drawable/ic_0x009b72ff44208336b7700dcf85dd4bcce06fe691d875e5d949870337d383b26a"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider1" />
+
+    <TextView
+        android:id="@+id/token1Pooled"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:text="XOR Pooled"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/token1PooledIcon"
+        app:layout_constraintStart_toEndOf="@+id/token1PooledIcon"
+        app:layout_constraintTop_toTopOf="@+id/token1PooledIcon" />
+
+    <TextView
+        android:id="@+id/token1PooledValue"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1.5678"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/token1PooledIcon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/token1PooledIcon" />
+
+    <View
+        android:id="@id/divider2"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="@dimen/x1"
+        android:background="@drawable/dashed_line"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/token1Pooled" />
+
+    <ImageView
+        android:id="@+id/token2PooledIcon"
+        android:layout_width="@dimen/x3"
+        android:layout_height="@dimen/x3"
+        android:layout_marginTop="@dimen/x1"
+        android:visibility="gone"
+        android:src="@drawable/ic_0x009b72ff44208336b7700dcf85dd4bcce06fe691d875e5d949870337d383b26a"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider2" />
+
+    <TextView
+        android:id="@+id/token2Pooled"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:text="DAI Pooled"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/token2PooledIcon"
+        app:layout_constraintStart_toEndOf="@+id/token2PooledIcon"
+        app:layout_constraintTop_toTopOf="@+id/token2PooledIcon" />
+
+    <TextView
+        android:id="@+id/token2PooledValue"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1.5678"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/token2PooledIcon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/token2PooledIcon" />
+
+    <View
+        android:id="@id/divider3"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginTop="@dimen/x1"
+        android:background="@drawable/dashed_line"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/token2Pooled" />
+
+    <soup.neumorphism.NeumorphButton
+        android:id="@+id/addButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.40.Shadow"
+        android:layout_marginTop="@dimen/x1"
+        android:text="Add"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@+id/removeButton"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/divider3" />
+
+    <soup.neumorphism.NeumorphButton
+        android:id="@+id/removeButton"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.40.Shadow"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Remove"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/addButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/addButton"
+        app:layout_constraintTop_toTopOf="@+id/addButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

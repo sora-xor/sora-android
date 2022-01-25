@@ -9,6 +9,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
+import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapQuote
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import kotlinx.coroutines.flow.Flow
@@ -16,9 +17,21 @@ import java.math.BigDecimal
 
 interface PolkaswapRepository {
 
+    suspend fun updateAccountPools(address: String)
+
+    suspend fun subscribeToPoolsData(address: String): Flow<String>
+
+    fun subscribeToPoolsAssets(address: String): Flow<String>
+
+    fun subscribePoolFlow(address: String): Flow<List<PoolData>>
+
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean
 
     suspend fun getAvailableSources(tokenId1: String, tokenId2: String): List<Market>
+
+    fun getPolkaswapDisclaimerVisibility(): Flow<Boolean>
+
+    suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
 
     fun observePoolXYKReserves(tokenId: String): Flow<String>
 

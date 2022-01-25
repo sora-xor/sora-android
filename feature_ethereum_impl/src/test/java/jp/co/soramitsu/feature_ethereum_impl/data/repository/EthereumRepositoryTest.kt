@@ -23,6 +23,7 @@ import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiC
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -54,6 +55,9 @@ class EthereumRepositoryTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var web3jProvider: Web3jProvider
@@ -156,16 +160,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `observer eth registration state`() = runBlockingTest {
-        val state = EthRegisterState.State.NONE
-        given(ethereumDatasource.observeEthRegisterState()).willReturn(flow { emit(state) })
-
-        val value = ethereumRepository.observeEthRegisterState().toList()
-        assertEquals(state, value[0])
-    }
-
-    @Test
-    fun `get eth registration state`() {
+    fun `get eth registration state`() = runBlockingTest {
         val state = EthRegisterState(EthRegisterState.State.NONE, "")
         given(ethereumDatasource.getEthRegisterState()).willReturn(state)
 
@@ -174,7 +169,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `registration state called`() {
+    fun `registration state called`() = runBlockingTest {
         val operationId = "operationId"
         val ethRegisterState = EthRegisterState(EthRegisterState.State.IN_PROGRESS, operationId)
 
@@ -184,7 +179,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `registration completed called`() {
+    fun `registration completed called`() = runBlockingTest {
         val operationId = "operationId"
         val ethRegisterState = EthRegisterState(EthRegisterState.State.REGISTERED, operationId)
 
@@ -194,7 +189,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `registration failed called`() {
+    fun `registration failed called`() = runBlockingTest {
         val operationId = "operationId"
         val ethRegisterState = EthRegisterState(EthRegisterState.State.FAILED, operationId)
 
@@ -236,14 +231,14 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `get eth credentials from cache called`() {
+    fun `get eth credentials from cache called`() = runBlockingTest {
         given(ethereumDatasource.retrieveEthereumCredentials()).willReturn(ethereumCredentials)
 
         assertEquals(ethereumCredentials, ethereumRepository.getEthCredentials(mnemonic))
     }
 
     @Test
-    fun `get eth credentials called`() {
+    fun `get eth credentials called`() = runBlockingTest {
         val masterKeypair = Bip32ECKeyPair(BigInteger.ONE, BigInteger.ONE, 0, seed, null)
         val childKeypair =
             Bip32ECKeyPair(ethereumCredentials.privateKey, BigInteger.TEN, 1, seed, masterKeypair)

@@ -5,64 +5,68 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/rounded_card_view"
-    android:paddingStart="@dimen/x2"
-    android:paddingEnd="@dimen/x1_5"
+    android:paddingStart="@dimen/x3"
+    android:paddingEnd="@dimen/x3"
+    android:paddingBottom="@dimen/x4"
     tools:layout_height="wrap_content">
 
-    <ImageView
+    <View
         android:id="@+id/bottomSheetPin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64dp"
+        android:layout_height="4dp"
         android:layout_marginTop="@dimen/x1_2"
-        android:src="@drawable/ic_bottomsheet_pin"
+        android:background="@drawable/drag_indicator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/assetId"
-        style="@style/TextAppearance.Soramitsu.Paragraph_3"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.11"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/x4"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="@dimen/x1"
         android:text="@string/wallet_asset_id"
+        android:textAllCaps="true"
+        android:textColor="?attr/onBackgroundColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottomSheetPin"
         tools:text="Asset id" />
-
 
     <TextView
         android:id="@+id/assetIdValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.13"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/text_background"
-        android:drawablePadding="@dimen/x1"
-        android:drawableEnd="@drawable/ic_copy_thin_16"
-        android:ellipsize="middle"
-        android:includeFontPadding="false"
-        android:singleLine="true"
-        app:drawableEndCompat="@drawable/ic_copy_thin_16"
-        app:layout_constraintBottom_toBottomOf="@+id/assetId"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_default="wrap"
-        app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintStart_toEndOf="@+id/assetId"
-        app:layout_constraintTop_toTopOf="@+id/assetId"
-        app:layout_constraintWidth_default="wrap"
-        tools:text="s9d9asdassdlkdc8vqqwe8s9v7c"
-        tools:textColor="@color/grey_300" />
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/x2"
-        android:layout_marginBottom="@dimen/x4"
-        android:background="@drawable/bg_dash_divider"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:paddingStart="@dimen/x1"
+        android:paddingEnd="@dimen/x1"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ivAssetIcon"
+        app:layout_constraintTop_toBottomOf="@id/assetId"
+        tools:text="0x28376482...923872865" />
+
+    <ImageView
+        android:id="@+id/ivAssetIcon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:scaleType="centerInside"
+        app:layout_constraintBottom_toBottomOf="@id/assetIdValue"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/assetId" />
+        app:layout_constraintTop_toTopOf="@id/assetIdValue"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_0x00a99f39d40faab010fb4164ff617f2d0f10ba34d1ee37f1ae9acd537489c932" />
+
+    <ImageView
+        android:id="@+id/ivCopyIcon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_neu_copy_wrapped"
+        app:layout_constraintBottom_toBottomOf="@id/assetIdValue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/assetIdValue"
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

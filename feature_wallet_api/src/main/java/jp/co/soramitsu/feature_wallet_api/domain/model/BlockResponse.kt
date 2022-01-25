@@ -5,6 +5,10 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.model
 
-class BlockResponse(val justification: Any?, val block: BlockEntry)
+import androidx.annotation.Keep
 
-class BlockEntry(val header: Any?, val extrinsics: List<String>)
+@Keep
+data class BlockResponse(val justification: Any?, val block: BlockEntry)
+
+@Keep
+data class BlockEntry(val header: Any?, val extrinsics: List<String>)

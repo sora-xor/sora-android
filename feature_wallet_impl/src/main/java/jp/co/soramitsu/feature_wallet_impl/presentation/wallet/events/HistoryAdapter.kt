@@ -5,26 +5,26 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events
 
+import android.graphics.drawable.Animatable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationSet
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.color.MaterialColors
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.ViewAnimations
-import jp.co.soramitsu.common.util.ext.doAnimation
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.hide
+import jp.co.soramitsu.common.util.ext.safeCast
+import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.common.util.ext.showOrHide
-import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionHeaderBinding
-import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemBinding
+import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemInBinding
+import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemOutBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionLiquiditySwapBinding
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
 
@@ -37,8 +37,10 @@ class HistoryAdapter(
     override fun getItemViewType(position: Int): Int =
         when (getItem(position)) {
             is EventUiModel.EventTimeSeparatorUiModel -> R.layout.event_section_header
-            is EventUiModel.EventTxUiModel.EventTransferUiModel -> R.layout.event_section_item
+            is EventUiModel.EventTxUiModel.EventTransferInUiModel -> R.layout.event_section_item_in
+            is EventUiModel.EventTxUiModel.EventTransferOutUiModel -> R.layout.event_section_item_out
             is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel -> R.layout.event_section_liquidity_swap
+            null -> R.layout.event_section_header
             else -> throw IllegalStateException("Unknown view type ${getItem(position)?.javaClass?.simpleName}")
         }
 
@@ -55,18 +57,24 @@ class HistoryAdapter(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.event_section_liquidity_swap, parent, false)
             )
-            else -> EventItemViewHolder.EventTransactionViewHolder(
+            R.layout.event_section_item_out -> EventItemViewHolder.EventTransactionOutViewHolder(
                 LayoutInflater.from(parent.context)
-                    .inflate(R.layout.event_section_item, parent, false)
+                    .inflate(R.layout.event_section_item_out, parent, false)
+            )
+            else -> EventItemViewHolder.EventTransactionInViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.event_section_item_in, parent, false)
             )
         }
     }
 
     override fun onBindViewHolder(holder: EventItemViewHolder, position: Int) {
-        val eventUiModel = getItem(position) ?: return
-        if (holder is EventItemViewHolder.EventTimeSeparatorViewHolder && eventUiModel is EventUiModel.EventTimeSeparatorUiModel) {
+        val eventUiModel = getItem(position)
+        if (holder is EventItemViewHolder.EventTimeSeparatorViewHolder && (eventUiModel is EventUiModel.EventTimeSeparatorUiModel || eventUiModel == null)) {
             holder.bind(eventUiModel)
-        } else if (holder is EventItemViewHolder.EventTransactionViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventTransferUiModel) {
+        } else if (holder is EventItemViewHolder.EventTransactionInViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventTransferInUiModel) {
+            holder.bind(eventUiModel, debounceClickHandler, clickListener)
+        } else if (holder is EventItemViewHolder.EventTransactionOutViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventTransferOutUiModel) {
             holder.bind(eventUiModel, debounceClickHandler, clickListener)
         } else if (holder is EventItemViewHolder.EventLiquiditySwapViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel) {
             holder.bind(eventUiModel, debounceClickHandler, clickListener)
@@ -80,22 +88,41 @@ object EventUiModelDiffCallback : DiffUtil.ItemCallback<EventUiModel>() {
     }
 
     override fun areItemsTheSame(oldItem: EventUiModel, newItem: EventUiModel): Boolean {
-        val isSameEventItem =
-            oldItem is EventUiModel.EventTxUiModel.EventTransferUiModel && newItem is EventUiModel.EventTxUiModel.EventTransferUiModel && oldItem.id == newItem.id
-        val isSameSwapItem =
-            oldItem is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel && newItem is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel && oldItem.txHash == newItem.txHash
+        val isSameItem =
+            oldItem is EventUiModel.EventTxUiModel && newItem is EventUiModel.EventTxUiModel && oldItem.txHash == newItem.txHash
         val isSameSeparatorItem =
             oldItem is EventUiModel.EventTimeSeparatorUiModel && newItem is EventUiModel.EventTimeSeparatorUiModel && oldItem.title == newItem.title
-        return isSameEventItem || isSameSeparatorItem || isSameSwapItem
+        return isSameSeparatorItem || isSameItem
     }
 }
+
+private val positiveBalanceStyle = AssetBalanceStyle(
+    intStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_14,
+    decStyle = R.style.TextAppearance_Soramitsu_Neu_Semibold_11,
+    color = R.attr.balanceColorPositive,
+    tickerStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+    tickerColor = R.attr.balanceColorDefault
+)
+
+private val negativeBalanceStyle = AssetBalanceStyle(
+    intStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_14,
+    decStyle = R.style.TextAppearance_Soramitsu_Neu_Semibold_11,
+    color = R.attr.balanceColorNegative,
+    tickerStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+    tickerColor = R.attr.balanceColorDefault
+)
+
+private val neutralBalanceStyle = AssetBalanceStyle(
+    intStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_14,
+    decStyle = R.style.TextAppearance_Soramitsu_Neu_Semibold_11,
+    tickerStyle = R.style.TextAppearance_Soramitsu_Neu_Bold_15
+)
 
 sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     class EventLiquiditySwapViewHolder(view: View) : EventItemViewHolder(view) {
 
         private val viewBinding = EventSectionLiquiditySwapBinding.bind(view)
-        private val rotateAnimation: AnimationSet = ViewAnimations.rotateAnimation
         fun bind(
             soraTransaction: EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel,
             debounceClickHandler: DebounceClickHandler,
@@ -107,92 +134,129 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             if (soraTransaction.success == false) {
                 viewBinding.tvAmountFrom.hide()
                 viewBinding.tvAmountTo.hide()
-                viewBinding.tvFullAmountTo.hide()
                 viewBinding.tvFailed.show()
             } else {
                 viewBinding.tvAmountFrom.show()
                 viewBinding.tvAmountTo.show()
-                viewBinding.tvFullAmountTo.show()
                 viewBinding.tvFailed.hide()
-                viewBinding.tvAmountFrom.text = soraTransaction.amountFrom
-                viewBinding.tvAmountTo.text = soraTransaction.amountTo
-                viewBinding.tvFullAmountTo.text = soraTransaction.amountFullTo
+                viewBinding.tvAmountFrom.setBalance(
+                    AssetBalanceData(
+                        amount = soraTransaction.amountFrom.first,
+                        ticker = soraTransaction.amountFrom.second,
+                        style = neutralBalanceStyle
+                    )
+                )
+                viewBinding.tvAmountTo.setBalance(
+                    AssetBalanceData(
+                        amount = soraTransaction.amountTo.first,
+                        ticker = soraTransaction.amountTo.second,
+                        style = positiveBalanceStyle
+                    )
+                )
             }
-            viewBinding.eventStatusIconImageView.setImageResource(soraTransaction.iconFrom)
-            viewBinding.eventStatusIconImageView2.setImageResource(soraTransaction.iconTo)
-            viewBinding.eventStatusIconImageViewSp.showOrHide(soraTransaction.pending)
-            viewBinding.eventStatusIconImageViewSp.doAnimation(
-                soraTransaction.pending,
-                rotateAnimation
-            )
+            viewBinding.tvHistorySwapDate.text = soraTransaction.dateTime
+            viewBinding.eventStatusIconImageView2.setImageResource(soraTransaction.iconFrom)
+            viewBinding.eventStatusIconImageView3.setImageResource(soraTransaction.iconTo)
+            if (soraTransaction.pending) {
+                viewBinding.eventStatusIconImageView.hide()
+                viewBinding.eventStatusIconImageViewSp.show()
+                viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
+            } else {
+                viewBinding.eventStatusIconImageView.show()
+                viewBinding.eventStatusIconImageViewSp.hide()
+            }
         }
     }
 
-    class EventTransactionViewHolder(containerView: View) : EventItemViewHolder(containerView) {
+    class EventTransactionInViewHolder(containerView: View) : EventItemViewHolder(containerView) {
 
-        private val viewBinding = EventSectionItemBinding.bind(containerView)
-        private val rotateAnimation: AnimationSet = ViewAnimations.rotateAnimation
+        private val viewBinding = EventSectionItemInBinding.bind(containerView)
 
         fun bind(
-            soraTransaction: EventUiModel.EventTxUiModel.EventTransferUiModel,
+            soraTransaction: EventUiModel.EventTxUiModel.EventTransferInUiModel,
             debounceClickHandler: DebounceClickHandler,
             itemClickedListener: (String) -> Unit
         ) {
             viewBinding.rootEvent.setDebouncedClickListener(debounceClickHandler) {
-                itemClickedListener(soraTransaction.id)
+                itemClickedListener(soraTransaction.txHash)
             }
 
-            viewBinding.eventItemDateTextView.text = soraTransaction.title.truncateUserAddress()
-
-            if (soraTransaction.amountFormatted.isNotEmpty()) {
-                viewBinding.eventItemFailedTextView.gone()
-                viewBinding.eventItemAmountTextView.show()
-                viewBinding.eventItemAmountFull.show()
-                if (soraTransaction.isIncoming) {
-                    viewBinding.eventItemTitleTextView.setText(R.string.common_receive)
-                    val amountText = "+ ${soraTransaction.amountFormatted}"
-                    viewBinding.eventItemAmountTextView.setTextColor(
-                        MaterialColors.getColor(
-                            viewBinding.eventItemAmountTextView,
-                            R.attr.statusSuccess
-                        )
-                    )
-                    viewBinding.eventItemAmountTextView.text = amountText
-                    viewBinding.eventItemAmountFull.text =
-                        "+ %s".format(soraTransaction.amountFullFormatted)
-                } else {
-                    viewBinding.eventItemTitleTextView.setText(R.string.common_send)
-                    val amountText = "− ${soraTransaction.amountFormatted}"
-                    viewBinding.eventItemAmountTextView.setTextColor(
-                        MaterialColors.getColor(
-                            viewBinding.eventItemAmountTextView,
-                            R.attr.contentPrimary
-                        )
-                    )
-                    viewBinding.eventItemAmountTextView.text = amountText
-                    viewBinding.eventItemAmountFull.text =
-                        "- %s".format(soraTransaction.amountFullFormatted)
-                }
-            } else {
+            viewBinding.eventItemDateTextView.text = soraTransaction.peerAddress
+            viewBinding.tvHistoryTransferDate.text = soraTransaction.dateTime
+            viewBinding.ivHistoryTransferToken.setImageResource(soraTransaction.tokenIcon)
+            if (soraTransaction.success == false) {
                 viewBinding.eventItemFailedTextView.show()
                 viewBinding.eventItemAmountTextView.gone()
-                viewBinding.eventItemAmountFull.gone()
+            } else {
+                viewBinding.eventItemFailedTextView.gone()
+                viewBinding.eventItemAmountTextView.show()
+                viewBinding.eventItemAmountTextView.setBalance(
+                    AssetBalanceData(
+                        amount = soraTransaction.amountFormatted.first,
+                        ticker = soraTransaction.amountFormatted.second,
+                        style = positiveBalanceStyle
+                    )
+                )
+            }
+            if (soraTransaction.pending) {
+                viewBinding.eventStatusIconImageView.hide()
+                viewBinding.eventStatusIconImageViewSp.show()
+                viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
+            } else {
+                viewBinding.eventStatusIconImageView.show()
+                viewBinding.eventStatusIconImageViewSp.hide()
+            }
+        }
+    }
+
+    class EventTransactionOutViewHolder(containerView: View) : EventItemViewHolder(containerView) {
+
+        private val viewBinding = EventSectionItemOutBinding.bind(containerView)
+
+        fun bind(
+            soraTransaction: EventUiModel.EventTxUiModel.EventTransferOutUiModel,
+            debounceClickHandler: DebounceClickHandler,
+            itemClickedListener: (String) -> Unit
+        ) {
+            viewBinding.rootEvent.setDebouncedClickListener(debounceClickHandler) {
+                itemClickedListener(soraTransaction.txHash)
             }
 
-            viewBinding.eventStatusIconImageView.setImageResource(soraTransaction.statusIconResource)
-            viewBinding.eventStatusIconImageViewSp.showOrHide(soraTransaction.pending)
-            viewBinding.eventStatusIconImageViewSp.doAnimation(
-                soraTransaction.pending,
-                rotateAnimation
-            )
+            viewBinding.eventItemDateTextView.text = soraTransaction.peerAddress
+            viewBinding.tvHistoryTransferDate.text = soraTransaction.dateTime
+            viewBinding.ivHistoryTransferToken.setImageResource(soraTransaction.tokenIcon)
+            if (soraTransaction.success == false) {
+                viewBinding.eventItemFailedTextView.show()
+                viewBinding.eventItemAmountTextView.gone()
+            } else {
+                viewBinding.eventItemFailedTextView.gone()
+                viewBinding.eventItemAmountTextView.show()
+                viewBinding.eventItemAmountTextView.setBalance(
+                    AssetBalanceData(
+                        amount = soraTransaction.amountFormatted.first,
+                        ticker = soraTransaction.amountFormatted.second,
+                        style = negativeBalanceStyle
+                    )
+                )
+            }
+            if (soraTransaction.pending) {
+                viewBinding.eventStatusIconImageView.hide()
+                viewBinding.eventStatusIconImageViewSp.show()
+                viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
+            } else {
+                viewBinding.eventStatusIconImageView.show()
+                viewBinding.eventStatusIconImageViewSp.hide()
+            }
         }
     }
 
     class EventTimeSeparatorViewHolder(containerView: View) : EventItemViewHolder(containerView) {
         private val viewBinding = EventSectionHeaderBinding.bind(containerView)
 
-        fun bind(item: EventUiModel.EventTimeSeparatorUiModel) {
-            viewBinding.eventItemDayTextView.text = item.title
+        fun bind(item: EventUiModel?) {
+            item?.safeCast<EventUiModel.EventTimeSeparatorUiModel>()?.let {
+                viewBinding.eventItemDayTextView.text = it.title
+            }
         }
     }
 }

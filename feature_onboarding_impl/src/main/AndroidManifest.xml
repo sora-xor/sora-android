@@ -10,9 +10,10 @@
 
         <activity
             android:name=".presentation.OnboardingActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme"
-            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize" />
 
     </application>

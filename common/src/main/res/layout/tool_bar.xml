@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
-        android:background="@android:color/white">
+        android:background="?attr/baseBackground">
 
         <ImageView
             android:id="@+id/backImg"
@@ -18,8 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:background="?selectableItemBackground"
-            android:padding="@dimen/x1_5"
-            android:src="@drawable/ic_arrow_left_24"
+            android:src="@drawable/ic_neu_arrow_left_40"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintStart_toStartOf="parent"
@@ -71,14 +70,14 @@
             android:id="@+id/rightImg"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:padding="@dimen/x2"
             android:visibility="gone"
+            android:scaleType="center"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="ContentDescription"
-            tools:src="@drawable/uikit_ic_arrow_back"
+            tools:src="@drawable/ic_arrow_left_24"
             tools:visibility="visible" />
 
         <TextView

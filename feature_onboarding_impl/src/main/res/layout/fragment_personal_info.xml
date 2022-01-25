@@ -4,98 +4,67 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/baseBackground"
     android:orientation="vertical">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="@string/common_personal_info_title" />
+        app:titleText="@string/create_account_title" />
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_weight="1"
-        android:overScrollMode="never">
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+
+        <com.vanniktech.emoji.EmojiEditText
+            android:id="@+id/accountNameEt"
+            style="@style/TextAppearance.Soramitsu.Neu.EditText"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/x7"
+            android:layout_marginStart="@dimen/x2"
+            android:layout_marginEnd="@dimen/x2"
+            android:gravity="center_horizontal"
+            android:hint="@string/personal_info_username_v1"
+            android:maxLength="30"
+            android:singleLine="true"
+            app:layout_constraintBottom_toTopOf="@+id/accountNameHint"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+            android:id="@+id/accountNameHint"
+            style="@style/TextAppearance.Soramitsu.Neu.13.Light"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/white">
-
-            <TextView
-                android:id="@+id/title"
-                style="@style/TextAppearance.Soramitsu.Header1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x2"
-                android:text="@string/create_account_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/toolbar" />
-
-            <com.vanniktech.emoji.EmojiEditText
-                android:id="@+id/accountNameEt"
-                android:layout_width="0dp"
-                android:layout_height="?android:actionBarSize"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginEnd="@dimen/x2"
-                android:background="@null"
-                android:fontFamily="@font/sora_regular"
-                android:hint="@string/personal_info_username_v1"
-                android:maxLength="30"
-                android:paddingTop="@dimen/x1"
-                android:paddingBottom="@dimen/x1"
-                android:singleLine="true"
-                android:textSize="14sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/title" />
-
-            <View
-                android:id="@+id/divider1"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginEnd="@dimen/x2"
-                android:background="@color/greyDivider"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/accountNameEt" />
-
-            <Space
-                android:id="@+id/space3"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/x1"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/divider1" />
-
-            <TextView
-                android:id="@+id/accountNameHint"
-                style="@style/TextAppearance.Soramitsu.Body2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x1"
-                android:layout_marginEnd="@dimen/x2"
-                android:text="@string/personal_details_info"
-                android:textColor="@color/soonGrey"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/space3" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.core.widget.NestedScrollView>
+            android:layout_marginTop="@dimen/x1_5"
+            android:layout_marginStart="@dimen/x4"
+            android:layout_marginEnd="@dimen/x4"
+            android:gravity="center_horizontal"
+            android:text="@string/personal_details_info"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/accountNameEt"
+            app:layout_constraintVertical_bias="0.0" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/tutorialTermsCondition"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.13.Light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:paddingStart="@dimen/x2"
-        android:paddingEnd="@dimen/x2"
-        android:paddingBottom="@dimen/x2"
+        android:layout_marginStart="@dimen/x4"
+        android:layout_marginEnd="@dimen/x4"
+        android:layout_marginBottom="@dimen/x1_5"
         app:layout_constraintBottom_toTopOf="@id/nextBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -103,14 +72,14 @@
 
     <Button
         android:id="@+id/nextBtn"
-        style="@style/Widget.Soramitsu.Button.Primary.48"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x1"
         android:layout_marginEnd="@dimen/x1"
         android:layout_marginBottom="@dimen/x4"
         android:text="@string/transaction_continue"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textAllCaps="true"
+        app:layout_constraintBottom_toTopOf="@id/tutorialRestoreTextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

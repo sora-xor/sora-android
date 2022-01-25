@@ -58,4 +58,12 @@ class RecoveryViewModel(
     fun onInputChanged(mnemonic: String) {
         _nextButtonEnabledLiveData.value = mnemonic.isNotEmpty()
     }
+
+    fun showTermsScreen() {
+        router.showTermsScreen()
+    }
+
+    fun showPrivacyScreen() {
+        router.showPrivacyScreen()
+    }
 }

@@ -10,6 +10,7 @@ import android.view.View
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.util.ext.onBackPressed
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentUserVerificationBinding
@@ -38,5 +39,7 @@ class UserVerificationFragment :
         viewModel.restartApplicationLiveData.observe {
             (activity as? MainActivity)?.restartApp()
         }
+
+        onBackPressed { requireActivity().finish() }
     }
 }

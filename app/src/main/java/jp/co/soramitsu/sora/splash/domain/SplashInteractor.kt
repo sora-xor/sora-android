@@ -15,13 +15,13 @@ class SplashInteractor @Inject constructor(
     private val credentialsRepository: CredentialsRepository
 ) {
 
-    fun getRegistrationState() = userRepository.getRegistrationState()
+    suspend fun getRegistrationState() = userRepository.getRegistrationState()
 
     suspend fun saveRegistrationState(onboardingState: OnboardingState) {
         userRepository.saveRegistrationState(onboardingState)
     }
 
-    fun saveInviteCode(inviteCode: String) {
+    suspend fun saveInviteCode(inviteCode: String) {
         userRepository.saveParentInviteCode(inviteCode)
     }
 }

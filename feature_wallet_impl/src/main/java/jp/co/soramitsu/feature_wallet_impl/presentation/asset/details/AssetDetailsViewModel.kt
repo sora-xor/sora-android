@@ -12,17 +12,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.insertSeparators
 import androidx.paging.map
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
-import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
-import jp.co.soramitsu.common.util.DateTimeUtils
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -32,14 +29,13 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.details.model.FrozenXorDetailsModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
+import jp.co.soramitsu.feature_wallet_impl.presentation.util.insertHistorySeparators
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.util.Date
 
 class AssetDetailsViewModel(
     private val interactor: WalletInteractor,
@@ -109,22 +105,7 @@ class AssetDetailsViewModel(
         .map { pagingData ->
             pagingData.map { tx ->
                 transactionMappers.mapTransaction(tx)
-            }.insertSeparators { before, after ->
-                when {
-                    before == null -> null
-                    after == null -> null
-                    !DateTimeUtils.isSameMonth(
-                        before.timestamp,
-                        after.timestamp
-                    ) -> EventUiModel.EventTimeSeparatorUiModel(
-                        transactionMappers.dateTimeFormatter.formatDate(
-                            Date(before.timestamp),
-                            DateTimeFormatter.MMMM_YYYY
-                        )
-                    )
-                    else -> null
-                }
-            }
+            }.insertHistorySeparators(transactionMappers)
         }
         .cachedIn(viewModelScope)
 
@@ -171,7 +152,10 @@ class AssetDetailsViewModel(
                     }
                 } else {
                     _totalBalanceLiveData.value =
-                        numbersFormatter.formatBigDecimal(asset.balance.transferable, asset.token.precision)
+                        numbersFormatter.formatBigDecimal(
+                            asset.balance.transferable,
+                            asset.token.precision
+                        )
                 }
             }
         }

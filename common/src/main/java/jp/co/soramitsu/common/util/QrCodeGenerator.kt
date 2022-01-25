@@ -6,13 +6,13 @@
 package jp.co.soramitsu.common.util
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
 
 class QrCodeGenerator(
     private val firstColor: Int,
-    private val secondColor: Int
 ) {
 
     companion object {
@@ -20,7 +20,7 @@ class QrCodeGenerator(
         private const val PADDING_SIZE = 2
     }
 
-    fun generateQrBitmap(input: String): Bitmap {
+    fun generateQrBitmap(input: String, backgroundColor: Int = Color.WHITE): Bitmap {
 //        val hints = HashMap<EncodeHintType, String>()
 //        hints[EncodeHintType.CHARACTER_SET] = "UTF-8"
 //        val qrCode = Encoder.encode(input, ErrorCorrectionLevel.H, hints)
@@ -51,7 +51,7 @@ class QrCodeGenerator(
         for (y in 0 until h) {
             val offset = y * w
             for (x in 0 until w) {
-                pixels[offset + x] = if (result[x, y]) firstColor else secondColor
+                pixels[offset + x] = if (result[x, y]) firstColor else backgroundColor
             }
         }
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)

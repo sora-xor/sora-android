@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.DiffUtil
@@ -17,8 +18,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
-import jp.co.soramitsu.common.util.ext.gone
-import jp.co.soramitsu.common.util.ext.hide
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_impl.R
@@ -43,22 +42,26 @@ class ContactsAdapter(
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ContactsViewHolder {
         return when (viewType) {
             R.layout.item_contact -> {
-                val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_contact, viewGroup, false)
+                val view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.item_contact, viewGroup, false)
                 ContactsViewHolder.ContactViewHolder(view)
             }
 
             R.layout.item_contact_header -> {
-                val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_contact_header, viewGroup, false)
+                val view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.item_contact_header, viewGroup, false)
                 ContactsViewHolder.ContactsHeaderViewHolder(view)
             }
 
             R.layout.item_contact_menu -> {
-                val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_contact_menu, viewGroup, false)
+                val view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.item_contact_menu, viewGroup, false)
                 ContactsViewHolder.ContactsMenuViewHolder(view)
             }
 
             R.layout.item_contact_address -> {
-                val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_contact_address, viewGroup, false)
+                val view = LayoutInflater.from(viewGroup.context)
+                    .inflate(R.layout.item_contact_address, viewGroup, false)
                 ContactsViewHolder.ContactsEthViewHolder(view)
             }
 
@@ -68,10 +71,22 @@ class ContactsAdapter(
 
     override fun onBindViewHolder(holder: ContactsViewHolder, position: Int) {
         when (holder) {
-            is ContactsViewHolder.ContactViewHolder -> holder.bind(getItem(position) as ContactListItem, debounceClickHandler, itemViewClickListener)
+            is ContactsViewHolder.ContactViewHolder -> holder.bind(
+                getItem(position) as ContactListItem,
+                debounceClickHandler,
+                itemViewClickListener
+            )
             is ContactsViewHolder.ContactsHeaderViewHolder -> holder.bind(getItem(position) as ContactHeader)
-            is ContactsViewHolder.ContactsMenuViewHolder -> holder.bind(getItem(position) as ContactMenuItem, debounceClickHandler, menuItemViewClickListener)
-            is ContactsViewHolder.ContactsEthViewHolder -> holder.bind(getItem(position) as EthListItem, debounceClickHandler, ethItemViewClickListener)
+            is ContactsViewHolder.ContactsMenuViewHolder -> holder.bind(
+                getItem(position) as ContactMenuItem,
+                debounceClickHandler,
+                menuItemViewClickListener
+            )
+            is ContactsViewHolder.ContactsEthViewHolder -> holder.bind(
+                getItem(position) as EthListItem,
+                debounceClickHandler,
+                ethItemViewClickListener
+            )
         }
     }
 }
@@ -79,16 +94,17 @@ class ContactsAdapter(
 sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     class ContactViewHolder(itemView: View) : ContactsViewHolder(itemView) {
 
-        private val root: ConstraintLayout = itemView.findViewById(R.id.item_contact)
+        private val root: LinearLayout = itemView.findViewById(R.id.item_contact)
         private val nameTv: TextView = itemView.findViewById(R.id.contactNameTextView)
-        private val iconTv: TextView = itemView.findViewById(R.id.contactIconTextView)
         private val iconIv: ImageView = itemView.findViewById(R.id.contactIconImageView)
-        private val contactSeparator: View = itemView.findViewById(R.id.contactsGreySeparator)
 
-        fun bind(contact: ContactListItem, debounceClickHandler: DebounceClickHandler, itemViewClickListener: (Account) -> Unit) {
+        fun bind(
+            contact: ContactListItem,
+            debounceClickHandler: DebounceClickHandler,
+            itemViewClickListener: (Account) -> Unit
+        ) {
             val account = contact.account
             nameTv.text = account.address
-            iconTv.hide()
             iconIv.show()
             iconIv.setImageDrawable(contact.icon)
 
@@ -97,12 +113,6 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
                     itemViewClickListener(account)
                 }
             )
-
-            if (contact.isLast) {
-                contactSeparator.gone()
-            } else {
-                contactSeparator.show()
-            }
         }
     }
 
@@ -112,7 +122,11 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
         private val nameTv: TextView = itemView.findViewById(R.id.contactNameTextView)
         private val iconTv: ImageView = itemView.findViewById(R.id.contactIconImageView)
 
-        fun bind(contactMenuItem: ContactMenuItem, debounceClickHandler: DebounceClickHandler, itemViewClickListener: (ContactMenuItem) -> Unit) {
+        fun bind(
+            contactMenuItem: ContactMenuItem,
+            debounceClickHandler: DebounceClickHandler,
+            itemViewClickListener: (ContactMenuItem) -> Unit
+        ) {
             nameTv.setText(contactMenuItem.nameRes)
             iconTv.setImageResource(contactMenuItem.iconRes)
 
@@ -130,7 +144,11 @@ sealed class ContactsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemVi
         private val nameTv: TextView = itemView.findViewById(R.id.contactNameTextView)
         private val iconTv: ImageView = itemView.findViewById(R.id.contactIconImageView)
 
-        fun bind(contactEthListItem: EthListItem, debounceClickHandler: DebounceClickHandler, itemViewClickListener: (EthListItem) -> Unit) {
+        fun bind(
+            contactEthListItem: EthListItem,
+            debounceClickHandler: DebounceClickHandler,
+            itemViewClickListener: (EthListItem) -> Unit
+        ) {
             nameTv.text = contactEthListItem.ethereumAddress
             iconTv.setImageResource(R.drawable.ic_eth_16)
 

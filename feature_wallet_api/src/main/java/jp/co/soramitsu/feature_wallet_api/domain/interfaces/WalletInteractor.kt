@@ -37,7 +37,7 @@ interface WalletInteractor {
 
     suspend fun updateWhitelistBalances()
 
-    suspend fun getWhitelistAssets(updateBalances: Boolean = false): List<Asset>
+    suspend fun getWhitelistAssets(): List<Asset>
 
     fun subscribeVisibleAssets(): Flow<List<Asset>>
 
@@ -71,5 +71,7 @@ interface WalletInteractor {
 
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
-    suspend fun getAsset(assetId: String): Asset
+    suspend fun getAsset(assetId: String): Asset?
+
+    suspend fun isWhitelistedToken(tokenId: String): Boolean
 }

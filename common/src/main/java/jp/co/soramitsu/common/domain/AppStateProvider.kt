@@ -10,5 +10,9 @@ import kotlinx.coroutines.flow.Flow
 interface AppStateProvider {
     val isForeground: Boolean
     val isBackground: Boolean
-    fun observeState(): Flow<Boolean>
+    fun observeState(): Flow<AppEvent>
+
+    enum class AppEvent {
+        ON_CREATE, ON_RESUME, ON_PAUSE, ON_DESTROY
+    }
 }

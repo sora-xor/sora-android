@@ -12,20 +12,23 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import jp.co.soramitsu.core_db.converters.BigDecimalConverter
 import jp.co.soramitsu.core_db.dao.AssetDao
+import jp.co.soramitsu.core_db.dao.PoolDao
 import jp.co.soramitsu.core_db.dao.TransferTransactionDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.ExtrinsicLocal
 import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
+import jp.co.soramitsu.core_db.model.PoolLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 
 @TypeConverters(BigDecimalConverter::class)
 @Database(
-    version = 44,
+    version = 50,
     entities = [
         ExtrinsicParamLocal::class,
         ExtrinsicLocal::class,
         AssetLocal::class,
         TokenLocal::class,
+        PoolLocal::class
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,4 +55,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransferTransactionDao
 
     abstract fun assetDao(): AssetDao
+
+    abstract fun poolDao(): PoolDao
 }

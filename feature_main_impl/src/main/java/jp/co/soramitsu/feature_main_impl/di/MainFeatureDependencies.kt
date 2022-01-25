@@ -13,10 +13,10 @@ import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ContextManager
-import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -42,6 +42,8 @@ interface MainFeatureDependencies {
 
     fun walletRepository(): WalletRepository
 
+    fun appUpdateManager(): InAppUpdateManager
+
     fun resourceManager(): ResourceManager
 
     fun numbersFormatter(): NumbersFormatter
@@ -63,8 +65,6 @@ interface MainFeatureDependencies {
     fun debounceClickHandler(): DebounceClickHandler
 
     fun notificationRepository(): NotificationRepository
-
-    fun languagesHolder(): LanguagesHolder
 
     fun clipboardManager(): ClipboardManager
 

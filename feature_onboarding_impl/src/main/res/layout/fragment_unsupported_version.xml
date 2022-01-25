@@ -2,7 +2,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:background="?attr/baseBackground">
 
     <ImageView
         android:layout_width="wrap_content"
@@ -47,7 +47,7 @@
 
     <Button
         android:id="@+id/googlePlayBtn"
-        style="@style/Widget.Soramitsu.Button"
+        style="@style/Widget.Soramitsu.Button.Secondary.48"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"

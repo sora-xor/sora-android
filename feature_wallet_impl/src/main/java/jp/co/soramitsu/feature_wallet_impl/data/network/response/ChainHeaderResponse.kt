@@ -5,4 +5,7 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.network.response
 
+import androidx.annotation.Keep
+
+@Keep
 class ChainHeaderResponse(val parentHash: String, val number: String, val stateRoot: String, val extrinsicsRoot: String)

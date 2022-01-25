@@ -13,10 +13,13 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap.SwapFragm
 class ViewPagerAdapter(fragment: Fragment) :
     FragmentStateAdapter(fragment) {
 
+    private val swapFragment: Fragment by lazy { SwapFragment() }
+    private val poolFragment: Fragment by lazy { PoolFragment() }
+
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            SwapFragment.ID -> SwapFragment()
-            PoolFragment.ID -> PoolFragment()
+            SwapFragment.ID -> swapFragment
+            PoolFragment.ID -> poolFragment
             else -> throw IllegalArgumentException("Incorrect Polkaswap $position fragment")
         }
     }
@@ -30,6 +33,14 @@ class ViewPagerAdapter(fragment: Fragment) :
             SwapFragment.ID -> SwapFragment.TITLE_RESOURCE
             PoolFragment.ID -> PoolFragment.TITLE_RESOURCE
             else -> SwapFragment.TITLE_RESOURCE
+        }
+    }
+
+    fun getFragmentAtPosition(position: Int): Fragment {
+        return when (position) {
+            SwapFragment.ID -> swapFragment
+            PoolFragment.ID -> poolFragment
+            else -> throw IllegalArgumentException("Incorrect Polkaswap $position fragment")
         }
     }
 }

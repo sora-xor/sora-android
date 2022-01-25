@@ -1,28 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="?attr/baseBackground"
     android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/icHome"
-        android:layout_width="wrap_content"
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
+        android:id="@+id/tbAbout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/uikit_ic_arrow_back"
-        android:background="?selectableItemBackground"
-        android:layout_margin="@dimen/x1_5"
-        android:padding="@dimen/x1"
-        android:tint="@color/black" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        style="@style/TextAppearance.Soramitsu.Header1"
-        android:text="@string/about_title" />
+        app:titleText="@string/about_title" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -31,324 +19,123 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x3"
-            android:orientation="vertical">
+            android:divider="@drawable/line_ver_divider"
+            android:dividerPadding="@dimen/x2"
+            android:orientation="vertical"
+            android:showDividers="middle">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/websiteWrapper"
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acOfficialWebsite"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/x7"
-                android:background="?selectableItemBackground"
-                android:orientation="horizontal"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2">
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="sora.org"
+                app:cellTitleText="@string/about_website" />
 
-                <ImageView
-                    android:id="@+id/websiteIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_website_24"
-                    app:layout_constraintBottom_toBottomOf="@id/websiteSubtitleTv"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/websiteTv" />
-
-                <TextView
-                    android:id="@+id/websiteTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_website"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toTopOf="@+id/websiteSubtitleTv"
-                    app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
-                    app:layout_constraintStart_toEndOf="@id/websiteIcon"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_chainStyle="packed" />
-
-                <TextView
-                    android:id="@+id/websiteSubtitleTv"
-                    style="@style/TextAppearance.Soramitsu.Body2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_website"
-                    android:textColor="@color/uikit_lightRed"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
-                    app:layout_constraintStart_toEndOf="@id/websiteIcon"
-                    app:layout_constraintTop_toBottomOf="@+id/websiteTv"
-                    tools:text="@string/about_website" />
-
-                <ImageView
-                    android:id="@+id/wesiteRightIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_top_right_16"
-                    app:layout_constraintBottom_toBottomOf="@id/websiteSubtitleTv"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/websiteTv" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/sourceWrapper"
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acGithubSource"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/x7"
-                android:background="?selectableItemBackground"
-                android:orientation="horizontal"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2">
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="App version"
+                app:cellLeftIcon="@drawable/ic_github_24"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_source_code" />
 
-                <ImageView
-                    android:id="@+id/sourceIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_github_24"
-                    app:layout_constraintBottom_toBottomOf="@id/sourceSubtitleTv"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/sourceTv" />
-
-                <TextView
-                    android:id="@+id/sourceTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_source_code"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toTopOf="@+id/sourceSubtitleTv"
-                    app:layout_constraintEnd_toStartOf="@id/sourceRightIcon"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@id/sourceIcon"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_chainStyle="packed" />
-
-                <TextView
-                    android:id="@+id/sourceSubtitleTv"
-                    style="@style/TextAppearance.Soramitsu.Body2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_website"
-                    android:textColor="@color/uikit_lightRed"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/sourceRightIcon"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@id/sourceIcon"
-                    app:layout_constraintTop_toBottomOf="@+id/sourceTv"
-                    tools:text="@string/about_open_source_url" />
-
-                <ImageView
-                    android:id="@+id/sourceRightIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_top_right_16"
-                    app:layout_constraintBottom_toBottomOf="@id/sourceSubtitleTv"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/sourceTv" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/tgWrapper"
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acTwitter"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/x7"
-                android:background="?selectableItemBackground"
-                android:orientation="horizontal"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2">
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="twitter.com/sora_xor"
+                app:cellLeftIcon="@drawable/ic_twitter"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_twitter" />
 
-                <ImageView
-                    android:id="@+id/telegramIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_tg_24"
-                    app:layout_constraintBottom_toBottomOf="@id/telegramSubtitleTv"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/telegramTv" />
-
-                <TextView
-                    android:id="@+id/telegramTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_telegram"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toTopOf="@+id/telegramSubtitleTv"
-                    app:layout_constraintEnd_toStartOf="@id/telegramRightIcon"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@id/telegramIcon"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_chainStyle="packed" />
-
-                <TextView
-                    android:id="@+id/telegramSubtitleTv"
-                    style="@style/TextAppearance.Soramitsu.Body2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_website"
-                    android:textColor="@color/uikit_lightRed"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/telegramRightIcon"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@id/telegramIcon"
-                    app:layout_constraintTop_toBottomOf="@+id/telegramTv"
-                    tools:text="@string/about_open_source_url" />
-
-                <ImageView
-                    android:id="@+id/telegramRightIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_top_right_16"
-                    app:layout_constraintBottom_toBottomOf="@id/telegramSubtitleTv"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/telegramTv" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/contactsWrapper"
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acYoutube"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/x7"
-                android:background="?selectableItemBackground"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2">
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="youtube.com/sora_xor"
+                app:cellLeftIcon="@drawable/ic_youtube"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_youtube" />
 
-                <ImageView
-                    android:id="@+id/contactIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_email_24"
-                    app:layout_constraintBottom_toBottomOf="@id/contactSubtitleTv"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/contactTv" />
-
-                <TextView
-                    android:id="@+id/contactTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_contact_us"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toTopOf="@+id/contactSubtitleTv"
-                    app:layout_constraintEnd_toStartOf="@id/contactRightIcon"
-                    app:layout_constraintStart_toEndOf="@id/contactIcon"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_chainStyle="packed" />
-
-                <TextView
-                    android:id="@+id/contactSubtitleTv"
-                    style="@style/TextAppearance.Soramitsu.Body2"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:text="@string/about_website"
-                    android:textColor="@color/uikit_lightRed"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/contactRightIcon"
-                    app:layout_constraintStart_toEndOf="@id/contactIcon"
-                    app:layout_constraintTop_toBottomOf="@+id/contactTv"
-                    tools:text="@string/about_open_source_url" />
-
-                <ImageView
-                    android:id="@+id/contactRightIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_top_right_16"
-                    app:layout_constraintBottom_toBottomOf="@id/contactSubtitleTv"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/contactTv" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/termsWrapper"
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acInstagram"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/x7"
-                android:background="?selectableItemBackground"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2"
-                android:orientation="horizontal">
-                <ImageView
-                    android:id="@+id/termsIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_info_24_darkgrey"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/termsTv"
-                    app:layout_constraintBottom_toBottomOf="@id/termsTv" />
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="instagram.com/sora_xor"
+                app:cellLeftIcon="@drawable/ic_neu_instagram"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_instagram" />
 
-                <TextView
-                    android:id="@+id/termsTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/common_terms_title"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/termsRightIcon"
-                    app:layout_constraintStart_toEndOf="@id/termsIcon"
-                    app:layout_constraintTop_toTopOf="parent" />
-                <ImageView
-                    android:id="@+id/termsRightIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_top_right_16"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/termsTv"
-                    app:layout_constraintBottom_toBottomOf="@id/termsTv"
-                    />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/privacyWrapper"
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acMedium"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/x7"
-                android:background="?selectableItemBackground"
-                android:paddingStart="@dimen/x2"
-                android:paddingEnd="@dimen/x2"
-                android:orientation="horizontal">
-                <ImageView
-                    android:id="@+id/privacyIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_info_24_darkgrey"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/privacyTv"
-                    app:layout_constraintBottom_toBottomOf="@id/privacyTv" />
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="medium.com/sora_xor"
+                app:cellLeftIcon="@drawable/ic_neu_medium"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_medium" />
 
-                <TextView
-                    android:id="@+id/privacyTv"
-                    style="@style/TextAppearance.Soramitsu.Body1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/x2"
-                    android:lineSpacingExtra="5sp"
-                    android:text="@string/about_privacy"
-                    android:textColor="@color/black"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/privacyRightIcon"
-                    app:layout_constraintStart_toEndOf="@id/privacyIcon"
-                    app:layout_constraintTop_toTopOf="parent" />
-                <ImageView
-                    android:id="@+id/privacyRightIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/ic_arrow_top_right_16"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@id/privacyTv"
-                    app:layout_constraintBottom_toBottomOf="@id/privacyTv"
-                    />
-            </androidx.constraintlayout.widget.ConstraintLayout>
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acWiki"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="wiki.sora.org"
+                app:cellLeftIcon="@drawable/ic_neu_question"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_wiki" />
+
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acTelegram"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="t.me/sora_xor"
+                app:cellLeftIcon="@drawable/ic_tg_24"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_telegram" />
+
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acTelegramAnnouncements"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="t.me/sora_announcements"
+                app:cellLeftIcon="@drawable/ic_neu_wifi"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_announcements" />
+
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acTelegramHappiness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="t.me/sorahappiness"
+                app:cellLeftIcon="@drawable/ic_neu_heart"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_ask_support" />
+
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acContactEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellDescriptionText="support@sora.org"
+                app:cellLeftIcon="@drawable/ic_email_24"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_contact_us" />
+
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acTermsAndConditions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellLeftIcon="@drawable/ic_neu_ok"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/common_terms_title" />
+
+            <jp.co.soramitsu.common.presentation.view.AboutCellView
+                android:id="@+id/acPrivacyPolicy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cellLeftIcon="@drawable/ic_neu_ok"
+                app:cellLeftIconTint="?attr/tintColorLight"
+                app:cellTitleText="@string/about_privacy" />
 
         </LinearLayout>
 

@@ -20,9 +20,9 @@ class PinCodeInteractor @Inject constructor(
         return userRepository.savePin(pin)
     }
 
-    fun checkPin(code: String) = userRepository.retrievePin() == code
+    suspend fun checkPin(code: String) = userRepository.retrievePin() == code
 
-    fun isCodeSet(): Boolean {
+    suspend fun isCodeSet(): Boolean {
         return userRepository.retrievePin().isNotEmpty()
     }
 

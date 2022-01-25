@@ -1,35 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:gravity="center_horizontal"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/chooserItemText"
-        style="@style/TextAppearance.AppCompat.Button"
-        android:layout_width="match_parent"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.24"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
-        android:drawableStart="@drawable/ic_scan_24"
         android:drawablePadding="@dimen/margin_padding_content"
+        android:letterSpacing="-0.02"
         android:padding="@dimen/x2"
         android:text="@string/contacts_scan"
-        android:textAllCaps="false"
-        android:gravity="center_vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="106dp" />
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:background="@color/grey_300"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/chooserItemText" />
+        android:textColor="?attr/onBackgroundColor"
+        app:drawableStartCompat="@drawable/ic_neu_upload"
+        app:drawableTint="?attr/tintColorDark" />
 
 </LinearLayout>

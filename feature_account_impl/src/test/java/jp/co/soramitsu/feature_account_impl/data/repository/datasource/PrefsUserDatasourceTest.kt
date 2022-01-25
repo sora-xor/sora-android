@@ -7,8 +7,10 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,8 +29,11 @@ class PrefsUserDatasourceTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     @Mock
-    private lateinit var preferences: Preferences
+    private lateinit var soraPreferences: SoraPreferences
 
     @Mock
     private lateinit var encryptedPreferences: EncryptedPreferences
@@ -37,11 +42,11 @@ class PrefsUserDatasourceTest {
 
     @Before
     fun setUp() {
-        prefsUserDatasource = PrefsUserDatasource(preferences, encryptedPreferences)
+        prefsUserDatasource = PrefsUserDatasource(soraPreferences, encryptedPreferences)
     }
 
     @Test
-    fun `save pin calls prefsutil putEncryptedString for PREFS_PIN_CODE`() {
+    fun `save pin calls prefsutil putEncryptedString for PREFS_PIN_CODE`() = runBlockingTest {
         val pin = "1234"
         val pincodeKey = "user_pin_code"
 
@@ -51,7 +56,7 @@ class PrefsUserDatasourceTest {
     }
 
     @Test
-    fun `retrieve pin calls prefsutil getDecryptedString for PREFS_PIN_CODE`() {
+    fun `retrieve pin calls prefsutil getDecryptedString for PREFS_PIN_CODE`() = runBlockingTest {
         val pincodeKey = "user_pin_code"
 
         prefsUserDatasource.retrievePin()
@@ -60,90 +65,73 @@ class PrefsUserDatasourceTest {
     }
 
     @Test
-    fun `save registration state is called`() {
+    fun `save registration state is called`() = runBlockingTest {
         val keyRegistrationState = "registration_state"
         val onboardingState = OnboardingState.INITIAL
 
         prefsUserDatasource.saveRegistrationState(onboardingState)
 
-        verify(preferences).putString(keyRegistrationState, onboardingState.toString())
+        verify(soraPreferences).putString(keyRegistrationState, onboardingState.toString())
     }
 
     @Test
-    fun `retrieve registration state called`() {
+    fun `retrieve registration state called`() = runBlockingTest {
         val keyRegistrationState = "registration_state"
         val onboardingState = OnboardingState.REGISTRATION_FINISHED
-        given(preferences.getString(keyRegistrationState)).willReturn(onboardingState.toString())
+        given(soraPreferences.getString(keyRegistrationState)).willReturn(onboardingState.toString())
 
         assertEquals(onboardingState, prefsUserDatasource.retrieveRegistratrionState())
     }
 
     @Test
-    fun `retrieve registration state if empty`() {
+    fun `retrieve registration state if empty`() = runBlockingTest {
         val keyRegistrationState = "registration_state"
-        given(preferences.getString(keyRegistrationState)).willReturn("")
+        given(soraPreferences.getString(keyRegistrationState)).willReturn("")
 
         assertEquals(OnboardingState.INITIAL, prefsUserDatasource.retrieveRegistratrionState())
     }
 
     @Test
-    fun `clear user data called`() {
+    fun `clear user data called`() = runBlockingTest {
         prefsUserDatasource.clearUserData()
 
-        verify(preferences).clearAll()
+        verify(soraPreferences).clearAll()
     }
 
     @Test
-    fun `save parent invite code called`() {
+    fun `save parent invite code called`() = runBlockingTest {
         val inviteCode = "1234"
         val keyInviteCode = "invite_code"
         prefsUserDatasource.saveParentInviteCode(inviteCode)
 
-        verify(preferences).putString(keyInviteCode, inviteCode)
+        verify(soraPreferences).putString(keyInviteCode, inviteCode)
     }
 
     @Test
-    fun `retrieve parent invite code called`() {
+    fun `retrieve parent invite code called`() = runBlockingTest {
         val inviteCode = "1234"
         val keyInviteCode = "invite_code"
-        given(preferences.getString(keyInviteCode)).willReturn(inviteCode)
+        given(soraPreferences.getString(keyInviteCode)).willReturn(inviteCode)
 
         assertEquals(inviteCode, prefsUserDatasource.getParentInviteCode())
     }
 
     @Test
-    fun `get current language called`() {
-        val language = "ru"
-        given(preferences.getCurrentLanguage()).willReturn(language)
-
-        assertEquals(language, prefsUserDatasource.getCurrentLanguage())
-    }
-
-    @Test
-    fun `save current language called`() {
-        val language = "ru"
-
-        prefsUserDatasource.changeLanguage(language)
-
-        verify(preferences).saveCurrentLanguage(language)
-    }
-
-    @Test
-    fun `save accountName called`() {
+    fun `save accountName called`() = runBlockingTest {
         val accountName = "accountName"
         val keyAccountName = "key_account_name"
 
         prefsUserDatasource.saveAccountName(accountName)
 
-        verify(preferences).putString(keyAccountName, accountName)
+        verify(soraPreferences).putString(keyAccountName, accountName)
     }
 
     @Test
-    fun `get accountName called`() {
+    fun `get accountName called`() = runBlockingTest {
         val accountName = "accountName"
         val keyAccountName = "key_account_name"
 
-        given(preferences.getString(keyAccountName)).willReturn(accountName)
+        given(soraPreferences.getString(keyAccountName)).willReturn(accountName)
 
         val resultAccountName = prefsUserDatasource.getAccountName()
 
@@ -151,21 +139,21 @@ class PrefsUserDatasourceTest {
     }
 
     @Test
-    fun `set biometry enabled called`() {
+    fun `set biometry enabled called`() = runBlockingTest {
         val isEnabled = true
         val keyBiometryEnabled = "biometry_enabled"
 
         prefsUserDatasource.setBiometryEnabled(isEnabled)
 
-        verify(preferences).putBoolean(keyBiometryEnabled, isEnabled)
+        verify(soraPreferences).putBoolean(keyBiometryEnabled, isEnabled)
     }
 
     @Test
-    fun `is biometry enabled called`() {
+    fun `is biometry enabled called`() = runBlockingTest {
         val isEnabled = true
         val keyBiometryEnabled = "biometry_enabled"
 
-        given(preferences.getBoolean(keyBiometryEnabled, true)).willReturn(isEnabled)
+        given(soraPreferences.getBoolean(keyBiometryEnabled, true)).willReturn(isEnabled)
 
         val isEnabledResult = prefsUserDatasource.isBiometryEnabled()
 
@@ -173,21 +161,21 @@ class PrefsUserDatasourceTest {
     }
 
     @Test
-    fun `set biometry available called`() {
+    fun `set biometry available called`() = runBlockingTest {
         val isAvailable = true
         val keyBiometryAvailable = "biometry_available"
 
         prefsUserDatasource.setBiometryAvailable(isAvailable)
 
-        verify(preferences).putBoolean(keyBiometryAvailable, isAvailable)
+        verify(soraPreferences).putBoolean(keyBiometryAvailable, isAvailable)
     }
 
     @Test
-    fun `is biometry available called`() {
+    fun `is biometry available called`() = runBlockingTest {
         val isAvailable = true
         val keyBiometryAvailable = "biometry_available"
 
-        given(preferences.getBoolean(keyBiometryAvailable, true)).willReturn(isAvailable)
+        given(soraPreferences.getBoolean(keyBiometryAvailable, true)).willReturn(isAvailable)
 
         val isAvailableResult = prefsUserDatasource.isBiometryAvailable()
 

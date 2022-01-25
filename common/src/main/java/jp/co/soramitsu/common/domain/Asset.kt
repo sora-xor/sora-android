@@ -14,7 +14,6 @@ import java.math.BigDecimal
 data class Asset(
     val token: Token,
     val isDisplaying: Boolean,
-    val isDisplayingBalance: Boolean,
     val position: Int,
     var balance: AssetBalance,
 ) : Parcelable
@@ -39,3 +38,8 @@ data class Token(
     val isHidable: Boolean,
     @DrawableRes val icon: Int,
 ) : Parcelable
+
+fun List<Token>.getByIdOrEmpty(id: String): Token =
+    this.find {
+        it.id == id
+    } ?: AssetHolder.emptyToken

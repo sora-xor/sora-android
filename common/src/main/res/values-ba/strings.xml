@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">Бәйләнеш</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">Хосусил сәйәсәте</string>
   <string name="about_source_code">сығанаҡ код</string>
   <string name="about_telegram">Рәсми Телеграм Төркөмө</string>
   <string name="about_title">Тураһында</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">Рәсми вебсайт</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">Мнемониканы раҫларға</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Проект</string>
   <string name="address_not_found">Адрес табылмаған, дөрөҫ селтәренән икәнен тикшерегеҙ</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Транзакцияның хаҡы</string>
   <string name="amount_error_no_funds">Ғәфү итегеҙ, кәрәккән сумманы ебәреү өсөн етерлек аҡса юҡ</string>
   <string name="amount_title">Сумма</string>
   <string name="ask_biometry_message">Һеҙ биометрик аутентификация ҡулланырға теләйһегеҙме?</string>
   <string name="asset_add">Аккаунты өҫтәргә</string>
+  <string name="asset_details_title">Asset Details</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">Аккаунттар</string>
   <string name="asset_state_associating">Бәйләнә...</string>
   <string name="asset_state_error">Хата</string>
@@ -21,17 +32,29 @@
   <string name="asset_val_name">Sora Validator Token</string>
   <string name="biometric_dialog_title">Тикшереү</string>
   <string name="block_id">Блок хеш</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">Әгәр һорауығыҙ булһа, һеҙ %%бәйләнешергә.%%</string>
   <string name="claim_contact_1">Әгәр һорауығыҙ булһа, һеҙ</string>
   <string name="claim_contact_2">Бәйләнешергә</string>
+  <string name="claim_contact_us">%%Contact us%% for any questions or concerns</string>
+  <string name="claim_error_title">Transition failed</string>
+  <string name="claim_error_title_v1">Transition of assets failed. Please try again later.</string>
   <string name="claim_notification_text">Күсереү барышта</string>
   <string name="claim_skip">Үткәрергә</string>
   <string name="claim_subtitle">SORA селтәренән аҡса күсерер өсөн һеҙҙең ризалығыҙ кәрәк. SORA substrate селтәрендә эшләйесәк. Зинһар, күсереүҙе раҫлағыҙ.</string>
+  <string name="claim_subtitle_confirmed">Thank you for the confirmation!</string>
+  <string name="claim_subtitle_confirmed_2">Transition of assets is in progress.\nPlease wait.</string>
   <string name="claim_subtitle_v1">Беҙ һеҙгә кәрәк, һеҙгә иң актив v1 SORA күсергә ризалыҡ бирә. Һеҙ был мөмкинлек бирә һезгә буталыш sora актив ҡулланыу нигеҙендә v2.\n\nЗатрагиваться Ethereum селтәрендә актив түгел, һеҙ алырға мөмкин, уны барыбер инеп, һәр һүҙ үҙ-ара яраша парольный приема кошо.</string>
+  <string name="claim_subtitle_v2">• We need consent to transition your assets from SORA v1 to SORA v2\n\n• The SORA v2 network is built with Substrate, which is natively compatible with the Polkadot and Kusama ecosystem\n\n• Assets on Ethereum are not affected, you can still access them by importing your passphrase to any compatible wallet</string>
+  <string name="claim_welcome_sora2">Welcome to SORA v2</string>
+  <string name="claim_welcome_sora2_v1">Welcome to\n%%SORA v2%%</string>
   <string name="coming_soon">Тиҙҙән...</string>
+  <string name="common_account">Account</string>
   <string name="common_add">Өҫтәргә</string>
   <string name="common_advanced_settings">Өҫтәмә көйләүҙәр</string>
   <string name="common_and">һәм</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">Яйлаштырырға</string>
   <string name="common_arab">Ғәрәп</string>
   <string name="common_asset">Актив</string>
@@ -51,12 +74,13 @@
   <string name="common_croatian">Хорват</string>
   <string name="common_description">Асыҡлама</string>
   <string name="common_done">Әҙер</string>
+  <string name="common_donotallow">Don\'t Allow</string>
   <string name="common_english">Инглиз</string>
+  <string name="common_enter_amount">Enter amount</string>
   <string name="common_error_ambiguous_result">Ҡаршылыҡлы һөҙөмтә</string>
   <string name="common_error_fee_rate_not_available">Аҡсаны алыу өсөн тәьмин итеүсе менән бәйләнеш юҡ. Һуңыраҡ ҡабатлап ҡарағыҙ.</string>
   <string name="common_error_gas_limit_low">Газ лимиты %s ашырға тейен түгел</string>
   <string name="common_error_general_message">Йүнәтеү өҫтөнән эшләйбеҙ. Һуңыраҡ ҡабатлап ҡарағыҙ.</string>
-  <!-- Error -->
   <string name="common_error_general_title">Хата</string>
   <string name="common_error_internal_error_title">Эске хата</string>
   <string name="common_error_invalid_parameters">Яңылыш параметрҙар</string>
@@ -68,7 +92,6 @@
   <string name="common_error_inviter_registered_after_invitee">Саҡырыу кодын ҡуллана алмайһығыҙ сөнки ул һеҙҙән һуң теркәлгән файҙаланыусынан</string>
   <string name="common_error_mnemonic_is_not_valid">Һеҙҙең серһуҙе яраҡһыҙ. Зинһар, икенсене ҡулланып ҡарағыҙ.</string>
   <string name="common_error_mnemonic_length_error">Серһүҙе 15 һүҙҙән торорға тейеш.</string>
-  <!-- Errors -->
   <string name="common_error_network">Зинһар, интернет селтәрен тикшерегеҙ һәм һуңыраҡ ҡабатлап ҡарағыҙ.</string>
   <string name="common_error_not_enough_invitations">Ғәфү итегеҙ, саҡарыуығыҙ бөткән</string>
   <string name="common_error_not_found_title">Ресурс менән бәйләнеш юҡ</string>
@@ -76,8 +99,8 @@
   <string name="common_error_phone_already_registered">Был телефон номеры икенсе файҙалыныусы менән теркәләнде</string>
   <string name="common_error_pincode_check_error">Яңылыш код индерелгән</string>
   <string name="common_error_price_is_to_low">Хаҡы бик түбән</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">Ғәфу итегеҙ, проект табылмаған.</string>
+  <string name="common_error_retry">Please try again</string>
   <string name="common_error_search_string_error">Һорау 3 һәм 64 араһында оҙонлоғо булырға тейеш</string>
   <string name="common_error_self_invitation">Саҡырыу кодын үҙегеҙ өсөн ҡуллана алмайһығыҙ</string>
   <string name="common_error_unauthorized_body">Зинһар, интернет селтәрен тикшерегеҙ һәм һуңыраҡ ҡабатлап ҡарағыҙ.</string>
@@ -85,7 +108,6 @@
   <string name="common_error_user_not_found">Һеҙҙең серһуҙе яраҡһыҙ. Зинһар, икенсене ҡулланып ҡарағыҙ.</string>
   <string name="common_error_user_values_not_found">Барыш дауам ителә алмай сөнки ҡулланыусы мәғлүмәте табылманы</string>
   <string name="common_error_votes_invalid_format">Ғәфү итегеҙ, яраҡһыҙ тауыш индерелгән. Зинһар, тауышты яңынан биреп ҡарағыҙ.</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">Ғәфү итегеҙ, етерлек тауышығыҙ юҡ</string>
   <string name="common_error_voting_is_not_allowed">Ғәфу итегеҙ, проект тауыш ала алмай.</string>
   <string name="common_error_wrong_user_status">Барыш дауам ителә алмай сөнки ҡулланыусының статусы яраҡһыҙ</string>
@@ -93,9 +115,11 @@
   <string name="common_failed">Уңышһыҙ</string>
   <string name="common_filipino">Филипин</string>
   <string name="common_finnish">Фин</string>
+  <string name="common_for">for</string>
   <string name="common_french">Француз</string>
   <string name="common_from">Кемдән</string>
   <string name="common_gallery">Галерея</string>
+  <string name="common_german">German</string>
   <string name="common_hide">Йәшерергә</string>
   <plurals name="common_hour">
     <item quantity="zero">сәғәт</item>
@@ -111,10 +135,14 @@
   <string name="common_japanese">Япон</string>
   <string name="common_khmer">Кхмер</string>
   <string name="common_korean">Корея</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">Малай</string>
+  <string name="common_manage">Manage</string>
   <string name="common_min">мин</string>
   <string name="common_network_unavailable">Селтәр юҡ</string>
   <string name="common_next">Киләһе</string>
+  <string name="common_norwegian">Norwegian</string>
+  <string name="common_notsent">Not sent</string>
   <string name="common_ok">Ярар</string>
   <string name="common_open_explorer">Blockchain Explorer\'да ҡарау</string>
   <string name="common_options_title">Һайлағыҙ</string>
@@ -122,9 +150,9 @@
   <string name="common_passphrase_header">Серһүҙ паролден төрө.</string>
   <string name="common_passphrase_save_mnemonic_title">Серһүҙҙе һаҡларға йәки ебәрергә</string>
   <string name="common_passphrase_save_or_send">Һаҡларға йәки ебәрергә</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">Серһүҙ</string>
   <string name="common_passphrase_your_passphrase">Һеҙҙең серһүҙегеҙ</string>
+  <string name="common_per">per</string>
   <string name="common_personal_info_account_name_invalid">Аккаунт 32 биттан торорға тейеш</string>
   <string name="common_personal_info_first_name_hint">Исем</string>
   <string name="common_personal_info_first_name_hyphen_error">Исем дефис йә ике дефис менән башлана йәки тамамлана алмай</string>
@@ -132,21 +160,25 @@
   <string name="common_personal_info_last_name_hint">Фамилия</string>
   <string name="common_personal_info_last_name_hyphen_error">Фамилия дефис йә ике дефис менән башлана йәки тамамлана алмай</string>
   <string name="common_personal_info_last_name_is_empty">Фамилия буш</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">Шәхси мәғлүмәт</string>
   <string name="common_please_wait">Зинһар, көтөгөҙ</string>
   <string name="common_receive">Алырға</string>
+  <string name="common_received">Received</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">Ҡабатларға</string>
   <string name="common_russian">Урыҫ</string>
   <string name="common_save">Һаҡларға</string>
   <string name="common_scan">Скаировать</string>
   <string name="common_search">Эҙләү</string>
   <string name="common_sec">сек</string>
-  <!-- Other common stuff -->
+  <string name="common_select_asset">Select an asset</string>
   <string name="common_select_email_app_title">Email һайлағыҙ</string>
   <string name="common_send">Ебәрергә</string>
+  <string name="common_sender">Sender</string>
   <string name="common_sent">Ебәрергә</string>
+  <string name="common_settings">Көйләүҙәр</string>
   <string name="common_share">Уртаҡлашыу</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">Үткэрергә</string>
   <string name="common_sms_code_expired">Тикшереү коды иҫкергән. Икенсене ҡулланып ҡарағыҙ.</string>
   <string name="common_sms_code_not_correct">Яңылыш тикшереү коды</string>
@@ -156,13 +188,15 @@
   <string name="common_terms_title">Ҡағиҙәләре Һәм Шарттары</string>
   <string name="common_thai">Тай</string>
   <string name="common_to">Кемгә</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">Бөгөн</string>
   <string name="common_try_another">Башҡа ҡулланып ҡарағыҙ</string>
+  <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Украин</string>
   <string name="common_unsupported_version_body">Google Playҙа яңы яҡшыртылған Sora ҡушымтаһы бар.</string>
   <string name="common_unsupported_version_open_google_play">Google Play асырға</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">Sora ҡушымтаһын яңыртырға</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">Тауыш биреү</string>
   <string name="common_yesterday">Кисә</string>
   <string name="contacts_empty_state_title">Бында мөһим булған контакттар күрһәтеләсәк</string>
@@ -174,19 +208,26 @@
   <string name="copy_eth_title">Ethereum (ETH) яңсыҡтың адресын күсерергә</string>
   <string name="copy_val_title">SORA NET (VAL) янсыҡтың адресын күсерергә</string>
   <string name="countries_country_not_found">Һеҙҙең һорау буйынса ил табылманы</string>
-  <!-- Countries -->
   <string name="countries_title">Үҙ илегеҙҙе һайлағыҙ</string>
   <string name="create_account_title">Аккаунт яһарға</string>
+  <string name="details_frozen">Frozen</string>
+  <string name="details_frozen_total">Frozen (Total)</string>
+  <string name="details_total">Total balance</string>
+  <string name="details_transferable">Transferable</string>
   <string name="empty_recent_recipients">Бында ебәрелгән адрестар күренәсәк</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">Был операция дауам итеү өсөн ethereum менән бәйле аккаунт кәрәк, майнер хаҡын түләү өсөн аккаунта аҡса булырға тейеш.</string>
   <string name="error_ethereum_account_title">ethereum аккаунт бәйләнмәгән</string>
   <string name="error_miner_fee_subtitle">Был операция дауам итеү өсөн, һеҙгә кәрәк Ethereum аккаунтҡа аҡса ебәрер кәрәк.</string>
   <string name="error_miner_fee_title">Майнер хаҡын түләргә аҡса етмәй</string>
   <string name="error_transaction_fee_title">Комиссияға етерлек аҡса юҡ</string>
   <string name="ethereum_config_unavailable">Эфириум нодаһы менән бәйләнеш юҡ</string>
-  <!-- FAQ -->
   <string name="faq_title">Йыш бирелгән һорауҙар</string>
   <string name="friends_spread_word">Дуҫтар менән уртаҡлашырға</string>
+  <string name="from_account">From account</string>
+  <string name="history_receive">Receive</string>
+  <string name="history_send">Send</string>
+  <string name="history_swap">Swap</string>
   <string name="history_title">Һуңғы ваҡиғалар</string>
   <string name="invite_accepted_empty_state_title">Саҡырыу ҡалманы</string>
   <string name="invite_accepted_invitations_title">Ҡабул ителгән саҡырыуҙар</string>
@@ -205,7 +246,6 @@
   <string name="invite_enter_error_already_applied">Һеҙ икенсе саҡырыу кодын индерҙегеҙ</string>
   <string name="invite_enter_error_time_is_up">Саҡырыу коды индереү ваҡыты үткән</string>
   <string name="invite_enter_invitation_code">Инвайт индереү-чита</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">Дуҫтар</string>
   <string name="invite_link_format">Soraға ҡушылырға түбән һылтанманы файҙаланығыҙ: \n%s</string>
   <string name="invite_link_sharing_title">Ҡушымтаны уртаҡлашырға</string>
@@ -219,6 +259,9 @@
   <string name="logout_dialog_body">Был хәрәкәт ҡоролманан адрес юйҙырыуын килтерәсәк. Дауам итер алдынан, серһүҙҙең резерв күсермәһен барлығын тикшерегеҙ.</string>
   <string name="mnemonic_alert_text">Мнемоник серһүҙе аккаунт тергеҙелеү өсөн ҡулланыла. Уны яҙып алығыҙ, унһыҙ беҙ аккаунты тергеҙә алмаҫбыҙ!</string>
   <string name="mnemonic_confirm_text">Дөрөҫ тәртиптә һүҙҙәрҙе һайлағыҙ</string>
+  <string name="mnemonic_confirm_text_v2">Дөрөҫ тәртиптә һүҙҙәрҙе һайлағыҙ</string>
+  <string name="mnemonic_invalid">Invalid mnemonic passphrase, please check one more time the words order.</string>
+  <string name="mnemonic_invalid_title">Invalid mnemonic passphrase</string>
   <string name="mnemonic_text">Һаҡлау өсөн цифр булмаған әйберҙе ҡулланығыҙ, мәҫәлән, һүҙҙәрҙе ҡағыҙға яҙып һалығыҙ.</string>
   <string name="mnemonic_title">Мнемоникты һаҡлау</string>
   <string name="parliament_coming_soon">SORA селтәрендә хөкүмәт</string>
@@ -230,7 +273,6 @@
   <string name="personal_info_username_v1">Аккаунт исеме</string>
   <string name="phone_number_mobile">Телефон номеры</string>
   <string name="phone_number_sms_code_will_be_sent">Код SMS менэн һеҙгә ебәрәләсәк</string>
-  <!-- Phone number -->
   <string name="phone_number_title">Теркәлеү</string>
   <string name="phone_verification_too_frequent_message">Тикшереү коды бик йыш һоранған. Һуңыраҡ ҡабатлап ҡарағыҙ.</string>
   <string name="pincode_change_success">Пин-код уңышлы үҙгәртелгән</string>
@@ -245,7 +287,60 @@
   <string name="pincode_set_your_pin_code">Пин кодты индерегеҙ</string>
   <string name="pincode_touch_fingerprint_scanner">Бармаҡ эҙҙәре сенсор сканерын тейегеҙ</string>
   <string name="pincode_updated">Пин-код яңыртылған</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">Polkaswap - Polkadot селтәрендә токен алмаштырыу өсөн децентраль биржа.</string>
+  <string name="polkaswap_confirm_swap">Confirm Swap</string>
+  <string name="polkaswap_details">Details</string>
+  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
+  <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
+  <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
+  <string name="polkaswap_info_text_4">Your understanding that the current version of Polkaswap is an alpha version: it has not been fully tested, and some functions may not perform as designed;</string>
+  <string name="polkaswap_info_text_5">Your understanding and voluntary acceptance of the risks involved in using Polkaswap, including, but not limited to, the risk of losing tokens.</string>
+  <string name="polkaswap_info_text_6">Once more, please do not continue without reading the %%Polkaswap FAQ%%, %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%!</string>
+  <string name="polkaswap_info_text_7">In order to hide the disclaimer notification from the Swap tab please swipe the button below. Only do so if you fully understand and have read all of the documents mentioned!</string>
+  <string name="polkaswap_info_text_8">Swipe to hide</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_title">Disclaimer</string>
+  <string name="polkaswap_info_title_main">Disclaimer: please read before continuing to use polkaswap!</string>
+  <string name="polkaswap_input_estimated">Input is estimated. You will sell maximum %s or the transaction will revert.</string>
+  <string name="polkaswap_insufficient_balance">Insufficient %s balance</string>
+  <string name="polkaswap_insufficient_liqudity">Insufficient liquidity</string>
+  <string name="polkaswap_liqudity_fee">LP Fee</string>
+  <string name="polkaswap_liqudity_fee_info">A portion of each trade (0.3%) goes to liquidity providers as a protocol incentive.</string>
+  <string name="polkaswap_market">Market</string>
+  <string name="polkaswap_market_info">Market algorithm - option to choose between Primary Market (TBC), Secondary Market (XYK) or a combined smart algorithm for guaranteed best price for any given transaction.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_title">Market algorithm</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_maximum_sold">Max Sold</string>
+  <string name="polkaswap_maximum_sold_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_minimum_received">Min Received</string>
+  <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_network_fee">Network Fee</string>
+  <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
+  <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
+  <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
+  <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
+  <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
+  <string name="polkaswap_slippage_tolerance">Slippage Tolerance</string>
+  <string name="polkaswap_smart">Smart</string>
+  <string name="polkaswap_swap_title">Swap</string>
+  <string name="polkaswap_swapped">Swapped</string>
+  <string name="polkaswap_tbc">TBC</string>
+  <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Add</string>
+  <string name="pool_button_remove">Remove</string>
+  <string name="pool_liqudity_title">Your liquidity</string>
+  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_share_title">Share of Pool</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">Pooled</string>
   <string name="profile_about_title">Тураһында</string>
   <string name="profile_biometry_title">Биометрик аутентификация</string>
   <string name="profile_change_pin_title">Пин-кодты алмаштырға</string>
@@ -292,12 +387,11 @@
   <string name="project_vote_dialog_title">Нисә тауыш</string>
   <string name="project_voted">Тауыш бирелгән</string>
   <string name="project_you_can_vote_at_least_1_point">Һеҙ кәм тигәндә 1 тауыш бирә алаһығыҙ 😜</string>
+  <string name="qr_code">QR code</string>
   <string name="qr_upload">Галерянан тәьмин итеү</string>
   <string name="recovery_body_subtitle">Ҡыҙғанысҡа ҡаршы, әгәр серһүҙҙе онотһағыҙ, аккаунтҡа инә алмайһығыҙ</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">Серһүҙҙе индерегеҙ</string>
   <string name="recovery_mnemonic_passphrase">Мнемоник серһүҙе</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">Аккаунтҡа доступ яңыртырға</string>
   <string name="recovery_source_type">Сығанаҡ төрө</string>
   <string name="recovery_title">Аккаунтты импорт итергә</string>
@@ -323,19 +417,26 @@
   <string name="referendum_total_votes">Бары тауыштар</string>
   <string name="referendum_unsupport_title">Юҡ</string>
   <string name="referendum_voting_result">Тауыштар һөҙөмтәһе</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Экран күсермәһен эшләмәгеҙ, сөнки сит программаһы ҡуллана ала</string>
   <string name="screenshot_alert_title">Экран күсермәһен эшләмәгеҙ</string>
+  <string name="search_asset_by_name">Search by asset name or symbol</string>
   <string name="select_account_address">Аккаунттың адресын эҙләү</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Алыусыны һайлағыҙ</string>
   <string name="set_amount">Сумманы индерегеҙ</string>
   <string name="staking_coming_soon">XOR эйәһе XOR менән валидаторҙы тәғәйләп награда ала аласаҡ.</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA валидатор наградалары</string>
-  <!-- Startup -->
   <string name="startup_verification_title">Авторизация...</string>
+  <string name="status_error">Error</string>
   <string name="status_pending">Барышта</string>
   <string name="status_rejected">Кире ҡағылған</string>
   <string name="status_success">Уңышлы</string>
   <string name="status_title">Статус</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">Дуҫтар</string>
   <string name="tabbar_parliament_title">Парламент</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -363,51 +464,66 @@
   <string name="transaction_send_back">Кире ебәрергә</string>
   <string name="transaction_token">Токен</string>
   <string name="transaction_total">Дөйөм</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">Many Worlds.\nOne Economy.</string>
+  <string name="tutorial_many_world_desc">SORA is working to become a decentralized multiverse economic system, financing the creation of new and exciting applications, under the democratic supervision of the SORA Parliament.</string>
   <string name="tutorial_one_world">Бер Донъя.\nБер Иҡтисад.</string>
   <string name="tutorial_one_world_desc">SORA бөтә донъя үҙәк банкы децентрализация өҫтөндә эшләй, демократик SORA парламент контроле аҫтында яңы һәм төҙөлгән ҡушымталарҙы финанс етештерә.</string>
   <string name="tutorial_privacy_policy">Хосусил сәйәсәте</string>
   <string name="tutorial_project_success_desc">Әгәр был проект етәрлек тауыш йыйһа, һәр бер тауыш биреүсе өлөш аласаҡ</string>
   <string name="tutorial_projects_desc">һайлап алыу процесынан һуң, Sora проекттары тауыш биреү өсөн әҙер була</string>
   <string name="tutorial_restore_account">Аккаунтҡа доступты тергеҙеү</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">Теркәлеү</string>
+  <string name="tutorial_terms_and_conditions">By creating an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
   <string name="tutorial_terms_and_conditions_1">Һеҙҙең ризалыҡ менән яҙылған</string>
   <string name="tutorial_terms_and_conditions_2">Ҡағиҙәләр һәм шарттар</string>
   <string name="tutorial_terms_and_conditions_3">Ҡағиҙәләр һәм шарттар</string>
+  <string name="tutorial_terms_and_conditions_recovery">By importing an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">Файҙаланыусылар проект өсөн тауыш биреп, ниндәй проектҡа аҡса йүнәлтелгәнен ҡарар итә</string>
   <string name="unknown_balance">Билдәһеҙ</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">VAL токен төрлө селтәрҙә</string>
   <string name="verification_enter_code_from_sms">Кодты SMSтан индерегеҙ</string>
   <string name="verification_request_new_code_time" formatted="false">Яңы кодты %s:%s ваҡыттан һорарға була</string>
-  <!-- Verification -->
   <string name="verification_resend_code">Кодты яңынан ебәрергә</string>
   <string name="verification_title">Телефон номерын раҫлау</string>
   <string name="view_balance_val">SORA NET (VAL) токен бүлеүен ҡарарға</string>
   <string name="votes_empty_history_description">Тауыш үҙгәреү тарихын бында курәсәкһегеҙ</string>
-  <!-- Votes -->
   <string name="votes_history_title">Тауыш тарихы</string>
   <string name="votes_zero_error_message">Ғәфү итегеҙ, һеҙҙә кәм тигәндә 1 тауыш булыуы кәрәк</string>
   <string name="wallet_account_retry_registration">Теркәүҙе ҡабатларға</string>
+  <string name="wallet_asset_id">Asset id</string>
   <string name="wallet_balance_locked">Бикләнгән</string>
   <string name="wallet_balance_reserved">Резерв</string>
+  <string name="wallet_bonded">Bonded</string>
   <string name="wallet_empty_description">Килгән һәм ебәрелгән транзакциялар бында күрһәтеләсәк</string>
+  <string name="wallet_empty_history_title">No transactions</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_history_from_ethereum_address_title">Ethereum аккаунтынан</string>
   <string name="wallet_history_from_soranet_address_title">SORA NET аккаунтынан</string>
+  <string name="wallet_history_limitations_text">At the moment, the history of transactions is stored locally, which means if you import the account on another device, log out or reinstall the application on current device, the history of transactions wouldn’t be available any more. Also we can’t show any incoming transactions. We apologize for any inconvenience caused, we are working to resolve the issue.</string>
+  <string name="wallet_history_limitations_title">History limitations</string>
   <string name="wallet_history_reward_from_system">Ҡушамтанан награда</string>
   <string name="wallet_history_to_ethereum_address">Ethereum адресына</string>
   <string name="wallet_history_to_my_ethereum_title">Ethereum аккаунтыма</string>
   <string name="wallet_history_to_my_soranet_title">SORA NET аккаунтыма</string>
   <string name="wallet_history_to_soranet_account">SORA NET аккаунтына</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s eбәреү өсөн минең %s адрес:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_template" formatted="false">%s %s eбәреү өсөн минең %s адрес:</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
   <string name="wallet_receive_val">VAL алырға</string>
+  <string name="wallet_redeemable">Redeemable</string>
   <string name="wallet_send_existential_warning_message">Был транзакция аккаунты юҡҡа сығара сөнки дөйөм сумма бар депозиттан кәмерәк була</string>
   <string name="wallet_soranet">SORA NET</string>
-  <!-- Wallet -->
   <string name="wallet_title">Янсыҡ</string>
+  <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">Транзакция ебәреү</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">Иң күбендә %s билдә</string>
   <string name="wallet_transfer_to_ethereum">Ethereum янсыҡтың адресы</string>
+  <string name="wallet_unbonding">Unbonding</string>
   <string name="wallet_val_to_my_eth">VAL минең Ethereum аккантыма</string>
 </resources>

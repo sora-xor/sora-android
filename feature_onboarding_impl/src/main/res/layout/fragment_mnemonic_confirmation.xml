@@ -4,64 +4,57 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/baseBackground"
     android:orientation="vertical">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:iconRight="@drawable/ic_arrows_rotate_24"
-        app:title="" />
+        app:iconRight="@drawable/ic_reload_40"
+        app:titleText="@string/account_confirmation_title" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:fillViewport="true"
         android:overScrollMode="never">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
+            android:layout_height="match_parent"
             android:paddingBottom="@dimen/x1">
 
             <TextView
-                android:id="@+id/title"
-                style="@style/TextAppearance.Soramitsu.Header1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x2"
-                android:layout_marginEnd="@dimen/x2"
-                android:text="@string/account_confirmation_title"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/toolbar" />
-
-            <TextView
                 android:id="@+id/yourPassphraseTv"
-                style="@style/TextAppearance.Soramitsu.Title_3"
+                style="@style/TextAppearance.Soramitsu.Neu.18.Light"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/x2"
+                android:layout_marginStart="@dimen/x4"
                 android:layout_marginTop="@dimen/x4"
-                android:layout_marginEnd="@dimen/x2"
-                android:fontFamily="@font/sora_bold"
-                android:paddingEnd="@dimen/x2"
-                android:text="@string/mnemonic_confirm_text"
-                android:textColor="@color/black"
+                android:layout_marginEnd="@dimen/x4"
+                android:gravity="center_horizontal"
+                android:text="@string/mnemonic_confirm_text_v2"
+                app:layout_constraintBottom_toTopOf="@+id/wordsMnemonicView"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/title" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
 
             <jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic_confirmation.view.MnemonicContainerView
                 android:id="@+id/wordsMnemonicView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x4"
+                android:layout_marginTop="@dimen/x2"
                 android:layout_marginEnd="@dimen/x2"
                 android:animateLayoutChanges="true"
+                app:layout_constraintHeight_min="140dp"
+                app:layout_constraintBottom_toTopOf="@+id/divider"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/yourPassphraseTv"
                 tools:layout_height="144dp" />
@@ -70,10 +63,13 @@
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginTop="@dimen/x2"
                 android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x3"
                 android:layout_marginEnd="@dimen/x2"
-                android:background="@drawable/bg_dash_divider"
+                android:background="?attr/onBackgroundColor"
+                app:layout_constraintBottom_toTopOf="@+id/confirmationMnemonicView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/wordsMnemonicView" />
 
             <jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic_confirmation.view.MnemonicContainerView
@@ -81,10 +77,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/x2"
-                android:layout_marginTop="@dimen/x3"
+                android:layout_marginTop="@dimen/x2"
                 android:layout_marginEnd="@dimen/x2"
                 android:animateLayoutChanges="true"
+                app:layout_constraintHeight_min="140dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/divider"
                 tools:layout_height="144dp" />
@@ -97,29 +96,29 @@
         android:orientation="vertical">
         <Button
             android:id="@+id/skipBtn"
-            style="@style/Widget.Soramitsu.Button.Secondary.48"
+            style="@style/Widget.Soramitsu.Button.Secondary.Neu.56"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
             android:layout_marginEnd="@dimen/x1"
             android:layout_marginBottom="@dimen/x1"
-            android:text="@string/claim_skip"
+            android:text="@string/common_skip"
             app:layout_constraintBottom_toTopOf="@id/confirmBtn"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
             android:id="@+id/confirmBtn"
-            style="@style/Widget.Soramitsu.Button.Primary.48"
+            style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
             android:layout_marginEnd="@dimen/x1"
-            android:layout_marginBottom="@dimen/x3"
+            android:layout_marginBottom="@dimen/x4"
             android:text="@string/account_confirmation_title"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:textAllCaps="true"
+            app:layout_constraintBottom_toTopOf="@id/tutorialRestoreTextView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
     </LinearLayout>
 
 </LinearLayout>

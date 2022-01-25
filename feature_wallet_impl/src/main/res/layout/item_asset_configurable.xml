@@ -4,9 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/baseOnAccent"
-    android:paddingTop="@dimen/x1_5"
-    android:paddingBottom="@dimen/x1_5">
+    android:paddingTop="@dimen/x2"
+    android:paddingBottom="@dimen/x2">
 
     <ImageView
         android:id="@+id/ivAssetManagementItemIcon"
@@ -16,33 +15,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="ContentDescription"
-        tools:src="@drawable/ic_sora_red_shadow" />
+        tools:src="@drawable/ic_0x0200050000000000000000000000000000000000000000000000000000000000" />
 
     <TextView
         android:id="@+id/tvAssetManagementItemTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_3"
+        style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.13"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        app:layout_constraintStart_toEndOf="@id/ivAssetManagementItemIcon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="XOR" />
+
+    <TextView
+        android:id="@+id/tvAssetManagementItemTicker"
+        style="@style/TextAppearance.Soramitsu.Neu.ExtraLight.11"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x1"
         android:ellipsize="end"
-        android:gravity="start"
         android:singleLine="true"
-        app:layout_constraintBottom_toTopOf="@id/tvAssetManagementItemAmount"
         app:layout_constraintEnd_toStartOf="@id/swAssetManagementItem"
-        app:layout_constraintStart_toEndOf="@id/ivAssetManagementItemIcon"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed"
-        tools:text="SORA )XOR)" />
+        app:layout_constraintStart_toEndOf="@id/tvAssetManagementItemTitle"
+        app:layout_constraintBaseline_toBaselineOf="@id/tvAssetManagementItemTitle"
+        tools:text="Sora validator" />
 
     <TextView
         android:id="@+id/tvAssetManagementItemAmount"
-        style="@style/TextAppearance.Soramitsu.Paragraph_4"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.11"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:gravity="start"
         android:singleLine="true"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/swAssetManagementItem"
         app:layout_constraintStart_toStartOf="@id/tvAssetManagementItemTitle"
         app:layout_constraintTop_toBottomOf="@id/tvAssetManagementItemTitle"
@@ -50,7 +55,7 @@
 
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/swAssetManagementItem"
-        style="@style/Widget.Soramitsu.Switch"
+        style="@style/Widget.Soramitsu.Switch.Red"
         android:layout_width="wrap_content"
         android:layout_height="24dp"
         android:layout_marginEnd="@dimen/x1"
@@ -61,8 +66,8 @@
 
     <ImageView
         android:id="@+id/ivAssetManagementItemDrag"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="20dp"
+        android:layout_height="10dp"
         android:src="@drawable/ic_drag_lines_3_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

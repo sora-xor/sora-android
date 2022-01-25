@@ -27,10 +27,8 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiMode
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.anyNonNull
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -92,23 +90,6 @@ class WalletViewModelTest {
     }
 
     @Test
-    fun `swipe asset card`() = runBlockingTest {
-        walletViewModel.onAssetCardSwiped(
-            assetModel()
-        )
-        walletViewModel.assetsLiveData.observeForever {
-            assertEquals(3, it.size)
-        }
-    }
-
-    @Test
-    fun `swipe asset card partly`() = runBlockingTest {
-        walletViewModel.onAssetCardSwipedPartly(assetModel())
-        val res = walletViewModel.assetsLiveData.getOrAwaitValue()
-        assertEquals(3, res.size)
-    }
-
-    @Test
     fun `btn help clicked`() {
         walletViewModel.btnHelpClicked()
         verify(router).showFaq()
@@ -164,7 +145,7 @@ class WalletViewModelTest {
 
     private val assetXor = Asset(
         oneToken(),
-        true, false, 0, AssetBalance(
+        true, 0, AssetBalance(
             BigDecimal.ONE,
             BigDecimal.ONE,
             BigDecimal.ONE,
@@ -177,7 +158,7 @@ class WalletViewModelTest {
 
     private val assetXorErc = Asset(
         oneToken(),
-        true, false, 0, AssetBalance(
+        true, 0, AssetBalance(
             BigDecimal.ONE,
             BigDecimal.ONE,
             BigDecimal.ONE,
@@ -190,7 +171,7 @@ class WalletViewModelTest {
 
     private val assetEth = Asset(
         oneToken(),
-        true, false, 0, AssetBalance(
+        true, 0, AssetBalance(
             BigDecimal.ONE,
             BigDecimal.ONE,
             BigDecimal.ONE,
@@ -235,15 +216,13 @@ class WalletViewModelTest {
 
     private val assets = mutableListOf(assetXor, assetXorErc, assetEth)
 
-    private fun eventUi() = EventUiModel.EventTxUiModel.EventTransferUiModel(
+    private fun eventUi() = EventUiModel.EventTxUiModel.EventTransferInUiModel(
         "id",
-        true,
         0,
         "",
         "",
         100000,
-        "",
-        "",
+        "10" to "10",
         false,
         true
     )
@@ -254,10 +233,8 @@ class WalletViewModelTest {
         "",
         0,
         "",
-        AssetModel.State.NORMAL,
         4,
         1,
-        true,
         true,
         true
     )

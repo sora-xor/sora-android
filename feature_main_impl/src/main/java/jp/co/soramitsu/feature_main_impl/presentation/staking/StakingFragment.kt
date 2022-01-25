@@ -6,7 +6,9 @@
 package jp.co.soramitsu.feature_main_impl.presentation.staking
 
 import android.os.Bundle
+import android.text.SpannableStringBuilder
 import android.view.View
+import androidx.core.text.underline
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
@@ -31,10 +33,10 @@ class StakingFragment : BaseFragment<StakingViewModel>(R.layout.fragment_staking
         super.onViewCreated(view, savedInstanceState)
 
         (activity as BottomBarController).showBottomBar()
-        binding.stakingSubtitleTv.text = Const.VAL_REWARD_LINK
-
-        binding.stakingWrapper.setDebouncedClickListener(debounceClickHandler) {
-            showBrowser(Const.VAL_REWARD_LINK)
+        binding.tvStakingMore.text =
+            SpannableStringBuilder().underline { append(getString(R.string.common_learn_more)) }
+        binding.tvStakingMore.setDebouncedClickListener(debounceClickHandler) {
+            showBrowser(Const.STAKING_LEARN_MORE_LINK)
         }
     }
 

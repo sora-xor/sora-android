@@ -36,11 +36,11 @@ android {
             dimension 'default'
         }
 
-        tst {
+        soralution {
             dimension 'default'
         }
 
-        staging {
+        tsting {
             dimension 'default'
         }
 
@@ -64,6 +64,9 @@ dependencies {
 
     implementation retrofitDep
     implementation gsonDep
+
+    implementation coroutineDep
+    implementation coroutineTestDep
 
     testImplementation jUnitDep
     testImplementation mockitoDep

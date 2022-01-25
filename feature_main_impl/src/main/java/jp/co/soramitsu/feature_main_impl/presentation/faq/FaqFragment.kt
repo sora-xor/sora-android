@@ -13,6 +13,8 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.util.ext.attrColor
+import jp.co.soramitsu.common.util.ext.setPageBackground
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentTermsBinding
@@ -44,6 +46,7 @@ class FaqFragment : BaseFragment<FaqViewModel>(R.layout.fragment_terms) {
         binding.webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                view?.setPageBackground(requireContext().attrColor(R.attr.baseBackground))
                 progressDialog.dismiss()
             }
         }

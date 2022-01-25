@@ -9,7 +9,7 @@ import android.content.Context
 import com.google.gson.Gson
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
 import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.date.DateTimeFormatter
@@ -36,7 +36,7 @@ import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 
 interface WalletFeatureDependencies {
 
-    fun preferences(): Preferences
+    fun preferences(): SoraPreferences
 
     fun encryptedPreferences(): EncryptedPreferences
 

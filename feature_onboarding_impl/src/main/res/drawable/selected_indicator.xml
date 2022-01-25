@@ -6,7 +6,7 @@
             android:shape="ring"
             android:thickness="4dp"
             android:useLevel="false">
-            <solid android:color="@color/uikit_lightRed" />
+            <solid android:color="@color/brand_soramitsu_red" />
         </shape>
     </item>
 </layer-list>

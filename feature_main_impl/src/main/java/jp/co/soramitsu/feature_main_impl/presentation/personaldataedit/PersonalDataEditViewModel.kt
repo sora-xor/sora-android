@@ -45,10 +45,10 @@ class PersonalDataEditViewModel(
             showProgress()
             try {
                 interactor.saveAccountName(accountName)
+                hideProgress()
                 router.popBackStack()
             } catch (t: Throwable) {
                 onError(t)
-            } finally {
                 hideProgress()
             }
         }

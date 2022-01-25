@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.privacy
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebViewClient
@@ -14,6 +15,8 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.ext.attrColor
+import jp.co.soramitsu.common.util.ext.setPageBackground
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentTermsBinding
@@ -44,10 +47,13 @@ class PrivacyFragment : BaseFragment<PrivacyViewModel>(R.layout.fragment_terms) 
         configureWebView()
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView() {
+        viewBinding.webView.settings.javaScriptEnabled = true
         viewBinding.webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: android.webkit.WebView?, url: String?) {
                 super.onPageFinished(view, url)
+                view?.setPageBackground(requireContext().attrColor(R.attr.baseBackground))
                 progressDialog.dismiss()
             }
         }

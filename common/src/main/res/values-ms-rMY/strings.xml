@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">Hubungi Kami</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">Dasar privasi</string>
   <string name="about_source_code">Kod sumber</string>
   <string name="about_telegram">Kumpulan Telegram Rasmi</string>
   <string name="about_title">Mengenai</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">Laman web</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">Sahkan mnemonik</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Projek</string>
   <string name="address_not_found">Alamat tidak dijumpai, pastikan alamat tersebut tergolong dalam rangkaian yang betul.</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Bayaran transaksi</string>
   <string name="amount_error_no_funds">Maaf, anda tidak mempunyai dana yang cukup untuk memindahkan jumlah yang ditetapkan.</string>
   <string name="amount_title">Jumlah</string>
   <string name="ask_biometry_message">Adakah anda ingin menggunakan biometri untuk pengesahan?</string>
   <string name="asset_add">Tambah akaun</string>
+  <string name="asset_details_title">Butiran Aset</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">Akaun</string>
   <string name="asset_state_associating">Mengaitkan ...</string>
   <string name="asset_state_error">Ralat</string>
@@ -21,19 +32,29 @@
   <string name="asset_val_name">Token Pengesah SORA</string>
   <string name="biometric_dialog_title">Mengesahkan</string>
   <string name="block_id">Sekat hash</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">Sekiranya anda mempunyai pertanyaan atau kebimbangan, anda boleh %%hubungi kami.%%</string>
   <string name="claim_contact_1">Sekiranya anda mempunyai pertanyaan atau kebimbangan, anda boleh</string>
   <string name="claim_contact_2">hubungi kami.</string>
+  <string name="claim_contact_us">%%Hubungi kami%% untuk sebarang pertanyaan atau masalah</string>
   <string name="claim_error_title">Peralihan gagal</string>
+  <string name="claim_error_title_v1">Peralihan aset gagal. Sila cuba sebentar lagi.</string>
   <string name="claim_notification_text">Peralihan sedang dijalankan ...</string>
   <string name="claim_skip">Melangkau proses</string>
   <string name="claim_subtitle">Kami memerlukan persetujuan anda untuk membuat peralihan dana anda dari SORA supaya anda dapat menggunakannya. SORA kini akan beroperasi di rangkaian Substrat. Sila sahkan peralihan.</string>
+  <string name="claim_subtitle_confirmed">Terima kasih atas pengesahannya!</string>
+  <string name="claim_subtitle_confirmed_2">Peralihan aset sedang dijalankan.\nSila tunggu.</string>
   <string name="claim_subtitle_v1">Kami memerlukan persetujuan anda untuk membuat peralihan aset anda dari SORA v1. Ini akan membolehkan anda menggunakan aset anda pada SORA v2 berasaskan Substrat. \n\nAset di rangkaian Ethereum tidak terjejas, anda masih boleh mengaksesnya dengan mengimport frasa laluan anda ke dompet yang serasi.</string>
+  <string name="claim_subtitle_v2">• Kami memerlukan persetujuan untuk memindahkan aset anda dari SORA v1 ke SORA v2\n\n• Rangkaian SORA v2 dibina dengan Substrat, yang secara asli serasi dengan ekosistem Polkadot dan Kusama\n\n• Aset pada Ethereum tidak terjejas, anda masih boleh mengaksesnya dengan mengimport frasa laluan anda ke mana-mana dompet yang serasi</string>
   <string name="claim_welcome_sora2">Selamat datang ke SORA v2</string>
+  <string name="claim_welcome_sora2_v1">Selamat datang ke\n%%SORA v2%%</string>
   <string name="coming_soon">Akan datang...</string>
+  <string name="common_account">Akaun</string>
   <string name="common_add">Tambah</string>
   <string name="common_advanced_settings">Tetapan lanjutan</string>
   <string name="common_and">dan</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">Memohon</string>
   <string name="common_arab">Arab</string>
   <string name="common_asset">Aset</string>
@@ -55,11 +76,11 @@
   <string name="common_done">Selesai</string>
   <string name="common_donotallow">Jangan Benarkan</string>
   <string name="common_english">Bahasa Inggeris</string>
+  <string name="common_enter_amount">Masukkan amaun</string>
   <string name="common_error_ambiguous_result">Keputusan tidak jelas</string>
   <string name="common_error_fee_rate_not_available">Tidak dapat menghubungi pembekal pengeluaran. Sila cuba sebentar lagi.</string>
   <string name="common_error_gas_limit_low">Had gas mestilah sekurang-kurangnya %s</string>
   <string name="common_error_general_message">Kami berusaha keras untuk menyelesaikan masalah tersebut. Sila cuba sebentar lagi.</string>
-  <!-- Error -->
   <string name="common_error_general_title">Ralat</string>
   <string name="common_error_internal_error_title">Masalah dalaman</string>
   <string name="common_error_invalid_parameters">Parameter Tidak Sah</string>
@@ -71,7 +92,6 @@
   <string name="common_error_inviter_registered_after_invitee">Kod jemputan yang disediakan tidak dapat digunakan kerana dari pengguna yang mendaftar selepas anda</string>
   <string name="common_error_mnemonic_is_not_valid">Sila pastikan frasa laluan anda terdiri daripada 12 atau 15 perkataan dan semuanya betul.</string>
   <string name="common_error_mnemonic_length_error">Frasa Laluan mesti mengandungi 15 perkataan</string>
-  <!-- Errors -->
   <string name="common_error_network">Sila, periksa sambungan internet dan cuba lagi kemudian.</string>
   <string name="common_error_not_enough_invitations">Maaf, tetapi anda tidak mempunyai jemputan untuk dikongsi</string>
   <string name="common_error_not_found_title">Sumber tidak tersedia</string>
@@ -79,7 +99,6 @@
   <string name="common_error_phone_already_registered">Nombor telefon telah digunakan semasa pendaftaran dengan pengguna ini atau yang lain</string>
   <string name="common_error_pincode_check_error">Kod yang dimasukkan salah</string>
   <string name="common_error_price_is_to_low">Harganya terlalu rendah</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">Maaf, tetapi projek itu tidak dijumpai.</string>
   <string name="common_error_retry">Sila cuba lagi</string>
   <string name="common_error_search_string_error">Saiz carian mestilah di antara 3 dan 64 aksara</string>
@@ -89,7 +108,6 @@
   <string name="common_error_user_not_found">Frasa laluan anda tidak sah. Sila cuba yang lain.</string>
   <string name="common_error_user_values_not_found">Tidak dapat meneruskan operasi kerana data nilai pengguna tidak dijumpai</string>
   <string name="common_error_votes_invalid_format">Maaf, tetapi jumlah undian anda tidak dapat ditafsirkan. Tolong, cuba mengundi lagi.</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">Maaf, tapi anda tidak memiliki mata yang cukup untuk mengundi.</string>
   <string name="common_error_voting_is_not_allowed">Maaf, projek ini tidak dapat menerima undi lagi.</string>
   <string name="common_error_wrong_user_status">Tidak dapat meneruskan operasi kerana status pengguna tidak sah</string>
@@ -97,9 +115,11 @@
   <string name="common_failed">Gagal</string>
   <string name="common_filipino">Orang Filipina</string>
   <string name="common_finnish">Finland</string>
+  <string name="common_for">untuk</string>
   <string name="common_french">Bahasa Perancis</string>
   <string name="common_from">Dari</string>
   <string name="common_gallery">Galeri</string>
+  <string name="common_german">Jerman</string>
   <string name="common_hide">Sembunyikan</string>
   <plurals name="common_hour">
     <item quantity="other">jam</item>
@@ -110,11 +130,14 @@
   <string name="common_japanese">Bahasa Jepun</string>
   <string name="common_khmer">Orang Khmer</string>
   <string name="common_korean">Orang Korea</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">Bahasa Melayu</string>
   <string name="common_manage">Menguruskan</string>
   <string name="common_min">min</string>
   <string name="common_network_unavailable">Sambungan rangkaian tidak tersedia</string>
   <string name="common_next">Seterusnya</string>
+  <string name="common_norwegian">Norway</string>
+  <string name="common_notsent">Not sent</string>
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Lihat di Blockchain Explorer</string>
   <string name="common_options_title">Pilih pilihan</string>
@@ -122,9 +145,9 @@
   <string name="common_passphrase_header">Frasa Laluan ialah \n sejenis kata laluan.</string>
   <string name="common_passphrase_save_mnemonic_title">Simpan atau hantar frasa laluan</string>
   <string name="common_passphrase_save_or_send">Simpan atau hantar</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">Frasa Laluan</string>
   <string name="common_passphrase_your_passphrase">Frasa laluan anda</string>
+  <string name="common_per">per</string>
   <string name="common_personal_info_account_name_invalid">Nama akaun hendaklah mengandungi hingga 32 bait</string>
   <string name="common_personal_info_first_name_hint">Nama depan</string>
   <string name="common_personal_info_first_name_hyphen_error">Nama depan tidak boleh bermula atau berakhiran tanda hubung atau tanda hubung berganda</string>
@@ -132,22 +155,25 @@
   <string name="common_personal_info_last_name_hint">Nama akhir</string>
   <string name="common_personal_info_last_name_hyphen_error">Nama belakang tidak boleh bermula atau diakhiri dengan kata hubung atau tanda hubung berganda</string>
   <string name="common_personal_info_last_name_is_empty">Nama akhir kosong</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">Maklumat peribadi</string>
   <string name="common_please_wait">Sila tunggu</string>
   <string name="common_receive">Terima</string>
   <string name="common_received">Menerima</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">Cuba lagi</string>
   <string name="common_russian">Bahasa Rusia</string>
   <string name="common_save">Simpan</string>
   <string name="common_scan">Imbas</string>
   <string name="common_search">Cari</string>
   <string name="common_sec">saat</string>
-  <!-- Other common stuff -->
+  <string name="common_select_asset">Pilih aset</string>
   <string name="common_select_email_app_title">Pilih aplikasi e-mel</string>
   <string name="common_send">Hantar</string>
+  <string name="common_sender">Sender</string>
   <string name="common_sent">Dihantar</string>
+  <string name="common_settings">Tetapan</string>
   <string name="common_share">Berkongsi</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">Langkau</string>
   <string name="common_sms_code_expired">Kod pengesahan telah tamat tempoh. Sila cuba yang lain.</string>
   <string name="common_sms_code_not_correct">Kod pengesahan tidak betul</string>
@@ -157,13 +183,15 @@
   <string name="common_terms_title">Terma &amp; Syarat</string>
   <string name="common_thai">Orang Thai</string>
   <string name="common_to">Ke</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">Hari ini</string>
   <string name="common_try_another">Cuba yang lain</string>
+  <string name="common_turkish">Turki</string>
   <string name="common_ukrainian">Bahasa Ukraine</string>
   <string name="common_unsupported_version_body">Aplikasi Sora yang dikemas kini boleh didapati di Google Play. Ia merangkumi penambahbaikan dan pembetulan pepijat.</string>
   <string name="common_unsupported_version_open_google_play">Buka Google Play</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">Kemas kini Aplikasi Sora anda</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">Undi</string>
   <string name="common_yesterday">Semalam</string>
   <string name="contacts_empty_state_title">Kenalan yang paling penting akan muncul di sini</string>
@@ -175,20 +203,26 @@
   <string name="copy_eth_title">Salin alamat dompet Ethereum (ETH)</string>
   <string name="copy_val_title">Salin alamat dompet SORA NET (VAL)</string>
   <string name="countries_country_not_found">Tiada negara yang padan dengan pertanyaan anda</string>
-  <!-- Countries -->
   <string name="countries_title">Pilih negara anda</string>
   <string name="create_account_title">Cipta akaun</string>
+  <string name="details_frozen">Dibekukan</string>
+  <string name="details_frozen_total">Dibekukan (Jumlah)</string>
   <string name="details_total">Jumlah baki</string>
+  <string name="details_transferable">Boleh dipindah milik</string>
   <string name="empty_recent_recipients">Tiada penerima terkini.\nAlamat yang dihantar akan ditunjukkan di sini.</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">Untuk meneruskan operasi ini, anda memerlukan akaun Ethereum yang berkaitan dengan sejumlah dana di dalamnya untuk bayaran Penambang untuk menyelesaikan transaksi.</string>
   <string name="error_ethereum_account_title">Akaun Ethereum tidak dikaitkan</string>
   <string name="error_miner_fee_subtitle">Untuk meneruskan operasi ini, anda perlu menambah akaun Ethereum anda.</string>
   <string name="error_miner_fee_title">Tidak cukup dana untuk bayaran Miner</string>
   <string name="error_transaction_fee_title">Tidak cukup dana untuk bayaran transaksi</string>
   <string name="ethereum_config_unavailable">Node Ethereum tidak tersedia</string>
-  <!-- FAQ -->
   <string name="faq_title">Soalan Lazim</string>
   <string name="friends_spread_word">Sebarkan berita, kongsi aplikasi dengan rakan anda.</string>
+  <string name="from_account">Dari akaun</string>
+  <string name="history_receive">Terima</string>
+  <string name="history_send">Hantar</string>
+  <string name="history_swap">Tukar</string>
   <string name="history_title">Peristiwa terkini</string>
   <string name="invite_accepted_empty_state_title">Jemputan belum diterima</string>
   <string name="invite_accepted_invitations_title">Jemputan yang diterima</string>
@@ -207,7 +241,6 @@
   <string name="invite_enter_error_already_applied">Anda telah menggunakan kod jemputan yang lain</string>
   <string name="invite_enter_error_time_is_up">Masa untuk menggunakan kod jemputan sudah habis</string>
   <string name="invite_enter_invitation_code">Masukkan kod jemputan</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">Kawan-kawan</string>
   <string name="invite_link_format">Sertailah Sora menggunakan pautan di bawah: \n %s</string>
   <string name="invite_link_sharing_title">Kongsi aplikasi</string>
@@ -221,6 +254,7 @@
   <string name="logout_dialog_body">Tindakan ini akan mengakibatkan penghapusan akaun dari peranti ini. Pastikan anda telah menyandarkan frasa laluan anda sebelum meneruskan.</string>
   <string name="mnemonic_alert_text">Mnemonik digunakan untuk memulihkan akses ke akaun. Tuliskan di atas kertas sebab kami tidak akan dapat memulihkan akaun anda tanpanya!</string>
   <string name="mnemonic_confirm_text">Sahkan dengan memilih perkataan mengikut urutan yang betul</string>
+  <string name="mnemonic_confirm_text_v2">Sahkan frasa laluan dengan memilih perkataan mengikut urutan yang betul</string>
   <string name="mnemonic_invalid">Frasa laluan mnemonik tidak sah, sila periksa sekali lagi susunan kata.</string>
   <string name="mnemonic_invalid_title">Frasa laluan mnemonik tidak sah</string>
   <string name="mnemonic_text">Kami mengesyorkan untuk menggunakan cara bukan digital untuk membuat sandaran, seperti menulisnya di atas kertas.</string>
@@ -234,7 +268,6 @@
   <string name="personal_info_username_v1">Nama akaun</string>
   <string name="phone_number_mobile">Nombor Telefon Bimbit</string>
   <string name="phone_number_sms_code_will_be_sent">Kod SMS akan dihantar \n ke telefon anda</string>
-  <!-- Phone number -->
   <string name="phone_number_title">Daftar</string>
   <string name="phone_verification_too_frequent_message">Permintaan kod pengesahan yang terlalu kerap. Sila cuba sebentar lagi.</string>
   <string name="pincode_change_success">Kod pin berjaya diubah.</string>
@@ -249,7 +282,60 @@
   <string name="pincode_set_your_pin_code">Cipta kod pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh pengimbas cap jari</string>
   <string name="pincode_updated">Kod pin dikemas kini</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">DEX untuk Masa Depan yang Boleh Beroperasi Polkaswap adalah protokol AMM-DEX bukan kustodian untuk menukar token berdasarkan rangkaian Polkadot, Parachains, dan blockchain yang dihubungkan melalui Bridge. Protokol Polkaswap secara berkesan menghilangkan perantara yang dipercayai dan memberi peluang untuk perdagangan yang lebih pantas.</string>
+  <string name="polkaswap_confirm_swap">Sahkan pertukaran</string>
+  <string name="polkaswap_details">Butiran</string>
+  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_info_faq">Soalan Lazim Polkaswap</string>
+  <string name="polkaswap_info_text_1">Polkaswap diselenggara oleh komuniti SORA. Sebelum menggunakan fungsi Polkaswap, sila semak %% Polkaswap FAQ %% dan dokumentasi, termasuk penjelasan yang terperinci mengenai cara Polkaswap berfungsi, serta Memorandum Polkaswap dan Syarat Perkhidmatan dan Dasar Privasi. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang selamat dan positif. Dengan menggunakan Polkaswap, anda mengakui bahawa anda telah membaca dan memahami dokumen-dokumen ini.</string>
+  <string name="polkaswap_info_text_2">Anda juga mengakui perkara-perkara berikut:</string>
+  <string name="polkaswap_info_text_3">Tanggungjawab anda untuk mematuhi semua undang-undang yang mungkin terpakai untuk penggunaan Polkaswap tertentu dalam bidang kuasa undang-undang anda;</string>
+  <string name="polkaswap_info_text_4">Pemahaman anda bahawa versi semasa Polkaswap adalah versi alfa: ia belum diuji sepenuhnya, dan sesetengah fungsi mungkin tidak berfungsi seperti yang direka;</string>
+  <string name="polkaswap_info_text_5">Pemahaman dan penerimaan sukarela anda terhadap risiko yang terlibat dalam menggunakan Polkaswap, termasuk, tetapi tidak terhad kepada, risiko kehilangan token.</string>
+  <string name="polkaswap_info_text_6">Sekali lagi, sila jangan teruskan tanpa membaca %%Polkaswap FAQ%%, %%Polkaswap Memorandum dan Syarat Perkhidmatan%%, dan %%Dasar Privasi%%!</string>
+  <string name="polkaswap_info_text_7">Untuk menyembunyikan pemberitahuan penafian dari tab Swap sila leret butang di bawah. Hanya berbuat demikian jika anda memahami sepenuhnya dan telah membaca semua dokumen yang disebutkan!</string>
+  <string name="polkaswap_info_text_8">Leret untuk menyembunyikan</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_title">Penafian</string>
+  <string name="polkaswap_info_title_main">Penafian: sila baca sebelum terus menggunakan polkaswap!</string>
+  <string name="polkaswap_input_estimated">Input dianggarkan. Anda akan menjual maksimum %s atau transaksi akan kembali.</string>
+  <string name="polkaswap_insufficient_balance">Baki %s tidak mencukupi</string>
+  <string name="polkaswap_insufficient_liqudity">Kecairan tidak mencukupi</string>
+  <string name="polkaswap_liqudity_fee">Bayaran LP</string>
+  <string name="polkaswap_liqudity_fee_info">Sebahagian daripada setiap dagangan (0.3%) diberikan kepada penyedia kecairan sebagai insentif protokol.</string>
+  <string name="polkaswap_market">Pasaran</string>
+  <string name="polkaswap_market_info">Algoritma pasaran - pilihan untuk memilih antara Pasaran Utama (TBC), Pasaran Sekunder (XYK) atau algoritma pintar gabungan untuk harga terbaik yang dijamin untuk mana-mana transaksi yang diberikan.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_title">Algoritma pasaran</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_maximum_sold">Jualan Maksimum</string>
+  <string name="polkaswap_maximum_sold_info">Transaksi anda akan kembali jika terdapat pergerakan harga yang besar dan tidak menguntungkan sebelum ia disahkan.</string>
+  <string name="polkaswap_minimum_received">Min Diterima</string>
+  <string name="polkaswap_minimum_received_info">Transaksi anda akan kembali jika terdapat pergerakan harga yang besar dan tidak menguntungkan sebelum ia disahkan.</string>
+  <string name="polkaswap_network_fee">Yuran Rangkaian</string>
+  <string name="polkaswap_network_fee_info">Yuran rangkaian digunakan untuk memastikan pertumbuhan sistem SORA dan prestasi yang stabil.</string>
+  <string name="polkaswap_output_estimated">Output dianggarkan. Anda akan menerima sekurang-kurangnya %s atau transaksi akan kembali.</string>
+  <string name="polkaswap_pool_not_created">Kolam tidak dicipta</string>
+  <string name="polkaswap_pool_title">Kolam</string>
+  <string name="polkaswap_slippage_frontrun">Urus niaga anda mungkin dijalankan</string>
+  <string name="polkaswap_slippage_info">Urus niaga anda akan kembali jika harga berubah dengan tidak menguntungkan lebih daripada peratusan ini</string>
+  <string name="polkaswap_slippage_mayfail">Transaksi anda mungkin gagal</string>
+  <string name="polkaswap_slippage_tolerance">Toleransi Gelinciran</string>
+  <string name="polkaswap_smart">Pintar</string>
+  <string name="polkaswap_swap_title">Tukar</string>
+  <string name="polkaswap_swapped">Ditukar</string>
+  <string name="polkaswap_tbc">TBC</string>
+  <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Tambah</string>
+  <string name="pool_button_remove">Buang</string>
+  <string name="pool_liqudity_title">Kecairan anda</string>
+  <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
+  <string name="pool_share_title">Bahagian Tabungan</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">Terkumpul</string>
   <string name="profile_about_title">Tentang</string>
   <string name="profile_biometry_title">Pengesahan biometri</string>
   <string name="profile_change_pin_title">Tukar PIN</string>
@@ -276,12 +362,11 @@
   <string name="project_vote_dialog_title">Berapa banyak undi</string>
   <string name="project_voted">Telah Mengundi</string>
   <string name="project_you_can_vote_at_least_1_point">Anda boleh mengundi dengan sekurang-kurangnya 1 mata 😜</string>
+  <string name="qr_code">Kod QR</string>
   <string name="qr_upload">Muat naik dari galeri</string>
   <string name="recovery_body_subtitle">Sayangnya tidak ada cara untuk mengakses akaun anda jika anda terlupa frasa laluan anda.</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">Masukkan frasa laluan anda</string>
   <string name="recovery_mnemonic_passphrase">Frasa laluan mnemonik</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">Pulihkan akses</string>
   <string name="recovery_source_type">Jenis sumber</string>
   <string name="recovery_title">Import akaun</string>
@@ -302,21 +387,26 @@
   <string name="referendum_total_votes">Jumlah undian</string>
   <string name="referendum_unsupport_title">Tidak</string>
   <string name="referendum_voting_result">Keputusan undian</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Jangan ambil tangkapan skrin, berkemungkinan dikumpulkan oleh perisian hasad pihak ketiga</string>
   <string name="screenshot_alert_title">Jangan ambil tangkapan skrin</string>
   <string name="search_asset_by_name">Cari mengikut nama atau simbol aset</string>
   <string name="select_account_address">Cari alamat akaun</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Pilih penerima</string>
   <string name="set_amount">Tetapkan Jumlah</string>
   <string name="staking_coming_soon">Pemegang XOR akan dapat mempertaruhkan XOR mereka untuk mencalonkan pengesah dan mendapat ganjaran.</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Ganjaran SALA VALidator</string>
-  <!-- Startup -->
   <string name="startup_verification_title">Mengesahkan kebenaran…</string>
   <string name="status_error">Ralat</string>
   <string name="status_pending">Belum selesai</string>
   <string name="status_rejected">Ditolak</string>
   <string name="status_success">Berjaya</string>
   <string name="status_title">Status</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">Kawan-kawan</string>
   <string name="tabbar_parliament_title">Parlimen</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -344,51 +434,66 @@
   <string name="transaction_send_back">Menghantar kembali</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_total">Jumlah</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">Banyak Dunia.\n Satu Ekonomi.</string>
+  <string name="tutorial_many_world_desc">SORA berusaha untuk menjadi sistem ekonomi multiverse yang terdesentralisasi, membiayai penciptaan aplikasi baru dan menarik, di bawah pengawasan demokratik Parlimen SORA.</string>
   <string name="tutorial_one_world">Satu dunia.\n Satu Ekonomi.</string>
   <string name="tutorial_one_world_desc">SORA sedang berusaha kearah untuk menjadi sistem ekonomi dunia yang tidak berpusat, membiayai pewujudan aplikasi baharu dan menarik, di bawah seliaan demokratik Parlimen SORA.</string>
   <string name="tutorial_privacy_policy">Dasar Privasi</string>
   <string name="tutorial_project_success_desc">Sekiranya projek berjaya diundi maka setiap orang mendapat bahagian mereka</string>
   <string name="tutorial_projects_desc">Projek ditambahkan ke Sora oleh pengeluar dan ditambahkan ke pengundian setelah proses pemilihan</string>
   <string name="tutorial_restore_account">Pulihkan akses akaun anda</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">Mendaftar</string>
+  <string name="tutorial_terms_and_conditions">Dengan mencipta akaun yang anda bersetuju dengan %%Terma &amp; Syarat%% dan %%Dasar Privasi%%</string>
   <string name="tutorial_terms_and_conditions_1">Dengan mendaftar, anda bersetuju\n</string>
   <string name="tutorial_terms_and_conditions_2">Terma dan syarat</string>
   <string name="tutorial_terms_and_conditions_3">Terma &amp; Syarat</string>
+  <string name="tutorial_terms_and_conditions_recovery">Dengan mengimport akaun, anda bersetuju dengan %% Terma &amp; Syarat %% dan %% Dasar Privasi %%</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">Pengguna yang membuat undian untuk projek.  Ini akan menentukan projek yang akan dibiayai</string>
   <string name="unknown_balance">Tidak diketahui</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">Token VAL pada rangkaian yang berbeza</string>
   <string name="verification_enter_code_from_sms">Masukkan kod dari SMS</string>
   <string name="verification_request_new_code_time" formatted="false">Minta kod baru dalam %s : %s</string>
-  <!-- Verification -->
   <string name="verification_resend_code">Hantar semula kod</string>
   <string name="verification_title">Pengesahan telefon</string>
   <string name="view_balance_val">Lihat peruntukan token SORA NET (VAL)</string>
   <string name="votes_empty_history_description">Setiap kali suara anda berubah, \n anda akan melihat sejarahnya di sini</string>
-  <!-- Votes -->
   <string name="votes_history_title">Sejarah Undi</string>
   <string name="votes_zero_error_message">Maaf, tetapi anda mesti mempunyai sekurang-kurangnya 1 mata untuk memilih</string>
   <string name="wallet_account_retry_registration">Cuba lagi pendaftaran</string>
+  <string name="wallet_asset_id">Id aset</string>
   <string name="wallet_balance_locked">Dikunci</string>
   <string name="wallet_balance_reserved">Ditempah</string>
+  <string name="wallet_bonded">Terikat</string>
   <string name="wallet_empty_description">Transaksi akan muncul di sini</string>
+  <string name="wallet_empty_history_title">Tiada transaksi</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_history_from_ethereum_address_title">Dari alamat Ethereum</string>
   <string name="wallet_history_from_soranet_address_title">Dari akaun SORA NET</string>
+  <string name="wallet_history_limitations_text">Pada masa ini, sejarah transaksi disimpan secara lokal, yang bermaksud jika anda mengimport akaun pada peranti lain, log keluar atau memasang semula aplikasi pada peranti semasa, sejarah transaksi tidak akan tersedia lagi. Kami juga tidak dapat menunjukkan sebarang transaksi yang masuk. Kami memohon maaf atas sebarang kesulitan yang timbul, kami sedang berusaha untuk menyelesaikan isu ini.</string>
+  <string name="wallet_history_limitations_title">Had sejarah</string>
   <string name="wallet_history_reward_from_system">Ganjaran dari sistem</string>
   <string name="wallet_history_to_ethereum_address">Ke alamat Ethereum</string>
   <string name="wallet_history_to_my_ethereum_title">Ke alamat Ethereum Saya</string>
   <string name="wallet_history_to_my_soranet_title">Ke akaun SORA NET Saya</string>
   <string name="wallet_history_to_soranet_account">Ke akaun SORA NET</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Alamat Rangkaian %s Saya untuk Menerima %s :</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">Alamat rangkaian saya %s untuk Menerima %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false"> %s Alamat rangkaian untuk Menerima %s:</string>
   <string name="wallet_qr_share_message_template" formatted="false">Alamat Rangkaian %s saya untuk Menerima %s %s :</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">Alamat Rangkaian %s saya untuk Menerima %s %s :</string>
   <string name="wallet_receive_val">Terima VAL</string>
+  <string name="wallet_redeemable">Boleh ditebus</string>
   <string name="wallet_send_existential_warning_message">Pemindahan akan memadamkan akaun anda dari blockstore kerana jumlah baki akan lebih rendah daripada simpanan yang wujud.</string>
   <string name="wallet_soranet">SORA NET</string>
-  <!-- Wallet -->
   <string name="wallet_title">Dompet</string>
+  <string name="wallet_transaction_rejected">Transaksi ditolak</string>
   <string name="wallet_transaction_submitted">Transaksi dihantar</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">Simbol maksimum %s</string>
   <string name="wallet_transfer_to_ethereum">Ke alamat Ethereum</string>
+  <string name="wallet_unbonding">Nyahikat</string>
   <string name="wallet_val_to_my_eth">VAL ke akaun Ethereum saya</string>
 </resources>

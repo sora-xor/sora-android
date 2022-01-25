@@ -9,7 +9,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
-import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -22,10 +21,8 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -35,7 +32,6 @@ import java.math.BigDecimal
 class SwapConfirmationViewModel(
     private val router: WalletRouter,
     walletInteractor: WalletInteractor,
-    healthChecker: HealthChecker,
     private val polkaswapInteractor: PolkaswapInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
@@ -50,10 +46,10 @@ class SwapConfirmationViewModel(
 ) : BaseViewModel() {
 
     companion object {
-        const val ROUNDING_SWAP = 9
+        const val ROUNDING_SWAP = 7
     }
 
-    private var job: Job? = null
+    private var isExtrinsicSubmitted = false
 
     private val _inputTokenLiveData = MutableLiveData<Token>()
     val inputTokenLiveData: LiveData<Token> = _inputTokenLiveData
@@ -82,14 +78,14 @@ class SwapConfirmationViewModel(
     private val _minmaxLiveData = MutableLiveData<String>()
     val minmaxLiveData: LiveData<String> = _minmaxLiveData
 
-    private val _minmaxValueLiveData = MutableLiveData<String>()
-    val minmaxValueLiveData: LiveData<String> = _minmaxValueLiveData
+    private val _minmaxValueLiveData = MutableLiveData<String?>()
+    val minmaxValueLiveData: LiveData<String?> = _minmaxValueLiveData
 
-    private val _liquidityLiveData = MutableLiveData<String>()
-    val liquidityLiveData: LiveData<String> = _liquidityLiveData
+    private val _liquidityLiveData = MutableLiveData<String?>()
+    val liquidityLiveData: LiveData<String?> = _liquidityLiveData
 
-    private val _networkFeeLiveData = MutableLiveData<String>()
-    val networkFeeLiveData: LiveData<String> = _networkFeeLiveData
+    private val _networkFeeLiveData = MutableLiveData<String?>()
+    val networkFeeLiveData: LiveData<String?> = _networkFeeLiveData
 
     private val _descLiveData = MutableLiveData<Pair<String, String>>()
     val descLiveData: LiveData<Pair<String, String>> = _descLiveData
@@ -109,14 +105,15 @@ class SwapConfirmationViewModel(
     private var fromTokenBalance: BigDecimal? = null
     private var toTokenBalance: BigDecimal? = null
     private var feeTokenBalance: BigDecimal? = null
-    private var newDetails: SwapDetails = details
+    private var newDetails: SwapDetails? = details
 
     init {
         updateScreen()
         walletInteractor.subscribeVisibleAssets()
             .catch { onError(it) }
             .onEach {
-                fromTokenBalance = it.find { a -> a.token.id == fromToken.id }?.balance?.transferable
+                fromTokenBalance =
+                    it.find { a -> a.token.id == fromToken.id }?.balance?.transferable
                 toTokenBalance = it.find { a -> a.token.id == toToken.id }?.balance?.transferable
                 feeTokenBalance =
                     it.find { a -> a.token.id == OptionsProvider.feeAssetId }?.balance?.transferable
@@ -124,56 +121,43 @@ class SwapConfirmationViewModel(
             }
             .launchIn(viewModelScope)
 
-        viewModelScope.launch {
-            tryCatch {
-                healthChecker.observeHealthState()
-                    .collectLatest {
-                        if (it) {
-                            observePoolReserves()
-                        }
-                    }
+        polkaswapInteractor.observePoolReserves()
+            .catch { onError(it) }
+            .onEach {
+                onChangeAssetsOrReserves()
             }
-        }
+            .launchIn(viewModelScope)
     }
 
     fun onBackButtonClicked() {
         router.popBackStackFragment()
     }
 
-    private fun observePoolReserves() {
-        viewModelScope.launch {
-            job?.cancel()
-            job = polkaswapInteractor.observePoolReserves()
-                .catch { onError(it) }
-                .onEach {
-                    onChangeAssetsOrReserves()
-                }
-                .launchIn(viewModelScope)
-        }
-    }
-
     fun onConfirmClicked() {
-        viewModelScope.launch {
-            _confirmBtnEnableLiveData.value = false
-            _confirmBtnProgressLiveData.value = true
-            var swapResult = false
-            try {
-                swapResult = polkaswapInteractor.swap(
-                    fromToken,
-                    toToken,
-                    desired,
-                    if (desired == WithDesired.INPUT) fromAmount else toAmount,
-                    newDetails.minmax,
-                    newDetails.networkFee,
-                    newDetails.liquidityFee,
-                )
-            } catch (t: Throwable) {
-                onError(t)
-            } finally {
-                delay(500)
-                _extrinsicEvent.value = swapResult
-                _confirmBtnProgressLiveData.value = false
-                router.returnToPolkaswap()
+        isExtrinsicSubmitted = true
+        newDetails?.let { details ->
+            viewModelScope.launch {
+                _confirmBtnEnableLiveData.value = false
+                _confirmBtnProgressLiveData.value = true
+                var swapResult = false
+                try {
+                    swapResult = polkaswapInteractor.swap(
+                        fromToken,
+                        toToken,
+                        desired,
+                        if (desired == WithDesired.INPUT) fromAmount else toAmount,
+                        details.minmax,
+                        details.networkFee,
+                        details.liquidityFee,
+                    )
+                } catch (t: Throwable) {
+                    onError(t)
+                } finally {
+                    delay(500)
+                    _extrinsicEvent.value = swapResult
+                    _confirmBtnProgressLiveData.value = false
+                    router.returnToPolkaswap()
+                }
             }
         }
     }
@@ -187,14 +171,14 @@ class SwapConfirmationViewModel(
 
     private fun updateScreen() {
         _inputTokenLiveData.value = fromToken
-        _inputAmountLiveData.value = numbersFormatter.formatBigDecimal(fromAmount, fromToken.precision)
+        _inputAmountLiveData.value =
+            numbersFormatter.formatBigDecimal(fromAmount, fromToken.precision)
 
         _outputTokenLiveData.value = toToken
         _outputAmountLiveData.value = numbersFormatter.formatBigDecimal(toAmount, toToken.precision)
 
-        val per = resourceManager.getString(R.string.common_per)
-        _per1LiveData.value = "%s %s %s".format(fromToken.symbol, per, toToken.symbol)
-        _per2LiveData.value = "%s %s %s".format(toToken.symbol, per, fromToken.symbol)
+        _per1LiveData.value = "%s / %s".format(fromToken.symbol, toToken.symbol)
+        _per2LiveData.value = "%s / %s".format(toToken.symbol, fromToken.symbol)
 
         _minmaxLiveData.value =
             if (desired == WithDesired.INPUT) resourceManager.getString(R.string.polkaswap_minimum_received) else resourceManager.getString(
@@ -202,7 +186,7 @@ class SwapConfirmationViewModel(
             )
 
         _networkFeeLiveData.value = "%s %s".format(
-            numbersFormatter.formatBigDecimal(newDetails.networkFee, ROUNDING_SWAP),
+            numbersFormatter.formatBigDecimal(details.networkFee, ROUNDING_SWAP),
             feeToken.symbol
         )
 
@@ -216,10 +200,9 @@ class SwapConfirmationViewModel(
             _per1ValueLiveData.value = numbersFormatter.formatBigDecimal(p1, ROUNDING_SWAP)
             _per2ValueLiveData.value = numbersFormatter.formatBigDecimal(p2, ROUNDING_SWAP)
 
-            val minmax = "%s %s".format(
-                numbersFormatter.formatBigDecimal(swapDetails.minmax, ROUNDING_SWAP),
-                if (desired == WithDesired.INPUT) toToken.symbol else fromToken.symbol
-            )
+            val minmax1 = numbersFormatter.formatBigDecimal(swapDetails.minmax, ROUNDING_SWAP)
+            val minmax2 = if (desired == WithDesired.INPUT) toToken.symbol else fromToken.symbol
+            val minmax = "%s %s".format(minmax1, minmax2)
             _minmaxValueLiveData.value = minmax
             val desc = resourceManager.getString(
                 if (desired == WithDesired.INPUT) R.string.polkaswap_output_estimated else R.string.polkaswap_input_estimated
@@ -233,9 +216,9 @@ class SwapConfirmationViewModel(
         } ?: run {
             _per1ValueLiveData.value = ""
             _per2ValueLiveData.value = ""
-            _minmaxValueLiveData.value = ""
+            _minmaxValueLiveData.value = null
             _descLiveData.value = "" to ""
-            _liquidityLiveData.value = ""
+            _liquidityLiveData.value = null
         }
     }
 
@@ -247,14 +230,14 @@ class SwapConfirmationViewModel(
                     .format(ok) to false
             }
             newDetails == null -> {
-                resourceManager.getString(R.string.polkaswap_insufficient_balance)
+                resourceManager.getString(R.string.polkaswap_insufficient_liqudity)
                     .format("") to false
             }
             else -> {
                 resourceManager.getString(R.string.common_confirm) to true
             }
         }
-        _confirmBtnEnableLiveData.value = enabled
+        _confirmBtnEnableLiveData.value = enabled && !isExtrinsicSubmitted
         _confirmBtnTitleLiveData.value = text
     }
 
@@ -265,32 +248,34 @@ class SwapConfirmationViewModel(
         return fromTokenBalance?.let { ftb ->
             toTokenBalance?.let { ttb ->
                 feeTokenBalance?.let { feetb ->
-                    if (fromAmount > BigDecimal.ZERO) {
-                        val result = polkaswapInteractor.checkSwapBalances(
-                            fromToken = fromToken,
-                            fromTokenBalance = ftb,
-                            fromAmount = fromAmount,
-                            swapFee = newDetails.networkFee,
-                            feeBalance = feetb,
-                            feeToken = feeToken,
-                            toToken = toToken,
-                            toTokenBalance = ttb,
-                            toAmount = toAmount,
-                            desired = desired,
-                            swapDetails = newDetails
-                        )
-                        when (result) {
-                            null -> {
-                                ""
+                    newDetails?.let { details ->
+                        if (fromAmount > BigDecimal.ZERO) {
+                            val result = polkaswapInteractor.checkSwapBalances(
+                                fromToken = fromToken,
+                                fromTokenBalance = ftb,
+                                fromAmount = fromAmount,
+                                swapFee = details.networkFee,
+                                feeBalance = feetb,
+                                feeToken = feeToken,
+                                toToken = toToken,
+                                toTokenBalance = ttb,
+                                toAmount = toAmount,
+                                desired = desired,
+                                swapDetails = details
+                            )
+                            when (result) {
+                                null -> {
+                                    ""
+                                }
+                                fromToken -> {
+                                    fromToken.symbol
+                                }
+                                else -> {
+                                    feeToken.symbol
+                                }
                             }
-                            fromToken -> {
-                                fromToken.symbol
-                            }
-                            else -> {
-                                feeToken.symbol
-                            }
-                        }
-                    } else null
+                        } else null
+                    }
                 }
             }
         }
@@ -310,7 +295,7 @@ class SwapConfirmationViewModel(
                         amountToCalc,
                         desired,
                         slippageTolerance,
-                    ) ?: newDetails
+                    )
 
                     updateDetails()
                     newDetails?.amount?.let {

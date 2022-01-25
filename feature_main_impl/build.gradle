@@ -37,11 +37,11 @@ android {
             dimension 'default'
         }
 
-        tst {
+        soralution {
             dimension 'default'
         }
 
-        staging {
+        tsting {
             dimension 'default'
         }
 
@@ -77,10 +77,13 @@ dependencies {
     implementation swipelayoutDep
     implementation biometricDep
 
+    implementation coreKtxDep
+
     implementation fearlessLibDep
     implementation loggerDep
 
     implementation emojiDep
+    implementation neumorphismDep
 
     implementation navigationFragmentDep
     implementation navigationUiDep
@@ -107,8 +110,6 @@ dependencies {
 
     implementation lifecycleDep
     kapt lifecycleKaptDep
-
-    implementation phoenixDep
 
     //implementation soraDep
     implementation birtDep

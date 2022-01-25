@@ -7,11 +7,11 @@ package jp.co.soramitsu.feature_main_impl.presentation.passphrase
 
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.databinding.FragmentMyMnemonicBinding
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
@@ -19,7 +19,6 @@ import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
-import jp.co.soramitsu.feature_main_impl.databinding.FragmentMyMnemonicBinding
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import javax.inject.Inject
@@ -59,23 +58,14 @@ class PassphraseFragment : BaseFragment<PassphraseViewModel>(R.layout.fragment_m
         }
         viewModel.mnemonicWords.observe { words: List<String> ->
             val rowCount = ceil(words.size.toFloat() / 2.0).toInt()
-            for (row in 1..rowCount) {
-                val viewWords = layoutInflater.inflate(R.layout.item_mnemonic_words, binding.llPassphrase, false)
-                viewWords.findViewById<TextView>(R.id.tvLeftPosition).also {
-                    it.text = "$row"
-                }
-                viewWords.findViewById<TextView>(R.id.tvLeftWord).also {
-                    it.text = words[row - 1]
-                }
-                val rightWord = words.getOrElse(row - 1 + rowCount) { "" }
-                viewWords.findViewById<TextView>(R.id.tvRightPosition).also {
-                    it.text = if (rightWord.isEmpty()) "" else "${row + rowCount}"
-                }
-                viewWords.findViewById<TextView>(R.id.tvRightWord).also {
-                    it.text = rightWord
-                }
-                binding.llPassphrase.addView(viewWords)
-            }
+            binding.tvPassphraseNumber1.text =
+                List(rowCount) { "${it + 1}" }.joinToString(separator = "\n")
+            binding.tvPassphraseNumber2.text =
+                List(words.size - rowCount) { "${it + rowCount + 1}" }.joinToString(separator = "\n")
+            binding.tvPassphraseWords1.text =
+                List(rowCount) { words[it] }.joinToString(separator = "\n")
+            binding.tvPassphraseWords2.text =
+                List(words.size - rowCount) { words[it + rowCount] }.joinToString(separator = "\n")
         }
         viewModel.getPassphrase()
     }

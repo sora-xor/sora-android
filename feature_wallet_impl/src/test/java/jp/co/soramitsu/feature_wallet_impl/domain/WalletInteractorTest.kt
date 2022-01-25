@@ -81,7 +81,7 @@ class WalletInteractorTest {
     private val myAddress = "myAddress"
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
         given(credentialsRepository.getAddress()).willReturn(myAddress)
         given(coroutineManager.applicationScope).willReturn(mainCoroutineRule)
         mockkStatic(String::blake2b256String)
@@ -262,6 +262,7 @@ class WalletInteractorTest {
     fun `process qr called`() = runBlockingTest {
         val content = "substrate:notMyAddress:en:part4:part5"
         given(credentialsRepository.isAddressOk("notMyAddress")).willReturn(true)
+        given(walletRepository.isWhitelistedToken("part5")).willReturn(true)
         val result = runCatching {
             interactor.processQr(content)
         }
@@ -273,6 +274,7 @@ class WalletInteractorTest {
     fun `process qr called with wrong qr data`() = runBlockingTest {
         val content = "substrate:notMyAddress:en:tjj:qwe"
         given(credentialsRepository.isAddressOk("notMyAddress")).willReturn(false)
+        given(walletRepository.isWhitelistedToken("qwe")).willReturn(true)
         val result = runCatching {
             interactor.processQr(content)
         }
@@ -303,7 +305,7 @@ class WalletInteractorTest {
     )
 
     private fun assetList() = listOf(
-        Asset(oneToken(), true, true, 1, assetBalance()),
+        Asset(oneToken(), true, 1, assetBalance()),
     )
 
     private fun oneToken() = Token("token_id", "token name", "token symbol", 18, true, 0)

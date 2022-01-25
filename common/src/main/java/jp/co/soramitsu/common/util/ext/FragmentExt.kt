@@ -9,6 +9,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Parcelable
 import android.util.TypedValue
+import android.view.View
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DimenRes
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
@@ -44,4 +46,23 @@ fun Fragment.runDelayed(
 ): Job = viewLifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
     delay(durationInMillis)
     block.invoke()
+}
+
+fun Fragment.onBackPressed(block: () -> Unit) {
+    requireActivity().onBackPressedDispatcher.addCallback(
+        viewLifecycleOwner,
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                block()
+            }
+        }
+    )
+}
+
+fun Fragment.hideSoftKeyboard() {
+    requireActivity().hideSoftKeyboard()
+}
+
+fun Fragment.openSoftKeyboard(view: View) {
+    requireActivity().openSoftKeyboard(view)
 }

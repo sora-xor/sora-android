@@ -41,7 +41,7 @@ class InviteFragment : BaseFragment<InviteViewModel>(R.layout.fragment_invite) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-        binding.btnInviteShareApp.setDebouncedClickListener(debounceClickHandler) {
+        binding.ibInviteShare.setDebouncedClickListener(debounceClickHandler) {
             viewModel.sendInviteClick()
         }
         binding.tbInvite.setHomeButtonListener {

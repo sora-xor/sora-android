@@ -8,7 +8,7 @@
 
     <TextView
         android:id="@+id/countryNameTv"
-        style="@style/BlackTextStyle"
+        style="@style/TextAppearance.Soramitsu.Neu.14.Regular"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:drawableEnd="@drawable/icon_forward_arrow_grey"

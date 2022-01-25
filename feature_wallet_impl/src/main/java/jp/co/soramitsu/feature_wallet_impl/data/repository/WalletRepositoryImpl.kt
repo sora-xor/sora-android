@@ -12,7 +12,6 @@ import androidx.paging.PagingData
 import androidx.paging.filter
 import androidx.paging.map
 import androidx.room.withTransaction
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import jp.co.soramitsu.common.data.network.dto.PhaseRecord
@@ -25,6 +24,7 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.AssetLocal
@@ -88,15 +88,14 @@ class WalletRepositoryImpl @Inject constructor(
             } else {
                 pager = Pager(
                     config = PagingConfig(
-                        pageSize = 20,
-                        prefetchDistance = 10,
-                        initialLoadSize = 40
+                        pageSize = 40,
                     ),
                     remoteMediator = TransactionsRemoteMediator(
                         soraScanApi,
                         db,
                         address,
                         tokensDeferred,
+                        gson
                     )
                 ) {
                     db.transactionDao().getExtrinsicPaging()
@@ -188,8 +187,7 @@ class WalletRepositoryImpl @Inject constructor(
             .let { events ->
 
                 if (events.isEmpty()) {
-                    FirebaseCrashlytics.getInstance()
-                        .recordException(Throwable("No success or failed event in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
+                    FirebaseWrapper.recordException(Throwable("No success or failed event in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
                 }
 
                 val (moduleIndexSuccess, eventIndexSuccess) = RuntimeHolder.getRuntime().metadata.module(
@@ -213,8 +211,7 @@ class WalletRepositoryImpl @Inject constructor(
                         false
                     }
                     else -> {
-                        FirebaseCrashlytics.getInstance()
-                            .recordException(Throwable("No success or failed event in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
+                        FirebaseWrapper.recordException(Throwable("No success or failed event in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
                         false
                     }
                 }
@@ -302,7 +299,7 @@ class WalletRepositoryImpl @Inject constructor(
         } ?: throw IllegalArgumentException("Token ($assetId) not found in db")
     }
 
-    override suspend fun updateTokens(address: String) {
+    private suspend fun updateTokens(address: String) {
         val tokens = fetchTokensList()
         val whiteList = runCatching {
             val whileListRaw = fileManager.readAssetFile("whitelist.json")
@@ -341,15 +338,15 @@ class WalletRepositoryImpl @Inject constructor(
                 )
             }
         )
+        val allTokens = db.assetDao().getTokensAll()
         tokensDeferred.complete(
-            db.assetDao().getTokensAll().map { tokenLocal ->
+            allTokens.map { tokenLocal ->
                 assetLocalToAssetMapper.map(tokenLocal, resourceManager)
             }
         )
     }
 
     override suspend fun updateBalancesVisibleAssets(address: String) {
-        updateTokens(address)
         val assets = db.assetDao().getAssetsVisible(address)
         val balances = fetchBalances(address, assets.map { it.tokenLocal.id })
         val updated = assets.mapIndexed { index, assetTokenLocal ->
@@ -364,11 +361,13 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateWhitelistBalances(address: String) {
+        updateTokens(address)
         val assetsLocal =
             db.assetDao().getAssetsWhitelist(AssetHolder.DEFAULT_WHITE_LIST_NAME, address)
         var amount = assetsLocal.count { it.assetLocal != null }
-        val balances = fetchBalances(address, assetsLocal.map { it.tokenLocal.id })
-        val updated = assetsLocal.mapIndexed { index, assetTokenLocal ->
+        val assetsLocalSorted = assetsLocal.sortedBy { it.tokenLocal.symbol }
+        val balances = fetchBalances(address, assetsLocalSorted.map { it.tokenLocal.id })
+        val updated = assetsLocalSorted.mapIndexed { index, assetTokenLocal ->
             assetTokenLocal.assetLocal?.copy(
                 free = mapBalance(
                     balances[index],
@@ -378,7 +377,6 @@ class WalletRepositoryImpl @Inject constructor(
                 tokenId = assetTokenLocal.tokenLocal.id,
                 accountAddress = address,
                 displayAsset = false,
-                showMainBalance = true,
                 position = ++amount,
                 free = mapBalance(
                     balances[index],
@@ -395,37 +393,28 @@ class WalletRepositoryImpl @Inject constructor(
         db.assetDao().insertAssets(updated)
     }
 
-    override suspend fun getAssetsWhitelist(address: String, updateBalances: Boolean): List<Asset> {
+    override suspend fun getAssetsWhitelist(address: String): List<Asset> {
         val assetsLocal =
             db.assetDao().getAssetsWhitelist(AssetHolder.DEFAULT_WHITE_LIST_NAME, address)
         var amount = assetsLocal.count { it.assetLocal != null }
-        val balances = if (updateBalances) fetchBalances(
-            address,
-            assetsLocal.map { it.tokenLocal.id }
-        ) else emptyList()
-        val updated = assetsLocal.mapIndexed { index, assetTokenLocal ->
-            assetTokenLocal.assetLocal?.copy(
-                free = if (updateBalances) mapBalance(
-                    balances[index],
-                    assetTokenLocal.tokenLocal.precision
-                ) else assetTokenLocal.assetLocal?.free ?: BigDecimal.ZERO
-            ) ?: AssetLocal(
-                tokenId = assetTokenLocal.tokenLocal.id,
-                accountAddress = address,
-                displayAsset = false,
-                showMainBalance = true,
-                position = ++amount,
-                free = if (updateBalances) mapBalance(
-                    balances[index],
-                    assetTokenLocal.tokenLocal.precision
-                ) else BigDecimal.ZERO,
-                reserved = BigDecimal.ZERO,
-                miscFrozen = BigDecimal.ZERO,
-                feeFrozen = BigDecimal.ZERO,
-                bonded = BigDecimal.ZERO,
-                redeemable = BigDecimal.ZERO,
-                unbonding = BigDecimal.ZERO,
+        val updated = assetsLocal.mapIndexed { _, assetTokenLocal ->
+            val assetLocal = assetTokenLocal.assetLocal
+            assetLocal?.copy(
+                free = assetLocal.free
             )
+                ?: AssetLocal(
+                    tokenId = assetTokenLocal.tokenLocal.id,
+                    accountAddress = address,
+                    displayAsset = false,
+                    position = ++amount,
+                    free = BigDecimal.ZERO,
+                    reserved = BigDecimal.ZERO,
+                    miscFrozen = BigDecimal.ZERO,
+                    feeFrozen = BigDecimal.ZERO,
+                    bonded = BigDecimal.ZERO,
+                    redeemable = BigDecimal.ZERO,
+                    unbonding = BigDecimal.ZERO,
+                )
         }
         db.assetDao().insertAssets(updated)
         return assetsLocal.mapIndexed { index, assetTokenLocal ->
@@ -567,15 +556,20 @@ class WalletRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAsset(assetId: String, address: String): Asset {
-        val assetAndTokenLocal = db.assetDao().getAssetWithToken(address, assetId)
-        return assetLocalToAssetMapper.map(assetAndTokenLocal, resourceManager)
+    override suspend fun getAsset(assetId: String, address: String): Asset? {
+        return db.assetDao().getAssetWithToken(address, assetId)?.let {
+            assetLocalToAssetMapper.map(it, resourceManager)
+        }
     }
 
-    override suspend fun getToken(tokenId: String): Token {
+    override suspend fun getToken(tokenId: String): Token? {
         return db.assetDao().getTokensByList(listOf(tokenId)).let {
-            assetLocalToAssetMapper.map(it.first(), resourceManager)
+            if (it.isEmpty()) null else assetLocalToAssetMapper.map(it.first(), resourceManager)
         }
+    }
+
+    override suspend fun isWhitelistedToken(tokenId: String): Boolean {
+        return db.assetDao().getWhitelistOfToken(tokenId).isNullOrEmpty().not()
     }
 
     private suspend fun checkDefaultAssetData(address: String): List<AssetTokenLocal> {
@@ -596,7 +590,6 @@ class WalletRepositoryImpl @Inject constructor(
                 it,
                 address,
                 assetHolder.isDisplay(it),
-                true,
                 assetHolder.position(it),
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,

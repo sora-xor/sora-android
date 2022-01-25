@@ -12,14 +12,14 @@ import com.google.android.material.tabs.TabLayoutMediator
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserBottomSheet
-import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserItem
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentPolkaSwapBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.marketchooserdialog.MarketChooserDialog
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap.SwapFragment
 import javax.inject.Inject
 
 class PolkaSwapFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment_polka_swap) {
@@ -43,23 +43,20 @@ class PolkaSwapFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment_pol
             tab.setText((binding.viewpager.adapter as ViewPagerAdapter).getTitle(position))
         }.attach()
 
+        if (arguments != null) {
+            (binding.viewpager.adapter as ViewPagerAdapter).getFragmentAtPosition(arguments!!.getInt(SwapFragment.ARG_ID)).arguments = arguments
+        }
+
         initListeners()
     }
 
     private fun initListeners() {
-        viewModel.marketListLiveData.observe { pair ->
-            val chooserItems = pair.first.map {
-                ChooserItem(
-                    it.titleResource,
-                    selected = it.titleResource == pair.second.titleResource
-                ) { viewModel.marketClicked(it) }
-            }
-
-            ChooserBottomSheet(
+        viewModel.showMarketDialogLiveData.observe { pair ->
+            MarketChooserDialog(
                 requireActivity(),
-                R.string.polkaswap_market_title,
-                chooserItems,
-                R.string.polkaswap_market_info
+                viewModel::marketClicked,
+                pair.second,
+                pair.first
             ).show()
         }
 

@@ -11,15 +11,17 @@
 
         <activity
             android:name=".presentation.MainActivity"
+            android:clearTaskOnLaunch="true"
+            android:exported="false"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:supportsRtl="true"
-            android:clearTaskOnLaunch="true"
-            android:launchMode="singleTask"
             android:theme="@style/AppTheme"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:exported="false"
             android:screenOrientation="fullSensor"
             android:theme="@style/AppTheme"
             tools:replace="android:theme,screenOrientation" />

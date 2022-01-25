@@ -35,13 +35,14 @@ class ClaimViewModel(
     init {
         viewModelScope.launch {
             walletInteractor.observeMigrationStatus().collectLatest {
-                _buttonPendingStatusLiveData.value = false
                 when (it) {
                     MigrationStatus.NOT_INITIATED -> {
                     }
-                    MigrationStatus.FAILED -> onError(R.string.common_error_general_message)
+                    MigrationStatus.FAILED -> onError(R.string.claim_error_title_v1)
                     MigrationStatus.SUCCESS -> router.popBackStackFragment()
                 }
+
+                _buttonPendingStatusLiveData.value = false
             }
         }
     }

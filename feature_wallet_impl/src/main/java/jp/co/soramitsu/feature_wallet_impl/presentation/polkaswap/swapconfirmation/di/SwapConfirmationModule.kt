@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModelProviders
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
-import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -49,14 +48,12 @@ class SwapConfirmationModule {
         @Named("outputAmount") outputAmount: BigDecimal,
         desired: WithDesired,
         details: SwapDetails,
-        healthChecker: HealthChecker,
         @Named("feeToken") feeToken: Token,
         slippageTolerance: Float,
     ): ViewModel {
         return SwapConfirmationViewModel(
             router,
             interactor,
-            healthChecker,
             polkaswapInteractor,
             nf,
             rm,

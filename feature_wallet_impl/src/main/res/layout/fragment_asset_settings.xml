@@ -5,40 +5,27 @@
     android:id="@+id/clAssetManagement"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/baseOnAccent">
+    android:background="?attr/flatAboveBackground">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
         android:id="@+id/tbAssetManagement"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        app:iconRight="@drawable/ic_neu_ok_wrapped_40"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:textRight="@string/common_done"
         app:titleText="@string/common_manage" />
 
     <androidx.appcompat.widget.SearchView
         android:id="@+id/svAssetList"
         style="@style/SearchViewStyle2"
         android:layout_width="0dp"
-        android:layout_height="?attr/searchViewHeight"
         android:layout_margin="@dimen/x1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tbAssetManagement"
-        app:queryHint="@string/search_asset_by_name"
-        tools:layout_height="40dp" />
-
-    <View
-        android:id="@+id/vShadow"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="@dimen/x1"
-        android:background="?attr/baseBorderPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/svAssetList"
-        tools:background="@color/brand_pmsblack" />
+        app:queryHint="@string/search_asset_by_name" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvAssetManagementList"
@@ -52,7 +39,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/vShadow"
+        app:layout_constraintTop_toBottomOf="@id/svAssetList"
         tools:itemCount="2"
         tools:listitem="@layout/item_asset_configurable" />
 

@@ -14,7 +14,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.ext.setValueIfNew
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
@@ -27,7 +26,6 @@ class MainViewModel(
     private val runtimeManager: RuntimeManager,
 ) : BaseViewModel() {
 
-    private var job: Job? = null
     private val _showInviteErrorTimeIsUpLiveData = MutableLiveData<Event<Unit>>()
     val showInviteErrorTimeIsUpLiveData: LiveData<Event<Unit>> = _showInviteErrorTimeIsUpLiveData
 
@@ -45,29 +43,19 @@ class MainViewModel(
         viewModelScope.launch {
             tryCatch {
                 runtimeManager.start()
-
                 healthChecker.observeHealthState()
                     .collectLatest {
-                        if (it) {
-                            subscribeToAccountStorage()
-                        }
                         _badConnectionVisibilityLiveData.setValueIfNew(!it)
                     }
             }
         }
-    }
-
-    private fun subscribeToAccountStorage() {
-        viewModelScope.launch {
-            job?.cancel()
-            job = walletInteractor.observeCurAccountStorage()
-                .catch {
-                    onError(it)
-                }
-                .onEach {
-                    walletInteractor.updateBalancesVisibleAssets()
-                }
-                .launchIn(viewModelScope)
-        }
+        walletInteractor.observeCurAccountStorage()
+            .catch {
+                onError(it)
+            }
+            .onEach {
+                walletInteractor.updateBalancesVisibleAssets()
+            }
+            .launchIn(viewModelScope)
     }
 }

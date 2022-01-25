@@ -6,12 +6,12 @@
 package jp.co.soramitsu.feature_notification_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationDatasource
 import javax.inject.Inject
 
 class PrefsNotificationDatasource @Inject constructor(
-    private val preferences: Preferences,
+    private val soraPreferences: SoraPreferences,
     private val encryptedPreferences: EncryptedPreferences
 ) : NotificationDatasource {
 
@@ -21,10 +21,10 @@ class PrefsNotificationDatasource @Inject constructor(
     }
 
     override fun saveIsPushTokenUpdateNeeded(updateNeeded: Boolean) {
-        preferences.putBoolean(PREFS_PUSH_UPDATE_NEEDED, updateNeeded)
+        // soraPreferences.putBoolean(PREFS_PUSH_UPDATE_NEEDED, updateNeeded)
     }
 
     override fun savePushToken(notificationToken: String) {
-        encryptedPreferences.putEncryptedString(PREFS_PUSH_TOKEN, notificationToken)
+        // encryptedPreferences.putEncryptedString(PREFS_PUSH_TOKEN, notificationToken)
     }
 }

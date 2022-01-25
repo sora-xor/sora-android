@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">联系我们</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">隐私协议</string>
   <string name="about_source_code">源代码</string>
   <string name="about_telegram">官方电报组</string>
   <string name="about_title">关于</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">官方网站</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">确认助记种子短语</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">项目</string>
   <string name="address_not_found">未找到地址，请确保该地址属于正确的网络。</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">交易费用</string>
   <string name="amount_error_no_funds">抱歉，您没有足够的资金来转账指定的金额。</string>
   <string name="amount_title">数量</string>
   <string name="ask_biometry_message">您想使用生物特征识别进行认证吗？</string>
   <string name="asset_add">添加账户</string>
+  <string name="asset_details_title">资产详情</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">账户</string>
   <string name="asset_state_associating">关联中...</string>
   <string name="asset_state_error">错误</string>
@@ -21,19 +32,29 @@
   <string name="asset_val_name">SORA验证者令牌</string>
   <string name="biometric_dialog_title">身份验证</string>
   <string name="block_id">哈希块</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">如果您有任何疑问或疑虑，可以 %%联系我们%%</string>
   <string name="claim_contact_1">如果您有任何疑问或疑虑，可以</string>
   <string name="claim_contact_2">联系我们</string>
+  <string name="claim_contact_us">%%联系我们%%有任何问题或担忧</string>
   <string name="claim_error_title">过渡失败</string>
+  <string name="claim_error_title_v1">资产转移失败。请稍后再试。</string>
   <string name="claim_notification_text">过渡中...</string>
   <string name="claim_skip">跳过过程</string>
   <string name="claim_subtitle">我们需要您的同意才能从SORA 过渡您的资金，以便您可以使用它们。 SORA现在将在底物网络上运行。请确认过渡。</string>
+  <string name="claim_subtitle_confirmed">谢谢你的确认！</string>
+  <string name="claim_subtitle_confirmed_2">资产转移正在进行中。\n请稍等。</string>
   <string name="claim_subtitle_v1">我们需要您的同意才能从SORA v1过渡您的资产。这将允许您在基于Substrate的SORA v2上使用资产。 \n\n以太坊网络上的资产不受影响，您仍然可以通过将密码短语导入任何兼容的钱包来访问它们。</string>
+  <string name="claim_subtitle_v2">• 我们需要同意才能将您的资产从 SORA v1 过渡到 SORA v2 \n\n • SORA v2 网络使用 Substrate 构建，与 Polkadot 和 Kusama 生态系统原生兼容\n\n • 以太坊上的资产不受影响，您仍然可以通过将密码导入任何兼容的钱包来访问它们</string>
   <string name="claim_welcome_sora2">欢迎使用SORA v2</string>
+  <string name="claim_welcome_sora2_v1">欢迎使用\n %% SORA v2 %%</string>
   <string name="coming_soon">快来了...</string>
+  <string name="common_account">账户</string>
   <string name="common_add">添加</string>
   <string name="common_advanced_settings">高级设置</string>
   <string name="common_and">和</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">申请</string>
   <string name="common_arab">阿拉伯</string>
   <string name="common_asset">资产</string>
@@ -55,11 +76,11 @@
   <string name="common_done">已完成</string>
   <string name="common_donotallow">不允许</string>
   <string name="common_english">英语</string>
+  <string name="common_enter_amount">输入金额</string>
   <string name="common_error_ambiguous_result">结果不明确</string>
   <string name="common_error_fee_rate_not_available">抱歉，我们无法联系提现供应商。请稍后再试。</string>
   <string name="common_error_gas_limit_low">燃气限制必须至少在%s</string>
   <string name="common_error_general_message">我们正在努力解决该问题。请稍后再试。</string>
-  <!-- Error -->
   <string name="common_error_general_title">错误</string>
   <string name="common_error_internal_error_title">内部错误</string>
   <string name="common_error_invalid_parameters">无效的参数</string>
@@ -69,9 +90,8 @@
   <string name="common_error_invitation_already_accepted">您已经申请了另一个邀请码</string>
   <string name="common_error_invitation_code_not_found">邀请码无效</string>
   <string name="common_error_inviter_registered_after_invitee">提供的邀请码不可用，因为它来自您之后注册的用户</string>
-  <string name="common_error_mnemonic_is_not_valid">您的助记词无效。请尝试另一个。</string>
+  <string name="common_error_mnemonic_is_not_valid">请确保您的密码由 12 或 15 个单词组成，并且它们都是正确的。</string>
   <string name="common_error_mnemonic_length_error">助记词必须包含15个字符</string>
-  <!-- Errors -->
   <string name="common_error_network">请检查网络连接，稍后再试。</string>
   <string name="common_error_not_enough_invitations">抱歉，您没有可用的邀请来分享</string>
   <string name="common_error_not_found_title">资源不可用</string>
@@ -79,7 +99,6 @@
   <string name="common_error_phone_already_registered">抱歉，此号码已被注册。请尝试另一个。</string>
   <string name="common_error_pincode_check_error">输入的密码有误</string>
   <string name="common_error_price_is_to_low">价格过低</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">很抱歉，找不到该项目。</string>
   <string name="common_error_retry">请再试一次</string>
   <string name="common_error_search_string_error">搜索字数必须在3到64位之间</string>
@@ -89,7 +108,6 @@
   <string name="common_error_user_not_found">您的助记词无效。请尝试另一个。</string>
   <string name="common_error_user_values_not_found">无法继续操作，因为找不到用户值数据</string>
   <string name="common_error_votes_invalid_format">抱歉，您的投票票数无法解。请尝试再次投票。</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">抱歉，您没有足够的分数来投票。</string>
   <string name="common_error_voting_is_not_allowed">抱歉，此项目不接受投票了。</string>
   <string name="common_error_wrong_user_status">无法继续操作，因为用户的状态无效</string>
@@ -97,9 +115,11 @@
   <string name="common_failed">失败了</string>
   <string name="common_filipino">菲律宾语</string>
   <string name="common_finnish">芬兰</string>
+  <string name="common_for">给</string>
   <string name="common_french">法文</string>
   <string name="common_from">从</string>
   <string name="common_gallery">项目库</string>
+  <string name="common_german">德语</string>
   <string name="common_hide">隐藏</string>
   <plurals name="common_hour">
     <item quantity="other">小时</item>
@@ -110,19 +130,21 @@
   <string name="common_japanese">日文</string>
   <string name="common_khmer">高棉语</string>
   <string name="common_korean">韩语</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">马来语</string>
   <string name="common_manage">管理</string>
   <string name="common_min">分</string>
   <string name="common_network_unavailable">网络连接不可用</string>
   <string name="common_next">下一个</string>
-  <string name="common_ok">好</string>
+  <string name="common_norwegian">挪威语</string>
+  <string name="common_notsent">Not sent</string>
+  <string name="common_ok">好的</string>
   <string name="common_open_explorer">在区块链浏览器中查看</string>
   <string name="common_options_title">选择一个选项</string>
-  <string name="common_passphrase_body">它用于恢复账户的访问。写下来，如果不见了，我们将无法恢复您的账户！</string>
+  <string name="common_passphrase_body">当在SORA中创建一个新的账户时，您现在会得到一个12个字的密码短语。如果您已经有一个15个字的SORA密码短语，您可以用它来导入您的账户 -- 这些密码短语也是兼容的，并可以继续使用。</string>
   <string name="common_passphrase_header">助记词是\n一种密码的类型。</string>
   <string name="common_passphrase_save_mnemonic_title">保存或发送助记词</string>
   <string name="common_passphrase_save_or_send">保存或发送</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">助记词</string>
   <string name="common_passphrase_your_passphrase">您的助记词</string>
   <string name="common_per">每</string>
@@ -133,11 +155,11 @@
   <string name="common_personal_info_last_name_hint">姓氏</string>
   <string name="common_personal_info_last_name_hyphen_error">姓氏不能以连字符开头或结尾，或具有双连字符</string>
   <string name="common_personal_info_last_name_is_empty">姓氏为空</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">个人信息</string>
   <string name="common_please_wait">请稍候</string>
   <string name="common_receive">接收</string>
   <string name="common_received">已收到</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">重试</string>
   <string name="common_russian">俄语</string>
   <string name="common_save">保存</string>
@@ -145,11 +167,13 @@
   <string name="common_search">搜索</string>
   <string name="common_sec">秒</string>
   <string name="common_select_asset">选择资产</string>
-  <!-- Other common stuff -->
   <string name="common_select_email_app_title">选择电子邮件应用</string>
   <string name="common_send">发送</string>
+  <string name="common_sender">Sender</string>
   <string name="common_sent">已发送</string>
+  <string name="common_settings">设置</string>
   <string name="common_share">分享</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">跳过</string>
   <string name="common_sms_code_expired">您的验证码已过期。请尝试另一个。</string>
   <string name="common_sms_code_not_correct">验证码无效</string>
@@ -159,13 +183,15 @@
   <string name="common_terms_title">协议条款和条件</string>
   <string name="common_thai">泰国</string>
   <string name="common_to">至</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">今天</string>
   <string name="common_try_another">试试另一个</string>
+  <string name="common_turkish">土耳其语</string>
   <string name="common_ukrainian">乌克兰语</string>
   <string name="common_unsupported_version_body">Sora应用可通过 Google Play 更新。这包括改进和错误修复。</string>
   <string name="common_unsupported_version_open_google_play">开启Google Play</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">更新您的Sora应用</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">投票</string>
   <string name="common_yesterday">昨天</string>
   <string name="contacts_empty_state_title">重要联系人将出现在这里</string>
@@ -177,23 +203,26 @@
   <string name="copy_eth_title">复制以太坊（ETH）钱包地址</string>
   <string name="copy_val_title">复制SORA NET（VAL）钱包地址</string>
   <string name="countries_country_not_found">没有符合您查询条件的国家</string>
-  <!-- Countries -->
   <string name="countries_title">选择您所在的国家/地区</string>
   <string name="create_account_title">注册</string>
-  <string name="details_frozen">冷冻</string>
-  <string name="details_frozen_total">冷冻（总计）</string>
+  <string name="details_frozen">已被冻结</string>
+  <string name="details_frozen_total">已被冻结 (总计)</string>
   <string name="details_total">总余额</string>
   <string name="details_transferable">可转让</string>
   <string name="empty_recent_recipients">没有最近的收件人。\n已发送的地址将在此处显示。</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">要进行此操作，您需要一个关联的以太坊账户，里面有适当用于支付矿工费用的资金，以完成交易。</string>
   <string name="error_ethereum_account_title">以太坊账户未关联</string>
   <string name="error_miner_fee_subtitle">要进行此操作，您需要充值以太坊账户。</string>
   <string name="error_miner_fee_title">矿工费资金不足</string>
   <string name="error_transaction_fee_title">您没有足够的资金来转账指定的金额。</string>
   <string name="ethereum_config_unavailable">以太坊无法连接节点</string>
-  <!-- FAQ -->
   <string name="faq_title">常见问题</string>
   <string name="friends_spread_word">散布消息, 和好友共享应用程序</string>
+  <string name="from_account">从账户</string>
+  <string name="history_receive">收到</string>
+  <string name="history_send">发送</string>
+  <string name="history_swap">交换</string>
   <string name="history_title">历史</string>
   <string name="invite_accepted_empty_state_title">尚未接受任何邀请</string>
   <string name="invite_accepted_invitations_title">已接受的邀请</string>
@@ -212,10 +241,9 @@
   <string name="invite_enter_error_already_applied">您已经应用了另一个邀请码</string>
   <string name="invite_enter_error_time_is_up">应用邀请码已过期</string>
   <string name="invite_enter_invitation_code">输入邀请码</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">好友</string>
   <string name="invite_link_format">使用以下链接加入Sora： \n %s</string>
-  <string name="invite_link_sharing_title">分享邀请链接</string>
+  <string name="invite_link_sharing_title">分享应用程序</string>
   <string name="invite_referral_reward">推荐奖励</string>
   <string name="invite_rewards">奖赏</string>
   <string name="invite_title_v1">邀请朋友来获得更多奖励。奖励将在启动该功能时开始分配。</string>
@@ -226,10 +254,11 @@
   <string name="logout_dialog_body">此操作将导致从该设备删除帐户。在继续操作之前，请确保已备份助记词。</string>
   <string name="mnemonic_alert_text">助记符用于恢复对账户的访问。必写下来，没有它我们将无法恢复您的帐户！</string>
   <string name="mnemonic_confirm_text">按正确的单词顺序选择来进行确认</string>
+  <string name="mnemonic_confirm_text_v2">通过按正确顺序选择单词来确认密码</string>
   <string name="mnemonic_invalid">助记词密码无效，请再检查一次单词顺序。</string>
   <string name="mnemonic_invalid_title">无效的助记密码</string>
-  <string name="mnemonic_text">使用非数字方式备份，例如将其记录在纸上。</string>
-  <string name="mnemonic_title">备份助记符</string>
+  <string name="mnemonic_text">我们建议使用非数字方式进行备份，例如将其写在纸上。</string>
+  <string name="mnemonic_title">备份密码短语</string>
   <string name="parliament_coming_soon">SORA网络的治理</string>
   <string name="personal_details_info">该帐户的名称及其在您的地址下的显示方式。通过链上身份，可以将其提供给其他人。</string>
   <string name="personal_info_inv_code_hint">邀请码（可选）</string>
@@ -239,7 +268,6 @@
   <string name="personal_info_username_v1">账户名</string>
   <string name="phone_number_mobile">手机号码</string>
   <string name="phone_number_sms_code_will_be_sent">短信代码将被发送\n到您的手机</string>
-  <!-- Phone number -->
   <string name="phone_number_title">注册</string>
   <string name="phone_verification_too_frequent_message">验证码请求过于频繁。请稍后再试。</string>
   <string name="pincode_change_success">密码已经成功更改。</string>
@@ -254,33 +282,66 @@
   <string name="pincode_set_your_pin_code">设置代码</string>
   <string name="pincode_touch_fingerprint_scanner">触摸指纹识别按键</string>
   <string name="pincode_updated">密码已经重申成功</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">未来的可互相操作去中心化交易。 Polkaswap是一种非托管的AMM-DEX协议，用于基于通过桥接器连接的Polkadot网络，Parachains和区块链交换令牌。 Polkaswap协议有效地删除了受信任的中介，并提供了更快交易的机会。</string>
+  <string name="polkaswap_confirm_swap">确认交换</string>
   <string name="polkaswap_details">细节</string>
-  <string name="polkaswap_info_text">Polkaswap 由 SORA 社区维护。在使用 Polkaswap 功能之前，请查看 %%Polkaswap FAQ%% 和文档，其中包括有关 Polkaswap 工作原理的详细说明、Polkaswap 备忘录和服务条款以及隐私政策。这些文档对于安全和积极的用户体验至关重要。使用 Polkaswap，即表示您承认您已阅读并理解这些文件。 \n\n您还承认以下几点： \n\n 1) 您全权负责遵守在您的法律管辖范围内可能适用于您对 Polkaswap 的特定使用的所有法律；\n 2）您对Polkaswap当前版本为alpha版本的理解：尚未经过全面测试，部分功能可能无法按设计执行；\n 3) 您理解并自愿接受使用 Polkaswap 所涉及的风险，包括但不限于丢失代币的风险。再一次，请不要继续阅读常见问题解答、Polkaswap 备忘录和服务条款以及隐私政策！</string>
-  <string name="polkaswap_liqudity_fee">流动性提供者费用</string>
+  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_info_faq">Polkaswap 常见问题</string>
+  <string name="polkaswap_info_text_1">Polkaswap 是由 SORA 社区维护。在使用 Polkaswap 功能之前，请查看 %%Polkaswap FAQ%% 和文档，其中包括有关 Polkaswap 操作原理的详细说明、Polkaswap 备忘录和服务条款以及隐私政策。这些文档对于安全和积极的用户体验至关重要。通过使用 Polkaswap，您承认您已阅读并理解这些文件。</string>
+  <string name="polkaswap_info_text_2">您还承认以下几点：</string>
+  <string name="polkaswap_info_text_3">您全权负责遵守在您的法律管辖范围内可能适用于您对 Polkaswap 的特定使用的所有法律；</string>
+  <string name="polkaswap_info_text_4">您的理解当前版本的 Polkaswap 为 alpha 版本：尚未经过全面测试，部分功能可能无法按设计执行；</string>
+  <string name="polkaswap_info_text_5">您理解并自愿接受使用 Polkaswap 所涉及的风险，包括但不限于丢失代币的风险。</string>
+  <string name="polkaswap_info_text_6">再次强调，在没有阅读%%Polkaswap常见问题%%、%%Polkaswap备忘录和服务条款%%以及%%Privacy Policy%%之前，请不要继续!</string>
+  <string name="polkaswap_info_text_7">为了在“交换”选项卡中隐藏免责声明通知，请滑动下面的按钮。只有在您完全理解并阅读了所有提到的文件后才能这样做！</string>
+  <string name="polkaswap_info_text_8">滑动隐藏</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_title">免责声明</string>
+  <string name="polkaswap_info_title_main">免责声明：请在继续使用 polkaswap 之前阅读！</string>
+  <string name="polkaswap_input_estimated">输入是估计的。您将卖出最大的%s，否则交易将被取消。</string>
+  <string name="polkaswap_insufficient_balance">%s余额不足</string>
+  <string name="polkaswap_insufficient_liqudity">流动性不足</string>
+  <string name="polkaswap_liqudity_fee">LP费用</string>
   <string name="polkaswap_liqudity_fee_info">每笔交易的一部分 (0.3%) 作为协议激励流向流动性提供者。</string>
   <string name="polkaswap_market">市场</string>
   <string name="polkaswap_market_info">市场算法 - 在一级市场 (TBC)、二级市场 (XYK) 或组合智能算法之间进行选择，以保证任何给定交易的最佳价格。</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
   <string name="polkaswap_market_title">市场算法</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
   <string name="polkaswap_maximum_sold">最大销售量</string>
-  <string name="polkaswap_maximum_sold_info">如果在确认之前出现较大的不利价格变动，您的交易将恢复。</string>
-  <string name="polkaswap_minimum_received">最低收到</string>
-  <string name="polkaswap_minimum_received_info">如果在确认之前出现较大的不利价格变动，您的交易将恢复。</string>
+  <string name="polkaswap_maximum_sold_info">如果在确认之前有一个较大而不利的价格变动，您的交易将被取消。</string>
+  <string name="polkaswap_minimum_received">最小收到</string>
+  <string name="polkaswap_minimum_received_info">如果在确认之前有一个较大而不利的价格变动，您的交易将被取消。</string>
   <string name="polkaswap_network_fee">网络费用</string>
   <string name="polkaswap_network_fee_info">网络费用用于保证 SORA 系统的增长和稳定的性能。</string>
-  <string name="polkaswap_pool_title">水池</string>
+  <string name="polkaswap_output_estimated">输出是估计的。您将至少收到%s，否则交易将被取消。</string>
+  <string name="polkaswap_pool_not_created">未创建池</string>
+  <string name="polkaswap_pool_title">池</string>
+  <string name="polkaswap_slippage_frontrun">您的交易可能提前</string>
   <string name="polkaswap_slippage_info">滑点容差是一个可接受的阈值，以百分比为单位设置，用于影响最小接收金额的最终金额。</string>
+  <string name="polkaswap_slippage_mayfail">您的交易可能会失败</string>
   <string name="polkaswap_slippage_tolerance">滑点公差</string>
-  <string name="polkaswap_smart">聪明的</string>
+  <string name="polkaswap_smart">智能</string>
   <string name="polkaswap_swap_title">交换</string>
-  <string name="polkaswap_tbc">待定</string>
+  <string name="polkaswap_swapped">已交换</string>
+  <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">添加</string>
+  <string name="pool_button_remove">消除</string>
+  <string name="pool_liqudity_title">您的流动性</string>
+  <string name="pool_liquidity_placeholder">您的流动性会出现在这里</string>
+  <string name="pool_share_title">池份额</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">汇集</string>
   <string name="profile_about_title">关于</string>
   <string name="profile_biometry_title">生物特征认证</string>
   <string name="profile_change_pin_title">更改密码</string>
   <string name="profile_language_title">语言</string>
   <string name="profile_logout_title">登出</string>
-  <string name="profile_passphrase_title_v1">助记词</string>
+  <string name="profile_passphrase_title_v1">密码短语</string>
   <string name="profile_title">文档</string>
   <plurals name="project_date_day_plurals">
     <item quantity="other">%s 天剩余</item>
@@ -301,13 +362,11 @@
   <string name="project_vote_dialog_title">有多少选票</string>
   <string name="project_voted">已投票</string>
   <string name="project_you_can_vote_at_least_1_point">您最低可以以1分分数投票😜</string>
-  <string name="qr_code">二维码</string>
+  <string name="qr_code">QR 代码</string>
   <string name="qr_upload">从相册上传</string>
   <string name="recovery_body_subtitle">很遗憾，如果您忘记了助记词，则无法進入您的账户。</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">输入您的助记词</string>
   <string name="recovery_mnemonic_passphrase">助记种子短语</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">恢复访问</string>
   <string name="recovery_source_type">来源类型</string>
   <string name="recovery_title">导入账户</string>
@@ -328,21 +387,26 @@
   <string name="referendum_total_votes">总票数</string>
   <string name="referendum_unsupport_title">没有</string>
   <string name="referendum_voting_result">投票结果</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">请勿截屏，这些截图可能被第三方恶意软件收集</string>
   <string name="screenshot_alert_title">请勿截屏</string>
   <string name="search_asset_by_name">按资产名称或符号搜索</string>
-  <string name="select_account_address">选择账户地址</string>
+  <string name="select_account_address">搜索账户地址</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">接受者</string>
   <string name="set_amount">设置金额</string>
   <string name="staking_coming_soon">XOR持有者将可以押注XOR来提名验证者并获得奖励。</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA验证者奖励</string>
-  <!-- Startup -->
   <string name="startup_verification_title">正在验证授权...</string>
   <string name="status_error">错误</string>
   <string name="status_pending">待定</string>
   <string name="status_rejected">被拒</string>
   <string name="status_success">成功</string>
   <string name="status_title">状态</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">好友</string>
   <string name="tabbar_parliament_title">议会</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -362,7 +426,7 @@
   <string name="transaction_fee_regular">常规</string>
   <string name="transaction_fee_set_recommended">建议设置</string>
   <string name="transaction_fee_slow">慢速</string>
-  <string name="transaction_id">交易ID</string>
+  <string name="transaction_id">交易哈希值</string>
   <string name="transaction_miner_fee_title">矿工费</string>
   <string name="transaction_miner_help">将从您的以太坊账户中扣除</string>
   <string name="transaction_note">注释</string>
@@ -370,57 +434,66 @@
   <string name="transaction_send_back">发送回</string>
   <string name="transaction_token">令牌</string>
   <string name="transaction_total">总共</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">许多世界。\n一经济。</string>
+  <string name="tutorial_many_world_desc">SORA 正在努力成为一个分散的多元宇宙经济系统，在 SORA 议会的民主监督下为创建新的和令人兴奋的应用程序提供资金。</string>
   <string name="tutorial_one_world">一个世界。\n一个经济体。</string>
-  <string name="tutorial_one_world_desc">SORA正在努力成为世界分散的中央银行，在SORA议会的民主监督下，为创建新颖而令人兴奋地应用程序提供资金。</string>
+  <string name="tutorial_one_world_desc">SORA正在努力成为一个去中心化的世界经济系统，在SORA议会的民主监督下，为创建新颖而令人振奋的应用程序提供资金。</string>
   <string name="tutorial_privacy_policy">隐私协议</string>
   <string name="tutorial_project_success_desc">如果项目投票成功，那么每人都可以获得份额</string>
   <string name="tutorial_projects_desc">由生产商添加的项目，并在选择流程后添加到投票项目中</string>
   <string name="tutorial_restore_account">恢复账户访问权限</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">注册</string>
+  <string name="tutorial_terms_and_conditions">创建帐户即表示您同意%%条款和条件%%和%%隐私政策%%</string>
   <string name="tutorial_terms_and_conditions_1">签署即表示您同意</string>
   <string name="tutorial_terms_and_conditions_2">条款和条件</string>
   <string name="tutorial_terms_and_conditions_3">条款及细则</string>
+  <string name="tutorial_terms_and_conditions_recovery">通过导入账户，您同意%%条款和条件%%和%%隐私政策%%。</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">用户为项目投票，决定应资助哪个项目</string>
   <string name="unknown_balance">未知</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">VAL令牌在不同的网络上</string>
   <string name="verification_enter_code_from_sms">输入短信验证码</string>
   <string name="verification_request_new_code_time" formatted="false">在请求新验证码%s： %s</string>
-  <!-- Verification -->
   <string name="verification_resend_code">重发验证码</string>
   <string name="verification_title">手机认证</string>
   <string name="view_balance_val">查看SORA NET（VAL）令牌分配</string>
   <string name="votes_empty_history_description">每当您的票数改变时\n您将在这里看到它的历史记录</string>
-  <!-- Votes -->
   <string name="votes_history_title">投票历史记录</string>
   <string name="votes_zero_error_message">抱歉，您必须至少有1分才能投票</string>
   <string name="wallet_account_retry_registration">重新注册</string>
   <string name="wallet_asset_id">资产编号</string>
   <string name="wallet_balance_locked">已被锁定</string>
   <string name="wallet_balance_reserved">已保留</string>
-  <string name="wallet_bonded">保税</string>
+  <string name="wallet_bonded">已绑定</string>
   <string name="wallet_empty_description">转入和转出\n交易会出现在这里</string>
+  <string name="wallet_empty_history_title">没有交易</string>
   <string name="wallet_ethereum">以太坊</string>
   <string name="wallet_history_from_ethereum_address_title">从以太坊地址</string>
   <string name="wallet_history_from_soranet_address_title">从SORA NET账户</string>
-  <string name="wallet_history_limitations_text">目前，交易历史存储在本地，这意味着如果您在另一台设备上导入帐户，在当前设备上注销或重新安装应用程序，交易历史将不再可用。我们也无法显示任何传入的交易。对于造成的任何不便，我们深表歉意，我们正在努力解决问题。</string>
+  <string name="wallet_history_limitations_text">目前，交易历史存储在本地，这意味着如果您在另一台设备上导入账户，在当前设备上注销或重新安装应用程序，交易历史将不再可用。我们也无法显示任何传入的交易。对于造成的任何不便，我们深表歉意，我们正在努力解决问题。</string>
   <string name="wallet_history_limitations_title">历史限制</string>
   <string name="wallet_history_reward_from_system">来自系统的奖励</string>
   <string name="wallet_history_to_ethereum_address">到以太坊地址</string>
   <string name="wallet_history_to_my_ethereum_title">到我的以太坊地址</string>
   <string name="wallet_history_to_my_soranet_title">到我的SORA NET账户</string>
   <string name="wallet_history_to_soranet_account">到SORA NET账户</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">我用以接收的%s网络地址%s ：</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">我的%s网络地址要接收%s：</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s 接收%s的网络地址：</string>
   <string name="wallet_qr_share_message_template" formatted="false">我用以接收的%s网络地址%s %s：</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">我的 %s 网络地址接收 %s %s：</string>
   <string name="wallet_receive_val">收到VAL</string>
   <string name="wallet_redeemable">可赎回</string>
   <string name="wallet_send_existential_warning_message">您的划转将会从BLOCKTORE被撤除，因为这将导致总余额低于现有存款。</string>
   <string name="wallet_soranet">Sora网络</string>
-  <!-- Wallet -->
   <string name="wallet_title">钱包</string>
+  <string name="wallet_transaction_rejected">交易被拒绝</string>
   <string name="wallet_transaction_submitted">交易已提交</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">最大 %s 符号</string>
   <string name="wallet_transfer_to_ethereum">至以太坊地址</string>
-  <string name="wallet_unbonding">解绑</string>
+  <string name="wallet_unbonding">取消绑定</string>
   <string name="wallet_val_to_my_eth">VAL至我的以太坊账户</string>
 </resources>

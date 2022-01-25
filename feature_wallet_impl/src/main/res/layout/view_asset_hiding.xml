@@ -8,7 +8,7 @@
 
     <ImageView
         android:id="@+id/iconImg"
-        style="@style/TextAppearance.Soramitsu.Header2"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_padding_list_element"
@@ -24,7 +24,7 @@
 
         <TextView
             android:id="@+id/balanceTv"
-            style="@style/TextAppearance.Soramitsu.Header2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
@@ -38,7 +38,7 @@
 
             <TextView
                 android:id="@+id/assetFirstNameTv"
-                style="@style/TextAppearance.Soramitsu.Body1"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/x1"
@@ -46,7 +46,7 @@
 
             <TextView
                 android:id="@+id/assetLastNameTv"
-                style="@style/TextAppearance.Soramitsu.Body1"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textColor="@color/subtitleGrey"

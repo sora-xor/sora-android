@@ -9,6 +9,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
@@ -28,6 +29,9 @@ class SplashInteractorTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     @Mock
     private lateinit var userRepository: UserRepository
 
@@ -42,7 +46,7 @@ class SplashInteractorTest {
     }
 
     @Test
-    fun `getRegistrationState calls userRepository getRegistrationState`() {
+    fun `getRegistrationState calls userRepository getRegistrationState`() = runBlockingTest {
         splashInteractor.getRegistrationState()
 
         verify(userRepository).getRegistrationState()
@@ -58,7 +62,7 @@ class SplashInteractorTest {
     }
 
     @Test
-    fun `saveInviteCode calls userRepository saveInviteCode`() {
+    fun `saveInviteCode calls userRepository saveInviteCode`() = runBlockingTest {
         val inviteCode = "inviteCode"
 
         splashInteractor.saveInviteCode(inviteCode)

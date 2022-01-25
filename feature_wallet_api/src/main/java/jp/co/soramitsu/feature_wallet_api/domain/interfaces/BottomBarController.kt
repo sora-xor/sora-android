@@ -10,4 +10,6 @@ interface BottomBarController {
     fun showBottomBar()
 
     fun hideBottomBar()
+
+    fun navigateTabToSwap()
 }

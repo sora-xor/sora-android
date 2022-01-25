@@ -9,6 +9,7 @@ import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
@@ -25,40 +26,65 @@ class TransactionMappers @Inject constructor(
     fun mapTransaction(tx: Transaction): EventUiModel.EventTxUiModel {
         when (tx) {
             is Transaction.Transfer -> {
-                val assetName = tx.token.symbol
-                val amountFormatted =
-                    if (tx.status == TransactionStatus.REJECTED || tx.successStatus == false) "" else "${
-                    numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
-                    } $assetName"
-                val amountFullFormatted =
-                    if (tx.status == TransactionStatus.REJECTED || tx.successStatus == false) "" else numbersFormatter.formatBigDecimal(
-                        tx.amount,
-                        tx.token.precision
+                return if (tx.transferType == TransactionTransferType.INCOMING)
+                    EventUiModel.EventTxUiModel.EventTransferInUiModel(
+                        tx.txHash,
+                        tx.token.icon,
+                        tx.peer.truncateUserAddress(),
+                        dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
+                        tx.timestamp,
+                        Pair(
+                            "+%s".format(
+                                numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
+                            ),
+                            tx.token.symbol,
+                        ),
+                        tx.status == TransactionStatus.PENDING,
+                        !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
+                    ) else
+                    EventUiModel.EventTxUiModel.EventTransferOutUiModel(
+                        tx.txHash,
+                        tx.token.icon,
+                        tx.peer.truncateUserAddress(),
+                        dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
+                        tx.timestamp,
+                        Pair(
+                            "-%s".format(
+                                numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
+                            ),
+                            tx.token.symbol,
+                        ),
+                        tx.status == TransactionStatus.PENDING,
+                        !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
                     )
-                return EventUiModel.EventTxUiModel.EventTransferUiModel(
-                    tx.txHash,
-                    tx.transferType == TransactionTransferType.INCOMING,
-                    tx.token.icon,
-                    tx.peer,
-                    dateTimeFormatter.formatDateTime(Date(tx.timestamp)),
-                    tx.timestamp,
-                    amountFormatted,
-                    amountFullFormatted,
-                    tx.status == TransactionStatus.PENDING,
-                    tx.successStatus
-                )
             }
             is Transaction.Swap -> {
                 return EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel(
                     tx.txHash,
                     tx.tokenFrom.icon,
                     tx.tokenTo.icon,
-                    "- %s %s".format(numbersFormatter.formatBigDecimal(tx.amountFrom, AssetHolder.ROUNDING), tx.tokenFrom.symbol),
-                    "+ %s %s".format(numbersFormatter.formatBigDecimal(tx.amountTo, AssetHolder.ROUNDING), tx.tokenTo.symbol),
-                    "+ %s".format(numbersFormatter.formatBigDecimal(tx.amountTo, tx.tokenTo.precision)),
+                    Pair(
+                        "-%s".format(
+                            numbersFormatter.formatBigDecimal(
+                                tx.amountFrom,
+                                AssetHolder.ROUNDING
+                            )
+                        ),
+                        tx.tokenFrom.symbol
+                    ),
+                    Pair(
+                        "+%s".format(
+                            numbersFormatter.formatBigDecimal(
+                                tx.amountTo,
+                                AssetHolder.ROUNDING
+                            )
+                        ),
+                        tx.tokenTo.symbol
+                    ),
+                    dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
                     tx.timestamp,
                     tx.status == TransactionStatus.PENDING,
-                    tx.successStatus
+                    !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
                 )
             }
         }

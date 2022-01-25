@@ -12,10 +12,11 @@ import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.networkStateFlow
 import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onEach
 
 @SuppressLint("CheckResult")
 class WsConnectionManager(
@@ -25,28 +26,44 @@ class WsConnectionManager(
 ) : ConnectionManager {
 
     init {
-        coroutineManager.applicationScope.launch {
-            appStateProvider.observeState()
-                .distinctUntilChanged()
-                .collectLatest {
-                    if (it) {
+        appStateProvider.observeState()
+            .distinctUntilChanged()
+            .catch {
+            }
+            .onEach {
+                when (it) {
+                    AppStateProvider.AppEvent.ON_CREATE -> {
                         start(OptionsProvider.url)
-                    } else {
+                    }
+                    AppStateProvider.AppEvent.ON_RESUME -> {
+                        resume()
+                    }
+                    AppStateProvider.AppEvent.ON_PAUSE -> {
+                        pause()
+                    }
+                    AppStateProvider.AppEvent.ON_DESTROY -> {
                         stop()
                     }
                 }
-        }
+            }
+            .launchIn(coroutineManager.applicationScope)
     }
 
     override fun connectionState(): Flow<Boolean> {
-        return socket.networkStateFlow().map {
-            it is SocketStateMachine.State.Connected
-        }.distinctUntilChanged()
+        return socket.networkStateFlow()
+            .map {
+                it is SocketStateMachine.State.Connected
+            }
+            .distinctUntilChanged()
     }
 
-    override fun start(url: String) = socket.start(url)
+    override fun start(url: String) = socket.start(url, true)
 
     override fun isStarted(): Boolean = socket.started()
 
     override fun stop() = socket.stop()
+
+    override fun pause() = socket.pause()
+
+    override fun resume() = socket.resume()
 }

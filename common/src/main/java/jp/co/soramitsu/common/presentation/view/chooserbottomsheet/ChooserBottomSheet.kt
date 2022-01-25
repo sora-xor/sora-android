@@ -11,7 +11,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.databinding.BottomSheetChooserBinding
 
-class ChooserBottomSheet(
+open class ChooserBottomSheet(
     context: Activity,
     title: Int,
     items: List<ChooserItem>,

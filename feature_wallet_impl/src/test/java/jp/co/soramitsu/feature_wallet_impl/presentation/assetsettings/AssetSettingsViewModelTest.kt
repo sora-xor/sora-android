@@ -66,7 +66,6 @@ class AssetSettingsViewModelTest {
                 Asset(
                     Token("token_id", "token name", "token symbol", 18, true, 0),
                     true,
-                    true,
                     1,
                     AssetBalance(
                         BigDecimal.ONE,
@@ -80,7 +79,6 @@ class AssetSettingsViewModelTest {
                 ),
                 Asset(
                     Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
-                    true,
                     true,
                     2,
                     AssetBalance(
@@ -96,7 +94,6 @@ class AssetSettingsViewModelTest {
                 Asset(
                     Token("token3_id", "token3 name", "token2 symbol", 18, true, 0),
                     true,
-                    true,
                     3,
                     AssetBalance(
                         BigDecimal.ONE,
@@ -110,7 +107,6 @@ class AssetSettingsViewModelTest {
                 ),
                 Asset(
                     Token("token4_id", "token2 name", "token4 symbol", 18, true, 0),
-                    true,
                     true,
                     4,
                     AssetBalance(
@@ -158,7 +154,7 @@ class AssetSettingsViewModelTest {
 
     @Test
     fun `click done`() = runBlockingTest {
-        viewModel.doneClicked()
+        viewModel.backClicked()
         verify(router).popBackStackFragment()
     }
 
@@ -166,7 +162,7 @@ class AssetSettingsViewModelTest {
     fun `check changed`() = runBlockingTest {
         val a = AssetConfigurableModel("id", "sora", "xor", 0, true, "1", true)
         viewModel.checkChanged(a, true)
-        viewModel.doneClicked()
+        viewModel.backClicked()
         verify(router).popBackStackFragment()
     }
 
@@ -175,7 +171,7 @@ class AssetSettingsViewModelTest {
         val a = AssetConfigurableModel("id", "sora", "xor", 0, true, "1", true)
         viewModel.checkChanged(a, true)
         viewModel.checkChanged(a, false)
-        viewModel.doneClicked()
+        viewModel.backClicked()
         verify(router).popBackStackFragment()
     }
 }

@@ -5,17 +5,17 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.receive
 
-import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.core.content.FileProvider
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
@@ -23,18 +23,19 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentReceiveBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
-import java.io.File
-import java.io.FileOutputStream
+import javax.inject.Inject
 
 class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive) {
 
     companion object {
-        private const val IMAGE_NAME = "image.png"
         private const val ARG_ASSET = "arg_asset"
         fun createBundle(asset: ReceiveAssetModel) = Bundle().apply {
             putSerializable(ARG_ASSET, asset)
         }
     }
+
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     private val model: ReceiveAssetModel by lazy { requireArguments().getSerializable(ARG_ASSET) as ReceiveAssetModel }
     private val viewBinding by viewBinding(FragmentReceiveBinding::bind)
@@ -47,6 +48,7 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
             .receiveAmountComponentBuilder()
             .withFragment(this)
             .withReceiveModel(model)
+            .withQrBackgroundColor(context.attrColor(R.attr.flatAboveBackground))
             .build()
             .inject(this)
     }
@@ -59,7 +61,9 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
             setHomeButtonListener {
                 viewModel.backButtonPressed()
             }
-            setRightActionClickListener { viewModel.shareQr() }
+        }
+        viewBinding.ibReceiveShare.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.shareQr()
         }
         viewBinding.ivCopyAddress.setOnClickListener {
             viewModel.copyAddress()
@@ -71,32 +75,21 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
     }
 
     private fun initListeners() {
-        viewModel.qrBitmapLiveData.observe(viewLifecycleOwner) {
+        viewModel.qrBitmapLiveData.observe {
             viewBinding.ivQr.setImageBitmap(it)
         }
 
-        viewModel.shareQrCodeLiveData.observe(viewLifecycleOwner) {
-            val mediaStorageDir: File = saveToTempFile(requireContext(), it.first)
-
-            val imageUri = FileProvider.getUriForFile(
-                requireContext(),
-                "${requireActivity().packageName}.provider",
-                mediaStorageDir
-            )
-
-            if (imageUri != null) {
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "image/*"
-                    putExtra(Intent.EXTRA_STREAM, imageUri)
-                    putExtra(Intent.EXTRA_SUBJECT, getString(R.string.common_share))
-                    putExtra(Intent.EXTRA_TEXT, it.second)
-                }
-
-                startActivity(Intent.createChooser(intent, getString(R.string.common_share)))
+        viewModel.shareQrCodeLiveData.observe {
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/*"
+                putExtra(Intent.EXTRA_STREAM, it.first)
+                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.common_share))
+                putExtra(Intent.EXTRA_TEXT, it.second)
             }
+            startActivity(Intent.createChooser(intent, getString(R.string.common_share)))
         }
 
-        viewModel.userNameAddress.observe(viewLifecycleOwner) {
+        viewModel.userNameAddress.observe {
             if (it.second.isEmpty()) {
                 viewBinding.tvUserName.text = it.first
                 viewBinding.tvUserAddress.gone()
@@ -107,26 +100,17 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
             }
         }
 
-        viewModel.userAvatar.observe(viewLifecycleOwner) {
+        viewModel.userAvatar.observe {
             viewBinding.ivUserAvatar.setImageDrawable(it)
         }
 
-        viewModel.copiedAddressEvent.observe(viewLifecycleOwner) {
+        viewModel.copiedAddressEvent.observe {
             Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun saveToTempFile(context: Context, bitmap: Bitmap): File {
-        val mediaStorageDir = File(context.externalCacheDir!!.absolutePath + IMAGE_NAME)
-        val outputStream = FileOutputStream(mediaStorageDir)
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-        outputStream.close()
-        return mediaStorageDir
-    }
-
     private fun composeTitle() = listOf(
         getString(R.string.common_receive),
-        model.networkName,
-        getString(R.string.brackets_format, model.tokenName)
+        model.tokenName
     ).filter { it.isNotEmpty() }.joinToString(separator = " ")
 }

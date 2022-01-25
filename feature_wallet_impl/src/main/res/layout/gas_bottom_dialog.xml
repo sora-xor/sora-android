@@ -13,7 +13,7 @@
 
     <TextView
         android:id="@+id/titleTv"
-        style="@style/TextAppearance.Soramitsu.Header4"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/x2"
@@ -29,7 +29,7 @@
 
         <TextView
             android:id="@+id/minerFeeSubtitle"
-            style="@style/TextAppearance.Soramitsu.Body1"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -40,11 +40,10 @@
 
         <TextView
             android:id="@+id/minerFeeTv"
-            style="@style/TextAppearance.Soramitsu.Body2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:fontFamily="@font/soramitsu_semibold"
             android:lineSpacingExtra="5sp"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_b2" />
@@ -53,11 +52,10 @@
 
     <TextView
         android:id="@+id/estimatedTimeText"
-        style="@style/TextAppearance.Soramitsu.Body2"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/x2"
-        android:fontFamily="@font/soramitsu_semibold"
         android:lineSpacingExtra="5sp"
         android:text="Estimated transaction time ~ 1 min 44 sec" />
 
@@ -98,7 +96,7 @@
 
     <TextView
         android:id="@+id/gasPriceTitle"
-        style="@style/TextAppearance.Soramitsu.Body2"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/x3"
@@ -117,7 +115,7 @@
 
         <EditText
             android:id="@+id/gasPriceInput"
-            style="@style/TextAppearance.Soramitsu.Header2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -131,19 +129,18 @@
 
         <TextView
             android:id="@+id/gasPriceSetRecommended"
-            style="@style/TextAppearance.Soramitsu.Body2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:fontFamily="@font/soramitsu_semibold"
             android:text="@string/transaction_fee_set_recommended"
-            android:textColor="@color/uikit_lightRed" />
+            android:textColor="@color/brand_soramitsu_red" />
 
     </LinearLayout>
 
     <TextView
         android:id="@+id/gasPriceErrorText"
-        style="@style/TextAppearance.Soramitsu.Body2"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/x2"
@@ -151,7 +148,7 @@
         android:drawablePadding="@dimen/x1_2"
         android:includeFontPadding="false"
         android:text="@string/common_error_price_is_to_low"
-        android:textColor="@color/uikit_lightRed"
+        android:textColor="@color/brand_soramitsu_red"
         android:visibility="gone" />
 
     <View
@@ -164,7 +161,7 @@
 
     <TextView
         android:id="@+id/gasLimitTitle"
-        style="@style/TextAppearance.Soramitsu.Body2"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/x3"
@@ -183,7 +180,7 @@
 
         <EditText
             android:id="@+id/gasLimitInput"
-            style="@style/TextAppearance.Soramitsu.Header2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -197,13 +194,12 @@
 
         <TextView
             android:id="@+id/gasLimitSetRecommended"
-            style="@style/TextAppearance.Soramitsu.Body2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:fontFamily="@font/soramitsu_semibold"
             android:text="@string/transaction_fee_set_recommended"
-            android:textColor="@color/uikit_lightRed" />
+            android:textColor="@color/brand_soramitsu_red" />
 
     </LinearLayout>
 
@@ -214,19 +210,19 @@
         android:layout_height="@dimen/x3"
         android:layout_marginBottom="@dimen/x2"
         android:progressBackgroundTint="@color/seekbarColor"
-        android:progressTint="@color/uikit_lightRed"
+        android:progressTint="@color/brand_soramitsu_red"
         android:thumb="@drawable/ic_seekbar_thumb_red"
         android:visibility="gone" />
 
     <TextView
         android:id="@+id/gasLimitErrorText"
-        style="@style/TextAppearance.Soramitsu.Body2"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:drawableStart="@drawable/ic_warning_16"
         android:drawablePadding="@dimen/x1_2"
         android:includeFontPadding="false"
         android:text="@string/common_error_gas_limit_low"
-        android:textColor="@color/uikit_lightRed"
+        android:textColor="@color/brand_soramitsu_red"
         android:visibility="gone" />
 </LinearLayout>

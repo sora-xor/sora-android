@@ -6,18 +6,19 @@
 package jp.co.soramitsu.feature_main_impl.presentation.personaldataedit
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ByteSizeTextWatcher
 import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.ext.enableIf
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.nameByteSizeTextWatcher
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
@@ -52,9 +53,8 @@ class PersonalDataEditFragment :
         (activity as BottomBarController).hideBottomBar()
 
         binding.toolbar.setHomeButtonListener { viewModel.backPressed() }
-        binding.toolbar.setRightTextButtonDisabled()
-        binding.toolbar.setRightActionClickListener {
-            viewModel.saveData(binding.accountNameEt.text!!.toString())
+        binding.btnAccountNameNext.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.saveData(binding.accountNameEt.text?.toString().orEmpty())
         }
 
         nameSizeTextWatcher = nameByteSizeTextWatcher(
@@ -70,18 +70,10 @@ class PersonalDataEditFragment :
 
         progressDialog = SoraProgressDialog(requireContext())
 
-        val textWatcher = object : TextWatcher {
-
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.accountNameChanged(binding.accountNameEt.text.toString())
-            }
+        binding.accountNameEt.doOnTextChanged { text, _, _, _ ->
+            viewModel.accountNameChanged(text?.toString().orEmpty())
         }
 
-        binding.accountNameEt.addTextChangedListener(textWatcher)
         initListeners()
     }
 
@@ -93,11 +85,7 @@ class PersonalDataEditFragment :
             if (it) progressDialog.show() else progressDialog.dismiss()
         }
         viewModel.nextButtonEnableLiveData.observe {
-            if (it) {
-                binding.toolbar.setRightTextButtonEnabled()
-            } else {
-                binding.toolbar.setRightTextButtonDisabled()
-            }
+            binding.btnAccountNameNext.enableIf(it)
         }
     }
 
@@ -107,11 +95,11 @@ class PersonalDataEditFragment :
     }
 
     override fun onPause() {
-        super.onPause()
-        if (keyboardHelper != null && keyboardHelper!!.isKeyboardShowing) {
-            hideSoftKeyboard(activity)
+        if (keyboardHelper?.isKeyboardShowing == true) {
+            hideSoftKeyboard()
         }
         keyboardHelper?.release()
+        super.onPause()
     }
 
     override fun onDestroyView() {

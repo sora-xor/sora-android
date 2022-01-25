@@ -5,4 +5,7 @@
 
 package jp.co.soramitsu.common.data.network.substrate.response
 
+import androidx.annotation.Keep
+
+@Keep
 data class BalanceResponse(val balance: String)

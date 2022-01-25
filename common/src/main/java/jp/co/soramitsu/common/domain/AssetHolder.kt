@@ -5,11 +5,21 @@
 
 package jp.co.soramitsu.common.domain
 
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+
 class AssetHolder {
 
     companion object {
         const val DEFAULT_WHITE_LIST_NAME = "tokens_white_list"
-        const val ROUNDING = 4
+        const val ROUNDING = 8
+        val emptyToken: Token = Token(
+            id = "",
+            name = "",
+            symbol = "???",
+            precision = 18,
+            isHidable = true,
+            icon = OptionsProvider.DEFAULT_ICON
+        )
         private val knownAssets: Map<String, AssetDefault> = mapOf(
             // xor
             "0x0200000000000000000000000000000000000000000000000000000000000000" to

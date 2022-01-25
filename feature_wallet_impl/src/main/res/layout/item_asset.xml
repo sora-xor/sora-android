@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<jp.co.soramitsu.feature_wallet_impl.presentation.wallet.view.AssetView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/soraAssetView"
+<soup.neumorphism.NeumorphCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.Soramitsu.Neu.CardView"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/x1_5"
-    android:foreground="?attr/selectableItemBackgroundBorderless"
-    app:cardCornerRadius="@dimen/x2"
-    app:cardElevation="4dp" />
+    android:layout_height="wrap_content">
+
+    <jp.co.soramitsu.feature_wallet_impl.presentation.wallet.view.AssetView
+        android:id="@+id/soraAssetView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</soup.neumorphism.NeumorphCardView>

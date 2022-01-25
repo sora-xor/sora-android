@@ -16,4 +16,8 @@ interface ConnectionManager {
     fun stop()
 
     fun connectionState(): Flow<Boolean>
+
+    fun resume()
+
+    fun pause()
 }

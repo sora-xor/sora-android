@@ -40,11 +40,11 @@ android {
             dimension 'default'
         }
 
-        tst {
+        soralution {
             dimension 'default'
         }
 
-        staging {
+        tsting {
             dimension 'default'
         }
 
@@ -76,6 +76,8 @@ dependencies {
     implementation novaCryptoDep
     implementation navigationFragmentDep
     implementation navigationUiDep
+
+    implementation neumorphismDep
 
     implementation daggerDep
     kapt daggerKapt

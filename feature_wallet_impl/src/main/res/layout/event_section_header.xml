@@ -1,31 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/header"
+    android:id="@+id/eventItemDayTextView"
+    style="@style/TextAppearance.Soramitsu.Neu.11.Semibold"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingStart="@dimen/x2"
-    android:paddingEnd="@dimen/x2">
-
-    <TextView
-        android:id="@+id/eventItemDayTextView"
-        style="@style/TextAppearance.Soramitsu.Upper_3.Bold"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxLines="1"
-        android:paddingTop="@dimen/x1_5"
-        android:paddingEnd="@dimen/x2"
-        android:paddingBottom="@dimen/x1_5"
-        android:textColor="?attr/contentQuaternary"
-        tools:text="Today"
-        tools:textColor="@color/grey_400" />
-
-    <View
-        android:id="@+id/vDividerAsset"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="@drawable/dashed_line_dark" />
-
-</LinearLayout>
+    android:gravity="center_horizontal"
+    android:maxLines="1"
+    android:paddingTop="@dimen/x1_5"
+    android:paddingBottom="@dimen/x1_5"
+    android:textAllCaps="true"
+    android:textColor="?attr/onBackgroundColor"
+    tools:text="Today"
+    tools:textColor="@color/grey_400" />

@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        tools:replace="android:allowBackup"
         android:allowBackup="false"
         android:icon="${appIcon}"
         android:roundIcon="${roundedIcon}"
@@ -19,7 +20,8 @@
         <activity
             android:name=".splash.presentation.SplashActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme">
+            android:theme="@style/SplashTheme"
+            android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -46,7 +48,8 @@
 
         </activity>
 
-        <service android:name=".service.PushNotificationService">
+        <service android:name=".service.PushNotificationService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
@@ -62,7 +65,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
+            android:authorities="${applicationId}.soraFileProvider"
             android:grantUriPermissions="true"
             android:exported="false">
             <meta-data

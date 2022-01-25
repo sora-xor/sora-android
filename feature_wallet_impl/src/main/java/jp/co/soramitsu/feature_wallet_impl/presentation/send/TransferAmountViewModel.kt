@@ -12,13 +12,14 @@ import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.setValueIfNew
-import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -37,11 +38,8 @@ class TransferAmountViewModel(
     private val clipboardManager: ClipboardManager,
 ) : BaseViewModel() {
 
-    private val _titleStringLiveData = MutableLiveData<String>()
-    val titleStringLiveData: LiveData<String> = _titleStringLiveData
-
-    private val _balanceFormattedLiveData = MediatorLiveData<String>()
-    val balanceFormattedLiveData: LiveData<String> = _balanceFormattedLiveData
+    private val _balanceFormattedLiveData = MediatorLiveData<AssetBalanceData>()
+    val balanceFormattedLiveData: LiveData<AssetBalanceData> = _balanceFormattedLiveData
 
     private val _transactionFeeFormattedLiveData = MediatorLiveData<String>()
     val transactionFeeFormattedLiveData: LiveData<String> = _transactionFeeFormattedLiveData
@@ -49,14 +47,17 @@ class TransferAmountViewModel(
     private val _recipientNameLiveData = MutableLiveData<String>()
     val recipientNameLiveData: LiveData<String> = _recipientNameLiveData
 
-    private val _recipientIconLiveData = MutableLiveData<Int>()
-    val recipientIconLiveData: LiveData<Int> = _recipientIconLiveData
+    private val _inputTokenIcon = MutableLiveData<Int>()
+    val inputTokenIcon: LiveData<Int> = _inputTokenIcon
 
     private val _nextButtonEnableLiveData = MutableLiveData<Boolean>()
     val nextButtonEnableLiveData: LiveData<Boolean> = _nextButtonEnableLiveData
 
-    private val _inputTokenLastName = MutableLiveData<String>()
-    val inputTokenLastName: LiveData<String> = _inputTokenLastName
+    private val _inputTokenName = MutableLiveData<String>()
+    val inputTokenName: LiveData<String> = _inputTokenName
+
+    private val _inputTokenSymbol = MutableLiveData<String>()
+    val inputTokenSymbol: LiveData<String> = _inputTokenSymbol
 
     private val _transactionFeeProgressVisibilityLiveData = MutableLiveData<Boolean>()
     val transactionFeeProgressVisibilityLiveData: LiveData<Boolean> =
@@ -76,12 +77,19 @@ class TransferAmountViewModel(
 
     init {
         viewModelScope.launch {
-            curAsset = interactor.getAsset(assetId)
-            feeAsset = interactor.getAsset(OptionsProvider.feeAssetId)
-            _balanceFormattedLiveData.value = numbersFormatter.formatBigDecimal(
-                curAsset.balance.transferable,
-                AssetHolder.ROUNDING
-            )
+            curAsset = interactor.getAsset(assetId)!!
+            feeAsset = interactor.getAsset(OptionsProvider.feeAssetId)!!
+            _balanceFormattedLiveData.value =
+                AssetBalanceData(
+                    amount = numbersFormatter.formatBigDecimal(
+                        curAsset.balance.transferable,
+                        AssetHolder.ROUNDING
+                    ),
+                    style = AssetBalanceStyle(
+                        R.style.TextAppearance_Soramitsu_Neu_Semibold_18,
+                        R.style.TextAppearance_Soramitsu_Neu_Semibold_13
+                    )
+                )
             _decimalLength.value = curAsset.token.precision
             configureScreenByTransferType()
             calcTransactionFee()
@@ -137,11 +145,11 @@ class TransferAmountViewModel(
     private fun configureScreenByTransferType() {
         when (transferType) {
             TransferType.VAL_TRANSFER -> {
-                _titleStringLiveData.value = "Choose amount"
+                _recipientNameLiveData.value = recipientId
 
-                _recipientIconLiveData.value = curAsset.token.icon
-                _recipientNameLiveData.value = recipientId.truncateUserAddress()
-                _inputTokenLastName.value = curAsset.token.symbol
+                _inputTokenName.value = curAsset.token.name
+                _inputTokenSymbol.value = curAsset.token.symbol
+                _inputTokenIcon.value = curAsset.token.icon
 
                 _transactionFeeFormattedLiveData.addSource(transactionFeeLiveData) { fee ->
                     val soraFee = "${

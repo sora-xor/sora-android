@@ -47,8 +47,11 @@ class PushNotificationService : FirebaseMessagingService() {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
 
-        val pendingIntent =
+        val pendingIntent = if (Build.VERSION.SDK_INT < 23) {
             PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT)
+        } else {
+            PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+        }
 
         val notificationId = Random().nextInt(60000)
 

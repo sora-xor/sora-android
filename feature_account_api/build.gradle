@@ -35,11 +35,11 @@ android {
             dimension 'default'
         }
 
-        tst {
+        soralution {
             dimension 'default'
         }
 
-        staging {
+        tsting {
             dimension 'default'
         }
 
