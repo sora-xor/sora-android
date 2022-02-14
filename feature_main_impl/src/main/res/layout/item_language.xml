@@ -1,42 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?selectableItemBackground"
     android:orientation="vertical"
-    android:paddingTop="@dimen/x1">
+    android:paddingStart="@dimen/x2"
+    android:paddingTop="@dimen/x1_5"
+    android:paddingEnd="@dimen/x2"
+    android:paddingBottom="@dimen/x1_5">
 
     <TextView
         android:id="@+id/languageNameTv"
-        android:layout_width="match_parent"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:textColor="@color/lightBlack"
-        android:textSize="15sp"
-        tools:text="Английский" />
-
-    <Space
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/x1_2" />
+        android:layout_marginEnd="@dimen/x1"
+        android:letterSpacing="-0.01"
+        app:layout_constraintEnd_toStartOf="@id/ivLanguageSelected"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="English" />
 
     <TextView
         android:id="@+id/languageNativeNameTv"
-        android:layout_width="match_parent"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.11"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingStart="@dimen/margin_padding_by_side"
-        android:paddingEnd="@dimen/margin_padding_by_side"
-        android:textColor="@color/grey"
-        tools:text="English" />
+        android:layout_marginEnd="@dimen/x1"
+        app:layout_constraintEnd_toStartOf="@id/ivLanguageSelected"
+        app:layout_constraintStart_toStartOf="@id/languageNameTv"
+        app:layout_constraintTop_toBottomOf="@id/languageNameTv"
+        tools:text="Английский" />
 
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="@dimen/x1"
-        android:layout_marginStart="@dimen/margin_padding_by_side"
-        android:layout_marginEnd="@dimen/margin_padding_by_side"
-        android:background="@color/indicatorDot" />
+    <ImageView
+        android:id="@+id/ivLanguageSelected"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:src="@drawable/ic_checkmark"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:visibility="visible" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

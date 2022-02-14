@@ -8,6 +8,8 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
+import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.github.razir.progressbutton.bindProgressButton
@@ -15,15 +17,21 @@ import com.github.razir.progressbutton.hideProgress
 import com.github.razir.progressbutton.showProgress
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.AssetSelectBottomSheet
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.presentation.view.slippagebottomsheet.SlippageBottomSheet
 import jp.co.soramitsu.common.util.KeyboardHelper
-import jp.co.soramitsu.common.util.ext.asFlow
+import jp.co.soramitsu.common.util.ext.asFlowCurrency
+import jp.co.soramitsu.common.util.ext.decimalPartSized
 import jp.co.soramitsu.common.util.ext.enableIf
 import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.runDelayed
+import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.common.util.ext.showOrGone
@@ -42,21 +50,49 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
+@FlowPreview
 class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
 
     companion object {
         const val ID = 0
         val TITLE_RESOURCE = R.string.polkaswap_swap_title
+
+        const val ARG_INPUT_TOKEN = "arg_input_token"
+        const val ARG_INPUT_AMOUNT = "arg_input_amount"
+        const val ARG_OUTPUT_TOKEN = "arg_output_token"
+        const val ARG_ID = "arg_id"
+
+        fun createSwapData(
+            inputToken: Token,
+            outputToken: Token,
+            inputAmount: BigDecimal,
+        ): Bundle = bundleOf(
+            ARG_ID to ID,
+            ARG_INPUT_TOKEN to inputToken,
+            ARG_INPUT_AMOUNT to inputAmount,
+            ARG_OUTPUT_TOKEN to outputToken,
+        )
     }
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
     private val binding by viewBinding(FragmentSwapBinding::bind)
 
-    @Volatile
-    private var amountFlow: Boolean = true
     private lateinit var keyboardHelper: KeyboardHelper
     private var swapButtonText = ""
+    private var disclaimerVisibility: Boolean = false
+
+    private val assetBalanceStyle = AssetBalanceStyle(
+        R.style.TextAppearance_Soramitsu_Neu_Regular_14,
+        R.style.TextAppearance_Soramitsu_Neu_Regular_11
+    )
+
+    private val swapDetailsStyle = AssetBalanceStyle(
+        intStyle = R.style.TextAppearance_Soramitsu_Neu_Regular_14,
+        decStyle = R.style.TextAppearance_Soramitsu_Neu_Regular_11,
+        color = R.attr.disabledColor,
+    )
 
     override fun onDestroy() {
         if (activity?.isChangingConfigurations == false)
@@ -64,41 +100,8 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         super.onDestroy()
     }
 
-    @FlowPreview
-    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        keyboardHelper = KeyboardHelper(
-            requireView(),
-            object : KeyboardHelper.KeyboardListener {
-                override fun onKeyboardShow() {
-                    (activity as BottomBarController).hideBottomBar()
-                    activity?.window?.currentFocus?.let {
-                        if (it.id == R.id.fromInput) {
-                            if (binding.toInput.isEnabled) {
-                                binding.amountPercentage.show()
-                            }
-                        } else {
-                            binding.amountPercentage.gone()
-                        }
-                    }
-                    binding.infoButtonWrapper.gone()
-                }
-
-                override fun onKeyboardHide() {
-                    runDelayed(100) {
-                        (activity as BottomBarController).showBottomBar()
-                        binding.amountPercentage.gone()
-                        binding.infoButtonWrapper.show()
-                    }
-                }
-            }
-        )
-
-        binding.fromBalance.text = "${getString(R.string.common_balance)}:"
-        binding.toBalance.text = "${getString(R.string.common_balance)}:"
-
         binding.fromCard.setClickListener {
             viewModel.fromCardClicked()
         }
@@ -111,11 +114,13 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             viewModel.reverseButtonClicked()
         }
 
-        binding.slippageTitle.setDebouncedClickListener(debounceClickHandler) {
+        binding.slippageOptions.setDebouncedClickListener(debounceClickHandler) {
+            binding.fromInput.clearFocus()
+            binding.toInput.clearFocus()
             viewModel.slippageToleranceClicked()
         }
 
-        binding.detailsTitle.setDebouncedClickListener(debounceClickHandler) {
+        binding.detailsIcon.setDebouncedClickListener(debounceClickHandler) {
             viewModel.detailsClicked()
         }
 
@@ -144,7 +149,7 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         binding.doneButton.setOnClickListener {
-            hideSoftKeyboard(requireActivity())
+            hideSoftKeyboard()
         }
 
         binding.percent100.setOnClickListener {
@@ -187,7 +192,8 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            binding.fromInput.asFlow().filter { amountFlow }.debounce(800).distinctUntilChanged()
+            binding.fromInput.asFlowCurrency().debounce(800).filter { it.isNotEmpty() }
+                .distinctUntilChanged()
                 .collectLatest {
                     viewModel.fromAmountChanged(
                         binding.fromInput.getBigDecimal() ?: BigDecimal.ZERO
@@ -196,7 +202,8 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            binding.toInput.asFlow().filter { amountFlow }.debounce(800).distinctUntilChanged()
+            binding.toInput.asFlowCurrency().debounce(800).filter { it.isNotEmpty() }
+                .distinctUntilChanged()
                 .collectLatest {
                     viewModel.toAmountChanged(
                         binding.toInput.getBigDecimal()
@@ -206,11 +213,19 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         binding.fromInput.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) viewModel.fromAmountFocused()
+            if (hasFocus) {
+                viewModel.fromAmountFocused()
+                if (!binding.amountPercentage.isVisible) {
+                    binding.amountPercentage.show()
+                }
+            }
         }
 
         binding.toInput.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) viewModel.toAmountFocused()
+            if (hasFocus) {
+                viewModel.toAmountFocused()
+                binding.amountPercentage.gone()
+            }
         }
 
         initListeners()
@@ -228,16 +243,28 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
     }
 
     private fun initListeners() {
-        viewModel.per1LiveData.observe {
-            binding.firstPerSecondValue.text = it
+        viewModel.disclaimerVisibilityLiveData.observe {
+            disclaimerVisibility = it
+            binding.infoButtonWrapper.showOrGone(disclaimerVisibility)
         }
 
-        viewModel.per2LiveData.observe {
-            binding.secondPerFirstValue.text = it
+        viewModel.detailsPriceValue.observe { pair ->
+            pair.first?.let { first ->
+                pair.second?.let { second ->
+                    binding.detailsPriceValue1.text = first.decimalPartSized()
+                    binding.detailsPriceValue2.text = second.decimalPartSized()
+                }
+            }
         }
 
         viewModel.minmaxLiveData.observe {
-            binding.receivedSoldValue.text = it.first
+            binding.receivedSoldValue.setBalance(
+                AssetBalanceData(
+                    amount = it.first?.first.orEmpty(),
+                    ticker = it.first?.second.orEmpty(),
+                    style = swapDetailsStyle
+                )
+            )
             binding.receivedSoldTitle.text = it.second
         }
         viewModel.minmaxClickLiveData.observe {
@@ -249,23 +276,35 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewModel.liquidityFeeLiveData.observe {
-            binding.liqudityProviderValue.text = it
+            binding.liqudityProviderValue.setBalance(
+                AssetBalanceData(
+                    amount = it?.first.orEmpty(),
+                    ticker = it?.second.orEmpty(),
+                    style = swapDetailsStyle
+                )
+            )
         }
 
         viewModel.networkFeeLiveData.observe {
-            binding.networkFeeValue.text = it
+            binding.networkFeeValue.setBalance(
+                AssetBalanceData(
+                    amount = it?.first.orEmpty(),
+                    ticker = it?.second.orEmpty(),
+                    style = swapDetailsStyle
+                )
+            )
         }
 
         viewModel.fromAmountLiveData.observe {
-            amountFlow = false
+            binding.fromInput.listenerEnabled = false
             binding.fromInput.setValue(it)
-            amountFlow = true
+            binding.fromInput.listenerEnabled = true
         }
 
         viewModel.toAmountLiveData.observe {
-            amountFlow = false
+            binding.toInput.listenerEnabled = false
             binding.toInput.setValue(it)
-            amountFlow = true
+            binding.toInput.listenerEnabled = true
         }
 
         viewModel.swapButtonTitleLiveData.observe {
@@ -297,42 +336,52 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewModel.fromBalanceLiveData.observe {
-            binding.fromBalanceValue.text = it
+            binding.fromBalanceValue.setBalance(
+                AssetBalanceData(
+                    amount = it.first,
+                    ticker = it.second,
+                    style = assetBalanceStyle
+                )
+            )
         }
         viewModel.toBalanceLiveData.observe {
-            binding.toBalanceValue.text = it
+            binding.toBalanceValue.setBalance(
+                AssetBalanceData(
+                    amount = it.first,
+                    ticker = it.second,
+                    style = assetBalanceStyle
+                )
+            )
         }
 
         viewModel.fromAssetLiveData.observe {
-            binding.fromCard.setAsset(it)
+            binding.fromCard.setAsset(it.token)
             binding.fromInput.decimalPartLength = it.token.precision
             binding.fromInput.isEnabled = true
 
-            binding.firstPerSecondTitle.text = "%s %s %s".format(
+            binding.detailPriceTitle1.text = "%s/%s".format(
                 viewModel.fromAssetLiveData.value?.token?.symbol,
-                getString(R.string.common_per),
                 viewModel.toAssetLiveData.value?.token?.symbol
             )
-            binding.secondPerFirstTitle.text = "%s %s %s".format(
+
+            binding.detailPriceTitle2.text = "%s/%s".format(
                 viewModel.toAssetLiveData.value?.token?.symbol,
-                getString(R.string.common_per),
                 viewModel.fromAssetLiveData.value?.token?.symbol
             )
         }
 
         viewModel.toAssetLiveData.observe {
-            binding.toCard.setAsset(it)
+            binding.toCard.setAsset(it.token)
             binding.toInput.decimalPartLength = it.token.precision
             binding.toInput.isEnabled = true
 
-            binding.firstPerSecondTitle.text = "%s %s %s".format(
+            binding.detailPriceTitle1.text = "%s/%s".format(
                 viewModel.fromAssetLiveData.value?.token?.symbol,
-                getString(R.string.common_per),
                 viewModel.toAssetLiveData.value?.token?.symbol
             )
-            binding.secondPerFirstTitle.text = "%s %s %s".format(
+
+            binding.detailPriceTitle2.text = "%s/%s".format(
                 viewModel.toAssetLiveData.value?.token?.symbol,
-                getString(R.string.common_per),
                 viewModel.fromAssetLiveData.value?.token?.symbol
             )
         }
@@ -350,27 +399,16 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewModel.detailsEnabledLiveData.observe {
-            binding.detailsTitle.isEnabled = it
+            binding.detailsIcon.isEnabled = it
         }
 
         viewModel.detailsShowLiveData.observe {
-            binding.firstPerSecondTitle.showOrGone(it)
-            binding.firstPerSecondValue.showOrGone(it)
-            binding.secondPerFirstTitle.showOrGone(it)
-            binding.secondPerFirstValue.showOrGone(it)
-            binding.liqudityProviderWrapper.showOrGone(it)
-            binding.networkFeeWrapper.showOrGone(it)
-            binding.receiveSoldWrapper.showOrGone(it)
-            binding.divider1.showOrGone(it)
-            binding.divider2.showOrGone(it)
-            binding.divider3.showOrGone(it)
-            binding.divider4.showOrGone(it)
-            binding.divider5.showOrGone(it)
+            binding.detailsGroup.showOrGone(it)
 
             if (it) {
-                binding.detailsIcon.setImageResource(R.drawable.ic_chevron_down_circled_32)
+                binding.detailsIcon.setImageResource(R.drawable.ic_neu_chevron_up)
             } else {
-                binding.detailsIcon.setImageResource(R.drawable.ic_chevron_up_circled_32)
+                binding.detailsIcon.setImageResource(R.drawable.ic_neu_chevron_down)
             }
         }
 
@@ -384,6 +422,54 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
                 binding.nextBtn.hideProgress(swapButtonText)
             }
         }
+
+        viewModel.dataInitiatedEvent.observeForever {
+            setInitialDataIfExists()
+        }
+    }
+
+    private fun setInitialDataIfExists() {
+        arguments?.let {
+            val inputToken = requireParcelable<Token>(ARG_INPUT_TOKEN)
+            val outputToken = requireParcelable<Token>(ARG_OUTPUT_TOKEN)
+            val inputAmount = requireArguments().getSerializable(ARG_INPUT_AMOUNT) as BigDecimal
+
+            viewModel.setSwapData(inputToken, outputToken, inputAmount)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        keyboardHelper = KeyboardHelper(
+            requireView(),
+            object : KeyboardHelper.KeyboardListener {
+                override fun onKeyboardShow() {
+                    (activity as BottomBarController).hideBottomBar()
+                    activity?.window?.currentFocus?.let {
+                        if (it.id == R.id.fromInput) {
+                            if (binding.toInput.isEnabled) {
+                                binding.amountPercentage.show()
+                            }
+                        } else {
+                            binding.amountPercentage.gone()
+                        }
+                    }
+                    if (disclaimerVisibility) {
+                        binding.infoButtonWrapper.gone()
+                    }
+                }
+
+                override fun onKeyboardHide() {
+                    runDelayed(100) {
+                        (activity as BottomBarController).showBottomBar()
+                        binding.amountPercentage.gone()
+                        if (disclaimerVisibility) {
+                            binding.infoButtonWrapper.show()
+                        }
+                    }
+                }
+            }
+        )
     }
 
     override fun onPause() {

@@ -3,90 +3,67 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?attr/baseBackground">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
         android:id="@+id/tbInvite"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:textRight=""
-        app:titleText=""
-        tools:layout_height="50dp" />
-
-    <TextView
-        android:id="@+id/title"
-        style="@style/TextAppearance.Soramitsu.Display_1"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:text="@string/invite_fragment_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tbInvite" />
-
-    <TextView
-        android:id="@+id/invite_title"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:text="@string/friends_spread_word"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
+        app:titleText="@string/invite_fragment_title" />
 
     <ImageView
-        android:layout_width="wrap_content"
+        android:id="@+id/ivInvite"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scaleType="centerInside"
-        android:padding="@dimen/x1"
-        android:src="@drawable/ic_sora__vertical_"
-        app:layout_constraintBottom_toTopOf="@+id/view"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/invite_title"
+        android:adjustViewBounds="true"
+        android:src="@drawable/image_friends"
+        app:layout_constraintTop_toBottomOf="@id/tbInvite"
         tools:ignore="ContentDescription" />
 
-    <View
-        android:id="@+id/view"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginBottom="@dimen/x1"
-        android:background="?attr/baseBorderPrimary"
-        app:layout_constraintBottom_toTopOf="@+id/btnInviteShareApp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:background="@color/grey_300" />
-
-    <Button
-        android:id="@+id/btnInviteShareApp"
-        style="@style/Widget.Soramitsu.Button.Primary.48"
-        android:layout_width="match_parent"
-        android:layout_marginStart="@dimen/x1"
-        android:layout_marginEnd="@dimen/x1"
-        android:layout_marginBottom="@dimen/x4"
-        android:text=""
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:background="@color/grey_500" />
-
-    <TextView
-        style="@style/TextAppearance.Soramitsu.Button"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glTransparent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:drawablePadding="@dimen/x2"
-        android:text="@string/invite_link_sharing_title"
-        android:textColor="@color/brand_white"
-        app:drawableStartCompat="@drawable/ic_reload"
-        app:layout_constraintBottom_toBottomOf="@id/btnInviteShareApp"
-        app:layout_constraintEnd_toEndOf="@id/btnInviteShareApp"
-        app:layout_constraintStart_toStartOf="@id/btnInviteShareApp"
-        app:layout_constraintTop_toTopOf="@id/btnInviteShareApp"
-        tools:drawableStart="@drawable/ic_reload" />
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.6" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:src="@drawable/background_transparent_image"
+        android:visibility="@integer/big_image_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/glTransparent"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/inviteTitle"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/x2"
+        android:letterSpacing="-0.02"
+        android:text="@string/friends_spread_word"
+        app:layout_constraintBottom_toTopOf="@id/ibInviteShare"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/ibInviteShare"
+        style="@style/Widget.Soramitsu.ImageButton.56.Secondary"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:layout_marginBottom="@dimen/x4"
+        android:src="@drawable/ic_neu_share"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

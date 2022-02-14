@@ -28,12 +28,13 @@ class AssetsListSwipeController(
     private var currentPosition: Int? = null
     private var currentIcon: Drawable? = null
     private var swipedPartlySent: Boolean = true
+    var isSwipeEnabled: Boolean = true
 
     override fun getMovementFlags(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
-        return makeMovementFlags(0, ItemTouchHelper.START or ItemTouchHelper.END)
+        return if (isSwipeEnabled) makeMovementFlags(0, ItemTouchHelper.START or ItemTouchHelper.END) else 0
     }
 
     override fun convertToAbsoluteDirection(flags: Int, layoutDirection: Int): Int =
@@ -75,13 +76,14 @@ class AssetsListSwipeController(
         drawIcons(c, viewHolder)
         currentPosition = viewHolder.adapterPosition
         if (actionState == ACTION_STATE_SWIPE) {
-            swiping.invoke(true)
+            swiping.invoke(dX != 0.0f)
             setOnItemSwipeListener(recyclerView)
             if (abs(dX) > 0.6 * viewHolder.itemView.width && !swipedPartlySent) {
                 swipedPartlySent = true
                 onSwipedPartly.invoke(viewHolder.adapterPosition)
             }
         }
+
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
 

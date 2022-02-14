@@ -7,7 +7,6 @@ package jp.co.soramitsu.feature_main_api.launcher
 
 import androidx.navigation.NavController
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
-import java.math.BigDecimal
 
 interface MainRouter {
 
@@ -16,6 +15,8 @@ interface MainRouter {
     fun detachNavController(navController: NavController)
 
     fun showPin(action: PinCodeAction)
+
+    fun showFlexibleUpdateScreen()
 
     fun showPersonalDataEdition()
 
@@ -35,11 +36,11 @@ interface MainRouter {
 
     fun showReferenda()
 
-    fun showValTransferAmount(recipientId: String, fullName: String, amount: BigDecimal)
-
     fun showUnsupportedScreen(appUrl: String)
 
     fun showAbout()
+
+    fun showPolkaswapDisclaimerFromSettings()
 
     fun showPrivacy()
 

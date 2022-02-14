@@ -5,14 +5,14 @@
 
 package jp.co.soramitsu.common.data.network.substrate.runtime
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.gson.Gson
 import com.orhanobut.logger.Logger
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.network.substrate.Constants
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.data.network.substrate.Pallete
 import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionsTree
@@ -31,7 +31,8 @@ import jp.co.soramitsu.fearless_utils.wsrpc.mappers.nonNull
 import jp.co.soramitsu.fearless_utils.wsrpc.mappers.pojo
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.chain.RuntimeVersion
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.chain.RuntimeVersionRequest
-import java.io.File
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.math.BigInteger
 
 object RuntimeHolder {
@@ -45,8 +46,7 @@ object RuntimeHolder {
 
     internal fun setRuntime(snapshot: RuntimeSnapshot, fromNet: Boolean) {
         runtimeSnapshot = snapshot
-        FirebaseCrashlytics.getInstance().log("Set Runtime $fromNet")
-        Logger.d("Runtime: set $fromNet")
+        FirebaseWrapper.log("Set Runtime $fromNet")
         val valueConstant =
             getRuntime().metadata.module(Pallete.SYSTEM.palleteName).constants[Constants.SS58Prefix.constantName]
         prefix =
@@ -66,7 +66,7 @@ object RuntimeHolder {
 }
 
 private const val DEFAULT_TYPES_FILE = "default_types.json"
-private const val SORA2_TYPES_FILE = "sora2_types.json"
+private const val SORA2_TYPES_FILE = "types_scalecodec_mobile.json"
 private const val RUNTIME_METADATA_FILE = "sora2_metadata"
 private const val RUNTIME_VERSION_PREF = "last_used_runtime_version"
 private const val SORA_VERSION_LAST_LAUNCH_PREF = "last_launch_version"
@@ -75,27 +75,30 @@ private const val RUNTIME_VERSION_START = 1
 class RuntimeManager(
     private val fileManager: FileManager,
     private val gson: Gson,
-    private val preferences: Preferences,
+    private val soraPreferences: SoraPreferences,
     private val socketService: SocketService,
     private val typesApi: SubstrateTypesApi,
 ) {
 
-    @Synchronized
+    private val mutex = Mutex()
+
     suspend fun start() {
-        Logger.d("Runtime: start")
-        if (!RuntimeHolder.isInitialized()) {
-            initFromCache()
-            Logger.d("Runtime: init from cache")
-            checkRuntimeVersion()
-            Logger.d("Runtime: check runtime version")
+        mutex.withLock {
+            debugLog("start")
+            if (!RuntimeHolder.isInitialized()) {
+                initFromCache()
+                debugLog("init from cache")
+                checkRuntimeVersion()
+                debugLog("check runtime version")
+            }
         }
     }
 
-    private fun initFromCache() {
-        val replaceCache = preferences.getInt(SORA_VERSION_LAST_LAUNCH_PREF, 0).let { version ->
+    private suspend fun initFromCache() {
+        val replaceCache = soraPreferences.getInt(SORA_VERSION_LAST_LAUNCH_PREF, 0).let { version ->
             (OptionsProvider.CURRENT_VERSION_CODE != version).also {
-                Logger.d("Runtime: launch $version $it")
-                if (it) preferences.putInt(
+                debugLog("launch $version $it")
+                if (it) soraPreferences.putInt(
                     SORA_VERSION_LAST_LAUNCH_PREF,
                     OptionsProvider.CURRENT_VERSION_CODE
                 )
@@ -109,18 +112,11 @@ class RuntimeManager(
         )
     }
 
-    private fun getLastRuntimeVersion(): Int =
-        if (preferences.contains(RUNTIME_VERSION_PREF)) {
-            preferences.getInt(RUNTIME_VERSION_PREF, RUNTIME_VERSION_START)
-        } else {
-            preferences.putInt(RUNTIME_VERSION_PREF, RUNTIME_VERSION_START)
-            RUNTIME_VERSION_START
-        }
+    private suspend fun getLastRuntimeVersion(): Int =
+        soraPreferences.getOrPutInt(RUNTIME_VERSION_PREF, RUNTIME_VERSION_START)
 
     private fun getContentFromCache(fileName: String, replaceCache: Boolean = false): String {
-        val cache =
-            File(fileManager.internalCacheDir, fileName).takeIf { it.exists() }?.run { readText() }
-                ?.takeIf { it.isNotEmpty() }
+        val cache = fileManager.readInternalCacheFile(fileName)
         if (cache != null && !replaceCache) return cache
         val asset = fileManager.readAssetFile(fileName)
         saveToCache(fileName, asset)
@@ -130,34 +126,32 @@ class RuntimeManager(
     private fun rawTypesToTree(raw: String) = gson.fromJson(raw, TypeDefinitionsTree::class.java)
 
     private suspend fun checkRuntimeVersion() {
+        debugLog("LOADING")
         val runtimeVersion = socketService.executeAsync(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull()
         )
-        Logger.d("Runtime: spec ${runtimeVersion.specVersion}")
-        if (runtimeVersion.specVersion > preferences.getInt(
+        debugLog("spec ${runtimeVersion.specVersion}")
+        if (runtimeVersion.specVersion > soraPreferences.getInt(
                 RUNTIME_VERSION_PREF,
                 RUNTIME_VERSION_START
             )
         ) {
-            FirebaseCrashlytics.getInstance()
-                .log("New runtime version ${runtimeVersion.specVersion}")
-            Logger.d("Runtime: get metadata")
+            FirebaseWrapper.log("New runtime version ${runtimeVersion.specVersion}")
             try {
                 val metadata = socketService.executeAsync(
                     request = GetMetadataRequest,
                     mapper = pojo<String>().nonNull()
                 )
                 val defaultTypes = typesApi.getDefaultTypes()
-                val sora2Types =
-                    typesApi.getSora2Types(OptionsProvider.typesFilePath)
-                preferences.putInt(RUNTIME_VERSION_PREF, runtimeVersion.specVersion)
+                val sora2Types = typesApi.getSora2Types()
+                soraPreferences.putInt(RUNTIME_VERSION_PREF, runtimeVersion.specVersion)
                 saveToCache(RUNTIME_METADATA_FILE, metadata)
                 saveToCache(DEFAULT_TYPES_FILE, defaultTypes)
                 saveToCache(SORA2_TYPES_FILE, sora2Types)
                 buildRuntimeSnapshot(metadata, defaultTypes, sora2Types, true)
             } catch (t: Throwable) {
-                FirebaseCrashlytics.getInstance().recordException(t)
+                FirebaseWrapper.recordException(t)
             }
         } else {
             RuntimeHolder.setNetRuntimeVersionChecked()
@@ -165,9 +159,9 @@ class RuntimeManager(
     }
 
     private fun saveToCache(file: String, content: String) =
-        File(fileManager.internalCacheDir, file).writeText(content)
+        fileManager.writeInternalCacheFile(file, content)
 
-    private fun buildRuntimeSnapshot(
+    private suspend fun buildRuntimeSnapshot(
         metadata: String,
         defaultTypesRaw: String,
         sora2TypesRaw: String,
@@ -176,24 +170,34 @@ class RuntimeManager(
         val defaultTypes = rawTypesToTree(defaultTypesRaw)
         val sora2Types = rawTypesToTree(sora2TypesRaw)
         val runtimeMetadataSchema = RuntimeMetadataSchema.read(metadata)
+        debugLog("build 1")
+        val def = TypeDefinitionParser.parseBaseDefinitions(
+            defaultTypes,
+            substratePreParsePreset()
+        ).typePreset
+        debugLog("build 2")
         val types = TypeDefinitionParser.parseNetworkVersioning(
             sora2Types,
-            TypeDefinitionParser.parseBaseDefinitions(
-                defaultTypes,
-                substratePreParsePreset()
-            ).typePreset,
+            def,
             getLastRuntimeVersion()
         )
+        debugLog("build 3")
         if (types.unknownTypes.isNotEmpty()) {
-            FirebaseCrashlytics.getInstance()
-                .log("BuildRuntimeSnapshot. ${types.unknownTypes.size} unknown types are found")
+            FirebaseWrapper.log("BuildRuntimeSnapshot. ${types.unknownTypes.size} unknown types are found")
         }
         val typeRegistry = TypeRegistry(
             types = types.typePreset,
             dynamicTypeResolver = DynamicTypeResolver(DynamicTypeResolver.DEFAULT_COMPOUND_EXTENSIONS + GenericsExtension)
         )
+        debugLog("build 4")
         val runtimeMetadata = RuntimeMetadata(typeRegistry, runtimeMetadataSchema)
+        debugLog("build 5")
         val runtimeSnapshot = RuntimeSnapshot(typeRegistry, runtimeMetadata)
+        debugLog("build 6")
         RuntimeHolder.setRuntime(runtimeSnapshot, fromNet)
+    }
+
+    private fun debugLog(s: String) {
+        Logger.d("Runtime: $s")
     }
 }

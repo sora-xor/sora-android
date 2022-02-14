@@ -6,14 +6,13 @@
 package jp.co.soramitsu.feature_wallet_impl.domain
 
 import androidx.paging.PagingData
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
@@ -26,10 +25,11 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
 import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformWhile
@@ -45,12 +45,17 @@ class WalletInteractorImpl(
 ) : WalletInteractor {
 
     override fun observeCurAccountStorage(): Flow<String> {
-        val id = credentialsRepository.getAccountId()
-        return walletRepository.observeStorageAccount(id)
+        return flow {
+            val id = credentialsRepository.getAccountId()
+            emitAll(walletRepository.observeStorageAccount(id))
+        }
     }
 
     override fun getEventsFlow(assetId: String): Flow<PagingData<Transaction>> {
-        return walletRepository.getTransactionsFlow(credentialsRepository.getAddress(), assetId)
+        return flow {
+            val address = credentialsRepository.getAddress()
+            emitAll(walletRepository.getTransactionsFlow(address, assetId))
+        }
     }
 
     override suspend fun getTransaction(txHash: String) = walletRepository.getTransaction(txHash)
@@ -70,7 +75,6 @@ class WalletInteractorImpl(
         return needs
     }
 
-    @ExperimentalCoroutinesApi
     override suspend fun migrate(): Boolean {
         val signature = credentialsRepository.getClaimSignature()
         val irohaAddress = credentialsRepository.getIrohaAddress()
@@ -83,7 +87,7 @@ class WalletInteractorImpl(
             keypair
         )
             .catch {
-                FirebaseCrashlytics.getInstance().recordException(it)
+                FirebaseWrapper.recordException(it)
                 emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
             }
             .map {
@@ -129,7 +133,6 @@ class WalletInteractorImpl(
             }
         }
 
-    @ExperimentalCoroutinesApi
     override suspend fun observeTransfer(
         to: String,
         assetId: String,
@@ -140,7 +143,7 @@ class WalletInteractorImpl(
         val keypair = credentialsRepository.retrieveKeyPair()
         return walletRepository.observeTransfer(keypair, address, to, assetId, amount, fee)
             .catch {
-                FirebaseCrashlytics.getInstance().recordException(it)
+                FirebaseWrapper.recordException(it)
                 emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
             }
             .map {
@@ -150,7 +153,7 @@ class WalletInteractorImpl(
                         assetId,
                         amount,
                         it.second,
-                        it.first.removeHexPrefix(),
+                        it.first,
                         fee,
                         null
                     )
@@ -171,7 +174,7 @@ class WalletInteractorImpl(
                         s.blake2b256String() == txHash
                     }.toLong()
                     val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
-                    walletRepository.updateTransactionSuccess(txHash.removeHexPrefix(), isSuccess)
+                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
                     // walletRepository.unwatch(subscription)
                 }
                 value.second.isNullOrEmpty() && value.first.isNotEmpty()
@@ -183,9 +186,9 @@ class WalletInteractorImpl(
         walletRepository.updateWhitelistBalances(address)
     }
 
-    override suspend fun getWhitelistAssets(updateBalances: Boolean): List<Asset> {
+    override suspend fun getWhitelistAssets(): List<Asset> {
         val address = credentialsRepository.getAddress()
-        return walletRepository.getAssetsWhitelist(address, updateBalances)
+        return walletRepository.getAssetsWhitelist(address)
     }
 
     override suspend fun getVisibleAssets(): List<Asset> {
@@ -194,7 +197,10 @@ class WalletInteractorImpl(
     }
 
     override fun subscribeVisibleAssets(): Flow<List<Asset>> {
-        return walletRepository.subscribeVisibleAssets(credentialsRepository.getAddress())
+        return flow {
+            val address = credentialsRepository.getAddress()
+            emitAll(walletRepository.subscribeVisibleAssets(address))
+        }
     }
 
     override suspend fun updateBalancesVisibleAssets() {
@@ -242,10 +248,12 @@ class WalletInteractorImpl(
                 if (address == myAddress) {
                     throw QrException.sendingToMyselfError()
                 } else {
+                    val tokenId = list[4]
                     val ok = credentialsRepository.isAddressOk(address)
-                    if (!ok) throw QrException.userNotFoundError() else Triple(
+                    val whitelisted = walletRepository.isWhitelistedToken(tokenId)
+                    if (!ok || !whitelisted) throw QrException.userNotFoundError() else Triple(
                         address,
-                        list[4],
+                        tokenId,
                         BigDecimal.ZERO
                     )
                 }
@@ -273,12 +281,16 @@ class WalletInteractorImpl(
     override suspend fun updateAssetPositions(assetPositions: Map<String, Int>) =
         walletRepository.updateAssetPositions(assetPositions)
 
-    override suspend fun getAsset(assetId: String): Asset {
+    override suspend fun getAsset(assetId: String): Asset? {
         val address = credentialsRepository.getAddress()
         return walletRepository.getAsset(assetId, address)
     }
 
+    override suspend fun isWhitelistedToken(tokenId: String): Boolean {
+        return walletRepository.isWhitelistedToken(tokenId)
+    }
+
     override suspend fun getFeeToken(): Token {
-        return walletRepository.getToken(OptionsProvider.feeAssetId)
+        return requireNotNull(walletRepository.getToken(OptionsProvider.feeAssetId))
     }
 }

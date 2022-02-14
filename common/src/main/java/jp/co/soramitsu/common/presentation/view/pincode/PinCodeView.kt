@@ -13,6 +13,7 @@ import android.view.View.OnClickListener
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatButton
 import jp.co.soramitsu.common.databinding.UikitViewPinCodeBinding
+import jp.co.soramitsu.common.util.ext.setShapeTypeTouchListener
 
 class PinCodeView @JvmOverloads constructor(
     context: Context,
@@ -39,17 +40,29 @@ class PinCodeView @JvmOverloads constructor(
     init {
         orientation = VERTICAL
         binding.btn1.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn1.setShapeTypeTouchListener()
         binding.btn2.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn2.setShapeTypeTouchListener()
         binding.btn3.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn3.setShapeTypeTouchListener()
         binding.btn4.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn4.setShapeTypeTouchListener()
         binding.btn5.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn5.setShapeTypeTouchListener()
         binding.btn6.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn6.setShapeTypeTouchListener()
         binding.btn7.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn7.setShapeTypeTouchListener()
         binding.btn8.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn8.setShapeTypeTouchListener()
         binding.btn9.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn9.setShapeTypeTouchListener()
         binding.btn0.setOnClickListener(pinCodeNumberClickListener)
+        binding.btn0.setShapeTypeTouchListener()
         binding.btnDelete.setOnClickListener(pinCodeDeleteClickListener)
+        binding.btnDelete.setShapeTypeTouchListener()
         binding.fingerprintBtn.setOnClickListener(pinCodeFingerprintClickListener)
+        binding.fingerprintBtn.setShapeTypeTouchListener()
     }
 
     fun changeDeleteButtonVisibility(isVisible: Boolean) {

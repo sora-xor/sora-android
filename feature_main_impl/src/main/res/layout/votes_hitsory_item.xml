@@ -15,7 +15,7 @@
 
         <TextView
             android:id="@+id/voteHistoryItemDescriptionTextView"
-            style="@style/DefaultTextStyle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -34,7 +34,7 @@
 
         <TextView
             android:id="@+id/voteHistoryItemAmountTextView"
-            style="@style/DefaultTextStyle"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"

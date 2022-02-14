@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository.datasource
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.gson.reflect.TypeToken
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.InvitedUser
@@ -41,7 +41,7 @@ class PrefsWalletDatasourceTest {
     var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
-    private lateinit var preferences: Preferences
+    private lateinit var soraPreferences: SoraPreferences
 
     @Mock
     private lateinit var serializer: Serializer
@@ -54,40 +54,40 @@ class PrefsWalletDatasourceTest {
 
     @Before
     fun setUp() {
-        prefsWalletDatasource = PrefsWalletDatasource(preferences, encryptedPreferences, serializer)
+        prefsWalletDatasource = PrefsWalletDatasource(soraPreferences, encryptedPreferences, serializer)
     }
 
     @Test
     fun `observe migration`() = runBlockingTest {
         prefsWalletDatasource.saveMigrationStatus(MigrationStatus.SUCCESS)
-        verify(preferences).putString("key_migration_status", MigrationStatus.SUCCESS.toString())
+        verify(soraPreferences).putString("key_migration_status", MigrationStatus.SUCCESS.toString())
         val first = prefsWalletDatasource.observeMigrationStatus().first()
         assertEquals(MigrationStatus.SUCCESS, first)
     }
 
     @Test
-    fun `save tx block`() {
+    fun `save tx block`() = runBlockingTest {
         prefsWalletDatasource.saveClaimBlockAndTxHash("block", "hash")
         verify(encryptedPreferences).putEncryptedString("key_claim_block_hash", "block")
         verify(encryptedPreferences).putEncryptedString("key_claim_tx_hash", "hash")
     }
 
     @Test
-    fun `save contacts called`() {
+    fun `save contacts called`() = runBlockingTest {
         val keyContacts = "key_contacts"
         val accounts = mutableListOf(Account("firstName", "lastName", "accountId"))
         given(serializer.serialize(accounts)).willReturn(emptyJson)
 
         prefsWalletDatasource.saveContacts(accounts)
 
-        verify(preferences).putString(keyContacts, emptyJson)
+        verify(soraPreferences).putString(keyContacts, emptyJson)
     }
 
     @Test
-    fun `retrieve contacts called`() {
+    fun `retrieve contacts called`() = runBlockingTest {
         val keyContacts = "key_contacts"
         val accounts = mutableListOf(Account("firstName", "lastName", "accountId"))
-        given(preferences.getString(keyContacts)).willReturn(emptyJson)
+        given(soraPreferences.getString(keyContacts)).willReturn(emptyJson)
         given(
             serializer.deserialize<List<Account>>(
                 emptyJson,
@@ -99,15 +99,15 @@ class PrefsWalletDatasourceTest {
     }
 
     @Test
-    fun `retrieve contacts called if no cached`() {
+    fun `retrieve contacts called if no cached`() = runBlockingTest {
         val keyContacts = "key_contacts"
-        given(preferences.getString(keyContacts)).willReturn("")
+        given(soraPreferences.getString(keyContacts)).willReturn("")
 
         assertNull(prefsWalletDatasource.retrieveContacts())
     }
 
     @Test
-    fun `save invitation parent called`() {
+    fun `save invitation parent called`() = runBlockingTest {
         val keyParentInvitation = "parent_invitation"
         val invitedUser = InvitedUser("firstName", "lastName", Date(1606898968000))
         given(serializer.serialize(invitedUser)).willReturn(emptyJson)
@@ -118,7 +118,7 @@ class PrefsWalletDatasourceTest {
     }
 
     @Test
-    fun `retrieve invitation parent called if empty`() {
+    fun `retrieve invitation parent called if empty`() = runBlockingTest {
         val keyParentInvitation = "parent_invitation"
         given(encryptedPreferences.getDecryptedString(keyParentInvitation)).willReturn("")
 
@@ -126,7 +126,7 @@ class PrefsWalletDatasourceTest {
     }
 
     @Test
-    fun `retrieve invitation parent called`() {
+    fun `retrieve invitation parent called`() = runBlockingTest {
         val keyParentInvitation = "parent_invitation"
         val invitedUser = InvitedUser("firstName", "lastName", Date(1606898968000))
         given(serializer.deserialize(emptyJson, InvitedUser::class.java)).willReturn(invitedUser)
@@ -136,29 +136,29 @@ class PrefsWalletDatasourceTest {
     }
 
     @Test
-    fun `save invited users called`() {
+    fun `save invited users called`() = runBlockingTest {
         val keyInvitedUsers = "prefs_invited_users"
         val invitedUsers = arrayOf(InvitedUser("firstName", "lastName", Date(1606898968000)))
         given(serializer.serialize(invitedUsers)).willReturn(emptyJson)
 
         prefsWalletDatasource.saveInvitedUsers(invitedUsers)
 
-        verify(preferences).putString(keyInvitedUsers, emptyJson)
+        verify(soraPreferences).putString(keyInvitedUsers, emptyJson)
     }
 
     @Test
-    fun `retrieve invited users called if empty`() {
+    fun `retrieve invited users called if empty`() = runBlockingTest {
         val keyInvitedUsers = "prefs_invited_users"
-        given(preferences.getString(keyInvitedUsers)).willReturn("")
+        given(soraPreferences.getString(keyInvitedUsers)).willReturn("")
 
         assertNull(prefsWalletDatasource.retrieveInvitedUsers())
     }
 
     @Test
-    fun `retrieve invited users called`() {
+    fun `retrieve invited users called`() = runBlockingTest {
         val keyInvitedUsers = "prefs_invited_users"
         val invitedUsers = arrayOf(InvitedUser("firstName", "lastName", Date(1606898968000)))
-        given(preferences.getString(keyInvitedUsers)).willReturn(emptyJson)
+        given(soraPreferences.getString(keyInvitedUsers)).willReturn(emptyJson)
         given(
             serializer.deserialize<Array<InvitedUser>>(
                 emptyJson,

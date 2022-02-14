@@ -31,22 +31,25 @@ class DotsProgressView @JvmOverloads constructor(
     private val completeListener: () -> Unit = {}
 
     init {
-        val itemSize = context.resources.getDimensionPixelSize(R.dimen.uikit_dot_progress_view_dot_size_default)
+        val itemWidth = context.resources.getDimensionPixelSize(R.dimen.uikit_dot_progress_view_dot_width_default)
+        val itemHeight = context.resources.getDimensionPixelSize(R.dimen.uikit_dot_progress_view_dot_height_default)
         val itemMargin = context.resources.getDimensionPixelOffset(R.dimen.uikit_dot_progress_view_dot_margin_default)
 
-        emptyDrawable = ContextCompat.getDrawable(context, R.drawable.uikit_pincode_indicator_empty)!!
-        filledDrawable = ContextCompat.getDrawable(context, R.drawable.uikit_pincode_indicator_filled)!!
+        emptyDrawable = ContextCompat.getDrawable(context, R.drawable.ic_dot_unchecked)!!
+        filledDrawable = ContextCompat.getDrawable(context, R.drawable.ic_dot_checked)!!
 
         circles = arrayOfNulls(MAX_PROGRESS)
 
         for (i in 0 until MAX_PROGRESS) {
             val circle = View(context)
-            val params = LayoutParams(itemSize, itemSize)
-            params.setMargins(itemMargin, 0, itemMargin, 0)
+            val params = LayoutParams(itemWidth, itemHeight)
+            params.setMargins(0, itemMargin, 0, 0)
             circle.layoutParams = params
             addView(circle)
             circles[i] = circle
         }
+
+        circles.reverse()
 
         setProgress(0)
     }

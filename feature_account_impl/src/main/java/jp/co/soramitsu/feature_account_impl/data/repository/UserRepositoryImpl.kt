@@ -23,7 +23,6 @@ class UserRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
     private val appLinksProvider: AppLinksProvider,
     private val deviceParamsProvider: DeviceParamsProvider,
-    private val languagesHolder: LanguagesHolder
 ) : UserRepository {
 
     override suspend fun getAppVersion(): String {
@@ -34,7 +33,7 @@ class UserRepositoryImpl @Inject constructor(
         userDatasource.savePin(pin)
     }
 
-    override fun retrievePin(): String {
+    override suspend fun retrievePin(): String {
         return userDatasource.retrievePin()
     }
 
@@ -46,7 +45,7 @@ class UserRepositoryImpl @Inject constructor(
         userDatasource.saveRegistrationState(onboardingState)
     }
 
-    override fun getRegistrationState(): OnboardingState {
+    override suspend fun getRegistrationState(): OnboardingState {
         return userDatasource.retrieveRegistratrionState()
     }
 
@@ -55,7 +54,7 @@ class UserRepositoryImpl @Inject constructor(
         db.withTransaction { db.clearAllTables() }
     }
 
-    override fun saveParentInviteCode(inviteCode: String) {
+    override suspend fun saveParentInviteCode(inviteCode: String) {
         userDatasource.saveParentInviteCode(inviteCode)
     }
 
@@ -64,7 +63,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAvailableLanguages(): Pair<List<Language>, String> {
-        return languagesHolder.getLanguages() to userDatasource.getCurrentLanguage()
+        return LanguagesHolder.getLanguages() to userDatasource.getCurrentLanguage()
     }
 
     override suspend fun changeLanguage(language: String): String {
@@ -73,7 +72,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSelectedLanguage(): Language {
-        return languagesHolder.getLanguages().first {
+        return LanguagesHolder.getLanguages().first {
             it.iso == userDatasource.getCurrentLanguage()
         }
     }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/background" >
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/flatAboveBackground"/>
+            <corners
+                android:topLeftRadius="@dimen/x3"
+                android:bottomLeftRadius="@dimen/x3"
+                android:bottomRightRadius="@dimen/x3"
+                android:topRightRadius="@dimen/x3" />
+        </shape>
+    </item>
+
+</layer-list>

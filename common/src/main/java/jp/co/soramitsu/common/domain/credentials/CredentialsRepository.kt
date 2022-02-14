@@ -16,7 +16,7 @@ interface CredentialsRepository {
 
     suspend fun restoreUserCredentials(mnemonic: String)
 
-    fun saveMnemonic(mnemonic: String)
+    suspend fun saveMnemonic(mnemonic: String)
 
     suspend fun retrieveMnemonic(): String
 
@@ -28,9 +28,9 @@ interface CredentialsRepository {
 
     suspend fun getClaimSignature(): String
 
-    fun getAddress(): String
+    suspend fun getAddress(): String
 
-    fun getAccountId(): ByteArray
+    suspend fun getAccountId(): ByteArray
 
     suspend fun isAddressOk(address: String): Boolean
 }

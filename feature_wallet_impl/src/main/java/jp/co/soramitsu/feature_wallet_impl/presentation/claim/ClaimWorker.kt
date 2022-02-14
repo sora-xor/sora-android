@@ -18,9 +18,9 @@ import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -74,9 +74,9 @@ class ClaimWorker(private val appContext: Context, workerParams: WorkerParameter
         val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification)
         setForegroundAsync(foregroundInfo)
 
-        FirebaseCrashlytics.getInstance().log("Migration started")
+        FirebaseWrapper.log("Migration started")
         val result = runCatching { walletInteractor.migrate() }.getOrElse {
-            FirebaseCrashlytics.getInstance().recordException(it)
+            FirebaseWrapper.recordException(it)
             false
         }
         walletInteractor.saveMigrationStatus(if (result) MigrationStatus.SUCCESS else MigrationStatus.FAILED)

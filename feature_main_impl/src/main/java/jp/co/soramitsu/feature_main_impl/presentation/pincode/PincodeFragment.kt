@@ -10,21 +10,19 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.jakewharton.processphoenix.ProcessPhoenix
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.ext.hide
+import jp.co.soramitsu.common.util.ext.onBackPressed
+import jp.co.soramitsu.common.util.ext.restartApplication
 import jp.co.soramitsu.common.util.ext.runDelayed
-import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R
@@ -43,6 +41,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
 
     @Inject
     lateinit var fingerprintWrapper: FingerprintWrapper
+
     @Inject
     lateinit var cma: ConnectionManager
 
@@ -63,8 +62,9 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        runDelayed(1) { binding.scrollWrapper.fullScroll(ScrollView.FOCUS_DOWN) }
-        binding.scrollWrapper.setOnTouchListener { _, _ -> true }
+        onBackPressed {
+            viewModel.backPressed()
+        }
 
         progressDialog = SoraProgressDialog(requireContext())
 
@@ -117,7 +117,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         }
         viewModel.resetApplicationEvent.observe {
             runDelayed(DATA_CLEAR_DELAY) {
-                ProcessPhoenix.triggerRebirth(activity)
+                requireContext().restartApplication()
             }
         }
 
@@ -164,17 +164,6 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         viewModel.checkInviteLiveData.observe {
             (activity as? MainActivity)?.checkInviteAction()
         }
-
-        viewModel.logoVisibilityLiveData.observe {
-            if (it)
-                binding.soraLogo.show()
-            else
-                binding.soraLogo.hide()
-        }
-    }
-
-    fun onBackPressed() {
-        viewModel.backPressed()
     }
 
     override fun onPause() {

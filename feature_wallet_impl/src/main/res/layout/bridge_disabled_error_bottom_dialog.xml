@@ -13,7 +13,7 @@
 
     <TextView
         android:id="@+id/titleTv"
-        style="@style/TextAppearance.Soramitsu.Body1"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_by_side"
@@ -47,7 +47,7 @@
 
         <TextView
             android:id="@+id/websiteTv"
-            style="@style/TextAppearance.Soramitsu.Body1"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x2"
@@ -62,13 +62,13 @@
 
         <TextView
             android:id="@+id/websiteSubtitleTv"
-            style="@style/TextAppearance.Soramitsu.Body2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x2"
             android:lineSpacingExtra="5sp"
             android:text="@string/about_website"
-            android:textColor="@color/uikit_lightRed"
+            android:textColor="@color/brand_soramitsu_red"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/wesiteRightIcon"
             app:layout_constraintStart_toEndOf="@id/websiteIcon"

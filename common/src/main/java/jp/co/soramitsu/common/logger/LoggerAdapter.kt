@@ -12,6 +12,6 @@ import jp.co.soramitsu.common.BuildConfig
 class LoggerAdapter(strategy: FormatStrategy) : AndroidLogAdapter(strategy) {
 
     override fun isLoggable(priority: Int, tag: String?): Boolean {
-        return BuildConfig.BUILD_TYPE == "debug"
+        return BuildConfig.DEBUG
     }
 }

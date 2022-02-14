@@ -34,11 +34,11 @@
                 android:id="@+id/assetIconView"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                tools:background="@color/uikit_lightRed">
+                tools:background="@color/brand_soramitsu_red">
 
                 <ImageView
                     android:id="@+id/iconImg"
-                    style="@style/TextAppearance.Soramitsu.Header2"
+                    style="@style/TextAppearance.Soramitsu.Paragraph_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="@dimen/x2"
@@ -65,7 +65,7 @@
 
                     <TextView
                         android:id="@+id/balanceTv"
-                        style="@style/TextAppearance.Soramitsu.Header2"
+                        style="@style/TextAppearance.Soramitsu.Paragraph_2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:includeFontPadding="false"
@@ -83,7 +83,7 @@
 
                         <TextView
                             android:id="@+id/assetFirstNameTv"
-                            style="@style/TextAppearance.Soramitsu.Body1"
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginEnd="@dimen/x1"
@@ -91,7 +91,7 @@
 
                         <TextView
                             android:id="@+id/assetLastNameTv"
-                            style="@style/TextAppearance.Soramitsu.Body1"
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textColor="@color/subtitleGrey"
@@ -107,7 +107,7 @@
                         android:visibility="gone">
 
                         <TextView
-                            style="@style/TextAppearance.Soramitsu.Body1"
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/asset_state_associating"
@@ -123,7 +123,7 @@
                         android:visibility="gone">
 
                         <TextView
-                            style="@style/TextAppearance.Soramitsu.Body1"
+                            style="@style/TextAppearance.Soramitsu.Paragraph_2"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:drawableStart="@drawable/ic_error_red_18"

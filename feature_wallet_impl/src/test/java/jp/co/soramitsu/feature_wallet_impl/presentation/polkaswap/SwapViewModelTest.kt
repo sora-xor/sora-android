@@ -10,6 +10,8 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -17,11 +19,14 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap.SwapViewModel
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runBlockingTest
@@ -40,6 +45,7 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
+@FlowPreview
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class SwapViewModelTest {
@@ -72,7 +78,6 @@ class SwapViewModelTest {
         Asset(
             Token("token_id", "token name", "token symbol", 18, true, 0),
             true,
-            true,
             1,
             AssetBalance(
                 BigDecimal.ONE,
@@ -86,7 +91,6 @@ class SwapViewModelTest {
         ),
         Asset(
             Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
-            true,
             true,
             2,
             AssetBalance(
@@ -106,8 +110,18 @@ class SwapViewModelTest {
     }
 
     private val assetsListItems = listOf(
-        AssetListItemModel(0, "token name", "10.10", "token symbol", 1, "token_id"),
-        AssetListItemModel(0, "token2 name", "10.10", "token2 symbol", 2, "token2_id")
+        AssetListItemModel(0, "token name", AssetBalanceData(
+            amount = "10.10",
+            style = AssetBalanceStyle(
+                R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+                R.style.TextAppearance_Soramitsu_Neu_Bold_11
+            )), "token symbol", 1, "token_id"),
+        AssetListItemModel(0, "token2 name", AssetBalanceData(
+            amount = "10.10",
+            style = AssetBalanceStyle(
+                R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+                R.style.TextAppearance_Soramitsu_Neu_Bold_11
+            )), "token2 symbol", 2, "token2_id")
     )
 
     @Before
@@ -124,6 +138,11 @@ class SwapViewModelTest {
         given(polkaswapInteractor.observeSelectedMarket()).willReturn(
             flow {
                 emit(Market.TBC)
+            }
+        )
+        given(polkaswapInteractor.observePoolReserves()).willReturn(
+            flow {
+                emit("")
             }
         )
 
@@ -181,20 +200,24 @@ class SwapViewModelTest {
 
     @Test
     fun fromAndToAssetsSelected() {
-        val fromAsset = assetsListItems.first()
-        val toAsset = assetsListItems.last()
+        mainCoroutineRule.runBlockingTest {
+            val fromAsset = assetsListItems.first()
+            val toAsset = assetsListItems.last()
 
-        viewModel.fromAssetSelected(fromAsset)
+            viewModel.fromAssetSelected(fromAsset)
+            delay(3000)
 
-        assertEquals(viewModel.fromAssetLiveData.getOrAwaitValue(), assets[0])
-        assertFalse(viewModel.swapButtonEnabledLiveData.getOrAwaitValue())
-        assertFalse(viewModel.detailsEnabledLiveData.getOrAwaitValue())
+            assertEquals(viewModel.fromAssetLiveData.getOrAwaitValue(), assets[0])
+            assertFalse(viewModel.swapButtonEnabledLiveData.getOrAwaitValue())
+            assertFalse(viewModel.detailsEnabledLiveData.getOrAwaitValue())
 
-        viewModel.toAssetSelected(toAsset)
+            viewModel.toAssetSelected(toAsset)
+            delay(3000)
 
-        assertEquals(viewModel.toAssetLiveData.getOrAwaitValue(), assets[1])
-        assertFalse(viewModel.swapButtonEnabledLiveData.getOrAwaitValue())
-        assertTrue(viewModel.detailsEnabledLiveData.getOrAwaitValue())
+            assertEquals(viewModel.toAssetLiveData.getOrAwaitValue(), assets[1])
+            assertFalse(viewModel.swapButtonEnabledLiveData.getOrAwaitValue())
+            assertTrue(viewModel.detailsEnabledLiveData.getOrAwaitValue())
+        }
     }
 
     @Test

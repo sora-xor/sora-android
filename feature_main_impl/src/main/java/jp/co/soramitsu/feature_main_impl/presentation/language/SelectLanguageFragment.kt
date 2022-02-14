@@ -7,6 +7,8 @@ package jp.co.soramitsu.feature_main_impl.presentation.language
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DividerItemDecoration
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
@@ -34,13 +36,24 @@ class SelectLanguageFragment :
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
-        with(binding.toolbar) {
-            setHomeButtonListener { viewModel.onBackPressed() }
-            showHomeButton()
-        }
+        binding.toolbar.setHomeButtonListener { viewModel.onBackPressed() }
 
         binding.languageRecyclerView.adapter =
             SelectLanguageAdapter(debounceClickHandler) { viewModel.languageSelected(it) }
+
+        ContextCompat.getDrawable(
+            binding.languageRecyclerView.context,
+            R.drawable.line_ver_divider
+        )?.let {
+            binding.languageRecyclerView.addItemDecoration(
+                DividerItemDecoration(
+                    binding.languageRecyclerView.context,
+                    DividerItemDecoration.VERTICAL
+                ).apply {
+                    setDrawable(it)
+                }
+            )
+        }
 
         viewModel.languagesLiveData.observe {
             (binding.languageRecyclerView.adapter as SelectLanguageAdapter).submitList(it)

@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_wallet_impl.data.network.substrate
 
 import jp.co.soramitsu.common.data.network.dto.EventRecord
+import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.data.network.dto.XorBalanceDto
@@ -91,4 +92,17 @@ interface SubstrateApi {
         amount: BigInteger,
         limit: BigInteger,
     ): BigInteger
+
+    suspend fun getPoolReserveAccount(runtime: RuntimeSnapshot, tokenId: ByteArray): ByteArray
+
+    suspend fun getUserPoolsData(
+        runtime: RuntimeSnapshot,
+        address: String,
+        tokensId: List<ByteArray>
+    ): List<PoolDataDto>
+
+    suspend fun getUserPoolsTokenIds(
+        runtime: RuntimeSnapshot,
+        address: String
+    ): List<ByteArray>
 }

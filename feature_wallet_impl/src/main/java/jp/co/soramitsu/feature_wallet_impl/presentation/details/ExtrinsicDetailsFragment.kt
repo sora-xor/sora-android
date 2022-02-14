@@ -5,14 +5,18 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
+import android.graphics.drawable.Animatable
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.os.bundleOf
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -90,10 +94,25 @@ class ExtrinsicDetailsFragment :
         viewModel.copyEvent.observe {
             Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
+        viewModel.btnVisibilityLiveData.observe {
+            viewBinding.nextBtn.showOrGone(it)
+        }
+        viewModel.progressVisibilityLiveData.observe {
+            if (it) {
+                viewBinding.ivPendingStatus.isVisible = true
+                viewBinding.ivPendingStatus.drawable.safeCast<Animatable>()?.start()
+            } else {
+                viewBinding.ivPendingStatus.isGone = true
+            }
+        }
+        viewModel.btnEnabledLiveData.observe {
+            viewBinding.nextBtn.isEnabled = it
+        }
         viewModel.btnTitleLiveData.observe {
             viewBinding.nextBtn.text = it
-            viewBinding.nextBtn.showOrGone(it.isNotBlank())
-            viewBinding.bottomButtonDivider.showOrGone(it.isNotBlank())
+        }
+        viewModel.changeTabToSwapEvent.observe {
+            (requireActivity() as BottomBarController).navigateTabToSwap()
         }
     }
 }

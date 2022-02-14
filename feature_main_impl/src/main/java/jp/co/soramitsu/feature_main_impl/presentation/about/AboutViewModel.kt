@@ -47,6 +47,14 @@ class AboutViewModel(
         _showBrowserLiveData.value = BuildConfig.TELEGRAM_LINK
     }
 
+    fun telegramAnnouncementsClicked() {
+        _showBrowserLiveData.value = BuildConfig.TELEGRAM_ANNOUNCEMENTS_LINK
+    }
+
+    fun telegramAskSupportClicked() {
+        _showBrowserLiveData.value = BuildConfig.TELEGRAM_HAPPINESS_LINK
+    }
+
     fun termsClicked() {
         router.showTerms()
     }
@@ -58,11 +66,32 @@ class AboutViewModel(
     fun getAppVersion() {
         viewModelScope.launch {
             val appVersion = interactor.getAppVersion()
-            _sourceTitleLiveData.value = "${resourceManager.getString(R.string.about_source_code)} (v$appVersion)"
+            _sourceTitleLiveData.value =
+                "${resourceManager.getString(R.string.common_app_version)} $appVersion"
         }
     }
 
     fun contactsClicked() {
         openSendEmailEvent.value = BuildConfig.EMAIL
+    }
+
+    fun twitterClicked() {
+        _showBrowserLiveData.value = BuildConfig.TWITTER_LINK
+    }
+
+    fun youtubeClicked() {
+        _showBrowserLiveData.value = BuildConfig.YOUTUBE_LINK
+    }
+
+    fun instagramClicked() {
+        _showBrowserLiveData.value = BuildConfig.INSTAGRAM_LINK
+    }
+
+    fun mediumClicked() {
+        _showBrowserLiveData.value = BuildConfig.MEDIUM_LINK
+    }
+
+    fun wikiClicked() {
+        _showBrowserLiveData.value = BuildConfig.WIKI_LINK
     }
 }

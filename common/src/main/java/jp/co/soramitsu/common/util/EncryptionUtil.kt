@@ -63,7 +63,7 @@ class EncryptionUtil @Inject constructor(
         initKeystore()
     }
 
-    fun getPrerenceAesKey(): Key {
+    private fun getPrerenceAesKey(): Key {
         val secretKey: SecretKey
         val encryptedKey = context.getSharedPreferences(KEY_ALIAS, Context.MODE_PRIVATE).getString(SECRET_KEY, "")
         if (encryptedKey!!.isEmpty()) {

@@ -8,13 +8,14 @@ package jp.co.soramitsu.feature_main_impl.presentation.language
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.language.model.LanguageItem
 
@@ -36,32 +37,25 @@ class LanguageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     private val languageNameTv: TextView = itemView.findViewById(R.id.languageNameTv)
     private val languageNativeNameTv: TextView = itemView.findViewById(R.id.languageNativeNameTv)
+    private val selectedIcon: ImageView = itemView.findViewById(R.id.ivLanguageSelected)
 
     fun bind(language: LanguageItem, debounceClickHandler: DebounceClickHandler, itemClickListener: (LanguageItem) -> Unit) {
         with(itemView) {
             languageNameTv.text = language.displayName
             languageNativeNameTv.text = language.nativeDisplayName
 
-            setOnClickListener(
-                DebounceClickListener(debounceClickHandler) {
-                    itemClickListener(language)
-                }
-            )
-
-            if (language.isSelected) {
-                languageNameTv.setTextColor(ContextCompat.getColor(context, R.color.uikit_lightRed))
-                languageNameTv.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_checkmark, 0)
-            } else {
-                languageNameTv.setTextColor(ContextCompat.getColor(context, R.color.lightBlack))
-                languageNameTv.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+            this.setDebouncedClickListener(debounceClickHandler) {
+                itemClickListener(language)
             }
+
+            selectedIcon.showOrHide(language.isSelected)
         }
     }
 }
 
 object DiffCallback : DiffUtil.ItemCallback<LanguageItem>() {
     override fun areItemsTheSame(oldItem: LanguageItem, newItem: LanguageItem): Boolean {
-        return oldItem == newItem
+        return oldItem.iso == newItem.iso
     }
 
     override fun areContentsTheSame(oldItem: LanguageItem, newItem: LanguageItem): Boolean {

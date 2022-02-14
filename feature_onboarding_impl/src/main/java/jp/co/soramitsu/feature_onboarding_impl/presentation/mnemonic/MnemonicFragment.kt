@@ -9,58 +9,34 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.databinding.FragmentMyMnemonicBinding
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
-import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentMnemonicBinding
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingRouter
-import jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic.adapter.MnemonicListAdapter
 import javax.inject.Inject
+import kotlin.math.ceil
 
-class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_mnemonic) {
-
-    companion object {
-        private const val MNEMONIC_COLUMNS_COUNT = 2
-    }
+class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_my_mnemonic) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var screenshotBlockHelper: ScreenshotBlockHelper
-    private val binding by viewBinding(FragmentMnemonicBinding::bind)
-
-    override fun inject() {
-        FeatureUtils.getFeature<OnboardingFeatureComponent>(
-            requireContext(),
-            OnboardingFeatureApi::class.java
-        )
-            .mnemonicComponentBuilder()
-            .withFragment(this)
-            .withRouter(activity as OnboardingRouter)
-            .build()
-            .inject(this)
-    }
+    private val binding by viewBinding(FragmentMyMnemonicBinding::bind)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.btnNextClicked()
-        }
 
-        binding.ibMnemonicShare.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.shareMnemonicClicked()
-        }
-
-        binding.toolbar.setHomeButtonListener { viewModel.backButtonClick() }
-
+        binding.toolbar.setHomeButtonListener { requireActivity().onBackPressed() }
         binding.toolbar.setRightActionClickListener {
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.common_info)
@@ -69,22 +45,44 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_mnemo
                 .show()
         }
 
-        screenshotBlockHelper = ScreenshotBlockHelper(requireActivity())
-        viewModel.mnemonicLiveData.observe {
-            if (binding.mnemonicRecyclerView.adapter == null) {
-                binding.mnemonicRecyclerView.layoutManager =
-                    GridLayoutManager(requireContext(), MNEMONIC_COLUMNS_COUNT)
-                binding.mnemonicRecyclerView.adapter = MnemonicListAdapter()
-            }
-
-            (binding.mnemonicRecyclerView.adapter as MnemonicListAdapter).submitList(it)
+        binding.ibMnemonicShare.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.onShareClick()
         }
+
+        binding.nextBtn.show()
+
+        binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.btnNextClicked()
+        }
+
+        screenshotBlockHelper = ScreenshotBlockHelper(requireActivity())
+
         viewModel.mnemonicShare.observe { mnemonic ->
             (requireActivity() as? AppCompatActivity)?.let {
                 ShareUtil.openShareDialog(it, getString(R.string.common_share), mnemonic)
             }
         }
+        viewModel.mnemonicWords.observe { words: List<String> ->
+            val rowCount = ceil(words.size.toFloat() / 2.0).toInt()
+            binding.tvPassphraseNumber1.text =
+                List(rowCount) { "${it + 1}" }.joinToString(separator = "\n")
+            binding.tvPassphraseNumber2.text =
+                List(words.size - rowCount) { "${it + rowCount + 1}" }.joinToString(separator = "\n")
+            binding.tvPassphraseWords1.text =
+                List(rowCount) { words[it] }.joinToString(separator = "\n")
+            binding.tvPassphraseWords2.text =
+                List(words.size - rowCount) { words[it + rowCount] }.joinToString(separator = "\n")
+        }
         viewModel.getPassphrase()
+    }
+
+    override fun inject() {
+        FeatureUtils.getFeature<OnboardingFeatureComponent>(requireContext(), OnboardingFeatureApi::class.java)
+            .mnemonicComponentBuilder()
+            .withFragment(this)
+            .withRouter(activity as OnboardingRouter)
+            .build()
+            .inject(this)
     }
 
     override fun onResume() {
@@ -93,7 +91,7 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_mnemo
     }
 
     override fun onPause() {
-        screenshotBlockHelper.enableScreenshoting()
         super.onPause()
+        screenshotBlockHelper.enableScreenshoting()
     }
 }

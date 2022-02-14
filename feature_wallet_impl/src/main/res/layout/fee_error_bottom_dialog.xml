@@ -12,7 +12,7 @@
 
     <TextView
         android:id="@+id/titleTv"
-        style="@style/TextAppearance.Soramitsu.Header3"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_by_side"
@@ -28,7 +28,7 @@
 
     <TextView
         android:id="@+id/subtitleTv"
-        style="@style/TextAppearance.Soramitsu.Header3"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_by_side"
@@ -52,7 +52,7 @@
 
         <TextView
             android:id="@+id/minerFeeTitleTv"
-            style="@style/TextAppearance.Soramitsu.Header3"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -64,12 +64,12 @@
 
         <TextView
             android:id="@+id/minerFeeTv"
-            style="@style/TextAppearance.Soramitsu.Header3"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
             android:fontFamily="@font/sora_semibold"
-            android:textColor="@color/uikit_lightRed"
+            android:textColor="@color/brand_soramitsu_red"
             android:textSize="15sp"
             tools:text="300 VAL" />
     </LinearLayout>
@@ -92,7 +92,7 @@
 
         <TextView
             android:id="@+id/ethereumBalanceTitleTv"
-            style="@style/TextAppearance.Soramitsu.Header3"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -106,7 +106,7 @@
 
         <TextView
             android:id="@+id/ethereumBalanceTv"
-            style="@style/TextAppearance.Soramitsu.Header3"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0"
@@ -119,12 +119,12 @@
 
     <Button
         android:id="@+id/goToEthereumBtn"
-        style="@style/Widget.Soramitsu.Button.OutlinedButton"
+        style="@style/Widget.Soramitsu.Button.Primary.40"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_content_by_side"
         android:layout_marginEnd="@dimen/margin_padding_content_by_side"
         android:text="@string/common_ok"
         android:textSize="14sp"
-        app:strokeColor="@color/uikit_lightRed" />
+        app:strokeColor="@color/brand_soramitsu_red" />
 </LinearLayout>

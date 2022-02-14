@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+  <string name="about_announcements">دریافت اطلاعیه‌ها</string>
+  <string name="about_ask_support">درخواست پشتیبانی</string>
+  <string name="about_contact_us">ایمیل تماس</string>
+  <string name="about_instagram">در اینستاگرام لایک کنید</string>
+  <string name="about_medium">در Medium بخوانید</string>
+  <string name="about_privacy">سیاست حفظ حریم خصوصی</string>
+  <string name="about_source_code">کد منبع Github</string>
+  <string name="about_telegram">به تلگرام بپیوندید</string>
+  <string name="about_title">درباره</string>
+  <string name="about_twitter">در توییتر فالو کنید</string>
+  <string name="about_website">وب سایت رسمی</string>
+  <string name="about_wiki">در ویکی بیاموزید</string>
+  <string name="about_youtube">در یوتیوب مشترک شوید</string>
+  <string name="account_confirmation_title">تایید کلمات</string>
+  <string name="account_confirmation_title_v2">تایید رمز عبور</string>
+  <string name="activity_project">پروژه</string>
+  <string name="address_not_found">آدرس پیدا نشد، مطمئن شوید که آدرس متعلق به شبکه متناسب است.</string>
+  <string name="address_not_found_1">دریافت کننده پیدا نشد</string>
+  <string name="amount_default_fee">کارمزد معامله</string>
+  <string name="amount_error_no_funds">متأسفیم ، بودجه کافی برای انتقال مبلغ مشخص شده ندارید.</string>
+  <string name="amount_title">مقدار</string>
+  <string name="ask_biometry_message">آیا می‌خواهید از بیومتری برای احراز هویت استفاده کنید؟</string>
+  <string name="asset_add">اضافه کردن حساب</string>
+  <string name="asset_details_title">جزئیات دارایی‌ها</string>
+  <string name="asset_not_found">دارایی پیدا نشد</string>
+  <string name="asset_settings_title">حساب ها</string>
+  <string name="asset_state_associating">مرتبط...</string>
+  <string name="asset_state_error">خطا</string>
+  <string name="asset_val_fullname">ارز تایید کنندگان SORA (VAL)</string>
+  <string name="asset_val_name">ارز تایید کنندگان Sora</string>
+  <string name="biometric_dialog_title">تایید</string>
+  <string name="block_id">بلاک هش</string>
+  <string name="choose_token">توکن را انتخاب کنید</string>
+  <string name="choose_tokens">توکن‌ها را انتخاب کنید</string>
+  <string name="claim_contact">اگر شما هر گونه سوال و یا مشکلی دارید،می‌توانید %% با ما تماس بگیرید.%%</string>
+  <string name="claim_contact_1">اگر شما هر گونه سوال و یا مشکلی دارید می توانید</string>
+  <string name="claim_contact_2">تماس با ما</string>
+  <string name="claim_contact_us">درصورت وجود هر گونه سوال و یا مشکلی، می‌توانید %% با ما تماس بگیرید.%%</string>
+  <string name="claim_error_title">انتقال ناموفق بود</string>
+  <string name="claim_error_title_v1">انتقال دارایی‌ها ناموفق بود. لطفاً بعداً دوباره امتحان کنید.</string>
+  <string name="claim_notification_text">انتقال در حال انجام ...</string>
+  <string name="claim_skip">بی خیال شو</string>
+  <string name="claim_subtitle">برای انتقال وجوه شما از SORA به رضایت شما نیاز داریم تا بتوانید از آنها استفاده کنید. SORA اکنون در شبکه Substrate کار میکند. لطفا انتقال را تأیید کنید.</string>
+  <string name="claim_subtitle_confirmed">ممنون بابت تایید!</string>
+  <string name="claim_subtitle_confirmed_2">انتقال دارایی‌ها در حال انجام است.\nلطفاً منتظر بمانید.</string>
+  <string name="claim_subtitle_v1">برای انتقال دارایی های شما از SORA v1 به رضایت شما نیاز داریم. این کار به شما این امکان را می دهد که از دارایی های خود در Substrate-based SORA v2 استفاده کنید. \n\nدارایی های روی شبکه Ethereum تحت تأثیر قرار نمی گیرند ، همچنان با وارد کردن عبارات رمز والت خود به هر کیف پول سازگار دیگری، می توانید به آنها دسترسی داشته باشید.</string>
+  <string name="claim_subtitle_v2">برای انتقال دارایی‌های شما از SORA v1 به SORA v2 به رضایت شما نیاز داریم.\n\nشبکه SORA v2 در Substrate ساخته شده است، که ذاتا با اکوسیستم‌های Polkadot و Kusama انطباق پذیر است. \n\nدارایی‌های روی شبکه Ethereum تحت تأثیر قرار نمی‌گیرند، همچنان با وارد کردن عبارات رمز والت خود به هر کیف پول سازگار دیگری، می‌توانید به آنها دسترسی داشته باشید.</string>
+  <string name="claim_welcome_sora2">به SORA v2 خوش آمدید</string>
+  <string name="claim_welcome_sora2_v1"> به \n %% SORA v2 %% خوش آمدید</string>
+  <string name="coming_soon">به زودی   </string>
+  <string name="common_account">حساب</string>
+  <string name="common_add">اضافه کردن</string>
+  <string name="common_advanced_settings">تنظیمات پیشرفته</string>
+  <string name="common_and">و</string>
+  <string name="common_app_version">نسخه App</string>
+  <string name="common_apply">اعمال</string>
+  <string name="common_arab">عرب</string>
+  <string name="common_asset">دارایی</string>
+  <string name="common_balance">موجودی</string>
+  <string name="common_bashkir">باشکر</string>
+  <string name="common_camera">دوربین</string>
+  <string name="common_cancel">لغو</string>
+  <string name="common_chinese">چینی</string>
+  <string name="common_chinesetaiwan">چینی (تایوان)</string>
+  <string name="common_choose_asset">دارایی را انتخاب کنید</string>
+  <string name="common_confirm">تایید</string>
+  <string name="common_connected">متصل</string>
+  <string name="common_connecting">برقراری ارتباط...</string>
+  <string name="common_copied">کپی شد</string>
+  <string name="common_copy">کپی</string>
+  <string name="common_copy_address">کپی کردن آدرس</string>
+  <string name="common_croatian">کرواتی</string>
+  <string name="common_description">شرح</string>
+  <string name="common_done">انجام شد</string>
+  <string name="common_donotallow">اجازه نده</string>
+  <string name="common_english">انگلیسی</string>
+  <string name="common_enter_amount">مقدار را وارد کنید</string>
+  <string name="common_error_ambiguous_result">نتیجه نامفهوم</string>
+  <string name="common_error_fee_rate_not_available">لطفاً ، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_gas_limit_low">حد گاز باید حداقل ٪s باشد</string>
+  <string name="common_error_general_message">ما سخت در تلاش هستیم تا مشکل را برطرف کنیم. لطفا بعدا دوباره امتحان کنید.</string>
+  <string name="common_error_general_title">خطا</string>
+  <string name="common_error_internal_error_title">خطای داخلی</string>
+  <string name="common_error_invalid_parameters">پارامترها نامعتبر است</string>
+  <string name="common_error_invalid_parameters_body">لطفاً، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_invalid_query_format">درخواست معتبر نمیباشد. لطفاً بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_invitation_accepting_window_closed">بازه پذیرش دعوت بسته است</string>
+  <string name="common_error_invitation_already_accepted">شما قبلاً کد دعوت دیگری را اعمال کرده اید</string>
+  <string name="common_error_invitation_code_not_found">کد دعوتنامه نامعتبر است</string>
+  <string name="common_error_inviter_registered_after_invitee">کد دعوت ارائه شده قابل استفاده نیست زیرا این کد از کاربری است که بعد از شما ثبت نام کرده است</string>
+  <string name="common_error_mnemonic_is_not_valid">لطفاً مطمئن شوید که عبارت عبور شما شامل 12 یا 15 کلمه است و همه آنها صحیح هستند.</string>
+  <string name="common_error_mnemonic_length_error">عبارت عبور باید شامل 15 حرف باشد</string>
+  <string name="common_error_network">لطفاً، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_not_enough_invitations">با عرض پوزش ، اما شما باید حداقل 1 امتیاز برای رای دادن داشته باشید</string>
+  <string name="common_error_not_found_title">منبع در دسترس نیست</string>
+  <string name="common_error_phone_already_exists">دعوت نامه های موجود را نمی توان تعیین کرد. لطفاً بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_phone_already_registered">شماره تلفن قبلاً هنگام ثبت نام شما یا کاربر دیگر استفاده شده است</string>
+  <string name="common_error_pincode_check_error">کد وارد شده اشتباه است</string>
+  <string name="common_error_price_is_to_low">قیمت خیلی پایین است</string>
+  <string name="common_error_project_not_found">متأسفانه پروژه یافت نشد.</string>
+  <string name="common_error_retry">لطفا دوباره تلاش کنید</string>
+  <string name="common_error_search_string_error">اندازه جستجو باید بین 3 تا 64 کارکتر باشد</string>
+  <string name="common_error_self_invitation">شما قبلاً کد دعوت دیگری را اعمال کرده اید</string>
+  <string name="common_error_unauthorized_body">لطفاً، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_unauthorized_title">تایید ناموفق بود</string>
+  <string name="common_error_user_not_found">عبارت عبور شما غلط است. لطفا دوباره امتحان کنید.</string>
+  <string name="common_error_user_values_not_found">ادامه کار امکان‌پذیر نیست زیرا داده‌های مقادیر کاربر یافت نشد</string>
+  <string name="common_error_votes_invalid_format">متأسفیم ، اما برخی از پارامترهای پروژه به درستی پیکربندی نشده اند. لطفاً پروژه دیگری را امتحان کنید.</string>
+  <string name="common_error_votes_not_enough">با عرض پوزش، شما امتیاز کافی برای رای دادن داشته ندارید.</string>
+  <string name="common_error_voting_is_not_allowed">متأسفیم ، اما پروژه یافت نشد</string>
+  <string name="common_error_wrong_user_status">ادامه عملیات ممکن نیست زیرا وضعیت کاربر نامعتبر است</string>
+  <string name="common_estonian">استونیایی</string>
+  <string name="common_failed">ناموفق</string>
+  <string name="common_filipino">فیلیپینی</string>
+  <string name="common_finnish">فنلاندی</string>
+  <string name="common_for">برای</string>
+  <string name="common_french">فرانسوی</string>
+  <string name="common_from">از</string>
+  <string name="common_gallery">گالری</string>
+  <string name="common_german">آلمانی</string>
+  <string name="common_hide">پنهان شدن</string>
+  <plurals name="common_hour">
+    <item quantity="one">saat</item>
+    <item quantity="other">saatha</item>
+  </plurals>
+  <string name="common_indonesian">اندونزیایی</string>
+  <string name="common_info">اطلاعات</string>
+  <string name="common_italian">ایتالیایی</string>
+  <string name="common_japanese">ژاپنی</string>
+  <string name="common_khmer">خمر</string>
+  <string name="common_korean">کره ای</string>
+  <string name="common_learn_more">بیشتر بدانید</string>
+  <string name="common_malay">مالاییایی</string>
+  <string name="common_manage">مدیریت کنید</string>
+  <string name="common_min">دقیقه</string>
+  <string name="common_network_unavailable">اتصال شبکه در دسترس نیست</string>
+  <string name="common_next">بعدی</string>
+  <string name="common_norwegian">نروژی</string>
+  <string name="common_notsent">ارسال نشده</string>
+  <string name="common_ok">باشه</string>
+  <string name="common_open_explorer">مشاهده در Blockchain Explorer</string>
+  <string name="common_options_title">یک گزینه را انتخاب کنید</string>
+  <string name="common_passphrase_body">هنگام ایجاد یک حساب کاربری جدید در SORA،  یک عبارت عبور 12 کلمه ای دریافت می‌کنید. اگر از قبل یک عبارت عبور 15 کلمه ای SORA دارید، می‌توانید حساب خود را با آن وارد کنید - اینها نیز سازگار هستند و به کار خود ادامه می‌دهند.</string>
+  <string name="common_passphrase_header">عبارت عبور\n یک نوع رمز عبور است</string>
+  <string name="common_passphrase_save_mnemonic_title">رمز عبور را ذخیره یا ارسال کنید</string>
+  <string name="common_passphrase_save_or_send">ذخیره یا ارسال کنید</string>
+  <string name="common_passphrase_title">رمز عبور</string>
+  <string name="common_passphrase_your_passphrase">رمز عبور شما</string>
+  <string name="common_per">در</string>
+  <string name="common_personal_info_account_name_invalid">نام حساب باید حداکثر 32 بایت باشد</string>
+  <string name="common_personal_info_first_name_hint">نام کوچک</string>
+  <string name="common_personal_info_first_name_hyphen_error">نام کوچک نمی‌تواند با خط تیره شروع شود یا به پایان برسد یا دارای دو خط باشد</string>
+  <string name="common_personal_info_first_name_is_empty">نام کوچک خالی است</string>
+  <string name="common_personal_info_last_name_hint">نام خانوادگی</string>
+  <string name="common_personal_info_last_name_hyphen_error">نام خانوادگی نمی‌تواند با خط تیره شروع شود یا به پایان برسد یا دارای دو خط باشد</string>
+  <string name="common_personal_info_last_name_is_empty">نام خانوادگی خالی است</string>
+  <string name="common_personal_info_title">اطلاعات شخصی</string>
+  <string name="common_please_wait">لطفا صبر کنید</string>
+  <string name="common_receive">دريافت كردن</string>
+  <string name="common_received">دریافت شده</string>
+  <string name="common_recipient">گیرنده</string>
+  <string name="common_retry">دوباره امتحان کنید</string>
+  <string name="common_russian">روسی</string>
+  <string name="common_save">ذخیره</string>
+  <string name="common_scan">اسکن</string>
+  <string name="common_search">جستجو</string>
+  <string name="common_sec">ثانیه</string>
+  <string name="common_select_asset">یک دارایی انتخاب کنید</string>
+  <string name="common_select_email_app_title">گیرنده را انتخاب کنید</string>
+  <string name="common_send">ارسال</string>
+  <string name="common_sender">فرستنده</string>
+  <string name="common_sent">ارسال شد</string>
+  <string name="common_settings">تنظیمات</string>
+  <string name="common_share">اشتراک گذاری</string>
+  <string name="common_show">نمایش بده</string>
+  <string name="common_skip">بی خیال</string>
+  <string name="common_sms_code_expired">دعوت نامه های موجود را نمی توان تعیین کرد. لطفاً بعداً دوباره امتحان کنید.</string>
+  <string name="common_sms_code_not_correct">کد دعوتنامه نامعتبر است</string>
+  <string name="common_spanish">اسپانیایی</string>
+  <string name="common_spanish_colombia">اسپانیایی (کلمبیا)</string>
+  <string name="common_swedish">سوئدی</string>
+  <string name="common_terms_title">شرایط و ضوابط</string>
+  <string name="common_thai">تایلندی</string>
+  <string name="common_to">به</string>
+  <string name="common_to_estimated">به (برآوردی)</string>
+  <string name="common_today">امروز</string>
+  <string name="common_try_another">دیگری را امتحان کنید</string>
+  <string name="common_turkish">ترکی</string>
+  <string name="common_ukrainian">اوکراینی</string>
+  <string name="common_unsupported_version_body">برنامه Sora به روز شده است\n موجود در فروشگاه App. آن شامل\n بهبودها و رفع اشکالات.</string>
+  <string name="common_unsupported_version_open_google_play">Google Play را باز کنید</string>
+  <string name="common_unsupported_version_title">برنامه Sora را به روز کنید</string>
+  <string name="common_update"> به روز رسانی</string>
+  <string name="common_vote">رای</string>
+  <string name="common_yesterday">دیروز</string>
+  <string name="contacts_empty_state_title">مهم ترین مخاطبین در اینجا ظاهر خواهند شد</string>
+  <string name="contacts_scan">اسکن</string>
+  <string name="contacts_search_empty_state_title">هیچ نتیجه ای برای جستجو یافت نشد</string>
+  <string name="contacts_search_hint_v1">به آدرس Ethereum</string>
+  <string name="contacts_search_results">نتایج جستجو</string>
+  <string name="contacts_title">مخاطبین</string>
+  <string name="copy_eth_title">تخصیص رمز SORA NET (VAL) را مشاهده کنید</string>
+  <string name="copy_val_title">تخصیص رمز SORA NET (VAL) را مشاهده کنید</string>
+  <string name="countries_country_not_found">هیچ کشوری با درخواست شما مطابقت ندارد</string>
+  <string name="countries_title">کشورت را انتخاب کن</string>
+  <string name="create_account_title">ایجاد حساب کاربری</string>
+  <string name="details_frozen">قفل شده</string>
+  <string name="details_frozen_total">قفل شده (مجموع)</string>
+  <string name="details_total">موجودی کل</string>
+  <string name="details_transferable">قابل انتقال</string>
+  <string name="empty_recent_recipients">اخیراً گیرنده ای وجود نداشته است\nآدرس‌های گیرندگان در اینجا نشان داده می‌شوند.</string>
+  <string name="empty_recent_recipients_2">دریافت کنندگان اینجا نشان داده خواهند شد</string>
+  <string name="error_ethereum_account_subtitle">برای انجام این عملیات برای انجام معامله به یک حساب مرتبط Ethereum با مقداری بودجه روی آن برای هزینه Miner نیاز دارید.</string>
+  <string name="error_ethereum_account_title">ارتباط حساب اتریوم برقرار نیست</string>
+  <string name="error_miner_fee_subtitle">برای ادامه این عملیات باید حساب اتریوم خود را شارژ کنید.</string>
+  <string name="error_miner_fee_title">موجودی کافی برای هزینه تراکنش نیست</string>
+  <string name="error_transaction_fee_title">بودجه کافی برای هزینه تراکنش وجود ندارد</string>
+  <string name="ethereum_config_unavailable">گره اتریوم در دسترس نیست</string>
+  <string name="faq_title">سوالات متداول</string>
+  <string name="friends_spread_word">SORA را با دوستان خود به اشتراک بگذارید.</string>
+  <string name="from_account">از حساب</string>
+  <string name="history_receive">دریافت</string>
+  <string name="history_send">ارسال</string>
+  <string name="history_swap">تبدیل</string>
+  <string name="history_title">تاریخچه</string>
+  <string name="invite_accepted_empty_state_title">هنوز هیچ دعوت نامه ای پذیرفته نشده است</string>
+  <string name="invite_accepted_invitations_title">دعوتنامه‌های پذیرفته شده</string>
+  <string name="invite_accepted_someone">شخصی دعوت را پذیرفت</string>
+  <string name="invite_code">کد دعوت</string>
+  <string name="invite_code_applied_body">کد با موفقیت اعمال شد</string>
+  <string name="invite_code_applied_title">تبریک!</string>
+  <string name="invite_code_apply">اعمال کد دعوت</string>
+  <string name="invite_code_left_hours">ح</string>
+  <string name="invite_code_left_minutes">م</string>
+  <string name="invite_code_left_seconds">س</string>
+  <string name="invite_code_sharing_title">کد دعوت خود را به اشتراک بگذارید</string>
+  <string name="invite_empty_friends_description">وضعیت دعوتهای شما\n در اینجا نمایش داده می‌شود</string>
+  <string name="invite_enter_confirmation_body_mask">کد دعوتنامه نامعتبر است</string>
+  <string name="invite_enter_dialog_title_hint">8 کارکتر عددی/الفبایی</string>
+  <string name="invite_enter_error_already_applied">شما قبلاً کد دعوت دیگری را اعمال کرده اید</string>
+  <string name="invite_enter_error_time_is_up">کد دعوتنامه نامعتبر است</string>
+  <string name="invite_enter_invitation_code">کد دعوت را وارد کنید</string>
+  <string name="invite_fragment_title">دوستان</string>
+  <string name="invite_link_format">با استفاده از لینک زیر به سورا بپیوندید:\n %s</string>
+  <string name="invite_link_sharing_title">اشتراک گذاری برنامه</string>
+  <string name="invite_referral_reward">پاداش زیرمجموعه</string>
+  <string name="invite_rewards">پاداش‌ها</string>
+  <string name="invite_title_v1">از دوستان خود دعوت کنید تا در آینده جوایز بیشتری دریافت کنند. توزیع جوایز از زمان راه اندازی هر ویژگی شروع می شود.</string>
+  <string name="invoice_scan_error_match">نمیتوانید برای خودتان بفرستید</string>
+  <string name="invoice_scan_error_no_info">کد QR قابل رمزگشایی نیست</string>
+  <string name="invoice_scan_error_user_not_found">کاربری با QR پیدا نمی شود</string>
+  <string name="language_title">زبان را انتخاب کنید</string>
+  <string name="logout_dialog_body">این عملکرد منجر به حذف حساب از این دستگاه می‌شود. قبل از ادامه مطمئن شوید که از کلمات بازیابی والت خود پشتیبان تهیه کرده اید.</string>
+  <string name="mnemonic_alert_text">کلمات عبور برای بازیابی دسترسی به حساب استفاده می شوند. حتما آنها را بنویسید، در صورت از دست دادن این کلمات هیچ کس و هیچوقت نمیتواند اکانت شما را بازیابی کند.</string>
+  <string name="mnemonic_confirm_text">با انتخاب کلمات در ترتیب صحیح تأیید انجام خواهد شد.</string>
+  <string name="mnemonic_confirm_text_v2"> با انتخاب ترتیب صحیح کلمات، عبارت عبور را تأیید کنید</string>
+  <string name="mnemonic_invalid">کلمات عبور والت نامعتبر است ، لطفاً یکبار دیگر ترتیب و درستی کلمات را بررسی کنید.</string>
+  <string name="mnemonic_invalid_title">کلمات عبور والت نامعتبر است</string>
+  <string name="mnemonic_text">پیشنهاد می‌شود که برای تهیه پشتیبان از روش غیر دیجیتالی مانند نوشتن روی کاغذ و نگهداری آن در یک جای امن استفاده کنید.</string>
+  <string name="mnemonic_title">پشتیبان گیری از عبارات عبور</string>
+  <string name="parliament_coming_soon">حاکمیتی برای شبکه SORA</string>
+  <string name="personal_details_info">نام این حساب و نحوه نمایش آن در آدرس شما. با هویت روی زنجیره ، می توان آن را در دسترس دیگران قرار داد.</string>
+  <string name="personal_info_inv_code_hint">کد دعوت (اختیاری)</string>
+  <string name="personal_info_invitation_description">👋 لینک دعوت دارید؟ فقط ضربه بزنید تا کد اعمال شود، یا کد را به صورت دستی وارد کنید.</string>
+  <string name="personal_info_invitation_is_invalid">کد دعوت نامعتبر است</string>
+  <string name="personal_info_username">نام حساب (اختیاری)</string>
+  <string name="personal_info_username_v1">نام اکانت</string>
+  <string name="phone_number_mobile">به آدرس Ethereum</string>
+  <string name="phone_number_sms_code_will_be_sent">برو به حساب Ethereum</string>
+  <string name="phone_number_title">ثبت نام</string>
+  <string name="phone_verification_too_frequent_message">لطفاً ، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
+  <string name="pincode_change_success">پین کد با موفقیت تغییر شد</string>
+  <string name="pincode_change_success_v1">پین کد تغییر کرد</string>
+  <string name="pincode_confirm_new_pin_code">پین کد جدید را تایید کنید</string>
+  <string name="pincode_confirm_your_pin_code">پین را تایید کنید</string>
+  <string name="pincode_enter_current_pin_code">پین کد فعلی را وارد کنید</string>
+  <string name="pincode_enter_new_pin_code">پین کد جدید را وارد کنید</string>
+  <string name="pincode_enter_pin_code">پین کد را وارد کنید</string>
+  <string name="pincode_fingerprint_error">شما تایید نشدید. انگشت دیگری را امتحان کنید.</string>
+  <string name="pincode_repeat_error">خطای در تکرار پین کد</string>
+  <string name="pincode_set_your_pin_code">پین را وارد کنید</string>
+  <string name="pincode_touch_fingerprint_scanner">اسکنر اثر انگشت را لمس کنید</string>
+  <string name="pincode_updated">کد با موفقیت به روز رسانی شد</string>
+  <string name="polkaswap_button_swap_again">دوباره مبادله کنید</string>
+  <string name="polkaswap_coming_soon">DEX برای آینده قابل همکاری Polkaswap یک پروتکل غیر حمایتی ، AMM-DEX برای مبادله رمزهای مبتنی بر شبکه Polkadot ، Parachains و بلاک چین های متصل از طریق Bridge است. پروتکل Polkaswap به طور موثر واسطه های قابل اعتماد را از بین می برد و فرصت تجارت سریعتر را فراهم می کند.</string>
+  <string name="polkaswap_confirm_swap">مبادله را تایید کنید</string>
+  <string name="polkaswap_details">جزئیات</string>
+  <string name="polkaswap_error_noswap">بدون مبادله</string>
+  <string name="polkaswap_info_faq">سوالات متداول Polkaswap</string>
+  <string name="polkaswap_info_text_1">Polkaswap توسط جامعه SORA نگهداری می‌شود. لطفاً قبل از استفاده از قابلیت Polkaswap ،%% سوالات متداول Polkaswap %% و دیگر نوشته ها ، که شامل توضیحات مفصلی در مورد نحوه عملکرد Polkaswap ، و همچنین یادداشت و شرایط خدمات Polkaswap و سیاست حفظ حریم خصوصی است را مرور کنید. این اسناد برای تجربه ایمن و مثبت کاربر بسیار مهم است. با استفاده از Polkaswap ، تایید می کنید که این اسناد را خوانده و درک کرده اید. \n</string>
+  <string name="polkaswap_info_text_2">شما همچنین به موارد زیر اذعان می‌کنید:</string>
+  <string name="polkaswap_info_text_3">Polkaswap توسط جامعه SORA نگهداری می‌شود. لطفاً قبل از استفاده از قابلیت Polkaswap ،%% س FAالات متداول Polkaswap %% و مستندات ، که شامل توضیحات مفصلی در مورد نحوه عملکرد Polkaswap ، و همچنین یادداشت و شرایط خدمات Polkaswap و سیاست حفظ حریم خصوصی است را مرور کنید. این اسناد برای تجربه ایمن و مثبت کاربر بسیار مهم است. با استفاده از Polkaswap ، تصدیق می کنید که این اسناد را خوانده و درک کرده اید. \n\n شما همچنین موارد زیر را تأیید می کنید: \n\n 1) تنها مسئولیت شما برای رعایت کلیه قوانینی که ممکن است در مورد استفاده خاص شما از Polkaswap در حوزه قضایی شما اعمال شود ؛\n 2) درک می کنید که نسخه فعلی Polkaswap یک نسخه آلفا است: به طور کامل آزمایش نشده است و برخی عملکردها ممکن است مطابق طراحی انجام نشوند.\n 3) درک و پذیرش داوطلبانه شما از خطرات ناشی از استفاده از Polkaswap ، از جمله ، اما نه محدود به ، خطر از دست دادن توکن ها. یکبار دیگر ، لطفاً بدون مطالعه سوالات متداول ، یادداشت Polkaswap و شرایط خدمات و سیاست حفظ حریم خصوصی ادامه ندهید!</string>
+  <string name="polkaswap_info_text_4">Polkaswap توسط جامعه SORA نگهداری می‌شود. لطفاً قبل از استفاده از قابلیت Polkaswap،%% س FAالات متداول Polkaswap %% و مستندات، که شامل توضیحات مفصلی در مورد نحوه عملکرد Polkaswap، و همچنین یادداشت و شرایط خدمات Polkaswap و سیاست حفظ حریم خصوصی است را مرور کنید. این اسناد برای تجربه ایمن و مثبت کاربر بسیار مهم است.  با استفاده از Polkaswap، تصدیق می‌کنید که این اسناد را خوانده و درک کرده اید. \n\n شما همچنین موارد زیر را تأیید می‌کنید: \n\n 1) تنها مسئولیت شما برای رعایت کلیه قوانینی که ممکن است در مورد استفاده خاص شما از Polkaswap در حوزه قضایی شما اعمال شود ؛\n 2) درک می‌کنید که نسخه فعلی Polkaswap یک نسخه آلفا است: به طور کامل آزمایش نشده است و برخی عملکردها ممکن است مطابق طراحی انجام نشوند.\n 3) درک و پذیرش داوطلبانه شما از خطرات ناشی از استفاده از Polkaswap، از جمله، اما نه محدود به، خطر از دست دادن توکن‌ها. یکبار دیگر، لطفاً بدون مطالعه سوالات متداول ، یادداشت Polkaswap و شرایط خدمات و سیاست حفظ حریم خصوصی ادامه ندهید!</string>
+  <string name="polkaswap_info_text_5">درک و پذیرش داوطلبانه شما از خطرات موجود در استفاده از Polkaswap، از جمله، اما نه محدود به، خطر از دست دادن توکن‌ها.</string>
+  <string name="polkaswap_info_text_6">مجددا تاکید می‌شود، لطفاً بدون خواندن %%Polkaswa FAQ%%، %% تفاهم نامه Polkaswap و شرایط خدمات %% و %% سیاست حفظ حریم خصوصی %% ادامه ندهید!</string>
+  <string name="polkaswap_info_text_7">برای پنهان کردن اعلان سلب مسئولیت از برگه Swap، لطفاً دکمه زیر را بکشید. تنها در صورتی این کار را انجام دهید که تمام اسناد ذکر شده را کاملاً درک و مطالعه کرده باشید!</string>
+  <string name="polkaswap_info_text_8">برای پنهان کردن، انگشت خود را بکشید</string>
+  <string name="polkaswap_info_text_9">اعلان سلب مسئولیت از زبانه Polkaswap پنهان شده است. اگر مایل به فعال کردن اعلان بودید دکمه زیر را بکشید.</string>
+  <string name="polkaswap_info_title">سلب مسئولیت</string>
+  <string name="polkaswap_info_title_main">سلب مسئولیت: لطفاً قبل از استفاده از polkaswap بخوانید!</string>
+  <string name="polkaswap_input_estimated">مقدار پرداختی تخمینی است. حداکثر مقدار %s خواهید فروخت، در غیر اینصورت تراکنش برگشت خواهد خورد.</string>
+  <string name="polkaswap_insufficient_balance">مانده %s ناکافی</string>
+  <string name="polkaswap_insufficient_liqudity">نقدینگی ناکافی</string>
+  <string name="polkaswap_liqudity_fee">هزینه LP</string>
+  <string name="polkaswap_liqudity_fee_info">بخشی از هر معامله (0.3٪) به عنوان مشوق پروتکل به ارائه دهندگان نقدینگی می‌رسد.</string>
+  <string name="polkaswap_market">بازار</string>
+  <string name="polkaswap_market_info">الگوریتم بازار - گزینه ای برای انتخاب بین بازار اولیه (TBC)، بازار ثانویه (XYK) یا یک الگوریتم هوشمند ترکیبی برای تضمین بهترین قیمت در هر تراکنش است.</string>
+  <string name="polkaswap_market_smart_description">مسیریابی نقدینگی SMART با ترکیب بهترین گزینه‌های قیمت از همه بازارهای موجود، بهترین قیمت را برای هر معامله تضمین می‌کند. در صورت امکان Token Bonding Curve (TBC) برای نقدینگی استفاده خواهد شد تا زمانی که قیمت دارایی مقرون به صرفه‌تر از منابع دیگر باشد، که در این حالت از استخر XYK استفاده می‌شود.</string>
+  <string name="polkaswap_market_tbc_description">TBC - خرید فقط از Token Bonfing Curve (بازار اولیه). ممکن است قیمت در مقایسه با مخزن XYK (بازار ثانویه) نامطلوب تر باشد، اما ارزش دریافتی از پاداش‌های اختصاص داده شده ممکن است در طول زمان بسیار مطلوب تر شود.</string>
+  <string name="polkaswap_market_title">الگوریتم بازار</string>
+  <string name="polkaswap_market_xyk_description">XYK — خرید فقط از استخر XYK (بازار ثانویه). استخر مبادله XYK سنتی که در آن هر کسی می‌تواند با تغییر موقعیت بازارساز در منحنی x*y=k، دارایی‌ها را بخرد یا بفروشد.</string>
+  <string name="polkaswap_maximum_sold">حداکثر فروش</string>
+  <string name="polkaswap_maximum_sold_info">در صورت وقوع یک تغییر قیمت نامساعد و چشمگیر قبل از تایید تراکنش، تراکنش شما برگشت خواهد خورد.</string>
+  <string name="polkaswap_minimum_received">حداقل دریافت شده</string>
+  <string name="polkaswap_minimum_received_info">در صورت وقوع یک تغییر قیمت قابل توجه (در صورتی که به ضرر شما باشد) تراکنش شما برگشت خواهد خورد.</string>
+  <string name="polkaswap_network_fee">هزینه شبکه</string>
+  <string name="polkaswap_network_fee_info">کارمزد شبکه برای اطمینان از رشد و عملکرد پایدار سامانه SORA استفاده می‌شود.</string>
+  <string name="polkaswap_output_estimated">مقدار دریافتی تخمینی است. حداقل مقدار %s دریافت خواهید کرد، در غیر اینصورت تراکنش برگشت خواهد خورد.</string>
+  <string name="polkaswap_pool_not_created">استخر ایجاد نشده</string>
+  <string name="polkaswap_pool_title">استخر</string>
+  <string name="polkaswap_slippage_frontrun">تراکنش شما ممکن است پیشتاز (frontrun) باشد</string>
+  <string name="polkaswap_slippage_info">در صورتی که قیمت بیش از مقدار تایین شده توسط شما جا به جا شود (اگر باعث ضرر شما شود) این تراکنش برگشت میخورد</string>
+  <string name="polkaswap_slippage_mayfail">تراکنش شما ممکن است انجام نشود</string>
+  <string name="polkaswap_slippage_tolerance">تغییرات محتمل در قیمت</string>
+  <string name="polkaswap_smart">هوشمند</string>
+  <string name="polkaswap_swap_title">تبدیل</string>
+  <string name="polkaswap_swapped">مبادله شد</string>
+  <string name="polkaswap_tbc">TBC</string>
+  <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">اضافه کنید</string>
+  <string name="pool_button_remove">حذف</string>
+  <string name="pool_liqudity_title">نقدینگی شما</string>
+  <string name="pool_liquidity_placeholder">نقدینگی شما اینجا نشان داده خواهد شد</string>
+  <string name="pool_share_title">سهم از استخر (pool)</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled"> به استخر اضافه شد</string>
+  <string name="profile_about_title">درباره</string>
+  <string name="profile_biometry_title">احراز بیومتریک</string>
+  <string name="profile_change_pin_title">تغییر پین</string>
+  <string name="profile_language_title">زبان</string>
+  <string name="profile_logout_title">خروج</string>
+  <string name="profile_passphrase_title_v1">عبارت عبور</string>
+  <string name="profile_title">پروفایل</string>
+  <plurals name="project_date_day_plurals">
+    <item quantity="one">roze baghimande</item>
+    <item quantity="other">roozhaye baghimande</item>
+  </plurals>
+  <plurals name="project_date_hour_plurals">
+    <item quantity="one">saate baghimande</item>
+    <item quantity="other">saate baghimande</item>
+  </plurals>
+  <plurals name="project_date_minute_plurals">
+    <item quantity="one">daghigheye baghimande</item>
+    <item quantity="other">daghayeghe baghimande</item>
+  </plurals>
+  <plurals name="project_date_second_plurals">
+    <item quantity="one">saniyeye baghimande</item>
+    <item quantity="other">saniyehaye baghimande</item>
+  </plurals>
+  <string name="project_ended_template">پایان یافت</string>
+  <string name="project_mark_new">جدید</string>
+  <string name="project_requires_votes_format">پروژه تنها نیاز به [٪s] رای 🚀</string>
+  <string name="project_user_have_not_enough_votes_message">متاسفانه رای کافی ندارید 😔</string>
+  <string name="project_vote_dialog_title">چند رای</string>
+  <string name="project_voted">رأی داده شده</string>
+  <string name="project_you_can_vote_at_least_1_point">میتوانید با حداقل یک امتیاز رای دهید. 😜</string>
+  <string name="qr_code">کد QR</string>
+  <string name="qr_upload">بارگیری از گالری</string>
+  <string name="recovery_body_subtitle">متأسفانه در صورت فراموش کردن عبارت عبور ، راهی برای دسترسی به حساب شما وجود ندارد.</string>
+  <string name="recovery_body_title">رمز عبور را وارد کنید</string>
+  <string name="recovery_mnemonic_passphrase">عبارات عبور منمونیک</string>
+  <string name="recovery_passphrase">بازیابی دسترسی</string>
+  <string name="recovery_source_type">نوع منبع</string>
+  <string name="recovery_title">بازیابی حساب</string>
+  <string name="referenda_title">همه پرسی</string>
+  <string name="referenda_title_vote">به همه پرسی رأی دهید</string>
+  <plurals name="referendum_date_day_plurals_value">
+    <item quantity="one">rooz</item>
+    <item quantity="other">roozha</item>
+  </plurals>
+  <string name="referendum_ended_title">پایان یافت</string>
+  <string name="referendum_ends_in_title">به پایان می‌رسد در</string>
+  <string name="referendum_finishing_soon">اندکی تا پایان</string>
+  <string name="referendum_my_votes_title">آرای شما</string>
+  <string name="referendum_no_active">اکنون هیچ رفراندوم فعالی وجود ندارد</string>
+  <string name="referendum_no_ended">هنوز هیچ رفراندوم پایان یافته ای وجود ندارد</string>
+  <string name="referendum_no_voted">هنوز هیچ رفراندومی رأی گیری شده ای وجود ندارد</string>
+  <string name="referendum_no_votes">هیچ کس رأی نداد</string>
+  <string name="referendum_support_title">بله</string>
+  <string name="referendum_total_votes">کل آرا</string>
+  <string name="referendum_unsupport_title">نه</string>
+  <string name="referendum_voting_result">نتیجه رأی گیری</string>
+  <string name="restart_required">نیازمند راه‌اندازی مجدد</string>
+  <string name="screenshot_alert_text">جهت جلوگیری از سو استفاده بد افزارهایی که ممکن است وجود داشته باشند از صفحه عکس نگیرید.</string>
+  <string name="screenshot_alert_title">از صفحه عکس نگیرید</string>
+  <string name="search_asset_by_name">جستجو بر اساس نام یا نماد</string>
+  <string name="select_account_address">جستجو آدرس حساب</string>
+  <string name="select_account_address_1">جستجو یا افزودن یک آدرس جدید</string>
+  <string name="select_asset_receive">یک دارایی جهت دریافت انتخاب کنید</string>
+  <string name="select_asset_send">یک دارایی جهت ارسال انتخاب کنید</string>
+  <string name="select_recipient">گیرنده را انتخاب کنید</string>
+  <string name="set_amount">مقدار را تعیین کنید</string>
+  <string name="staking_coming_soon">دارندگان XOR می توانند XOR خود را برای نامزدی تایید کننده‌ها سپرده کنند تا پاداش دریافت کنند.</string>
+  <string name="staking_description">اعتبارسنج‌های نامزدکننده (Nominating validators) بخش مهمی از اکوسیستم SORA هستند زیرا به امنیت و تمرکززدایی شبکه کمک می‌کنند. توکن‌های VAL به اعتبارسنج‌ها و نامزدکنندگان به عنوان پاداش گروگذاری (staking) آن‌ها اعطا خواهد شد.</string>
+  <string name="staking_val_reward">جوایز تایید کنندگان SORA</string>
+  <string name="startup_verification_title">درحال تأیید مجوز ...</string>
+  <string name="status_error">خطا</string>
+  <string name="status_pending">در انتظار</string>
+  <string name="status_rejected">رد شده</string>
+  <string name="status_success">موفقیت</string>
+  <string name="status_title">وضعیت</string>
+  <string name="swap_input_title">ورودی مبادله</string>
+  <string name="tabbar_friends_title">دوستان</string>
+  <string name="tabbar_parliament_title">مجلس</string>
+  <string name="tabbar_polkaswap_title">Polkaswap</string>
+  <string name="tabbar_profile_title">پروفایل</string>
+  <string name="tabbar_staking_title">استیک شده</string>
+  <string name="tabbar_wallet_title">کیف پول</string>
+  <string name="transaction_bridge_info">اطلاعات پل اتریوم</string>
+  <string name="transaction_bridge_not_active_error">پل اتریوم در دسترس نیست</string>
+  <string name="transaction_confirm">تراکنش را تایید کنید</string>
+  <string name="transaction_continue">ادامه</string>
+  <string name="transaction_date">روز/زمان</string>
+  <string name="transaction_details">جزئیات تراکنش</string>
+  <string name="transaction_fee_estimated_time">زمان تخمینی تراکنش ~ %s</string>
+  <string name="transaction_fee_fast">سریع</string>
+  <string name="transaction_fee_gaslimit">محدودیت گاز</string>
+  <string name="transaction_fee_gasprice">قیمت گاز تراکنش</string>
+  <string name="transaction_fee_regular">عادی</string>
+  <string name="transaction_fee_set_recommended">استفاده از پیش فرض</string>
+  <string name="transaction_fee_slow">آهسته</string>
+  <string name="transaction_id">هش خارجی (Extrinsic hash)</string>
+  <string name="transaction_miner_fee_title">هزینه انتقال</string>
+  <string name="transaction_miner_help">برو به حساب Ethereum</string>
+  <string name="transaction_note">توجه داشته باشید</string>
+  <string name="transaction_send_again">ارسال دوباره</string>
+  <string name="transaction_send_back">برگشت دادن</string>
+  <string name="transaction_token">Token</string>
+  <string name="transaction_total">مجموع</string>
+  <string name="transfer_amount_title">مقدار مدنظر جهت ارسال را وارد کنید</string>
+  <string name="tutorial_many_world">جهان‌های بسیار.\n اقتصادی واحد.</string>
+  <string name="tutorial_many_world_desc">SORA در تلاش است تا به یک سیستم اقتصادی چندجهانی غیرمتمرکز تبدیل شود ، و برنامه های جدید و هیجان انگیز را تحت نظارت دموکراتیک پارلمان SORA تأمین مالی کند.</string>
+  <string name="tutorial_one_world">یک جهان.\n یک اقتصاد.</string>
+  <string name="tutorial_one_world_desc">SORA در حال تلاش برای تبدیل شدن به یک سامانه اقتصادی غیرمتمرکز جهانی، جهت تامین مالی ایجاد برنامه‌های کاربردی جدید و هیجان انگیز تحت نظارت دموکراتیک پارلمان SORA می‌باشد.</string>
+  <string name="tutorial_privacy_policy">سیاست حفظ حریم خصوصی</string>
+  <string name="tutorial_project_success_desc">اگر پروژه در رای گیری موفق شود ، همه سهم خود را می‌گیرند</string>
+  <string name="tutorial_projects_desc">پروژه هایی که توسط تولیدکنندگان به Sora اضافه شده و پس از مراحل انتخاب به رأی گیری اضافه شدند</string>
+  <string name="tutorial_restore_account">دسترسی به حساب را بازیابی کنید</string>
+  <string name="tutorial_sign_up">ثبت نام</string>
+  <string name="tutorial_terms_and_conditions"> با ایجاد حساب شما با %% شرایط و ضوابط %% و %% خط مشی رازداری %% موافقت می‌کنید</string>
+  <string name="tutorial_terms_and_conditions_1">با ثبت نام شما موافقت می کنید که\n</string>
+  <string name="tutorial_terms_and_conditions_2">شرایط و ضوابط</string>
+  <string name="tutorial_terms_and_conditions_3">شرایط و ضوابط</string>
+  <string name="tutorial_terms_and_conditions_recovery">با انتقال حساب شما با %% شرایط و ضوابط %% و %% خط مشی رازداری %% موافقت میکنید</string>
+  <string name="tutorial_terms_and_conditions_v4"> با ایجاد یک حساب کاربری، با \n شرایط و ضوابط و خط مشی رازداری موافقت می‌کنید</string>
+  <string name="tutorial_votes_desc">کاربران به پروژه‌هایی رأی می‌دهند و تصمیم می‌گیرند کدام پروژه تأمین اعتبار شود</string>
+  <string name="unknown_balance">تعریف نشده</string>
+  <string name="update_downloaded">بروز رسانی برنامه SORA دانلود شده و آماده نصب است. \n\n مهم است که از آخرین نسخه برنامه استفاده کنید. \n\n برای به روز رسانی، برنامه نیازمند راه‌اندازی مجدد است.</string>
+  <string name="update_install_now">آیا می‌خواهید هم اکنون آپدیت را نصب کنید؟</string>
+  <string name="val_balance_title">ارز VAL در شبکه‌های مختلف</string>
+  <string name="verification_enter_code_from_sms">کد پیامکی را وارد کنید</string>
+  <string name="verification_request_new_code_time" formatted="false">درخواست کد جدید پس از %s : %s</string>
+  <string name="verification_resend_code">ارسال دوباره کد</string>
+  <string name="verification_title">تأیید تلفن</string>
+  <string name="view_balance_val">تخصیص رمز SORA NET (VAL) را مشاهده کنید</string>
+  <string name="votes_empty_history_description">هر زمان رأی شما تغییر کند،\n شما تاریخچه آن را اینجا خواهید دید</string>
+  <string name="votes_history_title">تاریخچه آرا</string>
+  <string name="votes_zero_error_message">با عرض پوزش، شما باید حداقل 1 امتیاز برای رای دادن داشته باشید</string>
+  <string name="wallet_account_retry_registration">ثبت نام را دوباره امتحان کنید</string>
+  <string name="wallet_asset_id">شناسه دارایی</string>
+  <string name="wallet_balance_locked">قفل شده</string>
+  <string name="wallet_balance_reserved">رزرو شده</string>
+  <string name="wallet_bonded">ادغام شده</string>
+  <string name="wallet_empty_description">معاملات در اینجا نشان داده می‌شوند</string>
+  <string name="wallet_empty_history_title">بدون تراکنش</string>
+  <string name="wallet_ethereum">اتریوم</string>
+  <string name="wallet_history_from_ethereum_address_title">از آدرس اتریوم</string>
+  <string name="wallet_history_from_soranet_address_title">از حساب SORA من</string>
+  <string name="wallet_history_limitations_text">در حال حاضر، تاریخچه تراکنش‌ها بر روی دستگاه ذخیره می‌شود، به این معنی که اگر حساب را در دستگاه دیگری وارد کنید، از سامانه خارج شده یا برنامه را در دستگاه فعلی مجدداً نصب کنید، تاریخچه تراکنش‌ها دیگر در دسترس نخواهد بود. همچنین ما نمی‌توانیم تراکنش‌های ورودی را نشان دهیم. ما برای هرگونه ناراحتی ایجاد شده عذرخواهی می‌کنیم، ما در حال حل و فصل موضوع هستیم.</string>
+  <string name="wallet_history_limitations_title">محدودیت‌های تاریخچه</string>
+  <string name="wallet_history_reward_from_system">پاداش از سیستم</string>
+  <string name="wallet_history_to_ethereum_address">به آدرس اتریوم</string>
+  <string name="wallet_history_to_my_ethereum_title">به آدرس اتریوم من</string>
+  <string name="wallet_history_to_my_soranet_title">به حساب SORA من</string>
+  <string name="wallet_history_to_soranet_account">به حساب SORA NET</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">آدرس شبکه %s برای دریافت %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s آدرس شبکه برای دریافت %s :</string>
+  <string name="wallet_qr_share_message_template" formatted="false">آدرس شبکه %s من برای دریافت %s %s :</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">%s آدرس شبکه من برای دریافت %s %s:</string>
+  <string name="wallet_receive_val">دريافت VAL</string>
+  <string name="wallet_redeemable">قابل آزاد سازی</string>
+  <string name="wallet_send_existential_warning_message">انتقال شما حساب را حذف میکند زیرا کل موجودی را کمتر از سپرده لازم برای ادامه بقا حساب می‌کند.</string>
+  <string name="wallet_soranet">SORA NET</string>
+  <string name="wallet_title">کیف پول</string>
+  <string name="wallet_transaction_rejected">تراکنش برگشت خورد</string>
+  <string name="wallet_transaction_submitted">تراکنش در دست اقدام</string>
+  <string name="wallet_transaction_submitted_1">تراکنش \n ارسال شد</string>
+  <string name="wallet_transfer_description_hint">حداکثر %s نمادها</string>
+  <string name="wallet_transfer_to_ethereum">به آدرس اتریوم</string>
+  <string name="wallet_unbonding">جدا سازی</string>
+  <string name="wallet_val_to_my_eth">VAL به آدرس Ethereum من</string>
+</resources>

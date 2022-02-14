@@ -34,7 +34,7 @@
         android:id="@+id/profile_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_menu_user_24"
-        android:title="@string/tabbar_profile_title"
+        android:title="@string/common_settings"
         app:showAsAction="ifRoom" />
 
 </menu>

@@ -13,6 +13,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.IntoMap
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.QrCodeGenerator
@@ -41,12 +42,27 @@ class ReceiveModule {
         model: ReceiveAssetModel,
         clipboardManager: ClipboardManager,
         avatarGenerator: AccountAvatarGenerator,
+        fileManager: FileManager,
+        qrColor: Int,
     ): ViewModel {
-        return ReceiveViewModel(interactor, walletRouter, resourceManager, qrCodeGenerator, model, clipboardManager, avatarGenerator)
+        return ReceiveViewModel(
+            interactor,
+            walletRouter,
+            resourceManager,
+            qrCodeGenerator,
+            model,
+            clipboardManager,
+            avatarGenerator,
+            fileManager,
+            qrColor,
+        )
     }
 
     @Provides
-    fun provideViewModelCreator(fragment: Fragment, viewModelFactory: ViewModelProvider.Factory): ReceiveViewModel {
+    fun provideViewModelCreator(
+        fragment: Fragment,
+        viewModelFactory: ViewModelProvider.Factory
+    ): ReceiveViewModel {
         return ViewModelProviders.of(fragment, viewModelFactory).get(ReceiveViewModel::class.java)
     }
 }

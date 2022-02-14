@@ -5,98 +5,106 @@
     android:id="@+id/clReceiveContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_white">
+    android:background="?attr/flatAboveBackground">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
         android:id="@+id/tbReceive"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:iconRight="@drawable/ic_share"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <View
-        android:id="@+id/vDivider1"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="?attr/baseBorderPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tbReceive" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:titleText="@string/common_receive" />
 
     <ImageView
         android:id="@+id/ivUserAvatar"
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="28dp"
-        android:scaleType="centerInside"
+        android:layout_marginTop="@dimen/x2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/vDivider1"
-        tools:ignore="ContentDescription" />
+        app:layout_constraintTop_toBottomOf="@id/tbReceive"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_0x0200050000000000000000000000000000000000000000000000000000000000" />
 
     <ImageView
         android:id="@+id/ivCopyAddress"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="12dp"
-        android:background="@drawable/circle_background"
-        android:backgroundTint="?attr/secondaryBackground"
+        android:layout_marginEnd="@dimen/x2"
         android:scaleType="center"
-        android:src="@drawable/ic_copy_thin_16"
+        android:src="@drawable/ic_neu_copy_wrapped"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/vDivider1"
+        app:layout_constraintTop_toTopOf="@id/ivUserAvatar"
         tools:ignore="ContentDescription" />
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/tvUserName"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x1"
-        android:layout_marginEnd="@dimen/x3"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="@id/ivUserAvatar"
+        android:layout_marginTop="@dimen/x2"
+        android:ellipsize="middle"
+        android:singleLine="true"
         app:layout_constraintEnd_toStartOf="@id/ivCopyAddress"
         app:layout_constraintStart_toEndOf="@id/ivUserAvatar"
-        app:layout_constraintTop_toTopOf="@id/ivUserAvatar">
+        app:layout_constraintTop_toBottomOf="@id/tbReceive"
+        tools:text="Name of account" />
 
-        <TextView
-            android:id="@+id/tvUserName"
-            style="@style/TextAppearance.Soramitsu.Paragraph_3"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            tools:text="Name of account" />
+    <TextView
+        android:id="@+id/tvUserAddress"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.11"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        app:layout_constraintEnd_toStartOf="@id/ivCopyAddress"
+        app:layout_constraintStart_toEndOf="@id/ivUserAvatar"
+        app:layout_constraintTop_toBottomOf="@id/tvUserName"
+        tools:text="cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm"
+        tools:visibility="visible" />
 
-        <TextView
-            android:id="@+id/tvUserAddress"
-            style="@style/TextAppearance.Soramitsu.Paragraph_4"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:ellipsize="middle"
-            android:singleLine="true"
-            android:textColor="?attr/contentQuaternary"
-            tools:text="Name of account"
-            tools:visibility="visible" />
-
-    </LinearLayout>
+    <View
+        android:id="@+id/vReceiveDivider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/x2"
+        android:background="?attr/dividerColor"
+        app:layout_constraintEnd_toEndOf="@id/ivCopyAddress"
+        app:layout_constraintStart_toStartOf="@id/ivUserAvatar"
+        app:layout_constraintTop_toBottomOf="@id/ivUserAvatar" />
 
     <ImageView
         android:id="@+id/ivQr"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/x7"
-        android:layout_marginTop="@dimen/x3"
         android:layout_marginEnd="@dimen/x7"
         android:adjustViewBounds="true"
         android:scaleType="centerInside"
+        app:layout_constraintBottom_toTopOf="@id/ibReceiveShare"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/ivUserAvatar"
+        app:layout_constraintTop_toBottomOf="@id/vReceiveDivider"
+        app:layout_constraintVertical_chainStyle="packed"
         tools:background="@color/grey_200"
+        tools:ignore="ContentDescription" />
+
+    <ImageButton
+        android:id="@+id/ibReceiveShare"
+        style="@style/Widget.Soramitsu.ImageButton.56.Secondary"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x5"
+        android:layout_marginTop="@dimen/x2"
+        android:layout_marginEnd="@dimen/x5"
+        android:src="@drawable/ic_neu_share"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivQr"
         tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

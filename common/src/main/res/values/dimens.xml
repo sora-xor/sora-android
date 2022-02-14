@@ -19,10 +19,12 @@
     <dimen name="tab_text_size">11sp</dimen>
     <dimen name="actionbar_tab_text_size">7sp</dimen>
 
+    <dimen name="tutorial_logo_size">110dp</dimen>
+
     <dimen name="greyTextStyleSize">11sp</dimen>
     <dimen name="subtitle_text_size">11sp</dimen>
 
-    <dimen name="search_view_height">36dp</dimen>
+    <dimen name="search_view_height">48dp</dimen>
     <dimen name="shadow_view_height">3dp</dimen>
 
     <dimen name="margin_padding_by_side">20dp</dimen>
@@ -34,6 +36,8 @@
     <dimen name="side_button_icon_size">30dp</dimen>
     <dimen name="user_icon_size">35dp</dimen>
 
+    <dimen name="profile_icon">44dp</dimen>
+
     <dimen name="text_size_b3">10sp</dimen>
     <dimen name="text_size_b2">12sp</dimen>
     <dimen name="text_size_b1">14sp</dimen>
@@ -43,13 +47,14 @@
     <dimen name="text_size_h1">30sp</dimen>
 
     <!--Pincode-->
-    <dimen name="pin_code_view_spacing">8dp</dimen>
-    <dimen name="pin_code_button_size">40dp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_size_default">8dp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_margin_default">8dp</dimen>
+    <dimen name="pin_code_view_spacing">0dp</dimen>
+    <dimen name="pin_code_button_size">72dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_width_default">80dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_height_default">24dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_margin_default">4dp</dimen>
     <dimen name="uikit_dot_stroke_width">1dp</dimen>
-    <dimen name="uikit_pin_code_button_text_size">16sp</dimen>
+    <dimen name="uikit_pin_code_button_text_size">30sp</dimen>
     <!--Pincode-->
 
-    <dimen name="round_corner_radius">16dp</dimen>
+    <dimen name="round_corner_radius_bottom_sheet">32dp</dimen>
 </resources>

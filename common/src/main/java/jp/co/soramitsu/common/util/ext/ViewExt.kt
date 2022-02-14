@@ -7,13 +7,20 @@ package jp.co.soramitsu.common.util.ext
 
 import android.content.res.ColorStateList
 import android.text.Editable
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
 import android.text.TextWatcher
+import android.text.style.ForegroundColorSpan
+import android.text.style.TextAppearanceSpan
 import android.view.View
 import android.view.animation.Animation
 import android.view.inputmethod.EditorInfo
+import android.webkit.WebView
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
@@ -21,7 +28,10 @@ import androidx.core.widget.ImageViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import com.google.android.material.color.MaterialColors
+import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.CurrencyEditText
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -79,7 +89,10 @@ inline fun View.setDebouncedClickListener(
 
 fun ImageView.setImageTint(@ColorRes colorRes: Int) {
     val color = ContextCompat.getColor(context, colorRes)
+    this.setImageTint2(color)
+}
 
+fun ImageView.setImageTint2(@ColorInt color: Int) {
     ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(color))
 }
 
@@ -88,6 +101,21 @@ fun EditText.asFlow() = callbackFlow {
 
     val onChanged: (CharSequence?, Int, Int, Int) -> Unit = { c, _, _, _ ->
         trySend(c.toString())
+    }
+
+    val listener = addTextChangedListener(
+        onTextChanged = onChanged
+    )
+
+    awaitClose { removeTextChangedListener(listener) }
+}
+
+@ExperimentalCoroutinesApi
+fun CurrencyEditText.asFlowCurrency() = callbackFlow {
+
+    val onChanged: (CharSequence?, Int, Int, Int) -> Unit = { c, _, _, _ ->
+        if (this@asFlowCurrency.listenerEnabled)
+            trySend(c.toString())
     }
 
     val listener = addTextChangedListener(
@@ -148,6 +176,24 @@ fun TextView.setDrawableEnd(
     setCompoundDrawablesRelative(null, null, drawable, null)
 }
 
+fun TextView.showOrGone(t: String?) {
+    if (t == null) {
+        gone()
+    } else {
+        show()
+        text = t
+    }
+}
+
+fun TextView.showOrHide(t: String?) {
+    if (t == null) {
+        hide()
+    } else {
+        show()
+        text = t
+    }
+}
+
 fun View.runDelayed(
     durationInMillis: Long,
     dispatcher: CoroutineDispatcher = Dispatchers.Main,
@@ -156,5 +202,77 @@ fun View.runDelayed(
     lifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
         delay(durationInMillis)
         block.invoke()
+    }
+}
+
+@ColorInt
+fun View.getColorAttr(@AttrRes attr: Int): Int = MaterialColors.getColor(this, attr)
+
+fun WebView.setPageBackground(color: Int) {
+    val colorHex = color.colorToHex()
+    this.loadUrl("javascript:(function() {document.getElementsByTagName(\"body\")[0].style.background = \"$colorHex\";})()")
+}
+
+fun TextView.setBalance(amount: AssetBalanceData, decimalSeparator: Char = '.') {
+    if (amount.amount.isEmpty()) {
+        this.text = ""
+    } else {
+        val pos = amount.amount.indexOf(decimalSeparator)
+        val text = SpannableString(amount.amount)
+        when {
+            pos >= 0 -> {
+                text.setSpan(
+                    TextAppearanceSpan(context, amount.style.intStyle),
+                    0,
+                    pos,
+                    SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                text.setSpan(
+                    TextAppearanceSpan(context, amount.style.decStyle),
+                    pos,
+                    text.length,
+                    SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            else -> {
+                text.setSpan(
+                    TextAppearanceSpan(context, amount.style.intStyle),
+                    0,
+                    text.length,
+                    SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        }
+        text.setSpan(
+            ForegroundColorSpan(getColorAttr(amount.style.color)),
+            0,
+            text.length,
+            SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        if (amount.ticker != null) {
+            val builder = SpannableStringBuilder()
+            builder.append(text).append(" ")
+            val ticker = SpannableString(amount.ticker)
+            ticker.setSpan(
+                TextAppearanceSpan(context, amount.style.tickerStyle ?: amount.style.intStyle),
+                0,
+                ticker.length,
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            ticker.setSpan(
+                ForegroundColorSpan(
+                    getColorAttr(
+                        amount.style.tickerColor ?: amount.style.color
+                    )
+                ),
+                0,
+                ticker.length,
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            builder.append(ticker)
+            this.setText(builder, TextView.BufferType.SPANNABLE)
+        } else {
+            this.setText(text, TextView.BufferType.SPANNABLE)
+        }
     }
 }

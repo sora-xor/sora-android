@@ -43,14 +43,8 @@ interface TransferTransactionDao {
     @Query("SELECT COUNT(txHash) from extrinsics")
     suspend fun countAll(): Long
 
-    @Query("SELECT COUNT(txHash) from extrinsics where type == 1 and localPending == 0 and eventSuccess == 1")
-    suspend fun countTransferNotLocalSuccess(): Long
-
-    @Query("SELECT COUNT(txHash) from extrinsics where type == 1 and localPending == 0 and eventSuccess == 0")
-    suspend fun countTransferNotLocalError(): Long
-
-    @Query("SELECT COUNT(txHash) from extrinsics where type == 0 and localPending == 0")
-    suspend fun countSwapNotLocal(): Long
+    @Query("SELECT COUNT(txHash) from extrinsics where localPending == 0")
+    suspend fun countExtrinsicNotLocal(): Long
 
     @Query("SELECT * FROM extrinsics ORDER BY timestamp DESC")
     fun getExtrinsicPaging(): PagingSource<Int, ExtrinsicLocal>

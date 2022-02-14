@@ -22,7 +22,7 @@
 
     <TextView
         android:id="@+id/contactNameTextView"
-        style="@style/TextAppearance.Soramitsu.Body1"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/margin_padding_content_by_side"

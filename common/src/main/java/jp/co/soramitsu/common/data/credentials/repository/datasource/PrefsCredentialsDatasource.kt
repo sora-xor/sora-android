@@ -6,7 +6,7 @@
 package jp.co.soramitsu.common.data.credentials.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 class PrefsCredentialsDatasource @Inject constructor(
     private val encryptedPreferences: EncryptedPreferences,
-    private val preferences: Preferences,
+    private val soraPreferences: SoraPreferences,
 ) : CredentialsDatasource {
 
     companion object {
@@ -31,15 +31,15 @@ class PrefsCredentialsDatasource @Inject constructor(
         private const val PREFS_SIGNATURE = "prefs_signature"
     }
 
-    override fun saveAddress(address: String) {
-        preferences.putString(PREFS_ADDRESS, address)
+    override suspend fun saveAddress(address: String) {
+        soraPreferences.putString(PREFS_ADDRESS, address)
     }
 
-    override fun getAddress(): String {
-        return preferences.getString(PREFS_ADDRESS)
+    override suspend fun getAddress(): String {
+        return soraPreferences.getString(PREFS_ADDRESS)
     }
 
-    override fun saveKeys(keyPair: Keypair) {
+    override suspend fun saveKeys(keyPair: Keypair) {
         encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.privateKey))
         encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.publicKey))
         keyPair.nonce?.let {
@@ -49,7 +49,7 @@ class PrefsCredentialsDatasource @Inject constructor(
         }
     }
 
-    override fun retrieveKeys(): Keypair? {
+    override suspend fun retrieveKeys(): Keypair? {
         val privateKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PRIVATE_KEY))
         val publicKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PUBLIC_KEY))
         val nonce = encryptedPreferences.getDecryptedString(PREFS_KEY_NONCE).let {
@@ -59,38 +59,38 @@ class PrefsCredentialsDatasource @Inject constructor(
         return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Keypair(privateKeyBytes, publicKeyBytes, nonce)
     }
 
-    override fun saveMnemonic(mnemonic: String) {
+    override suspend fun saveMnemonic(mnemonic: String) {
         encryptedPreferences.putEncryptedString(PREFS_MNEMONIC, mnemonic)
     }
 
-    override fun retrieveMnemonic(): String {
+    override suspend fun retrieveMnemonic(): String {
         return encryptedPreferences.getDecryptedString(PREFS_MNEMONIC)
     }
 
-    override fun saveIrohaKeys(keyPair: KeyPair) {
+    override suspend fun saveIrohaKeys(keyPair: KeyPair) {
         encryptedPreferences.putEncryptedString(PREFS_IROHA_PRIVATE_KEY, Hex.toHexString(keyPair.private.encoded))
         encryptedPreferences.putEncryptedString(PREFS_IROHA_PUBLIC_KEY, Hex.toHexString(keyPair.public.encoded))
     }
 
-    override fun retrieveIrohaKeys(): KeyPair? {
+    override suspend fun retrieveIrohaKeys(): KeyPair? {
         val privateKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_IROHA_PRIVATE_KEY))
         val publicKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_IROHA_PUBLIC_KEY))
         return Ed25519Sha3.keyPairFromBytes(privateKeyBytes, publicKeyBytes)
     }
 
-    override fun saveIrohaAddress(address: String) {
+    override suspend fun saveIrohaAddress(address: String) {
         encryptedPreferences.putEncryptedString(PREFS_IROHA_ADDRESS, address)
     }
 
-    override fun getIrohaAddress(): String {
+    override suspend fun getIrohaAddress(): String {
         return encryptedPreferences.getDecryptedString(PREFS_IROHA_ADDRESS)
     }
 
-    override fun saveSignature(signature: ByteArray) {
+    override suspend fun saveSignature(signature: ByteArray) {
         encryptedPreferences.putEncryptedString(PREFS_SIGNATURE, Hex.toHexString(signature))
     }
 
-    override fun retrieveSignature(): ByteArray {
+    override suspend fun retrieveSignature(): ByteArray {
         return Hex.decode(encryptedPreferences.getDecryptedString(PREFS_SIGNATURE))
     }
 }

@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 class AppStateProviderImpl @Inject constructor() : AppStateProvider, LifecycleObserver {
 
-    private val subject = MutableStateFlow(true)
+    private val subject = MutableStateFlow(AppStateProvider.AppEvent.ON_CREATE)
 
     init {
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -28,15 +28,25 @@ class AppStateProviderImpl @Inject constructor() : AppStateProvider, LifecycleOb
     override val isBackground: Boolean
         get() = !isForeground
 
-    override fun observeState(): Flow<Boolean> = subject.asStateFlow()
+    override fun observeState(): Flow<AppStateProvider.AppEvent> = subject.asStateFlow()
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onForeground() {
-        subject.value = true
+        subject.value = AppStateProvider.AppEvent.ON_RESUME
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onBackground() {
-        subject.value = false
+        subject.value = AppStateProvider.AppEvent.ON_PAUSE
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+    fun onCreate() {
+        subject.value = AppStateProvider.AppEvent.ON_CREATE
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onDestroy() {
+        subject.value = AppStateProvider.AppEvent.ON_DESTROY
     }
 }

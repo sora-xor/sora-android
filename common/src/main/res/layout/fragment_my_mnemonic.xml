@@ -1,0 +1,128 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/baseBackground">
+
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:iconRight="@drawable/ic_neu_info_circle"
+        app:layout_constraintTop_toTopOf="parent"
+        app:titleText="@string/common_passphrase_title" />
+
+    <ImageView
+        android:id="@+id/warning"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="@dimen/x7"
+        android:src="@drawable/ic_neu_explanation_triangle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/passphraseBodyTv"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x1"
+        android:layout_marginEnd="@dimen/x2"
+        android:gravity="center_horizontal"
+        android:letterSpacing="-0.02"
+        android:text="@string/mnemonic_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/warning" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glPassphrase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <TextView
+        android:id="@+id/tvPassphraseNumber1"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:paddingEnd="@dimen/x1"
+        app:layout_constraintEnd_toStartOf="@id/tvPassphraseWords1"
+        app:layout_constraintTop_toBottomOf="@id/passphraseBodyTv"
+        tools:ignore="RtlSymmetry"
+        tools:text="1\n2\n3\n4\n5\n6" />
+
+    <TextView
+        android:id="@+id/tvPassphraseWords1"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.18"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:paddingEnd="@dimen/x3"
+        app:layout_constraintEnd_toStartOf="@id/glPassphrase"
+        app:layout_constraintTop_toBottomOf="@id/passphraseBodyTv"
+        tools:ignore="RtlSymmetry"
+        tools:text="song\ntoss\nodor\nclick\nblouse\nlesson" />
+
+    <TextView
+        android:id="@+id/tvPassphraseNumber2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:paddingStart="@dimen/x1"
+        android:paddingEnd="@dimen/x1"
+        app:layout_constraintStart_toStartOf="@id/glPassphrase"
+        app:layout_constraintTop_toBottomOf="@id/passphraseBodyTv"
+        tools:text="7\n8\n9\n10\n11\n12" />
+
+    <TextView
+        android:id="@+id/tvPassphraseWords2"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.18"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x1"
+        android:letterSpacing="-0.02"
+        app:layout_constraintStart_toEndOf="@id/tvPassphraseNumber2"
+        app:layout_constraintTop_toBottomOf="@id/passphraseBodyTv"
+        tools:ignore="RtlSymmetry"
+        tools:text="song\ntoss\nodor\nclick\nblouse\nlesson" />
+
+    <ImageButton
+        android:id="@+id/ibMnemonicShare"
+        style="@style/Widget.Soramitsu.ImageButton.56.Secondary"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x6"
+        android:layout_marginTop="@dimen/x4"
+        android:layout_marginEnd="@dimen/x6"
+        android:src="@drawable/ic_neu_share"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvPassphraseNumber1"
+        tools:ignore="ContentDescription" />
+
+    <Button
+        android:id="@+id/nextBtn"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
+        android:layout_width="match_parent"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginEnd="@dimen/x1"
+        android:layout_marginBottom="@dimen/x4"
+        android:text="@string/transaction_continue"
+        android:textAllCaps="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

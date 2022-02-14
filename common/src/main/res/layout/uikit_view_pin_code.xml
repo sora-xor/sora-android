@@ -12,29 +12,19 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn1"
-            android:elevation="0dp"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="1" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn2"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="2" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn3"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="3" />
 
     </LinearLayout>
@@ -45,28 +35,19 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn4"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="4" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn5"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="5" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn6"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="6" />
 
     </LinearLayout>
@@ -77,28 +58,19 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn7"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="7" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn8"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="8" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn9"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="9" />
 
     </LinearLayout>
@@ -109,32 +81,26 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <androidx.appcompat.widget.AppCompatImageButton
+        <soup.neumorphism.NeumorphImageButton
             android:id="@+id/fingerprintBtn"
-            style="@style/Widget.Soramitsu.Button.PinCodeControlButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
-            android:src="@drawable/uikit_ic_fingerprint"
+            style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_pin_biometric"
+            android:tint="?attr/uikit_pinCodeButtonTextColor"
             android:visibility="invisible"
             tools:visibility="visible" />
 
-        <androidx.appcompat.widget.AppCompatButton
+        <soup.neumorphism.NeumorphButton
             android:id="@+id/btn0"
             style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
             android:text="0" />
 
-        <androidx.appcompat.widget.AppCompatImageButton
+        <soup.neumorphism.NeumorphImageButton
             android:id="@+id/btnDelete"
-            style="@style/Widget.Soramitsu.Button.PinCodeControlButton"
-            android:layout_width="@dimen/pin_code_button_size"
-            android:layout_height="@dimen/pin_code_button_size"
-            android:layout_margin="@dimen/pin_code_view_spacing"
-            android:src="@drawable/uikit_ic_delete"
-            android:tint="@color/black"
+            style="@style/Widget.Soramitsu.Button.PinCodeNumberButton"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_neu_chevron_back"
+            android:tint="?attr/uikit_pinCodeButtonTextColor"
             android:visibility="invisible"
             tools:visibility="visible" />
 

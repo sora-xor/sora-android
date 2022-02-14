@@ -11,9 +11,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.insertSeparators
 import androidx.paging.map
-import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.interfaces.WithPreloader
@@ -21,7 +19,6 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
-import jp.co.soramitsu.common.util.DateTimeUtils
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -29,16 +26,19 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
+import jp.co.soramitsu.feature_wallet_impl.presentation.util.insertHistorySeparators
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.AssetModel
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import java.util.Date
 
 class WalletViewModel(
     private val interactor: WalletInteractor,
@@ -53,9 +53,6 @@ class WalletViewModel(
     companion object {
         private const val LABEL_ADDRESS = "Address"
     }
-
-    private val _hideSwipeProgressLiveData = SingleLiveEvent<Unit>()
-    val hideSwipeProgressLiveData: LiveData<Unit> = _hideSwipeProgressLiveData
 
     private val _showSwipeProgressLiveData = SingleLiveEvent<Unit>()
     val showSwipeProgressLiveData: LiveData<Unit> = _showSwipeProgressLiveData
@@ -82,28 +79,9 @@ class WalletViewModel(
         .map { pagingData ->
             pagingData.map { tx ->
                 transactionMappers.mapTransaction(tx)
-            }.insertSeparators { before, after ->
-                when {
-                    before == null && after != null -> EventUiModel.EventTimeSeparatorUiModel(
-                        transactionMappers.dateTimeFormatter.formatDate(
-                            Date(after.timestamp),
-                            DateTimeFormatter.DD_MMM_YYYY
-                        )
-                    )
-                    before == null -> null
-                    after != null && !DateTimeUtils.isSameDay(
-                        before.timestamp,
-                        after.timestamp
-                    ) -> EventUiModel.EventTimeSeparatorUiModel(
-                        transactionMappers.dateTimeFormatter.formatDate(
-                            Date(after.timestamp),
-                            DateTimeFormatter.DD_MMM_YYYY
-                        )
-                    )
-                    else -> null
-                }
-            }
+            }.insertHistorySeparators(transactionMappers)
         }
+        .flowOn(Dispatchers.IO)
         .cachedIn(viewModelScope)
 
     init {
@@ -113,10 +91,6 @@ class WalletViewModel(
                 loadVisibleAssets()
                 subscribeVisibleAssets()
                 interactor.updateBalancesVisibleAssets()
-            }
-        }
-        viewModelScope.launch {
-            tryCatch {
                 interactor.updateWhitelistBalances()
             }
         }
@@ -128,28 +102,6 @@ class WalletViewModel(
                 interactor.updateBalancesVisibleAssets()
             }
         }
-    }
-
-    fun onAssetCardSwiped(asset: AssetModel) {
-        viewModelScope.launch {
-            tryCatch {
-                interactor.hideAssets(listOf(asset.id))
-            }
-        }
-    }
-
-    fun onAssetCardSwipedPartly(asset: AssetModel) {
-//        viewModelScope.launch {
-//            tryCatch {
-//                if (!asset.hidingAllowed) {
-//                    if (asset.displayed) {
-//                        interactor.hideAssets(listOf(asset.id))
-//                    } else {
-//                        interactor.displayAssets(listOf(asset.id))
-//                    }
-//                }
-//            }
-//        }
     }
 
     fun sendButtonClicked() {
@@ -188,6 +140,8 @@ class WalletViewModel(
 
     private fun subscribeVisibleAssets() {
         interactor.subscribeVisibleAssets()
+            .distinctUntilChanged()
+            .debounce(500)
             .map { mapAssetToAssetModel(it) }
             .catch { onError(it) }
             .onEach {
@@ -197,12 +151,12 @@ class WalletViewModel(
     }
 
     private fun mapAssetToAssetModel(assets: List<Asset>): List<AssetModel> {
-        return assets.filter { it.isDisplaying }.map {
+        return assets.filter { it.isDisplaying || (!it.isDisplaying && !it.token.isHidable) }.map {
             AssetModel(
                 it.token.id, it.token.name, it.token.symbol, it.token.icon,
-                numbersFormatter.formatBigDecimal(it.balance.transferable, it.token.precision),
-                AssetModel.State.NORMAL, AssetHolder.ROUNDING, it.position,
-                it.token.isHidable, it.isDisplaying, it.isDisplayingBalance
+                numbersFormatter.formatBigDecimal(it.balance.transferable, AssetHolder.ROUNDING),
+                AssetHolder.ROUNDING, it.position,
+                it.token.isHidable, it.isDisplaying
             )
         }.sortedBy { it.position }
     }

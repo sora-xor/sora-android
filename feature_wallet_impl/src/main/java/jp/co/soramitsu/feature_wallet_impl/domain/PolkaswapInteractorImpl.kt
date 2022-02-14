@@ -5,18 +5,18 @@
 
 package jp.co.soramitsu.feature_wallet_impl.domain
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
+import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
@@ -27,9 +27,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.stateIn
@@ -63,6 +65,14 @@ class PolkaswapInteractorImpl(
             )
     }
 
+    override fun subscribePoolsChanges(): Flow<String> = flow {
+        val address = credentialsRepository.getAddress()
+        val flow = polkaswapRepository.subscribeToPoolsAssets(address).flatMapLatest {
+            polkaswapRepository.subscribeToPoolsData(address)
+        }
+        emitAll(flow)
+    }
+
     override suspend fun calcDetails(
         tokenFrom: Token,
         tokenTo: Token,
@@ -80,6 +90,9 @@ class PolkaswapInteractorImpl(
             desired,
             curMarkets,
         ) ?: return null
+
+        if (swapQuote.amount == BigDecimal.ZERO) return null
+
         val minMax =
             (swapQuote.amount * BigDecimal.valueOf(slippageTolerance.toDouble() / 100)).let {
                 if (desired == WithDesired.INPUT)
@@ -161,6 +174,16 @@ class PolkaswapInteractorImpl(
             }.debounce(500)
     }
 
+    override suspend fun updatePools() {
+        val address = credentialsRepository.getAddress()
+        return polkaswapRepository.updateAccountPools(address)
+    }
+
+    override fun subscribePoolsCache(): Flow<List<PoolData>> = flow {
+        val address = credentialsRepository.getAddress()
+        emitAll(polkaswapRepository.subscribePoolFlow(address))
+    }
+
     override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean =
         polkaswapRepository.isSwapAvailable(tokenId1, tokenId2)
 
@@ -169,13 +192,23 @@ class PolkaswapInteractorImpl(
         return polkaswapRepository.getAvailableSources(tokenId1, tokenId2).also {
             availableMarkets.clear()
             availableMarkets.addAll(it)
+
+            if (selectedSwapMarket.value != Market.SMART && !availableMarkets.contains(selectedSwapMarket.value)) {
+                selectedSwapMarket.value = (availableMarkets + Market.SMART).first()
+            }
         }
+    }
+
+    override fun getPolkaswapDisclaimerVisibility(): Flow<Boolean> =
+        polkaswapRepository.getPolkaswapDisclaimerVisibility()
+
+    override suspend fun setPolkaswapDisclaimerVisibility(v: Boolean) {
+        polkaswapRepository.setPolkaswapDisclaimerVisibility(v)
     }
 
     override suspend fun getAvailableSources(): List<Market> =
         availableMarkets + Market.SMART
 
-    @ExperimentalCoroutinesApi
     override suspend fun swap(
         tokenInput: Token,
         tokenOutput: Token,
@@ -198,13 +231,13 @@ class PolkaswapInteractorImpl(
             limit,
         )
             .catch {
-                FirebaseCrashlytics.getInstance().recordException(it)
+                FirebaseWrapper.recordException(it)
                 emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
             }
             .map {
                 if (it.first.isNotEmpty()) {
                     polkaswapRepository.saveSwap(
-                        txHash = it.first.removeHexPrefix(),
+                        txHash = it.first,
                         status = it.second,
                         fee = networkFee,
                         eventSuccess = null,
@@ -232,7 +265,7 @@ class PolkaswapInteractorImpl(
                         s.blake2b256String() == txHash
                     }.toLong()
                     val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
-                    walletRepository.updateTransactionSuccess(txHash.removeHexPrefix(), isSuccess)
+                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
                 }
                 value.second.isNullOrEmpty() && value.first.isNotEmpty()
             }.stateIn(coroutineManager.applicationScope).first()

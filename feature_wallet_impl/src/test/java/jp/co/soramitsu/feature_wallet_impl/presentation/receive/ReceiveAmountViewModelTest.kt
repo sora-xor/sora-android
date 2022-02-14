@@ -6,14 +6,18 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.receive
 
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -59,6 +63,9 @@ class ReceiveAmountViewModelTest {
     private lateinit var clipboardManager: ClipboardManager
 
     @Mock
+    private lateinit var fileManager: FileManager
+
+    @Mock
     private lateinit var avatar: AccountAvatarGenerator
     private val model = ReceiveAssetModel("qazx", "VAL", "SORA", 0)
 
@@ -71,7 +78,15 @@ class ReceiveAmountViewModelTest {
         given(interactor.getAddress()).willReturn("0x123123")
         given(interactor.getPublicKeyHex(true)).willReturn("0xabc")
         given(interactor.getAccountName()).willReturn("0x98765")
-        given(qrCodeGenerator.generateQrBitmap(anyString())).willReturn(qrCodeBitmap)
+        given(qrCodeGenerator.generateQrBitmap(anyString(), anyInt())).willReturn(qrCodeBitmap)
+        given(
+            fileManager.writeExternalCacheBitmap(
+                qrCodeBitmap,
+                "qrcodefile.png",
+                Bitmap.CompressFormat.PNG,
+                100
+            )
+        ).willReturn(Uri.EMPTY)
         receiveAmountViewModel = ReceiveViewModel(
             interactor,
             router,
@@ -79,7 +94,9 @@ class ReceiveAmountViewModelTest {
             qrCodeGenerator,
             model,
             clipboardManager,
-            avatar
+            avatar,
+            fileManager,
+            Color.WHITE
         )
     }
 
@@ -95,12 +112,15 @@ class ReceiveAmountViewModelTest {
         val shareQrBodyTemplate = "My %1\$s network address to Receive %2\$s:"
         val completeMessage = "My SORA network address to Receive VAL:\n0x123123"
 
-        given(resourceManager.getString(anyInt())).willReturn(shareQrBodyTemplate)
+        given(resourceManager.getString(R.string.wallet_qr_share_message_empty_template_v1)).willReturn(
+            shareQrBodyTemplate
+        )
+        given(resourceManager.getString(R.string.asset_sora_fullname)).willReturn("SORA")
 
         receiveAmountViewModel.shareQr()
 
         val value = receiveAmountViewModel.shareQrCodeLiveData.getOrAwaitValue()
         assertEquals(completeMessage, value.second)
-        assertEquals(qrCodeBitmap, value.first)
+        assertEquals(Uri.EMPTY, value.first)
     }
 }

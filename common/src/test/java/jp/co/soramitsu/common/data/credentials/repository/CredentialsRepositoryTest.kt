@@ -7,11 +7,12 @@ package jp.co.soramitsu.common.data.credentials.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import io.mockk.every
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.data.network.substrate.toSoraAddress
 import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.bip39.Bip39
 import jp.co.soramitsu.fearless_utils.bip39.MnemonicLength
@@ -83,7 +84,6 @@ class CredentialsRepositoryTest {
         val entropy = mnemonic.toByteArray()
         val seed = "seed".toByteArray()
         val keypair = mock(Keypair::class.java)
-        val fc = mock(FirebaseCrashlytics::class.java)
 
         given(cryptoAssistant.bip39).willReturn(bip39)
         given(cryptoAssistant.keyPairFactory).willReturn(keypairFactory)
@@ -93,9 +93,11 @@ class CredentialsRepositoryTest {
         given(bip39.generateSeed(entropy, "")).willReturn(seed)
 
         mockkStatic(ByteArray::toSoraAddress)
-        mockkStatic(FirebaseCrashlytics::getInstance)
+        mockkObject(FirebaseWrapper)
+        every { FirebaseWrapper.log("Keys were created") } returns Unit
+
         every { keypair.publicKey.toSoraAddress() } returns "fooaddress"
-        every { FirebaseCrashlytics.getInstance() } returns fc
+
         credentialsRepository.generateUserCredentials()
 
         verify(bip39).generateMnemonic(MnemonicLength.TWELVE)
@@ -120,6 +122,9 @@ class CredentialsRepositoryTest {
         val publicKey = mock(PublicKey::class.java)
         given(publicKey.encoded).willReturn(publicKeyBytes)
         given(irohaKeypair.public).willReturn(publicKey)
+
+        mockkObject(FirebaseWrapper)
+        every { FirebaseWrapper.log("Keys were created") } returns Unit
 
         given(cryptoAssistant.bip39).willReturn(bip39)
         given(cryptoAssistant.keyPairFactory).willReturn(keypairFactory)
@@ -195,7 +200,7 @@ class CredentialsRepositoryTest {
         val signature = irohaAddress.toByteArray()
         val keypair = mock(Keypair::class.java)
         val publicKey = mock(PublicKey::class.java)
-        val fc = mock(FirebaseCrashlytics::class.java)
+        val fc = mock(FirebaseWrapper::class.java)
         given(publicKey.encoded).willReturn(publicKeyBytes)
         given(irohaKeypair.public).willReturn(publicKey)
         given(cryptoAssistant.bip39).willReturn(bip39)
@@ -210,9 +215,10 @@ class CredentialsRepositoryTest {
         given(datasource.getIrohaAddress()).willReturn("", irohaAddress)
         given(datasource.retrieveMnemonic()).willReturn(mnemonic)
         mockkStatic(ByteArray::toSoraAddress)
-        mockkStatic(FirebaseCrashlytics::getInstance)
+        mockkObject(FirebaseWrapper)
+        every { FirebaseWrapper.log("Keys were created") } returns Unit
+
         every { keypair.publicKey.toSoraAddress() } returns "fo oaddress"
-        every { FirebaseCrashlytics.getInstance() } returns fc
 
         assertEquals(credentialsRepository.getIrohaAddress(), irohaAddress)
 

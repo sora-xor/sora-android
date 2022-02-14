@@ -111,7 +111,7 @@ class TransactionDetailsViewModel(
 
         viewModelScope.launch {
             val feeAssetSymbol =
-                interactor.getAsset(OptionsProvider.feeAssetId).token.symbol
+                interactor.getAsset(OptionsProvider.feeAssetId)!!.token.symbol
 
             _transactionFeeLiveData.value = "${
             numbersFormatter.formatBigDecimal(

@@ -18,13 +18,14 @@ import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.ViewAnimations
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.doAnimation
 import jp.co.soramitsu.common.util.ext.enable
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.common.util.ext.showOrGone
@@ -134,7 +135,7 @@ class TransferAmountFragment :
         }
 
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            val currentAmount = viewBinding.amountEt.getBigDecimal() ?: BigDecimal.ZERO
+            val currentAmount = viewBinding.amountInput.getBigDecimal() ?: BigDecimal.ZERO
             viewModel.amountChanged(currentAmount)
         }
     }
@@ -166,7 +167,7 @@ class TransferAmountFragment :
 
         viewBinding.toolbar.setHomeButtonListener {
             if (keyboardHelper?.isKeyboardShowing == true) {
-                hideSoftKeyboard(activity)
+                hideSoftKeyboard()
             } else {
                 viewModel.backButtonPressed()
             }
@@ -174,20 +175,20 @@ class TransferAmountFragment :
 
         progressDialog = SoraProgressDialog(requireActivity())
 
-        viewBinding.amountEt.addTextChangedListener(amountTextWatcher)
+        viewBinding.amountInput.addTextChangedListener(amountTextWatcher)
 
         viewBinding.nextBtn.setOnClickListener(
             DebounceClickListener(debounceClickHandler) {
                 viewModel.nextButtonClicked(
-                    viewBinding.amountEt.getBigDecimal()
+                    viewBinding.amountInput.getBigDecimal()
                 )
                 if (keyboardHelper?.isKeyboardShowing == true) {
-                    hideSoftKeyboard(activity)
+                    hideSoftKeyboard()
                 }
             }
         )
 
-        viewBinding.tvTransferRecipient.setDebouncedClickListener(debounceClickHandler) {
+        viewBinding.recepientTitle.setDebouncedClickListener(debounceClickHandler) {
             viewModel.copyAddress()
         }
 
@@ -195,45 +196,45 @@ class TransferAmountFragment :
     }
 
     private fun initListeners() {
-        viewModel.titleStringLiveData.observe(viewLifecycleOwner) {
-            viewBinding.toolbar.setTitle(it)
+        viewModel.inputTokenName.observe {
+            viewBinding.tokenName.text = it
         }
 
-        viewModel.inputTokenLastName.observe(viewLifecycleOwner) {
-            viewBinding.inputAccountLastname.text = it
+        viewModel.inputTokenSymbol.observe {
+            viewBinding.tokenSymbol.text = it
         }
 
-        viewModel.recipientIconLiveData.observe(viewLifecycleOwner) {
-            viewBinding.ivAssetIcon.setImageResource(it)
-            viewBinding.ivAssetIcon.show()
+        viewModel.inputTokenIcon.observe {
+            viewBinding.ivTokenIcon.setImageResource(it)
+            viewBinding.ivTokenIcon.show()
         }
 
-        viewModel.recipientNameLiveData.observe(viewLifecycleOwner) {
-            viewBinding.tvTransferRecipient.text = it
+        viewModel.recipientNameLiveData.observe {
+            viewBinding.recepientValue.text = it
         }
 
-        viewModel.balanceFormattedLiveData.observe(viewLifecycleOwner) {
-            viewBinding.tvTransferBalance.text = it
+        viewModel.balanceFormattedLiveData.observe {
+            viewBinding.balanceValue.setBalance(it)
         }
 
-        viewModel.transactionFeeFormattedLiveData.observe(viewLifecycleOwner) {
-            viewBinding.tvTransferTransactionFee.text = it
+        viewModel.transactionFeeFormattedLiveData.observe {
+            viewBinding.transactionFeeValue.text = it
         }
 
-        viewModel.transactionFeeProgressVisibilityLiveData.observe(viewLifecycleOwner) {
+        viewModel.transactionFeeProgressVisibilityLiveData.observe {
             viewBinding.ivFeeCalculationProgress.showOrGone(it)
             viewBinding.ivFeeCalculationProgress.doAnimation(it, ViewAnimations.rotateAnimation)
         }
 
-        viewModel.nextButtonEnableLiveData.observe(viewLifecycleOwner) {
+        viewModel.nextButtonEnableLiveData.observe {
             if (it) viewBinding.nextBtn.enable() else viewBinding.nextBtn.disable()
         }
 
-        viewModel.decimalLength.observe(viewLifecycleOwner) {
-            viewBinding.amountEt.decimalPartLength = it
+        viewModel.decimalLength.observe {
+            viewBinding.amountInput.decimalPartLength = it
         }
 
-        viewModel.copiedAddressEvent.observe(viewLifecycleOwner) {
+        viewModel.copiedAddressEvent.observe {
             Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
     }

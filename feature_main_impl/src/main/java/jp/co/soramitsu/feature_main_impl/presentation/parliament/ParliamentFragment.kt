@@ -6,12 +6,16 @@
 package jp.co.soramitsu.feature_main_impl.presentation.parliament
 
 import android.os.Bundle
+import android.text.SpannableStringBuilder
 import android.view.View
+import androidx.core.text.underline
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.showBrowser
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentParliamentBinding
@@ -28,8 +32,10 @@ class ParliamentFragment : BaseFragment<ParliamentViewModel>(R.layout.fragment_p
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
-        binding.parliamentReferendaCard.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.onReferendaCardClicked()
+        binding.tvParliamentMore.text =
+            SpannableStringBuilder().underline { append(getString(R.string.common_learn_more)) }
+        binding.tvParliamentMore.setDebouncedClickListener(debounceClickHandler) {
+            showBrowser(Const.PARLIAMENT_LEARN_MORE_LINK)
         }
     }
 

@@ -6,7 +6,7 @@
 package jp.co.soramitsu.feature_ethereum_impl.di
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.Serializer
@@ -24,7 +24,7 @@ interface EthereumFeatureDependencies {
 
     fun encryptedPreferences(): EncryptedPreferences
 
-    fun preferences(): Preferences
+    fun preferences(): SoraPreferences
 
     fun serializer(): Serializer
 

@@ -7,8 +7,10 @@ package jp.co.soramitsu.common.data.did.repository.datasource
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.credentials.repository.datasource.PrefsCredentialsDatasource
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -27,17 +29,20 @@ class PrefsDidDatasourceTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     @Mock
     private lateinit var encryptedPreferences: EncryptedPreferences
 
     @Mock
-    private lateinit var preferences: Preferences
+    private lateinit var soraPreferences: SoraPreferences
 
     private lateinit var prefsCredentialsDatasource: PrefsCredentialsDatasource
 
     @Before
     fun setUp() {
-        prefsCredentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences, preferences)
+        prefsCredentialsDatasource = PrefsCredentialsDatasource(encryptedPreferences, soraPreferences)
     }
 
 //    @Test fun `save keys called`() {
@@ -98,7 +103,7 @@ class PrefsDidDatasourceTest {
 //    }
 
     @Test
-    fun `save mnemonic called`() {
+    fun `save mnemonic called`() = runBlockingTest {
         val keyMnemonic = "prefs_mnemonic"
         val mnemonic = "mnemonic"
 
@@ -108,7 +113,7 @@ class PrefsDidDatasourceTest {
     }
 
     @Test
-    fun `retrieve mnemonic called`() {
+    fun `retrieve mnemonic called`() = runBlockingTest {
         val keyMnemonic = "prefs_mnemonic"
         val mnemonic = "mnemonic"
         given(encryptedPreferences.getDecryptedString(keyMnemonic)).willReturn(mnemonic)

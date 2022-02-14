@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_ethereum_impl.di
 import dagger.Module
 import dagger.Provides
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
@@ -38,9 +38,9 @@ class EthereumFeatureModule {
     @Singleton
     fun provideEthereumDatasource(
         encryptedPreferences: EncryptedPreferences,
-        preferences: Preferences
+        soraPreferences: SoraPreferences
     ): EthereumDatasource {
-        return PrefsEthereumDatasource(encryptedPreferences, preferences)
+        return PrefsEthereumDatasource(encryptedPreferences, soraPreferences)
     }
 
     @Singleton

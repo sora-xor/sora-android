@@ -6,22 +6,26 @@
 package jp.co.soramitsu.common.data
 
 import jp.co.soramitsu.common.util.EncryptionUtil
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.mockito.ArgumentMatchers
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.times
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 
 class EncryptedPreferencesTest {
 
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     private lateinit var encryptedPreferences: EncryptedPreferences
 
-    private val preferences = mock(Preferences::class.java)
+    private val preferences = mock(SoraPreferences::class.java)
     private val encryptedUtil = mock(EncryptionUtil::class.java)
 
     private val key = "key"
@@ -32,7 +36,7 @@ class EncryptedPreferencesTest {
         encryptedPreferences = EncryptedPreferences(preferences, encryptedUtil)
     }
 
-    @Test fun `put encrypted string called`() {
+    @Test fun `put encrypted string called`() = runBlockingTest {
         given(encryptedUtil.encrypt(value)).willReturn(encryptedValue)
 
         encryptedPreferences.putEncryptedString(key, value)
@@ -41,7 +45,7 @@ class EncryptedPreferencesTest {
         verify(preferences).putString(key, encryptedValue)
     }
 
-    @Test fun `get decrypted string called`() {
+    @Test fun `get decrypted string called`() = runBlockingTest {
         given(encryptedUtil.decrypt(encryptedValue)).willReturn(value)
         given(preferences.getString(key)).willReturn(encryptedValue)
 
@@ -52,7 +56,7 @@ class EncryptedPreferencesTest {
         verify(preferences).getString(key)
     }
 
-    @Test fun `get empty string called`() {
+    @Test fun `get empty string called`() = runBlockingTest {
         given(preferences.getString(key)).willReturn("")
 
         val actual = encryptedPreferences.getDecryptedString(key)

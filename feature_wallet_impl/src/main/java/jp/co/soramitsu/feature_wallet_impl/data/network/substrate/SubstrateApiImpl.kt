@@ -5,24 +5,28 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.network.substrate
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.orhanobut.logger.Logger
 import io.emeraldpay.polkaj.scale.ScaleCodecReader
 import jp.co.soramitsu.common.data.network.dto.EventRecord
 import jp.co.soramitsu.common.data.network.dto.InnerEventRecord
 import jp.co.soramitsu.common.data.network.dto.PhaseRecord
+import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.data.network.dto.XorBalanceDto
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.data.network.substrate.Pallete
 import jp.co.soramitsu.common.data.network.substrate.Storage
+import jp.co.soramitsu.common.data.network.substrate.accountPoolsKey
 import jp.co.soramitsu.common.data.network.substrate.assetIdFromKey
 import jp.co.soramitsu.common.data.network.substrate.createAsset
 import jp.co.soramitsu.common.data.network.substrate.request.StateKeysPaged
 import jp.co.soramitsu.common.data.network.substrate.request.StateQueryStorageAt
+import jp.co.soramitsu.common.data.network.substrate.reservesKey
 import jp.co.soramitsu.common.data.network.substrate.response.BalanceResponse
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.common.data.network.substrate.toSoraAddress
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.Flavor
@@ -31,6 +35,7 @@ import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
+import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.Struct
@@ -68,6 +73,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.network.request.extrinsic.FeeCal
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.BlockHashRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.BlockRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.ChainHeaderRequest
+import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.ChainLastHeaderRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.FinalizedHeadRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.NextAccountIndexRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.response.ChainHeaderResponse
@@ -86,12 +92,11 @@ class SubstrateApiImpl @Inject constructor(
 ) : SubstrateApi {
 
     companion object {
-        private const val FINALIZED = "finalized"
-        private const val FINALITY_TIMEOUT = "finalityTimeout"
+        private const val IN_BLOCK = "inBlock"
     }
 
     private suspend fun genesisBytes(): ByteArray =
-        if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.STAGE, Flavor.SORALUTION)) {
+        if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.TESTING, Flavor.SORALUTION)) {
             val result = socketService.executeAsync(
                 request = BlockHashRequest(0),
                 mapper = pojo<String>().nonNull(),
@@ -195,7 +200,151 @@ class SubstrateApiImpl @Inject constructor(
                     } else emptyList()
                 }
         }.getOrElse {
-            FirebaseCrashlytics.getInstance().recordException(it)
+            FirebaseWrapper.recordException(it)
+            throw it
+        }
+    }
+
+    override suspend fun getUserPoolsTokenIds(
+        runtime: RuntimeSnapshot,
+        address: String
+    ): List<ByteArray> {
+        val storageKey = runtime.accountPoolsKey(address)
+        return runCatching {
+            socketService.executeAsync(
+                request = GetStorageRequest(listOf(storageKey)),
+                mapper = scale(PooledAssetId),
+            )
+                .let { storage ->
+                    storage.result?.let {
+                        it[it.schema.assetId]
+                    } ?: emptyList()
+                }
+        }.onFailure(
+            FirebaseWrapper::recordException
+        ).getOrThrow()
+    }
+
+    override suspend fun getUserPoolsData(
+        runtime: RuntimeSnapshot,
+        address: String,
+        tokensId: List<ByteArray>
+    ): List<PoolDataDto> {
+        return tokensId.map { tokenId ->
+            val reserves = getPairWithXorReserves(runtime, tokenId)
+            val totalIssuanceAndProperties =
+                getPoolTotalIssuanceAndProperties(runtime, tokenId, address)
+            PoolDataDto(
+                tokenId.toHexString(true),
+                reserves.first,
+                reserves.second,
+                totalIssuanceAndProperties.first,
+                totalIssuanceAndProperties.second
+            )
+        }
+    }
+
+    private suspend fun getPairWithXorReserves(
+        runtime: RuntimeSnapshot,
+        tokenId: ByteArray
+    ): Pair<BigInteger, BigInteger> {
+        val storageKey = runtime.reservesKey(tokenId)
+        return runCatching {
+            socketService.executeAsync(
+                request = GetStorageRequest(listOf(storageKey)),
+                mapper = scale(ReservesResponse).nonNull(),
+            )
+                .let { storage ->
+                    storage[storage.schema.first] to storage[storage.schema.second]
+                }
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            throw it
+        }
+    }
+
+    override suspend fun getPoolReserveAccount(
+        runtime: RuntimeSnapshot,
+        tokenId: ByteArray
+    ): ByteArray {
+        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palleteName)
+            .storage(Storage.PROPERTIES.storageName).storageKey(
+                RuntimeHolder.getRuntime(),
+                OptionsProvider.feeAssetId.fromHex(),
+                tokenId
+            )
+        return runCatching {
+            socketService.executeAsync(
+                request = GetStorageRequest(listOf(storageKey)),
+                mapper = scale(PoolPropertiesResponse).nonNull(),
+            )
+                .let { storage ->
+                    storage[storage.schema.first]
+                }
+        }.onFailure {
+            FirebaseWrapper.recordException(it)
+        }.getOrThrow()
+    }
+
+    private suspend fun getPoolTotalIssuanceAndProperties(
+        runtime: RuntimeSnapshot,
+        tokenId: ByteArray,
+        address: String
+    ): Pair<BigInteger, BigInteger> {
+        return getPoolReserveAccount(runtime, tokenId).let { account ->
+            getPoolTotalIssuances(
+                RuntimeHolder.getRuntime(),
+                account
+            ) to getPoolProviders(
+                RuntimeHolder.getRuntime(),
+                account,
+                address
+            )
+        }
+    }
+
+    private suspend fun getPoolTotalIssuances(
+        runtime: RuntimeSnapshot,
+        reservesAccountId: ByteArray
+    ): BigInteger {
+        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palleteName)
+            .storage(Storage.TOTAL_ISSUANCES.storageName)
+            .storageKey(RuntimeHolder.getRuntime(), reservesAccountId)
+        return runCatching {
+            socketService.executeAsync(
+                request = GetStorageRequest(listOf(storageKey)),
+                mapper = scale(TotalIssuance).nonNull(),
+            )
+                .let { storage ->
+                    storage[storage.schema.totalIssuance]
+                }
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            throw it
+        }
+    }
+
+    private suspend fun getPoolProviders(
+        runtime: RuntimeSnapshot,
+        reservesAccountId: ByteArray,
+        currentAddress: String
+    ): BigInteger {
+        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palleteName)
+            .storage(Storage.POOL_PROVIDERS.storageName).storageKey(
+                RuntimeHolder.getRuntime(),
+                reservesAccountId,
+                currentAddress.toAccountId()
+            )
+        return runCatching {
+            socketService.executeAsync(
+                request = GetStorageRequest(listOf(storageKey)),
+                mapper = scale(PoolProviders).nonNull(),
+            )
+                .let { storage ->
+                    storage[storage.schema.poolProviders]
+                }
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
             throw it
         }
     }
@@ -260,15 +409,10 @@ class SubstrateApiImpl @Inject constructor(
         val s = response.subscriptionId
         val result = response.params.result
         val statusResponse: ExtrinsicStatusResponse = when {
-            (result.safeCast<Map<String, *>>())?.containsKey(FINALIZED)
+            (result.safeCast<Map<String, *>>())?.containsKey(IN_BLOCK)
                 ?: false -> ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
                 s,
-                (result.safeCast<Map<String, *>>())?.getValue(FINALIZED) as String
-            )
-            (result.safeCast<Map<String, *>>())?.containsKey(FINALITY_TIMEOUT)
-                ?: false -> ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
-                s,
-                (result.safeCast<Map<String, *>>())?.getValue(FINALITY_TIMEOUT) as String
+                (result.safeCast<Map<String, *>>())?.getValue(IN_BLOCK) as String
             )
             else -> ExtrinsicStatusResponse.ExtrinsicStatusPending(s)
         }
@@ -279,7 +423,7 @@ class SubstrateApiImpl @Inject constructor(
     override suspend fun fetchBalance(accountId: String, assetId: String): BigInteger =
         socketService.executeAsync(
             request = RuntimeRequest(
-                "assets_freeBalance",
+                "assets_usableBalance",
                 listOf(accountId, assetId)
             ),
             mapper = pojo<BalanceResponse>().nonNull()
@@ -291,8 +435,9 @@ class SubstrateApiImpl @Inject constructor(
         runtime: RuntimeSnapshot,
         accountId: String
     ): XorBalanceDto {
-        val storageKey = runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.ACCOUNT.storageName)
-            .storageKey(runtime, accountId.toAccountId())
+        val storageKey =
+            runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.ACCOUNT.storageName)
+                .storageKey(runtime, accountId.toAccountId())
         val accountInfoStruct = socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(AccountInfo).nonNull()
@@ -336,7 +481,8 @@ class SubstrateApiImpl @Inject constructor(
                     return null
                 }
 
-                val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName).storage(Storage.LEDGER.storageName)
+                val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName)
+                    .storage(Storage.LEDGER.storageName)
                     .storageKey(runtime, it.toAccountId())
                 socketService.executeAsync(
                     request = GetStorageRequest(listOf(storageKey)),
@@ -346,7 +492,8 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     private suspend fun fetchActiveEra(runtime: RuntimeSnapshot): BigInteger {
-        val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName).storage(Storage.ACTIVE_ERA.storageName)
+        val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName)
+            .storage(Storage.ACTIVE_ERA.storageName)
             .storageKey()
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -360,8 +507,9 @@ class SubstrateApiImpl @Inject constructor(
         runtime: RuntimeSnapshot,
         accountId: String
     ): String? {
-        val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName).storage(Storage.BONDED.storageName)
-            .storageKey(runtime, accountId.toAccountId())
+        val storageKey =
+            runtime.metadata.module(Pallete.STAKING.palleteName).storage(Storage.BONDED.storageName)
+                .storageKey(runtime, accountId.toAccountId())
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
         ).let {
@@ -377,8 +525,9 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     override suspend fun fetchBalances(runtime: RuntimeSnapshot, accountId: String): BigInteger {
-        val storageKey = runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.ACCOUNT.storageName)
-            .storageKey(runtime, accountId.toAccountId())
+        val storageKey =
+            runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.ACCOUNT.storageName)
+                .storageKey(runtime, accountId.toAccountId())
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(AccountInfo).nonNull(),
@@ -389,7 +538,8 @@ class SubstrateApiImpl @Inject constructor(
 
     override suspend fun isUpgradedToDualRefCount(runtime: RuntimeSnapshot): Boolean {
         val storageKey =
-            runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.UPGRADED_TO_DUAL_REF_COUNT.storageName).storageKey()
+            runtime.metadata.module(Pallete.SYSTEM.palleteName)
+                .storage(Storage.UPGRADED_TO_DUAL_REF_COUNT.storageName).storageKey()
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = pojo<String>().nonNull()
@@ -569,45 +719,49 @@ class SubstrateApiImpl @Inject constructor(
         addCall: ExtrinsicBuilder.() -> ExtrinsicBuilder,
     ): String {
         val fromAddress = from.toAccountId()
-        return socketService.executeAsync(
+        val runtimeVersion = socketService.executeAsync(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull(),
         )
-            .let { runtimeVersion ->
-                socketService.executeAsync(
-                    request = FinalizedHeadRequest(),
-                    mapper = pojo<String>().nonNull()
-                )
-                    .let { finalizedHash ->
-                        socketService.executeAsync(
-                            request = ChainHeaderRequest(finalizedHash),
-                            mapper = pojo<ChainHeaderResponse>().nonNull(),
-                        )
-                            .let { blockHeader ->
-                                genesisBytes().let { genesis ->
-                                    getNonce(from).let { nonce ->
-                                        ExtrinsicBuilder(
-                                            runtime,
-                                            keypair,
-                                            nonce,
-                                            runtimeVersion,
-                                            genesis,
-                                            OptionsProvider.encryptionType,
-                                            fromAddress,
-                                            finalizedHash.removeHexPrefix().fromHex(),
-                                            Era.getEraFromBlockPeriod(
-                                                blockHeader.number.removeHexPrefix()
-                                                    .toInt(16),
-                                                OptionsProvider.mortalEraLength
-                                            )
-                                        )
-                                            .addCall()
-                                            .build()
-                                    }
-                                }
-                            }
-                    }
-            }
+        val finalizedHash = socketService.executeAsync(
+            request = FinalizedHeadRequest(),
+            mapper = pojo<String>().nonNull()
+        )
+        val blockHeaderFinalized = socketService.executeAsync(
+            request = ChainHeaderRequest(finalizedHash),
+            mapper = pojo<ChainHeaderResponse>().nonNull(),
+        )
+        val blockHeaderLast1 = socketService.executeAsync(
+            request = ChainLastHeaderRequest(),
+            mapper = pojo<ChainHeaderResponse>().nonNull(),
+        )
+        val blockHeaderLast2 = socketService.executeAsync(
+            request = ChainHeaderRequest(blockHeaderLast1.parentHash),
+            mapper = pojo<ChainHeaderResponse>().nonNull(),
+        )
+        val numberFinalized = blockHeaderFinalized.number.removeHexPrefix().toInt(16)
+        val numberLast = blockHeaderLast2.number.removeHexPrefix().toInt(16)
+        val (number, hash) = if (numberFinalized < numberLast &&
+            numberLast - numberFinalized < 5
+        ) numberFinalized to finalizedHash else numberLast to blockHeaderLast1.parentHash
+        val genesis = genesisBytes()
+        val nonce = getNonce(from)
+        return ExtrinsicBuilder(
+            runtime,
+            keypair,
+            nonce,
+            runtimeVersion,
+            genesis,
+            OptionsProvider.encryptionType,
+            fromAddress,
+            hash.removeHexPrefix().fromHex(),
+            Era.getEraFromBlockPeriod(
+                number,
+                OptionsProvider.mortalEraLength
+            )
+        )
+            .addCall()
+            .build()
     }
 
     private suspend fun getNonce(from: String): BigInteger =

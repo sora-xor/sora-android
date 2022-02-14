@@ -179,13 +179,8 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    @Named("SORA_HOST_URL")
-    fun provideSoraHostUrl(): String = BuildConfig.HOST_URL
-
-    @Provides
-    @Singleton
     fun provideSora2CoroutineApiCreator(@Named("SORA2_NET_CLIENT") okHttpClient: OkHttpClient): Sora2CoroutineApiCreator {
-        return Sora2CoroutineApiCreator(okHttpClient, OptionsProvider.soraScanUrl)
+        return Sora2CoroutineApiCreator(okHttpClient, OptionsProvider.urlPlaceholder)
     }
 
     @Singleton
@@ -195,16 +190,9 @@ class NetworkModule {
 
     @Singleton
     @Provides
-    @Named("INVITE_LINK_URL")
-    fun provideInviteLinkUrl(): String = BuildConfig.INVITE_LINK_URL
-
-    @Singleton
-    @Provides
     fun provideAppLinksProvider(
-        @Named("SORA_HOST_URL") soraHostUrl: String,
         @Named("DEFAULT_MARKET_URL") defaultMarketUrl: String,
-        @Named("INVITE_LINK_URL") inviteUrl: String
     ): AppLinksProvider {
-        return AppLinksProvider(soraHostUrl, defaultMarketUrl, inviteUrl, "")
+        return AppLinksProvider(defaultMarketUrl)
     }
 }

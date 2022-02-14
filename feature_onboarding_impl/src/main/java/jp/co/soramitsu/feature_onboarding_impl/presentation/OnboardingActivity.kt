@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation
 
+import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -39,14 +40,16 @@ class OnboardingActivity :
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 putExtra(KEY_ONBOARDING_STATE, state)
             }
-            context.startActivity(intent)
+            val options = ActivityOptions.makeCustomAnimation(context, android.R.anim.fade_in, android.R.anim.fade_out)
+            context.startActivity(intent, options.toBundle())
         }
 
         fun startWithInviteLink(context: Context) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
                 action = ACTION_INVITE
             }
-            context.startActivity(intent)
+            val options = ActivityOptions.makeCustomAnimation(context, android.R.anim.fade_in, android.R.anim.fade_out)
+            context.startActivity(intent, options.toBundle())
         }
     }
 
@@ -71,7 +74,7 @@ class OnboardingActivity :
     override fun initViews() {
         Insetter.builder()
             .paddingTop(windowInsetTypesOf(statusBars = true))
-            .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
+            .paddingBottom(windowInsetTypesOf(navigationBars = true))
             .applyToView(binding.flContainerOnboarding)
         initNavigation()
     }

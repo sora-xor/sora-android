@@ -7,38 +7,40 @@
 
     <TextView
         android:id="@+id/tvLeftPosition"
-        style="@style/TextAppearance.Soramitsu.Paragraph_1"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="?attr/contentQuaternary"
-        tools:text="1"
-        tools:textColor="@color/grey_400" />
+        android:letterSpacing="-0.02"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2"
+        tools:text="11" />
 
     <TextView
         android:id="@+id/tvLeftWord"
-        style="@style/TextAppearance.Soramitsu.Paragraph_1"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.18"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:paddingStart="@dimen/x2"
+        android:letterSpacing="-0.02"
         tools:text="one word" />
 
     <TextView
         android:id="@+id/tvRightPosition"
-        style="@style/TextAppearance.Soramitsu.Paragraph_1"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="?attr/contentQuaternary"
-        tools:text="6"
-        tools:textColor="@color/grey_400" />
+        android:letterSpacing="-0.02"
+        android:paddingStart="@dimen/x2"
+        android:paddingEnd="@dimen/x2"
+        tools:text="16" />
 
     <TextView
         android:id="@+id/tvRightWord"
-        style="@style/TextAppearance.Soramitsu.Paragraph_1"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.18"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:paddingStart="@dimen/x2"
+        android:letterSpacing="-0.02"
         tools:text="ten word" />
 
 </LinearLayout>

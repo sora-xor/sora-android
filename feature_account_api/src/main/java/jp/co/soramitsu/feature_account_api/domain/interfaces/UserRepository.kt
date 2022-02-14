@@ -10,11 +10,11 @@ import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 
 interface UserRepository {
 
-    fun getRegistrationState(): OnboardingState
+    suspend fun getRegistrationState(): OnboardingState
 
     suspend fun savePin(pin: String)
 
-    fun retrievePin(): String
+    suspend fun retrievePin(): String
 
     suspend fun saveRegistrationState(onboardingState: OnboardingState)
 
@@ -22,7 +22,7 @@ interface UserRepository {
 
     suspend fun getAppVersion(): String
 
-    fun saveParentInviteCode(inviteCode: String)
+    suspend fun saveParentInviteCode(inviteCode: String)
 
     suspend fun getParentInviteCode(): String
 

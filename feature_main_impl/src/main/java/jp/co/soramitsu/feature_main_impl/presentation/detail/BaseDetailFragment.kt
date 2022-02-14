@@ -8,10 +8,10 @@ package jp.co.soramitsu.feature_main_impl.presentation.detail
 import androidx.annotation.LayoutRes
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
-import jp.co.soramitsu.common.presentation.view.openSoftKeyboard
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.openSoftKeyboard
 import jp.co.soramitsu.feature_main_impl.presentation.util.VoteBottomSheetDialog
 import javax.inject.Inject
 
@@ -58,7 +58,7 @@ abstract class BaseDetailFragment<V : BaseDetailViewModel>(@LayoutRes layoutRes:
             { whenDone.invoke(it) },
             {
                 if (keyboardHelper!!.isKeyboardShowing) {
-                    hideSoftKeyboard(activity)
+                    hideSoftKeyboard()
                 } else {
                     openSoftKeyboard(it)
                 }

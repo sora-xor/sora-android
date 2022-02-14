@@ -7,9 +7,4 @@
         <attr name="assetIconViewBackgroundColor" format="color" />
         <attr name="assetBlockChainName" format="string" />
     </declare-styleable>
-    <declare-styleable name="AssetSettingsToolbar">
-        <attr name="leftActionText" format="string" />
-        <attr name="rightActionText" format="string" />
-        <attr name="titleText" format="string" />
-    </declare-styleable>
 </resources>

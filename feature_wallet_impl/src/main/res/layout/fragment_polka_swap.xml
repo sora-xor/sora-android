@@ -1,70 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?baseBackground">
 
-    <ImageView
-        android:id="@+id/titleLogo"
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glPolkaswapTop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x2"
-        android:layout_marginEnd="@dimen/x1"
-        android:src="@drawable/polkaswap_logo"
-        android:text="@string/tabbar_polkaswap_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="@dimen/x1" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glPolkaswapLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/x2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glPolkaswapRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/x2" />
+
+    <LinearLayout
+        android:id="@+id/llPolkaswapTitle"
+        android:layout_width="172dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toTopOf="@id/glPolkaswapTop">
+
+        <ImageView
+            android:id="@+id/titleLogo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_weight="1"
+            android:src="@drawable/ic_polkaswap_title"
+            app:tint="?attr/tintTitles"
+            tools:ignore="ContentDescription" />
+
+        <ImageView
+            android:id="@+id/titleLogo2"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:src="@drawable/ic_polkaswap"
+            tools:ignore="ContentDescription" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/marketTitleText"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TextAppearance.Soramitsu.Paragraph_4"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="@dimen/x1"
+        android:includeFontPadding="false"
         android:text="@string/polkaswap_market"
-        android:textColor="?contentTertiary"
+        android:textAllCaps="true"
+        android:textColor="?attr/balanceColorDefault"
+        app:layout_constraintBottom_toTopOf="@id/marketValueText"
         app:layout_constraintEnd_toStartOf="@+id/settingsButton"
-        app:layout_constraintTop_toTopOf="@+id/settingsButton" />
+        app:layout_constraintTop_toTopOf="@id/settingsButton"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <TextView
         android:id="@+id/marketValueText"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TextAppearance.Soramitsu.Paragraph_4"
         android:layout_marginEnd="@dimen/x1"
+        android:includeFontPadding="false"
         android:text="@string/polkaswap_smart"
-        android:textColor="@color/brand_pmsblack"
-        app:layout_constraintBottom_toBottomOf="@+id/settingsButton"
+        android:textAllCaps="true"
+        android:textColor="@color/neu_brand_polkaswap"
+        app:layout_constraintBottom_toBottomOf="@id/settingsButton"
         app:layout_constraintEnd_toStartOf="@+id/settingsButton"
         app:layout_constraintTop_toBottomOf="@+id/marketTitleText" />
 
-    <ImageView
+    <soup.neumorphism.NeumorphImageButton
         android:id="@+id/settingsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:src="@drawable/ic_settings_32"
-        android:text="@string/tabbar_polkaswap_title"
-        app:layout_constraintBottom_toBottomOf="@+id/titleLogo"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@id/titleLogo"
-        app:layout_constraintTop_toTopOf="@+id/titleLogo" />
+        style="@style/Widget.Soramitsu.Neu.ImageButton.Common"
+        android:src="@drawable/ic_neu_settings"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintTop_toTopOf="@id/glPolkaswapTop"
+        tools:ignore="ContentDescription" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabsLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="@dimen/x2"
-        android:paddingEnd="@dimen/x2"
-        app:tabIndicatorColor="@color/brand_pmsblack"
-        app:tabTextColor="?contentQuaternary"
-        app:tabTextAppearance="@style/TextAppearance.Soramitsu.Upper_2.Bold"
-        app:tabSelectedTextColor="@color/brand_pmsblack"
-        app:layout_constraintTop_toBottomOf="@+id/titleLogo" />
+        android:layout_marginTop="@dimen/x1"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toBottomOf="@id/llPolkaswapTitle"
+        app:tabBackground="@drawable/tab_background_swap"
+        app:tabIndicator="@android:color/transparent"
+        app:tabSelectedTextColor="@color/neu_brand_polkaswap"
+        app:tabTextAppearance="@style/TextAppearance.Soramitsu.Neu.18.Regular"
+        app:tabTextColor="?attr/disabledColor" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewpager"

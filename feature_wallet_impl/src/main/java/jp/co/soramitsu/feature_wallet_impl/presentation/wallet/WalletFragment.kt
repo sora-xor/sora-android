@@ -10,17 +10,14 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.updatePadding
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.paging.LoadState
-import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -28,28 +25,25 @@ import com.github.florent37.runtimepermission.RuntimePermission.askPermission
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.zxing.integration.android.IntentIntegrator
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
-import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserBottomSheet
-import jp.co.soramitsu.common.presentation.view.chooserbottomsheet.ChooserItem
-import jp.co.soramitsu.common.util.ext.dpRes2px
-import jp.co.soramitsu.common.util.ext.hide
-import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentWalletBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.util.ScanQrBottomSheetDialog
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.asset.AssetAdapter
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.asset.AssetsListSwipeController
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.EventsLoadAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.HistoryAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
 import javax.inject.Inject
 
 class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
@@ -60,9 +54,6 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
-
-    @Inject
-    lateinit var cma: ConnectionManager
 
     private lateinit var bottomSheetBehavior: LockBottomSheetBehavior<View>
     private lateinit var integrator: IntentIntegrator
@@ -81,6 +72,8 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
             .build()
             .inject(this)
     }
+
+    private lateinit var historyAdapter: HistoryAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -113,94 +106,57 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
                 }
 
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
-                    bottomSheetCollapsedOrHalfExpanded = BottomSheetBehavior.STATE_COLLAPSED == newState || BottomSheetBehavior.STATE_HALF_EXPANDED == newState
+                    bottomSheetCollapsedOrHalfExpanded =
+                        BottomSheetBehavior.STATE_COLLAPSED == newState || BottomSheetBehavior.STATE_HALF_EXPANDED == newState
                     if (isAdded) viewBinding.swipeLayout.isEnabled = bottomSheetCollapsedOrHalfExpanded
                 }
             })
 
         viewBinding.swipeLayout.setOnRefreshListener {
             viewModel.refreshAssets()
-            viewBinding.eventRecyclerView.adapter.safeCast<HistoryAdapter>()?.refresh()
+            historyAdapter.refresh()
         }
 
         viewBinding.recentEventsBottomSheet.doOnLayout {
-            bottomSheetBehavior.peekHeight = viewBinding.titleTv.height + viewBinding.titleTv.top
+            bottomSheetBehavior.peekHeight =
+                (viewBinding.bottomSheetPin.height + viewBinding.bottomSheetPin.top) * 4
         }
-
+        bottomSheetBehavior.expandedOffset = 30
         bottomSheetBehavior.isFitToContents = false
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
-        viewBinding.eventRecyclerView.adapter =
-            HistoryAdapter(debounceClickHandler) {
-                viewModel.eventClicked(it)
-            }
+        historyAdapter = HistoryAdapter(debounceClickHandler) {
+            viewModel.eventClicked(it)
+        }
+        viewBinding.eventRecyclerView.adapter = historyAdapter
+            .withLoadStateFooter(
+                footer = EventsLoadAdapter()
+            )
+        ContextCompat.getDrawable(
+            viewBinding.eventRecyclerView.context,
+            R.drawable.line_ver_divider
+        )?.let {
+            viewBinding.eventRecyclerView.addItemDecoration(
+                DividerItemDecoration(
+                    viewBinding.eventRecyclerView.context,
+                    DividerItemDecoration.VERTICAL
+                ).apply {
+                    setDrawable(it)
+                }
+            )
+        }
 
         viewBinding.ibWalletMore.setDebouncedClickListener(debounceClickHandler) {
             viewModel.assetSettingsClicked()
         }
 
         viewBinding.ibWalletScan.setDebouncedClickListener(debounceClickHandler) {
-            ChooserBottomSheet(
-                requireActivity(),
-                R.string.qr_code,
-                listOf(
-                    ChooserItem(
-                        R.string.qr_upload,
-                        R.drawable.ic_gallery_24
-                    ) { viewModel.openGallery() },
-                    ChooserItem(
-                        R.string.contacts_scan,
-                        R.drawable.ic_scan_24
-                    ) { viewModel.openCamera() }
-                )
+            ScanQrBottomSheetDialog(
+                context = requireActivity(),
+                uploadListener = { viewModel.openGallery() },
+                cameraListener = { viewModel.openCamera() }
             ).show()
         }
-
-        val assetsIconShow = requireNotNull(
-            ContextCompat.getDrawable(
-                requireContext(),
-                R.drawable.ic_eye_24
-            )
-        )
-        val assetsIconHide = requireNotNull(
-            ContextCompat.getDrawable(
-                requireContext(),
-                R.drawable.ic_eye_no_24
-            )
-        )
-        ItemTouchHelper(
-            AssetsListSwipeController(
-                dpRes2px(R.dimen.x3),
-                { pos ->
-                    if (pos != RecyclerView.NO_POSITION) {
-                        viewBinding.assetsRv.adapter.safeCast<AssetAdapter>()?.getAsset(pos)?.let {
-                            viewModel.onAssetCardSwiped(it)
-                        }
-                    }
-                },
-                { pos ->
-                    if (pos != RecyclerView.NO_POSITION) (viewBinding.assetsRv.adapter as AssetAdapter).allowToSwipe(
-                        pos
-                    ) else false
-                },
-                { pos ->
-                    if (pos != RecyclerView.NO_POSITION) {
-                        viewBinding.assetsRv.adapter.safeCast<AssetAdapter>()?.getAsset(pos)?.let {
-                            viewModel.onAssetCardSwipedPartly(it)
-                        }
-                    }
-                },
-                { pos ->
-                    if (pos != RecyclerView.NO_POSITION) {
-                        if ((viewBinding.assetsRv.adapter as AssetAdapter).isHideIcon(pos)
-                        ) assetsIconHide else assetsIconShow
-                    } else {
-                        null
-                    }
-                },
-                { swiping -> viewBinding.swipeLayout.isEnabled = !swiping }
-            )
-        ).attachToRecyclerView(viewBinding.assetsRv)
 
         initListeners()
     }
@@ -225,7 +181,11 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
             viewBinding.contentContainer.doOnNextLayout {
                 runCatching {
                     val ratio: Float =
-                        (viewBinding.assetsRv.height + viewBinding.title.height + resources.getDimension(R.dimen.x3)) / viewBinding.pageContainer.height.toFloat()
+                        (
+                            viewBinding.assetsRv.height + viewBinding.title.height + resources.getDimension(
+                                R.dimen.x3
+                            )
+                            ) / viewBinding.pageContainer.height.toFloat()
                     bottomSheetBehavior.halfExpandedRatio =
                         if (ratio > 0.15 && ratio < 0.85) 1 - ratio else 0.5f
                     viewBinding.assetsRv.adapter?.let { adapter ->
@@ -248,33 +208,23 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                viewModel.transactionsFlow.collectLatest {
-                    viewBinding.eventRecyclerView.adapter.safeCast<HistoryAdapter>()?.submitData(it)
-                }
+        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
+            viewModel.transactionsFlow.collectLatest {
+                historyAdapter.submitData(it)
             }
         }
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewBinding.eventRecyclerView.adapter.safeCast<HistoryAdapter>()?.loadStateFlow?.collectLatest {
-                viewBinding.swipeLayout.isRefreshing = it.refresh is LoadState.Loading
+        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
+            historyAdapter.loadStateFlow.collectLatest {
+                viewBinding.swipeLayout.isRefreshing = it.mediator?.refresh is LoadState.Loading
+                val emptyList = (it.refresh is LoadState.NotLoading || it.refresh is LoadState.Error) && historyAdapter.itemCount == 0
+                viewBinding.grEmptyHistoryWallet.showOrHide(emptyList)
             }
         }
-
-        viewBinding.eventRecyclerView.adapter.safeCast<HistoryAdapter>()?.let { adapter ->
-            adapter.addLoadStateListener { loadState ->
-                if (loadState.source.append.endOfPaginationReached || loadState.append.endOfPaginationReached) {
-                    if (adapter.itemCount < 1) {
-                        viewBinding.placeholder.show()
-                    } else {
-                        viewBinding.placeholder.hide()
-                    }
-                }
-            }
-        }
-
-        viewModel.hideSwipeProgressLiveData.observe {
-            viewBinding.swipeLayout.isRefreshing = false
+        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
+            historyAdapter.loadStateFlow
+                .distinctUntilChangedBy { it.refresh }
+                .filter { it.refresh is LoadState.NotLoading }
+                .collect { viewBinding.eventRecyclerView.scrollToPosition(0) }
         }
 
         viewModel.showSwipeProgressLiveData.observe(viewLifecycleOwner) {
@@ -341,6 +291,5 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
     override fun onResume() {
         super.onResume()
         viewModel.refreshAssets()
-        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     }
 }

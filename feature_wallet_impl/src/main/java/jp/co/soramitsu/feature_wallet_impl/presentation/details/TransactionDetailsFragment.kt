@@ -11,8 +11,10 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.setImageTint2
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransactionDetailsBinding
@@ -73,14 +75,25 @@ class TransactionDetailsFragment :
 
     private fun initListeners() {
         viewBinding.transactionStatusText.text = details.status
+        viewBinding.tvExDetailsTokenName.text = details.tokenName
         viewBinding.transactionStatusIcon.setImageResource(details.statusIcon)
+        viewBinding.transactionStatusIcon.setImageTint2(context.attrColor(details.statusIconTintAttr))
+        viewBinding.ivExDetailsTokenIcon.setImageResource(details.tokenIcon)
         viewBinding.tvTransactionHash.text = details.txHash
+        viewBinding.tvTransactionHash.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            0, 0, details.txHashIcon, 0
+        )
         viewBinding.tvBlockHash.text = details.blockHash
-        viewBinding.transactionDateText.text = details.date
+        viewBinding.tvBlockHash.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            0, 0, details.blockHashIcon, 0
+        )
+        viewBinding.tvTxDetailsDateValue.text = details.date
+        viewBinding.transactionDateText.text = details.time
         viewBinding.fromInfoTv.text = details.from
         viewBinding.toInfoTv.text = details.to
-        viewBinding.transactionAmountText.text = details.amount1
+        // viewBinding.transactionAmountText.text = details.amount1
         viewBinding.transactionTotalAmountTitle.text = details.amount2
         viewBinding.transactionFeeAmountText.text = details.fee
+        viewBinding.tvTxDetailsStatusType.text = details.statusText
     }
 }

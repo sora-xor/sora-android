@@ -10,6 +10,9 @@ import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,12 +23,16 @@ import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class SplashViewModelTest {
 
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var interactor: SplashInteractor
@@ -44,7 +51,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `nextScreen with REGISTRATION_FINISHED`() {
+    fun `nextScreen with REGISTRATION_FINISHED`() = runBlockingTest {
         given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
 
         splashViewModel.nextScreen()
@@ -53,7 +60,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `nextScreen with INITIAL`() {
+    fun `nextScreen with INITIAL`() = runBlockingTest {
         val state = OnboardingState.INITIAL
 
         given(interactor.getRegistrationState()).willReturn(state)
@@ -64,7 +71,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `handleDeepLink before registration called`() {
+    fun `handleDeepLink before registration called`() = runBlockingTest {
         val state = OnboardingState.INITIAL
         val invitationCode = "INVITATION_CODE"
 
@@ -77,7 +84,7 @@ class SplashViewModelTest {
     }
 
     @Test
-    fun `handleDeepLink after registration called`() {
+    fun `handleDeepLink after registration called`() = runBlockingTest {
         val state = OnboardingState.REGISTRATION_FINISHED
         val invitationCode = "INVITATION_CODE"
 

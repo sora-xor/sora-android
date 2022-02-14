@@ -12,23 +12,27 @@ import kotlinx.coroutines.flow.Flow
 
 interface WalletDatasource {
 
-    fun saveContacts(results: List<Account>)
+    suspend fun saveContacts(results: List<Account>)
 
-    fun retrieveContacts(): List<Account>?
+    suspend fun retrieveContacts(): List<Account>?
 
-    fun saveInvitedUsers(invitedUsers: Array<InvitedUser>)
+    suspend fun saveInvitedUsers(invitedUsers: Array<InvitedUser>)
 
-    fun retrieveInvitedUsers(): Array<InvitedUser>?
+    suspend fun retrieveInvitedUsers(): Array<InvitedUser>?
 
-    fun saveInvitationParent(parentInfo: InvitedUser)
+    suspend fun saveInvitationParent(parentInfo: InvitedUser)
 
-    fun retrieveInvitationParent(): InvitedUser?
+    suspend fun retrieveInvitationParent(): InvitedUser?
 
-    fun retrieveClaimBlockAndTxHash(): Pair<String, String>
+    suspend fun retrieveClaimBlockAndTxHash(): Pair<String, String>
 
-    fun saveClaimBlockAndTxHash(inBlock: String, txHash: String)
+    suspend fun saveClaimBlockAndTxHash(inBlock: String, txHash: String)
 
-    fun saveMigrationStatus(migrationStatus: MigrationStatus)
+    suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
 
     fun observeMigrationStatus(): Flow<MigrationStatus>
+
+    fun getDisclaimerVisibility(): Flow<Boolean>
+
+    suspend fun saveDisclaimerVisibility(v: Boolean)
 }

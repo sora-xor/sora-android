@@ -13,6 +13,9 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class PolkaSwapViewModel(
@@ -23,25 +26,56 @@ class PolkaSwapViewModel(
     private val _selectedMarketLiveData = MutableLiveData<Market>()
     val selectedMarketLiveData: LiveData<Market> = _selectedMarketLiveData
 
-    private val _marketListLiveData = SingleLiveEvent<Pair<List<Market>, Market>>()
-    val marketListLiveData: LiveData<Pair<List<Market>, Market>> = _marketListLiveData
+    private val _showMarketDialogLiveData = SingleLiveEvent<Pair<Market, List<Market>>>()
+    val showMarketDialogLiveData: LiveData<Pair<Market, List<Market>>> = _showMarketDialogLiveData
+
+    private val _disclaimerLiveData = MutableLiveData<Boolean>()
+    val disclaimerLiveData: LiveData<Boolean> = _disclaimerLiveData
+
+    private var currentVisibility: Boolean = true
 
     init {
         _selectedMarketLiveData.value = Market.SMART
+        polkaswapInteractor.getPolkaswapDisclaimerVisibility()
+            .catch {
+                onError(it)
+            }
+            .onEach {
+                currentVisibility = it
+                _disclaimerLiveData.value = it
+            }
+            .launchIn(viewModelScope)
+
+        polkaswapInteractor.observeSelectedMarket()
+            .catch {
+                onError(it)
+            }
+            .onEach {
+                _selectedMarketLiveData.value = it
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun onDisclaimerSwipe() {
+        viewModelScope.launch {
+            tryCatch {
+                polkaswapInteractor.setPolkaswapDisclaimerVisibility(currentVisibility.not())
+            }
+        }
     }
 
     fun marketClicked(market: Market) {
-        _selectedMarketLiveData.value = market
         polkaswapInteractor.setSwapMarket(market)
     }
 
     fun marketSettingsClicked() {
         viewModelScope.launch {
             tryCatch {
+                val selected = _selectedMarketLiveData.value ?: Market.SMART
                 val markets = polkaswapInteractor.getAvailableSources()
+
                 if (markets.isNotEmpty()) {
-                    _marketListLiveData.value =
-                        markets to (_selectedMarketLiveData.value ?: Market.SMART)
+                    _showMarketDialogLiveData.value = selected to markets
                 }
             }
         }

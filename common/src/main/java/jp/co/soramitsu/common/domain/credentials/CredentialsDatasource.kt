@@ -10,27 +10,27 @@ import java.security.KeyPair
 
 interface CredentialsDatasource {
 
-    fun saveAddress(address: String)
+    suspend fun saveAddress(address: String)
 
-    fun getAddress(): String
+    suspend fun getAddress(): String
 
-    fun saveKeys(keyPair: Keypair)
+    suspend fun saveKeys(keyPair: Keypair)
 
-    fun retrieveKeys(): Keypair?
+    suspend fun retrieveKeys(): Keypair?
 
-    fun saveMnemonic(mnemonic: String)
+    suspend fun saveMnemonic(mnemonic: String)
 
-    fun retrieveMnemonic(): String
+    suspend fun retrieveMnemonic(): String
 
-    fun saveIrohaKeys(keyPair: KeyPair)
+    suspend fun saveIrohaKeys(keyPair: KeyPair)
 
-    fun retrieveIrohaKeys(): KeyPair?
+    suspend fun retrieveIrohaKeys(): KeyPair?
 
-    fun saveIrohaAddress(address: String)
+    suspend fun saveIrohaAddress(address: String)
 
-    fun getIrohaAddress(): String
+    suspend fun getIrohaAddress(): String
 
-    fun saveSignature(signature: ByteArray)
+    suspend fun saveSignature(signature: ByteArray)
 
-    fun retrieveSignature(): ByteArray
+    suspend fun retrieveSignature(): ByteArray
 }

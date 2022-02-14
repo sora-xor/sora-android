@@ -47,7 +47,7 @@
 
     <Button
         android:id="@+id/googlePlayBtn"
-        style="@style/Widget.Soramitsu.Button"
+        style="@style/Widget.Soramitsu.Button.Secondary.48"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"

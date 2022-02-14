@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.Flow
 interface VotesDataSource {
     fun observeVotes(): Flow<String>
 
-    fun saveVotes(votes: String)
+    suspend fun saveVotes(votes: String)
 
-    fun retrieveVotes(): String
+    suspend fun retrieveVotes(): String
 
-    fun saveLastReceivedVotes(toString: String)
+    suspend fun saveLastReceivedVotes(toString: String)
 
-    fun retrieveLastReceivedVotes(): String
+    suspend fun retrieveLastReceivedVotes(): String
 }

@@ -5,49 +5,63 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.network.response
 
-import java.math.BigDecimal
-import java.math.BigInteger
+import androidx.annotation.Keep
+import com.google.gson.JsonObject
 
-data class TransactionsPageResponse(val errors: List<Any>, val data: List<TransactionRemote>)
+@Keep
+data class HistoryResponse(val data: HistoryResponseData)
 
-data class TransactionRemote(val attributes: TransactionRemoteAttributes, val id: String)
+@Keep
+data class HistoryResponseData(val historyElements: HistoryResponseDataElements)
 
-data class TransactionRemoteAttributes(
-    val block_hash: String,
-    val transaction_hash: String,
-    val transaction_timestamp: Double,
-    val value: BigDecimal,
-    val fee: BigDecimal,
+@Keep
+data class HistoryResponseDataElements(val nodes: List<HistoryResponseItem>, val pageInfo: HistoryResponsePageInfo)
+
+@Keep
+data class HistoryResponsePageInfo(
+    val endCursor: String,
+    val hasNextPage: Boolean,
+)
+
+@Keep
+data class HistoryResponseItem(
+    val id: String,
+    val blockHash: String,
+    val module: String,
+    val method: String,
+    val timestamp: String,
+    val networkFee: String,
+    val execution: ExecutionResult,
+    val data: JsonObject
+)
+
+@Keep
+data class ExecutionResult(
+    val success: Boolean,
+    val error: Error?
+)
+
+@Keep
+data class Error(
+    val moduleErrorId: Int?,
+    val moduleErrorIndex: Int?,
+    val nonModuleErrorMessage: String?
+)
+
+@Keep
+data class HistoryResponseItemTransfer(
+    val to: String,
+    val from: String,
+    val amount: String,
     val assetId: String,
-    val sender: TransactionRemoteAttributesPeer,
-    val destination: TransactionRemoteAttributesPeer,
 )
 
-data class TransactionRemoteAttributesPeer(val attributes: TransactionRemoteAttributesData)
-
-data class TransactionRemoteAttributesData(val address: String)
-
-data class ExtrinsicsPageResponse(val errors: List<Any>, val data: List<ExtrinsicRemote>)
-
-data class ExtrinsicRemote(val attributes: ExtrinsicRemoteAttributes, val id: String)
-
-data class ExtrinsicRemoteAttributes(
-    val extrinsic_hash: String,
-    val block_hash: String,
-    val success: Int,
-    val error: Int,
-    val params: List<ExtrinsicRemoteAttributeParams>,
-    val transaction_timestamp: Double,
-    val fee: BigInteger,
+@Keep
+data class HistoryResponseItemSwap(
+    val selectedMarket: String,
+    val liquidityProviderFee: String,
+    val baseAssetId: String,
+    val targetAssetId: String,
+    val baseAssetAmount: String,
+    val targetAssetAmount: String,
 )
-
-data class ExtrinsicRemoteAttributeParams(
-    val name: String,
-    val value: Any,
-)
-
-data class ExtrinsicSwapResponse(val errors: List<Any>, val data: ExtrinsicSwapDetails)
-
-data class ExtrinsicSwapDetails(val attributes: ExtrinsicSwapDetailsAttr)
-
-data class ExtrinsicSwapDetailsAttr(val params: List<ExtrinsicRemoteAttributeParams>)

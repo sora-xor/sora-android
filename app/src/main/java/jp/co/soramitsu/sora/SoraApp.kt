@@ -16,6 +16,7 @@ import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.di.api.CommonApi
 import jp.co.soramitsu.common.di.api.FeatureContainer
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.DiskLoggerAdapter
 import jp.co.soramitsu.common.logger.LoggerAdapter
 import jp.co.soramitsu.common.resourses.ContextManager
@@ -35,24 +36,25 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
     @Inject
     lateinit var connectionManager: ConnectionManager
 
+    @Inject
+    lateinit var fileManager: FileManager
+
     private lateinit var appComponent: AppComponent
 
-    private val languagesHolder: LanguagesHolder = LanguagesHolder()
-
     override fun attachBaseContext(base: Context) {
-        val contextManager = ContextManager.getInstanceOrInit(base, languagesHolder)
+        val contextManager = ContextManager.getInstanceOrInit(base, LanguagesHolder)
         super.attachBaseContext(contextManager.setLocale(base))
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val contextManager = ContextManager.getInstanceOrInit(this, languagesHolder)
+        val contextManager = ContextManager.getInstanceOrInit(this, LanguagesHolder)
         contextManager.setLocale(this)
     }
 
     override fun onCreate() {
         super.onCreate()
-        val contextManger = ContextManager.getInstanceOrInit(this, languagesHolder)
+        val contextManger = ContextManager.getInstanceOrInit(this, LanguagesHolder)
 
         appComponent = DaggerAppComponent
             .builder()
@@ -67,6 +69,7 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
         FirebaseApp.initializeApp(this)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
+        OptionsProvider.APPLICATION_ID = BuildConfig.APPLICATION_ID
     }
 
     private fun initLogger() {
@@ -75,9 +78,7 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
             .build()
 
         Logger.addLogAdapter(LoggerAdapter(formatStrategy))
-        applicationContext.externalCacheDir?.absolutePath?.let {
-            Logger.addLogAdapter(DiskLoggerAdapter(it))
-        }
+        Logger.addLogAdapter(DiskLoggerAdapter(fileManager.logStorageDir))
     }
 
     override fun <T> getFeature(key: Class<*>): T {

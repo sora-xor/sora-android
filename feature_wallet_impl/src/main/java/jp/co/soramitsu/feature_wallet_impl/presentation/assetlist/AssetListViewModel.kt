@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.assetlist
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -35,18 +36,22 @@ class AssetListViewModel(
 
     private val assetsList: MutableList<AssetListItemModel> = mutableListOf()
     private var curFilter: String = ""
+    private val balanceStyle = AssetBalanceStyle(
+        R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+        R.style.TextAppearance_Soramitsu_Neu_Bold_11
+    )
 
     init {
         viewModelScope.launch {
             val list = interactor.getVisibleAssets().map {
-                it.mapAssetToAssetModel(numbersFormatter)
-            }
+                it.mapAssetToAssetModel(numbersFormatter, balanceStyle)
+            }.sortedBy { it.sortOrder }
             assetsList.clear()
             assetsList.addAll(list)
             filterAssetsList()
         }
         _title.value =
-            if (assetListMode == AssetListMode.RECEIVE) R.string.common_receive else R.string.common_choose_asset
+            if (assetListMode == AssetListMode.RECEIVE) R.string.select_asset_receive else R.string.select_asset_send
     }
 
     private fun filterAssetsList() {

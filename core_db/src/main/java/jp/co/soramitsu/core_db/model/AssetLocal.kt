@@ -28,7 +28,6 @@ data class AssetLocal(
     @ColumnInfo(index = true)
     val accountAddress: String,
     val displayAsset: Boolean,
-    val showMainBalance: Boolean,
     val position: Int,
     val free: BigDecimal,
     val reserved: BigDecimal,

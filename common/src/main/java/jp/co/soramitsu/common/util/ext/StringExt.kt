@@ -7,6 +7,7 @@ package jp.co.soramitsu.common.util.ext
 
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
+import android.text.style.RelativeSizeSpan
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.util.SoraColoredClickableSpan
 import java.util.regex.Pattern
@@ -44,11 +45,25 @@ fun String.removeHexPrefix(): String = this.removePrefix(OptionsProvider.hexPref
 
 fun String.addHexPrefix(): String = "${OptionsProvider.hexPrefix}$this"
 
+fun String.removeWebPrefix(): String = this.removePrefix("http://").removePrefix("https://").removePrefix("www.")
+
 fun String.truncateHash(): String = if (this.isNotEmpty() && this.length > 10) "${this.substring(0, 5)}...${this.substring(this.lastIndex - 4, this.lastIndex + 1)}" else this
 
 fun String.truncateUserAddress(): String = if (this.isNotEmpty() && this.length > 10) "${this.substring(0, 5)}...${this.substring(this.lastIndex - 4, this.lastIndex + 1)}" else this
 
-fun String.highlightWords(colors: List<Int>, clickables: List<() -> Unit>): SpannableStringBuilder {
+fun String.decimalPartSized(decimalSeparator: String = "."): SpannableString {
+    val decimalPointIndex = this.indexOf(decimalSeparator)
+
+    val ss = SpannableString(this)
+
+    if (decimalPointIndex != -1) {
+        ss.setSpan(RelativeSizeSpan(0.7f), decimalPointIndex, this.length, 0)
+    }
+
+    return ss
+}
+
+fun String.highlightWords(colors: List<Int>, clickables: List<() -> Unit>, underlined: Boolean = false): SpannableStringBuilder {
     val delimiter = "%%"
 
     val builder = SpannableStringBuilder()
@@ -65,12 +80,13 @@ fun String.highlightWords(colors: List<Int>, clickables: List<() -> Unit>): Span
         val span = if (index % 2 == 0) {
             s
         } else {
-            val highlightSpan = SpannableString(s)
+            val highlightSpan = SpannableString(s.trim())
 
             highlightSpan.setSpan(
                 SoraColoredClickableSpan(
                     clickables[indexHighlighted],
-                    colors[indexHighlighted]
+                    colors[indexHighlighted],
+                    underlined
                 ),
                 0,
                 highlightSpan.length,

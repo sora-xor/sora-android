@@ -20,6 +20,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaSwapViewModel
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.pool.PoolViewModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap.SwapViewModel
 
 @Module(
@@ -67,5 +68,26 @@ class PolkaSwapModule {
         viewModelFactory: ViewModelProvider.Factory
     ): SwapViewModel {
         return ViewModelProviders.of(fragment, viewModelFactory).get(SwapViewModel::class.java)
+    }
+
+    @Provides
+    @IntoMap
+    @ViewModelKey(PoolViewModel::class)
+    fun providePoolViewModel(
+        router: WalletRouter,
+        interactor: WalletInteractor,
+        polkaswapInteractor: PolkaswapInteractor,
+        nf: NumbersFormatter,
+        rm: ResourceManager,
+    ): ViewModel {
+        return PoolViewModel(router, interactor, polkaswapInteractor, nf, rm)
+    }
+
+    @Provides
+    fun providePoolViewModelCreator(
+        fragment: Fragment,
+        viewModelFactory: ViewModelProvider.Factory
+    ): PoolViewModel {
+        return ViewModelProviders.of(fragment, viewModelFactory).get(PoolViewModel::class.java)
     }
 }

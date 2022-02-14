@@ -13,7 +13,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.databinding.BottomSheetAssetListBinding
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListAdapter
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
-import jp.co.soramitsu.common.presentation.view.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import java.util.Locale
 
 class AssetSelectBottomSheet(
@@ -29,7 +29,7 @@ class AssetSelectBottomSheet(
     private val queryListener = object : SearchView.OnQueryTextListener {
 
         override fun onQueryTextSubmit(query: String?): Boolean {
-            fragment.hideSoftKeyboard(fragment.requireActivity())
+            fragment.hideSoftKeyboard()
             searchAssets(query.orEmpty())
             return true
         }

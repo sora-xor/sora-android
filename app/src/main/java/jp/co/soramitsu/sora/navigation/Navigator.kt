@@ -25,11 +25,11 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragm
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap.SwapFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.SwapConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
 import jp.co.soramitsu.sora.R
-import kotlinx.coroutines.FlowPreview
 import java.math.BigDecimal
 
 class Navigator : MainRouter, WalletRouter {
@@ -52,6 +52,10 @@ class Navigator : MainRouter, WalletRouter {
             putSerializable(Const.PIN_CODE_ACTION, action)
         }
         navController?.navigate(R.id.pincodeFragment, bundle)
+    }
+
+    override fun showFlexibleUpdateScreen() {
+        navController?.navigate(R.id.updateFlexibleFragment)
     }
 
     override fun showPersonalDataEdition() {
@@ -105,7 +109,7 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showReferenda() {
-        navController?.navigate(R.id.mainFragment)
+        navController?.navigate(R.id.referendaFragment)
     }
 
     override fun showContacts(assetId: String) {
@@ -185,7 +189,10 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.polkaswapInfoFragment)
     }
 
-    @FlowPreview
+    override fun showPolkaswapDisclaimerFromSettings() {
+        navController?.navigate(R.id.polkaDiscFragment)
+    }
+
     override fun showSwapConfirmation(
         inputToken: Token,
         inputAmount: BigDecimal,
@@ -208,6 +215,14 @@ class Navigator : MainRouter, WalletRouter {
                 feeToken,
                 slippage,
             )
+        )
+    }
+
+    override fun showSwapTab(tokenFrom: Token, tokenTo: Token, amountFrom: BigDecimal) {
+        navController?.navigate(
+            R.id.polkaswap_nav_graph,
+            SwapFragment.createSwapData(tokenFrom, tokenTo, amountFrom),
+            NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build()
         )
     }
 

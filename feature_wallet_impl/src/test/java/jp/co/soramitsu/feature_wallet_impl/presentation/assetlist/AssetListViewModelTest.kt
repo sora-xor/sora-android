@@ -9,6 +9,8 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -72,7 +74,6 @@ class AssetListViewModelTest {
                 Asset(
                     Token("token_id", "token name", "token symbol", 18, true, 0),
                     true,
-                    true,
                     1,
                     AssetBalance(
                         BigDecimal.ONE,
@@ -86,7 +87,6 @@ class AssetListViewModelTest {
                 ),
                 Asset(
                     Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
-                    true,
                     true,
                     2,
                     AssetBalance(
@@ -123,7 +123,12 @@ class AssetListViewModelTest {
             router,
             AssetListMode.RECEIVE
         )
-        viewModel.itemClicked(AssetListItemModel(0, "title", "1", "sora", 1, "id"))
+        viewModel.itemClicked(AssetListItemModel(0, "title", AssetBalanceData(
+            amount = "1",
+            style = AssetBalanceStyle(
+                R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+                R.style.TextAppearance_Soramitsu_Neu_Bold_11
+            )), "sora", 1, "id"))
         verify(router).showReceive(ReceiveAssetModel("id", "sora", "title", 0))
     }
 
@@ -135,7 +140,12 @@ class AssetListViewModelTest {
             router,
             AssetListMode.SEND
         )
-        viewModel.itemClicked(AssetListItemModel(0, "title", "1", "sora", 1, "id"))
+        viewModel.itemClicked(AssetListItemModel(0, "title", AssetBalanceData(
+            amount = "1",
+            style = AssetBalanceStyle(
+                R.style.TextAppearance_Soramitsu_Neu_Bold_15,
+                R.style.TextAppearance_Soramitsu_Neu_Bold_11
+            )), "sora", 1, "id"))
         verify(router).showContacts("id")
     }
 
@@ -176,7 +186,7 @@ class AssetListViewModelTest {
             AssetListMode.SEND
         )
         viewModel.title.observeForever {
-            Assert.assertEquals(R.string.common_choose_asset, it)
+            Assert.assertEquals(R.string.select_asset_send, it)
         }
     }
 
@@ -189,7 +199,7 @@ class AssetListViewModelTest {
             AssetListMode.RECEIVE
         )
         viewModel.title.observeForever {
-            Assert.assertEquals(R.string.common_receive, it)
+            Assert.assertEquals(R.string.select_asset_receive, it)
         }
     }
 

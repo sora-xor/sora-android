@@ -9,34 +9,44 @@ sealed class EventUiModel {
     data class EventTimeSeparatorUiModel(val title: String) : EventUiModel()
 
     sealed class EventTxUiModel(
+        val txHash: String,
         val timestamp: Long,
         val pending: Boolean = false,
         val success: Boolean? = null
     ) : EventUiModel() {
-        class EventTransferUiModel(
-            val id: String,
-            val isIncoming: Boolean,
-            val statusIconResource: Int,
-            val title: String,
-            val dateString: String,
+        class EventTransferInUiModel(
+            hash: String,
+            val tokenIcon: Int,
+            val peerAddress: String,
+            val dateTime: String,
             timestamp: Long,
-            val amountFormatted: String,
-            val amountFullFormatted: String,
+            val amountFormatted: Pair<String, String>,
             pending: Boolean,
             success: Boolean?,
-        ) : EventTxUiModel(timestamp, pending, success)
+        ) : EventTxUiModel(hash, timestamp, pending, success)
+
+        class EventTransferOutUiModel(
+            hash: String,
+            val tokenIcon: Int,
+            val peerAddress: String,
+            val dateTime: String,
+            timestamp: Long,
+            val amountFormatted: Pair<String, String>,
+            pending: Boolean,
+            success: Boolean?,
+        ) : EventTxUiModel(hash, timestamp, pending, success)
 
         class EventLiquiditySwapUiModel(
-            val txHash: String,
+            hash: String,
             val iconFrom: Int,
             val iconTo: Int,
-            val amountFrom: String,
-            val amountTo: String,
-            val amountFullTo: String,
+            val amountFrom: Pair<String, String>,
+            val amountTo: Pair<String, String>,
+            val dateTime: String,
             timestamp: Long,
             pending: Boolean,
             success: Boolean?,
-        ) : EventTxUiModel(timestamp, pending, success)
+        ) : EventTxUiModel(hash, timestamp, pending, success)
     }
 }
 

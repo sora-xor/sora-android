@@ -10,6 +10,7 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
@@ -19,6 +20,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyInt
+import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -31,6 +34,9 @@ class AboutViewModelTest {
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
     private lateinit var interactor: MainInteractor
@@ -53,11 +59,12 @@ class AboutViewModelTest {
         val version = "1.0"
         val title = "source"
 
+        given(interactor.getAppVersion()).willReturn("1.0")
+        given(resourceManager.getString(anyInt())).willReturn("source")
         aboutViewModel.getAppVersion()
 
-        aboutViewModel.sourceTitleLiveData.observeForever {
-            assertEquals("$title (v$version)", it)
-        }
+        val res = aboutViewModel.sourceTitleLiveData.getOrAwaitValue()
+        assertEquals("$title $version", res)
     }
 
     @Test

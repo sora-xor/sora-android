@@ -45,7 +45,7 @@ interface WalletRepository {
         keypair: Keypair
     ): Flow<Pair<String, ExtrinsicStatusResponse>>
 
-    suspend fun getAssetsWhitelist(address: String, updateBalances: Boolean = false): List<Asset>
+    suspend fun getAssetsWhitelist(address: String): List<Asset>
 
     suspend fun updateWhitelistBalances(address: String)
 
@@ -56,8 +56,6 @@ interface WalletRepository {
     fun subscribeVisibleAssets(
         address: String
     ): Flow<List<Asset>>
-
-    suspend fun updateTokens(address: String)
 
     suspend fun updateBalancesVisibleAssets(address: String)
 
@@ -107,9 +105,11 @@ interface WalletRepository {
 
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
-    suspend fun getAsset(assetId: String, address: String): Asset
+    suspend fun getAsset(assetId: String, address: String): Asset?
 
-    suspend fun getToken(tokenId: String): Token
+    suspend fun getToken(tokenId: String): Token?
+
+    suspend fun isWhitelistedToken(tokenId: String): Boolean
 
     fun observeStorageAccount(account: Any): Flow<String>
 }

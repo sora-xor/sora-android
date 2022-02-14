@@ -24,13 +24,13 @@ class ProfileViewModel(
     private val _biometryEnabledLiveData = MutableLiveData<Boolean>()
     val biometryEnabledLiveData: LiveData<Boolean> = _biometryEnabledLiveData
 
-    private val _biometryAvailabledLiveData = MutableLiveData<Boolean>()
-    val biometryAvailabledLiveData: LiveData<Boolean> = _biometryAvailabledLiveData
+    private val _biometryAvailableLiveData = MutableLiveData<Boolean>()
+    val biometryAvailableLiveData: LiveData<Boolean> = _biometryAvailableLiveData
 
     init {
         viewModelScope.launch {
             tryCatch {
-                _biometryAvailabledLiveData.value = interactor.isBiometryAvailable()
+                _biometryAvailableLiveData.value = interactor.isBiometryAvailable()
                 _biometryEnabledLiveData.value = interactor.isBiometryEnabled()
             }
         }
@@ -50,6 +50,10 @@ class ProfileViewModel(
 
     fun profileAboutClicked() {
         router.showAbout()
+    }
+
+    fun disclaimerInSettingsClicked() {
+        router.showPolkaswapDisclaimerFromSettings()
     }
 
     fun profileLanguageClicked() {

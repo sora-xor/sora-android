@@ -9,41 +9,41 @@ import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 
 interface UserDatasource {
 
-    fun savePin(pin: String)
+    suspend fun savePin(pin: String)
 
-    fun retrievePin(): String
+    suspend fun retrievePin(): String
 
-    fun saveRegistrationState(onboardingState: OnboardingState)
+    suspend fun saveRegistrationState(onboardingState: OnboardingState)
 
-    fun retrieveRegistratrionState(): OnboardingState
+    suspend fun retrieveRegistratrionState(): OnboardingState
 
-    fun clearUserData()
+    suspend fun clearUserData()
 
-    fun saveParentInviteCode(inviteCode: String)
+    suspend fun saveParentInviteCode(inviteCode: String)
 
-    fun getParentInviteCode(): String
+    suspend fun getParentInviteCode(): String
 
     fun getCurrentLanguage(): String
 
     fun changeLanguage(language: String)
 
-    fun setBiometryEnabled(isEnabled: Boolean)
+    suspend fun setBiometryEnabled(isEnabled: Boolean)
 
-    fun isBiometryEnabled(): Boolean
+    suspend fun isBiometryEnabled(): Boolean
 
-    fun setBiometryAvailable(isAvailable: Boolean)
+    suspend fun setBiometryAvailable(isAvailable: Boolean)
 
-    fun isBiometryAvailable(): Boolean
+    suspend fun isBiometryAvailable(): Boolean
 
-    fun saveAccountName(accountName: String)
+    suspend fun saveAccountName(accountName: String)
 
-    fun getAccountName(): String
+    suspend fun getAccountName(): String
 
-    fun saveNeedsMigration(it: Boolean)
+    suspend fun saveNeedsMigration(it: Boolean)
 
-    fun needsMigration(): Boolean
+    suspend fun needsMigration(): Boolean
 
-    fun isMigrationStatusFetched(): Boolean
+    suspend fun isMigrationStatusFetched(): Boolean
 
-    fun saveIsMigrationFetched(it: Boolean)
+    suspend fun saveIsMigrationFetched(it: Boolean)
 }

@@ -6,13 +6,14 @@
 package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import javax.inject.Inject
 
 class PrefsUserDatasource @Inject constructor(
-    private val preferences: Preferences,
+    private val soraPreferences: SoraPreferences,
     private val encryptedPreferences: EncryptedPreferences
 ) : UserDatasource {
 
@@ -28,20 +29,20 @@ class PrefsUserDatasource @Inject constructor(
         private const val KEY_IS_MIGRATION_FETCHED = "is_migration_fetched"
     }
 
-    override fun savePin(pin: String) {
+    override suspend fun savePin(pin: String) {
         encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
     }
 
-    override fun retrievePin(): String {
+    override suspend fun retrievePin(): String {
         return encryptedPreferences.getDecryptedString(PREFS_PIN_CODE)
     }
 
-    override fun saveRegistrationState(onboardingState: OnboardingState) {
-        preferences.putString(PREFS_REGISTRATION_STATE, onboardingState.toString())
+    override suspend fun saveRegistrationState(onboardingState: OnboardingState) {
+        soraPreferences.putString(PREFS_REGISTRATION_STATE, onboardingState.toString())
     }
 
-    override fun retrieveRegistratrionState(): OnboardingState {
-        val registrationStateString = preferences.getString(PREFS_REGISTRATION_STATE)
+    override suspend fun retrieveRegistratrionState(): OnboardingState {
+        val registrationStateString = soraPreferences.getString(PREFS_REGISTRATION_STATE)
         return if (registrationStateString.isEmpty()) {
             OnboardingState.INITIAL
         } else {
@@ -49,63 +50,63 @@ class PrefsUserDatasource @Inject constructor(
         }
     }
 
-    override fun clearUserData() {
-        preferences.clearAll()
+    override suspend fun clearUserData() {
+        soraPreferences.clearAll()
     }
 
-    override fun saveParentInviteCode(inviteCode: String) {
-        preferences.putString(KEY_PARENT_INVITE_CODE, inviteCode)
+    override suspend fun saveParentInviteCode(inviteCode: String) {
+        soraPreferences.putString(KEY_PARENT_INVITE_CODE, inviteCode)
     }
 
-    override fun getParentInviteCode(): String {
-        return preferences.getString(KEY_PARENT_INVITE_CODE)
+    override suspend fun getParentInviteCode(): String {
+        return soraPreferences.getString(KEY_PARENT_INVITE_CODE)
     }
 
     override fun getCurrentLanguage(): String {
-        return preferences.getCurrentLanguage()
+        return ContextManager.getInstance()?.getCurrentLanguage().orEmpty()
     }
 
     override fun changeLanguage(language: String) {
-        preferences.saveCurrentLanguage(language)
+        ContextManager.getInstance()?.setCurrentLanguage(language)
     }
 
-    override fun setBiometryEnabled(isEnabled: Boolean) {
-        preferences.putBoolean(KEY_BIOMETRY_ENABLED, isEnabled)
+    override suspend fun setBiometryEnabled(isEnabled: Boolean) {
+        soraPreferences.putBoolean(KEY_BIOMETRY_ENABLED, isEnabled)
     }
 
-    override fun isBiometryEnabled(): Boolean {
-        return preferences.getBoolean(KEY_BIOMETRY_ENABLED, true)
+    override suspend fun isBiometryEnabled(): Boolean {
+        return soraPreferences.getBoolean(KEY_BIOMETRY_ENABLED, true)
     }
 
-    override fun setBiometryAvailable(isAvailable: Boolean) {
-        preferences.putBoolean(KEY_BIOMETRY_AVAILABLE, isAvailable)
+    override suspend fun setBiometryAvailable(isAvailable: Boolean) {
+        soraPreferences.putBoolean(KEY_BIOMETRY_AVAILABLE, isAvailable)
     }
 
-    override fun isBiometryAvailable(): Boolean {
-        return preferences.getBoolean(KEY_BIOMETRY_AVAILABLE, true)
+    override suspend fun isBiometryAvailable(): Boolean {
+        return soraPreferences.getBoolean(KEY_BIOMETRY_AVAILABLE, true)
     }
 
-    override fun saveAccountName(accountName: String) {
-        return preferences.putString(KEY_ACCOUNT_NAME, accountName)
+    override suspend fun saveAccountName(accountName: String) {
+        return soraPreferences.putString(KEY_ACCOUNT_NAME, accountName)
     }
 
-    override fun getAccountName(): String {
-        return preferences.getString(KEY_ACCOUNT_NAME)
+    override suspend fun getAccountName(): String {
+        return soraPreferences.getString(KEY_ACCOUNT_NAME)
     }
 
-    override fun saveNeedsMigration(it: Boolean) {
-        preferences.putBoolean(KEY_NEEDS_MIGRATION, it)
+    override suspend fun saveNeedsMigration(it: Boolean) {
+        soraPreferences.putBoolean(KEY_NEEDS_MIGRATION, it)
     }
 
-    override fun needsMigration(): Boolean {
-        return preferences.getBoolean(KEY_NEEDS_MIGRATION)
+    override suspend fun needsMigration(): Boolean {
+        return soraPreferences.getBoolean(KEY_NEEDS_MIGRATION)
     }
 
-    override fun saveIsMigrationFetched(it: Boolean) {
-        preferences.putBoolean(KEY_IS_MIGRATION_FETCHED, it)
+    override suspend fun saveIsMigrationFetched(it: Boolean) {
+        soraPreferences.putBoolean(KEY_IS_MIGRATION_FETCHED, it)
     }
 
-    override fun isMigrationStatusFetched(): Boolean {
-        return preferences.getBoolean(KEY_IS_MIGRATION_FETCHED, false)
+    override suspend fun isMigrationStatusFetched(): Boolean {
+        return soraPreferences.getBoolean(KEY_IS_MIGRATION_FETCHED, false)
     }
 }

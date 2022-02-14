@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">Makipag-ugnayan Sa Amin</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">Patakaran sa Privacy</string>
   <string name="about_source_code">Source Code</string>
   <string name="about_telegram">Opisyal na Telegram Group</string>
   <string name="about_title">Tungkol</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">Opisyal na Website</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">Kumpirmahin ang mnemonic</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Proyekto</string>
   <string name="address_not_found">Hindi nahanap ang address, siguraduhin na ang address ay kabilang sa tamang network.</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Bayad sa Transaksyon</string>
   <string name="amount_error_no_funds">Paumanhin, wala kang sapat na pondo upang mailipat ang tinukoy na halaga.</string>
   <string name="amount_title">Halaga</string>
   <string name="ask_biometry_message">Nais mo bang gumamit ng biometry para sa pagpapatotoo?</string>
   <string name="asset_add">Magdagdag ng account</string>
+  <string name="asset_details_title">Asset Details</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">Mga account</string>
   <string name="asset_state_associating">Nakikipag-ugnayan...</string>
   <string name="asset_state_error">Mali</string>
@@ -21,19 +32,29 @@
   <string name="asset_val_name">SORA Validator Token</string>
   <string name="biometric_dialog_title">Patunayan</string>
   <string name="block_id">Block hash</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">Kung mayroon kang anumang mga katanungan o alalahanin, maaari mo %%makipag-ugnay sa amin.%%</string>
   <string name="claim_contact_1">Kung mayroon kang anumang mga katanungan o alalahanin, maaari mo</string>
   <string name="claim_contact_2">makipag-ugnay sa amin.</string>
+  <string name="claim_contact_us">%%Contact us%% for any questions or concerns</string>
   <string name="claim_error_title">Nabigo ang transisyon</string>
+  <string name="claim_error_title_v1">Transition of assets failed. Please try again later.</string>
   <string name="claim_notification_text">Isinasagawa ang paglipat ...</string>
   <string name="claim_skip">Laktawan ang proseso</string>
   <string name="claim_subtitle">Kailangan namin ang iyong pahintulot na gumawa ng paglipat ng iyong mga pondo mula sa SORA upang maaari mo itong magamit. Ang SORA ay tatakbo ngayon sa Substrate network. Mangyaring kumpirmahin ang paglipat.</string>
+  <string name="claim_subtitle_confirmed">Thank you for the confirmation!</string>
+  <string name="claim_subtitle_confirmed_2">Transition of assets is in progress.\nPlease wait.</string>
   <string name="claim_subtitle_v1">Kailangan namin ang iyong pahintulot na gumawa ng paglipat ng iyong mga assets mula sa SORA v1. Papayagan ka nitong gamitin ang iyong mga assets sa batay sa Substrate na SORA v2. \n\nAng mga assets sa Ethereum network ay hindi apektado, maaari mo pa ring ma-access ang mga ito sa pamamagitan ng pag-import ng iyong passphrase sa anumang katugmang wallet.</string>
+  <string name="claim_subtitle_v2">• We need consent to transition your assets from SORA v1 to SORA v2\n\n• The SORA v2 network is built with Substrate, which is natively compatible with the Polkadot and Kusama ecosystem\n\n• Assets on Ethereum are not affected, you can still access them by importing your passphrase to any compatible wallet</string>
   <string name="claim_welcome_sora2">Maligayang pagdating sa SORA v2</string>
+  <string name="claim_welcome_sora2_v1">Welcome to\n%%SORA v2%%</string>
   <string name="coming_soon">Malapit na...</string>
+  <string name="common_account">Account</string>
   <string name="common_add">Idagdag</string>
   <string name="common_advanced_settings">Mga advanced na setting</string>
   <string name="common_and">at</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">Mag-apply</string>
   <string name="common_arab">Arabo</string>
   <string name="common_asset">Asset</string>
@@ -55,11 +76,11 @@
   <string name="common_done">Tapos na</string>
   <string name="common_donotallow">Huwag Pahintulutan</string>
   <string name="common_english">Ingles</string>
+  <string name="common_enter_amount">Enter amount</string>
   <string name="common_error_ambiguous_result">Malabong resulta</string>
   <string name="common_error_fee_rate_not_available">Hindi makontak ang withdrawal provider. Mangyaring subukang muli mamaya.</string>
   <string name="common_error_gas_limit_low">Ang limitasyon ng gas ay hindi dapat bababa sa %s</string>
   <string name="common_error_general_message">Nagsusumikap kami upang ayusin ang problema. Mangyaring subukang muli mamaya.</string>
-  <!-- Error -->
   <string name="common_error_general_title">Error</string>
   <string name="common_error_internal_error_title">Internal error</string>
   <string name="common_error_invalid_parameters">Di-wastong Mga Parameter</string>
@@ -71,7 +92,6 @@
   <string name="common_error_inviter_registered_after_invitee">Ang ibinigay na code ng imbitasyon ay hindi mailalapat dahil ito ay mula sa gumagamit na nakarehistro pagkatapos mo</string>
   <string name="common_error_mnemonic_is_not_valid">Hindi wasto ang iyong passphrase. Mangyaring subukan ang iba pa.</string>
   <string name="common_error_mnemonic_length_error">Ang passphrase ay dapat naglalaman ng 15 na salita</string>
-  <!-- Errors -->
   <string name="common_error_network">Mangyaring suriin ang koneksyon sa internet at subukang muli mamaya.</string>
   <string name="common_error_not_enough_invitations">Paumanhin, ngunit wala kang anumang mga imbitasyon upang ibahagi</string>
   <string name="common_error_not_found_title">Hindi available ang resource</string>
@@ -79,7 +99,6 @@
   <string name="common_error_phone_already_registered">Ginamit na ang numero ng telepono sa pamamagitan ng pagpaparehistro dito o sa ibang gumagamit</string>
   <string name="common_error_pincode_check_error">Mali ang na nailagay na code</string>
   <string name="common_error_price_is_to_low">Ang presyo ay masyadong mababa</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">Paumanhin, ngunit ang proyekto ay hindi natagpuan.</string>
   <string name="common_error_retry">Ulitin mo ulit</string>
   <string name="common_error_search_string_error">Ang sukat ng saliksik ay dapat nasa pagitan ng 3 at 64 na karakter</string>
@@ -89,7 +108,6 @@
   <string name="common_error_user_not_found">Hindi wasto ang iyong passphrase. Mangyaring subukan ang iba pa.</string>
   <string name="common_error_user_values_not_found">Hindi maipagpatuloy ang operasyon dahil hindi natagpuan ang user values data</string>
   <string name="common_error_votes_invalid_format">Paumanhin, ngunit ang halaga ng iyong mga boto ay hindi mabigyang-kahulugan. Mangyaring subukang bumoto muli.</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">Paumanhin, ngunit wala kang sapat na puntos upang bumoto.</string>
   <string name="common_error_voting_is_not_allowed">Paumanhin, pero hindi na puwedeng makatanggap ng mga boto ang proyekto.</string>
   <string name="common_error_wrong_user_status">Hindi maipagpatuloy ang operasyon dahil invalid ang user\'s status</string>
@@ -97,9 +115,11 @@
   <string name="common_failed">Nabigo</string>
   <string name="common_filipino">Filipino</string>
   <string name="common_finnish">Finnish</string>
+  <string name="common_for">for</string>
   <string name="common_french">Pranses</string>
   <string name="common_from">Mula sa</string>
   <string name="common_gallery">Galerya</string>
+  <string name="common_german">German</string>
   <string name="common_hide">Itago</string>
   <plurals name="common_hour">
     <item quantity="one">oras</item>
@@ -111,11 +131,14 @@
   <string name="common_japanese">Hapon</string>
   <string name="common_khmer">Khmer</string>
   <string name="common_korean">Koreano</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">Malay</string>
   <string name="common_manage">Pamahalaan</string>
   <string name="common_min">min</string>
   <string name="common_network_unavailable">Hindi available ang koneksyon sa network</string>
   <string name="common_next">Susunod</string>
+  <string name="common_norwegian">Norwegian</string>
+  <string name="common_notsent">Not sent</string>
   <string name="common_ok">Ok</string>
   <string name="common_open_explorer">Tingnan sa Blockchain Explorer</string>
   <string name="common_options_title">Pumili ng opsyon</string>
@@ -123,9 +146,9 @@
   <string name="common_passphrase_header">Ang passphrase ay \nisang uri ng password.</string>
   <string name="common_passphrase_save_mnemonic_title">I-save o ipadala ang passphrase</string>
   <string name="common_passphrase_save_or_send">I-save o ipadala</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_passphrase_your_passphrase">Ang iyong passphrase</string>
+  <string name="common_per">per</string>
   <string name="common_personal_info_account_name_invalid">Ang pangalan ng account ay dapat maglaman ng hanggang sa 32 bytes</string>
   <string name="common_personal_info_first_name_hint">Pangalan</string>
   <string name="common_personal_info_first_name_hyphen_error">Ang pangalan ay hindi maaaring magsimula o magtapos sa hyphen o may dobleng hyphen</string>
@@ -133,22 +156,25 @@
   <string name="common_personal_info_last_name_hint">Apelyido</string>
   <string name="common_personal_info_last_name_hyphen_error">Ang apelyido ay hindi maaaring magsimula o magtapos sa hyphen o may dobleng hyphen</string>
   <string name="common_personal_info_last_name_is_empty">Walang laman ang apelyido</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">Personal na impormasyon</string>
   <string name="common_please_wait">Maghintay lamang</string>
   <string name="common_receive">Tanggapin</string>
   <string name="common_received">Natanggap</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">Subukang muli</string>
   <string name="common_russian">Ruso</string>
   <string name="common_save">I-save</string>
   <string name="common_scan">Scan</string>
   <string name="common_search">Maghanap</string>
   <string name="common_sec">sec</string>
-  <!-- Other common stuff -->
+  <string name="common_select_asset">Select an asset</string>
   <string name="common_select_email_app_title">Pumili ng email app</string>
   <string name="common_send">Ipadala</string>
+  <string name="common_sender">Sender</string>
   <string name="common_sent">Naipadala</string>
+  <string name="common_settings">Mga setting</string>
   <string name="common_share">Ibahagi</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">Laktawan</string>
   <string name="common_sms_code_expired">Ang verification code ay expired na. Mangyaring subukan ang iba pa</string>
   <string name="common_sms_code_not_correct">Hindi tama ang verification code</string>
@@ -158,13 +184,15 @@
   <string name="common_terms_title">Mga Tuntunin at Kundisyon</string>
   <string name="common_thai">Thai</string>
   <string name="common_to">Para sa</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">Ngayon</string>
   <string name="common_try_another">Subukan ang isa pa</string>
+  <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ukranian</string>
   <string name="common_unsupported_version_body">Ang na-update na Sora Application ay makukuha sa Google Play. Kasama rito ang mga pagpapabuti at pag-aayos ng bug.</string>
   <string name="common_unsupported_version_open_google_play">Buksan ang Google Play</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">I-update ang iyong Sora App</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">Bumoto</string>
   <string name="common_yesterday">Kahapon</string>
   <string name="contacts_empty_state_title">Karamihan sa mahahalagang contact ay lilitaw dito</string>
@@ -176,20 +204,26 @@
   <string name="copy_eth_title">Kopyahin ang address ng wallet ng Ethereum (ETH)</string>
   <string name="copy_val_title">Kopyahin ang address ng SORA NET (VAL) wallet</string>
   <string name="countries_country_not_found">Walang mga bansa na tumutugma sa iyong query</string>
-  <!-- Countries -->
   <string name="countries_title">Piliin ang iyong bansa</string>
   <string name="create_account_title">Lumikha ng account</string>
+  <string name="details_frozen">Frozen</string>
+  <string name="details_frozen_total">Frozen (Total)</string>
   <string name="details_total">Kabuuang balanse</string>
+  <string name="details_transferable">Transferable</string>
   <string name="empty_recent_recipients">Walang mga bagong tatanggap.\nIpapakita rito ang mga naipadalang address.</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">Upang magpatuloy sa operasyong ito, kailangan mo ng isang kaugnay na Ethereum account na may ilang pondo rito para sa bayad sa Miner upang makumpleto ang transaksyon.</string>
   <string name="error_ethereum_account_title">Ang Ethereum account ay hindi naugnay</string>
   <string name="error_miner_fee_subtitle">Upang magpatuloy sa operasyong ito, kailangan mong pondohan ang iyong Ethereum account.</string>
   <string name="error_miner_fee_title">Hindi sapat na pondo para sa bayad sa Miner</string>
   <string name="error_transaction_fee_title">Hindi sapat na pondo para sa transaksyon fee</string>
   <string name="ethereum_config_unavailable">Hindi magagamit ang Ethereum node</string>
-  <!-- FAQ -->
   <string name="faq_title">FAQ</string>
   <string name="friends_spread_word">Ipalaganap ang salita, ibahagi ang app sa iyong mga kaibigan.</string>
+  <string name="from_account">From account</string>
+  <string name="history_receive">Receive</string>
+  <string name="history_send">Send</string>
+  <string name="history_swap">Swap</string>
   <string name="history_title">Kamakailang mga kaganapan</string>
   <string name="invite_accepted_empty_state_title">Wala pang natanggap na mga pag-anyaya</string>
   <string name="invite_accepted_invitations_title">Mga tinanggap na pag-anyaya</string>
@@ -208,7 +242,6 @@
   <string name="invite_enter_error_already_applied">Nakapag-apply ka na ng isa pang code ng imbitasyon</string>
   <string name="invite_enter_error_time_is_up">Ang oras upang mag-aplay ng code ng imbitasyon ay</string>
   <string name="invite_enter_invitation_code">Ilagay ang code ng pag-anyaya</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">Mga kaibigan</string>
   <string name="invite_link_format">Sumali sa Sora gamit ang link sa ibaba: \n %s</string>
   <string name="invite_link_sharing_title">Ibahagi ang app</string>
@@ -222,6 +255,7 @@
   <string name="logout_dialog_body">Ang pagkilos na ito ay magreresulta sa pagtanggal ng account mula sa device na ito. Tiyaking nai-back up mo ang iyong passphrase bago magpatuloy.</string>
   <string name="mnemonic_alert_text">Ginagamit ang Mnemonic upang mabawi ang pag-access sa account. Isulat ito, hindi namin mababawi ang iyong account nang wala ito!</string>
   <string name="mnemonic_confirm_text">Kumpirmahin sa pamamagitan ng pagpili ng mga salita sa tamang pagkakasunud-sunod</string>
+  <string name="mnemonic_confirm_text_v2">Kumpirmahin ang passphrase sa pamamagitan ng pagpili ng mga salita sa tamang pagkakasunud-sunod</string>
   <string name="mnemonic_invalid">Di-wastong pass ng mga mnemonic passphrase, mangyaring suriin nang isa pang beses ang pagkakasunud-sunod ng mga salita.</string>
   <string name="mnemonic_invalid_title">Di-wastong pass ng mga mnemonic passphrase</string>
   <string name="mnemonic_text">Gumamit ng hindi digital na paraan upang mag-backup, tulad ng pagsulat nito sa papel.</string>
@@ -235,7 +269,6 @@
   <string name="personal_info_username_v1">Pangalan ng account</string>
   <string name="phone_number_mobile">Numero ng mobile phone</string>
   <string name="phone_number_sms_code_will_be_sent">Ang SMS code ay ipapadala\nsa iyong telepono</string>
-  <!-- Phone number -->
   <string name="phone_number_title">Mag-sign up</string>
   <string name="phone_verification_too_frequent_message">Masyadong madalas ang paghiling ng verification code. Mangyaring subukang muli mamaya.</string>
   <string name="pincode_change_success">Matagumpay na nabago ang pin code</string>
@@ -250,7 +283,60 @@
   <string name="pincode_set_your_pin_code">I-set up ang pin code</string>
   <string name="pincode_touch_fingerprint_scanner">Hawakan ang fingerprint scanner</string>
   <string name="pincode_updated">Nai-update ang pin code</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">Ang DEX para sa Magkakabit na Kinabukasan. Ang Polkaswap ay isang non-custodial, AMM-DEX na protocol para sa pagpapalit ng mga token batay sa network ng Polkadot, Parachains, at mga blockchain na konektado sa pamamagitan ng isang Bridge. Epektibong tinanggal ng Polkaswap protocol ang mga pinagkakatiwalaang tagapamagitan at nagbibigay ng pagkakataon para sa mas mabilis na kalakalan.</string>
+  <string name="polkaswap_confirm_swap">Confirm Swap</string>
+  <string name="polkaswap_details">Details</string>
+  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
+  <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
+  <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
+  <string name="polkaswap_info_text_4">Your understanding that the current version of Polkaswap is an alpha version: it has not been fully tested, and some functions may not perform as designed;</string>
+  <string name="polkaswap_info_text_5">Your understanding and voluntary acceptance of the risks involved in using Polkaswap, including, but not limited to, the risk of losing tokens.</string>
+  <string name="polkaswap_info_text_6">Once more, please do not continue without reading the %%Polkaswap FAQ%%, %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%!</string>
+  <string name="polkaswap_info_text_7">In order to hide the disclaimer notification from the Swap tab please swipe the button below. Only do so if you fully understand and have read all of the documents mentioned!</string>
+  <string name="polkaswap_info_text_8">Swipe to hide</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_title">Disclaimer</string>
+  <string name="polkaswap_info_title_main">Pagwawaksi: mangyaring basahin bago magpatuloy na gumamit ng polkaswap!</string>
+  <string name="polkaswap_input_estimated">Input is estimated. You will sell maximum %s or the transaction will revert.</string>
+  <string name="polkaswap_insufficient_balance">Insufficient %s balance</string>
+  <string name="polkaswap_insufficient_liqudity">Insufficient liquidity</string>
+  <string name="polkaswap_liqudity_fee">LP Fee</string>
+  <string name="polkaswap_liqudity_fee_info">A portion of each trade (0.3%) goes to liquidity providers as a protocol incentive.</string>
+  <string name="polkaswap_market">Market</string>
+  <string name="polkaswap_market_info">Market algorithm - option to choose between Primary Market (TBC), Secondary Market (XYK) or a combined smart algorithm for guaranteed best price for any given transaction.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_title">Market algorithm</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_maximum_sold">Max Sold</string>
+  <string name="polkaswap_maximum_sold_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_minimum_received">Min Received</string>
+  <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_network_fee">Network Fee</string>
+  <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
+  <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
+  <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
+  <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
+  <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
+  <string name="polkaswap_slippage_tolerance">Slippage Tolerance</string>
+  <string name="polkaswap_smart">Smart</string>
+  <string name="polkaswap_swap_title">Swap</string>
+  <string name="polkaswap_swapped">Swapped</string>
+  <string name="polkaswap_tbc">TBC</string>
+  <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Add</string>
+  <string name="pool_button_remove">Remove</string>
+  <string name="pool_liqudity_title">Your liquidity</string>
+  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_share_title">Share of Pool</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">Pooled</string>
   <string name="profile_about_title">Tungkol</string>
   <string name="profile_biometry_title">Awtomatikong biometry</string>
   <string name="profile_change_pin_title">Palitan ang PIN</string>
@@ -281,12 +367,11 @@
   <string name="project_vote_dialog_title">Gaano karaming mga boto</string>
   <string name="project_voted">Bumoto</string>
   <string name="project_you_can_vote_at_least_1_point">Maaari kang bumoto na may hindi bababa sa 1 punto 😜</string>
+  <string name="qr_code">QR code</string>
   <string name="qr_upload">Mag-upload mula sa galerya</string>
   <string name="recovery_body_subtitle">Sa kasamaang-palad walang paraan upang ma-access ang iyong account kung nakalimutan mo ang iyong passphrase.</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">Ang iyong passphrase</string>
   <string name="recovery_mnemonic_passphrase">Mnemonic passphrase</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">Ibalik ang pag-access</string>
   <string name="recovery_source_type">Uri ng Pinagmulan</string>
   <string name="recovery_title">Mag-import ng account</string>
@@ -308,21 +393,26 @@
   <string name="referendum_total_votes">Kabuuang mga boto</string>
   <string name="referendum_unsupport_title">Hindi</string>
   <string name="referendum_voting_result">Resulta sa pagboto</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Huwag kumuha ng mga screenshot, na maaaring makolekta ng third-party na malware</string>
   <string name="screenshot_alert_title">Huwag kumuha ng mga screenshot</string>
   <string name="search_asset_by_name">Maghanap ayon sa pangalan ng asset o simbolo</string>
   <string name="select_account_address">Maghanap ng account address</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Pumili ng tatanggap</string>
   <string name="set_amount">Magtakda ng halaga</string>
   <string name="staking_coming_soon">Magagawa ng mga may-ari ng XOR na mai-stake ang kanilang XOR upang maghinalal ng mga validator at makakuha ng mga gantimpala.</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Mga Gantimpala ng SORA VALidator</string>
-  <!-- Startup -->
   <string name="startup_verification_title">Nagbe-verify ng awtoriasyon…</string>
   <string name="status_error">Error</string>
   <string name="status_pending">Naghihintay</string>
   <string name="status_rejected">Tinanggihan</string>
   <string name="status_success">Tagumpay</string>
   <string name="status_title">Katayuan</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">Mga kaibigan</string>
   <string name="tabbar_parliament_title">Parlamento</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -350,51 +440,66 @@
   <string name="transaction_send_back">Ipadala pabalik</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_total">Kabuuan</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">Maraming Mundo.\n Isang Ekonomiya.</string>
+  <string name="tutorial_many_world_desc">Ang SORA ay nagtatrabaho upang maging isang disentralisadong sistemang pang-ekonomiya ng multiverse, pinopondohan ang paglikha ng mga bago at kapanapanabik na aplikasyon, sa ilalim ng demokratikong pangangasiwa ng SORA Parliament.</string>
   <string name="tutorial_one_world">Isang mundo.\nIsang Ekonomiya.</string>
   <string name="tutorial_one_world_desc">Ang SORA ay nagtatrabaho upang maging desentralisadong sentral na bangko para sa buong mundo, na pinopondohan ang paglikha ng mga bago at kapanapanabik na aplikasyon, sa ilalim ng demokratikong pangangasiwa ng SORA Parliament.</string>
   <string name="tutorial_privacy_policy">Patakaran sa Privacy</string>
   <string name="tutorial_project_success_desc">Kung ang proyekto ay magtagumpay sa pagboto, ang lahat ay makakakuha ng kanilang bahagi</string>
   <string name="tutorial_projects_desc">Mga proyektong idinagdag sa Sora ng mga prodyuser at idinagdag sa pagboto matapos ang proseso ng pagpili</string>
   <string name="tutorial_restore_account">Ibalik ang access sa account</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">Mag-sign up</string>
+  <string name="tutorial_terms_and_conditions">By creating an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
   <string name="tutorial_terms_and_conditions_1">Sa pamamagitan ng pag-sign up, sumasang-ayon ka sa\n</string>
   <string name="tutorial_terms_and_conditions_2">Mga Tuntunin at Kundisyon</string>
   <string name="tutorial_terms_and_conditions_3">Mga Tuntunin at Kundisyon</string>
+  <string name="tutorial_terms_and_conditions_recovery">By importing an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">Bumuboto ang mga user sa mga proyekto para magpasya kung aling proyekto ang dapat pondohan</string>
   <string name="unknown_balance">Hindi kilala</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">VAL Token sa iba\'t ibang mga network</string>
   <string name="verification_enter_code_from_sms">Ilagay ang code mula sa SMS</string>
   <string name="verification_request_new_code_time" formatted="false">Humiling ng bagong code sa %s : %s</string>
-  <!-- Verification -->
   <string name="verification_resend_code">Ipadala muli ang code</string>
   <string name="verification_title">Pag-verify ng telepono</string>
   <string name="view_balance_val">Tingnan ang alokasyon ng SORA NET (VAL) token</string>
   <string name="votes_empty_history_description">Sa tuwing magbabago ang iyong mga boto, \nmakikita mo ang kasaysayan dito</string>
-  <!-- Votes -->
   <string name="votes_history_title">Kasaysayan ng Mga Boto</string>
   <string name="votes_zero_error_message">Paumanhin, ngunit dapat kang magkaroon ng kahit isang punto upang bumoto</string>
   <string name="wallet_account_retry_registration">Ulitin ang pagrehistro</string>
+  <string name="wallet_asset_id">Asset id</string>
   <string name="wallet_balance_locked">Naka-lock</string>
   <string name="wallet_balance_reserved">Nakareserba</string>
+  <string name="wallet_bonded">Bonded</string>
   <string name="wallet_empty_description">Papasok at papalabas \n na mga transaksyon ay lilitaw dito</string>
+  <string name="wallet_empty_history_title">No transactions</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_history_from_ethereum_address_title">Mula sa Ethereum address</string>
   <string name="wallet_history_from_soranet_address_title">Mula sa SORA NET account</string>
+  <string name="wallet_history_limitations_text">At the moment, the history of transactions is stored locally, which means if you import the account on another device, log out or reinstall the application on current device, the history of transactions wouldn’t be available any more. Also we can’t show any incoming transactions. We apologize for any inconvenience caused, we are working to resolve the issue.</string>
+  <string name="wallet_history_limitations_title">History limitations</string>
   <string name="wallet_history_reward_from_system">Gantimpala mula sa system</string>
   <string name="wallet_history_to_ethereum_address">Patungo sa Ethereum address</string>
   <string name="wallet_history_to_my_ethereum_title">Patungo sa My Ethereum address</string>
   <string name="wallet_history_to_my_soranet_title">Patungo sa Aking SORA NET account</string>
   <string name="wallet_history_to_soranet_account">Patungo sa SORA NET account</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Aking %s Network address para Makatanggap %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_template" formatted="false">Aking %s Network address para Makatanggap %s %s:</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
   <string name="wallet_receive_val">Tumanggap ng VAL</string>
+  <string name="wallet_redeemable">Redeemable</string>
   <string name="wallet_send_existential_warning_message">Aalisin ng iyong paglilipat ang account mula sa blockstore dahil gagawin nitong mas mababa ang kabuuang balanse kaysa sa existential deposit</string>
   <string name="wallet_soranet">SORA NET</string>
-  <!-- Wallet -->
   <string name="wallet_title">Wallet</string>
+  <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">Isinumite ang transaksyon</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">Max na simbolo%s</string>
   <string name="wallet_transfer_to_ethereum">Patungo sa Ethereum address</string>
+  <string name="wallet_unbonding">Unbonding</string>
   <string name="wallet_val_to_my_eth">VAL papunta sa My Ethereum account</string>
 </resources>

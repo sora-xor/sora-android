@@ -7,9 +7,8 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmat
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.text.style.ForegroundColorSpan
+import android.text.style.TextAppearanceSpan
 import android.view.View
-import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.text.set
 import androidx.core.text.toSpannable
@@ -17,11 +16,11 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.github.razir.progressbutton.bindProgressButton
 import com.github.razir.progressbutton.hideProgress
 import com.github.razir.progressbutton.showProgress
-import com.google.android.material.color.MaterialColors
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.view.ToastDialog
 import jp.co.soramitsu.common.util.ext.enableIf
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
@@ -137,12 +136,15 @@ class SwapConfirmationFragment :
     }
 
     private fun initListeners() {
-        viewModel.extrinsicEvent.observe {
-            Toast.makeText(
-                requireContext(),
-                if (it) R.string.wallet_transaction_submitted else R.string.wallet_transaction_rejected,
-                Toast.LENGTH_LONG
-            ).show()
+        viewModel.extrinsicEvent.observe { event ->
+            activity?.let {
+                ToastDialog(
+                    R.drawable.ic_green_pin,
+                    if (event) R.string.wallet_transaction_submitted_1 else R.string.wallet_transaction_rejected,
+                    1000,
+                    it
+                ).show()
+            }
         }
         viewModel.confirmBtnProgressLiveData.observe {
             if (it) {
@@ -201,12 +203,8 @@ class SwapConfirmationFragment :
             val text = it.first.toSpannable()
             val i1 = it.first.indexOf(it.second)
             if (i1 >= 0) {
-                text[i1..(i1 + it.second.length)] = ForegroundColorSpan(
-                    MaterialColors.getColor(
-                        binding.tvSwapDescription,
-                        R.attr.contentPrimary
-                    )
-                )
+                text[i1..(i1 + it.second.length)] =
+                    TextAppearanceSpan(context, R.style.TextAppearance_Soramitsu_Neu_Semibold_15)
             }
             binding.tvSwapDescription.text = text
         }

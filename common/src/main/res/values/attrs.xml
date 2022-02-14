@@ -6,17 +6,26 @@
 
     <attr name="searchViewHeight" format="reference" />
 
-    <attr name="statusSuccess" format="color"/>
-    <attr name="statusSuccessBackground" format="color"/>
-    <attr name="statusWarning" format="color"/>
-    <attr name="statusWarningBackground" format="color"/>
-    <attr name="statusError" format="color"/>
-    <attr name="statusErrorBackground" format="color"/>
+    <attr name="statusSuccess" format="color" />
+    <attr name="statusSuccessBackground" format="color" />
+    <attr name="statusWarning" format="color" />
+    <attr name="statusWarningBackground" format="color" />
+    <attr name="statusError" format="color" />
+    <attr name="statusErrorBackground" format="color" />
 
     <attr name="contentPrimary" format="color" />
     <attr name="contentSecondary" format="color" />
     <attr name="contentTertiary" format="color" />
     <attr name="contentQuaternary" format="color" />
+
+
+    <attr name="buttonPrimary" format="color" />$
+    <attr name="buttonPrimaryDark" format="color" />
+    <attr name="polkaswapPrimary" format="color" />
+    <attr name="polkaswapPrimaryDark" format="color" />
+    <attr name="disabledButtonColor" format="color" />
+    <attr name="disabledButtonTextColor" format="color" />
+    <attr name="disabledButtonTextColor2" format="color" />
 
     <attr name="baseBackground" format="color" />
     <attr name="baseBackgroundDark" format="color" />
@@ -32,6 +41,37 @@
     <attr name="secondaryPressed" format="color" />
     <attr name="secondaryFocused" format="color" />
 
+    <attr name="polkaswapMainColor" format="color" />
+    <attr name="dividerColor" format="color" />
+    <attr name="balanceColorDefault" format="color" />
+    <attr name="balanceColorPositive" format="color" />
+    <attr name="balanceColorNegative" format="color" />
+    <attr name="bottomMenuInactiveColor" format="color" />
+    <attr name="tintColorDark" format="color" />
+    <attr name="tintColorLight" format="color" />
+    <attr name="onBackgroundColor" format="color" />
+    <attr name="selectedPrimaryColor" format="color" />
+    <attr name="shadowDark" format="color" />
+    <attr name="shadowLight" format="color" />
+    <attr name="tintTitles" format="color" />
+    <attr name="disabledColor" format="color" />
+    <attr name="titleColor" format="color" />
+    <attr name="flatAboveBackground" format="color" />
+    <attr name="backgroundInfo" format="color" />
+    <attr name="statusColor" format="color" />
+    <attr name="statusWarningColor" format="color" />
+    <attr name="pureBlackOnDay" format="color" />
+    <attr name="pureWhiteOnDay" format="color" />
+    <attr name="pureRedOnDay" format="color" />
+    <attr name="statusPinkWarning" format="color" />
+    <attr name="colorOnGrey" format="color" />
+    <attr name="backgroundSearchView" format="color" />
+    <attr name="hintBackground" format="color" />
+    <attr name="textBackgroundColor" format="color" />
+    <attr name="iconTintColorPositive" format="color" />
+    <attr name="iconTintColorNegative" format="color" />
+    <attr name="iconTintAboveBackground" format="color" />
+
     <declare-styleable name="VsLineView">
         <attr name="leftColor" format="color" />
         <attr name="rightColor" format="color" />
@@ -43,35 +83,70 @@
         <attr name="primaryPercentage" format="float" />
     </declare-styleable>
 
+    <attr name="titleText" format="string" />
+    <attr name="iconRight" format="reference|color" />
+    <attr name="textRight" format="string" />
+    <attr name="homeButtonIcon" format="reference|color" />
+    <attr name="homeButtonVisible" format="boolean" />
     <declare-styleable name="SoraToolbar">
-        <attr name="titleText" format="string" />
-        <attr name="iconRight" format="reference|color" />
-        <attr name="textRight" format="string" />
-        <attr name="homeButtonIcon" format="reference|color" />
-        <attr name="homeButtonVisible" format="boolean" />
+        <attr name="titleText" />
+        <attr name="iconRight" />
+        <attr name="textRight" />
+        <attr name="homeButtonIcon" />
+        <attr name="homeButtonVisible" />
+    </declare-styleable>
+
+    <declare-styleable name="SoraNeuToolbar">
+        <attr name="titleText" />
+        <attr name="iconRight" />
+        <attr name="textRight" />
+        <attr name="homeButtonIcon" />
+        <attr name="homeButtonVisible" />
     </declare-styleable>
 
     <declare-styleable name="AssetCardView">
         <attr name="hintText" format="string" />
-<!--        <attr name="" format="reference|color" />-->
-<!--        <attr name="textRight" format="string" />-->
-<!--        <attr name="homeButtonIcon" format="reference|color" />-->
-<!--        <attr name="homeButtonVisible" format="boolean" />-->
+        <!--        <attr name="" format="reference|color" />-->
+        <!--        <attr name="textRight" format="string" />-->
+        <!--        <attr name="homeButtonIcon" format="reference|color" />-->
+        <!--        <attr name="homeButtonVisible" format="boolean" />-->
+    </declare-styleable>
+
+    <attr name="aboutCellViewStyle" format="reference" />
+    <declare-styleable name="AboutCellView">
+        <attr name="cellTitleTextAppearance" format="reference" />
+        <attr name="cellDescriptionTextAppearance" format="reference" />
+        <attr name="cellLeftIcon" format="reference" />
+        <attr name="cellTitleText" format="string|reference" />
+        <attr name="cellDescriptionText" format="string|reference" />
+        <attr name="cellLeftIconTint" format="color" />
+    </declare-styleable>
+
+    <attr name="selectTokenCardViewStyle" format="reference" />
+    <declare-styleable name="SelectTokenCardView">
+        <attr name="cardBackground" format="reference" />
+        <attr name="cardBackgroundColorTintSelected" format="reference" />
+        <attr name="cardBackgroundColorTintNotSelected" format="reference" />
+        <attr name="cardOpenIcon" format="reference" />
+        <attr name="cardCloseIcon" format="reference" />
+        <attr name="cardIconTintSelected" format="reference" />
+        <attr name="cardIconTintNotSelected" format="reference" />
+        <attr name="cardTokenIconPadding" format="dimension|reference" />
+        <attr name="cardTextAppearance" format="reference" />
+        <attr name="cardTextAppearanceNotSelected" format="reference" />
     </declare-styleable>
 
     <dimen name="defaultLineHeight">6dp</dimen>
     <color name="defaultLeftColor">@color/grey</color>
-    <color name="defaultRightColor">@color/uikit_lightRed</color>
+    <color name="defaultRightColor">@color/brand_soramitsu_red</color>
     <color name="defaultDelimiterColor">@color/black</color>
 
     <dimen name="delimiterExtraSpace">4dp</dimen>
     <dimen name="delimiterWidth">2dp</dimen>
 
     <!--Pincode-->
+    <attr name="uikit_pinCodeButtonTitleColor" format="reference" />
     <attr name="uikit_pinCodeButtonTextColor" format="reference" />
     <attr name="uikit_pinCodeButtonBackground" format="reference" />
-    <attr name="uikit_pinCodeEmptyDotStrokeColor" format="reference" />
-    <attr name="uikit_pinCodeEmptyDotStrokeWidth" format="reference" />
-    <attr name="uikit_pinCodeButtonTextSize" format="reference" />
     <!--Pincode-->
 </resources>

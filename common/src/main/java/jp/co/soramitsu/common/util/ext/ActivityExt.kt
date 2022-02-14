@@ -7,7 +7,7 @@ package jp.co.soramitsu.common.util.ext
 
 import android.app.Activity
 import android.content.BroadcastReceiver
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +22,7 @@ fun Activity.unregisterReceiverIfNeeded(receiver: BroadcastReceiver) {
     }
 }
 
-fun AppCompatActivity.runDelayed(
+fun FragmentActivity.runDelayed(
     durationInMillis: Long,
     dispatcher: CoroutineDispatcher = Dispatchers.Main,
     block: () -> Unit,

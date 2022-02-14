@@ -7,21 +7,16 @@ package jp.co.soramitsu.feature_ethereum_api.domain.interfaces
 
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
-import kotlinx.coroutines.flow.Flow
 
 interface EthereumDatasource {
 
-    fun saveVALAddress(address: String)
+    suspend fun saveVALAddress(address: String)
 
-    fun retrieveVALAddress(): String
+    suspend fun saveEthereumCredentials(ethereumCredentials: EthereumCredentials)
 
-    fun saveEthereumCredentials(ethereumCredentials: EthereumCredentials)
+    suspend fun retrieveEthereumCredentials(): EthereumCredentials?
 
-    fun retrieveEthereumCredentials(): EthereumCredentials?
+    suspend fun getEthRegisterState(): EthRegisterState
 
-    fun getEthRegisterState(): EthRegisterState
-
-    fun saveEthRegisterState(state: EthRegisterState)
-
-    fun observeEthRegisterState(): Flow<EthRegisterState.State>
+    suspend fun saveEthRegisterState(state: EthRegisterState)
 }

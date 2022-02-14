@@ -7,11 +7,13 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.receive
 
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -32,10 +34,12 @@ class ReceiveViewModel(
     private val assetModel: ReceiveAssetModel,
     private val clipboardManager: ClipboardManager,
     private val avatarGenerator: AccountAvatarGenerator,
+    private val fileManager: FileManager,
+    private val backgroundQrColor: Int,
 ) : BaseViewModel() {
 
     val qrBitmapLiveData = MediatorLiveData<Bitmap>()
-    val shareQrCodeLiveData = SingleLiveEvent<Pair<Bitmap, String>>()
+    val shareQrCodeLiveData = SingleLiveEvent<Pair<Uri, String>>()
     private val _copiedAddressEvent = SingleLiveEvent<Unit>()
     val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
     private val _userNameAddress = MutableLiveData<Pair<String, String>>()
@@ -66,16 +70,25 @@ class ReceiveViewModel(
     private fun generateQr() {
         runCatching {
             qrBitmapLiveData.value =
-                qrCodeGenerator.generateQrBitmap("substrate:$userAddress:$userPublicKey:$userName:${assetModel.assetId}")
+                qrCodeGenerator.generateQrBitmap(
+                    "substrate:$userAddress:$userPublicKey:$userName:${assetModel.assetId}",
+                    backgroundQrColor
+                )
         }.getOrElse {
-            logException(it)
+            onError(it)
         }
     }
 
     fun shareQr() {
         qrBitmapLiveData.value?.let { qrCodeBitmap ->
             val s = generateMessage(curAmount)
-            shareQrCodeLiveData.postValue(qrCodeBitmap to s)
+            val qrUri = fileManager.writeExternalCacheBitmap(
+                qrCodeBitmap,
+                "qrcodefile.png",
+                Bitmap.CompressFormat.PNG,
+                100
+            )
+            shareQrCodeLiveData.postValue(qrUri to s)
         }
     }
 
@@ -86,11 +99,18 @@ class ReceiveViewModel(
 
     private fun generateMessage(amount: String): String {
         val message = if (amount.isEmpty()) {
-            resourceManager.getString(R.string.wallet_qr_share_message_empty_template)
-                .format(assetModel.networkName, assetModel.tokenName)
+            resourceManager.getString(R.string.wallet_qr_share_message_empty_template_v1)
+                .format(
+                    resourceManager.getString(R.string.asset_sora_fullname),
+                    assetModel.tokenName
+                )
         } else {
-            resourceManager.getString(R.string.wallet_qr_share_message_template)
-                .format(assetModel.networkName, amount, assetModel.tokenName)
+            resourceManager.getString(R.string.wallet_qr_share_message_template_v1)
+                .format(
+                    resourceManager.getString(R.string.asset_sora_fullname),
+                    amount,
+                    assetModel.tokenName
+                )
         }
         return message + "\n$userAddress"
     }

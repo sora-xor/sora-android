@@ -101,7 +101,7 @@ class ContactsViewModel(
                 }
             accounts.lastOrNull()?.isLast = true
             contactsLiveData.value = accounts
-            emptyContactsVisibilityLiveData.value = accounts.isEmpty()
+            emptySearchResultVisibilityLiveData.value = accounts.isEmpty()
         } catch (t: Throwable) {
             onError(t)
         } finally {

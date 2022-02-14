@@ -353,7 +353,7 @@ class PinCodeViewModelTest {
     }
 
     @Test
-    fun `back pressed closing the app on TIMEOUT_CHECK action`() {
+    fun `back pressed closing the app on TIMEOUT_CHECK action`() = runBlockingTest {
         given(interactor.isCodeSet()).willReturn(true)
 
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
@@ -410,7 +410,7 @@ class PinCodeViewModelTest {
     }
 
     @Test
-    fun `onResume() starts fingerprint scanner on TIMEOUT_CHECK action`() {
+    fun `onResume() starts fingerprint scanner on TIMEOUT_CHECK action`() = runBlockingTest {
         given(interactor.isCodeSet()).willReturn(true)
 
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
@@ -432,7 +432,7 @@ class PinCodeViewModelTest {
     }
 
     @Test
-    fun `fingerprint scanner success leads to check user fragment on TIMEOUT_CHECK action`() {
+    fun `fingerprint scanner success leads to check user fragment on TIMEOUT_CHECK action`() = runBlockingTest {
         given(interactor.isCodeSet()).willReturn(true)
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
         pinCodeViewModel.onAuthenticationSucceeded()

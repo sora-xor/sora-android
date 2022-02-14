@@ -6,20 +6,18 @@
 package jp.co.soramitsu.common.di.modules
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Build
 import android.os.Vibrator
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl
 import jp.co.soramitsu.common.data.AppVersionProviderImpl
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.GsonSerializerImpl
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
@@ -39,11 +37,9 @@ import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ContextManager
-import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
-import jp.co.soramitsu.common.util.DidProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
@@ -57,8 +53,6 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
-
-const val SHARED_PREFERENCES_FILE = "sora_prefs"
 
 @Module
 class CommonModule {
@@ -92,8 +86,8 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideQrCodeGenerator(resourceManager: ResourceManager): QrCodeGenerator {
-        return QrCodeGenerator(Color.BLACK, resourceManager.getColor(R.color.brand_white))
+    fun provideQrCodeGenerator(): QrCodeGenerator {
+        return QrCodeGenerator(Color.BLACK)
     }
 
     @Singleton
@@ -106,11 +100,11 @@ class CommonModule {
     fun provideRuntimeManager(
         fileManager: FileManager,
         gson: Gson,
-        preferences: Preferences,
+        soraPreferences: SoraPreferences,
         socketService: SocketService,
         typesApi: SubstrateTypesApi,
     ): RuntimeManager =
-        RuntimeManager(fileManager, gson, preferences, socketService, typesApi)
+        RuntimeManager(fileManager, gson, soraPreferences, socketService, typesApi)
 
     @Singleton
     @Provides
@@ -143,12 +137,6 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideDidProvider(): DidProvider {
-        return DidProvider(null)
-    }
-
-    @Provides
-    @Singleton
     fun provideInvitationHandler(): InvitationHandler = InvitationHandler()
 
     @Provides
@@ -165,23 +153,19 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
-    }
-
-    @Provides
-    @Singleton
-    fun providePreferences(prefs: SharedPreferences): Preferences {
-        return Preferences(prefs)
+    fun providePreferences(
+        context: Context
+    ): SoraPreferences {
+        return SoraPreferences(context)
     }
 
     @Provides
     @Singleton
     fun provideEncryptedPreferences(
-        preferences: Preferences,
+        soraPreferences: SoraPreferences,
         encryptionUtil: EncryptionUtil
     ): EncryptedPreferences {
-        return EncryptedPreferences(preferences, encryptionUtil)
+        return EncryptedPreferences(soraPreferences, encryptionUtil)
     }
 
     @Provides
@@ -210,12 +194,6 @@ class CommonModule {
     @Singleton
     fun provideClipBoardManager(context: Context): ClipboardManager {
         return ClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
-    }
-
-    @Provides
-    @Singleton
-    fun provideLanguagesHolder(): LanguagesHolder {
-        return LanguagesHolder()
     }
 
     @Provides

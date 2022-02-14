@@ -17,6 +17,7 @@ import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.fearless_utils.runtime.extrinsic.ExtrinsicBuilder
 import jp.co.soramitsu.fearless_utils.scale.Schema
 import jp.co.soramitsu.fearless_utils.scale.compactInt
+import jp.co.soramitsu.fearless_utils.scale.dataType.byteArraySized
 import jp.co.soramitsu.fearless_utils.scale.schema
 import jp.co.soramitsu.fearless_utils.scale.sizedByteArray
 import jp.co.soramitsu.fearless_utils.scale.uint128
@@ -33,6 +34,28 @@ object AccountData : Schema<AccountData>() {
     val reserved by uint128()
     val miscFrozen by uint128()
     val feeFrozen by uint128()
+}
+
+object PooledAssetId : Schema<PooledAssetId>() {
+    val assetId by vector(byteArraySized(32))
+}
+
+object ReservesResponse : Schema<ReservesResponse>() {
+    val first by uint128()
+    val second by uint128()
+}
+
+object PoolPropertiesResponse : Schema<PoolPropertiesResponse>() {
+    val first by sizedByteArray(32)
+    val second by sizedByteArray(32)
+}
+
+object TotalIssuance : Schema<TotalIssuance>() {
+    val totalIssuance by uint128()
+}
+
+object PoolProviders : Schema<PoolProviders>() {
+    val poolProviders by uint128()
 }
 
 object AccountInfo : Schema<AccountInfo>() {

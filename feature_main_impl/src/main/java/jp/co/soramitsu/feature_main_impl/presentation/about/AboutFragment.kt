@@ -39,37 +39,67 @@ class AboutFragment : BaseFragment<AboutViewModel>(R.layout.fragment_about) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-        binding.websiteSubtitleTv.text = BuildConfig.WEBSITE.substring(8)
-        binding.sourceSubtitleTv.text = BuildConfig.SOURCE_LINK.substring(8)
-        binding.telegramSubtitleTv.text = BuildConfig.TELEGRAM_LINK.substring(8)
-        binding.contactSubtitleTv.text = BuildConfig.EMAIL
+        binding.acContactEmail.setDescription(BuildConfig.EMAIL)
+        binding.acTwitter.setDescription(BuildConfig.TWITTER_LINK)
+        binding.acYoutube.setDescription(BuildConfig.YOUTUBE_LINK)
+        binding.acInstagram.setDescription(BuildConfig.INSTAGRAM_LINK)
+        binding.acMedium.setDescription(BuildConfig.MEDIUM_LINK)
+        binding.acWiki.setDescription(BuildConfig.WIKI_LINK)
+        binding.acTelegramAnnouncements.setDescription(BuildConfig.TELEGRAM_ANNOUNCEMENTS_LINK)
+        binding.acTelegramHappiness.setDescription(BuildConfig.TELEGRAM_HAPPINESS_LINK)
 
-        binding.icHome.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.backPressed()
-        }
+        binding.tbAbout.setHomeButtonListener { viewModel.backPressed() }
 
-        binding.sourceWrapper.setDebouncedClickListener(debounceClickHandler) {
+        binding.acGithubSource.setDebouncedClickListener(debounceClickHandler) {
             viewModel.openSourceClicked()
         }
 
-        binding.tgWrapper.setDebouncedClickListener(debounceClickHandler) {
+        binding.acTelegram.setDebouncedClickListener(debounceClickHandler) {
             viewModel.telegramClicked()
         }
 
-        binding.websiteWrapper.setDebouncedClickListener(debounceClickHandler) {
+        binding.acTelegramAnnouncements.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.telegramAnnouncementsClicked()
+        }
+
+        binding.acTelegramHappiness.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.telegramAskSupportClicked()
+        }
+
+        binding.acOfficialWebsite.setDebouncedClickListener(debounceClickHandler) {
             viewModel.websiteClicked()
         }
 
-        binding.termsWrapper.setDebouncedClickListener(debounceClickHandler) {
+        binding.acTermsAndConditions.setDebouncedClickListener(debounceClickHandler) {
             viewModel.termsClicked()
         }
 
-        binding.privacyWrapper.setDebouncedClickListener(debounceClickHandler) {
+        binding.acPrivacyPolicy.setDebouncedClickListener(debounceClickHandler) {
             viewModel.privacyClicked()
         }
 
-        binding.contactsWrapper.setDebouncedClickListener(debounceClickHandler) {
+        binding.acContactEmail.setDebouncedClickListener(debounceClickHandler) {
             viewModel.contactsClicked()
+        }
+
+        binding.acTwitter.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.twitterClicked()
+        }
+
+        binding.acYoutube.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.youtubeClicked()
+        }
+
+        binding.acInstagram.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.instagramClicked()
+        }
+
+        binding.acMedium.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.mediumClicked()
+        }
+
+        binding.acWiki.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.wikiClicked()
         }
 
         initListeners()
@@ -78,7 +108,7 @@ class AboutFragment : BaseFragment<AboutViewModel>(R.layout.fragment_about) {
 
     private fun initListeners() {
         viewModel.sourceTitleLiveData.observe {
-            binding.sourceTv.text = it
+            binding.acGithubSource.setDescription(it)
         }
         viewModel.openSendEmailEvent.observe {
             requireActivity().createSendEmailIntent(

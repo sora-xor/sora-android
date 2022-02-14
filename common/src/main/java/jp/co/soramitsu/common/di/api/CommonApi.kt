@@ -10,7 +10,7 @@ import com.google.gson.Gson
 import com.neovisionaries.ws.client.WebSocketFactory
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.Preferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
@@ -24,11 +24,11 @@ import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ContextManager
-import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
@@ -44,7 +44,7 @@ interface CommonApi {
 
     fun contextManager(): ContextManager
 
-    fun preferences(): Preferences
+    fun preferences(): SoraPreferences
 
     fun encryptedPreferences(): EncryptedPreferences
 
@@ -88,8 +88,6 @@ interface CommonApi {
 
     fun fileManager(): FileManager
 
-    fun languagesHolder(): LanguagesHolder
-
     fun dateTimeFormatter(): DateTimeFormatter
 
     fun clipboardManager(): ClipboardManager
@@ -97,6 +95,8 @@ interface CommonApi {
     fun textFormatter(): TextFormatter
 
     fun assetHolder(): AssetHolder
+
+    fun inAppUpdateManager(): InAppUpdateManager
 
     fun avatarGenerator(): AccountAvatarGenerator
 

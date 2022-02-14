@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <jp.co.soramitsu.sora_ui.controls.DefaultToolbar
+        <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

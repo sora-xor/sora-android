@@ -40,6 +40,7 @@ class AssetViewHolder(itemView: View, touchHelper: ItemTouchHelper) :
     private val assetIcon = itemView.findViewById<ImageView>(R.id.ivAssetManagementItemIcon)
     private val switch = itemView.findViewById<SwitchMaterial>(R.id.swAssetManagementItem)
     private val title = itemView.findViewById<TextView>(R.id.tvAssetManagementItemTitle)
+    private val ticker = itemView.findViewById<TextView>(R.id.tvAssetManagementItemTicker)
     private val amount = itemView.findViewById<TextView>(R.id.tvAssetManagementItemAmount)
 
     init {
@@ -58,16 +59,15 @@ class AssetViewHolder(itemView: View, touchHelper: ItemTouchHelper) :
         } catch (t: Throwable) {
             assetIcon.setImageResource(OptionsProvider.DEFAULT_ICON)
         }
-        title.text = "${asset.assetFirstName} (${asset.assetLastName})"
+        title.text = asset.assetLastName
+        ticker.text = asset.assetFirstName
         amount.text = asset.balance
         switch.isChecked = asset.visible
         switch.setOnCheckedChangeListener { v, b ->
             if (v.isPressed)
                 checkedChangeListener.invoke(asset, b)
         }
-        dragIcon.isEnabled = asset.changeCheckStateEnabled
-        switch.isEnabled = asset.changeCheckStateEnabled
-        switch.alpha = if (asset.changeCheckStateEnabled) 1F else 0.5F
+        dragIcon.isEnabled = asset.hideAllowed
     }
 }
 

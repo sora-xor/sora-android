@@ -46,6 +46,18 @@ class ExtrinsicDetailsViewModel(
     private val _copyEvent = SingleLiveEvent<Unit>()
     val copyEvent: LiveData<Unit> = _copyEvent
 
+    private val _changeTabToSwapEvent = SingleLiveEvent<Unit>()
+    val changeTabToSwapEvent: LiveData<Unit> = _changeTabToSwapEvent
+
+    private val _btnVisibilityLiveData = MutableLiveData<Boolean>()
+    val btnVisibilityLiveData: LiveData<Boolean> = _btnVisibilityLiveData
+
+    private val _btnEnabledLiveData = MutableLiveData<Boolean>()
+    val btnEnabledLiveData: LiveData<Boolean> = _btnEnabledLiveData
+
+    private val _progressVisibilityLiveData = MutableLiveData<Boolean>()
+    val progressVisibilityLiveData: LiveData<Boolean> = _progressVisibilityLiveData
+
     private val _btnTitleLiveData = MutableLiveData<String>()
     val btnTitleLiveData: LiveData<String> = _btnTitleLiveData
 
@@ -84,6 +96,11 @@ class ExtrinsicDetailsViewModel(
         tx?.safeCast<Transaction.Transfer>()?.let {
             router.showValTransferAmount(it.peer, it.token.id, BigDecimal.ZERO)
         }
+
+        tx?.safeCast<Transaction.Swap>()?.let {
+            _changeTabToSwapEvent.trigger()
+            router.showSwapTab(it.tokenFrom, it.tokenTo, it.amountFrom)
+        }
     }
 
     private fun buildSwapModel(
@@ -91,34 +108,52 @@ class ExtrinsicDetailsViewModel(
         myAddress: String,
         feeToken: Token,
     ): SwapDetailsModel {
-        _btnTitleLiveData.value = ""
-        val amount1 = "+ %s %s".format(
-            numbersFormatter.formatBigDecimal(tx.amountTo, AssetHolder.ROUNDING),
-            tx.tokenTo.symbol
-        )
-        val desc = "%s %s %s %s".format(
-            resourceManager.getString(R.string.polkaswap_swap_title),
-            tx.tokenFrom.symbol,
-            resourceManager.getString(R.string.common_for),
-            tx.tokenTo.symbol
-        )
-        val date = Date(tx.timestamp).let {
-            "%s, %s".format(
-                dateTimeFormatter.formatDate(
-                    it,
-                    DateTimeFormatter.DD_MMM_YYYY
-                ),
-                dateTimeFormatter.formatTimeWithSeconds(it)
-            )
+        _btnVisibilityLiveData.value = true
+        _progressVisibilityLiveData.value = false
+
+        if (tx.status == TransactionStatus.PENDING) {
+            _btnTitleLiveData.value = ""
+            _btnEnabledLiveData.value = false
+            _progressVisibilityLiveData.value = true
+        } else {
+            _btnTitleLiveData.value = resourceManager.getString(R.string.polkaswap_button_swap_again)
+            _btnEnabledLiveData.value = true
+            _progressVisibilityLiveData.value = false
         }
+
+        val desc = if (tx.status != TransactionStatus.REJECTED) {
+            val first = if (tx.status != TransactionStatus.PENDING) {
+                resourceManager.getString(R.string.polkaswap_swap_title)
+            } else {
+                resourceManager.getString(R.string.polkaswap_swapped)
+            }
+
+            "%s %s %s %s".format(
+                first,
+                tx.tokenFrom.symbol,
+                resourceManager.getString(R.string.common_for),
+                tx.tokenTo.symbol
+            )
+        } else {
+            resourceManager.getString(R.string.polkaswap_error_noswap)
+        }
+        val (date, time) = Date(tx.timestamp).let {
+            dateTimeFormatter.formatDate(
+                it,
+                DateTimeFormatter.DD_MMMM_YYYY
+            ) to dateTimeFormatter.formatTimeWithSeconds(it)
+        }
+
         clipboardData.clear()
         clipboardData.add(tx.txHash)
         clipboardData.add(myAddress)
+        val icon = getIcon(tx)
         return SwapDetailsModel(
-            amount1,
             desc,
             date,
-            getIcon(tx),
+            time,
+            icon.first,
+            tx.status,
             getStatus(tx),
             tx.txHash.truncateHash(),
             myAddress.truncateUserAddress(),
@@ -126,8 +161,12 @@ class ExtrinsicDetailsViewModel(
                 numbersFormatter.formatBigDecimal(tx.fee, feeToken.precision),
                 feeToken.symbol
             ),
+            "%s %s".format(
+                numbersFormatter.formatBigDecimal(tx.lpFee, feeToken.precision),
+                feeToken.symbol
+            ),
             resourceManager.getString(tx.market.titleResource),
-            "- %s %s".format(
+            "-%s %s".format(
                 numbersFormatter.formatBigDecimal(
                     tx.amountFrom,
                     tx.tokenFrom.precision
@@ -135,30 +174,49 @@ class ExtrinsicDetailsViewModel(
                 tx.tokenFrom.symbol
             ),
             tx.tokenTo.icon,
-            tx.tokenTo.symbol,
-            "+ %s %s".format(
-                numbersFormatter.formatBigDecimal(tx.amountTo, tx.tokenTo.precision),
+            tx.tokenTo.name,
+            "+%s %s".format(
+                numbersFormatter.formatBigDecimal(tx.amountTo, AssetHolder.ROUNDING),
                 tx.tokenTo.symbol
             )
         )
     }
 
-    private fun buildTransferModel(
+    private suspend fun buildTransferModel(
         tx: Transaction.Transfer,
         myAddress: String,
         feeToken: Token,
     ): TransferDetailsModel {
-        _btnTitleLiveData.value = when {
+        val (btnTitle, statusText) = when {
             tx.transferType == TransactionTransferType.INCOMING && tx.status == TransactionStatus.COMMITTED && tx.successStatus == true -> {
-                resourceManager.getString(R.string.transaction_send_back)
+                resourceManager.getString(R.string.transaction_send_back) to resourceManager.getString(
+                    R.string.common_received
+                )
             }
             tx.transferType == TransactionTransferType.OUTGOING && tx.status == TransactionStatus.COMMITTED && tx.successStatus == true -> {
-                resourceManager.getString(R.string.transaction_send_again)
+                resourceManager.getString(R.string.transaction_send_again) to resourceManager.getString(
+                    R.string.common_sent
+                )
             }
             tx.transferType == TransactionTransferType.OUTGOING && (tx.status == TransactionStatus.REJECTED || (tx.status == TransactionStatus.COMMITTED && tx.successStatus == false)) -> {
-                resourceManager.getString(R.string.common_retry)
+                resourceManager.getString(R.string.common_retry) to resourceManager.getString(R.string.common_notsent)
             }
-            else -> ""
+            else -> "" to ""
+        }
+        if (walletInteractor.isWhitelistedToken(tx.token.id)) {
+            _btnVisibilityLiveData.value = true
+            if (tx.status == TransactionStatus.PENDING) {
+                _btnTitleLiveData.value = ""
+                _btnEnabledLiveData.value = false
+                _progressVisibilityLiveData.value = true
+            } else {
+                _btnTitleLiveData.value = btnTitle
+                _btnEnabledLiveData.value = true
+                _progressVisibilityLiveData.value = false
+            }
+        } else {
+            _btnVisibilityLiveData.value = false
+            _progressVisibilityLiveData.value = false
         }
         val sign =
             if (tx.transferType == TransactionTransferType.INCOMING) "+" else "-"
@@ -178,14 +236,11 @@ class ExtrinsicDetailsViewModel(
             ),
             symbol
         )
-        val date = Date(tx.timestamp).let {
-            "%s, %s".format(
-                dateTimeFormatter.formatDate(
-                    it,
-                    DateTimeFormatter.DD_MMM_YYYY
-                ),
-                dateTimeFormatter.formatTimeWithSeconds(it)
-            )
+        val (date, time) = Date(tx.timestamp).let {
+            dateTimeFormatter.formatDate(
+                it,
+                DateTimeFormatter.DD_MMMM_YYYY
+            ) to dateTimeFormatter.formatTimeWithSeconds(it)
         }
         val addresses = when (tx.transferType) {
             TransactionTransferType.INCOMING -> {
@@ -204,30 +259,49 @@ class ExtrinsicDetailsViewModel(
         clipboardData.add(tx.blockHash.orEmpty())
         clipboardData.add(addresses.first)
         clipboardData.add(addresses.second)
+        val statusIcon = getIcon(tx)
+        val (txHash, txHashIcon) = if (tx.txHash.isEmpty()) {
+            "..." to 0
+        } else {
+            tx.txHash.truncateHash() to R.drawable.ic_copy_16
+        }
+        val (blockHash, blockHashIcon) = if (tx.blockHash.isNullOrEmpty()) {
+            "..." to 0
+        } else {
+            tx.blockHash?.truncateHash().orEmpty() to R.drawable.ic_copy_16
+        }
         return TransferDetailsModel(
+            tx.transferType,
             amount2,
             amount1,
             date,
-            getIcon(tx),
+            time,
+            statusIcon.first,
+            statusIcon.second,
+            tx.token.icon,
+            tx.token.name,
             getStatus(tx),
-            tx.txHash.truncateHash(),
-            tx.blockHash?.truncateHash().orEmpty(),
+            txHash,
+            txHashIcon,
+            blockHash,
+            blockHashIcon,
             addresses.first.truncateUserAddress(),
             addresses.second.truncateUserAddress(),
             fee,
+            statusText
         )
     }
 
-    private fun getIcon(tx: Transaction): Int {
+    private fun getIcon(tx: Transaction): Pair<Int, Int> {
         return when (tx.status) {
             TransactionStatus.COMMITTED -> {
-                if (tx.successStatus == true) R.drawable.ic_success_green_18 else R.drawable.ic_error_red_18
+                if (tx.successStatus == true) R.drawable.ic_neu_ok to R.attr.iconTintColorPositive else R.drawable.ic_cross_red_16 to R.attr.iconTintColorNegative
             }
             TransactionStatus.PENDING -> {
-                R.drawable.ic_pending_grey_18
+                R.drawable.animation_progress_dots to R.attr.tintColorLight
             }
             TransactionStatus.REJECTED -> {
-                R.drawable.ic_error_red_18
+                R.drawable.ic_cross_red_16 to R.attr.iconTintColorNegative
             }
         }
     }

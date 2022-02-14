@@ -9,15 +9,11 @@
         android:id="@+id/wordTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TextAppearance.Soramitsu.Body1"
-        android:textColor="@color/black"
+        style="@style/TextAppearance.Soramitsu.Neu.18.Semibold"
         android:layout_gravity="center"
         android:gravity="center"
         android:background="@drawable/bg_mnemonic_word_chip"
-        android:paddingStart="@dimen/x1"
-        android:paddingTop="6dp"
-        android:paddingEnd="@dimen/x1"
-        android:paddingBottom="6dp"
+        android:padding="@dimen/x1"
         tools:text="blouse" />
 
 </merge>

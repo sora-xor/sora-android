@@ -10,6 +10,8 @@ import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -30,6 +32,9 @@ class EthereumInteractorTest {
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
     @Mock
     private lateinit var ethereumRepository: EthereumRepository
 
@@ -46,7 +51,7 @@ class EthereumInteractorTest {
     private val keyPair = mock(Keypair::class.java)
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
         ethereumInteractorImpl =
             EthereumInteractorImpl(ethereumRepository, credentialsRepository, healthChecker)
         given(credentialsRepository.getAddress()).willReturn(accountId)
@@ -54,7 +59,7 @@ class EthereumInteractorTest {
     }
 
     @Test
-    fun `start withdraw called`() {
+    fun `start withdraw called`() = runBlockingTest {
         val amount = BigDecimal.ONE
         val minerFee = "11.0"
         val ethAddress = "0xaddress"

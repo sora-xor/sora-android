@@ -15,6 +15,7 @@
     <string name="common_malay_native" translatable="false">Bahasa Melayu</string>
     <string name="common_swedish_native" translatable="false">Svenska</string>
     <string name="common_thai_native" translatable="false">ไทย</string>
+    <string name="common_turkish_native" translatable="false">Türk</string>
     <string name="common_spanish_native" translatable="false">Español</string>
     <string name="common_bashkir_native" translatable="false">Башҡортостан</string>
     <string name="common_french_native" translatable="false">Français</string>
@@ -22,6 +23,8 @@
     <string name="common_chinese_native" translatable="false">中国語</string>
     <string name="common_ukrainian_native" translatable="false">Українська</string>
     <string name="common_italian_native" translatable="false">Italiano</string>
+    <string name="common_german_native" translatable="false">Deutsch</string>
+    <string name="common_norwegian_native" translatable="false">Norsk</string>
     <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
     <string name="transaction_eth_sign" translatable="false">ETH</string>
     <string name="transaction_fee_gas_hint" translatable="false">GWEI</string>

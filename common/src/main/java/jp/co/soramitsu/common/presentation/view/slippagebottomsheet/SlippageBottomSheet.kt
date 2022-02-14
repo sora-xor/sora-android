@@ -12,16 +12,19 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.databinding.BottomSheetSlippageBinding
 import jp.co.soramitsu.common.util.ext.onDoneClicked
-import java.math.BigDecimal
+import jp.co.soramitsu.common.util.ext.openSoftKeyboard
 
 class SlippageBottomSheet(
     context: Context,
-    currentSlippage: Float,
-    val slippageSetted: (slippage: Float) -> Unit
+    private val currentSlippage: Float,
+    private val onSlippageSelected: (slippage: Float) -> Unit
 ) : BottomSheetDialog(context, R.style.BottomSheetDialog) {
 
-    private val MIN = BigDecimal.ZERO
-    private val MAX = BigDecimal.TEN
+    private val min: Float = 0.0F
+    private val minValue: Float = 0.01F
+    private val max: Float = 10F
+    private val minFail: Float = 0.1F
+    private val maxFrontrun: Float = 5.0F
 
     init {
         val binding = BottomSheetSlippageBinding.inflate(LayoutInflater.from(context), null, false)
@@ -29,42 +32,77 @@ class SlippageBottomSheet(
                 setContentView(it.root)
             }
 
-        binding.slippageToleranceInput.setText(currentSlippage.toString())
+        binding.slippageToleranceInputWrapper.setOnClickListener {
+            context.openSoftKeyboard(binding.slippageToleranceInput)
+        }
 
         binding.slippageToleranceInput.doOnTextChanged { text, _, _, _ ->
             if (text.toString().isNotEmpty()) {
-                val slippage = text.toString().toBigDecimal()
-                if (slippage < MIN) {
-                    binding.slippageToleranceInput.setText(MIN.toString())
+                val slippage = checkInput(text.toString(), min) {
+                    binding.slippageToleranceInput.setText(it)
                 }
-
-                if (slippage > MAX) {
-                    binding.slippageToleranceInput.setText(MAX.toString())
+                when {
+                    slippage >= maxFrontrun -> {
+                        binding.slippageToleranceWarningTitle.setText(R.string.polkaswap_slippage_frontrun)
+                        binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_neu_alert_blue_24, 0, 0, 0)
+                    }
+                    slippage <= minFail -> {
+                        binding.slippageToleranceWarningTitle.setText(R.string.polkaswap_slippage_mayfail)
+                        binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_neu_alert_blue_24, 0, 0, 0)
+                    }
+                    else -> {
+                        binding.slippageToleranceWarningTitle.text = ""
+                        binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
+                    }
                 }
             }
         }
 
-        binding.slippageToleranceInput.onDoneClicked {
-            if (binding.slippageToleranceInput.text.toString().isNotEmpty()) {
-                slippageSetted(binding.slippageToleranceInput.text.toString().toFloat())
-            }
+        binding.slippageToleranceInput.setText("$currentSlippage")
 
+        binding.slippageToleranceInput.onDoneClicked {
+            val value = binding.slippageToleranceInput.text.toString()
+            if (value.isNotEmpty()) {
+                onSlippageSelected(checkInput(value, minValue))
+            } else {
+                onSlippageSelected(currentSlippage)
+            }
             dismiss()
         }
 
         binding.firstChip.setOnClickListener {
-            slippageSetted(0.1f)
+            onSlippageSelected(0.1f)
             dismiss()
         }
 
         binding.secondChip.setOnClickListener {
-            slippageSetted(0.5f)
+            onSlippageSelected(0.5f)
             dismiss()
         }
 
         binding.lastChip.setOnClickListener {
-            slippageSetted(1.0f)
+            onSlippageSelected(1.0f)
             dismiss()
         }
+    }
+
+    private fun checkInput(text: String, m: Float, onUpdate: ((v: String) -> Unit)? = null): Float {
+        val slippage = text.let {
+            if (it[0].isDigit()) it else "0$it"
+        }.toFloatOrNull()
+        if (slippage == null) {
+            onUpdate?.invoke(currentSlippage.toString())
+            return currentSlippage
+        }
+        if (slippage < m) {
+            onUpdate?.invoke(m.toString())
+            return m
+        }
+        if (slippage > max) {
+            onUpdate?.invoke(max.toString())
+            return max
+        }
+
+        return slippage
     }
 }

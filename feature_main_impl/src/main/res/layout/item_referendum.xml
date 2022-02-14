@@ -43,7 +43,7 @@
 
             <TextView
                 android:id="@+id/referendumDeadlineLabel"
-                style="@style/TextAppearance.Soramitsu.Body1"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/referendum_ends_in_title"
@@ -52,7 +52,7 @@
 
             <TextView
                 android:id="@+id/referendumDeadline"
-                style="@style/TextAppearance.Soramitsu.Body1"
+                style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="@+id/referendumDeadlineLabel"
@@ -63,7 +63,7 @@
 
         <TextView
             android:id="@+id/referendumTitle"
-            style="@style/TextAppearance.Soramitsu.Header2"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x2"
@@ -98,7 +98,7 @@
 
         <TextView
             android:id="@+id/referendumNoLabel"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1"
@@ -122,18 +122,18 @@
 
         <TextView
             android:id="@+id/referendumYesLabel"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1"
             android:text="@string/referendum_support_title"
-            android:textColor="@color/uikit_lightRed"
+            android:textColor="@color/brand_soramitsu_red"
             app:layout_constraintEnd_toEndOf="@+id/referendumDescription"
             app:layout_constraintTop_toBottomOf="@+id/referendumDivider1" />
 
         <TextView
             android:id="@+id/referendumNoCount"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableStart="@drawable/ic_thumb_down_24"
@@ -146,14 +146,14 @@
 
         <TextView
             android:id="@+id/referendumYesCount"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/x3"
             android:drawableEnd="@drawable/ic_thumb_up_24"
             android:drawablePadding="@dimen/x1"
-            android:textColor="@color/uikit_lightRed"
-            app:drawableTint="@color/uikit_lightRed"
+            android:textColor="@color/brand_soramitsu_red"
+            app:drawableTint="@color/brand_soramitsu_red"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/referendumVsLine"
             app:layout_constraintTop_toBottomOf="@+id/referendumVsLine"

@@ -10,10 +10,7 @@ data class AssetConfigurableModel(
     val assetFirstName: String,
     val assetLastName: String,
     val assetIconResource: Int,
-    val changeCheckStateEnabled: Boolean,
+    val hideAllowed: Boolean,
     val balance: String?,
-    val visible: Boolean,
-) {
-
-    var position: Int = 0
-}
+    var visible: Boolean,
+)

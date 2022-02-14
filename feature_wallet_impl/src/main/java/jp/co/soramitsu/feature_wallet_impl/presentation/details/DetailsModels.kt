@@ -6,36 +6,49 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
 import android.os.Parcelable
+import androidx.annotation.AttrRes
 import androidx.annotation.DrawableRes
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class TransferDetailsModel(
+    val transferType: TransactionTransferType,
     val amount1: String,
     val amount2: String,
     val date: String,
+    val time: String,
     @DrawableRes val statusIcon: Int,
+    @AttrRes val statusIconTintAttr: Int,
+    @DrawableRes val tokenIcon: Int,
+    val tokenName: String,
     val status: String,
     val txHash: String,
+    @DrawableRes val txHashIcon: Int,
     val blockHash: String,
+    @DrawableRes val blockHashIcon: Int,
     val from: String,
     val to: String,
     val fee: String,
+    val statusText: String,
 ) : Parcelable
 
 @Parcelize
 data class SwapDetailsModel(
-    val amount1: String,
     val description: String,
     val date: String,
+    val time: String,
     @DrawableRes val statusIcon: Int,
-    val status: String,
+    val status: TransactionStatus,
+    val statusText: String,
     val txHash: String,
     val fromAccount: String,
     val networkFee: String,
+    val lpFee: String,
     val market: String,
-    val amountSwapped: String,
+    val sentAmount: String,
     @DrawableRes val receivedIcon: Int,
-    val toSymbol: String,
+    val receivedTokenName: String,
     val amount1Full: String,
 ) : Parcelable

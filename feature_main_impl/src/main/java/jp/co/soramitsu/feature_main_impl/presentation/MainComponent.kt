@@ -28,4 +28,5 @@ interface MainComponent {
     }
 
     fun inject(mainActivity: MainActivity)
+    fun inject(updateDialog: FlexibleUpdateDialog)
 }

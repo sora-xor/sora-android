@@ -23,7 +23,8 @@ class AssetAdapter(
 ) : ListAdapter<AssetModel, AssetViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): AssetViewHolder {
-        val view = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_asset, viewGroup, false)
+        val view =
+            LayoutInflater.from(viewGroup.context).inflate(R.layout.item_asset, viewGroup, false)
         return AssetViewHolder(view)
     }
 
@@ -35,28 +36,25 @@ class AssetAdapter(
     fun isHideIcon(pos: Int): Boolean = getItem(pos).let {
         it.hidingAllowed || (!it.hidingAllowed && it.displayed)
     }
+
     fun getAsset(pos: Int): AssetModel = getItem(pos)
 }
 
 class AssetViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(asset: AssetModel, debounceClickHandler: DebounceClickHandler, clickListener: (AssetModel) -> Unit) {
-        with(itemView as AssetView) {
+    private val assetView: AssetView = itemView.findViewById(R.id.soraAssetView)
+
+    fun bind(
+        asset: AssetModel,
+        debounceClickHandler: DebounceClickHandler,
+        clickListener: (AssetModel) -> Unit
+    ) {
+        with(assetView) {
             setAssetFirstName(asset.assetFirstName)
             setAssetIconResource(asset.assetIconResource)
             setAssetLastName(asset.assetLastName)
 
-            setBalance(if (asset.showMainBalance) asset.balance.orEmpty() else "")
-
-            asset.state?.let {
-                val state = when (it) {
-                    AssetModel.State.NORMAL -> AssetView.State.NORMAL
-                    AssetModel.State.ASSOCIATING -> AssetView.State.ASSOCIATING
-                    AssetModel.State.ERROR -> AssetView.State.ERROR
-                }
-                changeState(state)
-            }
-
+            setBalance(if (asset.displayed) asset.balance.orEmpty() else "")
             setDebouncedClickListener(debounceClickHandler) { clickListener(asset) }
         }
     }

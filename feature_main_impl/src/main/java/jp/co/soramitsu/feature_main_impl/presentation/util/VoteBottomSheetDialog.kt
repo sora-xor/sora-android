@@ -11,7 +11,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
-import android.view.WindowManager.LayoutParams
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.SeekBar
@@ -66,7 +65,7 @@ class VoteBottomSheetDialog(
                             ColorStateList.valueOf(
                                 ContextCompat.getColor(
                                     context,
-                                    R.color.uikit_lightRed
+                                    R.color.brand_soramitsu_red
                                 )
                             )
                     } else {
@@ -149,8 +148,6 @@ class VoteBottomSheetDialog(
         binding.cancelBtn.setDebouncedClickListener(debounceClickHandler) {
             dismiss()
         }
-
-        window!!.setSoftInputMode(LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         binding.voteSubmitContainer.setDebouncedClickListener(debounceClickHandler) {
             if (binding.votesEt.text.toString().isNotBlank()) {

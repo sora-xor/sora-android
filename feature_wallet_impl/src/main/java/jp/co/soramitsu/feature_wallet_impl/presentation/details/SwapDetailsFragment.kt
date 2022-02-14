@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
+import android.graphics.drawable.Animatable
 import android.os.Bundle
 import android.view.View
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -12,8 +13,10 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.requireParcelable
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentSwapDetailsBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
@@ -62,18 +65,23 @@ class SwapDetailsFragment :
         viewBinding.tvFromAccount.setDebouncedClickListener(debounceClickHandler) {
             viewModel.onCopyClicked(1)
         }
-        viewBinding.tvSwapAmount.text = details.amount1
-        viewBinding.tvSwapData.text = details.description
-        viewBinding.tvSwapDate.text = details.date
+
+        viewBinding.ivReceiveIcon.setImageResource(details.receivedIcon)
+        viewBinding.tvSwapAmount.text = details.amount1Full
+        viewBinding.tvSwapTokenInfo.text = details.receivedTokenName
         viewBinding.ivSwapStatus.setImageResource(details.statusIcon)
-        viewBinding.tvSwapStatus.text = details.status
+        if (details.status == TransactionStatus.PENDING) {
+            viewBinding.ivSwapStatus.drawable.safeCast<Animatable>()?.start()
+        }
+        viewBinding.tvSwapStatus.text = details.statusText
+        viewBinding.tvSwapData.text = details.description
         viewBinding.tvSwapHash.text = details.txHash
         viewBinding.tvFromAccount.text = details.fromAccount
         viewBinding.tvSwapMarket.text = details.market
         viewBinding.tvSwapNetworkFee.text = details.networkFee
-        viewBinding.tvSwapAmount2.text = details.amountSwapped
-        viewBinding.ivSwapToken.setImageResource(details.receivedIcon)
-        viewBinding.tvSwapReceivedSymbol.text = details.toSymbol
-        viewBinding.tvSwapReceivedAmount.text = details.amount1Full
+        viewBinding.tvSwapLpFee.text = details.lpFee
+        viewBinding.tvSwapInputValue.text = details.sentAmount
+        viewBinding.tvSwapDateValue.text = details.date
+        viewBinding.tvSwapTimeValue.text = details.time
     }
 }

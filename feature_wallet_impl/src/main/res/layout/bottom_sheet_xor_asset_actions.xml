@@ -25,7 +25,7 @@
             android:src="@drawable/ic_copy_red_18" />
 
         <TextView
-            style="@style/TextAppearance.Soramitsu.Body1"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -56,7 +56,7 @@
             android:src="@drawable/ic_copy_red_18" />
 
         <TextView
-            style="@style/TextAppearance.Soramitsu.Body1"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -87,7 +87,7 @@
             android:src="@drawable/ic_eye_show" />
 
         <TextView
-            style="@style/TextAppearance.Soramitsu.Body1"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

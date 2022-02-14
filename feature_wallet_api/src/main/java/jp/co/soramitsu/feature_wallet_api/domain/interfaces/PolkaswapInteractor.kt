@@ -7,6 +7,7 @@ package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
+import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import kotlinx.coroutines.flow.Flow
@@ -14,11 +15,21 @@ import java.math.BigDecimal
 
 interface PolkaswapInteractor {
 
+    fun subscribePoolsCache(): Flow<List<PoolData>>
+
+    fun subscribePoolsChanges(): Flow<String>
+
+    suspend fun updatePools()
+
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean
 
     suspend fun getAvailableSources(): List<Market>
 
     suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): List<Market>?
+
+    fun getPolkaswapDisclaimerVisibility(): Flow<Boolean>
+
+    suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
 
     suspend fun swap(
         tokenInput: Token,

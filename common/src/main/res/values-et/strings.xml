@@ -1,43 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="about_announcements">Receive Announcements</string>
+  <string name="about_ask_support">Ask for Support</string>
   <string name="about_contact_us">Võtke meiega ühendust</string>
+  <string name="about_instagram">Like on Instagram</string>
+  <string name="about_medium">Read on Medium</string>
   <string name="about_privacy">Privaatsuse poliis</string>
   <string name="about_source_code">Lähtekood</string>
   <string name="about_telegram">Ametlik telegrammigrupp</string>
   <string name="about_title">Meist</string>
+  <string name="about_twitter">Follow on Twitter</string>
   <string name="about_website">Veebisait</string>
+  <string name="about_wiki">Learn on Wiki</string>
+  <string name="about_youtube">Subscribe on YouTube</string>
   <string name="account_confirmation_title">Kinnitage mälu</string>
+  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Projekt</string>
+  <string name="address_not_found">Address not found, make sure that address belongs to the right network.</string>
+  <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Tehingu tasu</string>
   <string name="amount_error_no_funds">Kahjuks pole teil määratud summa ülekandmiseks piisavalt vahendeid.</string>
   <string name="amount_title">Summa</string>
   <string name="ask_biometry_message">Kas soovite kasutada autentimiseks biomeetriat?</string>
   <string name="asset_add">Lisa konto</string>
+  <string name="asset_details_title">Asset Details</string>
+  <string name="asset_not_found">Asset not found</string>
   <string name="asset_settings_title">Kontod</string>
   <string name="asset_state_associating">Seostamine...</string>
   <string name="asset_state_error">Viga</string>
   <string name="asset_val_fullname">SORA valideerimisluba (VAL)</string>
   <string name="asset_val_name">SORA valideerimisluba</string>
   <string name="biometric_dialog_title">Autentimine</string>
+  <string name="block_id">Block hash</string>
+  <string name="choose_token">Choose\ntoken</string>
+  <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">Kui teil on küsimusi või muresid, saate seda teha %%võtke meiega ühendust.%%</string>
   <string name="claim_contact_1">Kui teil on küsimusi või muresid, saate seda teha</string>
   <string name="claim_contact_2">võtke meiega ühendust.</string>
+  <string name="claim_contact_us">%%Contact us%% for any questions or concerns</string>
   <string name="claim_error_title">Üleminek nurjus</string>
+  <string name="claim_error_title_v1">Transition of assets failed. Please try again later.</string>
+  <string name="claim_notification_text">Transition in progress...</string>
+  <string name="claim_skip">Skip process</string>
   <string name="claim_subtitle">Vajame teie nõusolekut teie vahendite üleminekuks SORA-st, et saaksite neid kasutada. SORA töötab nüüd põhimikuvõrgus. Kinnitage üleminek.</string>
+  <string name="claim_subtitle_confirmed">Thank you for the confirmation!</string>
+  <string name="claim_subtitle_confirmed_2">Transition of assets is in progress.\nPlease wait.</string>
   <string name="claim_subtitle_v1">Teie varade SORA v1-st üleminekuks vajame teie nõusolekut. See võimaldab teil oma varasid kasutada substraadipõhises SORA v2-s. \n\nSee ei mõjuta Ethereumi võrgu varasid, neile pääsete siiski juurde, importides oma parooli mis tahes ühilduvasse rahakotti.</string>
+  <string name="claim_subtitle_v2">• We need consent to transition your assets from SORA v1 to SORA v2\n\n• The SORA v2 network is built with Substrate, which is natively compatible with the Polkadot and Kusama ecosystem\n\n• Assets on Ethereum are not affected, you can still access them by importing your passphrase to any compatible wallet</string>
   <string name="claim_welcome_sora2">Tere tulemast SORA v2-sse</string>
+  <string name="claim_welcome_sora2_v1">Welcome to\n%%SORA v2%%</string>
   <string name="coming_soon">Tulekul...</string>
+  <string name="common_account">Account</string>
   <string name="common_add">Lisa</string>
   <string name="common_advanced_settings">Täpsemad sätted</string>
   <string name="common_and">ja</string>
+  <string name="common_app_version">App version</string>
   <string name="common_apply">Rakenda</string>
   <string name="common_arab">Araabia</string>
+  <string name="common_asset">Asset</string>
+  <string name="common_balance">Balance</string>
   <string name="common_bashkir">Baškiiri</string>
   <string name="common_camera">Kaamera</string>
   <string name="common_cancel">Tühista</string>
   <string name="common_chinese">Hiina keel</string>
   <string name="common_chinesetaiwan">Hiina Taiwan</string>
   <string name="common_choose_asset">Valige vara</string>
+  <string name="common_confirm">Confirm</string>
+  <string name="common_connected">Connected</string>
+  <string name="common_connecting">Connecting...</string>
   <string name="common_copied">Kopeeritud lõikelauale</string>
   <string name="common_copy">Kopeeri</string>
   <string name="common_copy_address">Kopeeri aadress</string>
@@ -46,11 +76,11 @@
   <string name="common_done">Valmis</string>
   <string name="common_donotallow">Ära luba</string>
   <string name="common_english">Inglise keeles</string>
+  <string name="common_enter_amount">Enter amount</string>
   <string name="common_error_ambiguous_result">Ebaselge tulemus</string>
   <string name="common_error_fee_rate_not_available">Ei saanud ühendust väljastamise teenuseosutajaga. Palun proovige hiljem uuesti.</string>
   <string name="common_error_gas_limit_low">Gaasilimiit peab olema vähemalt %s</string>
   <string name="common_error_general_message">Teeme kõvasti tööd probleemi lahendamiseks. Palun proovi hiljem uuesti.</string>
-  <!-- Error -->
   <string name="common_error_general_title">Viga</string>
   <string name="common_error_internal_error_title">Sisemine viga</string>
   <string name="common_error_invalid_parameters">Sobimatud parameetrid</string>
@@ -62,7 +92,6 @@
   <string name="common_error_inviter_registered_after_invitee">Antud kutsekoodi ei saa rakendada, kuna see pärineb kasutajalt, kes on registreerunud pärast teid</string>
   <string name="common_error_mnemonic_is_not_valid">Teie paroolifraas on vale. Palun proovige uut.</string>
   <string name="common_error_mnemonic_length_error">Paroolifraas peab sisaldama 15 sõna</string>
-  <!-- Errors -->
   <string name="common_error_network">Palun kontrollige Interneti ühendust ja proovige uuesti.</string>
   <string name="common_error_not_enough_invitations">Kahjuks teil pole ühtegi kutset mida jagada</string>
   <string name="common_error_not_found_title">Ressurss pole saadaval</string>
@@ -70,7 +99,6 @@
   <string name="common_error_phone_already_registered">Seda telefoni numbrit on juba registreerimiseks kasutatud selle või mõne teine kasutajaga</string>
   <string name="common_error_pincode_check_error">Sisestatud kood on vale</string>
   <string name="common_error_price_is_to_low">Hind on liiga madal</string>
-  <!-- Favorite -->
   <string name="common_error_project_not_found">Kahjuks projekti ei leitud.</string>
   <string name="common_error_retry">Palun proovi uuesti</string>
   <string name="common_error_search_string_error">Otsingu suurus peab olema vahemikus 3–64</string>
@@ -80,7 +108,6 @@
   <string name="common_error_user_not_found">Teie paroolifraas ei sobi. Palun proovige uut.</string>
   <string name="common_error_user_values_not_found">Toimingut ei saa jätkata, kuna kasutajaväärtuste andmeid ei leita</string>
   <string name="common_error_votes_invalid_format">Kahjuks teie häälte arvu ei saa tõlgendada. Proovige uuesti hääletada.</string>
-  <!-- Voting -->
   <string name="common_error_votes_not_enough">Kahjuks teil pole piisavalt punkte, et hääletada.</string>
   <string name="common_error_voting_is_not_allowed">Vabandust, aga projekt ei saa enam hääli vastu võtta.</string>
   <string name="common_error_wrong_user_status">Toimingut ei saa jätkata, kuna kasutaja olek ei sobi</string>
@@ -88,9 +115,11 @@
   <string name="common_failed">Nurjus</string>
   <string name="common_filipino">Filipiinlane</string>
   <string name="common_finnish">Soome keel</string>
+  <string name="common_for">for</string>
   <string name="common_french">Prantsuse</string>
   <string name="common_from">Alates</string>
   <string name="common_gallery">Galerii</string>
+  <string name="common_german">German</string>
   <string name="common_hide">Peida</string>
   <plurals name="common_hour">
     <item quantity="one"></item>
@@ -102,10 +131,14 @@
   <string name="common_japanese">Jaapanlane</string>
   <string name="common_khmer">Inglise keeles</string>
   <string name="common_korean">Korea keel</string>
+  <string name="common_learn_more">Learn more</string>
   <string name="common_malay">Malai keel</string>
+  <string name="common_manage">Manage</string>
   <string name="common_min">min</string>
   <string name="common_network_unavailable">Võrguühendus pole saadaval</string>
   <string name="common_next">Järgmine</string>
+  <string name="common_norwegian">Norwegian</string>
+  <string name="common_notsent">Not sent</string>
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Kuva blockchain exploreris</string>
   <string name="common_options_title">Valige suvand</string>
@@ -113,9 +146,9 @@
   <string name="common_passphrase_header">Paroolifraas on teatud tüüpi parool.</string>
   <string name="common_passphrase_save_mnemonic_title">Paroolifraasi salvestamine või saatmine</string>
   <string name="common_passphrase_save_or_send">Salvesta või saada</string>
-  <!-- Passphrase -->
   <string name="common_passphrase_title">Paroolifraas</string>
   <string name="common_passphrase_your_passphrase">Teie paroolifraas</string>
+  <string name="common_per">per</string>
   <string name="common_personal_info_account_name_invalid">Konto nimi peaks sisaldama kuni 32 baiti</string>
   <string name="common_personal_info_first_name_hint">Eesnimi</string>
   <string name="common_personal_info_first_name_hyphen_error">Eesnimi ei saa alata ega lõppeda sidekriipsuga ega olla kahekordne sidekriips</string>
@@ -123,21 +156,25 @@
   <string name="common_personal_info_last_name_hint">Perekonnanimi</string>
   <string name="common_personal_info_last_name_hyphen_error">Perekonnanimi ei saa alata ega lõppeda sidekriipsuga ega olla kahekordne sidekriips</string>
   <string name="common_personal_info_last_name_is_empty">Perekonnanimi on tühi</string>
-  <!-- Personal info -->
   <string name="common_personal_info_title">Isikuandmed</string>
   <string name="common_please_wait">Palun oota</string>
   <string name="common_receive">Võta vastu</string>
   <string name="common_received">Saadud</string>
+  <string name="common_recipient">Recipient</string>
   <string name="common_retry">Uuesti proovima</string>
   <string name="common_russian">Vene keeles</string>
   <string name="common_save">Salvesta</string>
   <string name="common_scan">Skannimine</string>
   <string name="common_search">Otsing</string>
   <string name="common_sec">sek</string>
-  <!-- Other common stuff -->
+  <string name="common_select_asset">Select an asset</string>
   <string name="common_select_email_app_title">Valige e-posti rakendus</string>
   <string name="common_send">Saada</string>
+  <string name="common_sender">Sender</string>
+  <string name="common_sent">Sent</string>
+  <string name="common_settings">Seaded</string>
   <string name="common_share">Jaga</string>
+  <string name="common_show">Show</string>
   <string name="common_skip">Jäta vahele</string>
   <string name="common_sms_code_expired">Kinnituskood on aegunud. Proovige teist.</string>
   <string name="common_sms_code_not_correct">Kinnituskood on vale</string>
@@ -147,13 +184,15 @@
   <string name="common_terms_title">Tingimused</string>
   <string name="common_thai">Tai</string>
   <string name="common_to">Saaja</string>
+  <string name="common_to_estimated">To (estimated)</string>
   <string name="common_today">Täna</string>
   <string name="common_try_another">Proovige teist</string>
+  <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ukraina</string>
   <string name="common_unsupported_version_body">Uuendatud Sora rakendus on saadaval Google Plays. See sisaldab parendusi ja veaparandusi.</string>
   <string name="common_unsupported_version_open_google_play">Avage Google Play</string>
-  <!-- Unsupported version -->
   <string name="common_unsupported_version_title">Uuendage oma Sora rakendust</string>
+  <string name="common_update">Update</string>
   <string name="common_vote">Hääletus</string>
   <string name="common_yesterday">Eile</string>
   <string name="contacts_empty_state_title">Kõige olulisemad kontaktid kuvatakse siin</string>
@@ -165,17 +204,26 @@
   <string name="copy_eth_title">Kopeerige Ethereumi (ETH) rahakoti aadress</string>
   <string name="copy_val_title">Kopeeri SORA NET (VAL) rahakoti aadress</string>
   <string name="countries_country_not_found">Teie päringule vastavaid riike pole</string>
-  <!-- Countries -->
   <string name="countries_title">Vali oma riik</string>
   <string name="create_account_title">Loo konto</string>
+  <string name="details_frozen">Frozen</string>
+  <string name="details_frozen_total">Frozen (Total)</string>
   <string name="details_total">Kogusaldo</string>
+  <string name="details_transferable">Transferable</string>
+  <string name="empty_recent_recipients">No recent recipients.\nSent addresses will be shown here.</string>
+  <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="error_ethereum_account_subtitle">Selle toimingu jätkamiseks vajate tehingu lõpuleviimiseks sellega seotud Ethereumi kontot, millel on mõned sellel olevad rahalised summad Mineri tasu eest.</string>
   <string name="error_ethereum_account_title">Ethereumi kontot ei seostata</string>
   <string name="error_miner_fee_subtitle">Selle toimingu jätkamiseks peate oma Ethereumi konto täiendama.</string>
   <string name="error_miner_fee_title">Mineri teenustasuks pole piisavalt vahendeid</string>
+  <string name="error_transaction_fee_title">Not enough funds for transaction fee</string>
   <string name="ethereum_config_unavailable">Ethereumi sõlm pole saadaval</string>
-  <!-- FAQ -->
   <string name="faq_title">KKK</string>
+  <string name="friends_spread_word">Share SORA with friends.</string>
+  <string name="from_account">From account</string>
+  <string name="history_receive">Receive</string>
+  <string name="history_send">Send</string>
+  <string name="history_swap">Swap</string>
   <string name="history_title">Hiljutised sündmused</string>
   <string name="invite_accepted_empty_state_title">Ühtegi kutset pole veel vastu võetud</string>
   <string name="invite_accepted_invitations_title">Vastuvõetud kutsed</string>
@@ -184,6 +232,9 @@
   <string name="invite_code_applied_body">Kood on edukalt rakendatud</string>
   <string name="invite_code_applied_title">Palju õnne!</string>
   <string name="invite_code_apply">Rakenda kutsekood</string>
+  <string name="invite_code_left_hours">h</string>
+  <string name="invite_code_left_minutes">m</string>
+  <string name="invite_code_left_seconds">s</string>
   <string name="invite_code_sharing_title">Jagage oma kutsekoodi</string>
   <string name="invite_empty_friends_description">Teie kutsete olekud kuvatakse siin</string>
   <string name="invite_enter_confirmation_body_mask">Kas soovite rakendada kutsekoodi %s?</string>
@@ -191,7 +242,6 @@
   <string name="invite_enter_error_already_applied">Olete juba rakendanud mõne teise kutsekoodi</string>
   <string name="invite_enter_error_time_is_up">Kutsekoodi rakendamise aeg on möödas</string>
   <string name="invite_enter_invitation_code">Sisestage kutsekood</string>
-  <!-- Invite -->
   <string name="invite_fragment_title">Sõbrad</string>
   <string name="invite_link_format">Liituge Soraga, kasutades all olevat linki: \n %s</string>
   <string name="invite_link_sharing_title">Jaga kutse linki</string>
@@ -205,6 +255,7 @@
   <string name="logout_dialog_body">Selle toimingu tulemusena kustutatakse konto sellest seadmest. Enne jätkamist veenduge, et olete oma parooli varundanud.</string>
   <string name="mnemonic_alert_text">Seda kasutatakse kontole juurdepääsu taastamiseks. Kirjutage see üles, ilma selleta ei saa me teie kontot taastada!</string>
   <string name="mnemonic_confirm_text">Kinnitage, valides sõnad õiges järjekorras</string>
+  <string name="mnemonic_confirm_text_v2">Parooli kinnitamiseks valige sõnad õiges järjekorras</string>
   <string name="mnemonic_invalid">Vale mälumälu parool, kontrollige veel kord sõnade järjekorda.</string>
   <string name="mnemonic_invalid_title">Vale mnemooniline parool</string>
   <string name="mnemonic_text">Varundamiseks kasutage mitte digitaalset viisi, näiteks kirjutage see paberile.</string>
@@ -218,7 +269,6 @@
   <string name="personal_info_username_v1">Konto nimi</string>
   <string name="phone_number_mobile">Mobiiltelefoni number</string>
   <string name="phone_number_sms_code_will_be_sent">SMS-kood saadetakse teie telefoni</string>
-  <!-- Phone number -->
   <string name="phone_number_title">Registreeru</string>
   <string name="phone_verification_too_frequent_message">Liiga sagedased kinnituskoodi taotlused. Palun proovige hiljem uuesti.</string>
   <string name="pincode_change_success">PIN-koodi muutmine õnnestus.</string>
@@ -233,7 +283,60 @@
   <string name="pincode_set_your_pin_code">PIN-koodi seadistamine</string>
   <string name="pincode_touch_fingerprint_scanner">Puudutage sõrmejäljeskannerit</string>
   <string name="pincode_updated">PIN-kood on värskendatud</string>
+  <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">Koostalitlusvõimelise tuleviku DEX. Polkaswap on vabadusekaotuseta AMM-DEX-protokoll tokenide vahetamiseks, mis põhinevad Polkadoti võrgul, langevarjudel ja silla kaudu ühendatud plokiahelatel. Polkaswapi protokoll eemaldab usaldusväärsed vahendajad tõhusalt ja annab võimaluse kiiremaks kauplemiseks.</string>
+  <string name="polkaswap_confirm_swap">Confirm Swap</string>
+  <string name="polkaswap_details">Details</string>
+  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
+  <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
+  <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
+  <string name="polkaswap_info_text_4">Your understanding that the current version of Polkaswap is an alpha version: it has not been fully tested, and some functions may not perform as designed;</string>
+  <string name="polkaswap_info_text_5">Your understanding and voluntary acceptance of the risks involved in using Polkaswap, including, but not limited to, the risk of losing tokens.</string>
+  <string name="polkaswap_info_text_6">Once more, please do not continue without reading the %%Polkaswap FAQ%%, %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%!</string>
+  <string name="polkaswap_info_text_7">In order to hide the disclaimer notification from the Swap tab please swipe the button below. Only do so if you fully understand and have read all of the documents mentioned!</string>
+  <string name="polkaswap_info_text_8">Swipe to hide</string>
+  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_title">Disclaimer</string>
+  <string name="polkaswap_info_title_main">Vastutusest loobumine: palun lugege enne polkaswapi kasutamise jätkamist!</string>
+  <string name="polkaswap_input_estimated">Input is estimated. You will sell maximum %s or the transaction will revert.</string>
+  <string name="polkaswap_insufficient_balance">Insufficient %s balance</string>
+  <string name="polkaswap_insufficient_liqudity">Insufficient liquidity</string>
+  <string name="polkaswap_liqudity_fee">LP Fee</string>
+  <string name="polkaswap_liqudity_fee_info">A portion of each trade (0.3%) goes to liquidity providers as a protocol incentive.</string>
+  <string name="polkaswap_market">Market</string>
+  <string name="polkaswap_market_info">Market algorithm - option to choose between Primary Market (TBC), Secondary Market (XYK) or a combined smart algorithm for guaranteed best price for any given transaction.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
+  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_title">Market algorithm</string>
+  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_maximum_sold">Max Sold</string>
+  <string name="polkaswap_maximum_sold_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_minimum_received">Min Received</string>
+  <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
+  <string name="polkaswap_network_fee">Network Fee</string>
+  <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
+  <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
+  <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
+  <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
+  <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
+  <string name="polkaswap_slippage_tolerance">Slippage Tolerance</string>
+  <string name="polkaswap_smart">Smart</string>
+  <string name="polkaswap_swap_title">Swap</string>
+  <string name="polkaswap_swapped">Swapped</string>
+  <string name="polkaswap_tbc">TBC</string>
+  <string name="polkaswap_xyk">XYK</string>
+  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_button_add">Add</string>
+  <string name="pool_button_remove">Remove</string>
+  <string name="pool_liqudity_title">Your liquidity</string>
+  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_share_title">Share of Pool</string>
+  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_token_pooled">Pooled</string>
   <string name="profile_about_title">Minust</string>
   <string name="profile_biometry_title">Biomeetria autentimine</string>
   <string name="profile_change_pin_title">PIN-koodi muutmine</string>
@@ -264,13 +367,13 @@
   <string name="project_vote_dialog_title">Mitu häält</string>
   <string name="project_voted">Hääletatud</string>
   <string name="project_you_can_vote_at_least_1_point">Hääletada saab vähemalt ühe punktiga 😜</string>
+  <string name="qr_code">QR code</string>
   <string name="qr_upload">Laadige üles galeriist</string>
   <string name="recovery_body_subtitle">Kahjuks ei ole võimalik oma kontole juurde pääseda, kui olete oma paroolifraasi unustanud.</string>
-  <!-- Recovery screen -->
   <string name="recovery_body_title">Sisestage oma paroolifraas</string>
   <string name="recovery_mnemonic_passphrase">Mnemooniline parool</string>
-  <!-- Recovery -->
   <string name="recovery_passphrase">Taasta juurdepääs</string>
+  <string name="recovery_source_type">Source type</string>
   <string name="recovery_title">Impordi konto</string>
   <string name="referenda_title">Referendumid</string>
   <string name="referenda_title_vote">Hääletus rahvahääletustel</string>
@@ -290,17 +393,26 @@
   <string name="referendum_total_votes">Hääli kokku</string>
   <string name="referendum_unsupport_title">Ei</string>
   <string name="referendum_voting_result">Hääletustulemus</string>
+  <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Ärge tehke ekraanipilte, mida võib koguda kolmanda osapoole pahavara</string>
   <string name="screenshot_alert_title">Ärge tehke ekraanipilte</string>
+  <string name="search_asset_by_name">Search by asset name or symbol</string>
+  <string name="select_account_address">Search account address</string>
+  <string name="select_account_address_1">Search or add a new address</string>
+  <string name="select_asset_receive">Select Asset to Receive</string>
+  <string name="select_asset_send">Select Asset to Send</string>
+  <string name="select_recipient">Select recipient</string>
   <string name="set_amount">Määra summa</string>
   <string name="staking_coming_soon">XOR-i omanikud saavad valideerijate nimetamiseks ja preemiate saamiseks panustada oma XOR-i.</string>
+  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA valideerija preemiad</string>
-  <!-- Startup -->
   <string name="startup_verification_title">Autoriseerimise kinnitamine...</string>
+  <string name="status_error">Error</string>
   <string name="status_pending">Ootel</string>
   <string name="status_rejected">Tagasi lükatud</string>
   <string name="status_success">Edu</string>
   <string name="status_title">Olek</string>
+  <string name="swap_input_title">Swap input</string>
   <string name="tabbar_friends_title">Sõbrad</string>
   <string name="tabbar_parliament_title">Parlament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -328,48 +440,66 @@
   <string name="transaction_send_back">Saada tagasi</string>
   <string name="transaction_token">Tooken</string>
   <string name="transaction_total">Kokku</string>
+  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="tutorial_many_world">Paljud maailmad.\n Üks majandus.</string>
+  <string name="tutorial_many_world_desc">SORA töötab selle nimel, et saada detsentraliseeritud mitmekülgseks majandussüsteemiks, rahastades uute ja põnevate rakenduste loomist SORA parlamendi demokraatliku järelevalve all.</string>
   <string name="tutorial_one_world">Üks maailm.\n Üks majandus.</string>
   <string name="tutorial_one_world_desc">SORA töötab selle nimel, et saada maailma detsentraliseeritud keskpangaks, rahastades uute ja põnevate rakenduste loomist SORA parlamendi demokraatliku järelevalve all.</string>
   <string name="tutorial_privacy_policy">Privaatsuse poliis</string>
   <string name="tutorial_project_success_desc">Kui projekti poolt hääletamine õnnestub, saavad kõik oma osa</string>
   <string name="tutorial_projects_desc">Projektid mis tootjad on Sorasse lisanud ning pärast valikumenetlust hääletamisele lisatud</string>
   <string name="tutorial_restore_account">Taastage juurdepääs oma kontole</string>
-  <!-- Tutorial screen -->
   <string name="tutorial_sign_up">Registreeru</string>
+  <string name="tutorial_terms_and_conditions">By creating an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
   <string name="tutorial_terms_and_conditions_1">Registreerudes olete nõus\n</string>
   <string name="tutorial_terms_and_conditions_2">Tingimused</string>
   <string name="tutorial_terms_and_conditions_3">Tingimused</string>
+  <string name="tutorial_terms_and_conditions_recovery">By importing an account you are agreeing with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
+  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
   <string name="tutorial_votes_desc">Kasutajad hääletavad projektide poolt ning otsustavad, milliseid projekte tuleks rahastada</string>
   <string name="unknown_balance">Tundmatu</string>
+  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
+  <string name="update_install_now">Would you like to install the update now?</string>
   <string name="val_balance_title">VAL-märgis erinevates võrkudes</string>
   <string name="verification_enter_code_from_sms">Sisestage kood SMS-ist</string>
   <string name="verification_request_new_code_time" formatted="false">Uue koodi taotlemiseks aega %s:%s</string>
-  <!-- Verification -->
   <string name="verification_resend_code">Saada kood uuesti</string>
   <string name="verification_title">Telefoniga kinnitamine</string>
   <string name="view_balance_val">Kuva SORA NET (VAL) märgi jaotamine</string>
   <string name="votes_empty_history_description">Iga kord, kui teie hääled muutuvad, näete selle ajalugu siin</string>
-  <!-- Votes -->
   <string name="votes_history_title">Häälte ajalugu</string>
   <string name="votes_zero_error_message">Kahjuks on hääletamiseks vaja vähemalt ühte punkti</string>
   <string name="wallet_account_retry_registration">Proovi uuesti registreerimist</string>
+  <string name="wallet_asset_id">Asset id</string>
+  <string name="wallet_balance_locked">Locked</string>
+  <string name="wallet_balance_reserved">Reserved</string>
+  <string name="wallet_bonded">Bonded</string>
   <string name="wallet_empty_description">Sissetulevad ja väljaminevad tehingud kuvatakse siia</string>
+  <string name="wallet_empty_history_title">No transactions</string>
   <string name="wallet_ethereum">Ethereum</string>
   <string name="wallet_history_from_ethereum_address_title">Ethereumi aadressilt</string>
   <string name="wallet_history_from_soranet_address_title">SORA NETi kontolt</string>
+  <string name="wallet_history_limitations_text">At the moment, the history of transactions is stored locally, which means if you import the account on another device, log out or reinstall the application on current device, the history of transactions wouldn’t be available any more. Also we can’t show any incoming transactions. We apologize for any inconvenience caused, we are working to resolve the issue.</string>
+  <string name="wallet_history_limitations_title">History limitations</string>
   <string name="wallet_history_reward_from_system">Tasu süsteemist</string>
   <string name="wallet_history_to_ethereum_address">Ethereumi aadressile</string>
   <string name="wallet_history_to_my_ethereum_title">Minu Ethereumi aadressile</string>
   <string name="wallet_history_to_my_soranet_title">Minu SORA NET kontole</string>
   <string name="wallet_history_to_soranet_account">SORA NET kontole</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Minu %s võrgu aadress %s :</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_template" formatted="false">Minu %s Network aadress, kuhu saada %s %s :</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
   <string name="wallet_receive_val">Võta vastu VAL</string>
+  <string name="wallet_redeemable">Redeemable</string>
+  <string name="wallet_send_existential_warning_message">Your transfer will remove account from blockstore since it will make total balance lower than existential deposit.</string>
   <string name="wallet_soranet">SORA NET</string>
-  <!-- Wallet -->
   <string name="wallet_title">Rahakott</string>
+  <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">Tehing on esitatud</string>
+  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
   <string name="wallet_transfer_description_hint">Maksimaalselt %s sümbolit</string>
   <string name="wallet_transfer_to_ethereum">Ethereumi aadressile</string>
+  <string name="wallet_unbonding">Unbonding</string>
   <string name="wallet_val_to_my_eth">VAL minu Ethereumi kontole</string>
 </resources>

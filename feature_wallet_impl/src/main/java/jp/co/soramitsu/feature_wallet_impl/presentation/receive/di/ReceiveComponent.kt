@@ -29,6 +29,9 @@ interface ReceiveComponent {
         @BindsInstance
         fun withReceiveModel(model: ReceiveAssetModel): Builder
 
+        @BindsInstance
+        fun withQrBackgroundColor(color: Int): Builder
+
         fun build(): ReceiveComponent
     }
 

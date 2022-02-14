@@ -18,6 +18,7 @@ import jp.co.soramitsu.common.data.network.dto.EventRecord
 import jp.co.soramitsu.common.data.network.dto.InnerEventRecord
 import jp.co.soramitsu.common.data.network.dto.PhaseRecord
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
+import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.Asset
@@ -148,7 +149,7 @@ class WalletRepositoryTest {
     @Test
     fun `save migration status`() = runBlockingTest {
         val m = MigrationStatus.SUCCESS
-        willDoNothing().given(datasource).saveMigrationStatus(anyNonNull())
+        given(datasource.saveMigrationStatus(anyNonNull())).willReturn(Unit)
         walletRepository.saveMigrationStatus(m)
         verify(datasource).saveMigrationStatus(m)
     }
@@ -161,7 +162,7 @@ class WalletRepositoryTest {
 
     @Test
     fun `get assets`() = runBlockingTest {
-        given(assetDao.getAssetsVisible(anyString())).willReturn(emptyList())
+        given(assetDao.getAssetsVisible(anyString(), anyString())).willReturn(emptyList())
         assertEquals(assetList(), walletRepository.getAssetsVisible("address"))
     }
 
@@ -327,7 +328,6 @@ class WalletRepositoryTest {
             "0x0200000000000000000000000000000000000000000000000000000000000000",
             "someaddress",
             true,
-            true,
             1,
             BigDecimal.ONE,
             BigDecimal.ZERO,
@@ -341,7 +341,6 @@ class WalletRepositoryTest {
             "0x0200040000000000000000000000000000000000000000000000000000000000",
             "someaddress",
             true,
-            false,
             3,
             BigDecimal.ONE,
             BigDecimal.ZERO,
@@ -357,20 +356,17 @@ class WalletRepositoryTest {
         Asset(
             oneToken(),
             true,
-            true,
             1,
             assetBalance(),
         ),
         Asset(
             oneToken2(),
             true,
-            true,
             2,
             assetBalance(),
         ),
         Asset(
             oneToken3(),
-            true,
             true,
             3,
             assetBalance(),
@@ -383,7 +379,7 @@ class WalletRepositoryTest {
         "XOR",
         18,
         false,
-        0
+        OptionsProvider.DEFAULT_ICON,
     )
 
     private fun oneTokenLocal() =
@@ -395,7 +391,7 @@ class WalletRepositoryTest {
         "VAL",
         18,
         true,
-        0
+        OptionsProvider.DEFAULT_ICON,
     )
 
     private fun oneTokenLocal2() =
@@ -407,7 +403,7 @@ class WalletRepositoryTest {
         "PSWAP",
         18,
         true,
-        0
+        OptionsProvider.DEFAULT_ICON,
     )
 
     private fun assetBalance() = AssetBalance(

@@ -6,8 +6,6 @@
 package jp.co.soramitsu.common.resourses
 
 import android.content.Context
-import jp.co.soramitsu.common.data.Preferences
-import jp.co.soramitsu.common.di.modules.SHARED_PREFERENCES_FILE
 import jp.co.soramitsu.common.util.SingletonHolder
 import java.util.Locale
 import javax.inject.Singleton
@@ -20,6 +18,8 @@ class ContextManager private constructor(
 
     private val LANGUAGE_PART_INDEX = 0
     private val COUNTRY_PART_INDEX = 1
+    private val prefsLanguage = "sora_prefs"
+    private val prefCurrentLanguage = "current_language"
 
     companion object : SingletonHolder<ContextManager, Context, LanguagesHolder>(::ContextManager)
 
@@ -36,20 +36,18 @@ class ContextManager private constructor(
     }
 
     private fun updateResources(context: Context): Context {
-        val prefs = Preferences(context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE))
-
-        val currentLanguage = if (prefs.getCurrentLanguage().isEmpty()) {
+        val currentLanguageNullable = getCurrentLanguage()
+        val currentLanguage = if (currentLanguageNullable.isNullOrEmpty()) {
             val currentLocale = Locale.getDefault()
-            if (languagesHolder.getLanguages().map { it.iso }.contains(currentLocale.language)) {
+            val result = if (languagesHolder.getLanguages().map { it.iso }.contains(currentLocale.language)) {
                 currentLocale.language
             } else {
                 languagesHolder.getEnglishLang().iso
             }
+            setCurrentLanguage(result)
         } else {
-            prefs.getCurrentLanguage()
+            currentLanguageNullable
         }
-
-        prefs.saveCurrentLanguage(currentLanguage)
 
         val locale = mapLanguageToLocale(currentLanguage)
         Locale.setDefault(locale)
@@ -61,6 +59,17 @@ class ContextManager private constructor(
         this.context = context.createConfigurationContext(configuration)
 
         return this.context
+    }
+
+    fun getCurrentLanguage(): String? {
+        val prefs = context.getSharedPreferences(prefsLanguage, Context.MODE_PRIVATE)
+        return prefs.getString(prefCurrentLanguage, null)
+    }
+
+    fun setCurrentLanguage(l: String): String {
+        val prefs = context.getSharedPreferences(prefsLanguage, Context.MODE_PRIVATE)
+        prefs.edit().putString(prefCurrentLanguage, l).apply()
+        return l
     }
 
     private fun mapLanguageToLocale(language: String): Locale {

@@ -13,6 +13,8 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.presentation.AssetBalanceData
+import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -20,11 +22,11 @@ import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.TextFormatter
-import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.R
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
@@ -57,11 +59,14 @@ class TransactionConfirmationViewModel(
     private val _recipientNameLiveData = MutableLiveData<String>()
     val recipientNameLiveData: LiveData<String> = _recipientNameLiveData
 
-    private val _inputTokenLastNameLiveData = MutableLiveData<String>()
-    val inputTokenLastNameLiveData: LiveData<String> = _inputTokenLastNameLiveData
+    private val _inputTokenNameLiveData = MutableLiveData<String>()
+    val inputTokenNameLiveData: LiveData<String> = _inputTokenNameLiveData
 
-    private val _balanceFormattedLiveData = MutableLiveData<String>()
-    val balanceFormattedLiveData: LiveData<String> = _balanceFormattedLiveData
+    private val _inputTokenSymbolLiveData = MutableLiveData<String>()
+    val inputTokenSymbolLiveData: LiveData<String> = _inputTokenSymbolLiveData
+
+    private val _balanceFormattedLiveData = MutableLiveData<AssetBalanceData>()
+    val balanceFormattedLiveData: LiveData<AssetBalanceData> = _balanceFormattedLiveData
 
     private val _inputTokenIconLiveData = MutableLiveData<Int>()
     val inputTokenIconLiveData: LiveData<Int> = _inputTokenIconLiveData
@@ -77,15 +82,24 @@ class TransactionConfirmationViewModel(
 
     init {
         viewModelScope.launch {
-            curAsset = walletInteractor.getAsset(assetId)
-            feeToken = walletInteractor.getAsset(OptionsProvider.feeAssetId).token
+            curAsset = walletInteractor.getAsset(assetId)!!
+            feeToken = walletInteractor.getAsset(OptionsProvider.feeAssetId)!!.token
 
             _balanceFormattedLiveData.value =
-                numbersFormatter.formatBigDecimal(
-                    curAsset.balance.transferable,
-                    AssetHolder.ROUNDING,
+                AssetBalanceData(
+                    amount = numbersFormatter.formatBigDecimal(
+                        curAsset.balance.transferable,
+                        AssetHolder.ROUNDING,
+                    ),
+                    style = AssetBalanceStyle(
+                        R.style.TextAppearance_Soramitsu_Neu_Semibold_18,
+                        R.style.TextAppearance_Soramitsu_Neu_Semibold_13
+                    )
                 )
-            _inputTokenLastNameLiveData.value = curAsset.token.symbol
+
+            _inputTokenSymbolLiveData.value = curAsset.token.symbol
+            _inputTokenNameLiveData.value = curAsset.token.name
+
             configureScreen()
         }
     }
@@ -118,7 +132,7 @@ class TransactionConfirmationViewModel(
                     } ${feeToken.symbol}"
                 }
 
-                _recipientNameLiveData.value = peerId.truncateUserAddress()
+                _recipientNameLiveData.value = peerId
                 _inputTokenIconLiveData.value = curAsset.token.icon
             }
             else -> {
@@ -130,7 +144,12 @@ class TransactionConfirmationViewModel(
         viewModelScope.launch {
             showProgress()
             try {
-                val success = walletInteractor.observeTransfer(peerId, curAsset.token.id, amount, transactionFee)
+                val success = walletInteractor.observeTransfer(
+                    peerId,
+                    curAsset.token.id,
+                    amount,
+                    transactionFee
+                )
                 if (success) _transactionSuccessEvent.trigger()
             } catch (t: Throwable) {
                 onError(t)

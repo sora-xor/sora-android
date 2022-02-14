@@ -102,7 +102,11 @@ class TransactionConfirmationViewModelTest {
         viewModel.balanceFormattedLiveData.observeForever {
             assertEquals("0.34", it)
         }
-        viewModel.inputTokenLastNameLiveData.observeForever {
+        viewModel.inputTokenSymbolLiveData.observeForever {
+            assertEquals("pswap", it)
+        }
+
+        viewModel.inputTokenNameLiveData.observeForever {
             assertEquals("pswap", it)
         }
     }
@@ -130,7 +134,6 @@ class TransactionConfirmationViewModelTest {
         Asset(
             Token("token_id", "token name", "token symbol", 18, true, 0),
             true,
-            true,
             1,
             AssetBalance(
                 BigDecimal.ONE,
@@ -144,7 +147,6 @@ class TransactionConfirmationViewModelTest {
         ),
         Asset(
             Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
-            true,
             true,
             2,
             AssetBalance(

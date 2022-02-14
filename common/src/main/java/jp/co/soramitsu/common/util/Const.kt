@@ -13,10 +13,13 @@ class Const private constructor() {
 
     companion object {
         const val WEBSITE = "https://sora.org/"
+        const val PARLIAMENT_LEARN_MORE_LINK = "https://medium.com/sora-xor/the-sora-parliament-af8184dae384"
         const val SOURCE_LINK = "https://github.com/sora-xor/Sora-Android"
-        const val VAL_REWARD_LINK = "https://medium.com/@sora.xor/sora-validator-rewards-419320e22df8"
+        const val STAKING_LEARN_MORE_LINK = "https://medium.com/sora-xor/sora-validator-reward-token-val-c96a8afb8541"
         const val POLKASWAP_WEBSITE = "https://polkaswap.io"
         const val POLKASWAP_FAQ = "https://wiki.sora.org/polkaswap/polkaswap-faq"
+        const val POLKASWAP_PRIVACY_POLICY = "https://wiki.sora.org/polkaswap/polkaswap-privacy-policy"
+        const val POLKASWAP_MEMORANDUM = "https://wiki.sora.org/polkaswap/polkaswap-tos"
         const val TELEGRAM_LINK = "https://t.me/sora_xor"
         const val SORA_TERMS_PAGE = "https://sora.org/terms"
         const val SORA_PRIVACY_PAGE = "https://sora.org/privacy"

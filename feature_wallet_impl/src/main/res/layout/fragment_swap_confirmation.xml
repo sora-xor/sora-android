@@ -4,32 +4,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_white">
+    android:background="?attr/baseBackground">
 
-    <jp.co.soramitsu.common.presentation.view.SoraToolbar
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:homeButtonIcon="@drawable/ic_close"
-        app:homeButtonVisible="true"
         app:layout_constraintTop_toTopOf="parent"
         app:textRight=""
         app:titleText="@string/polkaswap_confirm_swap" />
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:background="?attr/baseBorderPrimary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        tools:background="@color/grey_300" />
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/svSwapConfirmationDetails"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/vSwapConfirmationDivider2"
+        app:layout_constraintBottom_toTopOf="@id/nextBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
@@ -42,230 +31,216 @@
 
             <TextView
                 android:id="@+id/tvAmountInput"
-                style="@style/TextAppearance.Soramitsu.Title_1"
+                style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.20"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
                 android:ellipsize="end"
-                android:paddingEnd="@dimen/x1"
                 android:singleLine="true"
-                app:layout_constraintEnd_toStartOf="@+id/tvInputTokenSymbol"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvInputTokenSymbol"
+                app:layout_constraintEnd_toStartOf="@id/ivInputToken"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 tools:text="2 345.34" />
 
             <TextView
                 android:id="@+id/tvInputTokenSymbol"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.20"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/x1"
-                app:layout_constraintBottom_toBottomOf="@id/tvAmountInput"
-                app:layout_constraintEnd_toStartOf="@id/ivInputToken"
-                app:layout_constraintTop_toTopOf="@id/tvAmountInput"
-                tools:text="XOR"
-                tools:textColor="@color/grey_300" />
+                android:layout_marginTop="@dimen/x4"
+                android:letterSpacing="-0.02"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="PSWAP" />
 
             <ImageView
                 android:id="@+id/ivInputToken"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="@dimen/x1"
                 app:layout_constraintBottom_toBottomOf="@id/tvAmountInput"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/tvInputTokenSymbol"
                 app:layout_constraintTop_toTopOf="@id/tvAmountInput"
                 tools:ignore="ContentDescription"
                 tools:src="@drawable/ic_0x0200060000000000000000000000000000000000000000000000000000000000" />
 
             <ImageView
                 android:id="@+id/ivArrowBottom"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_marginTop="@dimen/x2"
-                android:src="@drawable/ic_arrow_bottom_16"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="@dimen/x1"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_arrow_down_24"
                 app:layout_constraintStart_toStartOf="@id/tvAmountInput"
                 app:layout_constraintTop_toBottomOf="@id/tvAmountInput"
                 tools:ignore="ContentDescription" />
 
             <TextView
                 android:id="@+id/tvAmountOutput"
-                style="@style/TextAppearance.Soramitsu.Title_1"
+                style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.20"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
+                android:layout_marginTop="@dimen/x1_5"
                 android:ellipsize="end"
-                android:paddingEnd="@dimen/x1"
                 android:singleLine="true"
-                app:layout_constraintEnd_toStartOf="@+id/tvOutputTokenSymbol"
+                app:layout_constraintEnd_toStartOf="@id/ivOutputToken"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ivArrowBottom"
                 tools:text="2 345.34" />
 
             <TextView
                 android:id="@+id/tvOutputTokenSymbol"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.20"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="@dimen/x1"
+                app:layout_constraintBaseline_toBaselineOf="@id/tvAmountOutput"
                 app:layout_constraintBottom_toBottomOf="@id/tvAmountOutput"
-                app:layout_constraintEnd_toStartOf="@id/ivOutputToken"
-                app:layout_constraintTop_toTopOf="@id/tvAmountOutput"
-                tools:text="VAL"
-                tools:textColor="@color/grey_300" />
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="VAL" />
 
             <ImageView
                 android:id="@+id/ivOutputToken"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="@dimen/x1"
                 app:layout_constraintBottom_toBottomOf="@id/tvAmountOutput"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/tvOutputTokenSymbol"
                 app:layout_constraintTop_toTopOf="@id/tvAmountOutput"
                 tools:ignore="ContentDescription"
                 tools:src="@drawable/ic_0x0200070000000000000000000000000000000000000000000000000000000000" />
 
             <TextView
                 android:id="@+id/tvSwapDescription"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/x2"
-                android:textColor="?attr/contentQuaternary"
+                android:gravity="center_horizontal"
+                android:letterSpacing="-0.02"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvAmountOutput"
-                tools:text="Output is estimated. You will receive at least 234 VAL or the transaction will revert."
-                tools:textColor="@color/grey_300" />
+                tools:text="Output is estimated. You will receive at least 234 VAL or the transaction will revert." />
 
             <View
                 android:id="@+id/vSwapConfirmation1"
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_marginTop="@dimen/x2"
-                android:background="?attr/baseBorderPrimary"
+                android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvSwapDescription"
-                tools:background="@color/grey_300" />
+                app:layout_constraintTop_toBottomOf="@id/tvSwapDescription" />
 
             <TextView
                 android:id="@+id/tvPer1"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x3"
-                android:textColor="?attr/contentTertiary"
+                android:layout_marginTop="@dimen/x2"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/vSwapConfirmation1"
-                tools:text="XOR per VAL"
-                tools:textColor="@color/grey_300" />
+                tools:text="XOR / VAL" />
 
             <TextView
                 android:id="@+id/tvPer1Value"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:includeFontPadding="false"
+                android:gravity="end"
+                android:letterSpacing="-0.01"
                 android:singleLine="true"
-                app:layout_constrainedWidth="true"
                 app:layout_constraintBaseline_toBaselineOf="@id/tvPer1"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/tvPer1"
-                tools:text="0.0234" />
+                tools:text="0.023412" />
 
             <View
                 android:id="@+id/vDivider1"
                 android:layout_width="0dp"
                 android:layout_height="2dp"
-                android:layout_marginTop="@dimen/x2"
-                android:background="@drawable/dashed_line"
+                android:layout_marginTop="@dimen/x3"
+                android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvPer1" />
 
             <TextView
                 android:id="@+id/tvPer2"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/x2"
                 android:ellipsize="none"
                 android:singleLine="true"
-                android:textColor="?attr/contentTertiary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/vDivider1"
-                tools:text="VAL per XOR"
-                tools:textColor="@color/grey_300" />
+                tools:text="VAL / XOR" />
 
             <TextView
                 android:id="@+id/tvPer2Value"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:includeFontPadding="false"
+                android:gravity="end"
+                android:letterSpacing="-0.01"
                 android:singleLine="true"
-                app:layout_constrainedWidth="true"
-                app:layout_constraintBaseline_toBaselineOf="@id/tvPer2"
+                app:layout_constraintBottom_toBottomOf="@id/tvPer2"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/tvPer2"
                 tools:text="0.63482787675" />
 
             <View
                 android:id="@+id/vDivider3"
                 android:layout_width="0dp"
-                android:layout_height="2dp"
-                android:layout_marginTop="@dimen/x2"
-                android:background="@drawable/dashed_line"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/x3"
+                android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvPer2" />
 
             <TextView
                 android:id="@+id/tvMinMax"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/x2"
                 android:drawablePadding="@dimen/x1"
                 android:ellipsize="none"
                 android:singleLine="true"
-                android:textColor="?attr/contentTertiary"
-                app:drawableEndCompat="@drawable/ic_questionmark_16"
+                android:textAllCaps="true"
+                app:drawableEndCompat="@drawable/ic_neu_exclamation"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/vDivider3"
-                tools:drawableEnd="@drawable/ic_questionmark_16"
-                tools:text="Minimum received"
-                tools:textColor="@color/grey_300" />
+                tools:text="Min received" />
 
             <TextView
                 android:id="@+id/tvMinMaxValue"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:includeFontPadding="false"
-                android:singleLine="true"
-                app:layout_constrainedWidth="true"
+                android:gravity="end"
+                android:letterSpacing="-0.01"
                 app:layout_constraintBaseline_toBaselineOf="@id/tvMinMax"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/tvMinMax"
                 tools:text="23.33 VAL" />
 
             <View
                 android:id="@+id/vDivider3_2"
                 android:layout_width="0dp"
-                android:layout_height="2dp"
-                android:layout_marginTop="@dimen/x2"
-                android:background="@drawable/dashed_line"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/x3"
+                android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvMinMax" />
 
             <TextView
                 android:id="@+id/tvLiquidityFee"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/x2"
@@ -273,41 +248,35 @@
                 android:ellipsize="none"
                 android:singleLine="true"
                 android:text="@string/polkaswap_liqudity_fee"
-                android:textColor="?attr/contentTertiary"
-                app:drawableEndCompat="@drawable/ic_questionmark_16"
+                android:textAllCaps="true"
+                app:drawableEndCompat="@drawable/ic_neu_exclamation"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vDivider3_2"
-                tools:drawableEnd="@drawable/ic_questionmark_16"
-                tools:textColor="@color/grey_300" />
+                app:layout_constraintTop_toBottomOf="@id/vDivider3_2" />
 
             <TextView
                 android:id="@+id/tvLiquidityFeeValue"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:includeFontPadding="false"
-                android:singleLine="true"
-                app:layout_constrainedWidth="true"
+                android:gravity="end"
                 app:layout_constraintBaseline_toBaselineOf="@id/tvLiquidityFee"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/tvLiquidityFee"
                 tools:text="0.0003 XOR" />
 
             <View
                 android:id="@+id/vDivider4"
                 android:layout_width="0dp"
-                android:layout_height="2dp"
-                android:layout_marginTop="@dimen/x2"
-                android:background="@drawable/dashed_line"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/x3"
+                android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvLiquidityFee" />
 
             <TextView
                 android:id="@+id/tvNetworkFee"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
+                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/x2"
@@ -315,34 +284,28 @@
                 android:ellipsize="none"
                 android:singleLine="true"
                 android:text="@string/polkaswap_network_fee"
-                android:textColor="?attr/contentTertiary"
-                app:drawableEndCompat="@drawable/ic_questionmark_16"
+                android:textAllCaps="true"
+                app:drawableEndCompat="@drawable/ic_neu_exclamation"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vDivider4"
-                tools:drawableEnd="@drawable/ic_questionmark_16"
-                tools:textColor="@color/grey_300" />
+                app:layout_constraintTop_toBottomOf="@id/vDivider4" />
 
             <TextView
                 android:id="@+id/tvNetworkFeeValue"
-                style="@style/TextAppearance.Soramitsu.Paragraph_2"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:includeFontPadding="false"
-                android:singleLine="true"
-                app:layout_constrainedWidth="true"
+                android:gravity="end"
                 app:layout_constraintBaseline_toBaselineOf="@id/tvNetworkFee"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintStart_toEndOf="@id/tvNetworkFee"
                 tools:text="0.0007 XOR" />
 
             <View
                 android:id="@+id/vDivider5"
                 android:layout_width="0dp"
-                android:layout_height="2dp"
-                android:layout_marginTop="@dimen/x2"
-                android:background="@drawable/dashed_line"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/x3"
+                android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvNetworkFee" />
@@ -351,22 +314,12 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <View
-        android:id="@+id/vSwapConfirmationDivider2"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginBottom="@dimen/x1"
-        android:background="?attr/baseBorderPrimary"
-        app:layout_constraintBottom_toTopOf="@id/nextBtn"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
     <Button
         android:id="@+id/nextBtn"
-        style="@style/Widget.Soramitsu.Button.Primary.48"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56.Polkaswap"
         android:layout_width="0dp"
-        android:layout_marginStart="@dimen/x1"
-        android:layout_marginEnd="@dimen/x1"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
         android:layout_marginBottom="@dimen/x4"
         android:text="@string/common_confirm"
         app:layout_constraintBottom_toBottomOf="parent"

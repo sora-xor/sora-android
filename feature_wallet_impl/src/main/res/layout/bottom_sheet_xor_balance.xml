@@ -18,7 +18,7 @@
 
         <TextView
             android:id="@+id/valBalanceTitle"
-            style="@style/TextAppearance.Soramitsu.Body1"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:drawableStart="@drawable/ic_info"
@@ -31,7 +31,7 @@
 
         <TextView
             android:id="@+id/soraNetworkName"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -46,7 +46,7 @@
 
         <TextView
             android:id="@+id/soraTokenName"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
@@ -60,7 +60,7 @@
 
         <TextView
             android:id="@+id/ethNetworkName"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -75,7 +75,7 @@
 
         <TextView
             android:id="@+id/ethTokenName"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
@@ -88,7 +88,7 @@
 
         <TextView
             android:id="@+id/soraBalanceField"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"
@@ -100,7 +100,7 @@
 
         <TextView
             android:id="@+id/erc20BalanceField"
-            style="@style/TextAppearance.Soramitsu.Header4"
+            style="@style/TextAppearance.Soramitsu.Paragraph_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:includeFontPadding="false"

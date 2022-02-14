@@ -29,10 +29,12 @@
 -dontwarn okio.**
 # OkHttp platform used only on JVM and when Conscrypt dependency is available.
 -dontwarn okhttp3.internal.platform.ConscryptPlatform
+-dontwarn org.conscrypt.ConscryptHostnameVerifier
 # A resource is loaded with a relative path so the package of this class must be preserved.
 -keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
 
 # Retrofit
+# https://github.com/square/retrofit/blob/master/retrofit/src/main/resources/META-INF/proguard/retrofit2.pro
 -keepattributes Signature
 -keepattributes Exceptions
 
@@ -70,3 +72,5 @@
 
 # Keep sora sdk classes
 -keep class jp.co.soramitsu.sora.sdk.** { *; }
+-keep class jp.co.soramitsu.fearless_utils.** { *; }
+-keep class net.jpountz.** { *; }

@@ -60,12 +60,12 @@ class MnemoinicViewModelTest {
     @Test
     fun `get passphrase called`() = runBlockingTest {
         val mnemonic = listOf(
-            MnemonicWord(1, "mnemonic"),
-            MnemonicWord(3, "zxcasd"),
-            MnemonicWord(2, "qwerty"),
+            "mnemonic",
+            "qwerty",
+            "zxcasd"
         )
         given(interactor.getMnemonic()).willReturn("mnemonic qwerty zxcasd")
         mnemonicViewModel.getPassphrase()
-        assertEquals(mnemonicViewModel.mnemonicLiveData.value, mnemonic)
+        assertEquals(mnemonicViewModel.mnemonicWords.value, mnemonic)
     }
 }

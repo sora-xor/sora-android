@@ -23,7 +23,6 @@ import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiC
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
-import kotlinx.coroutines.flow.Flow
 import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
@@ -208,7 +207,7 @@ class EthereumRepositoryImpl @Inject constructor(
         return ("\u0019Ethereum Signed Message:\n" + (dat.size)).toByteArray() + dat
     }
 
-    override fun getEthCredentials(mnemonic: String): EthereumCredentials {
+    override suspend fun getEthCredentials(mnemonic: String): EthereumCredentials {
         val credentials = ethDataSource.retrieveEthereumCredentials()
         return if (credentials == null) {
             val ethCredentials = generateEthCredentials(mnemonic)
@@ -262,21 +261,21 @@ class EthereumRepositoryImpl @Inject constructor(
     ) {
     }
 
-    override fun getEthRegistrationState(): EthRegisterState {
+    override suspend fun getEthRegistrationState(): EthRegisterState {
         return ethDataSource.getEthRegisterState()
     }
 
-    override fun registrationStarted(operationId: String) {
+    override suspend fun registrationStarted(operationId: String) {
         val ethRegisterState = EthRegisterState(EthRegisterState.State.IN_PROGRESS, operationId)
         ethDataSource.saveEthRegisterState(ethRegisterState)
     }
 
-    override fun registrationCompleted(operationId: String) {
+    override suspend fun registrationCompleted(operationId: String) {
         val ethRegisterState = EthRegisterState(EthRegisterState.State.REGISTERED, operationId)
         ethDataSource.saveEthRegisterState(ethRegisterState)
     }
 
-    override fun registrationFailed(operationId: String) {
+    override suspend fun registrationFailed(operationId: String) {
         val ethRegisterState = EthRegisterState(EthRegisterState.State.FAILED, operationId)
         ethDataSource.saveEthRegisterState(ethRegisterState)
     }
@@ -309,10 +308,6 @@ class EthereumRepositoryImpl @Inject constructor(
             .mintTokensByPeers(amount, beneficiary, txHashBytes, v, r, s, from, tokenAddress)
             .send()
         return result.transactionHash
-    }
-
-    override fun observeEthRegisterState(): Flow<EthRegisterState.State> {
-        return ethDataSource.observeEthRegisterState()
     }
 
     override fun getGasEstimations(

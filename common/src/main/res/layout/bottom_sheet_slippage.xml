@@ -1,133 +1,165 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dialog"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/rounded_card_view"
-    android:paddingBottom="@dimen/x2">
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_card_view">
 
-    <ImageView
+    <View
         android:id="@+id/bottomSheetPin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64dp"
+        android:layout_height="4dp"
         android:layout_marginTop="@dimen/x1_2"
-        android:src="@drawable/ic_bottomsheet_pin"
+        android:background="@drawable/drag_indicator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
 
     <TextView
         android:id="@+id/slippageToleranceTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x4"
+        android:layout_marginTop="@dimen/x1_5"
+        android:letterSpacing="-0.02"
         android:text="@string/polkaswap_slippage_tolerance"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/slippageToleranceInput"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="@dimen/x1"
-        android:layout_marginEnd="@dimen/x2"
-        android:background="@android:color/transparent"
-        android:gravity="end"
-        android:imeOptions="actionDone"
-        android:inputType="numberDecimal"
-        android:lines="1"
-        android:maxLines="1"
-        app:layout_constraintBottom_toBottomOf="@+id/slippageToleranceTitle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/slippageToleranceTitle"
-        app:layout_constraintTop_toTopOf="@+id/slippageToleranceTitle" />
-
-    <View
-        android:id="@+id/view"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginTop="@dimen/x2"
-        android:background="@color/grey_300"
-        app:layout_constraintEnd_toEndOf="@id/slippageToleranceInput"
-        app:layout_constraintStart_toStartOf="@+id/slippageToleranceTitle"
-        app:layout_constraintTop_toBottomOf="@+id/slippageToleranceTitle" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/bottomSheetPin" />
 
     <TextView
-        android:id="@+id/slippageToleranceInfo"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:id="@+id/slippageToleranceWarningTitle"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:textColor="?attr/statusWarningColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/slippageToleranceTitle"
+        tools:text="@string/polkaswap_slippage_frontrun" />
+
+    <LinearLayout
+        android:id="@+id/slippageToleranceInputWrapper"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x2"
         android:layout_marginTop="@dimen/x1"
         android:layout_marginEnd="@dimen/x2"
-        android:text="@string/polkaswap_slippage_info"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/view" />
+        app:layout_constraintTop_toBottomOf="@id/slippageToleranceWarningTitle">
+
+        <EditText
+            android:id="@+id/slippageToleranceInput"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.28"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:drawablePadding="@dimen/x1"
+            android:gravity="center_horizontal"
+            android:imeOptions="actionDone"
+            android:inputType="numberDecimal"
+            android:lines="1"
+            android:maxLength="4"
+            android:maxLines="1"
+            tools:hint="0.3$" />
+
+        <TextView
+            style="@style/TextAppearance.Soramitsu.Neu.Light.28"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="%" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/view"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x1_2"
+        android:layout_marginEnd="@dimen/x2"
+        android:background="?attr/onBackgroundColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/slippageToleranceInputWrapper" />
 
     <TextView
-        android:id="@+id/firstChip"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        android:id="@+id/slippageToleranceInfo"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.13"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x3"
-        android:layout_marginEnd="@dimen/x1"
-        android:background="@drawable/background_rounded_grey_100"
-        android:gravity="center"
-        android:paddingStart="@dimen/x4"
-        android:paddingTop="@dimen/x1"
-        android:paddingEnd="@dimen/x4"
-        android:paddingBottom="@dimen/x1"
-        android:text="0.1%"
-        android:textColor="@color/brand_pmsblack"
-        app:layout_constraintEnd_toStartOf="@+id/secondChip"
-        app:layout_constraintHorizontal_bias="0.5"
+        android:layout_marginTop="@dimen/x1_5"
+        android:layout_marginEnd="@dimen/x2"
+        android:gravity="center_horizontal"
+        android:letterSpacing="-0.02"
+        android:text="@string/polkaswap_slippage_info"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/slippageToleranceInfo" />
+        app:layout_constraintTop_toBottomOf="@id/slippageToleranceInputWrapper" />
+
+    <View
+        android:id="@+id/view2"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="@dimen/x1_5"
+        android:background="?attr/dividerColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/slippageToleranceInfo" />
+
+    <TextView
+        android:id="@+id/firstChip"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:gravity="center"
+        android:letterSpacing="-0.04"
+        android:text="0.1%"
+        android:textColor="?attr/polkaswapPrimary"
+        app:layout_constraintEnd_toStartOf="@+id/secondChip"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/view2" />
 
     <TextView
         android:id="@+id/lastChip"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/x2"
-        android:background="@drawable/background_rounded_grey_100"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:gravity="center"
-        android:paddingStart="@dimen/x4"
-        android:paddingTop="@dimen/x1"
-        android:paddingEnd="@dimen/x4"
-        android:paddingBottom="@dimen/x1"
+        android:letterSpacing="-0.04"
         android:text="1.0%"
-        android:textColor="@color/brand_pmsblack"
-        app:layout_constraintBottom_toBottomOf="@+id/secondChip"
+        android:textColor="?attr/polkaswapPrimary"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/secondChip"
-        app:layout_constraintTop_toTopOf="@+id/secondChip" />
+        app:layout_constraintStart_toEndOf="@id/secondChip"
+        app:layout_constraintTop_toTopOf="@id/firstChip" />
 
     <TextView
         android:id="@+id/secondChip"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.18"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/x1"
-        android:background="@drawable/background_rounded_grey_100"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
         android:gravity="center"
-        android:paddingStart="@dimen/x4"
-        android:paddingTop="@dimen/x1"
-        android:paddingEnd="@dimen/x4"
-        android:paddingBottom="@dimen/x1"
+        android:letterSpacing="-0.04"
         android:text="0.5%"
-        android:textColor="@color/brand_pmsblack"
-        app:layout_constraintBottom_toBottomOf="@+id/firstChip"
-        app:layout_constraintEnd_toStartOf="@+id/lastChip"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/firstChip"
-        app:layout_constraintTop_toTopOf="@+id/firstChip" />
+        android:textColor="?attr/polkaswapPrimary"
+        app:layout_constraintEnd_toStartOf="@id/lastChip"
+        app:layout_constraintStart_toEndOf="@id/firstChip"
+        app:layout_constraintTop_toTopOf="@id/firstChip" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

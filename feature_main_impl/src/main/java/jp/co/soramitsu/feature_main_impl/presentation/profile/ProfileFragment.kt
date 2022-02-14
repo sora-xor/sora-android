@@ -12,7 +12,6 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentProfileBinding
@@ -71,6 +70,10 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
             viewModel.profileAboutClicked()
         }
 
+        binding.profileDisclaimerTextView.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.disclaimerInSettingsClicked()
+        }
+
         binding.profileLanguageTextView.setDebouncedClickListener(debounceClickHandler) {
             viewModel.profileLanguageClicked()
         }
@@ -87,9 +90,9 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
                 binding.profileBiometryAuthSwitch.tag = it
             }
         }
-        viewModel.biometryAvailabledLiveData.observe {
-            binding.profileBiometryAuthTextView.showOrGone(it)
-            binding.profileBiometryAuthSwitch.showOrGone(it)
+        viewModel.biometryAvailableLiveData.observe {
+            binding.profileBiometryAuthTextView.isEnabled = it
+            binding.profileBiometryAuthSwitch.isEnabled = it
         }
     }
 }

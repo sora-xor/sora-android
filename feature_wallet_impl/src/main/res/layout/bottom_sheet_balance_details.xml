@@ -4,37 +4,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/rounded_card_view"
     android:paddingStart="@dimen/x2"
     android:paddingEnd="@dimen/x2"
-    android:paddingBottom="@dimen/x3"
-    android:background="@drawable/rounded_card_view"
-    android:orientation="vertical">
+    android:paddingBottom="@dimen/x3">
 
-    <ImageView
+    <View
         android:id="@+id/bottomSheetPin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="64dp"
+        android:layout_height="4dp"
         android:layout_marginTop="@dimen/x1_2"
-        android:src="@drawable/ic_bottomsheet_pin"
+        android:background="@drawable/drag_indicator"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvFrozenTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/details_frozen_total"
         android:layout_marginTop="@dimen/x4"
+        android:drawablePadding="@dimen/x1"
+        android:text="@string/details_frozen"
         android:textColor="@color/black"
-        android:drawableStart="@drawable/ic_lock_16"
+        app:drawableEndCompat="@drawable/ic_lock_16"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvFrozenValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2.Bold"
+        style="@style/TextAppearance.Soramitsu.Neu.Bold.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,27 +44,27 @@
     <View
         android:id="@+id/divider1"
         android:layout_width="0dp"
-        android:layout_height="3dp"
+        android:layout_height="1dp"
         android:layout_marginTop="@dimen/x1_5"
-        android:background="@drawable/dashed_line"
+        android:background="?attr/dividerColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvFrozenTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvFrozenTitle"
         tools:background="@color/grey_300" />
 
     <TextView
         android:id="@+id/tvLockedTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wallet_balance_locked"
         android:layout_marginTop="@dimen/x1_5"
+        android:text="@string/wallet_balance_locked"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider1" />
 
     <TextView
         android:id="@+id/tvLockedValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -74,57 +74,56 @@
     <View
         android:id="@+id/divider2"
         android:layout_width="0dp"
-        android:layout_height="3dp"
+        android:layout_height="1dp"
         android:layout_marginTop="@dimen/x1_5"
-        android:background="@drawable/dashed_line"
+        android:background="?attr/dividerColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvLockedTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvLockedTitle"
         tools:background="@color/grey_300" />
 
     <TextView
         android:id="@+id/tvBondedTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wallet_bonded"
         android:layout_marginTop="@dimen/x1_5"
+        android:text="@string/wallet_bonded"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider2" />
 
     <TextView
         android:id="@+id/tvBondedValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tvBondedTitle"
+        app:layout_constraintTop_toTopOf="@id/tvBondedTitle"
         tools:text="100.000.00" />
 
     <View
         android:id="@+id/divider3"
         android:layout_width="0dp"
-        android:layout_height="3dp"
+        android:layout_height="1dp"
         android:layout_marginTop="@dimen/x1_5"
-        android:background="@drawable/dashed_line"
+        android:background="?attr/dividerColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvBondedTitle"
-        tools:background="@color/grey_300" />
+        app:layout_constraintTop_toBottomOf="@id/tvBondedTitle" />
 
     <TextView
         android:id="@+id/tvReservedTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wallet_balance_reserved"
         android:layout_marginTop="@dimen/x1_5"
+        android:text="@string/wallet_balance_reserved"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider3" />
 
     <TextView
         android:id="@+id/tvReservedValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -134,27 +133,27 @@
     <View
         android:id="@+id/divider4"
         android:layout_width="0dp"
-        android:layout_height="3dp"
+        android:layout_height="1dp"
         android:layout_marginTop="@dimen/x1_5"
-        android:background="@drawable/dashed_line"
+        android:background="?attr/dividerColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvReservedTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvReservedTitle"
         tools:background="@color/grey_300" />
 
     <TextView
         android:id="@+id/tvRedeemableTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wallet_redeemable"
         android:layout_marginTop="@dimen/x1_5"
+        android:text="@string/wallet_redeemable"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider4" />
 
     <TextView
         android:id="@+id/tvRedeemableValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -164,27 +163,26 @@
     <View
         android:id="@+id/divider5"
         android:layout_width="0dp"
-        android:layout_height="3dp"
+        android:layout_height="1dp"
         android:layout_marginTop="@dimen/x1_5"
-        android:background="@drawable/dashed_line"
+        android:background="?attr/dividerColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvRedeemableTitle"
-        tools:background="@color/grey_300" />
+        app:layout_constraintTop_toBottomOf="@+id/tvRedeemableTitle" />
 
     <TextView
         android:id="@+id/tvUnbondingTitle"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/wallet_unbonding"
         android:layout_marginTop="@dimen/x1_5"
+        android:text="@string/wallet_unbonding"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider5" />
 
     <TextView
         android:id="@+id/tvUnbondingValue"
-        style="@style/TextAppearance.Soramitsu.Paragraph_2"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.18"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
@@ -194,11 +192,10 @@
     <View
         android:id="@+id/divider6"
         android:layout_width="0dp"
-        android:layout_height="3dp"
+        android:layout_height="1dp"
         android:layout_marginTop="@dimen/x1_5"
-        android:background="@drawable/dashed_line"
+        android:background="?attr/dividerColor"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvUnbondingTitle"
-        tools:background="@color/grey_300" />
+        app:layout_constraintTop_toBottomOf="@+id/tvUnbondingTitle" />
 </androidx.constraintlayout.widget.ConstraintLayout>

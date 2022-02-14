@@ -62,7 +62,8 @@ class TransferAmountViewModelTest {
     private lateinit var transferAmountViewModel: TransferAmountViewModel
 
     private val fixedFeeStr = "0.6"
-    private val recipientId = "recipientId"
+    private val recipientId =
+        "recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId"
     private val recipientFullName = "recipientFull Name"
     private val transferType = TransferType.VAL_TRANSFER
 
@@ -71,27 +72,8 @@ class TransferAmountViewModelTest {
         given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt()))
             .willReturn(fixedFeeStr)
         given(walletInteractor.getAsset("token_id")).willReturn(
-                Asset(
-                    Token("token_id", "token name", "XOR", 18, true, 0),
-                    true,
-                    true,
-                    1,
-                    AssetBalance(
-                        BigDecimal.ONE,
-                        BigDecimal.ONE,
-                        BigDecimal.ONE,
-                        BigDecimal.ONE,
-                        BigDecimal.ONE,
-                        BigDecimal.ONE,
-                        BigDecimal.ONE
-                    ),
-                )
-        )
-
-        given(walletInteractor.getAsset(OptionsProvider.feeAssetId)).willReturn(
             Asset(
-                Token("token_id2", "token name2", "XOR", 18, true, 0),
-                true,
+                Token("token_id", "token name", "XOR", 18, true, 0),
                 true,
                 1,
                 AssetBalance(
@@ -106,13 +88,22 @@ class TransferAmountViewModelTest {
             )
         )
 
-        given(
-            walletInteractor.calcTransactionFee(
-                recipientId,
-                "token_id",
-                BigDecimal.ZERO
+        given(walletInteractor.getAsset(OptionsProvider.feeAssetId)).willReturn(
+            Asset(
+                Token("token_id2", "token name2", "XOR", 18, true, 0),
+                true,
+                1,
+                AssetBalance(
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE,
+                    BigDecimal.ONE
+                ),
             )
-        ).willReturn(BigDecimal.ZERO)
+        )
 
         transferAmountViewModel = TransferAmountViewModel(
             walletInteractor, router,
@@ -125,7 +116,7 @@ class TransferAmountViewModelTest {
     @Test
     fun `initialized correctly`() {
         transferAmountViewModel.recipientNameLiveData.observeForever {
-            assertEquals("recip...entId", it)
+            assertEquals("recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId", it)
         }
     }
 
@@ -133,27 +124,5 @@ class TransferAmountViewModelTest {
     fun `backButtonPressed() calls router popBackStackFragment()`() {
         transferAmountViewModel.backButtonPressed()
         verify(router).popBackStackFragment()
-    }
-
-    @Test
-    fun `next button click calls router showTransactionConfirmation()`() = runBlockingTest {
-        val formattedFeeStr = "0.6 XOR"
-
-        transferAmountViewModel.transactionFeeFormattedLiveData.observeForever {
-            assertEquals(formattedFeeStr, it)
-        }
-
-        transferAmountViewModel.nextButtonClicked(BigDecimal.ONE)
-
-        verify(router).showTransactionConfirmation(
-            recipientId,
-            recipientFullName,
-            BigDecimal.ZERO,
-            BigDecimal.ONE,
-            "token_id",
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            transferType
-        )
     }
 }

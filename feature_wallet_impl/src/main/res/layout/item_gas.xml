@@ -18,7 +18,7 @@
 
     <TextView
         android:id="@+id/minerFeeTitle"
-        style="@style/TextAppearance.Soramitsu.Body1"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -31,11 +31,10 @@
 
     <TextView
         android:id="@+id/minerFeeText"
-        style="@style/TextAppearance.Soramitsu.Body1"
+        style="@style/TextAppearance.Soramitsu.Paragraph_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:fontFamily="@font/soramitsu_semibold"
         android:textColor="@color/informationTextColor"
         android:lineSpacingExtra="5sp"
         tools:text="100"/>

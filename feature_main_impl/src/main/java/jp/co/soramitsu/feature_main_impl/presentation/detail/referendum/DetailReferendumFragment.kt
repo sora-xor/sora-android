@@ -39,7 +39,7 @@ class DetailReferendumFragment :
     ) {
         Accepted(
             R.drawable.ic_thumb_up_24,
-            R.color.uikit_lightRed,
+            R.color.brand_soramitsu_red,
             R.string.referendum_support_title
         ),
         Rejected(R.drawable.ic_thumb_down_24, R.color.grey, R.string.referendum_unsupport_title)
@@ -142,11 +142,11 @@ class DetailReferendumFragment :
         handleReferendumStatus(referendum)
     }
 
-    @Suppress("NON_EXHAUSTIVE_WHEN")
     private fun handleReferendumStatus(referendum: Referendum) {
         when (referendum.status) {
             ReferendumStatus.ACCEPTED -> showReferendumResult(VotingResultStyle.Accepted)
             ReferendumStatus.REJECTED -> showReferendumResult(VotingResultStyle.Rejected)
+            ReferendumStatus.CREATED -> showReferendumResult(VotingResultStyle.Accepted)
         }
     }
 

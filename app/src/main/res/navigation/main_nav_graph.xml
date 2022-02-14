@@ -6,6 +6,11 @@
     app:startDestination="@id/wallet_nav_graph">
 
     <fragment
+        android:id="@+id/updateFlexibleFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.FlexibleUpdateDialog"
+        tools:layout="@layout/dialog_flexible_update" />
+
+    <fragment
         android:id="@+id/pincodeFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment"
         tools:layout="@layout/fragment_pincode" />
@@ -25,10 +30,10 @@
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment"
         tools:layout="@layout/fragment_claim" />
 
-    <include app:graph="@navigation/parliament_nav_graph"/>
-    <include app:graph="@navigation/polkaswap_nav_graph"/>
-    <include app:graph="@navigation/profile_nav_graph"/>
-    <include app:graph="@navigation/staking_nav_graph"/>
-    <include app:graph="@navigation/wallet_nav_graph"/>
+    <include app:graph="@navigation/parliament_nav_graph" />
+    <include app:graph="@navigation/polkaswap_nav_graph" />
+    <include app:graph="@navigation/profile_nav_graph" />
+    <include app:graph="@navigation/staking_nav_graph" />
+    <include app:graph="@navigation/wallet_nav_graph" />
 
 </navigation>

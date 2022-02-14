@@ -4,23 +4,83 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:paddingStart="@dimen/x2"
+    android:paddingEnd="@dimen/x2"
+    android:paddingTop="@dimen/x2"
+    android:background="?attr/baseBackground">
 
     <TextView
-        android:id="@+id/comingSoon"
-        style="@style/TextAppearance.Soramitsu.Body2"
+        android:id="@+id/title"
+        style="@style/TextAppearance.Soramitsu.Neu.Bold.18"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginTop="@dimen/x3"
-        android:layout_marginEnd="@dimen/x1"
-        android:fontFamily="@font/soramitsu_semibold"
+        android:gravity="center_vertical"
         android:text="@string/coming_soon"
-        android:textAllCaps="true"
-        android:textColor="@color/grey_400"
-        android:textSize="@dimen/text_size_b3"
+        android:textColor="?attr/pureBlackOnDay"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+<!--    <com.airbnb.lottie.LottieAnimationView-->
+<!--        android:id="@+id/animationView"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:lottie_autoPlay="true"-->
+<!--        app:lottie_loop="true"-->
+<!--        app:lottie_rawRes="@raw/loading_anim" />-->
+
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/poolRecyclerView"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"-->
+<!--        android:overScrollMode="never"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/title" />-->
+
+<!--    <LinearLayout-->
+<!--        android:id="@+id/placeholder"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="vertical"-->
+<!--        android:gravity="center"-->
+<!--        android:visibility="gone"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/title">-->
+
+<!--        <ImageView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginBottom="@dimen/x2"-->
+<!--            android:src="@drawable/ic_empty_placeholder_88" />-->
+
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/pool_liquidity_placeholder"-->
+<!--            />-->
+<!--    </LinearLayout>-->
+
+
+<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+<!--        android:id="@+id/fabButton"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginEnd="@dimen/x2"-->
+<!--        android:layout_marginBottom="@dimen/x2"-->
+<!--        android:layout_gravity="center"-->
+<!--        app:backgroundTint="?attr/pureBlackOnDay"-->
+<!--        app:tint="?attr/baseOnAccent"-->
+<!--        android:src="@drawable/ic_plus_24"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

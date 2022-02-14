@@ -5,12 +5,12 @@
 
 package jp.co.soramitsu.common.data.credentials.repository
 
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.common.data.network.substrate.toSoraAddress
 import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.ext.didToAccountId
 import jp.co.soramitsu.fearless_utils.bip39.MnemonicLength
@@ -36,7 +36,7 @@ class CredentialsRepositoryImpl @Inject constructor(
         generateEntropyAndKeys(mnemonic.joinToString(" "))
     }
 
-    private fun generateEntropyAndKeys(mnemonic: String) {
+    private suspend fun generateEntropyAndKeys(mnemonic: String) {
         val entropy = cryptoAssistant.bip39.generateEntropy(mnemonic)
         val seed = cryptoAssistant.bip39.generateSeed(entropy, "")
         val keyPair = cryptoAssistant.keyPairFactory.generate(
@@ -47,13 +47,13 @@ class CredentialsRepositoryImpl @Inject constructor(
         credentialsPrefs.saveAddress(keyPair.publicKey.toSoraAddress())
         credentialsPrefs.saveKeys(keyPair)
         credentialsPrefs.saveMnemonic(mnemonic)
-        FirebaseCrashlytics.getInstance().log("Keys were created")
+        FirebaseWrapper.log("Keys were created")
     }
 
     private fun generateMnemonic(): List<String> =
         cryptoAssistant.bip39.generateMnemonic(MnemonicLength.TWELVE).split(" ")
 
-    private fun generateAndSaveClaimData(mnemonic: String) {
+    private suspend fun generateAndSaveClaimData(mnemonic: String) {
         val projectName = "SORA"
         val purpose = "iroha keypair"
 
@@ -76,7 +76,7 @@ class CredentialsRepositoryImpl @Inject constructor(
         generateAndSaveClaimData(mnemonic)
     }
 
-    override fun saveMnemonic(mnemonic: String) {
+    override suspend fun saveMnemonic(mnemonic: String) {
         credentialsPrefs.saveMnemonic(mnemonic)
     }
 
@@ -109,18 +109,18 @@ class CredentialsRepositoryImpl @Inject constructor(
         return Hex.toHexString(credentialsPrefs.retrieveSignature())
     }
 
-    override fun getAddress(): String {
+    override suspend fun getAddress(): String {
         var address = credentialsPrefs.getAddress()
         if (address.isEmpty()) {
             address = credentialsPrefs.retrieveKeys()?.publicKey?.toSoraAddress()
                 ?: throw IllegalStateException("Public key not found")
             credentialsPrefs.saveAddress(address)
-            FirebaseCrashlytics.getInstance().log("Address recreated ${address.isNotEmpty()}")
+            FirebaseWrapper.log("Address recreated ${address.isNotEmpty()}")
         }
         return address
     }
 
-    override fun getAccountId(): ByteArray = getAddress().toAccountId()
+    override suspend fun getAccountId(): ByteArray = getAddress().toAccountId()
 
     override suspend fun isAddressOk(address: String): Boolean =
         runCatching { address.toAccountId() }.getOrNull() != null &&

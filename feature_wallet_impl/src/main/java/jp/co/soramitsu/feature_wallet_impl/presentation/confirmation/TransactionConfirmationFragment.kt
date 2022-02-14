@@ -13,7 +13,9 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
+import jp.co.soramitsu.common.presentation.view.ToastDialog
 import jp.co.soramitsu.common.util.ext.enable
+import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -114,45 +116,49 @@ class TransactionConfirmationFragment :
             viewModel.nextClicked()
         }
 
-        viewBinding.outputAccountInfo.setDebouncedClickListener(debounceClickHandler) {
+        viewBinding.recepientTitle.setDebouncedClickListener(debounceClickHandler) {
             viewModel.copyAddress()
         }
         initListeners()
     }
 
     private fun initListeners() {
-        viewModel.inputTokenLastNameLiveData.observe {
-            viewBinding.inputAccountLastname.text = it
+        viewModel.inputTokenNameLiveData.observe {
+            viewBinding.tokenName.text = it
         }
+
+        viewModel.inputTokenSymbolLiveData.observe {
+            viewBinding.tokenSymbol.text = it
+        }
+
         viewModel.inputTokenIconLiveData.observe {
-            viewBinding.ivAssetIcon.setImageResource(it)
+            viewBinding.ivTokenIcon.setImageResource(it)
             viewBinding.nextBtn.enable()
         }
         viewModel.balanceFormattedLiveData.observe {
-            viewBinding.inputAccountInfo.text = it
+            viewBinding.balanceValue.setBalance(it)
         }
         viewModel.recipientNameLiveData.observe {
-            viewBinding.outputAccountInfo.text = it
+            viewBinding.recepientValue.text = it
         }
         viewModel.getProgressVisibility().observe {
             if (it) progressDialog.show() else progressDialog.dismiss()
         }
         viewModel.amountFormattedLiveData.observe {
-            viewBinding.transactionAmountText.text = it
+            viewBinding.amountValue.text = it
         }
         viewModel.transactionFeeFormattedLiveData.observe {
-            viewBinding.transactionFeeView.show()
-            viewBinding.transactionFeeText.text = it
+            viewBinding.feeValue.show()
+            viewBinding.feeTitle.show()
+            viewBinding.feeValue.text = it
         }
         viewModel.copiedAddressEvent.observe {
             Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
         viewModel.transactionSuccessEvent.observe {
-            Toast.makeText(
-                requireContext(),
-                R.string.wallet_transaction_submitted,
-                Toast.LENGTH_SHORT
-            ).show()
+            activity?.let {
+                ToastDialog(R.drawable.ic_green_pin, R.string.wallet_transaction_submitted_1, 1000, it).show()
+            }
         }
     }
 }

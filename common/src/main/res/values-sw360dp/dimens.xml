@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="pin_code_view_spacing">12dp</dimen>
-    <dimen name="pin_code_button_size">64dp</dimen>
-    <dimen name="uikit_pin_code_button_text_size">23sp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_size_default">12dp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_margin_default">12dp</dimen>
+    <dimen name="pin_code_view_spacing">0dp</dimen>
+    <dimen name="pin_code_button_size">90dp</dimen>
+    <dimen name="uikit_pin_code_button_text_size">34sp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_width_default">72dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_height_default">21dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_margin_default">13dp</dimen>
     <dimen name="uikit_dot_stroke_width">2dp</dimen>
 </resources>

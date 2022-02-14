@@ -25,7 +25,7 @@
     <color name="white">#ffffff</color>
     <color name="lightGrey">#799292</color>
     <color name="green">#1c504e</color>
-    <color name="secondaryGreen">#00a167</color>
+    <color name="secondaryGreen">#24DAA0</color>
     <color name="tabsUnderline">#cde1e0</color>
     <color name="tabsTitleColor">#73a8a6</color>
     <color name="profileDividerColor">#cee1e1</color>
@@ -85,5 +85,46 @@
     <color name="brand_blue">#0d0248</color>
     <color name="brand_onsurface">#0d0248</color>
 
-
+    <color name="neu_color_black">#000000</color>
+    <color name="neu_color_white">#ffffff</color>
+    <color name="neu_color_red">#ff0000</color>
+    <color name="neu_color_100">#f4f0f0</color>
+    <color name="neu_color_200">#faf6f6</color>
+    <color name="neu_color_300">#F6F2F2</color>
+    <color name="neu_status_warning_day">#479aef</color>
+    <color name="neu_status_pink_warning_day">#ff77aa</color>
+    <color name="neu_divider_color">#e5dddd</color>
+    <color name="neu_black_default">#221111</color>
+    <color name="neu_negative">#794b61</color>
+    <color name="neu_positive">#34ad87</color>
+    <color name="neu_tint_dark">#aa9999</color>
+    <color name="neu_tint_light">#ccbbbb</color>
+    <color name="neu_on_background">#998888</color>
+    <color name="neu_color_grey_100">#e0d6d6</color>
+    <color name="neu_color_grey_200">#776666</color>
+    <color name="neu_color_grey_300">#eee7e7</color>
+    <color name="neu_selected_primary">#ee2233</color>
+    <color name="neu_shadow_dark_on_day">#eeeae6e6</color>
+    <color name="neu_shadow_light_on_day">#eefefafa</color>
+    <color name="neu_tint_titles_dark">#000055</color>
+    <color name="neu_tint_titles_light">#000055</color>
+    <color name="neu_brand_polkaswap">#ff0066</color>
+    <color name="neu_disabled_on_day">#665555</color>
+    <color name="neu_disabled_on_night">#665555</color>
+    <color name="neu_violet_100">#5d2f73</color>
+    <color name="neu_violet_200">#492067</color>
+    <color name="neu_violet_300">#9b6fa5</color>
+    <color name="neu_background_info">#fff2df</color>
+    <color name="neu_status">#f754a3</color>
+    <color name="neu_disabled_grey">#ECE5E5</color>
+    <color name="neu_disabled_text_grey">#DCD2D2</color>
+    <color name="neu_disabled_text_grey_2">#cdc0c0</color>
+    <color name="neu_pressed_red">#cc0000</color>
+    <color name="neu_pressed_polkaswap">#DD0066</color>
+    <color name="neu_brown_color">#887777</color>
+    <color name="neu_bottom_menu_inactive">#443333</color>
+    <color name="neu_background_search_view">#f0ecec</color>
+    <color name="neu_hint_background">#d0c5c5</color>
+    <color name="neu_text_background">#efe9e9</color>
+    <color name="tint_above_background">#ddcccc</color>
 </resources>
