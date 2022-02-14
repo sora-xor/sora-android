@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.data.network.substrate
 import jp.co.soramitsu.common.data.network.substrate.Method
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.data.network.substrate.Pallete
-import jp.co.soramitsu.common.util.ext.removeHexPrefix
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.fearless_utils.hash.Hasher.blake2b256
@@ -100,8 +100,8 @@ fun ExtrinsicBuilder.swap(
         Method.SWAP.methodName,
         mapOf(
             "dex_id" to OptionsProvider.dexId.toBigInteger(),
-            "input_asset_id" to inputAssetId.removeHexPrefix().fromHex(),
-            "output_asset_id" to outputAssetId.removeHexPrefix().fromHex(),
+            "input_asset_id" to if (RuntimeHolder.getMetadataVersion() < 14) inputAssetId.fromHex() else Struct.Instance(mapOf("code" to inputAssetId.fromHex().toList().map { it.toInt().toBigInteger() })),
+            "output_asset_id" to if (RuntimeHolder.getMetadataVersion() < 14) outputAssetId.fromHex() else Struct.Instance(mapOf("code" to outputAssetId.fromHex().toList().map { it.toInt().toBigInteger() })),
             "swap_amount" to DictEnum.Entry(
                 name = desired.backString,
                 value = Struct.Instance(
@@ -114,7 +114,10 @@ fun ExtrinsicBuilder.swap(
                 )
             ),
             "selected_source_types" to markets,
-            "filter_mode" to filter,
+            "filter_mode" to if (RuntimeHolder.getMetadataVersion() < 14) filter else DictEnum.Entry(
+                name = filter,
+                value = null
+            ),
         )
     )
 
@@ -123,8 +126,7 @@ fun ExtrinsicBuilder.transfer(assetId: String, to: String, amount: BigInteger) =
         Pallete.ASSETS.palleteName,
         Method.TRANSFER.methodName,
         mapOf(
-            "asset_id" to assetId.removeHexPrefix()
-                .fromHex(),
+            "asset_id" to if (RuntimeHolder.getMetadataVersion() < 14) assetId.fromHex() else Struct.Instance(mapOf("code" to assetId.fromHex().toList().map { it.toInt().toBigInteger() })),
             "to" to to.toAccountId(),
             "amount" to amount
         )

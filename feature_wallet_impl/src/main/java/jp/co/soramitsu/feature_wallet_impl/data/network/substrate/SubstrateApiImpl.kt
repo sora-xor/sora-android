@@ -33,7 +33,10 @@ import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.EncryptionType
+import jp.co.soramitsu.fearless_utils.encrypt.MultiChainEncryption
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.SubstrateKeypairFactory
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
@@ -120,7 +123,7 @@ class SubstrateApiImpl @Inject constructor(
         irohaAddress: String,
         irohaPublicKey: String,
         signature: String,
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         runtime: RuntimeSnapshot,
     ): Flow<Pair<String, ExtrinsicStatusResponse>> {
         return buildExtrinsic(
@@ -141,7 +144,7 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     override suspend fun transfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,
@@ -190,8 +193,8 @@ class SubstrateApiImpl @Inject constructor(
                             EventRecord(
                                 phaseValue!!,
                                 InnerEventRecord(
-                                    innerEvent!!.moduleIndex,
-                                    innerEvent.eventIndex,
+                                    innerEvent!!.module.index.toInt(),
+                                    innerEvent.event.index.second,
                                     innerEvent.arguments
                                 )
                             )
@@ -363,10 +366,7 @@ class SubstrateApiImpl @Inject constructor(
         amount: BigInteger,
         runtime: RuntimeSnapshot,
     ): BigInteger {
-        val kp = cryptoAssistant.keyPairFactory.generate(
-            OptionsProvider.encryptionType,
-            ByteArray(32) { 1 }
-        )
+        val kp = generateFakeKeyPair()
         val extrinsic = buildExtrinsic(from, kp, runtime) {
             transfer(assetId, to, amount)
         }
@@ -377,7 +377,7 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     override suspend fun observeTransfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,
@@ -597,7 +597,7 @@ class SubstrateApiImpl @Inject constructor(
         ).result
 
     override fun observeSwap(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         runtime: RuntimeSnapshot,
         inputAssetId: String,
@@ -646,10 +646,7 @@ class SubstrateApiImpl @Inject constructor(
         amount: BigInteger,
         limit: BigInteger
     ): BigInteger {
-        val kp = cryptoAssistant.keyPairFactory.generate(
-            OptionsProvider.encryptionType,
-            ByteArray(32) { 1 }
-        )
+        val kp = generateFakeKeyPair()
         val extrinsic = buildExtrinsic(
             from,
             kp,
@@ -714,7 +711,7 @@ class SubstrateApiImpl @Inject constructor(
 
     private suspend fun buildExtrinsic(
         from: String,
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         runtime: RuntimeSnapshot,
         addCall: ExtrinsicBuilder.() -> ExtrinsicBuilder,
     ): String {
@@ -752,7 +749,7 @@ class SubstrateApiImpl @Inject constructor(
             nonce,
             runtimeVersion,
             genesis,
-            OptionsProvider.encryptionType,
+            MultiChainEncryption.Substrate(EncryptionType.SR25519),
             fromAddress,
             hash.removeHexPrefix().fromHex(),
             Era.getEraFromBlockPeriod(
@@ -770,4 +767,10 @@ class SubstrateApiImpl @Inject constructor(
             mapper = pojo<Double>().nonNull()
         )
             .toInt().toBigInteger()
+
+    private fun generateFakeKeyPair() = SubstrateKeypairFactory.generate(
+        EncryptionType.SR25519,
+        ByteArray(32) { 1 },
+        emptyList(),
+    ) as Sr25519Keypair
 }

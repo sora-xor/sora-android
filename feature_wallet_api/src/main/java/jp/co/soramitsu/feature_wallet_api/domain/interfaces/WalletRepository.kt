@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 import androidx.paging.PagingData
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_wallet_api.domain.model.BlockEvent
 import jp.co.soramitsu.feature_wallet_api.domain.model.BlockResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
@@ -42,7 +42,7 @@ interface WalletRepository {
         irohaAddress: String,
         irohaPublicKey: String,
         signature: String,
-        keypair: Keypair
+        keypair: Sr25519Keypair
     ): Flow<Pair<String, ExtrinsicStatusResponse>>
 
     suspend fun getAssetsWhitelist(address: String): List<Asset>
@@ -60,7 +60,7 @@ interface WalletRepository {
     suspend fun updateBalancesVisibleAssets(address: String)
 
     suspend fun transfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,
@@ -68,7 +68,7 @@ interface WalletRepository {
     ): String
 
     suspend fun observeTransfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,

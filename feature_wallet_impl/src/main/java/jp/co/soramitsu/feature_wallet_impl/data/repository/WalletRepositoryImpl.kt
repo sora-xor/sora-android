@@ -36,7 +36,7 @@ import jp.co.soramitsu.core_db.model.ExtrinsicStatus
 import jp.co.soramitsu.core_db.model.ExtrinsicTransferTypes
 import jp.co.soramitsu.core_db.model.ExtrinsicType
 import jp.co.soramitsu.core_db.model.TokenLocal
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.runtime.metadata.event
 import jp.co.soramitsu.fearless_utils.runtime.metadata.module
 import jp.co.soramitsu.fearless_utils.runtime.metadata.storage
@@ -219,7 +219,7 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override suspend fun transfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,
@@ -241,7 +241,7 @@ class WalletRepositoryImpl @Inject constructor(
         irohaAddress: String,
         irohaPublicKey: String,
         signature: String,
-        keypair: Keypair
+        keypair: Sr25519Keypair
     ): Flow<Pair<String, ExtrinsicStatusResponse>> {
         return wsConnection.migrate(
             irohaAddress,
@@ -262,7 +262,7 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override suspend fun observeTransfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/attentionIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_attention_32" />
+
+    <TextView
+        android:id="@+id/transactionsUnavailableTitle"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/x2"
+        android:text="@string/wallet_transactions_unavailable_title"
+        android:textColor="@color/neu_on_background" />
+
+    <TextView
+        android:id="@+id/transactionsUnavailableDescription"
+        style="@style/TextAppearance.Soramitsu.Neu.Semibold.13"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/wallet_transactions_unavailable_description" />
+
+</LinearLayout>

@@ -21,7 +21,7 @@ import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
 import jp.co.soramitsu.core_db.model.ExtrinsicStatus
 import jp.co.soramitsu.core_db.model.ExtrinsicType
 import jp.co.soramitsu.core_db.model.PoolLocal
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.runtime.metadata.module
 import jp.co.soramitsu.fearless_utils.runtime.metadata.storage
@@ -198,7 +198,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     override fun observeSwap(
         tokenId1: Token,
         tokenId2: Token,
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         address: String,
         markets: List<Market>,
         swapVariant: WithDesired,

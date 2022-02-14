@@ -6,7 +6,6 @@
 package jp.co.soramitsu.common.data.network.substrate.runtime
 
 import com.google.gson.Gson
-import com.orhanobut.logger.Logger
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.data.network.substrate.Constants
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
@@ -18,13 +17,17 @@ import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionsTree
 import jp.co.soramitsu.fearless_utils.runtime.definitions.dynamic.DynamicTypeResolver
 import jp.co.soramitsu.fearless_utils.runtime.definitions.dynamic.extentsions.GenericsExtension
+import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.TypePreset
 import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.TypeRegistry
-import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.substratePreParsePreset
+import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.v13Preset
+import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.v14Preset
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.fromByteArrayOrNull
+import jp.co.soramitsu.fearless_utils.runtime.definitions.v14.TypesParserV14
 import jp.co.soramitsu.fearless_utils.runtime.metadata.GetMetadataRequest
-import jp.co.soramitsu.fearless_utils.runtime.metadata.RuntimeMetadata
-import jp.co.soramitsu.fearless_utils.runtime.metadata.RuntimeMetadataSchema
+import jp.co.soramitsu.fearless_utils.runtime.metadata.RuntimeMetadataReader
+import jp.co.soramitsu.fearless_utils.runtime.metadata.builder.VersionedRuntimeBuilder
 import jp.co.soramitsu.fearless_utils.runtime.metadata.module
+import jp.co.soramitsu.fearless_utils.runtime.metadata.v14.RuntimeMetadataSchemaV14
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.executeAsync
 import jp.co.soramitsu.fearless_utils.wsrpc.mappers.nonNull
@@ -38,15 +41,19 @@ import java.math.BigInteger
 object RuntimeHolder {
     private var runtimeSnapshot: RuntimeSnapshot? = null
     private var netRuntimeVersionChecked: Boolean = false
+    private var metadataVersion: Int? = null
 
     @Throws(IllegalArgumentException::class)
     fun getRuntime(): RuntimeSnapshot = requireNotNull(runtimeSnapshot) { "Runtime is null" }
+    @Throws(IllegalArgumentException::class)
+    fun getMetadataVersion(): Int = requireNotNull(metadataVersion) { "MetadataVersion is null" }
     fun isInitialized() = runtimeSnapshot != null && netRuntimeVersionChecked
-    var prefix: Byte = 69
+    var prefix: Short = 69
 
-    internal fun setRuntime(snapshot: RuntimeSnapshot, fromNet: Boolean) {
+    internal fun setRuntime(snapshot: RuntimeSnapshot, snapshotFromSora: Boolean, metadata: Int) {
         runtimeSnapshot = snapshot
-        FirebaseWrapper.log("Set Runtime $fromNet")
+        metadataVersion = metadata
+        FirebaseWrapper.log("Set Runtime $snapshotFromSora")
         val valueConstant =
             getRuntime().metadata.module(Pallete.SYSTEM.palleteName).constants[Constants.SS58Prefix.constantName]
         prefix =
@@ -55,9 +62,9 @@ object RuntimeHolder {
                 getRuntime(),
                 valueConstant.value
             ) as? BigInteger
-            )?.toByte()
+            )?.toShort()
             ?: 69
-        if (fromNet) setNetRuntimeVersionChecked()
+        if (snapshotFromSora) setNetRuntimeVersionChecked()
     }
 
     internal fun setNetRuntimeVersionChecked() {
@@ -84,12 +91,9 @@ class RuntimeManager(
 
     suspend fun start() {
         mutex.withLock {
-            debugLog("start")
             if (!RuntimeHolder.isInitialized()) {
                 initFromCache()
-                debugLog("init from cache")
                 checkRuntimeVersion()
-                debugLog("check runtime version")
             }
         }
     }
@@ -97,7 +101,6 @@ class RuntimeManager(
     private suspend fun initFromCache() {
         val replaceCache = soraPreferences.getInt(SORA_VERSION_LAST_LAUNCH_PREF, 0).let { version ->
             (OptionsProvider.CURRENT_VERSION_CODE != version).also {
-                debugLog("launch $version $it")
                 if (it) soraPreferences.putInt(
                     SORA_VERSION_LAST_LAUNCH_PREF,
                     OptionsProvider.CURRENT_VERSION_CODE
@@ -106,14 +109,13 @@ class RuntimeManager(
         }
         buildRuntimeSnapshot(
             getContentFromCache(RUNTIME_METADATA_FILE, replaceCache),
-            getContentFromCache(DEFAULT_TYPES_FILE, replaceCache),
-            getContentFromCache(SORA2_TYPES_FILE, replaceCache),
-            false
+            MetadataSource.Cache(replaceCache),
+            soraPreferences.getInt(
+                RUNTIME_VERSION_PREF,
+                RUNTIME_VERSION_START
+            )
         )
     }
-
-    private suspend fun getLastRuntimeVersion(): Int =
-        soraPreferences.getOrPutInt(RUNTIME_VERSION_PREF, RUNTIME_VERSION_START)
 
     private fun getContentFromCache(fileName: String, replaceCache: Boolean = false): String {
         val cache = fileManager.readInternalCacheFile(fileName)
@@ -126,12 +128,10 @@ class RuntimeManager(
     private fun rawTypesToTree(raw: String) = gson.fromJson(raw, TypeDefinitionsTree::class.java)
 
     private suspend fun checkRuntimeVersion() {
-        debugLog("LOADING")
         val runtimeVersion = socketService.executeAsync(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull()
         )
-        debugLog("spec ${runtimeVersion.specVersion}")
         if (runtimeVersion.specVersion > soraPreferences.getInt(
                 RUNTIME_VERSION_PREF,
                 RUNTIME_VERSION_START
@@ -143,13 +143,9 @@ class RuntimeManager(
                     request = GetMetadataRequest,
                     mapper = pojo<String>().nonNull()
                 )
-                val defaultTypes = typesApi.getDefaultTypes()
-                val sora2Types = typesApi.getSora2Types()
-                soraPreferences.putInt(RUNTIME_VERSION_PREF, runtimeVersion.specVersion)
+                buildRuntimeSnapshot(metadata, MetadataSource.SoraNet, runtimeVersion.specVersion)
                 saveToCache(RUNTIME_METADATA_FILE, metadata)
-                saveToCache(DEFAULT_TYPES_FILE, defaultTypes)
-                saveToCache(SORA2_TYPES_FILE, sora2Types)
-                buildRuntimeSnapshot(metadata, defaultTypes, sora2Types, true)
+                soraPreferences.putInt(RUNTIME_VERSION_PREF, runtimeVersion.specVersion)
             } catch (t: Throwable) {
                 FirebaseWrapper.recordException(t)
             }
@@ -163,41 +159,105 @@ class RuntimeManager(
 
     private suspend fun buildRuntimeSnapshot(
         metadata: String,
-        defaultTypesRaw: String,
-        sora2TypesRaw: String,
-        fromNet: Boolean,
+        metadataSource: MetadataSource,
+        runtimeVersion: Int,
     ) {
-        val defaultTypes = rawTypesToTree(defaultTypesRaw)
-        val sora2Types = rawTypesToTree(sora2TypesRaw)
-        val runtimeMetadataSchema = RuntimeMetadataSchema.read(metadata)
-        debugLog("build 1")
-        val def = TypeDefinitionParser.parseBaseDefinitions(
-            defaultTypes,
-            substratePreParsePreset()
-        ).typePreset
-        debugLog("build 2")
-        val types = TypeDefinitionParser.parseNetworkVersioning(
-            sora2Types,
-            def,
-            getLastRuntimeVersion()
-        )
-        debugLog("build 3")
-        if (types.unknownTypes.isNotEmpty()) {
-            FirebaseWrapper.log("BuildRuntimeSnapshot. ${types.unknownTypes.size} unknown types are found")
+        val runtimeMetadataReader = RuntimeMetadataReader.read(metadata)
+        val typeRegistry = when (metadataSource) {
+            is MetadataSource.Cache -> {
+                if (runtimeMetadataReader.metadataVersion < 14) {
+                    val defaultTypesRaw =
+                        getContentFromCache(DEFAULT_TYPES_FILE, metadataSource.replaceCache)
+                    val sora2TypesRaw =
+                        getContentFromCache(SORA2_TYPES_FILE, metadataSource.replaceCache)
+                    buildTypeRegistry12(defaultTypesRaw, sora2TypesRaw, runtimeVersion)
+                } else {
+                    val sora2TypesRaw =
+                        getContentFromCache(SORA2_TYPES_FILE, metadataSource.replaceCache)
+                    buildTypeRegistry14(sora2TypesRaw, runtimeMetadataReader, runtimeVersion)
+                }
+            }
+            is MetadataSource.SoraNet -> {
+                if (runtimeMetadataReader.metadataVersion < 14) {
+                    val defaultTypes = typesApi.getDefaultTypes()
+                    val sora2Types = typesApi.getSora2Types()
+                    buildTypeRegistry12(defaultTypes, sora2Types, runtimeVersion).also {
+                        saveToCache(DEFAULT_TYPES_FILE, defaultTypes)
+                        saveToCache(SORA2_TYPES_FILE, sora2Types)
+                    }
+                } else {
+                    val sora2Types = typesApi.getSora2TypesMetadata14()
+                    buildTypeRegistry14(sora2Types, runtimeMetadataReader, runtimeVersion).also {
+                        saveToCache(SORA2_TYPES_FILE, sora2Types)
+                    }
+                }
+            }
         }
-        val typeRegistry = TypeRegistry(
-            types = types.typePreset,
-            dynamicTypeResolver = DynamicTypeResolver(DynamicTypeResolver.DEFAULT_COMPOUND_EXTENSIONS + GenericsExtension)
-        )
-        debugLog("build 4")
-        val runtimeMetadata = RuntimeMetadata(typeRegistry, runtimeMetadataSchema)
-        debugLog("build 5")
+        val runtimeMetadata =
+            VersionedRuntimeBuilder.buildMetadata(runtimeMetadataReader, typeRegistry)
         val runtimeSnapshot = RuntimeSnapshot(typeRegistry, runtimeMetadata)
-        debugLog("build 6")
-        RuntimeHolder.setRuntime(runtimeSnapshot, fromNet)
+        RuntimeHolder.setRuntime(runtimeSnapshot, metadataSource is MetadataSource.SoraNet, runtimeMetadataReader.metadataVersion)
     }
 
-    private fun debugLog(s: String) {
-        Logger.d("Runtime: $s")
+    private fun buildTypeRegistry12(
+        defaultRaw: String,
+        sora2TypesRaw: String,
+        runtimeVersion: Int
+    ): TypeRegistry {
+        return buildTypeRegistryCommon(
+            {
+                TypeDefinitionParser.parseBaseDefinitions(
+                    rawTypesToTree(defaultRaw),
+                    v13Preset()
+                ).typePreset
+            },
+            sora2TypesRaw,
+            runtimeVersion,
+            { DynamicTypeResolver(DynamicTypeResolver.DEFAULT_COMPOUND_EXTENSIONS + GenericsExtension) },
+        )
+    }
+
+    private fun buildTypeRegistry14(
+        sora2Raw: String,
+        runtimeMetadataReader: RuntimeMetadataReader,
+        runtimeVersion: Int
+    ): TypeRegistry {
+        return buildTypeRegistryCommon(
+            {
+                TypesParserV14.parse(
+                    runtimeMetadataReader.metadata[RuntimeMetadataSchemaV14.lookup],
+                    v14Preset()
+                ).typePreset
+            },
+            sora2Raw,
+            runtimeVersion,
+            { DynamicTypeResolver.defaultCompoundResolver() },
+        )
+    }
+
+    private fun buildTypeRegistryCommon(
+        defaultTypePresetBuilder: () -> TypePreset,
+        sora2TypesRaw: String,
+        runtimeVersion: Int,
+        dynamicTypeResolverBuilder: () -> DynamicTypeResolver,
+    ): TypeRegistry {
+        val sora2TypeDefinitionsTree = rawTypesToTree(sora2TypesRaw)
+        val sora2ParseResult = TypeDefinitionParser.parseNetworkVersioning(
+            sora2TypeDefinitionsTree,
+            defaultTypePresetBuilder.invoke(),
+            runtimeVersion
+        )
+        if (sora2ParseResult.unknownTypes.isNotEmpty()) {
+            FirebaseWrapper.log("BuildRuntimeSnapshot. ${sora2ParseResult.unknownTypes.size} unknown types are found")
+        }
+        return TypeRegistry(
+            types = sora2ParseResult.typePreset,
+            dynamicTypeResolver = dynamicTypeResolverBuilder.invoke()
+        )
+    }
+
+    private sealed class MetadataSource {
+        data class Cache(val replaceCache: Boolean) : MetadataSource()
+        object SoraNet : MetadataSource()
     }
 }

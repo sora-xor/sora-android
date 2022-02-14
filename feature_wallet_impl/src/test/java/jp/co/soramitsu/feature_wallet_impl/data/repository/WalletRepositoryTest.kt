@@ -34,7 +34,7 @@ import jp.co.soramitsu.core_db.dao.TransferTransactionDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.AssetTokenLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -210,7 +210,7 @@ class WalletRepositoryTest {
             "iroha address",
             "iroha public",
             "signature",
-            Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4)),
+            Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6)),
         ).toList()
 
         assertEquals(1, test.size)
@@ -235,7 +235,7 @@ class WalletRepositoryTest {
             )
         ).willReturn("hash")
         val test = walletRepository.transfer(
-            Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4)),
+            Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6)),
             "from",
             "to",
             "0x0200000000000000000000000000000000000000000000000000000000000000",
@@ -266,7 +266,7 @@ class WalletRepositoryTest {
             }
         )
         val result = walletRepository.observeTransfer(
-            Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4)),
+            Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6)),
             "from",
             "to",
             "0x0200000000000000000000000000000000000000000000000000000000000000",

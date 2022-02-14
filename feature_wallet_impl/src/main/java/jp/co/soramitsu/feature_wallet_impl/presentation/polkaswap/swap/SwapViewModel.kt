@@ -349,7 +349,6 @@ class SwapViewModel(
                     val m = polkaswapInteractor.fetchAvailableSources(from.token.id, to.token.id)
                     availableMarkets.clear()
                     if (!m.isNullOrEmpty()) {
-                        availableMarkets.add(Market.SMART)
                         availableMarkets.addAll(m)
                     }
                 }

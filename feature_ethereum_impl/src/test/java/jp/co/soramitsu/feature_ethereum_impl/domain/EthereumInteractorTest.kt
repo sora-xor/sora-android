@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_ethereum_impl.domain
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.HealthChecker
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.test.runBlockingTest
@@ -47,8 +46,6 @@ class EthereumInteractorTest {
     private lateinit var ethereumInteractorImpl: EthereumInteractorImpl
 
     private val accountId = "accountId"
-
-    private val keyPair = mock(Keypair::class.java)
 
     @Before
     fun setUp() = runBlockingTest {

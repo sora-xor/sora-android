@@ -15,4 +15,7 @@ interface SubstrateTypesApi {
 
     @GET("//raw.githubusercontent.com/sora-xor/sora2-substrate-js-library/master/packages/types/src/metadata/${OptionsProvider.typesFilePath}/types_scalecodec_mobile.json")
     suspend fun getSora2Types(): String
+
+    @GET("//raw.githubusercontent.com/sora-xor/sora2-substrate-js-library/metadata14/packages/types/src/metadata/${OptionsProvider.typesFilePath}/types_scalecodec_mobile_14.json")
+    suspend fun getSora2TypesMetadata14(): String
 }

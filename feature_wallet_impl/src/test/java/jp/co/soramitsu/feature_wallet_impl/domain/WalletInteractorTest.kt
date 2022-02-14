@@ -13,7 +13,7 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.util.CryptoAssistant
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
@@ -132,7 +132,7 @@ class WalletInteractorTest {
 
     @Test
     fun `just transfer`() = runBlockingTest {
-        val kp = Keypair(ByteArray(32), ByteArray(32))
+        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.getAddress()).willReturn("address")
         given(credentialsRepository.retrieveKeyPair()).willReturn(kp)
         given(walletRepository.transfer(kp, "address", "to", "assetId", BigDecimal.ONE)).willReturn(
@@ -162,7 +162,7 @@ class WalletInteractorTest {
         given(credentialsRepository.retrieveIrohaKeyPair()).willReturn(keyPair)
         given(keyPair.public).willReturn(publicKey)
         given(publicKey.encoded).willReturn(ByteArray(32) { 1 })
-        val kp = Keypair(ByteArray(32), ByteArray(32))
+        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.retrieveKeyPair()).willReturn(kp)
         given(
             walletRepository.migrate(
@@ -193,7 +193,7 @@ class WalletInteractorTest {
 
     @Test
     fun `observe transfer`() = runBlockingTest {
-        val kp = Keypair(ByteArray(32), ByteArray(32))
+        val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.getAddress()).willReturn("address")
         given(credentialsRepository.retrieveKeyPair()).willReturn(kp)
         given(
