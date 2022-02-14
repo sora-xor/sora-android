@@ -12,9 +12,13 @@ import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.common.util.deriveSeed32
 import jp.co.soramitsu.common.util.ext.didToAccountId
-import jp.co.soramitsu.fearless_utils.bip39.MnemonicLength
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.SubstrateKeypairFactory
+import jp.co.soramitsu.fearless_utils.encrypt.mnemonic.Mnemonic
+import jp.co.soramitsu.fearless_utils.encrypt.mnemonic.MnemonicCreator
+import jp.co.soramitsu.fearless_utils.encrypt.seed.substrate.SubstrateSeedFactory
 import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder
 import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
 import org.spongycastle.util.encoders.Hex
@@ -28,30 +32,29 @@ class CredentialsRepositoryImpl @Inject constructor(
 ) : CredentialsRepository {
 
     override suspend fun isMnemonicValid(mnemonic: String): Boolean {
-        return cryptoAssistant.bip39.isMnemonicValid(mnemonic)
+        return runCatching { MnemonicCreator.fromWords(mnemonic) }.isSuccess
     }
 
     override suspend fun generateUserCredentials() {
         val mnemonic = generateMnemonic()
-        generateEntropyAndKeys(mnemonic.joinToString(" "))
+        generateEntropyAndKeys(mnemonic)
     }
 
-    private suspend fun generateEntropyAndKeys(mnemonic: String) {
-        val entropy = cryptoAssistant.bip39.generateEntropy(mnemonic)
-        val seed = cryptoAssistant.bip39.generateSeed(entropy, "")
-        val keyPair = cryptoAssistant.keyPairFactory.generate(
+    private suspend fun generateEntropyAndKeys(mnemonic: Mnemonic) {
+        val derivationResult = SubstrateSeedFactory.deriveSeed32(mnemonic.words, null)
+        val keyPair = SubstrateKeypairFactory.generate(
             OptionsProvider.encryptionType,
-            seed
+            derivationResult.seed,
         )
+        require(keyPair is Sr25519Keypair)
 
         credentialsPrefs.saveAddress(keyPair.publicKey.toSoraAddress())
         credentialsPrefs.saveKeys(keyPair)
-        credentialsPrefs.saveMnemonic(mnemonic)
+        credentialsPrefs.saveMnemonic(mnemonic.words)
         FirebaseWrapper.log("Keys were created")
     }
 
-    private fun generateMnemonic(): List<String> =
-        cryptoAssistant.bip39.generateMnemonic(MnemonicLength.TWELVE).split(" ")
+    private fun generateMnemonic(): Mnemonic = MnemonicCreator.randomMnemonic(Mnemonic.Length.TWELVE)
 
     private suspend fun generateAndSaveClaimData(mnemonic: String) {
         val projectName = "SORA"
@@ -72,7 +75,7 @@ class CredentialsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun restoreUserCredentials(mnemonic: String) {
-        generateEntropyAndKeys(mnemonic)
+        generateEntropyAndKeys(MnemonicCreator.fromWords(mnemonic))
         generateAndSaveClaimData(mnemonic)
     }
 
@@ -84,7 +87,7 @@ class CredentialsRepositoryImpl @Inject constructor(
         return credentialsPrefs.retrieveMnemonic()
     }
 
-    override suspend fun retrieveKeyPair(): Keypair {
+    override suspend fun retrieveKeyPair(): Sr25519Keypair {
         return credentialsPrefs.retrieveKeys() ?: throw IllegalStateException("Keypair not found")
     }
 

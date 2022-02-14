@@ -298,8 +298,9 @@ class AssetDetailsFragment : BaseFragment<AssetDetailsViewModel>(R.layout.fragme
 
         viewLifecycleOwner.lifecycleScope.launchWhenCreated {
             adapter?.loadStateFlow?.collectLatest {
+                viewBinding.transactionsUnavailablePlaceholder.container.showOrHide(it.refresh is LoadState.Error && adapter?.itemCount == 0)
                 val emptyList =
-                    (it.refresh is LoadState.NotLoading || it.refresh is LoadState.Error) && adapter?.itemCount == 0
+                    it.refresh is LoadState.NotLoading && it.refresh !is LoadState.Error && adapter?.itemCount == 0
                 viewBinding.grEmptyHistory.showOrHide(emptyList)
             }
         }

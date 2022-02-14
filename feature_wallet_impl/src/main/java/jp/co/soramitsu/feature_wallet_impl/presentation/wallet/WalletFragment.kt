@@ -216,7 +216,9 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
         viewLifecycleOwner.lifecycleScope.launchWhenCreated {
             historyAdapter.loadStateFlow.collectLatest {
                 viewBinding.swipeLayout.isRefreshing = it.mediator?.refresh is LoadState.Loading
-                val emptyList = (it.refresh is LoadState.NotLoading || it.refresh is LoadState.Error) && historyAdapter.itemCount == 0
+                viewBinding.transactionsUnavailablePlaceholder.container.showOrHide(it.refresh is LoadState.Error && historyAdapter.itemCount == 0)
+                val emptyList =
+                    it.refresh is LoadState.NotLoading && it.refresh !is LoadState.Error && historyAdapter.itemCount == 0
                 viewBinding.grEmptyHistoryWallet.showOrHide(emptyList)
             }
         }

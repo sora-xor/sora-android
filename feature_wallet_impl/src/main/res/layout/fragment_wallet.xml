@@ -131,6 +131,7 @@
             android:id="@+id/grEmptyHistoryWallet"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="invisible"
             app:constraint_referenced_ids="tvEmptyHistoryTitle,placeholder_image,placeholder_text" />
 
         <TextView
@@ -169,6 +170,18 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvEmptyHistoryTitle" />
+
+        <include
+            android:id="@+id/transactionsUnavailablePlaceholder"
+            layout="@layout/layout_transactions_history_unavailable"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/x4"
+            android:layout_marginTop="@dimen/x8"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/eventRecyclerView"

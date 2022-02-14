@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.common.domain.credentials
 
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import java.security.KeyPair
 
 interface CredentialsRepository {
@@ -22,7 +22,7 @@ interface CredentialsRepository {
 
     suspend fun retrieveIrohaKeyPair(): KeyPair
 
-    suspend fun retrieveKeyPair(): Keypair
+    suspend fun retrieveKeyPair(): Sr25519Keypair
 
     suspend fun getIrohaAddress(): String
 

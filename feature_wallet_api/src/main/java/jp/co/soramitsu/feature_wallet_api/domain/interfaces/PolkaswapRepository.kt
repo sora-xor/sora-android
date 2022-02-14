@@ -6,7 +6,7 @@
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
@@ -40,7 +40,7 @@ interface PolkaswapRepository {
     fun observeSwap(
         tokenId1: Token,
         tokenId2: Token,
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         address: String,
         markets: List<Market>,
         swapVariant: WithDesired,

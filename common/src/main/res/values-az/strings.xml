@@ -502,4 +502,6 @@
   <string name="wallet_transfer_to_ethereum">Ethereum ünvanına</string>
   <string name="wallet_unbonding">Bağlanmayan</string>
   <string name="wallet_val_to_my_eth">Ethereum hesabıma VAL</string>
+  <string name="wallet_transactions_unavailable_title">Tranzaksiyaları yükləmək mümkün olmadı</string>
+  <string name="wallet_transactions_unavailable_description">Problem həll olunur,\n sonra yenidən cəhd edin.</string>
 </resources>

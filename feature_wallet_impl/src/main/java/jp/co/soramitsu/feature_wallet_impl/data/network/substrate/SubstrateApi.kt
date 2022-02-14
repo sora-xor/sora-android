@@ -10,7 +10,7 @@ import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.data.network.dto.XorBalanceDto
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.feature_wallet_api.domain.model.BlockResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
@@ -26,7 +26,7 @@ interface SubstrateApi {
     suspend fun fetchAssetsList(runtime: RuntimeSnapshot): List<TokenInfoDto>
     suspend fun needsMigration(irohaAddress: String): Boolean
     suspend fun transfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,
@@ -35,7 +35,7 @@ interface SubstrateApi {
     ): String
 
     suspend fun observeTransfer(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         to: String,
         assetId: String,
@@ -57,7 +57,7 @@ interface SubstrateApi {
         irohaAddress: String,
         irohaPublicKey: String,
         signature: String,
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         runtime: RuntimeSnapshot
     ): Flow<Pair<String, ExtrinsicStatusResponse>>
 
@@ -69,7 +69,7 @@ interface SubstrateApi {
     suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): List<String>
     suspend fun getSwapFees(tokenId1: String, tokenId2: String, amount: BigInteger, swapVariant: String, market: List<String>, filter: String): SwapFeeDto?
     fun observeSwap(
-        keypair: Keypair,
+        keypair: Sr25519Keypair,
         from: String,
         runtime: RuntimeSnapshot,
         inputAssetId: String,

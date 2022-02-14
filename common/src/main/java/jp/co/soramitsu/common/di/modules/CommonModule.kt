@@ -46,8 +46,6 @@ import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.fearless_utils.bip39.Bip39
-import jp.co.soramitsu.fearless_utils.encrypt.KeypairFactory
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import java.security.SecureRandom
 import java.util.Locale
@@ -132,7 +130,7 @@ class CommonModule {
     @Singleton
     @Provides
     fun provideCryptoAssistant(secureRandom: SecureRandom): CryptoAssistant {
-        return CryptoAssistant(secureRandom, Ed25519Sha3(), Bip39(), KeypairFactory())
+        return CryptoAssistant(secureRandom, Ed25519Sha3())
     }
 
     @Provides

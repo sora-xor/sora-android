@@ -9,7 +9,7 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import org.spongycastle.util.encoders.Hex
 import java.security.KeyPair
 import javax.inject.Inject
@@ -39,24 +39,18 @@ class PrefsCredentialsDatasource @Inject constructor(
         return soraPreferences.getString(PREFS_ADDRESS)
     }
 
-    override suspend fun saveKeys(keyPair: Keypair) {
+    override suspend fun saveKeys(keyPair: Sr25519Keypair) {
         encryptedPreferences.putEncryptedString(PREFS_PRIVATE_KEY, Hex.toHexString(keyPair.privateKey))
         encryptedPreferences.putEncryptedString(PREFS_PUBLIC_KEY, Hex.toHexString(keyPair.publicKey))
-        keyPair.nonce?.let {
-            if (it.isNotEmpty()) {
-                encryptedPreferences.putEncryptedString(PREFS_KEY_NONCE, Hex.toHexString(it))
-            }
-        }
+        encryptedPreferences.putEncryptedString(PREFS_KEY_NONCE, Hex.toHexString(keyPair.nonce))
     }
 
-    override suspend fun retrieveKeys(): Keypair? {
+    override suspend fun retrieveKeys(): Sr25519Keypair? {
         val privateKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PRIVATE_KEY))
         val publicKeyBytes = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_PUBLIC_KEY))
-        val nonce = encryptedPreferences.getDecryptedString(PREFS_KEY_NONCE).let {
-            if (it.isNotEmpty()) Hex.decode(it) else null
-        }
+        val nonce = Hex.decode(encryptedPreferences.getDecryptedString(PREFS_KEY_NONCE))
 
-        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Keypair(privateKeyBytes, publicKeyBytes, nonce)
+        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Sr25519Keypair(privateKeyBytes, publicKeyBytes, nonce)
     }
 
     override suspend fun saveMnemonic(mnemonic: String) {

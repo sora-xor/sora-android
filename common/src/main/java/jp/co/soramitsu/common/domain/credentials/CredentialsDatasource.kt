@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.common.domain.credentials
 
-import jp.co.soramitsu.fearless_utils.encrypt.model.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import java.security.KeyPair
 
 interface CredentialsDatasource {
@@ -14,9 +14,9 @@ interface CredentialsDatasource {
 
     suspend fun getAddress(): String
 
-    suspend fun saveKeys(keyPair: Keypair)
+    suspend fun saveKeys(keyPair: Sr25519Keypair)
 
-    suspend fun retrieveKeys(): Keypair?
+    suspend fun retrieveKeys(): Sr25519Keypair?
 
     suspend fun saveMnemonic(mnemonic: String)
 

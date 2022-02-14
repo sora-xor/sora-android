@@ -6,8 +6,6 @@
 package jp.co.soramitsu.common.util
 
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.fearless_utils.bip39.Bip39
-import jp.co.soramitsu.fearless_utils.encrypt.KeypairFactory
 import org.spongycastle.crypto.generators.SCrypt
 import org.spongycastle.jcajce.provider.digest.SHA3
 import java.security.KeyPair
@@ -16,8 +14,6 @@ import java.security.SecureRandom
 class CryptoAssistant(
     private val secureRandom: SecureRandom,
     private val ed25519Sha3: Ed25519Sha3,
-    val bip39: Bip39,
-    val keyPairFactory: KeypairFactory,
 ) {
 
     companion object {

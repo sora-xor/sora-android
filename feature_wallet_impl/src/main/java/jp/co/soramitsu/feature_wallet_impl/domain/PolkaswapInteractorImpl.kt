@@ -189,14 +189,29 @@ class PolkaswapInteractorImpl(
 
     override suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): List<Market>? {
         if (!isSwapAvailable(tokenId1, tokenId2)) return null
-        return polkaswapRepository.getAvailableSources(tokenId1, tokenId2).also {
-            availableMarkets.clear()
-            availableMarkets.addAll(it)
-
-            if (selectedSwapMarket.value != Market.SMART && !availableMarkets.contains(selectedSwapMarket.value)) {
-                selectedSwapMarket.value = (availableMarkets + Market.SMART).first()
+        val sources = polkaswapRepository.getAvailableSources(tokenId1, tokenId2)
+        availableMarkets.clear()
+        availableMarkets.addAll(sources)
+        if (availableMarkets.isEmpty()) {
+            if ((
+                tokenId1.equals(OptionsProvider.xstTokenId, true) &&
+                    OptionsProvider.xstPoolTokens.contains(tokenId2)
+                ) ||
+                (
+                    tokenId2.equals(OptionsProvider.xstTokenId, true) &&
+                        OptionsProvider.xstPoolTokens.contains(tokenId1)
+                    )
+            ) {
+                availableMarkets.add(Market.SMART)
             }
+        } else {
+            availableMarkets.add(Market.SMART)
         }
+        if (!availableMarkets.contains(selectedSwapMarket.value)
+        ) {
+            selectedSwapMarket.value = availableMarkets.first()
+        }
+        return availableMarkets
     }
 
     override fun getPolkaswapDisclaimerVisibility(): Flow<Boolean> =
@@ -207,7 +222,7 @@ class PolkaswapInteractorImpl(
     }
 
     override suspend fun getAvailableSources(): List<Market> =
-        availableMarkets + Market.SMART
+        availableMarkets
 
     override suspend fun swap(
         tokenInput: Token,

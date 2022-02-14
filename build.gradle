@@ -47,7 +47,7 @@ buildscript {
             activityKtx       : '1.1.0',
             fragmentKtx       : '1.4.0',
             coreKtx           : '1.5.0-beta02',
-            fearlessLib       : '1.0.79',
+            fearlessLib       : '1.0.97',
             webSocketLib      : '2.10',
 			ed25519           : '2.0.1',
             svgVersion        : '1.4',
@@ -64,9 +64,9 @@ buildscript {
 
     ext {
         // soralution 53 2.3.2 2022.1.20
-        // sora dae 58 2.3.2 2022.1.21
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 58)
-        appVersionName = '2.3.2'
+        // sora dae 59 2.3.3 2022.02.01
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 59)
+        appVersionName = '2.3.3'
 
         compileVersion = 31
         minVersion = 21
@@ -186,7 +186,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.1.0'
         classpath 'com.google.gms:google-services:4.3.10'
         classpath 'com.google.firebase:firebase-appdistribution-gradle:2.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
