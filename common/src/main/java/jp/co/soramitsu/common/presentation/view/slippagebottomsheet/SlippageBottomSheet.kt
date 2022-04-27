@@ -11,8 +11,10 @@ import androidx.core.widget.doOnTextChanged
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.databinding.BottomSheetSlippageBinding
+import jp.co.soramitsu.common.util.ext.hide
 import jp.co.soramitsu.common.util.ext.onDoneClicked
 import jp.co.soramitsu.common.util.ext.openSoftKeyboard
+import jp.co.soramitsu.common.util.ext.show
 
 class SlippageBottomSheet(
     context: Context,
@@ -34,26 +36,27 @@ class SlippageBottomSheet(
 
         binding.slippageToleranceInputWrapper.setOnClickListener {
             context.openSoftKeyboard(binding.slippageToleranceInput)
+            binding.slippageToleranceInput.requestFocus()
         }
 
         binding.slippageToleranceInput.doOnTextChanged { text, _, _, _ ->
-            if (text.toString().isNotEmpty()) {
-                val slippage = checkInput(text.toString(), min) {
-                    binding.slippageToleranceInput.setText(it)
+            val slippage = checkInput(text.toString(), min) {
+                binding.slippageToleranceInput.setText(it)
+            }
+            when {
+                slippage >= maxFrontrun -> {
+                    binding.slippageToleranceWarningTitle.setText(R.string.polkaswap_slippage_frontrun)
+                    binding.slippageToleranceWarningTitle.show()
+                    binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_neu_alert_blue_24, 0, 0, 0)
                 }
-                when {
-                    slippage >= maxFrontrun -> {
-                        binding.slippageToleranceWarningTitle.setText(R.string.polkaswap_slippage_frontrun)
-                        binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_neu_alert_blue_24, 0, 0, 0)
-                    }
-                    slippage <= minFail -> {
-                        binding.slippageToleranceWarningTitle.setText(R.string.polkaswap_slippage_mayfail)
-                        binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_neu_alert_blue_24, 0, 0, 0)
-                    }
-                    else -> {
-                        binding.slippageToleranceWarningTitle.text = ""
-                        binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-                    }
+                slippage <= minFail -> {
+                    binding.slippageToleranceWarningTitle.setText(R.string.polkaswap_slippage_mayfail)
+                    binding.slippageToleranceWarningTitle.show()
+                    binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_neu_alert_blue_24, 0, 0, 0)
+                }
+                else -> {
+                    binding.slippageToleranceWarningTitle.hide()
+                    binding.slippageToleranceInput.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
                 }
             }
         }
@@ -87,6 +90,10 @@ class SlippageBottomSheet(
     }
 
     private fun checkInput(text: String, m: Float, onUpdate: ((v: String) -> Unit)? = null): Float {
+        if (text.isEmpty()) {
+            return m
+        }
+
         val slippage = text.let {
             if (it[0].isDigit()) it else "0$it"
         }.toFloatOrNull()

@@ -23,6 +23,8 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.di.Transact
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.di.ContactsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.di.TransactionDetailsComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.di.PolkaSwapComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add.confirm.di.ConfirmAddLiquidityComponent
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.di.LiquidityComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.di.SwapConfirmationComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.di.ReceiveComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.di.TransferAmountComponent
@@ -63,6 +65,10 @@ interface WalletFeatureComponent : WalletFeatureApi {
     fun assetDetailsComponentBuilder(): AssetDetailsComponent.Builder
 
     fun polkaswapComponentBuilder(): PolkaSwapComponent.Builder
+
+    fun liquidityComponentBuilder(): LiquidityComponent.Builder
+
+    fun confirmAddLiquidityComponentBuilder(): ConfirmAddLiquidityComponent.Builder
 
     fun swapConfirmationComponentBuilder(): SwapConfirmationComponent.Builder
 

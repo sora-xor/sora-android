@@ -12,12 +12,15 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.dao.AccountDao
+import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_account_impl.R
@@ -56,6 +59,9 @@ class UserRepositoryTest {
     private lateinit var db: AppDatabase
 
     @Mock
+    private lateinit var accountDao: AccountDao
+
+    @Mock
     private lateinit var appLinkProvider: AppLinksProvider
 
     @Mock
@@ -65,6 +71,8 @@ class UserRepositoryTest {
     private lateinit var languagesHolder: LanguagesHolder
 
     private lateinit var userRepository: UserRepositoryImpl
+
+    private val soraAccount = SoraAccount("a", "n")
 
     @Before
     fun setUp() {
@@ -93,15 +101,25 @@ class UserRepositoryTest {
     @Test
     fun `get account name`() = runBlockingTest {
         val accountName = "accountName"
-        given(userDatasource.getAccountName()).willReturn(accountName)
-        assertEquals(accountName, userRepository.getAccountName())
+        val accountAddress = "accountAddress"
+        given(userDatasource.getCurAccountAddress()).willReturn(accountAddress)
+        given(db.accountDao()).willReturn(accountDao)
+        given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
+        userRepository.initCurSoraAccount()
+        assertEquals(accountName, userRepository.getCurSoraAccount().accountName)
     }
 
     @Test
     fun `save Account name called`() = runBlockingTest {
         val accountName = "accountName"
-        userRepository.saveAccountName(accountName)
-        verify(userDatasource).saveAccountName(accountName)
+        val accountAddress = "accountAddress"
+        given(userDatasource.getCurAccountAddress()).willReturn(accountAddress)
+        given(db.accountDao()).willReturn(accountDao)
+        given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
+        userRepository.initCurSoraAccount()
+        verify(accountDao).getAccount(accountAddress)
+        userRepository.updateAccountName(soraAccount, accountName)
+        verify(accountDao).updateAccountName(accountName, soraAccount.substrateAddress)
     }
 
     @Test

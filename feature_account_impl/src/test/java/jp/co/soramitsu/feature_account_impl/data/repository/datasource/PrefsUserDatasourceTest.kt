@@ -117,16 +117,6 @@ class PrefsUserDatasourceTest {
     }
 
     @Test
-    fun `save accountName called`() = runBlockingTest {
-        val accountName = "accountName"
-        val keyAccountName = "key_account_name"
-
-        prefsUserDatasource.saveAccountName(accountName)
-
-        verify(soraPreferences).putString(keyAccountName, accountName)
-    }
-
-    @Test
     fun `get accountName called`() = runBlockingTest {
         val accountName = "accountName"
         val keyAccountName = "key_account_name"

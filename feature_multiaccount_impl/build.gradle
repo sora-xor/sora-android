@@ -1,0 +1,91 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(":common")
+    implementation project(":core_di")
+    implementation project(":feature_account_api")
+    implementation project(':feature_ethereum_api')
+    implementation project(":feature_wallet_api")
+    implementation project(":feature_multiaccount_api")
+    implementation project(":feature_main_api")
+
+    implementation kotlinDep
+
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
+    implementation viewBindingDep
+
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
+    implementation viewmodelKtxDep
+
+    implementation emojiDep
+
+    implementation lifecycleExtDep
+    kapt lifecycleKaptDep
+
+    implementation navigationFragmentDep
+    implementation navigationUiDep
+
+    implementation daggerDep
+    kapt daggerKapt
+
+    testImplementation jUnitDep
+    testImplementation mockitoDep
+    testImplementation robolectricDep
+    testImplementation robolectricMultidexDep
+    testImplementation archCoreTestDep
+    testImplementation archFragmentTestDep
+    testImplementation project(":test_shared")
+}

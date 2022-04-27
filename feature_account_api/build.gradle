@@ -55,4 +55,7 @@ dependencies {
     implementation project(":common")
 
     implementation kotlinDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation coroutineTestDep
 }

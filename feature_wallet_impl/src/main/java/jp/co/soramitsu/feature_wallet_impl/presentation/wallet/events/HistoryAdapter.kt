@@ -21,10 +21,12 @@ import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionHeaderBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemInBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemOutBinding
+import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionLiquidityAddBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionLiquiditySwapBinding
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
 
@@ -40,6 +42,7 @@ class HistoryAdapter(
             is EventUiModel.EventTxUiModel.EventTransferInUiModel -> R.layout.event_section_item_in
             is EventUiModel.EventTxUiModel.EventTransferOutUiModel -> R.layout.event_section_item_out
             is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel -> R.layout.event_section_liquidity_swap
+            is EventUiModel.EventTxUiModel.EventLiquidityAddUiModel -> R.layout.event_section_liquidity_add
             null -> R.layout.event_section_header
             else -> throw IllegalStateException("Unknown view type ${getItem(position)?.javaClass?.simpleName}")
         }
@@ -56,6 +59,10 @@ class HistoryAdapter(
             R.layout.event_section_liquidity_swap -> EventItemViewHolder.EventLiquiditySwapViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.event_section_liquidity_swap, parent, false)
+            )
+            R.layout.event_section_liquidity_add -> EventItemViewHolder.EventLiquidityAddViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.event_section_liquidity_add, parent, false)
             )
             R.layout.event_section_item_out -> EventItemViewHolder.EventTransactionOutViewHolder(
                 LayoutInflater.from(parent.context)
@@ -77,6 +84,8 @@ class HistoryAdapter(
         } else if (holder is EventItemViewHolder.EventTransactionOutViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventTransferOutUiModel) {
             holder.bind(eventUiModel, debounceClickHandler, clickListener)
         } else if (holder is EventItemViewHolder.EventLiquiditySwapViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel) {
+            holder.bind(eventUiModel, debounceClickHandler, clickListener)
+        } else if (holder is EventItemViewHolder.EventLiquidityAddViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventLiquidityAddUiModel) {
             holder.bind(eventUiModel, debounceClickHandler, clickListener)
         }
     }
@@ -119,6 +128,57 @@ private val neutralBalanceStyle = AssetBalanceStyle(
 )
 
 sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+    class EventLiquidityAddViewHolder(view: View) : EventItemViewHolder(view) {
+
+        private val viewBinding = EventSectionLiquidityAddBinding.bind(view)
+        fun bind(
+            soraTransaction: EventUiModel.EventTxUiModel.EventLiquidityAddUiModel,
+            debounceClickHandler: DebounceClickHandler,
+            itemClickedListener: (String) -> Unit
+        ) {
+            viewBinding.rootEvent.setDebouncedClickListener(debounceClickHandler) {
+                itemClickedListener.invoke(soraTransaction.txHash)
+            }
+            val (title, prefix, balanceStyle) = if (soraTransaction.add)
+                Triple(
+                    R.string.common_add,
+                    "-",
+                    neutralBalanceStyle
+                ) else Triple(R.string.common_remove, "+", positiveBalanceStyle)
+            viewBinding.eventItemTitleTextView.setText(title)
+            viewBinding.tvAddAmount1.showOrHide(soraTransaction.success != false)
+            viewBinding.tvAddAmount2.showOrHide(soraTransaction.success != false)
+            viewBinding.tvFailed.showOrHide(soraTransaction.success == false)
+            if (soraTransaction.success != false) {
+                viewBinding.tvAddAmount1.setBalance(
+                    AssetBalanceData(
+                        amount = "$prefix${soraTransaction.amount1.first}",
+                        ticker = soraTransaction.amount1.second,
+                        style = balanceStyle
+                    )
+                )
+                viewBinding.tvAddAmount2.setBalance(
+                    AssetBalanceData(
+                        amount = "$prefix${soraTransaction.amount2.first}",
+                        ticker = soraTransaction.amount2.second,
+                        style = balanceStyle
+                    )
+                )
+            }
+            viewBinding.tvHistorySwapDate.text = soraTransaction.dateTime
+            viewBinding.eventStatusIconImageView2.setImageResource(soraTransaction.icon1)
+            viewBinding.eventStatusIconImageView3.setImageResource(soraTransaction.icon2)
+            if (soraTransaction.pending) {
+                viewBinding.eventStatusIconImageView.hide()
+                viewBinding.eventStatusIconImageViewSp.show()
+                viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
+            } else {
+                viewBinding.eventStatusIconImageView.show()
+                viewBinding.eventStatusIconImageViewSp.hide()
+            }
+        }
+    }
 
     class EventLiquiditySwapViewHolder(view: View) : EventItemViewHolder(view) {
 

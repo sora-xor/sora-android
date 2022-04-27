@@ -37,8 +37,8 @@ interface TransferTransactionDao {
     @Query("DELETE FROM extrinsics")
     suspend fun clearTable()
 
-    @Query("DELETE FROM extrinsics where localPending == 0")
-    suspend fun clearNotLocal()
+    @Query("DELETE FROM extrinsics where localPending == 0 and accountAddress = :accountAddress")
+    suspend fun clearNotLocal(accountAddress: String)
 
     @Query("SELECT COUNT(txHash) from extrinsics")
     suspend fun countAll(): Long
@@ -46,8 +46,23 @@ interface TransferTransactionDao {
     @Query("SELECT COUNT(txHash) from extrinsics where localPending == 0")
     suspend fun countExtrinsicNotLocal(): Long
 
-    @Query("SELECT * FROM extrinsics ORDER BY timestamp DESC")
-    fun getExtrinsicPaging(): PagingSource<Int, ExtrinsicLocal>
+    @Query("SELECT * FROM extrinsics where accountAddress = :accountAddress ORDER BY timestamp DESC")
+    fun getExtrinsicPaging(accountAddress: String): PagingSource<Int, ExtrinsicLocal>
+
+    @Query(
+        """
+        SELECT * FROM extrinsics inner join extrinsic_params 
+        on extrinsics.txHash = extrinsic_params.extrinsicId 
+        where extrinsics.accountAddress = :accountAddress and 
+        (extrinsics.type = 0 and extrinsic_params.paramValue = :assetId and (extrinsic_params.paramName = 'tokenId'  or extrinsic_params.paramName = 'token2Id')) or 
+        (extrinsics.type = 1 and extrinsic_params.paramValue = :assetId and extrinsic_params.paramName = 'tokenId') or 
+        (extrinsics.type = 2 and extrinsic_params.paramValue = :assetId and (extrinsic_params.paramName = 'tokenId' or extrinsic_params.paramName = 'token2Id'))
+        """
+    )
+    fun getExtrinsicPaging(
+        accountAddress: String,
+        assetId: String
+    ): PagingSource<Int, ExtrinsicLocal>
 
     @Query("SELECT * FROM extrinsics WHERE txHash == :txHash")
     suspend fun getExtrinsic(txHash: String): ExtrinsicLocal

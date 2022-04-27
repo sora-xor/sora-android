@@ -19,8 +19,11 @@
 
     <TextView
         android:id="@+id/loading_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_marginStart="@dimen/x3"
+        android:layout_marginEnd="@dimen/x3"
         android:layout_marginTop="@dimen/x3"
         android:fontFamily="@font/sora_bold"
         android:text="@string/startup_verification_title"
@@ -32,8 +35,11 @@
 
     <TextView
         android:id="@+id/loading_subtitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:layout_marginStart="@dimen/x4"
+        android:layout_marginEnd="@dimen/x4"
         android:layout_marginTop="@dimen/x2"
         android:text="@string/common_please_wait"
         android:textSize="@dimen/text_size_h3"

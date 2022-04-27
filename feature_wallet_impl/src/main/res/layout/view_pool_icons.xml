@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <ImageView
+        android:id="@+id/underlayIcon"
+        android:layout_width="@dimen/x4"
+        android:layout_height="@dimen/x4"
+        android:layout_marginBottom="@dimen/x2"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@drawable/ic_0x009b72ff44208336b7700dcf85dd4bcce06fe691d875e5d949870337d383b26a" />
+
+    <ImageView
+        android:id="@+id/overlayIcon"
+        android:layout_width="@dimen/x4"
+        android:layout_height="@dimen/x4"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginTop="@dimen/x2"
+        app:layout_constraintStart_toStartOf="@+id/underlayIcon"
+        app:layout_constraintTop_toTopOf="@+id/underlayIcon"
+        tools:src="@drawable/ic_0x009be848df92a400da2f217256c88d1a9b1a0304f9b3e90991a67418e1d3b08c" />
+
+</merge>

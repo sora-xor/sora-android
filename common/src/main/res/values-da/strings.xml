@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Bekræft den mnemoniske adgangskode</string>
   <string name="account_confirmation_title_v2">Bekræft Passphrase</string>
   <string name="activity_project">Projekt</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Adressen blev ikke fundet, dobbelttjek at adressen hører til det rette netværk.</string>
   <string name="address_not_found_1">Modtagere ikke fundet</string>
   <string name="amount_default_fee">Transaktionsgebyr</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopier</string>
   <string name="common_copy_address">Kopier adresse</string>
   <string name="common_croatian">Kroatisk</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Beskrivelse</string>
   <string name="common_done">Fuldført</string>
   <string name="common_donotallow">Tillad ikke</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Indonesisk</string>
   <string name="common_info">Info</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italiensk</string>
   <string name="common_japanese">Japansk</string>
   <string name="common_khmer">Khmer</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">Ok</string>
   <string name="common_open_explorer">Vis i Blockchain Explorer</string>
   <string name="common_options_title">Vælg en indstilling</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Når du opretter er ny SORA konto, får du nu en 12 ords mnemonisk adgangskode. Hvis du allerede havde en 15 ords mnemoniske adgangskode, så kan du importere din konto med den - disse er også kompatible og vil fortsat virke.</string>
   <string name="common_passphrase_header">En mnemoniske adgangskode \ner en slags adgangskode</string>
   <string name="common_passphrase_save_mnemonic_title">Gem eller send mnemonisk adgangskode</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Modtag</string>
   <string name="common_received">Modtaget</string>
   <string name="common_recipient">Modtager</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Prøv igen</string>
   <string name="common_russian">Russisk</string>
   <string name="common_save">Gem</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Bekræftelseskoden er forkert</string>
   <string name="common_spanish">Spansk</string>
   <string name="common_spanish_colombia">Spansk (Colombia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Svensk</string>
   <string name="common_terms_title">Vilkår &amp; Betingelser</string>
   <string name="common_thai">Thai</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Opdatering</string>
   <string name="common_vote">Stem</string>
   <string name="common_yesterday">I går</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">De vigtigste kontakter vises her</string>
   <string name="contacts_scan">Scan</string>
   <string name="contacts_search_empty_state_title">Ingen søgeresultater</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">QR-koden kan ikke afkodes</string>
   <string name="invoice_scan_error_user_not_found">Kan ikke genkende en bruger fra QR-koden</string>
   <string name="language_title">Vælg sprog</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Denne handling vil resultere i at kontoen bliver slettet fra denne enhed. Sikr dig, at du har sikkerhedskopieret din mnemoniske adgangskode, før du fortsætter.</string>
   <string name="mnemonic_alert_text">Den mnemoniske adgangskode bruges til at gendanne adgang til din konto. Skriv den ned, vi vil ikke kunne hjælpe dig med at få din konto tilbage uden den!</string>
   <string name="mnemonic_confirm_text">Bekræft ved at vælge ordene i den rigtige rækkefølge</string>
@@ -285,16 +303,18 @@
   <string name="pincode_updated">Pinkoden er opdateret</string>
   <string name="polkaswap_button_swap_again">Swap igen</string>
   <string name="polkaswap_coming_soon">DEX\'et til den interoperable fremtid. Polkaswap er en frihedsbevarende AMM-DEX-protokol til at veksle mellem tokens på Polkadot-netværket, Parachains og andre blockchains, som er forbundet med en bro. Polkaswap-protokollen fjerner mellemmænd og tillader hurtigere handel.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Bekræft Swap</string>
   <string name="polkaswap_details">Detaljer</string>
   <string name="polkaswap_error_noswap">Ingen swap</string>
   <string name="polkaswap_info_faq">Polkaswap Ofte stillede spørgsmål</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap bliver vedligeholdt af SORA-samfundet. Før du fortsætter med at bruge Polkaswap, venligst gennemgå  %%Polkaswap FAQ%% og dokumentation, som indeholder en detaljeret forklaring på hvordan Polkaswap fungerer, samt %%Polkaswap-memorandummet og servicevilkårene%%, og %%Privatlivspolitiken%%.\n\nDisse dokumenter er afgørende for en sikker og positiv brugeroplevelse. Ved at bruge Polkaswap anerkender du, at du har læst og forstået disse dokumenter.</string>
   <string name="polkaswap_info_text_2">Du anerkender også følgende:</string>
   <string name="polkaswap_info_text_3">Du er alene ansvarlig for overholdelse af alle love, der måtte gælde for din særlige brug af Polkaswap i dit juridiske område;</string>
   <string name="polkaswap_info_text_4">Din forståelse af, at den nuværende version af Polkaswap er en alfaversion: den er ikke blevet fuldt testet, og nogle funktioner fungerer muligvis ikke som designet;</string>
   <string name="polkaswap_info_text_5">Din forståelse og frivillige accept af de risici, der er forbundet med at bruge Polkaswap, inklusive, men ikke begrænset til, risikoen for at miste tokens.</string>
-  <string name="polkaswap_info_text_6">Vi gentager, forsæt venligst ikke uden at læse %%Polkaswap FAQ%%, %%Polkaswap Memorandum og Servicevilkår%%, og %%Privatlivspolitik%% !</string>
+  <string name="polkaswap_info_text_6">Vi gentager, forsæt venligst ikke uden at læse %%Polkaswap FAQ%%, %%Polkaswap Memorandum og Servicevilkår%%, og %%Privatlivspolitik%%!</string>
   <string name="polkaswap_info_text_7">For at skjule ansvarsfraskrivelsen fra Swap-fanen, stryg venligst knappen nedenfor. Gør det kun, hvis du fuldt ud forstår og har læst alle de nævnte dokumenter!</string>
   <string name="polkaswap_info_text_8">Stryg for at skjule</string>
   <string name="polkaswap_info_text_9">Notifikationen om ansvarsfraskrivelse er skjult fra fanen Polkaswap. Stryg knappen nedenunder, hvis du ønsker at aktivere notifikationen.</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">Din transaktion vil blive tilbageført, hvis der sker en stor ugunstig prisbevægelse, før den er blevet bekræftet.</string>
   <string name="polkaswap_network_fee">Netværksgebyr</string>
   <string name="polkaswap_network_fee_info">Netværksgebyr bruges til at sikre SORA systemets vækst og stabilitet.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Output er estimeret. Du modtager mindst %s ellers vil transaktionen blive tilbageført.</string>
   <string name="polkaswap_pool_not_created">Denne pulje er ikke oprettet</string>
   <string name="polkaswap_pool_title">Pulje</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Din transaktion risikerer at blive fortløbet</string>
   <string name="polkaswap_slippage_info">Dine transaktioner vil blive tilbageført, hvis prisen ændrer sig ugunstigt med mere end denne procentdel</string>
   <string name="polkaswap_slippage_mayfail">Din transaktion kan mislykkes</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">Swapped</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Tilføj</string>
   <string name="pool_button_remove">Fjern</string>
   <string name="pool_liqudity_title">Din likviditet</string>
   <string name="pool_liquidity_placeholder">Din likviditet vil blive vist her</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Andel af pulje</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Tilføjet puljen</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Samlede stemmer</string>
   <string name="referendum_unsupport_title">Nej</string>
   <string name="referendum_voting_result">Afstemningsresultat</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Genstart påkrævet</string>
   <string name="screenshot_alert_text">Lad være med at tage skærmbilleder, da de kan blive indsamlet af tredjepartsmalware</string>
   <string name="screenshot_alert_title">Lad være med at tage skærmbilleder</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Vælg det aktiv, der skal sendes</string>
   <string name="select_recipient">Vælg modtager</string>
   <string name="set_amount">Angiv mængde</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR-indehavere vil kunne stake deres XOR, for at nominere validators, og derfor få belønninger.</string>
   <string name="staking_description">At nominere validatorer er en vigtig del af SORAs økosystem, da det hjælper med at sikre og decentralisere netværket. Val tokens gives til validatorer og nominatorer som belønning for staking.</string>
   <string name="staking_val_reward">SORA VALidator belønninger</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">Til SORA NET-konto</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Min %s Network-adresse til at Modtage %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Netværksadresse til at modtage %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Min %s Network-adresse til at Modtage %s %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Min %s Netværksadresse til at modtage %s %s :</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Modtag VAL</string>
   <string name="wallet_redeemable">Kan indløses</string>
   <string name="wallet_send_existential_warning_message">Din transaktion vil fjerne kontoen fra blockstore, da den vil gøre den samlede saldo lavere end den eksistentielle indbetaling</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Transaktion afvist</string>
   <string name="wallet_transaction_submitted">Transaktion indsendt</string>
   <string name="wallet_transaction_submitted_1">Transaktion\nindsendt</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Maks %s tegn</string>
   <string name="wallet_transfer_to_ethereum">Til Ethereum-adresse</string>
   <string name="wallet_unbonding">Afbinding</string>

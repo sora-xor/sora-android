@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Bevestig mnemonic</string>
   <string name="account_confirmation_title_v2">Bevestig wachtwoordzin</string>
   <string name="activity_project">Project</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Adres niet gevonden, zorg ervoor dat het adres bij het juiste netwerk hoort.</string>
   <string name="address_not_found_1">Ontvangers niet gevonden</string>
   <string name="amount_default_fee">Transactiekosten</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopieer</string>
   <string name="common_copy_address">Kopieer adres</string>
   <string name="common_croatian">Kroatisch</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Omschrijving</string>
   <string name="common_done">Gedaan</string>
   <string name="common_donotallow">Sta niet toe</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Indonesisch</string>
   <string name="common_info">Info</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italiaans</string>
   <string name="common_japanese">Japans</string>
   <string name="common_khmer">Khmer</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Bekijk in Blockchain Explorer</string>
   <string name="common_options_title">Kies een optie</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Wanneer u een nieuw account creëert in SORA, krijgt u een wachtwoord bestaand uit 12 woorden. Als u al een SORA-wachtwoord heeft bestaande uit 15 woorden, kunt u met dit wachtwoord uw account importeren - deze zijn ook compatibel en zullen blijven werken.</string>
   <string name="common_passphrase_header">Wachtwoordzin is\n een type wachtwoord.</string>
   <string name="common_passphrase_save_mnemonic_title">Bewaar of verzend de wachtwoordzin</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Ontvang</string>
   <string name="common_received">Ontvangen</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Probeer opnieuw</string>
   <string name="common_russian">Russisch</string>
   <string name="common_save">Opslaan</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">De verificatiecode is onjuist</string>
   <string name="common_spanish">Spaans</string>
   <string name="common_spanish_colombia">Spaans (Colombia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Zweeds</string>
   <string name="common_terms_title">Algemene voorwaarden</string>
   <string name="common_thai">Thais</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Stemmen</string>
   <string name="common_yesterday">Gisteren</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">De belangrijkste contacten verschijnen hier</string>
   <string name="contacts_scan">Scan QR-code</string>
   <string name="contacts_search_empty_state_title">Geen resultaten gevonden</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">QR kan niet worden gedecodeerd</string>
   <string name="invoice_scan_error_user_not_found">Kan geen gebruiker vinden via QR</string>
   <string name="language_title">Selecteer taal</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Deze actie zal resulteren in het verwijderen van een account van dit apparaat. Zorg ervoor dat u een back-up hebt gemaakt van uw passphrase voordat u verder gaat.</string>
   <string name="mnemonic_alert_text">Mnemonic wordt gebruikt om de toegang tot het account te herstellen. Schrijf het op, we kunnen uw account niet herstellen zonder!</string>
   <string name="mnemonic_confirm_text">Bevestig door woorden in de juiste volgorde te kiezen</string>
@@ -285,16 +303,18 @@
   <string name="pincode_updated">Pincode bijgewerkt</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">De DEX voor de Interoperabele Toekomst. Polkaswap is een non-custodial, AMM-DEX protocol voor het verwisselen van tokens op basis van het Polkadot netwerk, Parachains en blockchains verbonden via een Bridge. Het Polkaswap-protocol verwijdert op effectieve wijze vertrouwde tussenpersonen en biedt de mogelijkheid om sneller te traden.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Bevestig omruil</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen.</string>
   <string name="polkaswap_info_text_2">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen. \n\n U erkent ook het volgende: \n\n 1) uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;\n 2) uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;\n 3) uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens. Nogmaals, ga alsjeblieft niet verder zonder de veelgestelde vragen, het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid te lezen!</string>
-  <string name="polkaswap_info_text_3">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen. \n\n U erkent ook het volgende: \n\n 1) uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;\n 2) uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;\n 3) uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens. Nogmaals, ga alsjeblieft niet verder zonder de veelgestelde vragen, het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid te lezen!</string>
-  <string name="polkaswap_info_text_4">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen. \n\n U erkent ook het volgende: \n\n 1) uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;\n 2) uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;\n 3) uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens. Nogmaals, ga alsjeblieft niet verder zonder de veelgestelde vragen, het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid te lezen!</string>
-  <string name="polkaswap_info_text_5">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen. \n\n U erkent ook het volgende: \n\n 1) uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;\n 2) uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;\n 3) uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens. Nogmaals, ga alsjeblieft niet verder zonder de veelgestelde vragen, het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid te lezen!</string>
-  <string name="polkaswap_info_text_6">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen. \n\n U erkent ook het volgende: \n\n 1) uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;\n 2) uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;\n 3) uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens. Nogmaals, ga alsjeblieft niet verder zonder de veelgestelde vragen, het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid te lezen!</string>
+  <string name="polkaswap_info_text_3">Uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;</string>
+  <string name="polkaswap_info_text_4">Uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;</string>
+  <string name="polkaswap_info_text_5">Uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens.</string>
+  <string name="polkaswap_info_text_6">Nogmaals, ga alsjeblieft niet verder zonder de %%Polkaswap FAQ%% , %%Polkaswap Memorandum en Servicevoorwaarden%% en %%Privacybeleid%%!</string>
   <string name="polkaswap_info_text_7">Veeg de onderstaande knop om de disclaimermelding van het tabblad Ruilen te verbergen. Doe dit alleen als je alle genoemde documenten volledig begrijpt en hebt gelezen!</string>
   <string name="polkaswap_info_text_8">Swipe om te verbergen</string>
   <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">Uw transactie zal worden teruggedraaid als er een grote, ongunstige koersbeweging is voordat deze wordt bevestigd.</string>
   <string name="polkaswap_network_fee">Netwerkvergoeding</string>
   <string name="polkaswap_network_fee_info">Netwerkvergoeding wordt gebruikt om de groei en stabiele prestaties van het van het SORA-systeem te garanderen.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">De output wordt geschat. U ontvangt %s minimaal of de transactie wordt teruggedraaid.</string>
   <string name="polkaswap_pool_not_created">Pool is niet aangemaakt</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Uw transactie kan frontrun zijn</string>
   <string name="polkaswap_slippage_info">Slippage-tolerantie is een geaccepteerde drempel die is ingesteld in procenten voor het uiteindelijke bedrag dat van invloed is op het minimum ontvangen bedrag.</string>
   <string name="polkaswap_slippage_mayfail">Uw transactie kan mislukken</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">Omgewisseld</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Toevoegen</string>
   <string name="pool_button_remove">Verwijder</string>
   <string name="pool_liqudity_title">Uw liquiditeit</string>
   <string name="pool_liquidity_placeholder">Uw liquiditeit zal hier verschijnen</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Aandeel van pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">gepoold</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Totaal aantal stemmen</string>
   <string name="referendum_unsupport_title">Nee</string>
   <string name="referendum_voting_result">Stemresultaat</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Opnieuw opstarten vereist</string>
   <string name="screenshot_alert_text">Maak geen screenshots, die kunnen worden verzameld door malware van derden</string>
   <string name="screenshot_alert_title">Geen screenshots maken</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Selecteer te verzenden asset</string>
   <string name="select_recipient">Selecteer ontvanger</string>
   <string name="set_amount">Bedrag invoeren</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR-houders kunnen hun XOR staken om validators te nomineren en beloningen te ontvangen.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA VALidator beloningen</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">Naar SORA NET-account</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s Netwerkadres om te ontvangen %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Netwerkadres om %s te ontvangen:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Mijn %s netwerkadres om %s %s te ontvangen:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Mijn %s netwerkadres naar %s %s ontvangen:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Ontvang VAL</string>
   <string name="wallet_redeemable">Inwisselbaar</string>
   <string name="wallet_send_existential_warning_message">Uw overschrijving zal het account verwijderen uit de blockstore omdat het totale saldo lager zal zijn dan de bestaande storting.</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Transactie verworpen</string>
   <string name="wallet_transaction_submitted">Transactie ingediend</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Max %s symbolen</string>
   <string name="wallet_transfer_to_ethereum">Naar Ethereum-adres</string>
   <string name="wallet_unbonding">Ontbinding</string>

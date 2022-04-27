@@ -19,16 +19,10 @@ class OnboardingInteractor @Inject constructor(
     private val ethereumRepository: EthereumRepository,
 ) {
 
-    suspend fun saveRegistrationStateFinished() {
-        userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-    }
-
     suspend fun getMnemonic(): String {
-        val m = credentialsRepository.retrieveMnemonic()
-        return if (m.isEmpty()) {
+        val m = credentialsRepository.retrieveMnemonic(userRepository.getCurSoraAccount())
+        return m.ifEmpty {
             throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
-        } else {
-            m
         }
     }
 
@@ -37,17 +31,10 @@ class OnboardingInteractor @Inject constructor(
     }
 
     suspend fun runRecoverFlow(mnemonic: String, accountName: String) {
-        credentialsRepository.restoreUserCredentials(mnemonic)
+        val soraAccount = credentialsRepository.restoreUserCredentials(mnemonic, accountName)
+        userRepository.insertSoraAccount(soraAccount)
+        userRepository.setCurSoraAccount(soraAccount)
         getMnemonic()
-        userRepository.saveAccountName(accountName)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
-    }
-
-    suspend fun createUser(accountName: String) {
-        credentialsRepository.generateUserCredentials()
-        userRepository.saveAccountName(accountName)
-        userRepository.saveRegistrationState(OnboardingState.INITIAL)
-        userRepository.saveNeedsMigration(false)
-        userRepository.saveIsMigrationFetched(true)
     }
 }

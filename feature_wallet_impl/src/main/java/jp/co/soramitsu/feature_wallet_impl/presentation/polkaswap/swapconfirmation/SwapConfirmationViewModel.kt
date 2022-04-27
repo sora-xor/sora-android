@@ -7,6 +7,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmat
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
@@ -20,8 +21,11 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.model.ButtonState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -63,23 +67,14 @@ class SwapConfirmationViewModel(
     private val _outputAmountLiveData = MutableLiveData<String>()
     val outputAmountLiveData: LiveData<String> = _outputAmountLiveData
 
-    private val _per1LiveData = MutableLiveData<String>()
-    val per1LiveData: LiveData<String> = _per1LiveData
+    private val _per1LiveData = MutableLiveData<Pair<String, String>>()
+    val per1LiveData: LiveData<Pair<String, String>> = _per1LiveData.distinctUntilChanged()
 
-    private val _per2LiveData = MutableLiveData<String>()
-    val per2LiveData: LiveData<String> = _per2LiveData
+    private val _per2LiveData = MutableLiveData<Pair<String, String>>()
+    val per2LiveData: LiveData<Pair<String, String>> = _per2LiveData.distinctUntilChanged()
 
-    private val _per1ValueLiveData = MutableLiveData<String>()
-    val per1ValueLiveData: LiveData<String> = _per1ValueLiveData
-
-    private val _per2ValueLiveData = MutableLiveData<String>()
-    val per2ValueLiveData: LiveData<String> = _per2ValueLiveData
-
-    private val _minmaxLiveData = MutableLiveData<String>()
-    val minmaxLiveData: LiveData<String> = _minmaxLiveData
-
-    private val _minmaxValueLiveData = MutableLiveData<String?>()
-    val minmaxValueLiveData: LiveData<String?> = _minmaxValueLiveData
+    private val _minmaxLiveData = MutableLiveData<Pair<String, String?>>()
+    val minmaxLiveData: LiveData<Pair<String, String?>> = _minmaxLiveData.distinctUntilChanged()
 
     private val _liquidityLiveData = MutableLiveData<String?>()
     val liquidityLiveData: LiveData<String?> = _liquidityLiveData
@@ -90,14 +85,8 @@ class SwapConfirmationViewModel(
     private val _descLiveData = MutableLiveData<Pair<String, String>>()
     val descLiveData: LiveData<Pair<String, String>> = _descLiveData
 
-    private val _confirmBtnProgressLiveData = MutableLiveData<Boolean>()
-    val confirmBtnProgressLiveData: LiveData<Boolean> = _confirmBtnProgressLiveData
-
-    private val _confirmBtnEnableLiveData = MutableLiveData<Boolean>()
-    val confirmBtnEnableLiveData: LiveData<Boolean> = _confirmBtnEnableLiveData
-
-    private val _confirmBtnTitleLiveData = MutableLiveData<String>()
-    val confirmBtnTitleLiveData: LiveData<String> = _confirmBtnTitleLiveData
+    private val _confirmButtonState: MutableStateFlow<ButtonState> = MutableStateFlow(ButtonState())
+    val confirmButtonState: StateFlow<ButtonState> = _confirmButtonState
 
     private val _extrinsicEvent = SingleLiveEvent<Boolean>()
     val extrinsicEvent: LiveData<Boolean> = _extrinsicEvent
@@ -107,9 +96,13 @@ class SwapConfirmationViewModel(
     private var feeTokenBalance: BigDecimal? = null
     private var newDetails: SwapDetails? = details
 
+    private var line1Title: String = ""
+    private var line2Title: String = ""
+    private var line3Title: String = ""
+
     init {
         updateScreen()
-        walletInteractor.subscribeVisibleAssets()
+        walletInteractor.subscribeVisibleAssetsOfCurAccount()
             .catch { onError(it) }
             .onEach {
                 fromTokenBalance =
@@ -137,8 +130,10 @@ class SwapConfirmationViewModel(
         isExtrinsicSubmitted = true
         newDetails?.let { details ->
             viewModelScope.launch {
-                _confirmBtnEnableLiveData.value = false
-                _confirmBtnProgressLiveData.value = true
+                _confirmButtonState.value = _confirmButtonState.value.copy(
+                    enabled = false,
+                    loading = true
+                )
                 var swapResult = false
                 try {
                     swapResult = polkaswapInteractor.swap(
@@ -155,7 +150,7 @@ class SwapConfirmationViewModel(
                 } finally {
                     delay(500)
                     _extrinsicEvent.value = swapResult
-                    _confirmBtnProgressLiveData.value = false
+                    setConfirmButtonLoading(false)
                     router.returnToPolkaswap()
                 }
             }
@@ -177,13 +172,12 @@ class SwapConfirmationViewModel(
         _outputTokenLiveData.value = toToken
         _outputAmountLiveData.value = numbersFormatter.formatBigDecimal(toAmount, toToken.precision)
 
-        _per1LiveData.value = "%s / %s".format(fromToken.symbol, toToken.symbol)
-        _per2LiveData.value = "%s / %s".format(toToken.symbol, fromToken.symbol)
+        line1Title = "%s / %s".format(fromToken.symbol, toToken.symbol)
+        line2Title = "%s / %s".format(toToken.symbol, fromToken.symbol)
 
-        _minmaxLiveData.value =
-            if (desired == WithDesired.INPUT) resourceManager.getString(R.string.polkaswap_minimum_received) else resourceManager.getString(
-                R.string.polkaswap_maximum_sold
-            )
+        line3Title = if (desired == WithDesired.INPUT) resourceManager.getString(R.string.polkaswap_minimum_received) else resourceManager.getString(
+            R.string.polkaswap_maximum_sold
+        )
 
         _networkFeeLiveData.value = "%s %s".format(
             numbersFormatter.formatBigDecimal(details.networkFee, ROUNDING_SWAP),
@@ -197,13 +191,13 @@ class SwapConfirmationViewModel(
         newDetails?.let { swapDetails ->
             val (p1, p2) = if (desired == WithDesired.INPUT) swapDetails.per1 to swapDetails.per2 else
                 swapDetails.per2 to swapDetails.per1
-            _per1ValueLiveData.value = numbersFormatter.formatBigDecimal(p1, ROUNDING_SWAP)
-            _per2ValueLiveData.value = numbersFormatter.formatBigDecimal(p2, ROUNDING_SWAP)
+            _per1LiveData.value = line1Title to numbersFormatter.formatBigDecimal(p1, ROUNDING_SWAP)
+            _per2LiveData.value = line2Title to numbersFormatter.formatBigDecimal(p2, ROUNDING_SWAP)
 
             val minmax1 = numbersFormatter.formatBigDecimal(swapDetails.minmax, ROUNDING_SWAP)
             val minmax2 = if (desired == WithDesired.INPUT) toToken.symbol else fromToken.symbol
             val minmax = "%s %s".format(minmax1, minmax2)
-            _minmaxValueLiveData.value = minmax
+            _minmaxLiveData.value = line3Title to minmax
             val desc = resourceManager.getString(
                 if (desired == WithDesired.INPUT) R.string.polkaswap_output_estimated else R.string.polkaswap_input_estimated
             ).format(minmax)
@@ -214,9 +208,9 @@ class SwapConfirmationViewModel(
                 feeToken.symbol
             )
         } ?: run {
-            _per1ValueLiveData.value = ""
-            _per2ValueLiveData.value = ""
-            _minmaxValueLiveData.value = null
+            _per1LiveData.value = line1Title to ""
+            _per2LiveData.value = line2Title to ""
+            _minmaxLiveData.value = line3Title to null
             _descLiveData.value = "" to ""
             _liquidityLiveData.value = null
         }
@@ -237,8 +231,11 @@ class SwapConfirmationViewModel(
                 resourceManager.getString(R.string.common_confirm) to true
             }
         }
-        _confirmBtnEnableLiveData.value = enabled && !isExtrinsicSubmitted
-        _confirmBtnTitleLiveData.value = text
+
+        _confirmButtonState.value = _confirmButtonState.value.copy(
+            text = text,
+            enabled = enabled && !isExtrinsicSubmitted
+        )
     }
 
     /**
@@ -281,12 +278,16 @@ class SwapConfirmationViewModel(
         }
     }
 
+    private fun setConfirmButtonLoading(loading: Boolean) {
+        _confirmButtonState.value = _confirmButtonState.value.copy(loading = loading)
+    }
+
     private suspend fun recalcDetails() {
         val amountToCalc = if (desired == WithDesired.INPUT) fromAmount else toAmount
         if (amountToCalc > BigDecimal.ZERO) {
-            _confirmBtnProgressLiveData.value = true
+            setConfirmButtonLoading(true)
             tryCatchFinally(
-                finally = { _confirmBtnProgressLiveData.value = false },
+                finally = { setConfirmButtonLoading(false) },
                 block = {
                     newDetails = polkaswapInteractor.calcDetails(
                         fromToken,

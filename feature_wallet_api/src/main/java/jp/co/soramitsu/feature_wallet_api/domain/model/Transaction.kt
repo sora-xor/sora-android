@@ -44,6 +44,20 @@ sealed class Transaction(
         val market: Market,
         val lpFee: BigDecimal,
     ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
+
+    class Liquidity(
+        txHash: String,
+        blockHash: String?,
+        fee: BigDecimal,
+        status: TransactionStatus,
+        timestamp: Long,
+        successStatus: Boolean?,
+        val token1: Token,
+        val token2: Token,
+        val amount1: BigDecimal,
+        val amount2: BigDecimal,
+        val type: TransactionLiquidityType,
+    ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
 }
 
 enum class TransactionStatus {
@@ -54,4 +68,8 @@ enum class TransactionStatus {
 
 enum class TransactionTransferType {
     OUTGOING, INCOMING
+}
+
+enum class TransactionLiquidityType {
+    ADD, WITHDRAW
 }

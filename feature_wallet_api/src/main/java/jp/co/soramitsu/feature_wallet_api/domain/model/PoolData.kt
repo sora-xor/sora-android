@@ -11,6 +11,11 @@ import java.math.BigDecimal
 data class PoolData(
     val token: Token,
     val xorPooled: BigDecimal,
+    val xorReserves: BigDecimal,
     val secondPooled: BigDecimal,
-    val poolShare: Double
+    val secondReserves: BigDecimal,
+    val strategicBonusApy: BigDecimal?,
+    val poolShare: Double,
+    val totalIssuance: BigDecimal,
+    val poolProvidersBalance: BigDecimal,
 )

@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Helyreállítási szavak megerősítése</string>
   <string name="account_confirmation_title_v2">Helyreállítási  megerősítése</string>
   <string name="activity_project">Projekt</string>
+  <string name="add_liquidity_alert_text">A likviditási tartalékból a poolban való részesedésével arányos díjakat fog keresni.</string>
+  <string name="add_liquidity_confirmation_title">Megerősítés</string>
+  <string name="add_liquidity_pool_share_description">A kimenet becsült. Ha az ár több mint %s %% -nál változik, a tranzakció visszafordul.</string>
+  <string name="add_liquidity_pool_share_title">A pool részesedésed</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Likviditás hozzáadása</string>
   <string name="address_not_found">A cím nem található, győződj meg arról, hogy a megfelelő hálózathoz tartozik.</string>
   <string name="address_not_found_1">A címzettek nem találhatók</string>
   <string name="amount_default_fee">Tranzakciós díj</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Másol</string>
   <string name="common_copy_address">Cím másolása</string>
   <string name="common_croatian">Horvát</string>
+  <string name="common_deposit">Befizetés</string>
+  <string name="common_deposit_symbol">%s befizetés</string>
   <string name="common_description">Leírás</string>
   <string name="common_done">Kész</string>
   <string name="common_donotallow">Ne engedje</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Indonéz</string>
   <string name="common_info">Információ</string>
+  <string name="common_insufficient_balance">Fedezethiány</string>
   <string name="common_italian">Olasz</string>
   <string name="common_japanese">Japán</string>
   <string name="common_khmer">Khmer</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">Rendben</string>
   <string name="common_open_explorer">Megtekintés a Blokklánc Felfedezőben</string>
   <string name="common_options_title">Válassz egy lehetőséget</string>
+  <string name="common_output">Kimenet</string>
   <string name="common_passphrase_body">A fiókhoz való hozzáférés helyreállítására szolgál. Írd le, nem leszünk képesek visszaállítani a fiókod  ez nélkül!</string>
   <string name="common_passphrase_header">A helyreállítási szavak\negyfajta jelszó.</string>
   <string name="common_passphrase_save_mnemonic_title">Helyreállítási szavak mentése vagy küldése</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Fogadás</string>
   <string name="common_received">Kapott</string>
   <string name="common_recipient">Címzett</string>
+  <string name="common_remove">Eltávolítás</string>
   <string name="common_retry">Próbálja újra</string>
   <string name="common_russian">Orosz</string>
   <string name="common_save">Ment</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Az ellenörző kód helytelen</string>
   <string name="common_spanish">Spanyol</string>
   <string name="common_spanish_colombia">Spanyol (Kolumbiai)</string>
+  <string name="common_supply">Kínálat</string>
   <string name="common_swedish">Svéd</string>
   <string name="common_terms_title">Felhasználási Feltételek</string>
   <string name="common_thai">Thai</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Frissítés</string>
   <string name="common_vote">Szavaz</string>
   <string name="common_yesterday">Tegnap</string>
+  <string name="common_you_will_receive">Kapni fogsz</string>
+  <string name="common_your_position">Pozíciód</string>
   <string name="contacts_empty_state_title">A legfontosabb kapcsolatok itt jelennek meg</string>
   <string name="contacts_scan">Beolvasás</string>
   <string name="contacts_search_empty_state_title">Nincs találat</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">A QR nem dekódolható</string>
   <string name="invoice_scan_error_user_not_found">Nem található felhasználó a QR-ből</string>
   <string name="language_title">Válassz nyelvet</string>
+  <string name="liquidity_added">Hozzáadva %s likviditás</string>
+  <string name="liquidity_pair_creation_description">A hozzáadott tokenek aránya határozza meg ennek a készletnek az árát. Ha elégedett az árfolyammal, kattintson a kínálatra az áttekintéshez.</string>
+  <string name="liquidity_pair_creation_title">Te vagy az első likviditás szolgáltató</string>
+  <string name="liquidity_removed">Eltávolított %s likviditás</string>
   <string name="logout_dialog_body">Ez a művelet a fiók törlését eredményezi erről az eszközről. A folytatás előtt győzödjön meg róla, hogy biztonsági másolatot készített a helyreállítási szavakról.</string>
   <string name="mnemonic_alert_text">A fiókhoz való hozzáférés helyreállítására szolgál. Írd le, nem leszünk képesek visszaállítani a fiókod  ez nélkül!</string>
   <string name="mnemonic_confirm_text">Erősítsd meg a szavak helyes sorrendben történő kiválasztásával</string>
@@ -285,10 +303,12 @@
   <string name="pincode_updated">PIN-kód frissítve</string>
   <string name="polkaswap_button_swap_again">Váltás megint</string>
   <string name="polkaswap_coming_soon">A jövő decentralizált tőzsdéje. A Polkaswap nem végez kulcskezelést, decentralizált automata árjegyző tőzsde protokoll, amely a Polkadot hálózaton, párhuzamos láncokon és a hidakon keresztül tokenek cseréjére szolgál. A Polkaswap protokoll hatékonyan helyettesíti közvetítőket és lehetőséget nyújt a gyorsabb kereskedésre.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Váltás megerősítése</string>
   <string name="polkaswap_details">Részletek</string>
   <string name="polkaswap_error_noswap">Nincs váltás</string>
   <string name="polkaswap_info_faq">Polkaswap GYIK</string>
+  <string name="polkaswap_info_prices_and_fees">Árak és díjak</string>
   <string name="polkaswap_info_text_1">A Polkaswapot a SORA közösség tartja fenn. Mielőtt folytatnád a Polkaswap használatát, kérjük, olvasd el a %%Polkaswap GYIK%% és a dokumentációt, amely részletes magyarázatot tartalmaz a Polkaswap működéséről, valamint a %%Polkaswap Memorandum és Szolgáltatási feltételek%% és a %%Adatvédelmi irányelvek%%.\n\nEzek a dokumentumok elengedhetetlenek a biztonságos és pozitív felhasználói élményhez. A Polkaswap használatával elismered, hogy elolvastad és megértetted ezeket a dokumentumokat.</string>
   <string name="polkaswap_info_text_2">Tudomásul veszed továbbá a következőket:</string>
   <string name="polkaswap_info_text_3">Az Te kizárólagos felelősséged a Polkaswap általad történő használatára vonatkozó összes törvény betartása a Te országod joghatóságában;</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">A tranzakció visszafordul, ha a tranzakció megerősítése előtt nagy, kedvezőtlen ármozgás következik be.</string>
   <string name="polkaswap_network_fee">Hálózati díj</string>
   <string name="polkaswap_network_fee_info">A hálózati díjat a SORA rendszer növekedésének és stabil teljesítményének biztosítására használják.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Nincs elég token a pool-ban</string>
   <string name="polkaswap_output_estimated">Becsült eredmény. Legalább %s kapsz, vagy a tranzakció visszafordul.</string>
   <string name="polkaswap_pool_not_created">A pool nem jött létre</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Előfordulhat, hogy a tranzakció előre fut</string>
   <string name="polkaswap_slippage_info">A csúszási tolerancia egy elfogadott küszöbérték, amelyet százalékban határoznak meg a végösszegre, és befolyásolja a minimálisan kapott összeget.</string>
   <string name="polkaswap_slippage_mayfail">A tranzakció sikertelen lehet</string>
@@ -329,13 +352,15 @@
   <string name="polkaswap_swapped">Átváltva</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="polkaswap_your_position">Pozíciód (becsült)</string>
+  <string name="pool_apy_title">Stratégiai bónusz APY</string>
   <string name="pool_button_add">Hozzáadás</string>
   <string name="pool_button_remove">Eltávolítás</string>
   <string name="pool_liqudity_title">A likviditásod</string>
-  <string name="pool_liquidity_placeholder">A likviditásod itt jelenik meg</string>
+  <string name="pool_liquidity_placeholder">Még nincs aktív pool részedése.\nAdjon hozzá likviditást a jutalmak megszerzéséhez</string>
+  <string name="pool_share_after_tx">Pool-részesedés tx után</string>
   <string name="pool_share_title">Pool részesedése</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">A pool részesedésed</string>
   <string name="pool_token_pooled">Poolban lévő</string>
   <string name="profile_about_title">Leírás</string>
   <string name="profile_biometry_title">Biometrikus hitelesítés</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Összes szavazat</string>
   <string name="referendum_unsupport_title">Nem</string>
   <string name="referendum_voting_result">Szavazás eredménye</string>
+  <string name="remove_liquidity_info_text">A likviditás eltávolítása visszaváltja a pozícióját az aktuális árfolyamon, arányosan a poolból való részesedésével.</string>
+  <string name="remove_liquidity_title">Likviditás eltávolítása</string>
+  <string name="remove_pool_confirmation_description">A kimenet becsült. Ha az ár több mint %s %% -nál változik, a tranzakció visszafordul.</string>
+  <string name="remove_pool_confirmation_title">Eltávolítás megerősítése</string>
   <string name="restart_required">Újraindítás szükséges</string>
   <string name="screenshot_alert_text">Ne készíts képernyőképeket, amelyeket harmadik féltől származó rosszindulatú programok gyűjthetnek</string>
   <string name="screenshot_alert_title">Ne készíts képernyőképeket</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Küldendő eszköz kiválasztása</string>
   <string name="select_recipient">Címzett kiválasztása</string>
   <string name="set_amount">Állítsd be az összeget</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">FIÓK BEÁLLÍTÁSOK</string>
+  <string name="settings_header_app">ALKALMAZÁS BEÁLLÍTÁSAI</string>
+  <string name="settings_header_other">EGYÉB</string>
   <string name="staking_coming_soon">Az XOR tulajdonosok stakelhetik a XOR-ukat, hogy validátorokat jelöljenek és jutalmakat kapjanak.</string>
   <string name="staking_description">A validátorok kijelölése fontos része a SORA ökoszisztémának, mivel segít a hálózat biztonságának és decentralizálásának biztosításában. A validátorok és a nominátorok VAL tokeneket kapnak a staking jutalmaként.</string>
   <string name="staking_val_reward">SORA VALidator jutalmak</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">SORA NET számlára</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">A %s Fogadásra jogosult hálózati címem %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Fogadásra jogosult hálózati cím %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">A %s Fogadásra jogosult hálózati címem %s%s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">%s Fogadásra jogosult hálózati címem %s%s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">VAL fogadása</string>
   <string name="wallet_redeemable">Beváltható</string>
   <string name="wallet_send_existential_warning_message">Az átutalás eltávolítja a fiókot, mivel ezáltal az egyenleg alacsonyabb lesz, mint a szükséges minimum.</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">A tranzakció elutasítva</string>
   <string name="wallet_transaction_submitted">Tranzakció benyújtva</string>
   <string name="wallet_transaction_submitted_1">Tranzakció \n elküldve</string>
+  <string name="wallet_transactions_unavailable_description">A probléma megoldása folyamatban van, \n próbálja újra később.</string>
+  <string name="wallet_transactions_unavailable_title">Nem sikerült betölteni a tranzakciókat</string>
   <string name="wallet_transfer_description_hint">Maximum %s szimbólumok</string>
   <string name="wallet_transfer_to_ethereum">Ethereum címre</string>
   <string name="wallet_unbonding">Feloldás</string>

@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Conferma mnemonic</string>
   <string name="account_confirmation_title_v2">Conferma la Passphrase</string>
   <string name="activity_project">Progetto</string>
+  <string name="add_liquidity_alert_text">Guadagnerai commissioni proporzionali alla tua quota della pool dalla fornitura di liquidità.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Aggiungi liquidità</string>
   <string name="address_not_found">Indirizzo non trovato, assicurati che l\'indirizzo appartenga al network corretto.</string>
   <string name="address_not_found_1">Destinatari non trovati</string>
   <string name="amount_default_fee">Commissione della transazione</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Copia</string>
   <string name="common_copy_address">Copia indirizzo</string>
   <string name="common_croatian">Croato</string>
+  <string name="common_deposit">Deposita</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Descrizione</string>
   <string name="common_done">Fatto</string>
   <string name="common_donotallow">Non permettere</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Indonesiano</string>
   <string name="common_info">Informazioni</string>
+  <string name="common_insufficient_balance">Saldo insufficiente</string>
   <string name="common_italian">Italiano</string>
   <string name="common_japanese">Giapponese</string>
   <string name="common_khmer">Khmer</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">Ok</string>
   <string name="common_open_explorer">Visualizza in Blockchain Explorer</string>
   <string name="common_options_title">Selezionare un\'opzione</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Viene utilizzato per ripristinare l\'accesso all\'account. Scrivila e custodiscila con cura, senza di essa non saremo in grado di recuperare il tuo account!</string>
   <string name="common_passphrase_header">La passphrase è\nun tipo di password.</string>
   <string name="common_passphrase_save_mnemonic_title">Salva o invia la passphrase</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Ricevi</string>
   <string name="common_received">Ricevuto</string>
   <string name="common_recipient">Destinatario</string>
+  <string name="common_remove">Rimuovi</string>
   <string name="common_retry">Riprova</string>
   <string name="common_russian">Russo</string>
   <string name="common_save">Salva</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Il codice di verifica non è corretto</string>
   <string name="common_spanish">Spagnolo</string>
   <string name="common_spanish_colombia">Spagnolo (Colombia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Svedese</string>
   <string name="common_terms_title">Termini &amp; Condizioni</string>
   <string name="common_thai">Thai</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Aggiornamento</string>
   <string name="common_vote">Vota</string>
   <string name="common_yesterday">Ieri</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">La tua posizione</string>
   <string name="contacts_empty_state_title">I contatti più importanti appariranno qui</string>
   <string name="contacts_scan">Scansiona il codice QR</string>
   <string name="contacts_search_empty_state_title">Nessun risultato trovato</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">Il QR non può essere decodificato</string>
   <string name="invoice_scan_error_user_not_found">Impossibile trovare un utente dal codice QR</string>
   <string name="language_title">Seleziona la lingua</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Questa azione comporterà l\'eliminazione dell\'account da questo dispositivo. Assicurati di aver eseguito il backup della passphrase prima di procedere.</string>
   <string name="mnemonic_alert_text">La passphrase viene utilizzata per ripristinare l\'accesso all\'account. Scrivila e custodiscila con cura, senza di essa non saremo in grado di recuperare il tuo account!</string>
   <string name="mnemonic_confirm_text">Conferma scegliendo le parole nell\'ordine corretto</string>
@@ -285,10 +303,12 @@
   <string name="pincode_updated">Codice PIN aggiornato</string>
   <string name="polkaswap_button_swap_again">Scambia di nuovo</string>
   <string name="polkaswap_coming_soon">Il DEX per il futuro interoperabile. Polkaswap è un protocollo AMM-DEX non custodial per lo scambio di tokens basati sulla rete Polkadot, sulle Parachains e sulle blockchain collegate tramite un Bridge. Il protocollo Polkaswap rimuove efficacemente gli intermediari e offre un trading più veloce.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Conferma lo scambio</string>
   <string name="polkaswap_details">Dettagli</string>
   <string name="polkaswap_error_noswap">Nessuno scambio</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap è gestito dalla comunità SORA. Prima di continuare a utilizzare Polkaswap, consulta le %%Polkaswap FAQ%% e la documentazione, che include una spiegazione dettagliata su come funziona Polkaswap, nonché %%Polkaswap Memorandum e Termini di servizio%% e %%Privacy Policy%% . \n\nQuesti documenti sono fondamentali per un\'esperienza utente sicura e positiva. Utilizzando Polkaswap, riconosci di aver letto e compreso questi documenti.</string>
   <string name="polkaswap_info_text_2">L\'utente riconosce inoltre quanto segue:</string>
   <string name="polkaswap_info_text_3">Tua unica la responsabilità per il rispetto di tutte le leggi che possono applicarsi al tuo uso particolare di Polkaswap nella tua giurisdizione legale;</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">La tua transazione tornerà indietro se c\'è un grande movimento di prezzo sfavorevole prima che sia confermata.</string>
   <string name="polkaswap_network_fee">Fee del Network</string>
   <string name="polkaswap_network_fee_info">La tariffa di rete viene utilizzata per garantire la crescita del sistema SORA e prestazioni stabili.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">L\' output è stimato. Riceverai almeno %s o la transazione verrà annullata.</string>
   <string name="polkaswap_pool_not_created">La pool non è stata creata</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">La tua transazione potrebbe essere anticipata da un\' altra</string>
   <string name="polkaswap_slippage_info">Le tue transazioni verranno ripristinate se il prezzo cambia in modo sfavorevole di più di questa percentuale</string>
   <string name="polkaswap_slippage_mayfail">La tua transazione potrebbe non riuscire</string>
@@ -329,13 +352,15 @@
   <string name="polkaswap_swapped">Scambiato</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Aggiungi</string>
   <string name="pool_button_remove">Rimuovi</string>
   <string name="pool_liqudity_title">La tua liquidità</string>
   <string name="pool_liquidity_placeholder">La tua liquidità apparirà qui</string>
+  <string name="pool_share_after_tx">Quota della pool dopo la tx</string>
   <string name="pool_share_title">Share della pool</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">La tua quota della pool</string>
   <string name="pool_token_pooled">Pooled</string>
   <string name="profile_about_title">Informazioni</string>
   <string name="profile_biometry_title">Autenticazione biometrica</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Voti totali</string>
   <string name="referendum_unsupport_title">No</string>
   <string name="referendum_voting_result">Risultato della votazione</string>
+  <string name="remove_liquidity_info_text">La rimozione della liquidità converte la tua posizione al tasso attuale, proporzionale alla tua quota della pool.</string>
+  <string name="remove_liquidity_title">Rimuovi liquidità</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Riavvio richiesto</string>
   <string name="screenshot_alert_text">Non acquisire screenshot, che potrebbero essere raccolti da malware di terze parti</string>
   <string name="screenshot_alert_title">Non fare screenshot</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Seleziona l\' Asset da Inviare</string>
   <string name="select_recipient">Seleziona il destinatario</string>
   <string name="set_amount">Imposta quantità</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">I possessori di XOR potranno fare staking con XOR nominando validatori e ottenendo una ricompensa</string>
   <string name="staking_description">La nomina dei validatori è una parte importante dell\'ecosistema SORA in quanto aiuta a proteggere e decentralizzare la rete. I token VAL verranno dati ai validatori e ai nominatori come ricompensa per lo staking.</string>
   <string name="staking_val_reward">Ricompense SORA VALidator</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">All\'account SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Il mio indirizzo di rete %s per ricevere %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">L\' indirizzo di rete %s per ricevere %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Il mio indirizzo di rete %s per ricevere %s %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Il mio indirizzo di rete %s per ricevere %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Ricevi VAL</string>
   <string name="wallet_redeemable">Riscattabile</string>
   <string name="wallet_send_existential_warning_message">Il tuo trasferimento rimuoverà l\'account dal blockstore poiché renderà il saldo totale inferiore al deposito esistenziale.</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Transazione rifiutata</string>
   <string name="wallet_transaction_submitted">Transazione inviata</string>
   <string name="wallet_transaction_submitted_1">Transazione\ninviata</string>
+  <string name="wallet_transactions_unavailable_description">Stiamo risolvendo il problema,\n riprova più tardi.</string>
+  <string name="wallet_transactions_unavailable_title">Impossibile caricare le transazioni</string>
   <string name="wallet_transfer_description_hint">Massimo %s simboli</string>
   <string name="wallet_transfer_to_ethereum">All\'indirizzo Ethereum</string>
   <string name="wallet_unbonding">Unbonding</string>

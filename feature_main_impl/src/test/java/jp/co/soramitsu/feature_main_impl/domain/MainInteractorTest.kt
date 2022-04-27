@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,8 +32,11 @@ class MainInteractorTest {
 
     private lateinit var interactor: MainInteractor
 
+    private val soraAccount = SoraAccount("a", "n")
+
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
+        given(userRepository.getCurSoraAccount()).willReturn(soraAccount)
         interactor = MainInteractor(
             userRepository,
             credentialsRepository,
@@ -42,21 +46,21 @@ class MainInteractorTest {
     @Test
     fun `getMnemonic() function returns not empty mnemonic`() = runBlockingTest {
         val mnemonic = "test mnemonic"
-        given(credentialsRepository.retrieveMnemonic()).willReturn(mnemonic)
+        given(credentialsRepository.retrieveMnemonic(soraAccount)).willReturn(mnemonic)
         val mnemonicActual = interactor.getMnemonic()
-        verify(credentialsRepository).retrieveMnemonic()
+        verify(credentialsRepository).retrieveMnemonic(soraAccount)
         assertEquals(mnemonic, mnemonicActual)
     }
 
     @Test
     fun `getMnemonic() function returns empty mnemonic`() = runBlockingTest {
         val mnemonic = ""
-        given(credentialsRepository.retrieveMnemonic()).willReturn(mnemonic)
+        given(credentialsRepository.retrieveMnemonic(soraAccount)).willReturn(mnemonic)
         val result = runCatching {
             interactor.getMnemonic()
         }
         assertTrue(result.isFailure)
-        verify(credentialsRepository).retrieveMnemonic()
+        verify(credentialsRepository).retrieveMnemonic(soraAccount)
     }
 
     @Test

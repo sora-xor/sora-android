@@ -19,6 +19,27 @@ private const val DEFAULT_PRECISION = 2
 
 private const val GROUPING_SEPARATOR = ' '
 private const val DECIMAL_SEPARATOR = '.'
+private val precisionsMap: Map<Int, BigDecimal> = mapOf(
+    0 to BigDecimal(1),
+    1 to BigDecimal(0.1),
+    2 to BigDecimal(0.01),
+    3 to BigDecimal(0.001),
+    4 to BigDecimal(0.0001),
+    5 to BigDecimal(0.00001),
+    6 to BigDecimal(0.000001),
+    7 to BigDecimal(0.0000001),
+    8 to BigDecimal(0.00000001),
+    9 to BigDecimal(0.000000001),
+    10 to BigDecimal(0.000000001),
+    11 to BigDecimal(0.0000000001),
+    12 to BigDecimal(0.00000000001),
+    13 to BigDecimal(0.000000000001),
+    14 to BigDecimal(0.0000000000001),
+    15 to BigDecimal(0.00000000000001),
+    16 to BigDecimal(0.000000000000001),
+    17 to BigDecimal(0.0000000000000001),
+    18 to BigDecimal(0.00000000000000001),
+)
 
 class NumbersFormatter {
     fun format(num: BigDecimal, code: String): String {
@@ -33,8 +54,27 @@ class NumbersFormatter {
             .format(num)
     }
 
-    fun formatBigDecimal(num: BigDecimal, precision: Int = DEFAULT_PRECISION): String {
-        return decimalFormatterFor(patternWith(precision)).format(num)
+    fun formatBigDecimal(
+        num: BigDecimal,
+        precision: Int = DEFAULT_PRECISION,
+        checkFraction: Boolean = true
+    ): String {
+        val newPrecision = if (checkFraction) {
+            var nubs = num.abs()
+            if (nubs > BigDecimal.ZERO && nubs < precisionsMap[precision.coerceAtMost(18)]) {
+                var p = 1
+                val scale = nubs.scale()
+                while (p < scale) {
+                    nubs = nubs.movePointRight(1)
+                    if (nubs > BigDecimal.ONE) {
+                        break
+                    }
+                    p++
+                }
+                p.coerceAtLeast(precision)
+            } else precision
+        } else precision
+        return decimalFormatterFor(patternWith(newPrecision)).format(num)
     }
 
     fun formatInteger(num: BigDecimal): String {

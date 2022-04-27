@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_wallet_impl.domain
 
 import androidx.paging.PagingData
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -14,6 +15,7 @@ import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
+import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
@@ -27,10 +29,11 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
 import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformWhile
 import java.math.BigDecimal
@@ -44,18 +47,25 @@ class WalletInteractorImpl(
     private val coroutineManager: CoroutineManager,
 ) : WalletInteractor {
 
+    init {
+        userRepository.flowCurSoraAccount()
+            .onEach {
+                walletRepository.setCurSoraAccount(it)
+            }
+            .launchIn(coroutineManager.applicationScope)
+    }
+
+    override fun flowCurSoraAccount(): Flow<SoraAccount> =
+        userRepository.flowCurSoraAccount()
+
     override fun observeCurAccountStorage(): Flow<String> {
-        return flow {
-            val id = credentialsRepository.getAccountId()
-            emitAll(walletRepository.observeStorageAccount(id))
+        return userRepository.flowCurSoraAccount().flatMapLatest {
+            walletRepository.observeStorageAccount(it.substrateAddress.toAccountId())
         }
     }
 
     override fun getEventsFlow(assetId: String): Flow<PagingData<Transaction>> {
-        return flow {
-            val address = credentialsRepository.getAddress()
-            emitAll(walletRepository.getTransactionsFlow(address, assetId))
-        }
+        return walletRepository.getTransactionsFlow(assetId)
     }
 
     override suspend fun getTransaction(txHash: String) = walletRepository.getTransaction(txHash)
@@ -69,21 +79,21 @@ class WalletInteractorImpl(
     }
 
     override suspend fun needsMigration(): Boolean {
-        val irohaAddress = credentialsRepository.getIrohaAddress()
-        val needs = walletRepository.needsMigration(irohaAddress)
-        userRepository.saveNeedsMigration(needs)
+        val soraAccount = userRepository.getCurSoraAccount()
+        val irohaData = credentialsRepository.getIrohaData(soraAccount)
+        val needs = walletRepository.needsMigration(irohaData.address)
+        userRepository.saveNeedsMigration(needs, soraAccount)
         return needs
     }
 
     override suspend fun migrate(): Boolean {
-        val signature = credentialsRepository.getClaimSignature()
-        val irohaAddress = credentialsRepository.getIrohaAddress()
-        val irohaKeypair = credentialsRepository.retrieveIrohaKeyPair()
-        val keypair = credentialsRepository.retrieveKeyPair()
+        val soraAccount = userRepository.getCurSoraAccount()
+        val irohaData = credentialsRepository.getIrohaData(soraAccount)
+        val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
         val result = walletRepository.migrate(
-            irohaAddress,
-            irohaKeypair.public.encoded.toHexString(),
-            signature,
+            irohaData.address,
+            irohaData.publicKey,
+            irohaData.claimSignature,
             keypair
         )
             .catch {
@@ -105,7 +115,7 @@ class WalletInteractorImpl(
                         blockResponse.block.extrinsics.indexOfFirst { s -> s.blake2b256String() == txHash }
                             .toLong()
                     val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
-                    userRepository.saveNeedsMigration(!isSuccess)
+                    userRepository.saveNeedsMigration(!isSuccess, soraAccount)
                     true
                 } ?: false
                 emit(finish)
@@ -121,17 +131,16 @@ class WalletInteractorImpl(
         assetId: String,
         amount: BigDecimal
     ): BigDecimal {
-        return credentialsRepository.getAddress().let {
-            walletRepository.calcTransactionFee(it, to, assetId, amount)
+        return userRepository.getCurSoraAccount().let {
+            walletRepository.calcTransactionFee(it.substrateAddress, to, assetId, amount)
         }
     }
 
-    override suspend fun transfer(to: String, assetId: String, amount: BigDecimal): String =
-        credentialsRepository.getAddress().let { address ->
-            credentialsRepository.retrieveKeyPair().let { keypair ->
-                walletRepository.transfer(keypair, address, to, assetId, amount)
-            }
-        }
+    override suspend fun transfer(to: String, assetId: String, amount: BigDecimal): String {
+        val soraAccount = userRepository.getCurSoraAccount()
+        val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
+        return walletRepository.transfer(keypair, soraAccount.substrateAddress, to, assetId, amount)
+    }
 
     override suspend fun observeTransfer(
         to: String,
@@ -139,9 +148,16 @@ class WalletInteractorImpl(
         amount: BigDecimal,
         fee: BigDecimal
     ): Boolean {
-        val address = credentialsRepository.getAddress()
-        val keypair = credentialsRepository.retrieveKeyPair()
-        return walletRepository.observeTransfer(keypair, address, to, assetId, amount, fee)
+        val soraAccount = userRepository.getCurSoraAccount()
+        val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
+        return walletRepository.observeTransfer(
+            keypair,
+            soraAccount.substrateAddress,
+            to,
+            assetId,
+            amount,
+            fee
+        )
             .catch {
                 FirebaseWrapper.recordException(it)
                 emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
@@ -155,7 +171,8 @@ class WalletInteractorImpl(
                         it.second,
                         it.first,
                         fee,
-                        null
+                        null,
+                        soraAccount
                     )
                 }
                 Triple(
@@ -182,46 +199,44 @@ class WalletInteractorImpl(
     }
 
     override suspend fun updateWhitelistBalances() {
-        val address = credentialsRepository.getAddress()
+        val address = userRepository.getCurSoraAccount().substrateAddress
         walletRepository.updateWhitelistBalances(address)
     }
 
     override suspend fun getWhitelistAssets(): List<Asset> {
-        val address = credentialsRepository.getAddress()
+        val address = userRepository.getCurSoraAccount().substrateAddress
         return walletRepository.getAssetsWhitelist(address)
     }
 
     override suspend fun getVisibleAssets(): List<Asset> {
-        val address = credentialsRepository.getAddress()
+        val address = userRepository.getCurSoraAccount().substrateAddress
         return walletRepository.getAssetsVisible(address)
     }
 
-    override fun subscribeVisibleAssets(): Flow<List<Asset>> {
-        return flow {
-            val address = credentialsRepository.getAddress()
-            emitAll(walletRepository.subscribeVisibleAssets(address))
+    override fun subscribeVisibleAssetsOfCurAccount(): Flow<List<Asset>> {
+        return userRepository.flowCurSoraAccount().flatMapLatest {
+            walletRepository.subscribeVisibleAssets(it.substrateAddress)
         }
     }
 
+    override fun subscribeVisibleAssetsOfAccount(soraAccount: SoraAccount): Flow<List<Asset>> =
+        walletRepository.subscribeVisibleAssets(soraAccount.substrateAddress)
+
     override suspend fun updateBalancesVisibleAssets() {
-        walletRepository.updateBalancesVisibleAssets(credentialsRepository.getAddress())
+        walletRepository.updateBalancesVisibleAssets(userRepository.getCurSoraAccount().substrateAddress)
     }
 
-    override suspend fun getAddress(): String =
-        credentialsRepository.getAddress()
-
-    override suspend fun getPublicKey(): ByteArray {
-        return credentialsRepository.getAccountId()
-    }
+    override suspend fun getAddress(): String = userRepository.getCurSoraAccount().substrateAddress
 
     override suspend fun getPublicKeyHex(withPrefix: Boolean): String {
-        return credentialsRepository.getAccountId().toHexString(withPrefix)
+        return userRepository.getCurSoraAccount().substrateAddress.toAccountId()
+            .toHexString(withPrefix)
     }
 
-    override suspend fun getAccountName(): String = userRepository.getAccountName()
+    override suspend fun getAccountName(): String = userRepository.getCurSoraAccount().accountName
 
     override suspend fun findOtherUsersAccounts(search: String): List<Account> {
-        val address = credentialsRepository.getAddress()
+        val address = userRepository.getCurSoraAccount().substrateAddress
         val ok = credentialsRepository.isAddressOk(search)
         val list = if (ok && address != search) {
             listOf(Account("", "", search))
@@ -240,7 +255,7 @@ class WalletInteractorImpl(
     }
 
     override suspend fun processQr(contents: String): Triple<String, String, BigDecimal> {
-        val myAddress = credentialsRepository.getAddress()
+        val myAddress = userRepository.getCurSoraAccount().substrateAddress
         val list = contents.split(":")
         return if (list.size == 5) {
             if (list[0] == OptionsProvider.substrate) {
@@ -266,24 +281,29 @@ class WalletInteractorImpl(
     }
 
     override suspend fun hideAssets(assetIds: List<String>) {
-        return walletRepository.hideAssets(assetIds)
+        val curAccount = userRepository.getCurSoraAccount()
+        return walletRepository.hideAssets(assetIds, curAccount)
     }
 
     override suspend fun displayAssets(assetIds: List<String>) {
-        return walletRepository.displayAssets(assetIds)
+        val curAccount = userRepository.getCurSoraAccount()
+        return walletRepository.displayAssets(assetIds, curAccount)
     }
 
     override suspend fun getXorBalance(precision: Int): XorAssetBalance {
-        return credentialsRepository.getAddress()
-            .let { myAddress -> walletRepository.getXORBalance(myAddress, precision) }
+        return userRepository.getCurSoraAccount()
+            .let { account -> walletRepository.getXORBalance(account.substrateAddress, precision) }
     }
 
-    override suspend fun updateAssetPositions(assetPositions: Map<String, Int>) =
-        walletRepository.updateAssetPositions(assetPositions)
+    override suspend fun updateAssetPositions(assetPositions: Map<String, Int>) {
+        val curAccount = userRepository.getCurSoraAccount()
+        walletRepository.updateAssetPositions(assetPositions, curAccount)
+    }
 
-    override suspend fun getAsset(assetId: String): Asset? {
-        val address = credentialsRepository.getAddress()
+    override suspend fun getAssetOrThrow(assetId: String): Asset {
+        val address = userRepository.getCurSoraAccount().substrateAddress
         return walletRepository.getAsset(assetId, address)
+            ?: throw NoSuchElementException("$assetId not found")
     }
 
     override suspend fun isWhitelistedToken(tokenId: String): Boolean {

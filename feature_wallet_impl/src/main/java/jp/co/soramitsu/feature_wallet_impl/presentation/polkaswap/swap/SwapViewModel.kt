@@ -26,10 +26,13 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.model.ButtonState
 import jp.co.soramitsu.feature_wallet_impl.presentation.util.mapAssetToAssetModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -81,11 +84,8 @@ class SwapViewModel(
     private val _detailsShowLiveData = MutableLiveData(false)
     val detailsShowLiveData: LiveData<Boolean> = _detailsShowLiveData
 
-    private val _swapButtonTitleLiveData = MutableLiveData<String>()
-    val swapButtonTitleLiveData: LiveData<String> = _swapButtonTitleLiveData
-
-    private val _swapButtonEnabledLiveData = MutableLiveData<Boolean>()
-    val swapButtonEnabledLiveData: LiveData<Boolean> = _swapButtonEnabledLiveData
+    private val _swapButtonState: MutableStateFlow<ButtonState> = MutableStateFlow(ButtonState())
+    val swapButtonState: StateFlow<ButtonState> = _swapButtonState
 
     private val _detailsEnabledLiveData = MutableLiveData(false)
     val detailsEnabledLiveData: LiveData<Boolean> = _detailsEnabledLiveData
@@ -117,8 +117,8 @@ class SwapViewModel(
     private val _minmaxClickLiveData = SingleLiveEvent<Pair<Int, Int>>()
     val minmaxClickLiveData: LiveData<Pair<Int, Int>> = _minmaxClickLiveData
 
-    private val _preloaderEventLiveData = SingleLiveEvent<Boolean>()
-    val preloaderEventLiveData: LiveData<Boolean> = _preloaderEventLiveData
+//    private val _preloaderEventLiveData = SingleLiveEvent<Boolean>()
+//    val preloaderEventLiveData: LiveData<Boolean> = _preloaderEventLiveData
 
     private val _disclaimerVisibilityLiveData = MutableLiveData<Boolean>()
     val disclaimerVisibilityLiveData: LiveData<Boolean> = _disclaimerVisibilityLiveData
@@ -138,9 +138,10 @@ class SwapViewModel(
     )
 
     init {
-        _preloaderEventLiveData.value = false
         _slippageToleranceLiveData.value = 0.5f
-        _swapButtonTitleLiveData.value = resourceManager.getString(R.string.choose_tokens)
+        _swapButtonState.value = _swapButtonState.value.copy(
+            text = resourceManager.getString(R.string.choose_tokens)
+        )
         polkaswapInteractor.getPolkaswapDisclaimerVisibility()
             .catch {
                 onError(it)
@@ -174,7 +175,7 @@ class SwapViewModel(
                 }
         }
         viewModelScope.launch {
-            walletInteractor.subscribeVisibleAssets()
+            walletInteractor.subscribeVisibleAssetsOfCurAccount()
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest { assets ->
@@ -210,7 +211,7 @@ class SwapViewModel(
 
                     if (networkFee == null) {
                         assets.find { it.token.id == OptionsProvider.feeAssetId }?.let {
-                            networkFee = polkaswapInteractor.fetchNetworkFee(it.token)
+                            networkFee = polkaswapInteractor.fetchSwapNetworkFee(it.token)
                         }
                     }
 
@@ -333,8 +334,10 @@ class SwapViewModel(
                 resourceManager.getString(R.string.choose_tokens) to false
             }
         }
-        _swapButtonTitleLiveData.value = text
-        _swapButtonEnabledLiveData.value = enabled
+        _swapButtonState.value = _swapButtonState.value.copy(
+            text = text,
+            enabled = enabled
+        )
     }
 
     private fun toggleDetailsStatus() {
@@ -396,15 +399,19 @@ class SwapViewModel(
         }
     }
 
+    private fun setSwapButtonLoading(loading: Boolean) {
+        _swapButtonState.value = _swapButtonState.value.copy(loading = loading)
+    }
+
     private suspend fun recalcDetails() {
         feeAsset?.let { feeAsset ->
             _fromAssetLiveData.value?.let { fromAsset ->
                 _toAssetLiveData.value?.let { toAsset ->
                     val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
                     if (amountToCalc > BigDecimal.ZERO) {
-                        _preloaderEventLiveData.value = true
+                        setSwapButtonLoading(true)
                         tryCatchFinally(
-                            finally = { _preloaderEventLiveData.value = false },
+                            finally = { setSwapButtonLoading(false) },
                             block = {
                                 val details = polkaswapInteractor.calcDetails(
                                     fromAsset.token,
@@ -486,12 +493,14 @@ class SwapViewModel(
     }
 
     fun fromAmountChanged(amount: BigDecimal) {
+        if (amount == amountFrom && desired == WithDesired.INPUT) return
         amountFrom = amount
         desired = WithDesired.INPUT
         onChangedProperty.set(false)
     }
 
     fun toAmountChanged(amount: BigDecimal) {
+        if (amount == amountTo && desired == WithDesired.OUTPUT) return
         amountTo = amount
         desired = WithDesired.OUTPUT
         onChangedProperty.set(false)

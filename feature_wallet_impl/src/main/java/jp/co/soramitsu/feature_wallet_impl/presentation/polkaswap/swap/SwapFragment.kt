@@ -10,11 +10,10 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.github.razir.progressbutton.bindProgressButton
-import com.github.razir.progressbutton.hideProgress
-import com.github.razir.progressbutton.showProgress
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
@@ -22,11 +21,10 @@ import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.AssetSelectBottomSheet
+import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.presentation.view.slippagebottomsheet.SlippageBottomSheet
 import jp.co.soramitsu.common.util.KeyboardHelper
-import jp.co.soramitsu.common.util.ext.asFlowCurrency
 import jp.co.soramitsu.common.util.ext.decimalPartSized
-import jp.co.soramitsu.common.util.ext.enableIf
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.requireParcelable
@@ -44,8 +42,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -80,7 +76,6 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
     private val binding by viewBinding(FragmentSwapBinding::bind)
 
     private lateinit var keyboardHelper: KeyboardHelper
-    private var swapButtonText = ""
     private var disclaimerVisibility: Boolean = false
 
     private val assetBalanceStyle = AssetBalanceStyle(
@@ -148,38 +143,14 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             viewModel.infoClicked()
         }
 
-        binding.doneButton.setOnClickListener {
+        binding.amountPercentage.setOnDoneButtonClickListener {
             hideSoftKeyboard()
         }
 
-        binding.percent100.setOnClickListener {
+        binding.amountPercentage.setOnOptionClickListener { percent ->
             activity?.window?.currentFocus?.let {
                 if (it.id == R.id.fromInput) {
-                    viewModel.fromInputPercentClicked(100)
-                }
-            }
-        }
-
-        binding.percent75.setOnClickListener {
-            activity?.window?.currentFocus?.let {
-                if (it.id == R.id.fromInput) {
-                    viewModel.fromInputPercentClicked(75)
-                }
-            }
-        }
-
-        binding.percent50.setOnClickListener {
-            activity?.window?.currentFocus?.let {
-                if (it.id == R.id.fromInput) {
-                    viewModel.fromInputPercentClicked(50)
-                }
-            }
-        }
-
-        binding.percent25.setOnClickListener {
-            activity?.window?.currentFocus?.let {
-                if (it.id == R.id.fromInput) {
-                    viewModel.fromInputPercentClicked(25)
+                    viewModel.fromInputPercentClicked(percent)
                 }
             }
         }
@@ -188,27 +159,20 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             setDebouncedClickListener(debounceClickHandler) {
                 viewModel.swapClicked()
             }
-            viewLifecycleOwner.bindProgressButton(this)
+            viewLifecycleOwner.bindLoadingButton(this)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            binding.fromInput.asFlowCurrency().debounce(800).filter { it.isNotEmpty() }
-                .distinctUntilChanged()
+            binding.fromInput.asFlowCurrency()
                 .collectLatest {
-                    viewModel.fromAmountChanged(
-                        binding.fromInput.getBigDecimal() ?: BigDecimal.ZERO
-                    )
+                    viewModel.fromAmountChanged(it)
                 }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            binding.toInput.asFlowCurrency().debounce(800).filter { it.isNotEmpty() }
-                .distinctUntilChanged()
+            binding.toInput.asFlowCurrency()
                 .collectLatest {
-                    viewModel.toAmountChanged(
-                        binding.toInput.getBigDecimal()
-                            ?: BigDecimal.ZERO
-                    )
+                    viewModel.toAmountChanged(it)
                 }
         }
 
@@ -296,19 +260,11 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewModel.fromAmountLiveData.observe {
-            binding.fromInput.listenerEnabled = false
             binding.fromInput.setValue(it)
-            binding.fromInput.listenerEnabled = true
         }
 
         viewModel.toAmountLiveData.observe {
-            binding.toInput.listenerEnabled = false
             binding.toInput.setValue(it)
-            binding.toInput.listenerEnabled = true
-        }
-
-        viewModel.swapButtonTitleLiveData.observe {
-            binding.nextBtn.text = it
         }
 
         viewModel.showFromAssetSelectBottomSheet.observe { list ->
@@ -386,10 +342,6 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             )
         }
 
-        viewModel.swapButtonEnabledLiveData.observe {
-            binding.nextBtn.enableIf(it)
-        }
-
         viewModel.showSlippageToleranceBottomSheet.observe { value ->
             SlippageBottomSheet(requireContext(), value) { viewModel.slippageChanged(it) }.show()
         }
@@ -412,15 +364,15 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             }
         }
 
-        viewModel.preloaderEventLiveData.observe {
-            if (it) {
-                swapButtonText = binding.nextBtn.text.toString()
-                binding.nextBtn.showProgress {
-                    progressColorRes = R.color.grey_400
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.swapButtonState
+                .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+                .debounce(200)
+                .collectLatest { state ->
+                    binding.nextBtn.setButtonText(state.text)
+                    binding.nextBtn.setButtonEnabled(state.enabled)
+                    binding.nextBtn.showLoader(state.loading)
                 }
-            } else {
-                binding.nextBtn.hideProgress(swapButtonText)
-            }
         }
 
         viewModel.dataInitiatedEvent.observeForever {

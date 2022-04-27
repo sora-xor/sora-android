@@ -5,12 +5,14 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.pool.model
 
+import jp.co.soramitsu.common.domain.Token
+import java.math.BigDecimal
+
 data class PoolModel(
-    val token1Name: String,
-    val token1IconResource: Int,
-    val token2Name: String,
-    val token2IconResource: Int,
-    val token1Pooled: String,
-    val token2Pooled: String,
-    val poolShare: String
+    val tokenFrom: Token,
+    val tokenTo: Token,
+    val tokenFromPooled: BigDecimal,
+    val tokenToPooled: BigDecimal,
+    val strategicBonusApy: BigDecimal?,
+    val poolShare: Double
 )

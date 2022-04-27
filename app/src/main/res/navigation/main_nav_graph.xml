@@ -35,5 +35,7 @@
     <include app:graph="@navigation/profile_nav_graph" />
     <include app:graph="@navigation/staking_nav_graph" />
     <include app:graph="@navigation/wallet_nav_graph" />
+    <include app:graph="@navigation/create_account_nav_graph" />
+    <include app:graph="@navigation/recovery_account_nav_graph" />
 
 </navigation>

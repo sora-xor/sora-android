@@ -6,31 +6,16 @@
 package jp.co.soramitsu.common.domain.credentials
 
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import java.security.KeyPair
 
 interface CredentialsDatasource {
 
-    suspend fun saveAddress(address: String)
-
     suspend fun getAddress(): String
 
-    suspend fun saveKeys(keyPair: Sr25519Keypair)
+    suspend fun saveKeys(keyPair: Sr25519Keypair, suffixAddress: String)
 
-    suspend fun retrieveKeys(): Sr25519Keypair?
+    suspend fun retrieveKeys(suffixAddress: String): Sr25519Keypair?
 
-    suspend fun saveMnemonic(mnemonic: String)
+    suspend fun saveMnemonic(mnemonic: String, suffixAddress: String)
 
-    suspend fun retrieveMnemonic(): String
-
-    suspend fun saveIrohaKeys(keyPair: KeyPair)
-
-    suspend fun retrieveIrohaKeys(): KeyPair?
-
-    suspend fun saveIrohaAddress(address: String)
-
-    suspend fun getIrohaAddress(): String
-
-    suspend fun saveSignature(signature: ByteArray)
-
-    suspend fun retrieveSignature(): ByteArray
+    suspend fun retrieveMnemonic(suffixAddress: String): String
 }

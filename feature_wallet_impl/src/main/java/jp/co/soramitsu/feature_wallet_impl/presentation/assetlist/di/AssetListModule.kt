@@ -34,9 +34,10 @@ class AssetListModule {
         interactor: WalletInteractor,
         nf: NumbersFormatter,
         walletRouter: WalletRouter,
-        mode: AssetListMode
+        mode: AssetListMode,
+        hiddenAssetId: String?
     ): ViewModel {
-        return AssetListViewModel(interactor, nf, walletRouter, mode)
+        return AssetListViewModel(interactor, nf, walletRouter, mode, hiddenAssetId)
     }
 
     @Provides

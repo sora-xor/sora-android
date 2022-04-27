@@ -20,6 +20,13 @@ import java.math.BigDecimal
             childColumns = ["tokenId"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.NO_ACTION,
+        ),
+        ForeignKey(
+            entity = SoraAccountLocal::class,
+            parentColumns = ["substrateAddress"],
+            childColumns = ["accountAddress"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.NO_ACTION,
         )
     ]
 )

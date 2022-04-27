@@ -17,6 +17,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelKey
 import jp.co.soramitsu.core_di.holder.viewmodel.ViewModelModule
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaSwapViewModel
@@ -77,10 +78,10 @@ class PolkaSwapModule {
         router: WalletRouter,
         interactor: WalletInteractor,
         polkaswapInteractor: PolkaswapInteractor,
-        nf: NumbersFormatter,
+        poolsManager: PoolsManager,
         rm: ResourceManager,
     ): ViewModel {
-        return PoolViewModel(router, interactor, polkaswapInteractor, nf, rm)
+        return PoolViewModel(router, interactor, polkaswapInteractor, poolsManager, rm)
     }
 
     @Provides

@@ -27,23 +27,94 @@
 
         <TextView
             android:id="@+id/title"
-            style="@style/TitleTextStyle"
+            style="@style/TextAppearance.Soramitsu.Neu.Bold.24"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x2"
-            android:text="@string/profile_title"
+            android:letterSpacing="-0.03"
+            android:text="@string/common_settings"
             app:layout_constraintEnd_toEndOf="@id/glRight"
             app:layout_constraintStart_toStartOf="@id/glLeft"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvProfileAccountSettingsGroup"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x3"
+            android:letterSpacing="-0.02"
+            android:text="@string/settings_header_account"
+            android:textAllCaps="true"
+            android:textColor="?attr/titleColor"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/title" />
+
+        <ImageView
+            android:id="@+id/ivSwitchAccount"
+            android:layout_width="@dimen/profile_icon"
+            android:layout_height="@dimen/profile_icon"
+            android:layout_marginTop="@dimen/x1"
+            android:padding="@dimen/x1"
+            android:src="@drawable/ic_switch_arrows"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/tvProfileAccountSettingsGroup"
+            app:tint="?attr/tintColorLight"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/tvSwitchAccount"
+            style="@style/TextAppearance.Soramitsu.Neu.18.Regular"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:padding="@dimen/x1"
+            android:text="@string/common_account"
+            app:layout_constraintBottom_toBottomOf="@id/ivSwitchAccount"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toEndOf="@id/ivSwitchAccount"
+            app:layout_constraintTop_toTopOf="@id/ivSwitchAccount" />
+
+        <TextView
+            android:id="@+id/tvSwitchAccountName"
+            style="@style/TextAppearance.Soramitsu.Neu.Regular.11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:paddingEnd="@dimen/x2"
+            android:text="@string/common_account"
+            android:textColor="?attr/tintColorLight"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvSwitchAccount"
+            app:layout_constraintEnd_toStartOf="@id/ivSwitchAccount2" />
+
+        <ImageView
+            android:id="@+id/ivSwitchAccount2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_neu_chevron_right"
+            app:layout_constraintBottom_toBottomOf="@id/tvSwitchAccount"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintTop_toTopOf="@id/tvSwitchAccount"
+            tools:ignore="ContentDescription" />
+
+        <View
+            android:id="@+id/vProfileDiv0"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/ivSwitchAccount" />
 
         <ImageView
             android:id="@+id/ivProfileAccount"
             android:layout_width="@dimen/profile_icon"
             android:layout_height="@dimen/profile_icon"
             android:padding="@dimen/x1"
-            android:src="@drawable/ic_neu_account"
+            android:src="@drawable/ic_pencil"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/title"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv0"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -59,6 +130,18 @@
             app:layout_constraintEnd_toEndOf="@id/glRight"
             app:layout_constraintStart_toEndOf="@id/ivProfileAccount"
             app:layout_constraintTop_toTopOf="@id/ivProfileAccount" />
+
+        <TextView
+            android:id="@+id/tvAccountNameValue"
+            style="@style/TextAppearance.Soramitsu.Neu.Regular.11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:paddingEnd="@dimen/x2"
+            android:textColor="?attr/tintColorLight"
+            app:layout_constraintBaseline_toBaselineOf="@id/profilePersonalDetailsTextView"
+            app:layout_constraintEnd_toStartOf="@id/ivSwitchAccount2"
+            tools:text="my supe...ount" />
 
         <ImageView
             android:id="@+id/profilePersonalDetailsArrow"
@@ -83,10 +166,11 @@
             android:id="@+id/ivProfileFriends"
             android:layout_width="@dimen/profile_icon"
             android:layout_height="@dimen/profile_icon"
+            android:layout_marginTop="@dimen/x1"
             android:padding="@dimen/x1"
             android:src="@drawable/ic_neu_heart"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv1"
+            app:layout_constraintTop_toBottomOf="@id/tvProfileOtherSettingsGroup"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -129,7 +213,7 @@
             android:padding="@dimen/x1"
             android:src="@drawable/ic_neu_lock"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv2"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv1"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -169,10 +253,11 @@
             android:id="@+id/ivProfilePin"
             android:layout_width="@dimen/profile_icon"
             android:layout_height="@dimen/profile_icon"
+            android:layout_marginTop="@dimen/x1"
             android:padding="@dimen/x1"
             android:src="@drawable/ic_neu_pin_key"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv3"
+            app:layout_constraintTop_toBottomOf="@id/tvProfileAppSettingsGroup"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -304,7 +389,7 @@
             android:padding="@dimen/x1"
             android:src="@drawable/ic_neu_question"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv6"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv2"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -433,7 +518,7 @@
             android:padding="@dimen/x1"
             android:src="@drawable/ic_neu_logout"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDividerDisclaimer"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv3"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -468,5 +553,33 @@
             app:layout_constraintEnd_toEndOf="@id/glRight"
             app:layout_constraintStart_toStartOf="@id/glLeft"
             app:layout_constraintTop_toBottomOf="@id/ivProfileLogout" />
+
+        <TextView
+            android:id="@+id/tvProfileAppSettingsGroup"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:letterSpacing="-0.02"
+            android:text="@string/settings_header_app"
+            android:textAllCaps="true"
+            android:textColor="?attr/titleColor"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv9" />
+
+        <TextView
+            android:id="@+id/tvProfileOtherSettingsGroup"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x2"
+            android:letterSpacing="-0.02"
+            android:text="@string/settings_header_other"
+            android:textAllCaps="true"
+            android:textColor="?attr/titleColor"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv6" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

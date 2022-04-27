@@ -10,7 +10,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import jp.co.soramitsu.core_db.converters.BigDecimalConverter
+import jp.co.soramitsu.core_db.converters.BigDecimalNullableConverter
+import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.dao.PoolDao
 import jp.co.soramitsu.core_db.dao.TransferTransactionDao
@@ -18,17 +19,19 @@ import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.ExtrinsicLocal
 import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
 import jp.co.soramitsu.core_db.model.PoolLocal
+import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 
-@TypeConverters(BigDecimalConverter::class)
+@TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 50,
+    version = 58,
     entities = [
         ExtrinsicParamLocal::class,
         ExtrinsicLocal::class,
         AssetLocal::class,
         TokenLocal::class,
-        PoolLocal::class
+        PoolLocal::class,
+        SoraAccountLocal::class,
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -57,4 +60,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun assetDao(): AssetDao
 
     abstract fun poolDao(): PoolDao
+
+    abstract fun accountDao(): AccountDao
 }

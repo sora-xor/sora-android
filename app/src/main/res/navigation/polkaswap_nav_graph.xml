@@ -10,6 +10,16 @@
         tools:layout="@layout/fragment_polka_swap" />
 
     <fragment
+        android:id="@+id/selectAssetForLiquidityFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment"
+        tools:layout="@layout/fragment_asset_list" />
+
+    <fragment
+        android:id="@+id/confirmAddLiquidityFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add.confirm.ConfirmAddLiquidityFragment"
+        tools:layout="@layout/fragment_confirm_add_liquidity" />
+
+    <fragment
         android:id="@+id/polkaswapInfoFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaSwapInfoFragment"
         tools:layout="@layout/fragment_polka_swap_info" />
@@ -19,5 +29,20 @@
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.SwapConfirmationFragment"
         android:label="SwapConfirmationFragment"
         tools:layout="@layout/fragment_swap_confirmation" />
+
+    <fragment
+        android:id="@+id/addLiquidityFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add.AddLiquidityFragment"
+        tools:layout="@layout/fragment_add_liquidity" />
+
+    <fragment
+        android:id="@+id/removeLiquidityFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.remove.RemoveLiquidityFragment"
+        tools:layout="@layout/fragment_remove_liquidity" />
+
+    <fragment
+        android:id="@+id/removeLiquidityConfirmationFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.remove.confirmation.RemoveLiquidityConfirmationFragment"
+        tools:layout="@layout/fragment_remove_liquidity_confirmation" />
 
 </navigation>

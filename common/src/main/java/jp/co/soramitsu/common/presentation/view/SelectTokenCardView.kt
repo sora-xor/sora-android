@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.use
+import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.core.widget.TextViewCompat
 import jp.co.soramitsu.common.R
@@ -116,6 +117,7 @@ class SelectTokenCardView @JvmOverloads constructor(
         selectedIconTintColor?.let {
             binding.chevronIcon.setImageTint2(it)
         }
+        binding.chevronIcon.isVisible = isEnabled
         binding.text.text = token.symbol
         binding.icon.setImageResource(token.icon)
         binding.icon.show()

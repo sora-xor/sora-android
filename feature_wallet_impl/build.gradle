@@ -73,6 +73,8 @@ dependencies {
     implementation constraintDep
     implementation swipelayoutDep
 
+    implementation navigationFragmentDep
+
     implementation insetterDep
     implementation viewBindingDep
 
@@ -83,13 +85,13 @@ dependencies {
     implementation neumorphismDep
     implementation swipeButtonDep
 
-    implementation workManagerDep
+    implementation workerManagerDep
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation coroutineTestDep
     implementation viewmodelKtxDep
     implementation fragmentKtxDep
-    implementation livecycleKtxDep
+    implementation lifecycleKtxDep
 
     implementation runtimePermissionsDep
 
@@ -100,7 +102,8 @@ dependencies {
     implementation retrofitDep
     implementation gsonConvertedDep
 
-    implementation lifecycleDep
+    implementation lifecycleKtxDep
+    implementation lifecycleExtDep
     kapt lifecycleKaptDep
 
     implementation roomDep
@@ -119,8 +122,6 @@ dependencies {
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
-
-    implementation progressButtonDep
 
     implementation(crashlyticsDep) {
         transitive = true

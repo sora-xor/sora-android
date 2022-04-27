@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.domain
 
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -38,8 +39,11 @@ class OnboardingInteractorTests {
 
     private lateinit var interactor: OnboardingInteractor
 
+    private val soraAccount = SoraAccount("a", "n")
+
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
+        given(userRepository.getCurSoraAccount()).willReturn(soraAccount)
         interactor = OnboardingInteractor(
             userRepository,
             credentialsRepository,
@@ -51,41 +55,39 @@ class OnboardingInteractorTests {
     fun `getMnemonic() returns mnemonic from did repository`() = runBlockingTest {
         val mnemonic = "test mnemonic"
 
-        given(credentialsRepository.retrieveMnemonic())
+        given(credentialsRepository.retrieveMnemonic(soraAccount))
             .willReturn(mnemonic)
 
         assertEquals(mnemonic, interactor.getMnemonic())
-        verify(credentialsRepository).retrieveMnemonic()
+        verify(credentialsRepository).retrieveMnemonic(soraAccount)
         verifyNoMoreInteractions(credentialsRepository)
-        verifyZeroInteractions(userRepository)
+        verify(userRepository).getCurSoraAccount()
     }
 
     @Test
     fun `getMnemonic() throws General error if mnemonic from did repo is empty`() =
         runBlockingTest {
-            given(credentialsRepository.retrieveMnemonic())
+            given(credentialsRepository.retrieveMnemonic(soraAccount))
                 .willReturn("")
             val result = runCatching {
                 interactor.getMnemonic()
             }
             assertTrue(result.isFailure && result.exceptionOrNull()!! is SoraException)
-            verify(credentialsRepository).retrieveMnemonic()
+            verify(credentialsRepository).retrieveMnemonic(soraAccount)
             verifyNoMoreInteractions(credentialsRepository)
-            verifyZeroInteractions(userRepository)
+            verify(userRepository).getCurSoraAccount()
         }
 
     @Test
     fun `runRecoverFlow() calls recoverAccount from did repo and getUser() from user repo`() =
         runBlockingTest {
-            given(credentialsRepository.retrieveMnemonic()).willReturn("mnemonic")
-            given(credentialsRepository.restoreUserCredentials("mnemonic")).willReturn(Unit)
-            given(userRepository.saveAccountName("")).willReturn(Unit)
+            given(credentialsRepository.retrieveMnemonic(soraAccount)).willReturn("mnemonic")
+            given(credentialsRepository.restoreUserCredentials("mnemonic", "acname")).willReturn(soraAccount)
 
-            interactor.runRecoverFlow("mnemonic", "")
-            verify(credentialsRepository).restoreUserCredentials("mnemonic")
-            verify(credentialsRepository).retrieveMnemonic()
-            verify(userRepository).saveAccountName(anyString())
+            interactor.runRecoverFlow("mnemonic", "acname")
+            verify(credentialsRepository).restoreUserCredentials("mnemonic", "acname")
+            verify(credentialsRepository).retrieveMnemonic(soraAccount)
             verify(userRepository).saveRegistrationState(anyNonNull())
-            verifyNoMoreInteractions(credentialsRepository, userRepository)
+            verifyNoMoreInteractions(credentialsRepository)
         }
 }

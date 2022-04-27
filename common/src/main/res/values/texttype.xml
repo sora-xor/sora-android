@@ -146,6 +146,17 @@
         <item name="android:textColor">?attr/contentPrimary</item>
     </style>
 
+    <style name="TextAppearance.Soramitsu.Polkaswap.Button" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineSpacingExtra">5sp</item>
+        <item name="fontFamily">@font/sora_extrabold</item>
+        <item name="android:fontFamily">@font/sora_extrabold</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">?attr/flatAboveBackground</item>
+    </style>
+
     <style name="TextAppearance.Soramitsu.Neu.Button" parent="TextAppearance.MaterialComponents.Button">
         <item name="android:textSize">29sp</item>
         <item name="android:lineSpacingExtra">0sp</item>
@@ -375,6 +386,10 @@
 
     <style name="TextAppearance.Soramitsu.Neu.ExtraBold.21">
         <item name="android:textSize">21sp</item>
+    </style>
+
+    <style name="TextAppearance.Soramitsu.Neu.ExtraBold.29">
+        <item name="android:textSize">29sp</item>
     </style>
 
     <style name="TextAppearance.Soramitsu.Neu.ExtraBold.15.SelectTokenCardNotSelected">

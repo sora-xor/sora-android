@@ -79,7 +79,7 @@ dependencies {
     implementation gsonConvertedDep
     implementation fearlessLibDep
 
-    implementation workManagerDep
+    implementation workerManagerDep
 
     implementation(crashlyticsDep) {
         transitive = true

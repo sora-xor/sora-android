@@ -28,18 +28,24 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
 
     companion object {
         private const val ARG_MODE = "arg_mode"
-        fun createBundle(mode: AssetListMode) = Bundle().apply {
+        private const val ARG_HIDDEN_ASSET_ID = "ARG_HIDDEN_ASSET_ID"
+        fun createBundle(mode: AssetListMode, hiddenAssetId: String? = null) = Bundle().apply {
             putSerializable(ARG_MODE, mode)
+            hiddenAssetId?.let {
+                putString(ARG_HIDDEN_ASSET_ID, hiddenAssetId)
+            }
         }
     }
 
     private val mode: AssetListMode by lazy { requireArguments().get(ARG_MODE) as AssetListMode }
+    private val hiddenAssetId: String? by lazy { requireArguments().getString(ARG_HIDDEN_ASSET_ID) }
     private val viewBinding by viewBinding(FragmentAssetListBinding::bind)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
         viewBinding.tbAssetList.setHomeButtonListener { viewModel.backClicked() }
+        viewBinding.tbAssetList.setTitle(mode.titleRes)
         viewBinding.svAssetList.setOnQueryTextListener(queryListener)
         viewModel.displayingAssetsLiveData.observe {
             if (viewBinding.rvAssetList.adapter == null) {
@@ -68,9 +74,6 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
             (viewBinding.rvAssetList.adapter as AssetListAdapter).submitList(it)
             viewBinding.grAssetNotFound.showOrGone(it.isEmpty())
         }
-        viewModel.title.observe {
-            viewBinding.tbAssetList.setTitle(it)
-        }
     }
 
     override fun inject() {
@@ -81,6 +84,7 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
             .assetListComponentBuilder()
             .withFragment(this)
             .withAssetListMode(mode)
+            .withHiddenAssetId(hiddenAssetId)
             .build()
             .inject(this)
     }

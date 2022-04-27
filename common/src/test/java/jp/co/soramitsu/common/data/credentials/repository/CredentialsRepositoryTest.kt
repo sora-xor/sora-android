@@ -9,6 +9,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.substrate.toSoraAddress
 import jp.co.soramitsu.common.domain.credentials.CredentialsDatasource
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -99,10 +100,10 @@ class CredentialsRepositoryTest {
         every { SubstrateSeedFactory.deriveSeed32(any(), any()) } returns derivationResult
         every { keypair.publicKey.toSoraAddress() } returns "fooaddress"
 
-        credentialsRepository.generateUserCredentials()
+        credentialsRepository.generateUserCredentials("")
 
-        verify(datasource).saveKeys(keypair)
-        verify(datasource).saveMnemonic(mnemonic)
+        verify(datasource).saveKeys(keypair, "fooaddress")
+        verify(datasource).saveMnemonic(mnemonic, "fooaddress")
     }
 
     @Test
@@ -149,13 +150,13 @@ class CredentialsRepositoryTest {
             )
         ).willReturn(signature)
 
-        credentialsRepository.restoreUserCredentials(mnemonic)
+        credentialsRepository.restoreUserCredentials(mnemonic, "")
 
-        verify(datasource).saveMnemonic(mnemonic)
+        verify(datasource).saveMnemonic(mnemonic, "fooaddress")
         verify(cryptoAssistant).signEd25519(message.toByteArray(), irohaKeypair)
-        verify(datasource).saveIrohaKeys(irohaKeypair)
-        verify(datasource).saveIrohaAddress(irohaAddress)
-        verify(datasource).saveSignature(signature)
+        verify(datasource).saveIrohaKeys(irohaKeypair, "fooaddress")
+        verify(datasource).saveIrohaAddress(irohaAddress, "fooaddress")
+        verify(datasource).saveSignature(signature, "fooaddress")
     }
 
     @Test
@@ -163,42 +164,42 @@ class CredentialsRepositoryTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
 
-        credentialsRepository.saveMnemonic(mnemonic)
+        credentialsRepository.saveMnemonic(mnemonic, SoraAccount("", ""))
 
-        verify(datasource).saveMnemonic(mnemonic)
+        verify(datasource).saveMnemonic(mnemonic, "")
     }
 
     @Test
     fun `retrieve mnemonic called`() = runBlockingTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
-        given(datasource.retrieveMnemonic()).willReturn(mnemonic)
+        given(datasource.retrieveMnemonic("")).willReturn(mnemonic)
 
-        assertEquals(credentialsRepository.retrieveMnemonic(), mnemonic)
+        assertEquals(credentialsRepository.retrieveMnemonic(SoraAccount("", "")), mnemonic)
     }
 
     @Test
     fun `retrieve keypair called`() = runBlockingTest {
         val keypair = mock(Sr25519Keypair::class.java)
-        given(datasource.retrieveKeys()).willReturn(keypair)
+        given(datasource.retrieveKeys("")).willReturn(keypair)
 
-        assertEquals(keypair, credentialsRepository.retrieveKeyPair())
+        assertEquals(keypair, credentialsRepository.retrieveKeyPair(SoraAccount("", "")))
     }
 
     @Test
     fun `retrieve iroha keypair called`() = runBlockingTest {
         val keypair = mock(KeyPair::class.java)
-        given(datasource.retrieveIrohaKeys()).willReturn(keypair)
+        given(datasource.retrieveIrohaKeys("")).willReturn(keypair)
 
-        assertEquals(credentialsRepository.retrieveIrohaKeyPair(), keypair)
+        assertEquals(credentialsRepository.retrieveIrohaKeyPair(SoraAccount("", "")), keypair)
     }
 
     @Test
     fun `get iroha address called`() = runBlockingTest {
         val irohaAddress = "did_sora_7075626c69634b657942@sora"
-        given(datasource.getIrohaAddress()).willReturn(irohaAddress)
+        given(datasource.getIrohaAddress("")).willReturn(irohaAddress)
 
-        assertEquals(credentialsRepository.getIrohaAddress(), irohaAddress)
+        assertEquals(credentialsRepository.getIrohaAddress(SoraAccount("", "")), irohaAddress)
     }
 
     @Test
@@ -230,22 +231,22 @@ class CredentialsRepositoryTest {
                 irohaKeypair
             )
         ).willReturn(signature)
-        given(datasource.getIrohaAddress()).willReturn("", irohaAddress)
-        given(datasource.retrieveMnemonic()).willReturn(mnemonic)
+        given(datasource.getIrohaAddress("")).willReturn("", irohaAddress)
+        given(datasource.retrieveMnemonic("")).willReturn(mnemonic)
         mockkStatic(ByteArray::toSoraAddress)
         mockkObject(FirebaseWrapper)
         every { FirebaseWrapper.log("Keys were created") } returns Unit
         every { keypair.publicKey.toSoraAddress() } returns "fo oaddress"
 
-        assertEquals(credentialsRepository.getIrohaAddress(), irohaAddress)
+        assertEquals(credentialsRepository.getIrohaAddress(SoraAccount("", "")), irohaAddress)
     }
 
     @Test
     fun `get claim signature called`() = runBlockingTest {
         val signature = "did_sora_7075626c69634b657942@sora".toByteArray()
         val signatureHex = Hex.toHexString(signature)
-        given(datasource.retrieveSignature()).willReturn(signature)
+        given(datasource.retrieveSignature("")).willReturn(signature)
 
-        assertEquals(credentialsRepository.getClaimSignature(), signatureHex)
+        assertEquals(credentialsRepository.getClaimSignature(SoraAccount("", "")), signatureHex)
     }
 }

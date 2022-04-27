@@ -1,5 +1,5 @@
 {
-    "runtime_id": 22,
+    "runtime_id": 26,
     "types": {},
     "versioning": [
         {
@@ -110,6 +110,32 @@
                         ]
                     ]
                 },
+                "ContentSource": "Text",
+                "ContributionInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "funds_contributed",
+                            "Balance"
+                        ],
+                        [
+                            "tokens_bought",
+                            "Balance"
+                        ],
+                        [
+                            "tokens_claimed",
+                            "Balance"
+                        ],
+                        [
+                            "claiming_finished",
+                            "bool"
+                        ],
+                        [
+                            "number_of_claims",
+                            "u32"
+                        ]
+                    ]
+                },
                 "CurrencyId": "AssetId",
                 "CurrencyIdEncoded": {
                     "type": "enum",
@@ -153,6 +179,7 @@
                         ]
                     ]
                 },
+                "Description": "Text",
                 "DispatchErrorWithPostInfoTPostDispatchInfo": {
                     "type": "struct",
                     "type_mapping": [
@@ -219,6 +246,99 @@
                 "Fixed": "FixedU128",
                 "FixedBytes": "Vec<u8>",
                 "HolderId": "AccountId",
+                "ILOInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "ilo_organizer",
+                            "AccountId"
+                        ],
+                        [
+                            "tokens_for_ilo",
+                            "Balance"
+                        ],
+                        [
+                            "tokens_for_liquidity",
+                            "Balance"
+                        ],
+                        [
+                            "ilo_price",
+                            "Balance"
+                        ],
+                        [
+                            "soft_cap",
+                            "Balance"
+                        ],
+                        [
+                            "hard_cap",
+                            "Balance"
+                        ],
+                        [
+                            "min_contribution",
+                            "Balance"
+                        ],
+                        [
+                            "max_contribution",
+                            "Balance"
+                        ],
+                        [
+                            "refund_type",
+                            "bool"
+                        ],
+                        [
+                            "liquidity_percent",
+                            "Balance"
+                        ],
+                        [
+                            "listing_price",
+                            "Balance"
+                        ],
+                        [
+                            "lockup_days",
+                            "u32"
+                        ],
+                        [
+                            "start_block",
+                            "BlockNumber"
+                        ],
+                        [
+                            "end_block",
+                            "BlockNumber"
+                        ],
+                        [
+                            "token_vesting",
+                            "VestingInfo"
+                        ],
+                        [
+                            "sold_tokens",
+                            "Balance"
+                        ],
+                        [
+                            "funds_raised",
+                            "Balance"
+                        ],
+                        [
+                            "succeeded",
+                            "bool"
+                        ],
+                        [
+                            "failed",
+                            "bool"
+                        ],
+                        [
+                            "lp_tokens",
+                            "Balance"
+                        ],
+                        [
+                            "claimed_lp_tokens",
+                            "bool"
+                        ],
+                        [
+                            "finish_block",
+                            "BlockNumber"
+                        ]
+                    ]
+                },
                 "IncomingAddToken": {
                     "type": "struct",
                     "type_mapping": [
@@ -626,7 +746,8 @@
                         "MockPool",
                         "MockPool2",
                         "MockPool3",
-                        "MockPool4"
+                        "MockPool4",
+                        "XSTPool"
                     ]
                 },
                 "LoadIncomingMetaRequest": {
@@ -692,6 +813,27 @@
                         ]
                     ]
                 },
+                "LockInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "pool_tokens",
+                            "Balance"
+                        ],
+                        [
+                            "unlocking_block",
+                            "BlockNumber"
+                        ],
+                        [
+                            "asset_a",
+                            "AssetId"
+                        ],
+                        [
+                            "asset_b",
+                            "AssetId"
+                        ]
+                    ]
+                },
                 "LookupSource": "AccountId",
                 "MarketMakerInfo": {
                     "type": "struct",
@@ -729,8 +871,17 @@
                 "MultiCurrencyBalance": "Balance",
                 "MultiCurrencyBalanceOf": "MultiCurrencyBalance",
                 "MultisigAccount": {
-                    "signatories": "Vec<AccountId>",
-                    "threshold": "u8"
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "signatories",
+                            "Vec<AccountId>"
+                        ],
+                        [
+                            "threshold",
+                            "u8"
+                        ]
+                    ]
                 },
                 "OffchainRequest": {
                     "type": "enum",
@@ -1277,9 +1428,38 @@
                     ]
                 },
                 "OwnerId": "AccountId",
-                "PendingMultisigAccount": "Null",
+                "PendingMultisigAccount": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "approving_accounts",
+                            "Vec<AccountId>"
+                        ],
+                        [
+                            "migrate_at",
+                            "Option<BlockNumber>"
+                        ]
+                    ]
+                },
                 "Permission": "Null",
                 "PermissionId": "u32",
+                "PollInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "number_of_options",
+                            "u32"
+                        ],
+                        [
+                            "poll_start_block",
+                            "BlockNumber"
+                        ],
+                        [
+                            "poll_end_block",
+                            "BlockNumber"
+                        ]
+                    ]
+                },
                 "PoolFarmer": {
                     "type": "struct",
                     "type_mapping": [
@@ -1308,6 +1488,20 @@
                             "pays_fee",
                             "Pays"
                         ]
+                    ]
+                },
+                "PredefinedAssetId": {
+                    "type": "enum",
+                    "value_list": [
+                        "XOR",
+                        "DOT",
+                        "KSM",
+                        "USDT",
+                        "VAL",
+                        "PSWAP",
+                        "DAI",
+                        "ETH",
+                        "XSTUSD"
                     ]
                 },
                 "PriceInfo": {
@@ -1435,6 +1629,19 @@
                     ]
                 },
                 "SmoothPriceState": "Null",
+                "StakingInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "deposited",
+                            "Balance"
+                        ],
+                        [
+                            "rewards",
+                            "Balance"
+                        ]
+                    ]
+                },
                 "StorageVersion": "Null",
                 "SwapAction": "Null",
                 "SwapAmount": {
@@ -1532,9 +1739,20 @@
                         ]
                     ]
                 },
-                "TechAccountIdPrimitive": "Null",
                 "TechAmount": "Amount",
-                "TechAssetId": "Null",
+                "TechAssetId": {
+                    "type": "enum",
+                    "type_mapping": [
+                        [
+                            "Wrapped",
+                            "PredefinedAssetId"
+                        ],
+                        [
+                            "Escaped",
+                            "AssetId"
+                        ]
+                    ]
+                },
                 "TechBalance": "Balance",
                 "TechPurpose": {
                     "type": "enum",
@@ -1544,12 +1762,46 @@
                             "Null"
                         ],
                         [
+                            "FeeCollectorForPair",
+                            "TechTradingPair"
+                        ],
+                        [
                             "LiquidityKeeper",
-                            "TradingPair"
+                            "TechTradingPair"
                         ],
                         [
                             "Identifier",
                             "Vec<u8>"
+                        ]
+                    ]
+                },
+                "TechTradingPair": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "base_asset_id",
+                            "TechAssetId"
+                        ],
+                        [
+                            "target_asset_id",
+                            "TechAssetId"
+                        ]
+                    ]
+                },
+                "TokenLockInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "tokens",
+                            "Balance"
+                        ],
+                        [
+                            "unlocking_block",
+                            "BlockNumber"
+                        ],
+                        [
+                            "asset_id",
+                            "AssetId"
                         ]
                     ]
                 },
@@ -1566,7 +1818,24 @@
                         ]
                     ]
                 },
-                "ValidationFunction": "Null"
+                "ValidationFunction": "Null",
+                "VotingInfo": {
+                    "type": "struct",
+                    "type_mapping": [
+                        [
+                            "voting_option",
+                            "u32"
+                        ],
+                        [
+                            "number_of_votes",
+                            "Balance"
+                        ],
+                        [
+                            "ceres_withdrawn",
+                            "bool"
+                        ]
+                    ]
+                }
             }
         }
     ]

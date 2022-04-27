@@ -27,7 +27,14 @@ class PrefsUserDatasource @Inject constructor(
         private const val KEY_BIOMETRY_ENABLED = "biometry_enabled"
         private const val KEY_NEEDS_MIGRATION = "needs_migration"
         private const val KEY_IS_MIGRATION_FETCHED = "is_migration_fetched"
+        private const val KEY_CUR_ACCOUNT_ADDRESS = "cur_account_address"
     }
+
+    override suspend fun getCurAccountAddress(): String =
+        soraPreferences.getString(KEY_CUR_ACCOUNT_ADDRESS)
+
+    override suspend fun setCurAccountAddress(accountAddress: String) =
+        soraPreferences.putString(KEY_CUR_ACCOUNT_ADDRESS, accountAddress)
 
     override suspend fun savePin(pin: String) {
         encryptedPreferences.putEncryptedString(PREFS_PIN_CODE, pin)
@@ -86,27 +93,23 @@ class PrefsUserDatasource @Inject constructor(
         return soraPreferences.getBoolean(KEY_BIOMETRY_AVAILABLE, true)
     }
 
-    override suspend fun saveAccountName(accountName: String) {
-        return soraPreferences.putString(KEY_ACCOUNT_NAME, accountName)
-    }
-
     override suspend fun getAccountName(): String {
         return soraPreferences.getString(KEY_ACCOUNT_NAME)
     }
 
-    override suspend fun saveNeedsMigration(it: Boolean) {
-        soraPreferences.putBoolean(KEY_NEEDS_MIGRATION, it)
+    override suspend fun saveNeedsMigration(it: Boolean, suffixAddress: String) {
+        soraPreferences.putBoolean(KEY_NEEDS_MIGRATION + suffixAddress, it)
     }
 
-    override suspend fun needsMigration(): Boolean {
-        return soraPreferences.getBoolean(KEY_NEEDS_MIGRATION)
+    override suspend fun needsMigration(suffixAddress: String): Boolean {
+        return soraPreferences.getBoolean(KEY_NEEDS_MIGRATION + suffixAddress)
     }
 
-    override suspend fun saveIsMigrationFetched(it: Boolean) {
-        soraPreferences.putBoolean(KEY_IS_MIGRATION_FETCHED, it)
+    override suspend fun saveIsMigrationFetched(it: Boolean, suffixAddress: String) {
+        soraPreferences.putBoolean(KEY_IS_MIGRATION_FETCHED + suffixAddress, it)
     }
 
-    override suspend fun isMigrationStatusFetched(): Boolean {
-        return soraPreferences.getBoolean(KEY_IS_MIGRATION_FETCHED, false)
+    override suspend fun isMigrationStatusFetched(suffixAddress: String): Boolean {
+        return soraPreferences.getBoolean(KEY_IS_MIGRATION_FETCHED + suffixAddress, false)
     }
 }

@@ -12,16 +12,16 @@ import android.view.View
 import androidx.core.os.bundleOf
 import androidx.core.text.set
 import androidx.core.text.toSpannable
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.github.razir.progressbutton.bindProgressButton
-import com.github.razir.progressbutton.hideProgress
-import com.github.razir.progressbutton.showProgress
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.ToastDialog
-import jp.co.soramitsu.common.util.ext.enableIf
+import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -32,6 +32,9 @@ import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentSwapConfirmationBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -106,31 +109,31 @@ class SwapConfirmationFragment :
         binding.toolbar.setHomeButtonListener {
             viewModel.onBackButtonClicked()
         }
-        binding.tvMinMax.setDebouncedClickListener(debounceClickHandler) {
+        binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.onConfirmClicked()
+        }
+        viewLifecycleOwner.bindLoadingButton(binding.nextBtn)
+        binding.rvSwapConfirmation.setOnClickListener(2) { t ->
             AlertDialog.Builder(requireActivity())
-                .setTitle(binding.tvMinMax.text)
+                .setTitle(t)
                 .setMessage(R.string.polkaswap_minimum_received_info)
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .show()
         }
-        binding.tvLiquidityFee.setDebouncedClickListener(debounceClickHandler) {
+        binding.rvSwapConfirmation.setOnClickListener(3) {
             AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.polkaswap_liqudity_fee)
                 .setMessage(R.string.polkaswap_liqudity_fee_info)
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .show()
         }
-        binding.tvNetworkFee.setDebouncedClickListener(debounceClickHandler) {
+        binding.rvSwapConfirmation.setOnClickListener(4) {
             AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.polkaswap_network_fee)
                 .setMessage(R.string.polkaswap_network_fee_info)
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .show()
         }
-        binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.onConfirmClicked()
-        }
-        viewLifecycleOwner.bindProgressButton(binding.nextBtn)
 
         initListeners()
     }
@@ -146,21 +149,18 @@ class SwapConfirmationFragment :
                 ).show()
             }
         }
-        viewModel.confirmBtnProgressLiveData.observe {
-            if (it) {
-                binding.nextBtn.showProgress {
-                    progressColorRes = R.color.grey_400
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.confirmButtonState
+                .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+                .debounce(200)
+                .collectLatest { state ->
+                    binding.nextBtn.setButtonText(state.text)
+                    binding.nextBtn.setButtonEnabled(state.enabled)
+                    binding.nextBtn.showLoader(state.loading)
                 }
-            } else {
-                binding.nextBtn.hideProgress(R.string.common_confirm)
-            }
         }
-        viewModel.confirmBtnEnableLiveData.observe {
-            binding.nextBtn.enableIf(it)
-        }
-        viewModel.confirmBtnTitleLiveData.observe {
-            binding.nextBtn.text = it
-        }
+
         viewModel.inputAmountLiveData.observe {
             binding.tvAmountInput.text = it
         }
@@ -176,28 +176,37 @@ class SwapConfirmationFragment :
             binding.tvOutputTokenSymbol.text = it.symbol
         }
         viewModel.per1LiveData.observe {
-            binding.tvPer1.text = it
+            binding.rvSwapConfirmation.updateValuesInRow(0, it.first, it.second)
         }
         viewModel.per2LiveData.observe {
-            binding.tvPer2.text = it
+            binding.rvSwapConfirmation.updateValuesInRow(1, it.first, it.second)
         }
         viewModel.minmaxLiveData.observe {
-            binding.tvMinMax.text = it
-        }
-        viewModel.per1ValueLiveData.observe {
-            binding.tvPer1Value.text = it
-        }
-        viewModel.per2ValueLiveData.observe {
-            binding.tvPer2Value.text = it
-        }
-        viewModel.minmaxValueLiveData.observe {
-            binding.tvMinMaxValue.text = it
+            binding.rvSwapConfirmation.updateValuesInRow(
+                2,
+                it.first,
+                it.second.orEmpty(),
+                null,
+                R.drawable.ic_neu_exclamation
+            )
         }
         viewModel.liquidityLiveData.observe {
-            binding.tvLiquidityFeeValue.text = it
+            binding.rvSwapConfirmation.updateValuesInRow(
+                3,
+                getString(R.string.polkaswap_liqudity_fee),
+                it.orEmpty(),
+                null,
+                R.drawable.ic_neu_exclamation
+            )
         }
         viewModel.networkFeeLiveData.observe {
-            binding.tvNetworkFeeValue.text = it
+            binding.rvSwapConfirmation.updateValuesInRow(
+                4,
+                getString(R.string.polkaswap_network_fee),
+                it.orEmpty(),
+                null,
+                R.drawable.ic_neu_exclamation
+            )
         }
         viewModel.descLiveData.observe {
             val text = it.first.toSpannable()

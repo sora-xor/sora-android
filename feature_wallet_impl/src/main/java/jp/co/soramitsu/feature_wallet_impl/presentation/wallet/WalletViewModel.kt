@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.interfaces.WithPreloader
@@ -31,8 +32,8 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.Transacti
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.AssetModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -72,6 +73,9 @@ class WalletViewModel(
     private val _initiateGalleryChooserLiveData = SingleLiveEvent<Unit>()
     val initiateGalleryChooserLiveData: LiveData<Unit> = _initiateGalleryChooserLiveData
 
+    private val _curSoraAccount = MutableLiveData<SoraAccount>()
+    val curSoraAccount: LiveData<SoraAccount> = _curSoraAccount
+
     val transactionsFlow = interactor.getEventsFlow()
         .catch {
             this.emit(PagingData.empty())
@@ -86,14 +90,24 @@ class WalletViewModel(
 
     init {
         _showSwipeProgressLiveData.trigger()
-        viewModelScope.launch {
-            tryCatch {
+        interactor.flowCurSoraAccount()
+            .distinctUntilChanged()
+            .catch { onError(it) }
+            .onEach {
+                _curSoraAccount.value = it
                 loadVisibleAssets()
-                subscribeVisibleAssets()
-                interactor.updateBalancesVisibleAssets()
-                interactor.updateWhitelistBalances()
             }
-        }
+            .flatMapLatest {
+                val subscription = interactor.subscribeVisibleAssetsOfAccount(it)
+                interactor.updateWhitelistBalances()
+                subscription
+            }
+            .map { mapAssetToAssetModel(it) }
+            .catch { onError(it) }
+            .onEach {
+                _assetsLiveData.value = it
+            }
+            .launchIn(viewModelScope)
     }
 
     fun refreshAssets() {
@@ -136,18 +150,6 @@ class WalletViewModel(
     private suspend fun loadVisibleAssets() {
         val list = interactor.getVisibleAssets()
         _assetsLiveData.value = mapAssetToAssetModel(list)
-    }
-
-    private fun subscribeVisibleAssets() {
-        interactor.subscribeVisibleAssets()
-            .distinctUntilChanged()
-            .debounce(500)
-            .map { mapAssetToAssetModel(it) }
-            .catch { onError(it) }
-            .onEach {
-                _assetsLiveData.value = it
-            }
-            .launchIn(viewModelScope)
     }
 
     private fun mapAssetToAssetModel(assets: List<Asset>): List<AssetModel> {

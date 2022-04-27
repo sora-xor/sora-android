@@ -5,10 +5,30 @@
 
 package jp.co.soramitsu.feature_account_api.domain.interfaces
 
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
+
+    suspend fun getSoraAccountsCount(): Int
+
+    suspend fun initCurSoraAccount()
+
+    suspend fun getCurSoraAccount(): SoraAccount
+
+    suspend fun setCurSoraAccount(soraAccount: SoraAccount)
+
+    suspend fun setCurSoraAccount(accountAddress: String)
+
+    fun flowCurSoraAccount(): Flow<SoraAccount>
+
+    fun flowSoraAccountsList(): Flow<List<SoraAccount>>
+
+    suspend fun insertSoraAccount(soraAccount: SoraAccount)
+
+    suspend fun updateAccountName(soraAccount: SoraAccount, newName: String)
 
     suspend fun getRegistrationState(): OnboardingState
 
@@ -42,15 +62,13 @@ interface UserRepository {
 
     suspend fun isBiometryAvailable(): Boolean
 
-    suspend fun saveAccountName(accountName: String)
+    suspend fun getAccountNameForMigration(): String
 
-    suspend fun getAccountName(): String
+    suspend fun saveNeedsMigration(it: Boolean, soraAccount: SoraAccount)
 
-    suspend fun saveNeedsMigration(it: Boolean)
+    suspend fun needsMigration(soraAccount: SoraAccount): Boolean
 
-    suspend fun needsMigration(): Boolean
+    suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: SoraAccount)
 
-    suspend fun saveIsMigrationFetched(it: Boolean)
-
-    suspend fun isMigrationFetched(): Boolean
+    suspend fun isMigrationFetched(soraAccount: SoraAccount): Boolean
 }

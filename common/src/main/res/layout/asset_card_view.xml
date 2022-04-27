@@ -27,6 +27,8 @@
         android:paddingStart="20dp"
         android:text="@string/choose_token"
         android:textAllCaps="true"
+        android:layout_marginTop="@dimen/margin_padding_content"
+        android:layout_marginBottom="@dimen/margin_padding_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/chevronIcon"
         app:layout_constraintStart_toEndOf="@id/icon"

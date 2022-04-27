@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Confirmați mnemonic</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Proiect</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Address not found, make sure that address belongs to the right network.</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Taxa de tranzacție</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Copie</string>
   <string name="common_copy_address">Copiază adresă</string>
   <string name="common_croatian">Croată</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Descriere</string>
   <string name="common_done">Efectuat</string>
   <string name="common_donotallow">Nu permiteți</string>
@@ -128,6 +136,7 @@
   </plurals>
   <string name="common_indonesian">Indoneziană</string>
   <string name="common_info">Informații</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italiană</string>
   <string name="common_japanese">Japoneză</string>
   <string name="common_khmer">Khmer</string>
@@ -143,6 +152,7 @@
   <string name="common_ok">Bine</string>
   <string name="common_open_explorer">Vizualizați în Blockchain Explorer</string>
   <string name="common_options_title">Selecteaza o opțiune</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Este folosit pentru a recupera accesul la cont. Notează-l, nu îți vom putea recupera contul fără el!</string>
   <string name="common_passphrase_header">Fraza de acces este\nun tip de parolă.</string>
   <string name="common_passphrase_save_mnemonic_title">Salvați sau trimiteți fraza de acces</string>
@@ -162,6 +172,7 @@
   <string name="common_receive">Primește</string>
   <string name="common_received">Primit</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Reîncercați</string>
   <string name="common_russian">Rusă</string>
   <string name="common_save">Salvați</string>
@@ -181,6 +192,7 @@
   <string name="common_sms_code_not_correct">Codul de verificare este incorect</string>
   <string name="common_spanish">Spaniolă</string>
   <string name="common_spanish_colombia">Spaniolă (Columbia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">suedeza</string>
   <string name="common_terms_title">termeni si conditii</string>
   <string name="common_thai">thailandeza</string>
@@ -196,6 +208,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Vot</string>
   <string name="common_yesterday">Ieri</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Cele mai importante contacte vor apărea aici</string>
   <string name="contacts_scan">Scanează codul QR</string>
   <string name="contacts_search_empty_state_title">Nu există rezultate</string>
@@ -253,6 +267,10 @@
   <string name="invoice_scan_error_no_info">QR nu poate fi decodat</string>
   <string name="invoice_scan_error_user_not_found">Nu pot găsi un utilizator din QR</string>
   <string name="language_title">Selectare limbă</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Această acțiune va duce la ștergerea contului de pe acest dispozitiv. Asigurați-vă că ați făcut o copie de rezervă a expresiei de acces înainte de a continua.</string>
   <string name="mnemonic_alert_text">Expresia de acces mnemonică este utilizată pentru a recupera accesul la cont. Notează-l, nu îți vom putea recupera contul fără el!</string>
   <string name="mnemonic_confirm_text">Confirmați alegând cuvintele în ordinea corectă</string>
@@ -286,10 +304,12 @@
   <string name="pincode_updated">Cod PIN actualizat</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">DEX pentru viitorul inter-operabil. Polkaswap este un protocol AMM-DEX, non-custodial pentru schimbarea jetoanelor bazate pe rețeaua Polkadot, Parachainurile și blockchain-urile conectate printr-o punte. Protocolul Polkaswap elimină eficient intermediarii și oferă posibilitatea tranzacționării mai rapide.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Confirm Swap</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
   <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
   <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
@@ -318,9 +338,12 @@
   <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
   <string name="polkaswap_network_fee">Network Fee</string>
   <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
   <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
   <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
@@ -330,11 +353,13 @@
   <string name="polkaswap_swapped">Swapped</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Add</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -399,6 +424,10 @@
   <string name="referendum_total_votes">Total voturi</string>
   <string name="referendum_unsupport_title">Nu</string>
   <string name="referendum_voting_result">Rezultatul votului</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Nu faceți capturi de ecran, care pot fi colectate de malware terță parte</string>
   <string name="screenshot_alert_title">Nu faceți capturi de ecran</string>
@@ -409,6 +438,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Selecteaza destinatarul</string>
   <string name="set_amount">Setați suma</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Deținătorii XOR vor putea delega XOR pentru a nominaliza validatori și a obține recompense.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Recompense SORA VALidator </string>
@@ -494,8 +527,10 @@
   <string name="wallet_history_to_soranet_account">În contul SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Adresa mea de rețea %s pentru a primi %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Adresa mea de rețea %s pentru a primi %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Primește VAL</string>
   <string name="wallet_redeemable">Redeemable</string>
   <string name="wallet_send_existential_warning_message">Transferul tau va insemna stergerea contul din blockstore deoarece soldul contului tau va fi mai mic decat depozitul minim existential.</string>
@@ -504,6 +539,8 @@
   <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">Tranzacție trimisă</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Simboluri maxime %s</string>
   <string name="wallet_transfer_to_ethereum">Către adresa Ethereum</string>
   <string name="wallet_unbonding">Unbonding</string>

@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Vahvista mnemonic</string>
   <string name="account_confirmation_title_v2">Vahvista tunnuslause</string>
   <string name="activity_project">Projekti</string>
+  <string name="add_liquidity_alert_text">Ansaitset likviditeetin tarjoamisesta palkkioita, jotka ovat suhteessa osuuteesi likviditeetin tarjoamisesta.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Lisää likviditeettiä</string>
   <string name="address_not_found">Osoitetta ei löydy. Varmista, että osoite kuuluu oikeaan verkkoon.</string>
   <string name="address_not_found_1">Vastaanottajaa ei löytynyt</string>
   <string name="amount_default_fee">Palvelumaksu</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopio</string>
   <string name="common_copy_address">Kopioi osoite</string>
   <string name="common_croatian">Kroatialainen</string>
+  <string name="common_deposit">Talletus</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Kuvaus</string>
   <string name="common_done">Tehty</string>
   <string name="common_donotallow">Älä salli</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Indonesia</string>
   <string name="common_info">Info</string>
+  <string name="common_insufficient_balance">Riittämätön saldo</string>
   <string name="common_italian">Italia</string>
   <string name="common_japanese">japanilainen</string>
   <string name="common_khmer">Khmer</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Näytä Blockchain Explorerissa</string>
   <string name="common_options_title">Valitse vaihtoehto</string>
+  <string name="common_output">Tuotto</string>
   <string name="common_passphrase_body">Kun luot uuden tilin SORA:ssa, saat nyt 12 sanan tunnuslauseen. Jos sinulla on jo 15 sanan SORA-tunnuslause, voit tuoda tilisi käyttämällä sitä - nämä ovat myös yhteensopivia ja toimivat edelleen.</string>
   <string name="common_passphrase_header">Tunnuslause on eräänlainen salasana.</string>
   <string name="common_passphrase_save_mnemonic_title">Tallenna tai lähetä tunnuslause</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Vastaanottaa</string>
   <string name="common_received">Sai</string>
   <string name="common_recipient">Vastaanottaja</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Yritä uudelleen</string>
   <string name="common_russian">Venäjän kieli</string>
   <string name="common_save">Tallentaa</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Vahvistuskoodi on väärä</string>
   <string name="common_spanish">Espanja</string>
   <string name="common_spanish_colombia">Espanja (Kolumbia)</string>
+  <string name="common_supply">Tarjonta</string>
   <string name="common_swedish">Ruotsin kieli</string>
   <string name="common_terms_title">käyttöehdot</string>
   <string name="common_thai">Thai</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Päivitä</string>
   <string name="common_vote">Äänestää</string>
   <string name="common_yesterday">Eilen</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Asemasi</string>
   <string name="contacts_empty_state_title">Tärkeimmät yhteystiedot näkyvät täällä</string>
   <string name="contacts_scan">Skannaa QR-koodi</string>
   <string name="contacts_search_empty_state_title">Ei hakutuloksia</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">QR-koodia ei voi dekoodata</string>
   <string name="invoice_scan_error_user_not_found">Käyttäjää ei löydy QR:stä</string>
   <string name="language_title">Valitse kieli</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Tämä toiminto johtaa tilin poistamiseen tältä laitteelta. Varmista, että olet varmuuskopioinut salasanasi, ennen kuin jatkat.</string>
   <string name="mnemonic_alert_text">Tätä käytetään tilien käyttöoikeuksien palauttamiseen. Kirjoita muistiin, emme voi palauttaa tiliäsi ilman sitä!</string>
   <string name="mnemonic_confirm_text">Vahvista valitsemalla sanat oikeassa järjestyksessä</string>
@@ -283,12 +301,14 @@
   <string name="pincode_set_your_pin_code">Syötä PIN-koodi</string>
   <string name="pincode_touch_fingerprint_scanner">Kosketa sormenjälkiskanneria</string>
   <string name="pincode_updated">PIN-koodi päivitetty</string>
-  <string name="polkaswap_button_swap_again">Swap again</string>
+  <string name="polkaswap_button_swap_again">Swap uudestaan</string>
   <string name="polkaswap_coming_soon">DEX yhteentoimivaa tulevaisuutta varten. Polkaswap on ei-säilöönoton AMM-DEX-protokolla, joka vaihtaa merkkejä Polkadot-verkon, parachainien ja sillan kautta yhdistettyjen lohkoketjujen perusteella. Polkaswap-protokolla poistaa tehokkaasti luotetut välittäjät ja tarjoaa mahdollisuuden nopeampaan kaupankäyntiin.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Vahvista vaihto</string>
   <string name="polkaswap_details">Tiedot</string>
   <string name="polkaswap_error_noswap">Ei vaihtoa</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswapia ylläpitää SORA-yhteisö. Ennen kuin jatkat Polkaswapin käyttöä, tutustu %%Polkaswapin usein kysyttyihin kysymyksiin%% ja dokumentaatioon, joka sisältää yksityiskohtaisen selityksen Polkaswapin toiminnasta, sekä %%Polkaswapin muistion ja palveluehdot%%, ja %%tietosuojakäytännön%%.\n\nNämä asiakirjat ovat ratkaisevan tärkeitä turvallisen ja positiivisen käyttökokemuksen kannalta. Käyttämällä Polkaswapia hyväksyt lukeneen ja ymmärtäneensi nämä asiakirjat.</string>
   <string name="polkaswap_info_text_2">Hyväksyt myös seuraavat asiat:</string>
   <string name="polkaswap_info_text_3">Olet yksin vastuussa kaikkien lakien noudattamisesta, joita voidaan soveltaa Polkaswapin erityiseen käyttöön lainkäyttöalueellasi;</string>
@@ -307,19 +327,22 @@
   <string name="polkaswap_liqudity_fee_info">Osa jokaisesta kaupasta (0,3 %) menee likviditeetin tarjoajille protokollakannustimena.</string>
   <string name="polkaswap_market">Market</string>
   <string name="polkaswap_market_info">Markkina-algoritmi - mahdollisuus valita primaarimarkkinoiden (TBC), jälkimarkkinoiden (XYK) tai yhdistetyn älykkään algoritmin välillä parhaan hinnan takaamiseksi missä tahansa tapahtumassa.</string>
-  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
-  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_smart_description">SMART likviditeetin reititys varmistaa parhaan hinnan jokaiselle tapahtumalle, yhdistämällä vain parhaat hintavaihtoehdot kaikilta saatavilla olevilta markkinoilta. Token Bonding Curvea (TBC) käytetään mahdollisuuksien mukaan likviditeettiin niin kauan kun resurssien hinta on edullisempi kuin muista lähteistä, jolloin taas hyödynnetään XYK-poolia.</string>
+  <string name="polkaswap_market_tbc_description">TBC – ostaminen vain Token Bonding Curvesta (ensisijainen markkina). On mahdollista, että hinnasta tulee epäedullinen verrattuna XYK-pooliin (toissijainen markkina), mutta saavutetuista palkkioista saatu arvo saattaa osoittautua paljon edullisemmaksi ajan myötä.</string>
   <string name="polkaswap_market_title">Markkina-algoritmi</string>
-  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_market_xyk_description">XYK — ostaminen vain XYK-poolista (toissijainen markkina). Perinteinen XYK pooli swappi, jossa kuka tahansa voi ostaa tai myydä omaisuutta muuttamalla market makerin asemaa x*y=k-käyrällä.</string>
   <string name="polkaswap_maximum_sold">Enintään myyty</string>
   <string name="polkaswap_maximum_sold_info">Tapahtumasi peruuntuu, jos hinta muuttuu paljon ja epäsuotuisasti ennen sen vahvistamista.</string>
   <string name="polkaswap_minimum_received">Min vastaanotettu</string>
   <string name="polkaswap_minimum_received_info">Tapahtumasi peruuntuu, jos hinta muuttuu paljon ja epäsuotuisasti ennen sen vahvistamista.</string>
   <string name="polkaswap_network_fee">Verkkomaksu</string>
   <string name="polkaswap_network_fee_info">Verkkomaksua käytetään SORA-järjestelmän kasvun ja vakaan suorituskyvyn varmistamiseen.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Tuotos on arvioitu. Vastaanotat vähintään %s tai tapahtuma peruuntuu.</string>
   <string name="polkaswap_pool_not_created">Poolia ei ole luotu</string>
   <string name="polkaswap_pool_title">Pooli</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Tapahtumasi voidaan ylittää</string>
   <string name="polkaswap_slippage_info">Tapahtumasi peruuntuu, jos hinta muuttuu epäsuotuisasti yli tämän prosenttiosuuden</string>
   <string name="polkaswap_slippage_mayfail">Tapahtumasi voi epäonnistua</string>
@@ -329,13 +352,15 @@
   <string name="polkaswap_swapped">Swapped</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
+  <string name="pool_apy_title">Strateginen bonus apy</string>
   <string name="pool_button_add">Lisää</string>
   <string name="pool_button_remove">Poista</string>
   <string name="pool_liqudity_title">Sinun Likviditeetti</string>
   <string name="pool_liquidity_placeholder">Likviditeettisi näkyy täällä</string>
+  <string name="pool_share_after_tx">Poolin osuus tx:n jälkeen</string>
   <string name="pool_share_title">Osuus poolista</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">Sinun osuutesi poolista</string>
   <string name="pool_token_pooled">Poolittu</string>
   <string name="profile_about_title">Minusta</string>
   <string name="profile_biometry_title">Biometrian vahvistus</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Ääniä yhteensä</string>
   <string name="referendum_unsupport_title">Ei</string>
   <string name="referendum_voting_result">Äänestystulos</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Poista likviditeettiä</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Uudelleenkäynnistys vaaditaan</string>
   <string name="screenshot_alert_text">Älä ota kuvakaappauksia, jotka kolmannen osapuolen haittaohjelmat voivat kerätä</string>
   <string name="screenshot_alert_title">Älä ota kuvakaappauksia</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Valitse lähetettävä resurssi</string>
   <string name="select_recipient">Valitse vastaanottaja</string>
   <string name="set_amount">Aseta määrä</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR: n haltijat voivat panostaa XOR: nsa nimeämään validoijat ja saamaan palkintoja.</string>
   <string name="staking_description">Validaattorien nimeäminen on tärkeä osa SORA-ekosysteemiä, koska se auttaa turvaamaan ja hajauttamaan verkkoa. Validaattorit ja nominaattorit saavat VAL-tokoneja staking-palkkioina.</string>
   <string name="staking_val_reward">SORA-validointipalkinnot</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">SORA NET-tilille</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Minun %s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Vastaanottava verkko-osoite %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Minun %s-verkkoosoitteeni vastaanottamiseksi %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Minun %s-verkkoosoitteeni vastaanottamiseksi %s %s :</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Vastaanota VAL</string>
   <string name="wallet_redeemable">Lunastettavissa</string>
   <string name="wallet_send_existential_warning_message">Siirtosi poistaa tilin blockstore-kaupasta, koska se tekee kokonaissaldon pienemmäksi kuin olemassa oleva talletus</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Tapahtuma hylätty</string>
   <string name="wallet_transaction_submitted">Tapahtuma lähetetty</string>
   <string name="wallet_transaction_submitted_1">Tapahtuma \n lähetetty</string>
+  <string name="wallet_transactions_unavailable_description">Ongelmaa käsitellään parhaillaan,\n yritä myöhemmin uudelleen.</string>
+  <string name="wallet_transactions_unavailable_title">Tapahtumia ei voitu ladata</string>
   <string name="wallet_transfer_description_hint">Enintään %s symbolia</string>
   <string name="wallet_transfer_to_ethereum">Ethereum-osoitteeseen</string>
   <string name="wallet_unbonding">Unbonding</string>

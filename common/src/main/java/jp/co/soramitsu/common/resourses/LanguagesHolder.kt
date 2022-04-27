@@ -6,6 +6,8 @@
 package jp.co.soramitsu.common.resourses
 
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.common.util.Flavor
 
 object LanguagesHolder {
 
@@ -37,11 +39,7 @@ object LanguagesHolder {
 
     private val availableLanguages = mutableListOf(RUSSIAN, ENGLISH, SPANISH, FRENCH, GERMAN, NORWEGIAN, CHINESE, INDONESIAN, TURKISH)
 
-    fun getEnglishLang(): Language {
-        return ENGLISH
-    }
+    fun getEnglishLang(): Language = ENGLISH
 
-    fun getLanguages(): List<Language> {
-        return availableLanguages
-    }
+    fun getLanguages(): List<Language> = if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION)) availableLanguages + ARAB else availableLanguages
 }

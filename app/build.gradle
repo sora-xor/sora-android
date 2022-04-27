@@ -134,6 +134,8 @@ dependencies {
     implementation project(":feature_onboarding_impl")
     implementation project(":feature_main_api")
     implementation project(":feature_main_impl")
+    implementation project(":feature_multiaccount_api")
+    implementation project(":feature_multiaccount_impl")
     implementation project(":feature_account_api")
     implementation project(":feature_account_impl")
     implementation project(':feature_ethereum_api')
@@ -164,7 +166,8 @@ dependencies {
     implementation daggerDep
     kapt daggerKapt
 
-    implementation lifecycleDep
+    implementation lifecycleKtxDep
+    implementation lifecycleExtDep
     kapt lifecycleKaptDep
 
     implementation coroutineAndroidDep
@@ -200,6 +203,7 @@ dependencies {
     // Tests
     testImplementation jUnitDep
     testImplementation mockitoDep
+    testImplementation mockkDep
     testImplementation robolectricDep
     testImplementation robolectricMultidexDep
     testImplementation archCoreTestDep

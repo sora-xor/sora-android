@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import androidx.paging.PagingData
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
@@ -20,7 +21,9 @@ import java.math.BigDecimal
 
 interface WalletRepository {
 
-    fun getTransactionsFlow(address: String, assetId: String = ""): Flow<PagingData<Transaction>>
+    fun getTransactionsFlow(assetId: String = ""): Flow<PagingData<Transaction>>
+
+    fun setCurSoraAccount(soraAccount: SoraAccount)
 
     suspend fun getTransaction(txHash: String): Transaction
 
@@ -83,7 +86,8 @@ interface WalletRepository {
         status: ExtrinsicStatusResponse,
         hash: String,
         fee: BigDecimal,
-        eventSuccess: Boolean?
+        eventSuccess: Boolean?,
+        soraAccount: SoraAccount
     )
 
     suspend fun updateTransactionSuccess(hash: String, success: Boolean)
@@ -99,11 +103,11 @@ interface WalletRepository {
 
     suspend fun getContacts(query: String): Set<String>
 
-    suspend fun hideAssets(assetIds: List<String>)
+    suspend fun hideAssets(assetIds: List<String>, soraAccount: SoraAccount)
 
-    suspend fun displayAssets(assetIds: List<String>)
+    suspend fun displayAssets(assetIds: List<String>, soraAccount: SoraAccount)
 
-    suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
+    suspend fun updateAssetPositions(assetPositions: Map<String, Int>, soraAccount: SoraAccount)
 
     suspend fun getAsset(assetId: String, address: String): Asset?
 

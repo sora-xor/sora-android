@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_main_impl.presentation.about
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
@@ -21,7 +20,6 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.anyInt
-import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -58,6 +56,8 @@ class AboutViewModelTest {
     fun `init called`() = runBlockingTest {
         val version = "1.0"
         val title = "source"
+        given(interactor.getAppVersion()).willReturn("1.0")
+        given(resourceManager.getString(anyInt())).willReturn(title)
 
         given(interactor.getAppVersion()).willReturn("1.0")
         given(resourceManager.getString(anyInt())).willReturn("source")

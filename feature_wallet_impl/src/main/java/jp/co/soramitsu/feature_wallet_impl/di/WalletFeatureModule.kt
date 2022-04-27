@@ -17,6 +17,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
@@ -27,10 +28,13 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.PolkaswapRepositoryIm
 import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.feature_wallet_impl.domain.PolkaswapInteractorImpl
+import jp.co.soramitsu.feature_wallet_impl.domain.PoolsManagerImpl
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
+import kotlinx.coroutines.FlowPreview
 import javax.inject.Singleton
 
+@FlowPreview
 @Module
 class WalletFeatureModule {
 
@@ -83,12 +87,14 @@ class WalletFeatureModule {
     @Provides
     fun providePolkaswapInteractor(
         credentialsRepository: CredentialsRepository,
+        userRepository: UserRepository,
         walletRepository: WalletRepository,
         coroutineManager: CoroutineManager,
         polkaswapRepository: PolkaswapRepository,
     ): PolkaswapInteractor {
         return PolkaswapInteractorImpl(
             credentialsRepository,
+            userRepository,
             coroutineManager,
             polkaswapRepository,
             walletRepository,
@@ -99,4 +105,10 @@ class WalletFeatureModule {
     @Provides
     fun provideSoraScanApi(sora2CoroutineApiCreator: Sora2CoroutineApiCreator): SoraScanApi =
         sora2CoroutineApiCreator.create(SoraScanApi::class.java)
+
+    @Singleton
+    @Provides
+    fun providePoolsManager(polkaswapInteractor: PolkaswapInteractor): PoolsManager {
+        return PoolsManagerImpl(polkaswapInteractor)
+    }
 }

@@ -19,6 +19,7 @@ import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.setValueIfNew
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
@@ -37,6 +38,10 @@ class TransferAmountViewModel(
     private var transferType: TransferType,
     private val clipboardManager: ClipboardManager,
 ) : BaseViewModel() {
+
+    private companion object {
+        val PERCENT_100: BigDecimal = BigDecimal.valueOf(100L)
+    }
 
     private val _balanceFormattedLiveData = MediatorLiveData<AssetBalanceData>()
     val balanceFormattedLiveData: LiveData<AssetBalanceData> = _balanceFormattedLiveData
@@ -72,27 +77,32 @@ class TransferAmountViewModel(
     private val transactionFeeLiveData = MediatorLiveData<BigDecimal>()
     private val amountLiveData = MutableLiveData<BigDecimal>()
 
+    private val _amountPercentage = MutableLiveData<String>()
+    val amountPercentage = _amountPercentage
+
     private lateinit var curAsset: Asset
     private lateinit var feeAsset: Asset
 
     init {
         viewModelScope.launch {
-            curAsset = interactor.getAsset(assetId)!!
-            feeAsset = interactor.getAsset(OptionsProvider.feeAssetId)!!
-            _balanceFormattedLiveData.value =
-                AssetBalanceData(
-                    amount = numbersFormatter.formatBigDecimal(
-                        curAsset.balance.transferable,
-                        AssetHolder.ROUNDING
-                    ),
-                    style = AssetBalanceStyle(
-                        R.style.TextAppearance_Soramitsu_Neu_Semibold_18,
-                        R.style.TextAppearance_Soramitsu_Neu_Semibold_13
+            tryCatch {
+                curAsset = interactor.getAssetOrThrow(assetId)
+                feeAsset = interactor.getAssetOrThrow(OptionsProvider.feeAssetId)
+                _balanceFormattedLiveData.value =
+                    AssetBalanceData(
+                        amount = numbersFormatter.formatBigDecimal(
+                            curAsset.balance.transferable,
+                            AssetHolder.ROUNDING
+                        ),
+                        style = AssetBalanceStyle(
+                            R.style.TextAppearance_Soramitsu_Neu_Semibold_18,
+                            R.style.TextAppearance_Soramitsu_Neu_Semibold_13
+                        )
                     )
-                )
-            _decimalLength.value = curAsset.token.precision
-            configureScreenByTransferType()
-            calcTransactionFee()
+                _decimalLength.value = curAsset.token.precision
+                configureScreenByTransferType()
+                calcTransactionFee()
+            }
         }
     }
 
@@ -115,8 +125,8 @@ class TransferAmountViewModel(
         router.popBackStackFragment()
     }
 
-    fun nextButtonClicked(amount: BigDecimal?) {
-        soraNetTransfer(amount ?: BigDecimal.ZERO)
+    fun nextButtonClicked() {
+        soraNetTransfer(amountLiveData.value ?: BigDecimal.ZERO)
     }
 
     private fun soraNetTransfer(amount: BigDecimal) {
@@ -168,5 +178,22 @@ class TransferAmountViewModel(
             else -> {
             }
         }
+    }
+
+    fun optionSelected(percent: Int) {
+        val amount = curAsset.balance.transferable
+            .subtract(transactionFeeLiveData.value)
+            .multiply(
+                percent.toBigDecimal()
+                    .divideBy(PERCENT_100, curAsset.token.precision)
+            )
+
+        amountLiveData.setValueIfNew(amount)
+        amountPercentage.setValueIfNew(
+            numbersFormatter.formatBigDecimal(
+                amount,
+                curAsset.token.precision
+            )
+        )
     }
 }

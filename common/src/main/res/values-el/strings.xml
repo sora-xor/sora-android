@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Επιβεβαίωση μνημονικού</string>
   <string name="account_confirmation_title_v2">Επιβεβαιώστε τη φράση πρόσβασης</string>
   <string name="activity_project">Έργο</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Η διεύθυνση δεν βρέθηκε, βεβαιωθείτε πως αυτή η διεύθυνση ανήκει στο σωστό δίκτυο.</string>
   <string name="address_not_found_1">Δε βρέθηκαν παραλήπτες</string>
   <string name="amount_default_fee">Τέλη συναλλαγής</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Αντιγραφή</string>
   <string name="common_copy_address">Αντιγραφή διεύθυνσης</string>
   <string name="common_croatian">Κροατικά</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Περιγραφή</string>
   <string name="common_done">Έγινε</string>
   <string name="common_donotallow">Μην επιτρέπετε</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Ινδονησιακά</string>
   <string name="common_info">Πληροφορίες</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Ιταλικά</string>
   <string name="common_japanese">Ιαπωνικά</string>
   <string name="common_khmer">Καμποτζιανά</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">Εντάξει</string>
   <string name="common_open_explorer">Προβολή στην Εξερεύνηση blockchain</string>
   <string name="common_options_title">Επιλογή μιας επιλογής</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Χρησιμοποιείται για την ανάκτηση πρόσβασης σε λογαριασμό. Σημειώστε τον διότι δε θα είμαστε σε θέση να ανακτήσουμε τον λογαριασμό σας χωρίς αυτόν!</string>
   <string name="common_passphrase_header">Η φράση πρόσβασης είναι\n ένα είδος κωδικού πρόσβασης.</string>
   <string name="common_passphrase_save_mnemonic_title">Αποθήκευση ή αποστολή φράσης πρόσβασης</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Λήψη</string>
   <string name="common_received">Λήφθηκε</string>
   <string name="common_recipient">Παραλήπτης</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Ξαναδοκιμάσετε</string>
   <string name="common_russian">Ρωσικά</string>
   <string name="common_save">Αποθήκευση</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Ο κωδικός επαλήθευσης είναι λανθασμένος</string>
   <string name="common_spanish">Ισπανικά</string>
   <string name="common_spanish_colombia">Ισπανικά (Κολομβίας)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Σουηδικά</string>
   <string name="common_terms_title">Όροι και Προϋποθέσεις</string>
   <string name="common_thai">Ταϊλανδέζικα</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Ενημέρωση</string>
   <string name="common_vote">Ψήφος</string>
   <string name="common_yesterday">Χθες</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Οι πιο σημαντικές επαφές θα εμφανίζονται εδώ</string>
   <string name="contacts_scan">Σάρωση κωδικού QR</string>
   <string name="contacts_search_empty_state_title">Δεν υπάρχουν αποτελέσματα αναζήτησης</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">Δεν είναι δυνατή η αποκωδικοποίηση του QR</string>
   <string name="invoice_scan_error_user_not_found">Δεν είναι δυνατή η εύρεση χρήστη από το QR</string>
   <string name="language_title">Επιλέξτε γλώσσα</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Αυτή η ενέργεια θα έχει ως αποτέλεσμα τη διαγραφή λογαριασμού από αυτήν τη συσκευή. Βεβαιωθείτε ότι έχετε δημιουργήσει αντίγραφα ασφαλείας της φράσης πρόσβασης πριν συνεχίσετε.</string>
   <string name="mnemonic_alert_text">Η μνημονική φράση χρησιμοποιείται για την ανάκτηση πρόσβασης στον λογαριασμό σας. Σημειώστε τη, διότι δε θα είμαστε σε θέση να ανακτήσουμε τον λογαριασμό σας χωρίς αυτό!</string>
   <string name="mnemonic_confirm_text">Επιβεβαιώστε επιλέγοντας λέξεις με τη σωστή σειρά</string>
@@ -285,10 +303,12 @@
   <string name="pincode_updated">Ο κωδικός PIN ενημερώθηκε</string>
   <string name="polkaswap_button_swap_again">Ανταλλαγή Ξανά</string>
   <string name="polkaswap_coming_soon">Το DEX για το Διαλειτουργικό Μέλλον. Το Polkaswap είναι ένα πρωτόκολλο AMM-DEX για ανταλλαγή νομισμάτων με βάση το δίκτυο Polkadot, Parachains και blockchains που συνδέονται μέσω γέφυρας. Το πρωτόκολλο Polkaswap αφαιρεί αποτελεσματικά τους αξιόπιστους διαμεσολαβητές και παρέχει την ευκαιρία για ταχύτερες συναλλαγές.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Confirm Swap</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">Ανεπιτυχής Ανταλλαγή</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
   <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
   <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
   <string name="polkaswap_network_fee">Network Fee</string>
   <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
   <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
   <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">Ανταλλάχθηκαν</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Προσθήκη</string>
   <string name="pool_button_remove">Αφαίρεση</string>
   <string name="pool_liqudity_title">Η ρευστότητά σας</string>
   <string name="pool_liquidity_placeholder">Η ρευστότητά σας θα εμφανιστεί εδώ</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Μερίδιο στη δεξαμενή ρευστότητας</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Συγκεντρωμένα</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Σύνολο ψήφων</string>
   <string name="referendum_unsupport_title">Όχι</string>
   <string name="referendum_voting_result">Αποτέλεσμα ψηφοφορίας</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Απαιτείται επανεκκίνηση</string>
   <string name="screenshot_alert_text">Μην τραβάτε στιγμιότυπα οθόνης, ενδέχεται να συλλέγονται από κακόβουλο λογισμικό τρίτων</string>
   <string name="screenshot_alert_title">Μην τραβάτε στιγμιότυπα οθόνης</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Διαλέξτε ένα νόμισμα για Αποστολή</string>
   <string name="select_recipient">Select recipient</string>
   <string name="set_amount">Ορισμός ποσού</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Οι κάτοχοι XOR θα μπορούν να ποντάρουν (stake) τα XOR τους για να ορίσουν επικυρωτες (validators) και να λάβουν ανταμοιβές.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Ανταμοιβές SORA VALidator</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">Στον λογαριασμό SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Η διεύθυνση δικτύου μου %s για λήψη %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1">Διεύθυνση %s Δικτύου για Λήψη:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Η %s διεύθυνση δικτύου μου για λήψη %s %s :</string>
   <string name="wallet_qr_share_message_template_v1">Η διεύθυνση μου στο %s Δίκτυο για Λήψη είναι:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Λήψη VAL</string>
   <string name="wallet_redeemable">Redeemable</string>
   <string name="wallet_send_existential_warning_message">Your transfer will remove account from blockstore since it will make total balance lower than existential deposit.</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">Η συναλλαγή υποβλήθηκε</string>
   <string name="wallet_transaction_submitted_1">Η συναλλαγή υποβλήθηκε</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Μέγιστα σύμβολα %s</string>
   <string name="wallet_transfer_to_ethereum">Στη διεύθυνση Ethereum</string>
   <string name="wallet_unbonding">Unbonding</string>

@@ -77,6 +77,8 @@ dependencies {
     implementation retrofitDep
     implementation gsonConvertedDep
 
+    implementation loggerDep
+
     testImplementation jUnitDep
     testImplementation mockitoDep
     testImplementation mockkDep

@@ -121,203 +121,33 @@
                 app:layout_constraintTop_toBottomOf="@id/tvAmountOutput"
                 tools:text="Output is estimated. You will receive at least 234 VAL or the transaction will revert." />
 
-            <View
-                android:id="@+id/vSwapConfirmation1"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/x2"
-                android:background="?attr/dividerColor"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvSwapDescription" />
-
-            <TextView
-                android:id="@+id/tvPer1"
-                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
-                android:layout_width="wrap_content"
+            <jp.co.soramitsu.common.presentation.view.table.RowsView
+                android:id="@+id/rvSwapConfirmation"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/x2"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vSwapConfirmation1"
-                tools:text="XOR / VAL" />
-
-            <TextView
-                android:id="@+id/tvPer1Value"
-                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:gravity="end"
-                android:letterSpacing="-0.01"
-                android:singleLine="true"
-                app:layout_constraintBaseline_toBaselineOf="@id/tvPer1"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/tvPer1"
-                tools:text="0.023412" />
-
-            <View
-                android:id="@+id/vDivider1"
-                android:layout_width="0dp"
-                android:layout_height="2dp"
-                android:layout_marginTop="@dimen/x3"
-                android:background="?attr/dividerColor"
+                android:divider="@drawable/line_ver_divider"
+                android:orientation="vertical"
+                android:showDividers="beginning|middle|end"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvPer1" />
-
-            <TextView
-                android:id="@+id/tvPer2"
-                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
-                android:ellipsize="none"
-                android:singleLine="true"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vDivider1"
-                tools:text="VAL / XOR" />
-
-            <TextView
-                android:id="@+id/tvPer2Value"
-                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:gravity="end"
-                android:letterSpacing="-0.01"
-                android:singleLine="true"
-                app:layout_constraintBottom_toBottomOf="@id/tvPer2"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/tvPer2"
-                tools:text="0.63482787675" />
-
-            <View
-                android:id="@+id/vDivider3"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/x3"
-                android:background="?attr/dividerColor"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvPer2" />
-
-            <TextView
-                android:id="@+id/tvMinMax"
-                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
-                android:drawablePadding="@dimen/x1"
-                android:ellipsize="none"
-                android:singleLine="true"
-                android:textAllCaps="true"
-                app:drawableEndCompat="@drawable/ic_neu_exclamation"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vDivider3"
-                tools:text="Min received" />
-
-            <TextView
-                android:id="@+id/tvMinMaxValue"
-                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:letterSpacing="-0.01"
-                app:layout_constraintBaseline_toBaselineOf="@id/tvMinMax"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/tvMinMax"
-                tools:text="23.33 VAL" />
-
-            <View
-                android:id="@+id/vDivider3_2"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/x3"
-                android:background="?attr/dividerColor"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvMinMax" />
-
-            <TextView
-                android:id="@+id/tvLiquidityFee"
-                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
-                android:drawablePadding="@dimen/x1"
-                android:ellipsize="none"
-                android:singleLine="true"
-                android:text="@string/polkaswap_liqudity_fee"
-                android:textAllCaps="true"
-                app:drawableEndCompat="@drawable/ic_neu_exclamation"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vDivider3_2" />
-
-            <TextView
-                android:id="@+id/tvLiquidityFeeValue"
-                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                app:layout_constraintBaseline_toBaselineOf="@id/tvLiquidityFee"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/tvLiquidityFee"
-                tools:text="0.0003 XOR" />
-
-            <View
-                android:id="@+id/vDivider4"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/x3"
-                android:background="?attr/dividerColor"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvLiquidityFee" />
-
-            <TextView
-                android:id="@+id/tvNetworkFee"
-                style="@style/TextAppearance.Soramitsu.Neu.Light.15"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/x2"
-                android:drawablePadding="@dimen/x1"
-                android:ellipsize="none"
-                android:singleLine="true"
-                android:text="@string/polkaswap_network_fee"
-                android:textAllCaps="true"
-                app:drawableEndCompat="@drawable/ic_neu_exclamation"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/vDivider4" />
-
-            <TextView
-                android:id="@+id/tvNetworkFeeValue"
-                style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                app:layout_constraintBaseline_toBaselineOf="@id/tvNetworkFee"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/tvNetworkFee"
-                tools:text="0.0007 XOR" />
-
-            <View
-                android:id="@+id/vDivider5"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="@dimen/x3"
-                android:background="?attr/dividerColor"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvNetworkFee" />
+                app:layout_constraintTop_toBottomOf="@id/tvSwapDescription"
+                app:rowText1TextAppearance="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                app:rowText2TextAppearance="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+                app:rowTitleTextAppearance="@style/TextAppearance.Soramitsu.Neu.Light.15"
+                app:rowType="line"
+                app:rowsBottomPadding="@dimen/x3"
+                app:rowsCount="5"
+                app:rowsTopPadding="@dimen/x2" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>
 
-    <Button
+    <jp.co.soramitsu.common.presentation.view.button.LoadingButton
         android:id="@+id/nextBtn"
-        style="@style/Widget.Soramitsu.Button.Primary.Neu.56.Polkaswap"
         android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x2"
         android:layout_marginEnd="@dimen/x2"
         android:layout_marginBottom="@dimen/x4"

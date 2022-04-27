@@ -6,20 +6,28 @@
 package jp.co.soramitsu.feature_wallet_impl.domain
 
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
+import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
+import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas
+import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateAddLiquidityAmount
+import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateAddingShareOfPool
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,6 +51,7 @@ import kotlin.math.max
 @ExperimentalCoroutinesApi
 class PolkaswapInteractorImpl(
     private val credentialsRepository: CredentialsRepository,
+    private val userRepository: UserRepository,
     private val coroutineManager: CoroutineManager,
     private val polkaswapRepository: PolkaswapRepository,
     private val walletRepository: WalletRepository,
@@ -53,25 +62,117 @@ class PolkaswapInteractorImpl(
     private var poolReservesFlowToken = MutableStateFlow<Pair<String, String>?>(null)
     private val availableMarkets = mutableListOf<Market>()
     private var swapNetworkFee: BigDecimal? = null
+    private var removeLiquidityNetworkFee: BigDecimal? = null
 
-    override suspend fun fetchNetworkFee(feeToken: Token): BigDecimal {
+    private var addLiquidityForPresentedPairNetworkFee: BigDecimal? = null
+    private var addLiquidityForEnabledPairNetworkFee: BigDecimal? = null
+    private var addLiquidityForDisabledPairNetworkFee: BigDecimal? = null
+
+    override suspend fun fetchSwapNetworkFee(feeToken: Token): BigDecimal {
         return swapNetworkFee ?: (
             polkaswapRepository.calcSwapNetworkFee(
                 feeToken,
-                credentialsRepository.getAddress(),
+                userRepository.getCurSoraAccount().substrateAddress,
             ).also {
                 swapNetworkFee = it
             }
             )
     }
 
-    override fun subscribePoolsChanges(): Flow<String> = flow {
-        val address = credentialsRepository.getAddress()
-        val flow = polkaswapRepository.subscribeToPoolsAssets(address).flatMapLatest {
-            polkaswapRepository.subscribeToPoolsData(address)
-        }
-        emitAll(flow)
+    override suspend fun fetchRemoveLiquidityNetworkFee(
+        tokenId1: Token,
+        tokenId2: Token
+    ): BigDecimal {
+        return removeLiquidityNetworkFee ?: (
+            polkaswapRepository.calcRemoveLiquidityNetworkFee(
+                tokenId1,
+                tokenId2,
+                userRepository.getCurSoraAccount().substrateAddress,
+            ).also {
+                removeLiquidityNetworkFee = it
+            }
+            )
     }
+
+    override suspend fun fetchAddLiquidityNetworkFee(
+        tokenFrom: Token,
+        tokenTo: Token,
+        tokenFromAmount: BigDecimal,
+        tokenToAmount: BigDecimal,
+        pairEnabled: Boolean,
+        pairPresented: Boolean,
+        slippageTolerance: Float
+    ): BigDecimal = polkaswapRepository.calcAddLiquidityNetworkFee(
+        userRepository.getCurSoraAccount().substrateAddress,
+        tokenFrom,
+        tokenTo,
+        tokenFromAmount,
+        tokenToAmount,
+        pairEnabled,
+        pairPresented,
+        slippageTolerance.toDouble(),
+    )
+
+    private suspend fun getLiquidityNetworkFee(
+        tokenFrom: Token,
+        tokenTo: Token,
+        tokenFromAmount: BigDecimal,
+        tokenToAmount: BigDecimal,
+        pairEnabled: Boolean,
+        pairPresented: Boolean,
+        slippageTolerance: Float
+    ): BigDecimal =
+        when {
+            !pairPresented && pairEnabled -> {
+                addLiquidityForEnabledPairNetworkFee
+                    ?: fetchAddLiquidityNetworkFee(
+                        tokenFrom,
+                        tokenTo,
+                        tokenFromAmount,
+                        tokenToAmount,
+                        pairEnabled,
+                        pairPresented,
+                        slippageTolerance
+                    ).also {
+                        addLiquidityForEnabledPairNetworkFee = it
+                    }
+            }
+            !pairPresented && !pairEnabled -> {
+                addLiquidityForDisabledPairNetworkFee
+                    ?: fetchAddLiquidityNetworkFee(
+                        tokenFrom,
+                        tokenTo,
+                        tokenFromAmount,
+                        tokenToAmount,
+                        pairEnabled,
+                        pairPresented,
+                        slippageTolerance
+                    ).also {
+                        addLiquidityForDisabledPairNetworkFee = it
+                    }
+            }
+            else -> {
+                addLiquidityForPresentedPairNetworkFee
+                    ?: fetchAddLiquidityNetworkFee(
+                        tokenFrom,
+                        tokenTo,
+                        tokenFromAmount,
+                        tokenToAmount,
+                        pairEnabled,
+                        pairPresented,
+                        slippageTolerance
+                    ).also {
+                        addLiquidityForPresentedPairNetworkFee = it
+                    }
+            }
+        }
+
+    override fun subscribePoolsChanges(): Flow<String> =
+        userRepository.flowCurSoraAccount().flatMapLatest { soraAccount ->
+            polkaswapRepository.subscribeToPoolsAssets(soraAccount.substrateAddress).flatMapLatest {
+                polkaswapRepository.subscribeToPoolsData(soraAccount.substrateAddress)
+            }
+        }
 
     override suspend fun calcDetails(
         tokenFrom: Token,
@@ -102,7 +203,8 @@ class PolkaswapInteractorImpl(
             }
 
         val scale = max(swapQuote.amount.scale(), amount.scale())
-        val networkFee = swapNetworkFee ?: (fetchNetworkFee(feeToken).also { swapNetworkFee = it })
+        val networkFee =
+            swapNetworkFee ?: (fetchSwapNetworkFee(feeToken).also { swapNetworkFee = it })
         poolReservesFlowToken.value = tokenFrom.id to tokenTo.id
         return SwapDetails(
             swapQuote.amount,
@@ -112,6 +214,135 @@ class PolkaswapInteractorImpl(
             swapQuote.fee,
             networkFee,
         )
+    }
+
+    override suspend fun calcLiquidityDetails(
+        tokenFrom: Token,
+        tokenTo: Token,
+        reservesFrom: BigDecimal,
+        reservesTo: BigDecimal,
+        pooledTo: BigDecimal,
+        baseAmount: BigDecimal,
+        targetAmount: BigDecimal,
+        desired: WithDesired,
+        slippageTolerance: Float,
+        pairEnabled: Boolean,
+        pairPresented: Boolean
+    ): LiquidityDetails {
+        val resultAmount = if (!pairPresented) {
+            targetAmount
+        } else {
+            calculateAddLiquidityAmount(
+                baseAmount,
+                reservesFrom,
+                reservesTo,
+                tokenFrom.precision,
+                tokenTo.precision,
+                desired
+            )
+        }
+
+        val networkFee = getLiquidityNetworkFee(
+            tokenFrom,
+            tokenTo,
+            tokenFromAmount = if (desired == WithDesired.INPUT) baseAmount else resultAmount,
+            tokenToAmount = if (desired == WithDesired.OUTPUT) baseAmount else resultAmount,
+            pairEnabled = pairEnabled,
+            pairPresented = pairPresented,
+            slippageTolerance = slippageTolerance
+        )
+
+        val perFirst = baseAmount.safeDivide(resultAmount)
+        val perSecond = resultAmount.safeDivide(baseAmount)
+
+        val shareOfPool = estimateAddingShareOfPool(
+            if (desired == WithDesired.INPUT) resultAmount else baseAmount,
+            pooledTo,
+            reservesTo
+        )
+
+        return LiquidityDetails(
+            baseAmount = baseAmount,
+            targetAmount = resultAmount,
+            perFirst = if (desired == WithDesired.INPUT) perFirst else perSecond,
+            perSecond = if (desired == WithDesired.OUTPUT) perFirst else perSecond,
+            networkFee = networkFee,
+            shareOfPool = shareOfPool,
+            pairPresented = pairPresented,
+            pairEnabled = pairEnabled
+        )
+    }
+
+    override suspend fun observeAddLiquidity(
+        tokenFrom: Token,
+        tokenTo: Token,
+        amountFrom: BigDecimal,
+        amountTo: BigDecimal,
+        enabled: Boolean,
+        presented: Boolean,
+        slippageTolerance: Float
+    ): Boolean {
+        val soraAccount = userRepository.getCurSoraAccount()
+        val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
+
+        val networkFee = getLiquidityNetworkFee(
+            tokenFrom,
+            tokenTo,
+            amountFrom,
+            amountTo,
+            enabled,
+            presented,
+            slippageTolerance
+        )
+
+        return polkaswapRepository.observeAddLiquidity(
+            soraAccount.substrateAddress,
+            keypair,
+            tokenFrom,
+            tokenTo,
+            amountFrom,
+            amountTo,
+            enabled,
+            presented,
+            slippageTolerance.toDouble()
+        )
+            .catch {
+                FirebaseWrapper.recordException(it)
+                emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
+            }
+            .map {
+                if (it.first.isNotEmpty()) {
+                    polkaswapRepository.saveAddLiquidity(
+                        txHash = it.first,
+                        status = it.second,
+                        eventSuccess = null,
+                        networkFee = networkFee,
+                        tokenIdFrom = tokenFrom.id,
+                        tokenIdTo = tokenTo.id,
+                        amountFrom = amountFrom,
+                        amountTo = amountTo,
+                        soraAccount = soraAccount,
+                    )
+                }
+                Triple(
+                    it.first,
+                    (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
+                    it.second.subscription
+                )
+            }
+            .transformWhile { value ->
+                this.emit(value.first.isNotEmpty())
+                value.second?.let { blockHash ->
+                    val txHash = value.first
+                    val blockResponse = walletRepository.getBlock(blockHash)
+                    val extrinsicId = blockResponse.block.extrinsics.indexOfFirst { s ->
+                        s.blake2b256String() == txHash
+                    }.toLong()
+                    val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
+                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
+                }
+                value.second.isNullOrEmpty() && value.first.isNotEmpty()
+            }.stateIn(coroutineManager.applicationScope).first()
     }
 
     override fun setSwapMarket(market: Market) {
@@ -140,6 +371,14 @@ class PolkaswapInteractorImpl(
         }
         return null
     }
+
+    override fun checkLiquidityBalance(
+        fromTokenBalance: BigDecimal,
+        fromAmount: BigDecimal,
+        toTokenBalance: BigDecimal,
+        toAmount: BigDecimal,
+        networkFee: BigDecimal
+    ): Boolean = (fromAmount + networkFee) <= fromTokenBalance && toAmount <= toTokenBalance
 
     override fun observeSelectedMarket(): Flow<Market> =
         selectedSwapMarket.asStateFlow()
@@ -175,14 +414,36 @@ class PolkaswapInteractorImpl(
     }
 
     override suspend fun updatePools() {
-        val address = credentialsRepository.getAddress()
+        val address = userRepository.getCurSoraAccount().substrateAddress
         return polkaswapRepository.updateAccountPools(address)
     }
 
-    override fun subscribePoolsCache(): Flow<List<PoolData>> = flow {
-        val address = credentialsRepository.getAddress()
-        emitAll(polkaswapRepository.subscribePoolFlow(address))
+    override fun getPoolData(assetId: String): Flow<PoolData?> = flow {
+        val address = userRepository.getCurSoraAccount().substrateAddress
+        emitAll(polkaswapRepository.getPoolData(address, assetId))
     }
+
+    override suspend fun updatePool(tokenId: String) {
+        polkaswapRepository.updateAccountPool(
+            userRepository.getCurSoraAccount().substrateAddress,
+            tokenId
+        )
+    }
+
+    override fun subscribePoolsCache(): Flow<List<PoolData>> =
+        userRepository.flowCurSoraAccount().flatMapLatest {
+            polkaswapRepository.subscribePoolFlow(it.substrateAddress)
+        }
+
+    override fun subscribeReservesCache(assetId: String): Flow<LiquidityData?> =
+        userRepository.flowCurSoraAccount().flatMapLatest {
+            polkaswapRepository.subscribeLocalPoolReserves(it.substrateAddress, assetId)
+        }
+
+    override suspend fun getPoolStrategicBonusAPY(tokenId: String): BigDecimal? =
+        PolkaswapFormulas.calculateStrategicBonusAPY(
+            polkaswapRepository.getPoolStrategicBonusAPY(tokenId)
+        )
 
     override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean =
         polkaswapRepository.isSwapAvailable(tokenId1, tokenId2)
@@ -209,7 +470,7 @@ class PolkaswapInteractorImpl(
         }
         if (!availableMarkets.contains(selectedSwapMarket.value)
         ) {
-            selectedSwapMarket.value = availableMarkets.first()
+            selectedSwapMarket.value = availableMarkets.firstOrNull() ?: Market.SMART
         }
         return availableMarkets
     }
@@ -233,13 +494,13 @@ class PolkaswapInteractorImpl(
         networkFee: BigDecimal,
         liquidityFee: BigDecimal,
     ): Boolean {
-        val address = credentialsRepository.getAddress()
-        val keypair = credentialsRepository.retrieveKeyPair()
+        val soraAccount = userRepository.getCurSoraAccount()
+        val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
         val result = polkaswapRepository.observeSwap(
             tokenInput,
             tokenOutput,
             keypair,
-            address,
+            soraAccount.substrateAddress,
             if (selectedSwapMarket.value == Market.SMART) emptyList() else listOf(selectedSwapMarket.value),
             desired,
             amount,
@@ -262,6 +523,7 @@ class PolkaswapInteractorImpl(
                         amountTo = if (desired == WithDesired.INPUT) limit else amount,
                         market = selectedSwapMarket.value,
                         liquidityFee = liquidityFee,
+                        soraAccount = soraAccount,
                     )
                 }
                 Triple(
@@ -285,6 +547,88 @@ class PolkaswapInteractorImpl(
                 value.second.isNullOrEmpty() && value.first.isNotEmpty()
             }.stateIn(coroutineManager.applicationScope).first()
         swapResult.set(result)
+        return result
+    }
+
+    override suspend fun isPairEnabled(inputAssetId: String, outputAssetId: String): Flow<Boolean> =
+        polkaswapRepository.isPairEnabled(inputAssetId, outputAssetId)
+
+    override suspend fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean> =
+        polkaswapRepository.isPairPresentedInNetwork(tokenId)
+
+    override suspend fun getLiquidityData(
+        tokenFrom: Token,
+        tokenTo: Token,
+        enabled: Boolean,
+        presented: Boolean
+    ): LiquidityData {
+        return polkaswapRepository.getRemotePoolReserves(
+            userRepository.getCurSoraAccount().substrateAddress,
+            RuntimeHolder.getRuntime(),
+            tokenFrom,
+            tokenTo,
+            enabled,
+            presented
+        )
+    }
+
+    override suspend fun removeLiquidity(
+        token1: Token,
+        token2: Token,
+        markerAssetDesired: BigDecimal,
+        firstAmountMin: BigDecimal,
+        secondAmountMin: BigDecimal,
+        networkFee: BigDecimal
+    ): Boolean {
+        val soraAccount = userRepository.getCurSoraAccount()
+        val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
+        val result = polkaswapRepository.observeRemoveLiquidity(
+            soraAccount.substrateAddress,
+            keypair,
+            token1,
+            token2,
+            markerAssetDesired,
+            firstAmountMin,
+            secondAmountMin
+        )
+            .catch {
+                FirebaseWrapper.recordException(it)
+                emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
+            }
+            .map {
+                if (it.first.isNotEmpty()) {
+                    polkaswapRepository.saveRemoveLiquidity(
+                        txHash = it.first,
+                        status = it.second,
+                        fee = networkFee,
+                        eventSuccess = null,
+                        tokenIdFrom = token1.id,
+                        tokenIdTo = token2.id,
+                        amountFrom = firstAmountMin,
+                        amountTo = secondAmountMin,
+                        soraAccount = soraAccount,
+                    )
+                }
+                Triple(
+                    it.first,
+                    (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
+                    it.second.subscription
+                )
+            }
+            .transformWhile { value ->
+                emit(value.first.isNotEmpty())
+
+                value.second?.let { blockHash ->
+                    val txHash = value.first
+                    val blockResponse = walletRepository.getBlock(blockHash)
+                    val extrinsicId = blockResponse.block.extrinsics.indexOfFirst { s ->
+                        s.blake2b256String() == txHash
+                    }.toLong()
+                    val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
+                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
+                }
+                value.second.isNullOrEmpty() && value.first.isNotEmpty()
+            }.stateIn(coroutineManager.applicationScope).first()
         return result
     }
 }

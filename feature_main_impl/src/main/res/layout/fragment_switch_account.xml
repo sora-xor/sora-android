@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/baseBackground">
+
+    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:textRight=""
+        app:titleText="@string/common_account" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSwitchAccount"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:overScrollMode="never"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@id/tutorialSignUpButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        tools:itemCount="3"
+        tools:listitem="@layout/item_list_switch_account" />
+
+    <Button
+        android:id="@+id/tutorialSignUpButton"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
+        android:text="@string/create_account_title"
+        android:textAllCaps="true"
+        app:layout_constraintBottom_toTopOf="@id/tutorialRestoreTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <soup.neumorphism.NeumorphButton
+        android:id="@+id/tutorialRestoreTextView"
+        style="@style/Widget.Soramitsu.Button.Primary.Neu.56.Shadow"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/x1_2"
+        android:layout_marginEnd="@dimen/x1_2"
+        android:layout_marginBottom="@dimen/x2"
+        android:text="@string/recovery_title"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

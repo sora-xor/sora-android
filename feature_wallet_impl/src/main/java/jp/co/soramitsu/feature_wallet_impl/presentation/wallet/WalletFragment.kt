@@ -16,6 +16,7 @@ import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.updatePadding
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -40,16 +41,19 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.asset.AssetAdapte
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.EventsLoadAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.HistoryAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
     companion object {
         private const val PICK_IMAGE_REQUEST = 101
+        private const val HALF_MINUTE_IN_MS = 30000L
     }
 
     @Inject
@@ -162,6 +166,10 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
     }
 
     private fun initListeners() {
+        viewModel.curSoraAccount.observe {
+            historyAdapter.refresh()
+        }
+
         viewModel.initiateGalleryChooserLiveData.observe {
             selectQrFromGallery()
         }
@@ -205,6 +213,11 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
                         }
                     }
                 }
+            }
+
+            viewModel.viewModelScope.launch {
+                delay(HALF_MINUTE_IN_MS)
+                historyAdapter.refresh()
             }
         }
 
@@ -288,10 +301,5 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
             viewModel.decodeTextFromBitmapQr(data.data!!)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshAssets()
     }
 }

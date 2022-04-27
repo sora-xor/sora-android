@@ -10,6 +10,16 @@
         <item name="cellLeftIconTint" />
     </style>
 
+    <style name="Widget.Soramitsu.RowsView" parent="android:Widget">
+        <item name="rowsCount">1</item>
+        <item name="rowTitleTextAppearance">@style/TextAppearance.Soramitsu.Neu.Light.15</item>
+        <item name="rowText1TextAppearance">@style/TextAppearance.Soramitsu.Neu.Semibold.15</item>
+        <item name="rowText2TextAppearance">@style/TextAppearance.Soramitsu.Neu.Semibold.15</item>
+        <item name="rowType">line</item>
+        <item name="rowsTopPadding">@dimen/x2</item>
+        <item name="rowsBottomPadding">@dimen/x3</item>
+    </style>
+
     <style name="Widget.Soramitsu.SelectTokenCardView" parent="android:Widget">
         <item name="cardBackground">@drawable/background_select_token_40</item>
         <item name="cardBackgroundColorTintSelected">?attr/flatAboveBackground</item>

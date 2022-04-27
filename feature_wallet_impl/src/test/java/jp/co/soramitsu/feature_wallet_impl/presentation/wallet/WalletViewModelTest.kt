@@ -34,6 +34,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
@@ -80,8 +81,8 @@ class WalletViewModelTest {
 
     @Before
     fun setUp() = runBlockingTest {
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("10.12")
-        given(interactor.getVisibleAssets()).willReturn(assets)
+//        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt(), anyBoolean())).willReturn("10.12")
+//        given(interactor.getVisibleAssets()).willReturn(assets)
         walletViewModel = WalletViewModel(
             interactor, router, preloader,
             numbersFormatter, clipboardManager, transactionMappers,

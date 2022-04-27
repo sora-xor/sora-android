@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.sora.splash.presentation
 
+import android.animation.ValueAnimator
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import jp.co.soramitsu.common.di.api.FeatureUtils
@@ -26,38 +27,41 @@ class SplashActivity : AppCompatActivity(), SplashRouter {
     private var isFirstPartFinished = false
     private var isSecondPartStarted = false
 
+    private val animatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
+        val progress = it.animatedFraction
+        if (progress >= 0.8 && !isFirstPartFinished) {
+            isFirstPartFinished = true
+            viewBinding.animationView.pauseAnimation()
+        }
+        if (splashViewModel.runtimeInitiated.value == true && isFirstPartFinished && !isSecondPartStarted) {
+            isSecondPartStarted = true
+            viewBinding.animationView.resumeAnimation()
+        }
+        if (progress >= 0.89) {
+            goNext()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         inject()
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
 
-        viewBinding.animationView.addAnimatorUpdateListener {
-            val progress = it.animatedFraction
+        viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
 
-            if (progress >= 0.8 && !isFirstPartFinished) {
-                isFirstPartFinished = true
-                viewBinding.animationView.pauseAnimation()
-            }
-
-            if (splashViewModel.runtimeInitiated.value == true && isFirstPartFinished && !isSecondPartStarted) {
+        splashViewModel.runtimeInitiated.observe(
+            this
+        ) {
+            if (it && isFirstPartFinished && !isSecondPartStarted) {
                 isSecondPartStarted = true
                 viewBinding.animationView.resumeAnimation()
             }
-
-            if (progress >= 0.89) {
-                splashViewModel.nextScreen()
-            }
         }
+    }
 
-        splashViewModel.runtimeInitiated.observe(
-            this,
-            {
-                if (it && isFirstPartFinished && !isSecondPartStarted) {
-                    isSecondPartStarted = true
-                    viewBinding.animationView.resumeAnimation()
-                }
-            }
-        )
+    private fun goNext() {
+        viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
+        splashViewModel.nextScreen()
     }
 
     private fun inject() {

@@ -32,10 +32,22 @@ data class ExtrinsicParamLocal(
     val paramValue: String,
 )
 
-@Entity(tableName = "extrinsics")
+@Entity(
+    tableName = "extrinsics",
+    foreignKeys = [
+        ForeignKey(
+            entity = SoraAccountLocal::class,
+            parentColumns = ["substrateAddress"],
+            childColumns = ["accountAddress"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.NO_ACTION,
+        )
+    ]
+)
 @TypeConverters(ExtrinsicStatusConverter::class, ExtrinsicTypeConverter::class)
 data class ExtrinsicLocal(
     @PrimaryKey val txHash: String,
+    val accountAddress: String,
     val blockHash: String?,
     val fee: BigDecimal,
     val status: ExtrinsicStatus,
@@ -54,6 +66,7 @@ enum class ExtrinsicStatus {
 enum class ExtrinsicType {
     TRANSFER,
     SWAP,
+    ADD_REMOVE_LIQUIDITY
 }
 
 enum class ExtrinsicParam(val paramName: String) {
@@ -63,10 +76,14 @@ enum class ExtrinsicParam(val paramName: String) {
     AMOUNT("amount"),
     AMOUNT2("amount2"),
     AMOUNT3("amount3"),
-    TRANSFER_TYPE("transferType"),
+    EXTRINSIC_TYPE("type"),
     SWAP_MARKET("swapMarket")
 }
 
 enum class ExtrinsicTransferTypes {
     OUT, IN
+}
+
+enum class ExtrinsicLiquidityType {
+    ADD, WITHDRAW
 }

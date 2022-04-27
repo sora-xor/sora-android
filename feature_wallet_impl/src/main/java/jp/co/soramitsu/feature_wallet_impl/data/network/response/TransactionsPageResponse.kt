@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_wallet_impl.data.network.response
 
 import androidx.annotation.Keep
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
 @Keep
@@ -32,7 +33,7 @@ data class HistoryResponseItem(
     val timestamp: String,
     val networkFee: String,
     val execution: ExecutionResult,
-    val data: JsonObject
+    val data: JsonElement
 )
 
 @Keep
@@ -64,4 +65,32 @@ data class HistoryResponseItemSwap(
     val targetAssetId: String,
     val baseAssetAmount: String,
     val targetAssetAmount: String,
+)
+
+@Keep
+data class HistoryResponseItemLiquidity(
+    val type: String,
+    val baseAssetId: String,
+    val targetAssetId: String,
+    val baseAssetAmount: String,
+    val targetAssetAmount: String,
+)
+
+@Keep
+data class HistoryResponseBatchItem(
+    val data: HistoryResponseBatchItemArgs,
+    val method: String,
+)
+
+@Keep
+data class HistoryResponseBatchItemArgs(
+    val args: JsonObject
+)
+
+@Keep
+data class HistoryResponseItemLiquidityBatch(
+    val input_asset_a: String,
+    val input_asset_b: String,
+    val input_a_desired: String,
+    val input_b_desired: String,
 )

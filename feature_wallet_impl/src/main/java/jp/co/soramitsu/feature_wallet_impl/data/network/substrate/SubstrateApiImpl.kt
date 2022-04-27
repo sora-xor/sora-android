@@ -78,6 +78,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.BlockRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.ChainHeaderRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.ChainLastHeaderRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.FinalizedHeadRequest
+import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.IsPairEnabledRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.request.rpc.NextAccountIndexRequest
 import jp.co.soramitsu.feature_wallet_impl.data.network.response.ChainHeaderResponse
 import jp.co.soramitsu.feature_wallet_impl.data.network.response.FeeResponse
@@ -233,98 +234,109 @@ class SubstrateApiImpl @Inject constructor(
         address: String,
         tokensId: List<ByteArray>
     ): List<PoolDataDto> {
-        return tokensId.map { tokenId ->
-            val reserves = getPairWithXorReserves(runtime, tokenId)
-            val totalIssuanceAndProperties =
-                getPoolTotalIssuanceAndProperties(runtime, tokenId, address)
-            PoolDataDto(
-                tokenId.toHexString(true),
-                reserves.first,
-                reserves.second,
-                totalIssuanceAndProperties.first,
-                totalIssuanceAndProperties.second
-            )
+        return tokensId.mapNotNull { tokenId ->
+            getUserPoolData(runtime, address, tokenId)
         }
+    }
+
+    override suspend fun getUserPoolData(
+        runtime: RuntimeSnapshot,
+        address: String,
+        tokenId: ByteArray
+    ): PoolDataDto? {
+        val reserves = getPairWithXorReserves(runtime, tokenId)
+        val totalIssuanceAndProperties =
+            getPoolTotalIssuanceAndProperties(runtime, tokenId, address)
+
+        if (reserves == null || totalIssuanceAndProperties == null) {
+            return null
+        }
+
+        return PoolDataDto(
+            tokenId.toHexString(true),
+            reserves.first,
+            reserves.second,
+            totalIssuanceAndProperties.first,
+            totalIssuanceAndProperties.second
+        )
     }
 
     private suspend fun getPairWithXorReserves(
         runtime: RuntimeSnapshot,
         tokenId: ByteArray
-    ): Pair<BigInteger, BigInteger> {
+    ): Pair<BigInteger, BigInteger>? {
         val storageKey = runtime.reservesKey(tokenId)
-        return runCatching {
-            socketService.executeAsync(
-                request = GetStorageRequest(listOf(storageKey)),
-                mapper = scale(ReservesResponse).nonNull(),
-            )
-                .let { storage ->
-                    storage[storage.schema.first] to storage[storage.schema.second]
-                }
-        }.getOrElse {
-            FirebaseWrapper.recordException(it)
-            throw it
-        }
+        return socketService.executeAsync(
+            request = GetStorageRequest(listOf(storageKey)),
+            mapper = scale(ReservesResponse),
+        )
+            .result
+            ?.let { storage ->
+                storage[storage.schema.first] to storage[storage.schema.second]
+            }
     }
 
     override suspend fun getPoolReserveAccount(
         runtime: RuntimeSnapshot,
         tokenId: ByteArray
-    ): ByteArray {
-        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palleteName)
+    ): ByteArray? {
+        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palletName)
             .storage(Storage.PROPERTIES.storageName).storageKey(
                 RuntimeHolder.getRuntime(),
                 OptionsProvider.feeAssetId.fromHex(),
                 tokenId
             )
-        return runCatching {
-            socketService.executeAsync(
-                request = GetStorageRequest(listOf(storageKey)),
-                mapper = scale(PoolPropertiesResponse).nonNull(),
-            )
-                .let { storage ->
-                    storage[storage.schema.first]
-                }
-        }.onFailure {
-            FirebaseWrapper.recordException(it)
-        }.getOrThrow()
+        return socketService.executeAsync(
+            request = GetStorageRequest(listOf(storageKey)),
+            mapper = scale(PoolPropertiesResponse),
+        )
+            .result
+            ?.let { storage ->
+                storage[storage.schema.first]
+            }
+    }
+
+    override suspend fun getPoolReserves(
+        runtime: RuntimeSnapshot,
+        tokenId: String
+    ): Pair<BigInteger, BigInteger>? {
+        return getPairWithXorReserves(runtime, tokenId.fromHex())
     }
 
     private suspend fun getPoolTotalIssuanceAndProperties(
         runtime: RuntimeSnapshot,
         tokenId: ByteArray,
         address: String
-    ): Pair<BigInteger, BigInteger> {
-        return getPoolReserveAccount(runtime, tokenId).let { account ->
+    ): Pair<BigInteger, BigInteger>? {
+        return getPoolReserveAccount(runtime, tokenId)?.let { account ->
             getPoolTotalIssuances(
                 RuntimeHolder.getRuntime(),
                 account
-            ) to getPoolProviders(
-                RuntimeHolder.getRuntime(),
-                account,
-                address
-            )
+            )?.let {
+                it to getPoolProviders(
+                    RuntimeHolder.getRuntime(),
+                    account,
+                    address
+                )
+            }
         }
     }
 
     private suspend fun getPoolTotalIssuances(
         runtime: RuntimeSnapshot,
         reservesAccountId: ByteArray
-    ): BigInteger {
-        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palleteName)
+    ): BigInteger? {
+        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palletName)
             .storage(Storage.TOTAL_ISSUANCES.storageName)
             .storageKey(RuntimeHolder.getRuntime(), reservesAccountId)
-        return runCatching {
-            socketService.executeAsync(
-                request = GetStorageRequest(listOf(storageKey)),
-                mapper = scale(TotalIssuance).nonNull(),
-            )
-                .let { storage ->
-                    storage[storage.schema.totalIssuance]
-                }
-        }.getOrElse {
-            FirebaseWrapper.recordException(it)
-            throw it
-        }
+        return socketService.executeAsync(
+            request = GetStorageRequest(listOf(storageKey)),
+            mapper = scale(TotalIssuance),
+        )
+            .result
+            ?.let { storage ->
+                storage[storage.schema.totalIssuance]
+            }
     }
 
     private suspend fun getPoolProviders(
@@ -332,7 +344,7 @@ class SubstrateApiImpl @Inject constructor(
         reservesAccountId: ByteArray,
         currentAddress: String
     ): BigInteger {
-        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palleteName)
+        val storageKey = runtime.metadata.module(Pallete.POOL_XYK.palletName)
             .storage(Storage.POOL_PROVIDERS.storageName).storageKey(
                 RuntimeHolder.getRuntime(),
                 reservesAccountId,
@@ -341,10 +353,12 @@ class SubstrateApiImpl @Inject constructor(
         return runCatching {
             socketService.executeAsync(
                 request = GetStorageRequest(listOf(storageKey)),
-                mapper = scale(PoolProviders).nonNull(),
+                mapper = scale(PoolProviders),
             )
                 .let { storage ->
-                    storage[storage.schema.poolProviders]
+                    storage.result?.let {
+                        it[it.schema.poolProviders]
+                    } ?: BigInteger.ZERO
                 }
         }.getOrElse {
             FirebaseWrapper.recordException(it)
@@ -436,7 +450,7 @@ class SubstrateApiImpl @Inject constructor(
         accountId: String
     ): XorBalanceDto {
         val storageKey =
-            runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.ACCOUNT.storageName)
+            runtime.metadata.module(Pallete.SYSTEM.palletName).storage(Storage.ACCOUNT.storageName)
                 .storageKey(runtime, accountId.toAccountId())
         val accountInfoStruct = socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -450,7 +464,7 @@ class SubstrateApiImpl @Inject constructor(
         var bonded = BigInteger.ZERO
 
         stakingLedgerXorBalance?.let { stakingLedgerXorBalance ->
-            redeemable = stakingLedgerXorBalance[StakingLedger.unlocking]?.filter {
+            redeemable = stakingLedgerXorBalance[StakingLedger.unlocking].filter {
                 it[UnlockChunk.era] <= activeEra
             }.sumByBigInteger { it[UnlockChunk.value] }
             unbonding = stakingLedgerXorBalance[StakingLedger.unlocking].filter {
@@ -481,7 +495,7 @@ class SubstrateApiImpl @Inject constructor(
                     return null
                 }
 
-                val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName)
+                val storageKey = runtime.metadata.module(Pallete.STAKING.palletName)
                     .storage(Storage.LEDGER.storageName)
                     .storageKey(runtime, it.toAccountId())
                 socketService.executeAsync(
@@ -492,7 +506,7 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     private suspend fun fetchActiveEra(runtime: RuntimeSnapshot): BigInteger {
-        val storageKey = runtime.metadata.module(Pallete.STAKING.palleteName)
+        val storageKey = runtime.metadata.module(Pallete.STAKING.palletName)
             .storage(Storage.ACTIVE_ERA.storageName)
             .storageKey()
         return socketService.executeAsync(
@@ -508,7 +522,7 @@ class SubstrateApiImpl @Inject constructor(
         accountId: String
     ): String? {
         val storageKey =
-            runtime.metadata.module(Pallete.STAKING.palleteName).storage(Storage.BONDED.storageName)
+            runtime.metadata.module(Pallete.STAKING.palletName).storage(Storage.BONDED.storageName)
                 .storageKey(runtime, accountId.toAccountId())
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -526,7 +540,7 @@ class SubstrateApiImpl @Inject constructor(
 
     override suspend fun fetchBalances(runtime: RuntimeSnapshot, accountId: String): BigInteger {
         val storageKey =
-            runtime.metadata.module(Pallete.SYSTEM.palleteName).storage(Storage.ACCOUNT.storageName)
+            runtime.metadata.module(Pallete.SYSTEM.palletName).storage(Storage.ACCOUNT.storageName)
                 .storageKey(runtime, accountId.toAccountId())
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -538,7 +552,7 @@ class SubstrateApiImpl @Inject constructor(
 
     override suspend fun isUpgradedToDualRefCount(runtime: RuntimeSnapshot): Boolean {
         val storageKey =
-            runtime.metadata.module(Pallete.SYSTEM.palleteName)
+            runtime.metadata.module(Pallete.SYSTEM.palletName)
                 .storage(Storage.UPGRADED_TO_DUAL_REF_COUNT.storageName).storageKey()
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -662,19 +676,199 @@ class SubstrateApiImpl @Inject constructor(
                 desired = desired,
             )
         }
+
+        return calculateNetworkFeeFromExtrinsic(extrinsic)
+    }
+
+    override suspend fun calcRemoveLiquidityNetworkFee(
+        from: String,
+        runtime: RuntimeSnapshot,
+        outputAssetIdA: String,
+        outputAssetIdB: String,
+        markerAssetDesired: BigInteger,
+        outputAMin: BigInteger,
+        outputBMin: BigInteger
+    ): BigInteger {
+        val kp = generateFakeKeyPair()
+        val extrinsic = buildExtrinsic(
+            from,
+            kp,
+            runtime
+        ) {
+            removeLiquidity(
+                outputAssetIdA = outputAssetIdA,
+                outputAssetIdB = outputAssetIdB,
+                markerAssetDesired = markerAssetDesired,
+                outputAMin = outputAMin,
+                outputBMin = outputBMin
+            )
+        }
+        return calculateNetworkFeeFromExtrinsic(extrinsic)
+    }
+
+    private suspend fun calculateNetworkFeeFromExtrinsic(
+        extrinsic: String
+    ): BigInteger {
         return socketService.executeAsync(
             request = FeeCalculationRequest(extrinsic),
             mapper = pojo<FeeResponse>().nonNull(),
         ).partialFee
     }
 
+    override suspend fun calcAddLiquidityNetworkFee(
+        address: String,
+        runtime: RuntimeSnapshot,
+        inputAssetId: String,
+        outputAssetId: String,
+        baseAssetAmount: BigInteger,
+        targetAssetAmount: BigInteger,
+        amountFromMin: BigInteger,
+        amountToMin: BigInteger,
+        pairEnabled: Boolean,
+        pairPresented: Boolean
+    ): BigInteger {
+        val keyPair = generateFakeKeyPair()
+
+        val extrinsic = buildAddLiquidityExtrinsic(
+            address,
+            keyPair,
+            runtime,
+            inputAssetId,
+            outputAssetId,
+            baseAssetAmount,
+            targetAssetAmount,
+            amountFromMin,
+            amountToMin,
+            pairEnabled,
+            pairPresented
+        )
+
+        return calculateNetworkFeeFromExtrinsic(extrinsic)
+    }
+
+    override suspend fun observeAddLiquidity(
+        address: String,
+        keypair: Sr25519Keypair,
+        runtime: RuntimeSnapshot,
+        inputAssetId: String,
+        outputAssetId: String,
+        baseAssetAmount: BigInteger,
+        targetAssetAmount: BigInteger,
+        amountFromMin: BigInteger,
+        amountToMin: BigInteger,
+        pairEnabled: Boolean,
+        pairPresented: Boolean
+    ): Flow<Pair<String, ExtrinsicStatusResponse>> {
+        return buildAddLiquidityExtrinsic(
+            address,
+            keypair,
+            runtime,
+            inputAssetId,
+            outputAssetId,
+            baseAssetAmount,
+            targetAssetAmount,
+            amountFromMin,
+            amountToMin,
+            pairEnabled,
+            pairPresented
+        )
+            .let { extrinsic ->
+                val hashExt = extrinsic.blake2b256String()
+                socketService.subscriptionFlow(
+                    request = SubmitAndWatchExtrinsicRequest(extrinsic),
+                    unsubscribeMethod = "author_unwatchExtrinsic",
+                ).map {
+                    mapSubscription(hashExt, it)
+                }
+            }
+    }
+
+    private suspend fun buildAddLiquidityExtrinsic(
+        address: String,
+        keypair: Sr25519Keypair,
+        runtime: RuntimeSnapshot,
+        inputAssetId: String,
+        outputAssetId: String,
+        baseAssetAmount: BigInteger,
+        targetAssetAmount: BigInteger,
+        amountFromMin: BigInteger,
+        amountToMin: BigInteger,
+        pairEnabled: Boolean,
+        pairPresented: Boolean
+    ): String {
+        return buildExtrinsic(
+            address,
+            keypair,
+            runtime,
+            useBatchAll = !pairPresented
+        ) {
+            if (!pairPresented) {
+                if (!pairEnabled) {
+                    register(inputAssetId, outputAssetId)
+                }
+                initializePool(inputAssetId, outputAssetId)
+            }
+
+            depositLiquidity(
+                inputAssetId,
+                outputAssetId,
+                baseAssetAmount,
+                targetAssetAmount,
+                amountFromMin,
+                amountToMin
+            )
+        }
+    }
+
+    override suspend fun isPairEnabled(inputAssetId: String, outputAssetId: String): Boolean {
+        return socketService.executeAsync(
+            request = IsPairEnabledRequest(inputAssetId, outputAssetId),
+            mapper = pojo<Boolean>().nonNull()
+        )
+    }
+
+    override fun observeRemoveLiquidity(
+        keypair: Sr25519Keypair,
+        from: String,
+        runtime: RuntimeSnapshot,
+        token1: String,
+        token2: String,
+        markerAssetDesired: BigInteger,
+        firstAmountMin: BigInteger,
+        secondAmountMin: BigInteger
+    ): Flow<Pair<String, ExtrinsicStatusResponse>> {
+        return flow {
+            val extrinsic = buildExtrinsic(
+                from,
+                keypair,
+                runtime
+            ) {
+                removeLiquidity(
+                    outputAssetIdA = token1,
+                    outputAssetIdB = token2,
+                    markerAssetDesired = markerAssetDesired,
+                    outputAMin = firstAmountMin,
+                    outputBMin = secondAmountMin
+                )
+            }
+            val hashExt = extrinsic.blake2b256String()
+            val socketFlow = socketService.subscriptionFlow(
+                request = SubmitAndWatchExtrinsicRequest(extrinsic),
+                unsubscribeMethod = "author_unwatchExtrinsic",
+            ).map {
+                mapSubscription(hashExt, it)
+            }
+            emitAll(socketFlow)
+        }
+    }
+
     override suspend fun fetchAssetsList(runtime: RuntimeSnapshot): List<TokenInfoDto> {
-        val storage = runtime.metadata.module(Pallete.ASSETS.palleteName)
+        val storage = runtime.metadata.module(Pallete.ASSETS.palletName)
             .storage(Storage.ASSET_INFOS.storageName)
         val key = storage.storageKey()
         val type = storage.type.value
         var loaded: Int
-        val amount = 10
+        val amount = 400
         var lastKey: String? = null
         val assetKeys = mutableListOf<String>()
         do {
@@ -713,6 +907,7 @@ class SubstrateApiImpl @Inject constructor(
         from: String,
         keypair: Sr25519Keypair,
         runtime: RuntimeSnapshot,
+        useBatchAll: Boolean = false,
         addCall: ExtrinsicBuilder.() -> ExtrinsicBuilder,
     ): String {
         val fromAddress = from.toAccountId()
@@ -758,7 +953,7 @@ class SubstrateApiImpl @Inject constructor(
             )
         )
             .addCall()
-            .build()
+            .build(useBatchAll)
     }
 
     private suspend fun getNonce(from: String): BigInteger =

@@ -6,8 +6,8 @@
   <string name="about_instagram">Like for Instagram</string>
   <string name="about_medium">Read for Medium</string>
   <string name="about_privacy">Privacy Policy</string>
-  <string name="about_source_code">Source Code</string>
-  <string name="about_telegram">Official Telegram Group</string>
+  <string name="about_source_code">Github Source Code</string>
+  <string name="about_telegram">join the official telegram group</string>
   <string name="about_title">About</string>
   <string name="about_twitter">Follow for Twitter</string>
   <string name="about_website">Official Website</string>
@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Confirm mnemonic</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Project</string>
+  <string name="add_liquidity_alert_text">you go de get fees according to wettin your put inside the pool</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">We nor see the Address, make sure say that address belongs to the right network</string>
   <string name="address_not_found_1">Dem nor see Receiver</string>
   <string name="amount_default_fee">Transaction fee</string>
@@ -35,7 +41,7 @@
   <string name="choose_token">Choose\ntoken</string>
   <string name="choose_tokens">Choose tokens</string>
   <string name="claim_contact">If you get any question or anything wey dey disturb you, you fit %% contact us%%.</string>
-  <string name="claim_contact_1">If you get any question or anything wey dey disturb you, you fit </string>
+  <string name="claim_contact_1">If you get any question or anything wey dey disturb you, you fit</string>
   <string name="claim_contact_2">contact us.</string>
   <string name="claim_contact_us">%%Contact us%% for any questions or anything wey dey bother you</string>
   <string name="claim_error_title">the movement fail</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Copy</string>
   <string name="common_copy_address">Copy address</string>
   <string name="common_croatian">Croatian</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Description</string>
   <string name="common_done">Don do am</string>
   <string name="common_donotallow">Nor Allow</string>
@@ -131,6 +139,7 @@
   </plurals>
   <string name="common_indonesian">Indonesian</string>
   <string name="common_info">Info</string>
+  <string name="common_insufficient_balance">balance no reach</string>
   <string name="common_italian">Italian</string>
   <string name="common_japanese">Japanese</string>
   <string name="common_khmer">Khmer</string>
@@ -146,6 +155,7 @@
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">See am for Blockchain Explorer</string>
   <string name="common_options_title">Select option</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">When you dey create new account for SORA, you go get 12 word passphrase. If you don get 15 word SORA passphrase already, you go fit import account with am - Im still dey compatible and im go continue to work.</string>
   <string name="common_passphrase_header">Passphrase na\ntype of password.</string>
   <string name="common_passphrase_save_mnemonic_title">Save or send passphrase</string>
@@ -165,6 +175,7 @@
   <string name="common_receive">Receive</string>
   <string name="common_received">Recieved</string>
   <string name="common_recipient">Reciever</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Try again</string>
   <string name="common_russian">Russian</string>
   <string name="common_save">Save</string>
@@ -184,8 +195,9 @@
   <string name="common_sms_code_not_correct">Verification code nor correct</string>
   <string name="common_spanish">Spanish</string>
   <string name="common_spanish_colombia">Spanish (Colombia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Swedish</string>
-  <string name="common_terms_title">Terms &amp; nCondition</string>
+  <string name="common_terms_title">Terms and Condition</string>
   <string name="common_thai">Thai</string>
   <string name="common_to">To</string>
   <string name="common_to_estimated">To (estimated)</string>
@@ -199,6 +211,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Vote</string>
   <string name="common_yesterday">Yesterday</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">The contacts wey dey important go show for here</string>
   <string name="contacts_scan">Scan QR code</string>
   <string name="contacts_search_empty_state_title">The search nor get result</string>
@@ -256,6 +270,10 @@
   <string name="invoice_scan_error_no_info">QR nor fit decode am</string>
   <string name="invoice_scan_error_user_not_found">we nor fit see user from QR</string>
   <string name="language_title">Select language</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">This action so, go make your account delete commot from this device. Make sure say you don back up your pasphrase before you continue</string>
   <string name="mnemonic_alert_text">Mnemonic passphrase na dem dey use take  dey recover access to account. Write am for somewhere, we nor go fit recover your account without am</string>
   <string name="mnemonic_confirm_text">Choose the words for the correct order to take confirm am</string>
@@ -289,16 +307,18 @@
   <string name="pincode_updated">Dem don update pin code</string>
   <string name="polkaswap_button_swap_again">Swap am again</string>
   <string name="polkaswap_coming_soon">The DEX wey dey for the Interoperable Future. Polkaswap na non-custodial, AMM-DEX protocol na dey swap token base on Polkadot network, Parachains, and blockchains dey connect throught Bridge. Polkaswap protocol don commot trusted intermediaries and im dey provide the opportunity to take trade fast.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">abeg Confirm say you this swap</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">E nor get SWAP</string>
   <string name="polkaswap_info_faq">Question wey dem dey ask always about Polkaswap</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Na SORA community na dey maintain Polkaswap. Before you use Polkaswap functionality, I beg make you read the %%Polkaswap FAQ%%  and documentation well, wey  explain how Polkaswap dey work dey for inside, also the Polkaswap Memorandum and Terms of Services, and Privacy Policy still dey inside.All these documents dey very important to take secure positive user experience. \nAs you dey use Polkaswap, you agree say you don read and understand all these documents.</string>
   <string name="polkaswap_info_text_2">Na SORA community na dey maintain Polkaswap. Before you use Polkaswap functionality, I beg make you review the %%Polkaswap FAQ%%  and documentation, wey detail explanation of how Polkaswap dey work dey for inside, also the Polkaswap Memorandum and Terms of Services, and Privacy Policy still dey inside.All these documents dey very important to take secure positive user experience. \nAs you dey use Polkaswap, you agree say you don read and understand all these documents.\n\nYou agree say:\n\n1) You dey responsible to take obey all the laws wey go apply to your particular use of Polkaswap for your legal jurisdiction;\n2) You understand say dis current version of Polkaswap na alpha version: im mean say dem never test am well well, and some functions nor go work as dem design am;\n3) You understand and volunteer say you go accpet the risks wey dey to take use Polaswap, the risk include, but nor be only, the risk to take loose tokens. Again, I beg nor continue without say you nor read the FAQ, Polkaswap Memorandum and Terms of Services, and Privacy Policy!</string>
-  <string name="polkaswap_info_text_3">Na SORA community na dey maintain Polkaswap. Before you use Polkaswap functionality, I beg make you review the %%Polkaswap FAQ%%  and documentation, wey detail explanation of how Polkaswap dey work dey for inside, also the Polkaswap Memorandum and Terms of Services, and Privacy Policy still dey inside.All these documents dey very important to take secure positive user experience. \nAs you dey use Polkaswap, you agree say you don read and understand all these documents.\n\nYou agree say:\n\n1) You dey responsible to take obey all the laws wey go apply to your particular use of Polkaswap for your legal jurisdiction;\n2) You understand say dis current version of Polkaswap na alpha version: im mean say dem never test am well well, and some functions nor go work as dem design am;\n3) You understand and volunteer say you go accpet the risks wey dey to take use Polaswap, the risk include, but nor be only, the risk to take loose tokens. Again, I beg nor continue without say you nor read the FAQ, Polkaswap Memorandum and Terms of Services, and Privacy Policy!</string>
-  <string name="polkaswap_info_text_4">Na SORA community na dey maintain Polkaswap. Before you use Polkaswap functionality, I beg make you review the %%Polkaswap FAQ%%  and documentation, wey detail explanation of how Polkaswap dey work dey for inside, also the Polkaswap Memorandum and Terms of Services, and Privacy Policy still dey inside.All these documents dey very important to take secure positive user experience. \nAs you dey use Polkaswap, you agree say you don read and understand all these documents.\n\nYou agree say:\n\n1) You dey responsible to take obey all the laws wey go apply to your particular use of Polkaswap for your legal jurisdiction;\n2) You understand say dis current version of Polkaswap na alpha version: im mean say dem never test am well well, and some functions nor go work as dem design am;\n3) You understand and volunteer say you go accpet the risks wey dey to take use Polaswap, the risk include, but nor be only, the risk to take loose tokens. Again, I beg nor continue without say you nor read the FAQ, Polkaswap Memorandum and Terms of Services, and Privacy Policy!</string>
-  <string name="polkaswap_info_text_5">Na SORA community na dey maintain Polkaswap. Before you use Polkaswap functionality, I beg make you review the %%Polkaswap FAQ%%  and documentation, wey detail explanation of how Polkaswap dey work dey for inside, also the Polkaswap Memorandum and Terms of Services, and Privacy Policy still dey inside.All these documents dey very important to take secure positive user experience. \nAs you dey use Polkaswap, you agree say you don read and understand all these documents.\n\nYou agree say:\n\n1) You dey responsible to take obey all the laws wey go apply to your particular use of Polkaswap for your legal jurisdiction;\n2) You understand say dis current version of Polkaswap na alpha version: im mean say dem never test am well well, and some functions nor go work as dem design am;\n3) You understand and volunteer say you go accpet the risks wey dey to take use Polaswap, the risk include, but nor be only, the risk to take loose tokens. Again, I beg nor continue without say you nor read the FAQ, Polkaswap Memorandum and Terms of Services, and Privacy Policy!</string>
-  <string name="polkaswap_info_text_6">Na SORA community na dey maintain Polkaswap. Before you use Polkaswap functionality, I beg make you review the %%Polkaswap FAQ%%  and documentation, wey detail explanation of how Polkaswap dey work dey for inside, also the Polkaswap Memorandum and Terms of Services, and Privacy Policy still dey inside.All these documents dey very important to take secure positive user experience. \nAs you dey use Polkaswap, you agree say you don read and understand all these documents.\n\nYou agree say:\n\n1) You dey responsible to take obey all the laws wey go apply to your particular use of Polkaswap for your legal jurisdiction;\n2) You understand say dis current version of Polkaswap na alpha version: im mean say dem never test am well well, and some functions nor go work as dem design am;\n3) You understand and volunteer say you go accpet the risks wey dey to take use Polkaswap, the risk include, but nor be only, the risk to take lose tokens. Again, I beg nor continue without say you nor read the FAQ, Polkaswap Memorandum and Terms of Services, and Privacy Policy!</string>
+  <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
+  <string name="polkaswap_info_text_4">Your understanding that the current version of Polkaswap is an alpha version: it has not been fully tested, and some functions may not perform as designed;</string>
+  <string name="polkaswap_info_text_5">Your understanding and voluntary acceptance of the risks involved in using Polkaswap, including, but not limited to, the risk of losing tokens.</string>
+  <string name="polkaswap_info_text_6">abeg make you continue if you no va  read the %%Polkaswap FAQ%%, %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%!</string>
   <string name="polkaswap_info_text_7">For you to take fit hide the disclaimer notification from the Swap tab, abeg swipe the button wey dey bottom. Make you only do am if you understand and you don read all the documents wey dem mention!</string>
   <string name="polkaswap_info_text_8">Swipe to take hide</string>
   <string name="polkaswap_info_text_9">Disclaimer notification hide from the Polkaswap tab. Swipe the button below if you wish  say you want activate the notification.</string>
@@ -321,9 +341,12 @@
   <string name="polkaswap_minimum_received_info">as you wan sell or buy,if the price change too much before we confirm am and we no like the change,your transaction fit no go through</string>
   <string name="polkaswap_network_fee">Network Fee</string>
   <string name="polkaswap_network_fee_info">Na Network fee na dem dey use take dey make sure say SORA system\'s dey grow and im dey perform steady</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Wettin you go get na estimate. You go get at least %s or the transaction go go cancel</string>
   <string name="polkaswap_pool_not_created">Dem nor create pool</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction go fit dey frontrunned</string>
   <string name="polkaswap_slippage_info">as you wan sell or buy,if the price change pass this percent,,your transaction fit no go through</string>
   <string name="polkaswap_slippage_mayfail">Your transaction fit fail</string>
@@ -333,13 +356,15 @@
   <string name="polkaswap_swapped">Dem don swap am</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Add</string>
   <string name="pool_button_remove">Commot</string>
   <string name="pool_liqudity_title">Your liquidity</string>
   <string name="pool_liquidity_placeholder">Your liquidity go show for here</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">the portion of the pool wey be your own</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">wettin reach you for the pool</string>
   <string name="pool_token_pooled">then join them together inside one place\n</string>
   <string name="profile_about_title">About</string>
   <string name="profile_biometry_title">Biometry auth</string>
@@ -417,6 +442,10 @@
   <string name="referendum_total_votes">Total votes</string>
   <string name="referendum_unsupport_title">No</string>
   <string name="referendum_voting_result">Na the vote result</string>
+  <string name="remove_liquidity_info_text">when you remove the liquidity you be put before now,e go convert your stuff to the current rate as to wettin be your share for the pool</string>
+  <string name="remove_liquidity_title">commot liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">E require restart</string>
   <string name="screenshot_alert_text">Nor take screenshots, wey third-party malware go fit collect</string>
   <string name="screenshot_alert_title">Make you nor screenshot</string>
@@ -427,6 +456,10 @@
   <string name="select_asset_send">Select Asset wey you want Send</string>
   <string name="select_recipient">Select who go recieve am</string>
   <string name="set_amount">Set amount</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR holders go fit stake their XOR to take nominate validators and dem go get rewards</string>
   <string name="staking_description">To take nominate validators na important part of the SORA ecosystem as e dey help to take secure and deventralize the network. Dem go give VAL tokens to the validators and nominators as reward for them to take stake.</string>
   <string name="staking_val_reward">SORA VALidator Rewards</string>
@@ -475,7 +508,7 @@
   <string name="tutorial_restore_account">Restore account access</string>
   <string name="tutorial_sign_up">Sign up</string>
   <string name="tutorial_terms_and_conditions">As you dey create account you dey agree with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
-  <string name="tutorial_terms_and_conditions_1">For you to Signup you dey agree say\n</string>
+  <string name="tutorial_terms_and_conditions_1">For you to Signup you dey agree say</string>
   <string name="tutorial_terms_and_conditions_2">Terms and Conditions</string>
   <string name="tutorial_terms_and_conditions_3">Terms &amp; Conditions</string>
   <string name="tutorial_terms_and_conditions_recovery">As you dey import account you dey say you agree with the %%Terms &amp; Conditions%% and %%Privacy Policy%%</string>
@@ -512,8 +545,10 @@
   <string name="wallet_history_to_soranet_account">Dey go My SORA NET account</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">My %sNetwork address to take Receive %s</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address wel go Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">My %s Network address to take Receive %s %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address wey go Recieve %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Receive VAL</string>
   <string name="wallet_redeemable">to get am back</string>
   <string name="wallet_send_existential_warning_message">Your transfer go commot your account commot from blockstore since im go make total balance low pass existing deposit</string>
@@ -522,8 +557,10 @@
   <string name="wallet_transaction_rejected">Dem reject the transaction</string>
   <string name="wallet_transaction_submitted">Dem don submit the transaction</string>
   <string name="wallet_transaction_submitted_1">Transaction\ndem don submit am</string>
+  <string name="wallet_transactions_unavailable_description">we de handle the issue,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">no fit load transactions</string>
   <string name="wallet_transfer_description_hint">Max %s symbols</string>
   <string name="wallet_transfer_to_ethereum">Dey go Ethereum address</string>
-  <string name="wallet_unbonding">to free </string>
+  <string name="wallet_unbonding">to free</string>
   <string name="wallet_val_to_my_eth">VAL go My Ethereum account</string>
 </resources>

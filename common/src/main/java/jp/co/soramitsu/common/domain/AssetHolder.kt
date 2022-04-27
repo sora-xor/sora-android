@@ -41,6 +41,13 @@ class AssetHolder {
                     "Polkaswap", "PSWAP",
                     true, true,
                     3,
+                ),
+            // xstusd
+            "0x0200080000000000000000000000000000000000000000000000000000000000" to
+                AssetDefault(
+                    "SORA Synthetic USD", "XSTUSD",
+                    true, true,
+                    4,
                 )
         )
         private val defaultAsset: AssetDefault = AssetDefault(

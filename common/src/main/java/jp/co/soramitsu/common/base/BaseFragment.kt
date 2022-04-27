@@ -72,4 +72,10 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
     fun <V> LiveData<V>.observe(observer: (V) -> Unit) {
         observe(viewLifecycleOwner, observer)
     }
+
+    fun <V> LiveData<V>.observeNonNull(observer: (V) -> Unit) {
+        observe(viewLifecycleOwner) {
+            it?.let(observer)
+        }
+    }
 }

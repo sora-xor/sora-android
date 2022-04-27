@@ -10,6 +10,8 @@ import android.text.SpannableStringBuilder
 import android.text.style.RelativeSizeSpan
 import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.util.SoraColoredClickableSpan
+import java.math.BigDecimal
+import java.util.Locale
 import java.util.regex.Pattern
 
 fun String.parseOtpCode(): String {
@@ -51,13 +53,21 @@ fun String.truncateHash(): String = if (this.isNotEmpty() && this.length > 10) "
 
 fun String.truncateUserAddress(): String = if (this.isNotEmpty() && this.length > 10) "${this.substring(0, 5)}...${this.substring(this.lastIndex - 4, this.lastIndex + 1)}" else this
 
-fun String.decimalPartSized(decimalSeparator: String = "."): SpannableString {
+fun String.decimalPartSized(decimalSeparator: String = ".", ticker: String = ""): SpannableString {
     val decimalPointIndex = this.indexOf(decimalSeparator)
+
+    val endIndex = this.indexOf(ticker).let { index ->
+        if (ticker.isEmpty() || index == -1) {
+            this.length
+        } else {
+            index
+        }
+    }
 
     val ss = SpannableString(this)
 
     if (decimalPointIndex != -1) {
-        ss.setSpan(RelativeSizeSpan(0.7f), decimalPointIndex, this.length, 0)
+        ss.setSpan(RelativeSizeSpan(0.7f), decimalPointIndex, endIndex, 0)
     }
 
     return ss
@@ -101,4 +111,21 @@ fun String.highlightWords(colors: List<Int>, clickables: List<() -> Unit>, under
     }
 
     return builder
+}
+
+fun String?.getBigDecimal(groupingSymbol: Char = ' '): BigDecimal? {
+    if (this.isNullOrEmpty() || this.first() == '.')
+        return null
+
+    return BigDecimal(this.replace(groupingSymbol.toString(), ""))
+}
+
+fun String.snakeCaseToCamelCase(): String {
+    return split("_").mapIndexed { index, segment ->
+        if (index > 0) { // do not capitalize first segment
+            segment.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        } else {
+            segment
+        }
+    }.joinToString(separator = "")
 }

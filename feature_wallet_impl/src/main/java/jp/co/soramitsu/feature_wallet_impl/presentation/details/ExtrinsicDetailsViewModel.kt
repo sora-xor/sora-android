@@ -22,6 +22,7 @@ import jp.co.soramitsu.common.util.ext.truncateHash
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -76,6 +77,9 @@ class ExtrinsicDetailsViewModel(
                     is Transaction.Swap -> {
                         _details.value = buildSwapModel(it, myAddress, feeToken)
                     }
+                    is Transaction.Liquidity -> {
+                        _details.value = buildLiquidityModel(it, myAddress, feeToken)
+                    }
                 }
             }
         }
@@ -116,7 +120,8 @@ class ExtrinsicDetailsViewModel(
             _btnEnabledLiveData.value = false
             _progressVisibilityLiveData.value = true
         } else {
-            _btnTitleLiveData.value = resourceManager.getString(R.string.polkaswap_button_swap_again)
+            _btnTitleLiveData.value =
+                resourceManager.getString(R.string.polkaswap_button_swap_again)
             _btnEnabledLiveData.value = true
             _progressVisibilityLiveData.value = false
         }
@@ -179,6 +184,59 @@ class ExtrinsicDetailsViewModel(
                 numbersFormatter.formatBigDecimal(tx.amountTo, AssetHolder.ROUNDING),
                 tx.tokenTo.symbol
             )
+        )
+    }
+
+    private fun buildLiquidityModel(
+        tx: Transaction.Liquidity,
+        myAddress: String,
+        feeToken: Token,
+    ): LiquidityDetailsModel {
+        val (date, time) = Date(tx.timestamp).let {
+            dateTimeFormatter.formatDate(
+                it,
+                DateTimeFormatter.DD_MMMM_YYYY
+            ) to dateTimeFormatter.formatTimeWithSeconds(it)
+        }
+        val sumPrefix = if (tx.type == TransactionLiquidityType.ADD) "-" else "+"
+        clipboardData.clear()
+        clipboardData.add(tx.txHash)
+        clipboardData.add(myAddress)
+        return LiquidityDetailsModel(
+            liquidityType = tx.type,
+            statusIcon = getIcon(tx).first,
+            token1Icon = tx.token1.icon,
+            token2Icon = tx.token2.icon,
+            status = tx.status,
+            statusText = getStatus(tx),
+            statusDescription = if (tx.status == TransactionStatus.COMMITTED && tx.successStatus == true) resourceManager.getString(
+                if (tx.type == TransactionLiquidityType.ADD) R.string.liquidity_added else R.string.liquidity_removed
+            ).format("%s-%s".format(tx.token1.symbol, tx.token2.symbol))
+            else "",
+            txHash = tx.txHash.truncateHash(),
+            fromAccount = myAddress.truncateUserAddress(),
+            networkFee = "%s %s".format(
+                numbersFormatter.formatBigDecimal(tx.fee, feeToken.precision),
+                feeToken.symbol
+            ),
+            date = date,
+            time = time,
+            token1Name = tx.token1.name,
+            token1Amount = "$sumPrefix%s %s".format(
+                numbersFormatter.formatBigDecimal(
+                    tx.amount1,
+                    tx.token1.precision
+                ),
+                tx.token1.symbol
+            ),
+            token2Name = tx.token2.name,
+            token2Amount = "$sumPrefix%s %s".format(
+                numbersFormatter.formatBigDecimal(
+                    tx.amount2,
+                    tx.token2.precision
+                ),
+                tx.token2.symbol
+            ),
         )
     }
 

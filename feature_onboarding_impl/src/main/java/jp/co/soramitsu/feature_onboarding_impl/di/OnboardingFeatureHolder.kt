@@ -29,7 +29,7 @@ class OnboardingFeatureHolder @Inject constructor(
             .commonApi(commonApi())
             .build()
         return DaggerOnboardingFeatureComponent.builder()
-            .onboardingFeatureDependencies(onboardingFeatureDependencies)
+            .withDependencies(onboardingFeatureDependencies)
             .build()
     }
 }

@@ -96,7 +96,7 @@ fun ExtrinsicBuilder.swap(
     desired: WithDesired,
 ) =
     this.call(
-        Pallete.LIQUIDITY_PROXY.palleteName,
+        Pallete.LIQUIDITY_PROXY.palletName,
         Method.SWAP.methodName,
         mapOf(
             "dex_id" to OptionsProvider.dexId.toBigInteger(),
@@ -123,7 +123,7 @@ fun ExtrinsicBuilder.swap(
 
 fun ExtrinsicBuilder.transfer(assetId: String, to: String, amount: BigInteger) =
     this.call(
-        Pallete.ASSETS.palleteName,
+        Pallete.ASSETS.palletName,
         Method.TRANSFER.methodName,
         mapOf(
             "asset_id" to if (RuntimeHolder.getMetadataVersion() < 14) assetId.fromHex() else Struct.Instance(mapOf("code" to assetId.fromHex().toList().map { it.toInt().toBigInteger() })),
@@ -134,7 +134,7 @@ fun ExtrinsicBuilder.transfer(assetId: String, to: String, amount: BigInteger) =
 
 fun ExtrinsicBuilder.migrate(irohaAddress: String, irohaPublicKey: String, signature: String) =
     this.call(
-        Pallete.IROHA_MIGRATION.palleteName,
+        Pallete.IROHA_MIGRATION.palletName,
         Method.MIGRATE.methodName,
         mapOf(
             "iroha_address" to irohaAddress.toByteArray(charset("UTF-8")),
@@ -142,3 +142,82 @@ fun ExtrinsicBuilder.migrate(irohaAddress: String, irohaPublicKey: String, signa
             "iroha_signature" to signature.toByteArray(charset("UTF-8"))
         )
     )
+
+fun ExtrinsicBuilder.removeLiquidity(
+    outputAssetIdA: String,
+    outputAssetIdB: String,
+    markerAssetDesired: BigInteger,
+    outputAMin: BigInteger,
+    outputBMin: BigInteger
+) =
+    this.call(
+        Pallete.POOL_XYK.palletName,
+        Method.WITHDRAW_LIQUIDITY.methodName,
+        mapOf(
+            "dex_id" to OptionsProvider.dexId.toBigInteger(),
+            "output_asset_a" to if (RuntimeHolder.getMetadataVersion() < 14) outputAssetIdA.fromHex() else Struct.Instance(mapOf("code" to outputAssetIdA.fromHex().toList().map { it.toInt().toBigInteger() })),
+            "output_asset_b" to if (RuntimeHolder.getMetadataVersion() < 14) outputAssetIdB.fromHex() else Struct.Instance(mapOf("code" to outputAssetIdB.fromHex().toList().map { it.toInt().toBigInteger() })),
+            "marker_asset_desired" to markerAssetDesired,
+            "output_a_min" to outputAMin,
+            "output_b_min" to outputBMin
+        )
+    )
+
+fun ExtrinsicBuilder.register(
+    baseAssetId: String,
+    targetAssetId: String
+) = this.call(
+    Pallete.TRADING_PAIR.palletName,
+    Method.REGISTER.methodName,
+    mapOf(
+        "dex_id" to OptionsProvider.dexId.toBigInteger(),
+        "base_asset_id" to if (RuntimeHolder.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
+            mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        ),
+        "target_asset_id" to if (RuntimeHolder.getMetadataVersion() < 14) targetAssetId.fromHex() else Struct.Instance(
+            mapOf("code" to targetAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        )
+    )
+)
+
+fun ExtrinsicBuilder.initializePool(
+    baseAssetId: String,
+    targetAssetId: String
+) = this.call(
+    Pallete.POOL_XYK.palletName,
+    Method.INITIALIZE_POOL.methodName,
+    mapOf(
+        "dex_id" to OptionsProvider.dexId.toBigInteger(),
+        "asset_a" to if (RuntimeHolder.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
+            mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        ),
+        "asset_b" to if (RuntimeHolder.getMetadataVersion() < 14) targetAssetId.fromHex() else Struct.Instance(
+            mapOf("code" to targetAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        )
+    )
+)
+
+fun ExtrinsicBuilder.depositLiquidity(
+    baseAssetId: String,
+    targetAssetId: String,
+    baseAssetAmount: BigInteger,
+    targetAssetAmount: BigInteger,
+    amountFromMin: BigInteger,
+    amountToMin: BigInteger
+) = this.call(
+    Pallete.POOL_XYK.palletName,
+    Method.DEPOSIT_LIQUIDITY.methodName,
+    mapOf(
+        "dex_id" to OptionsProvider.dexId.toBigInteger(),
+        "input_asset_a" to if (RuntimeHolder.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
+            mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        ),
+        "input_asset_b" to if (RuntimeHolder.getMetadataVersion() < 14) targetAssetId.fromHex() else Struct.Instance(
+            mapOf("code" to targetAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        ),
+        "input_a_desired" to baseAssetAmount,
+        "input_b_desired" to targetAssetAmount,
+        "input_a_min" to amountFromMin,
+        "input_b_min" to amountToMin
+    )
+)

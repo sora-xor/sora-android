@@ -42,7 +42,7 @@
 
     <TextView
         android:id="@+id/placeholder"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:drawablePadding="@dimen/x2"
         android:lineSpacingExtra="6sp"
@@ -50,6 +50,9 @@
         android:textColor="@color/coolGrey"
         android:textSize="14sp"
         android:visibility="gone"
+        android:gravity="center_horizontal"
+        android:layout_marginStart="@dimen/x3"
+        android:layout_marginEnd="@dimen/x3"
         app:drawableTopCompat="@drawable/ic_no_referenda_all"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

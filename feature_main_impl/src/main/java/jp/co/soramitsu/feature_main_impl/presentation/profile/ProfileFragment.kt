@@ -12,6 +12,7 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentProfileBinding
@@ -23,6 +24,7 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
     private val binding by viewBinding(FragmentProfileBinding::bind)
 
     override fun inject() {
@@ -37,6 +39,14 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
         super.onViewCreated(view, savedInstanceState)
 
         (activity as BottomBarController).showBottomBar()
+
+        binding.tvSwitchAccount.setDebouncedClickListener(debounceClickHandler) {
+            // viewModel.onSwitchAccountClicked()
+        }
+
+        binding.tvSwitchAccountName.setDebouncedClickListener(debounceClickHandler) {
+            // viewModel.onSwitchAccountClicked()
+        }
 
         binding.profileFriendsTextView.setDebouncedClickListener(debounceClickHandler) {
             viewModel.profileFriendsClicked()
@@ -82,6 +92,12 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
     }
 
     private fun initListeners() {
+        viewModel.accountName.observe {
+            binding.tvAccountNameValue.text = it.truncateUserAddress()
+        }
+        viewModel.accountAddress.observe {
+            binding.tvSwitchAccountName.text = it.truncateUserAddress()
+        }
         viewModel.biometryEnabledLiveData.observe {
             binding.profileBiometryAuthSwitch.isChecked = it
 
