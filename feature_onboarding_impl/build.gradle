@@ -64,6 +64,8 @@ dependencies {
     implementation project(":feature_wallet_api")
     implementation project(":feature_onboarding_api")
     implementation project(":feature_main_api")
+    implementation project(":feature_multiaccount_api")
+    implementation project(":feature_multiaccount_impl")
 
     implementation kotlinDep
 
@@ -96,7 +98,8 @@ dependencies {
 
     implementation insetterDep
 
-    implementation lifecycleDep
+    implementation lifecycleKtxDep
+    implementation lifecycleExtDep
     kapt lifecycleKaptDep
 
     testImplementation jUnitDep

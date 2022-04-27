@@ -18,12 +18,11 @@ import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
+import jp.co.soramitsu.feature_multiaccount_api.di.MultiaccountFeatureApi
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.databinding.ActivityOnboardingBinding
 import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info.PersonalInfoFragment
-import jp.co.soramitsu.feature_onboarding_impl.presentation.privacy.PrivacyFragment
 import jp.co.soramitsu.feature_onboarding_impl.presentation.version.UnsupportedVersionFragment
 import javax.inject.Inject
 
@@ -34,6 +33,9 @@ class OnboardingActivity :
 
         private const val KEY_ONBOARDING_STATE = "onboarding_state"
         const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
+
+        private const val SWITCH_ACCOUNT_MODE_KEY =
+            "jp.co.soramitsu.feature_onboarding_impl.SWITCH_ACCOUNT_MODE_KEY"
 
         fun start(context: Context, state: OnboardingState) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
@@ -97,31 +99,15 @@ class OnboardingActivity :
     }
 
     override fun showPersonalInfo() {
-        PersonalInfoFragment.newInstance(navController)
-    }
-
-    override fun showMnemonic() {
-        navController.navigate(R.id.mnemonicFragment)
-    }
-
-    override fun showMnemonicConfirmation() {
-        navController.navigate(R.id.mnemonicConfirmation)
-    }
-
-    override fun showMainScreen() {
-        mainStarter.start(this)
+        FeatureUtils.getFeature<MultiaccountFeatureApi>(application, MultiaccountFeatureApi::class.java)
+            .provideMultiaccountStarter()
+            .startCreateAccount(navController)
     }
 
     override fun showRecovery() {
-        navController.navigate(R.id.recoveryFragment)
-    }
-
-    override fun onBackButtonPressed() {
-        navController.popBackStack()
-    }
-
-    override fun showTermsScreen() {
-        navController.navigate(R.id.termsFragment)
+        FeatureUtils.getFeature<MultiaccountFeatureApi>(application, MultiaccountFeatureApi::class.java)
+            .provideMultiaccountStarter()
+            .startRecoveryAccount(navController)
     }
 
     override fun showBrowser(link: String) {
@@ -133,9 +119,5 @@ class OnboardingActivity :
 
     override fun showUnsupportedScreen(appUrl: String) {
         UnsupportedVersionFragment.newInstance(appUrl, navController)
-    }
-
-    override fun showPrivacyScreen() {
-        PrivacyFragment.start(navController)
     }
 }

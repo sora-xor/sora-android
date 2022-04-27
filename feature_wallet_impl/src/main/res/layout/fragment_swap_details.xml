@@ -25,12 +25,10 @@
         <TextView
             android:id="@+id/tvSwapAmount"
             style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.21"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/x1"
-            android:ellipsize="end"
             android:includeFontPadding="false"
-            android:singleLine="true"
             android:textColor="?attr/balanceColorDefault"
             app:layout_constraintBottom_toBottomOf="@+id/ivReceiveIcon"
             app:layout_constraintEnd_toEndOf="parent"
@@ -57,7 +55,7 @@
             tools:textColor="@color/grey_700" />
 
         <TextView
-            android:id="@+id/tvSwapStatusTitle"
+            android:id="@+id/tvLiquidityStatusTitle"
             style="@style/TextAppearance.Soramitsu.Neu.Light.15"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -75,7 +73,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/x1_2"
             android:textColor="?attr/balanceColorDefault"
-            app:layout_constraintBaseline_toBaselineOf="@id/tvSwapStatusTitle"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvLiquidityStatusTitle"
             app:layout_constraintEnd_toStartOf="@+id/ivSwapStatus"
             tools:text="Pending" />
 
@@ -83,9 +81,9 @@
             android:id="@+id/ivSwapStatus"
             android:layout_width="@dimen/x2"
             android:layout_height="@dimen/x2"
-            app:layout_constraintBottom_toBottomOf="@id/tvSwapStatusTitle"
+            app:layout_constraintBottom_toBottomOf="@id/tvLiquidityStatusTitle"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tvSwapStatusTitle"
+            app:layout_constraintTop_toTopOf="@id/tvLiquidityStatusTitle"
             tools:ignore="ContentDescription"
             tools:src="@drawable/ic_pending_grey_18" />
 
@@ -182,7 +180,7 @@
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvSwapMarketTitle"
             app:layout_constraintWidth_default="wrap"
-            tools:text="7sdfhksdf6sqwdhksdfsi6d7f"
+            tools:text="7sdfhksdf6fsi6d7f"
             tools:textColor="@color/grey_300" />
 
         <View
@@ -205,12 +203,12 @@
             android:includeFontPadding="false"
             android:singleLine="true"
             android:textColor="?attr/balanceColorDefault"
-            app:layout_constraintBottom_toBottomOf="@+id/tvSwapDateTimeTitle"
+            android:layout_marginTop="@dimen/x1_5"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_default="wrap"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvSwapDateTimeTitle"
-            app:layout_constraintTop_toTopOf="@+id/tvSwapDateTimeTitle"
+            app:layout_constraintTop_toBottomOf="@+id/vDivider3_3"
             app:layout_constraintWidth_default="wrap"
             tools:text="7sdfhksdf6sqwdhksdfsi6d7f"
             tools:textColor="@color/grey_300" />
@@ -226,11 +224,9 @@
             android:includeFontPadding="false"
             android:singleLine="true"
             android:textColor="?attr/balanceColorDefault"
-            app:layout_constraintBottom_toBottomOf="@+id/tvSwapDateTimeTitle"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_default="wrap"
             app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toEndOf="@id/tvSwapDateTimeTitle"
             app:layout_constraintTop_toBottomOf="@+id/tvSwapDateValue"
             app:layout_constraintVertical_bias="1.0"
             app:layout_constraintWidth_default="wrap"
@@ -242,13 +238,13 @@
             style="@style/TextAppearance.Soramitsu.Neu.Light.15"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x1_5"
             android:ellipsize="none"
             android:singleLine="true"
             android:text="@string/transaction_date"
             android:textColor="?attr/balanceColorDefault"
+            app:layout_constraintBottom_toBottomOf="@+id/tvSwapDateValue"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/vDivider3_3"
+            app:layout_constraintTop_toTopOf="@+id/tvSwapDateValue"
             tools:textColor="@color/grey_300" />
 
         <TextView

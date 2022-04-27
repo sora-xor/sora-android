@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.dto.EventRecord
 import jp.co.soramitsu.common.data.network.dto.InnerEventRecord
 import jp.co.soramitsu.common.data.network.dto.PhaseRecord
@@ -59,7 +60,6 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.anyList
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
-import org.mockito.BDDMockito.willDoNothing
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
@@ -124,6 +124,7 @@ class WalletRepositoryTest {
     private lateinit var walletRepository: WalletRepositoryImpl
     private val emptyJson = "{}"
     private val myAddress = "myaddress"
+    private val soraAccount = SoraAccount("a", "n")
 
     @Before
     fun setUp() = runBlockingTest {
@@ -293,6 +294,7 @@ class WalletRepositoryTest {
             "hash",
             BigDecimal.ZERO,
             true,
+            soraAccount,
         )
         verify(transactionDao).insert(transaction = anyNonNull())
         verify(transactionDao).insertParams(transactions = anyList())
@@ -300,17 +302,18 @@ class WalletRepositoryTest {
 
     @Test
     fun `display assets`() = runBlockingTest {
-        walletRepository.displayAssets(listOf())
+        walletRepository.displayAssets(listOf(), soraAccount)
     }
 
     @Test
     fun `hide assets`() = runBlockingTest {
-        walletRepository.hideAssets(listOf())
+        walletRepository.hideAssets(listOf(), soraAccount)
     }
 
     @Test
     fun `get contacts`() = runBlockingTest {
         given(transactionDao.getContacts("")).willReturn(listOf("contact"))
+        walletRepository.setCurSoraAccount(soraAccount)
         assertEquals(setOf("contact"), walletRepository.getContacts(""))
     }
 
@@ -370,6 +373,12 @@ class WalletRepositoryTest {
             true,
             3,
             assetBalance(),
+        ),
+        Asset(
+            oneToken4(),
+            true,
+            4,
+            assetBalance(),
         )
     )
 
@@ -404,6 +413,15 @@ class WalletRepositoryTest {
         18,
         true,
         OptionsProvider.DEFAULT_ICON,
+    )
+
+    private fun oneToken4() = Token(
+        "0x0200080000000000000000000000000000000000000000000000000000000000",
+        "SORA Synthetic USD",
+        "XSTUSD",
+        18,
+        true,
+        OptionsProvider.DEFAULT_ICON
     )
 
     private fun assetBalance() = AssetBalance(

@@ -1,30 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-  <string name="about_announcements">Receive Announcements</string>
-  <string name="about_ask_support">Ask for Support</string>
-  <string name="about_contact_us">Kontaktujte nás</string>
-  <string name="about_instagram">Like on Instagram</string>
-  <string name="about_medium">Read on Medium</string>
+  <string name="about_announcements">Přijímat oznámení</string>
+  <string name="about_ask_support">Požádejte o podporu</string>
+  <string name="about_contact_us">Kontaktní e-mail</string>
+  <string name="about_instagram">Like na Instagramu</string>
+  <string name="about_medium">Přečtěte si na webu Medium</string>
   <string name="about_privacy">Zásady ochrany osobních údajů</string>
-  <string name="about_source_code">Zdrojový kód</string>
-  <string name="about_telegram">Oficiální Telegram Skupina</string>
+  <string name="about_source_code">Zdrojový kód GitHub</string>
+  <string name="about_telegram">Připojte se na Telegramu</string>
   <string name="about_title">O projektu</string>
-  <string name="about_twitter">Follow on Twitter</string>
+  <string name="about_twitter">Sledujte na Twitteru</string>
   <string name="about_website">Oficiální webové stránky</string>
-  <string name="about_wiki">Learn on Wiki</string>
-  <string name="about_youtube">Subscribe on YouTube</string>
+  <string name="about_wiki">Zjistěte na Wiki</string>
+  <string name="about_youtube">Přihlaste se k odběru na YouTube</string>
   <string name="account_confirmation_title">Potvrdit mnemotechnickou pomůcku</string>
-  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
+  <string name="account_confirmation_title_v2">Potvrďte přístupovou frázi</string>
   <string name="activity_project">Projekt</string>
+  <string name="add_liquidity_alert_text">Z poskytování likvidity získáte poplatky úměrné vašemu podílu z poolu.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Přidat likviditu</string>
   <string name="address_not_found">Adresa nenalezena, zkontrolujte, zda adresa patří do správné sítě.</string>
-  <string name="address_not_found_1">Recipients not found</string>
+  <string name="address_not_found_1">Příjemci nenalezeni</string>
   <string name="amount_default_fee">Transakční poplatek</string>
   <string name="amount_error_no_funds">Je nám líto, nemáte dostatek finančních prostředků k převodu zadané částky.</string>
   <string name="amount_title">Částka</string>
   <string name="ask_biometry_message">Chcete pro ověření použít biometrii?</string>
   <string name="asset_add">Přidat účet</string>
   <string name="asset_details_title">Podrobnosti o aktivu</string>
-  <string name="asset_not_found">Asset not found</string>
+  <string name="asset_not_found">Aktivum nenalezeno</string>
   <string name="asset_settings_title">Účty</string>
   <string name="asset_state_associating">Páruji...</string>
   <string name="asset_state_error">Chyba</string>
@@ -32,8 +38,8 @@
   <string name="asset_val_name">SORA Validátor Token</string>
   <string name="biometric_dialog_title">Ověřit</string>
   <string name="block_id">Hash bloku</string>
-  <string name="choose_token">Choose\ntoken</string>
-  <string name="choose_tokens">Choose tokens</string>
+  <string name="choose_token">Vyberte token</string>
+  <string name="choose_tokens">Vyberte tokeny</string>
   <string name="claim_contact">Máte-li jakékoli dotazy nebo připomínky, můžete nás %% kontaktovat%%.</string>
   <string name="claim_contact_1">Máte-li jakékoli dotazy nebo obavy, můžete</string>
   <string name="claim_contact_2">kontaktujte nás.</string>
@@ -54,7 +60,7 @@
   <string name="common_add">Přidat</string>
   <string name="common_advanced_settings">Pokročilé nastavení</string>
   <string name="common_and">a</string>
-  <string name="common_app_version">App version</string>
+  <string name="common_app_version">Verze aplikace</string>
   <string name="common_apply">Použít</string>
   <string name="common_arab">Arabština</string>
   <string name="common_asset">Aktivum</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopírovat</string>
   <string name="common_copy_address">Kopírovat adresu</string>
   <string name="common_croatian">Chorvatština</string>
+  <string name="common_deposit">Vklad</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Popis</string>
   <string name="common_done">Hotovo</string>
   <string name="common_donotallow">Nepovolit</string>
@@ -129,21 +137,23 @@
   </plurals>
   <string name="common_indonesian">Indonésština</string>
   <string name="common_info">Info</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italština</string>
   <string name="common_japanese">Japonština</string>
   <string name="common_khmer">Khmerština</string>
   <string name="common_korean">Korejština</string>
-  <string name="common_learn_more">Learn more</string>
+  <string name="common_learn_more">Zjistit více</string>
   <string name="common_malay">Malajština</string>
   <string name="common_manage">Spravovat</string>
   <string name="common_min">min</string>
   <string name="common_network_unavailable">Síťové připojení není k dispozici</string>
   <string name="common_next">Další</string>
   <string name="common_norwegian">Norština</string>
-  <string name="common_notsent">Not sent</string>
+  <string name="common_notsent">Neodesláno</string>
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Zobrazit v blockchain průzkumníku</string>
   <string name="common_options_title">Vyberte možnost</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Při vytváření nového účtu v systému SORA nyní získáte 12ti slovní přístupovou frázi. Pokud již máte 15ti slovní přístupovou frázi SORA, můžete svůj účet importovat s ní - tyto fráze jsou rovněž kompatibilní a budou fungovat i nadále.</string>
   <string name="common_passphrase_header">Přístupová fráze je \ntyp hesla.</string>
   <string name="common_passphrase_save_mnemonic_title">Uložit nebo odeslat přístupovou frázi</string>
@@ -162,7 +172,8 @@
   <string name="common_please_wait">Počkejte prosím</string>
   <string name="common_receive">Přijmout</string>
   <string name="common_received">Přijato</string>
-  <string name="common_recipient">Recipient</string>
+  <string name="common_recipient">Příjemce</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Zkuste znovu</string>
   <string name="common_russian">Ruština</string>
   <string name="common_save">Uložit</string>
@@ -172,21 +183,22 @@
   <string name="common_select_asset">Vyberte aktivum</string>
   <string name="common_select_email_app_title">Vyberte e-mailovou aplikaci</string>
   <string name="common_send">Odeslat</string>
-  <string name="common_sender">Sender</string>
+  <string name="common_sender">Odesílatel</string>
   <string name="common_sent">Odesláno</string>
   <string name="common_settings">Nastavení</string>
   <string name="common_share">Sdílet</string>
-  <string name="common_show">Show</string>
+  <string name="common_show">Zobrazit</string>
   <string name="common_skip">Přeskočit</string>
   <string name="common_sms_code_expired">Platnost ověřovacího kódu vypršela. Zkuste prosím jiný.</string>
   <string name="common_sms_code_not_correct">Ověřovací kód je nesprávný</string>
   <string name="common_spanish">Španělština</string>
   <string name="common_spanish_colombia">Španělština (Kolumbie)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Švédština</string>
   <string name="common_terms_title">Smluvní podmínky</string>
   <string name="common_thai">Thajština</string>
   <string name="common_to">Komu</string>
-  <string name="common_to_estimated">To (estimated)</string>
+  <string name="common_to_estimated">Na (odhad)</string>
   <string name="common_today">Dnes</string>
   <string name="common_try_another">Zkuste jiný</string>
   <string name="common_turkish">Turečtina</string>
@@ -194,11 +206,13 @@
   <string name="common_unsupported_version_body">Aktualizovaná Sora aplikace je k dispozici na Google Play. Zahrnuje vylepšení a opravy chyb.</string>
   <string name="common_unsupported_version_open_google_play">Otevřít Google Play</string>
   <string name="common_unsupported_version_title">Aktualizujte si aplikaci Sora</string>
-  <string name="common_update">Update</string>
+  <string name="common_update">Aktualizace</string>
   <string name="common_vote">Hlasovat</string>
   <string name="common_yesterday">Včera</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Zde se zobrazí nejdůležitější kontakty</string>
-  <string name="contacts_scan">Naskenujte QR kód</string>
+  <string name="contacts_scan">Skenovat</string>
   <string name="contacts_search_empty_state_title">Žádné výsledky vyhledávání</string>
   <string name="contacts_search_hint_v1">ID účtu, telefonní číslo, adresa</string>
   <string name="contacts_search_results">Výsledky vyhledávání</string>
@@ -213,7 +227,7 @@
   <string name="details_total">Celková rovnováha</string>
   <string name="details_transferable">Přenositelné</string>
   <string name="empty_recent_recipients">Žádní nedávní příjemci.\nZde se zobrazí odeslané adresy.</string>
-  <string name="empty_recent_recipients_2">Recipients will appear here</string>
+  <string name="empty_recent_recipients_2">Zde se zobrazí příjemci</string>
   <string name="error_ethereum_account_subtitle">Chcete-li pokračovat v této operaci, potřebujete k dokončení transakce spárovaný Ethereum účet, na kterém jsou dostatečné prostředky pro uhrazení těžařských poplatků.</string>
   <string name="error_ethereum_account_title">Ethereum účet není spárován</string>
   <string name="error_miner_fee_subtitle">Chcete-li pokračovat v této operaci, musíte si dobít svůj Ethereum účet.</string>
@@ -221,7 +235,7 @@
   <string name="error_transaction_fee_title">Nedostatek prostředků na transakční poplatek</string>
   <string name="ethereum_config_unavailable">Ethereum node není k dispozici</string>
   <string name="faq_title">FAQ</string>
-  <string name="friends_spread_word">Dejte vědět i ostatním a sdílejte aplikaci se svými přáteli.</string>
+  <string name="friends_spread_word">Sdílejte SORA s přáteli.</string>
   <string name="from_account">Z účtu</string>
   <string name="history_receive">Přijaté</string>
   <string name="history_send">Odeslané</string>
@@ -254,6 +268,10 @@
   <string name="invoice_scan_error_no_info">QR nelze dekódovat</string>
   <string name="invoice_scan_error_user_not_found">Nelze najít uživatele z QR</string>
   <string name="language_title">Zvolte jazyk</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Výsledkem této akce bude odstranění účtu z tohoto zařízení. Než budete pokračovat, ujistěte se, že jste zálohovali přístupovou frázi.</string>
   <string name="mnemonic_alert_text">Mnemotechnická pomůcka se používá k obnovení přístupu k účtu. Zapište si ji, bez ní nebudeme moci obnovit váš účet!</string>
   <string name="mnemonic_confirm_text">Potvrďte výběrem slov ve správném pořadí</string>
@@ -268,7 +286,7 @@
   <string name="personal_info_invitation_description">👋Máte odkaz s pozvánkou? Stačí na něj kliknout pro použítí kódu, nebo zadat kód ručně.</string>
   <string name="personal_info_invitation_is_invalid">Kód pozvánky je neplatný</string>
   <string name="personal_info_username">Jméno účtu (nepovinné)</string>
-  <string name="personal_info_username_v1">Jméno účtu</string>
+  <string name="personal_info_username_v1">Název účtu</string>
   <string name="phone_number_mobile">Číslo mobilního telefonu</string>
   <string name="phone_number_sms_code_will_be_sent">SMS kód bude odeslán\n do vašeho telefonu</string>
   <string name="phone_number_title">Registrace</string>
@@ -285,12 +303,14 @@
   <string name="pincode_set_your_pin_code">Nastavte PIN kód</string>
   <string name="pincode_touch_fingerprint_scanner">Dotkněte se skeneru otisků prstů</string>
   <string name="pincode_updated">PIN kód byl aktualizován</string>
-  <string name="polkaswap_button_swap_again">Swap again</string>
+  <string name="polkaswap_button_swap_again">Swapovat znovu</string>
   <string name="polkaswap_coming_soon">DEX pro interoperabilní budoucnost. Polkaswap je non-custodial AMM-DEX protokol pro swap tokenů založených na síti Polkadot, Parachainech a blockchainech připojených přes Bridge. Protokol Polkaswap účinně odstraňuje zprostředkovatele a poskytuje příležitost pro rychlejší obchodování.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Potvrdit swap</string>
   <string name="polkaswap_details">Podrobnosti</string>
-  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_error_noswap">Swap neproběhl</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap spravuje komunita SORA. Před dalším používáním služby Polkaswap si prosím prostudujte %%Polkaswap FAQ%% a dokumentaci, která obsahuje podrobné vysvětlení fungování služby Polkaswap, stejně jako %%Polkaswap Memorandum a Podmínky služeb%% a %%Zásady ochrany osobních údajů%%.\n\nTyto dokumenty mají zásadní význam pro bezpečnou a pozitivní uživatelskou zkušenost. Používáním služby Polkaswap potvrzujete, že jste si tyto dokumenty přečetli a rozumíte jim.</string>
   <string name="polkaswap_info_text_2">Dále berete na vědomí následující skutečnosti:</string>
   <string name="polkaswap_info_text_3">Nesete výhradní odpovědnost za dodržování všech zákonů, které se mohou vztahovat na vaše konkrétní používání služby Polkaswap ve vaší jurisdikci;</string>
@@ -299,7 +319,7 @@
   <string name="polkaswap_info_text_6">Ještě jednou vás žádáme, abyste nepokračovali bez přečtení %%Polkaswap FAQ%%, %%Polkaswap Memoranda a Podmínek služeb%% a %%Zásad ochrany osobních údajů%%!</string>
   <string name="polkaswap_info_text_7">Chcete-li skrýt oznámení o vyloučení odpovědnosti z karty Swap, přetáhněte tlačítko níže. Učiňte tak pouze v případě, že jste přečetli a plně porozuměli všem uvedeným dokumentům!</string>
   <string name="polkaswap_info_text_8">Přetažením skryjete</string>
-  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_text_9">Oznámení o zřeknutí se odpovědnosti je na kartě Polkaswap skryté. Pokud chcete oznámení aktivovat, přejeďte po tlačítku níže.</string>
   <string name="polkaswap_info_title">Zřeknutí se odpovědnosti</string>
   <string name="polkaswap_info_title_main">Prohlášení: přečtěte si prosím, než budete pokračovat v používání Polkaswap!</string>
   <string name="polkaswap_input_estimated">Vstup je odhadován. Prodáte maximálně %s, jinak se transakce vrátí zpět.</string>
@@ -309,19 +329,22 @@
   <string name="polkaswap_liqudity_fee_info">Část z každého obchodu (0,3 %) jde poskytovatelům likvidity jako pobídka v rámci protokolu.</string>
   <string name="polkaswap_market">Trh</string>
   <string name="polkaswap_market_info">Algoritmus trhu - možnost volby mezi primárním trhem (TBC), sekundárním trhem (XYK) nebo kombinovaným inteligentním algoritmem pro zaručeně nejlepší cenu pro danou transakci.</string>
-  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
-  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_smart_description">SMART přesměrování likvidity zajišťuje nejlepší cenu pro každou transakci tím, že kombinuje pouze nejlepší cenové možnosti ze všech dostupných trhů. Pokud je k dispozici, použije se pro likviditu Token Bonding Curve (TBC) dokud je cena aktiva příznivější než z jiných zdrojů. V opačném případě se využívá XYK pool.</string>
+  <string name="polkaswap_market_tbc_description">TBC - nákup pouze z Token Bonding Curve (primární trh). Je tu možnost, že se cena může stát nevýhodnou ve srovnání s XYK poolem (sekundární trh), ale hodnota získaná z uzamčených odměn se může časem ukázat jako mnohem výhodnější.</string>
   <string name="polkaswap_market_title">Algoritmus trhu</string>
-  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_market_xyk_description">XYK - nákup pouze z fondu XYK (sekundární trh). Tradiční swap z poolu XYK, kde může kdokoli koupit nebo prodat aktiva posunutím pozice tvůrce trhu na křivce x*y=k.</string>
   <string name="polkaswap_maximum_sold">Max prodáno</string>
   <string name="polkaswap_maximum_sold_info">Vaše transakce se vrátí zpět, pokud dojde k velkému nepříznivému pohybu ceny před jejím potvrzením.</string>
   <string name="polkaswap_minimum_received">Min přijato</string>
   <string name="polkaswap_minimum_received_info">Vaše transakce se vrátí zpět, pokud dojde k velkému nepříznivému pohybu ceny před jejím potvrzením.</string>
   <string name="polkaswap_network_fee">Síťový poplatek</string>
   <string name="polkaswap_network_fee_info">Síťový poplatek slouží k zajištění růstu a stabilního výkonu systému SORA.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Výstup je odhadován. Obdržíte alespoň %s, jinak se transakce vrátí zpět.</string>
   <string name="polkaswap_pool_not_created">Pool není vytvořen</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Vaše transakce může být předběhnuta</string>
   <string name="polkaswap_slippage_info">Vaše transakce se vrátí zpět, pokud se cena změní nepříznivě o více než toto procento.</string>
   <string name="polkaswap_slippage_mayfail">Vaše transakce může selhat</string>
@@ -331,13 +354,15 @@
   <string name="polkaswap_swapped">Směněno</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
+  <string name="pool_apy_title">Strategický apy bonus</string>
   <string name="pool_button_add">Přidat</string>
   <string name="pool_button_remove">Odstranit</string>
   <string name="pool_liqudity_title">Vaše likvidita</string>
   <string name="pool_liquidity_placeholder">Vaše likvidita se zobrazí zde</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Podíl z Poolu</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">Váš podíl z poolu</string>
   <string name="pool_token_pooled">Poolované</string>
   <string name="profile_about_title">O profilu</string>
   <string name="profile_biometry_title">Biometrické ověření</string>
@@ -378,7 +403,7 @@
   <string name="project_voted">Hlasováno</string>
   <string name="project_you_can_vote_at_least_1_point">Hlasovat můžete s alespoň 1 bodem 😜</string>
   <string name="qr_code">QR kód</string>
-  <string name="qr_upload">Nahrát z galerie</string>
+  <string name="qr_upload">Z galerie</string>
   <string name="recovery_body_subtitle">Bohužel neexistuje žádný způsob, jak získat přístup k účtu, pokud jste zapomněli přístupovou frázi.</string>
   <string name="recovery_body_title">Zadejte přístupovou frázi</string>
   <string name="recovery_mnemonic_passphrase">Mnemotechnická přístupová fráze</string>
@@ -405,18 +430,26 @@
   <string name="referendum_total_votes">Celkový počet hlasů</string>
   <string name="referendum_unsupport_title">Ne</string>
   <string name="referendum_voting_result">Výsledek hlasování</string>
-  <string name="restart_required">Restart required</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
+  <string name="restart_required">Je potřeba restartovat</string>
   <string name="screenshot_alert_text">Nepořizujte screenshoty, mohou být zachyceny malwarem třetích stran</string>
   <string name="screenshot_alert_title">Nepořizujte screenshoty</string>
   <string name="search_asset_by_name">Vyhledávání podle názvu aktiva nebo symbolu</string>
   <string name="select_account_address">Vyhledat adresu účtu</string>
-  <string name="select_account_address_1">Search or add a new address</string>
-  <string name="select_asset_receive">Select Asset to Receive</string>
-  <string name="select_asset_send">Select Asset to Send</string>
+  <string name="select_account_address_1">Vyhledávání nebo přidání nové adresy</string>
+  <string name="select_asset_receive">Vyberte aktivum, které chcete přijmout</string>
+  <string name="select_asset_send">Vyberte aktivum k odeslání</string>
   <string name="select_recipient">Vyberte příjemce</string>
   <string name="set_amount">Zadejte částku</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Držitelé XOR budou moci stakovat své XOR, aby nominovali validátory a získali odměny.</string>
-  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
+  <string name="staking_description">Nominace validátorů je důležitou součástí ekosystému SORA, protože pomáhá zabezpečit a decentralizovat síť. Validátorům a nominátorům budou jako odměna za staking rozděleny VAL tokeny.</string>
   <string name="staking_val_reward">SORA VALidátor Odměny</string>
   <string name="startup_verification_title">Ověřování autorizace...</string>
   <string name="status_error">Chyba</string>
@@ -424,7 +457,7 @@
   <string name="status_rejected">Odmítnuto</string>
   <string name="status_success">Úspěšně dokončeno</string>
   <string name="status_title">Stav</string>
-  <string name="swap_input_title">Swap input</string>
+  <string name="swap_input_title">Zadat swap</string>
   <string name="tabbar_friends_title">Přátelé</string>
   <string name="tabbar_parliament_title">Parlament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -435,7 +468,7 @@
   <string name="transaction_bridge_not_active_error">Ethereum bridge není aktivní.</string>
   <string name="transaction_confirm">Potvrdit transakci</string>
   <string name="transaction_continue">Pokračovat</string>
-  <string name="transaction_date">Datum a čas</string>
+  <string name="transaction_date">Datum / Čas</string>
   <string name="transaction_details">Detaily transakce</string>
   <string name="transaction_fee_estimated_time">Odhadovaná doba transakce ~ %s</string>
   <string name="transaction_fee_fast">Rychle</string>
@@ -444,7 +477,7 @@
   <string name="transaction_fee_regular">Běžně</string>
   <string name="transaction_fee_set_recommended">Nastavte doporučené</string>
   <string name="transaction_fee_slow">Pomalu</string>
-  <string name="transaction_id">Hash transakce</string>
+  <string name="transaction_id">Vnější hash</string>
   <string name="transaction_miner_fee_title">Těžařský poplatek</string>
   <string name="transaction_miner_help">Bude odebráno z vašeho Ethereum účtu</string>
   <string name="transaction_note">Poznámka</string>
@@ -452,7 +485,7 @@
   <string name="transaction_send_back">Odeslat zpět</string>
   <string name="transaction_token">Token</string>
   <string name="transaction_total">Celkem</string>
-  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="transfer_amount_title">Zadejte částku k odeslání</string>
   <string name="tutorial_many_world">Mnoho světů.\nJedna ekonomika.</string>
   <string name="tutorial_many_world_desc">SORA se snaží stát multiversním decentralizovaným ekonomickým systémem, který financuje vytváření nových a zajímavých aplikací pod demokratickým dohledem SORA Parlamentu.</string>
   <string name="tutorial_one_world">Jeden svět.\nJedna ekonomika.</string>
@@ -467,11 +500,11 @@
   <string name="tutorial_terms_and_conditions_2">Smluvní podmínky</string>
   <string name="tutorial_terms_and_conditions_3">Smluvní podmínky</string>
   <string name="tutorial_terms_and_conditions_recovery">Importem účtu souhlasíte s %%Obchodními podmínkami%% a %%Zásadami ochrany osobních údajů%%</string>
-  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
+  <string name="tutorial_terms_and_conditions_v4">Vytvořením účtu souhlasíte s\nSmluvními podmínkami a Zásadami ochrany osobních údajů</string>
   <string name="tutorial_votes_desc">Uživatelé hlasují pro projekty a rozhodují o tom, který projekt by měl být financován</string>
   <string name="unknown_balance">Neznámý</string>
-  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
-  <string name="update_install_now">Would you like to install the update now?</string>
+  <string name="update_downloaded">Byla stažena aktualizace aplikace SORA a je připravena k instalaci.\n\nJe důležité používat nejnovější verzi aplikace.\n\nPro aktualizaci aplikace je nutné provést restart.</string>
+  <string name="update_install_now">Chcete nyní nainstalovat aktualizaci?</string>
   <string name="val_balance_title">VAL Token v různých sítích</string>
   <string name="verification_enter_code_from_sms">Zadejte kód ze SMS</string>
   <string name="verification_request_new_code_time" formatted="false">Požádat o nový kód za %s:%s</string>
@@ -498,10 +531,12 @@
   <string name="wallet_history_to_my_ethereum_title">Na moji Ethereum adresu</string>
   <string name="wallet_history_to_my_soranet_title">Na můj SORA NET účet</string>
   <string name="wallet_history_to_soranet_account">Na SORA NET účet</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">Moje %s síťová adresa pro příjem %s :</string>
-  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">Moje %s síťová adresa pro příjem %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Síťová adresa pro příjem %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Moje %s síťová adresa pro příjem %s %s :</string>
-  <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v1" formatted="false">Moje %s síťová adresa pro příjem %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Příjem VAL</string>
   <string name="wallet_redeemable">K výběru</string>
   <string name="wallet_send_existential_warning_message">Váš převod odebere účet z blockstore, protože celkový zůstatek bude nižší než existenční vklad.</string>
@@ -509,7 +544,9 @@
   <string name="wallet_title">Peněženka</string>
   <string name="wallet_transaction_rejected">Transakce zamítnuta</string>
   <string name="wallet_transaction_submitted">Transakce byla odeslána</string>
-  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transaction_submitted_1">Transakce\nodeslána</string>
+  <string name="wallet_transactions_unavailable_description">Problém se řeší, \n zkuste to prosím znovu později.</string>
+  <string name="wallet_transactions_unavailable_title">Nelze načíst transakce</string>
   <string name="wallet_transfer_description_hint">Max. %s symbolů</string>
   <string name="wallet_transfer_to_ethereum">Na Ethereum adresu</string>
   <string name="wallet_unbonding">Uvolnění</string>

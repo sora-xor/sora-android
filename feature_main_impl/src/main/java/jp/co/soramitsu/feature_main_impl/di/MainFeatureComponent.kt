@@ -28,6 +28,7 @@ import jp.co.soramitsu.feature_main_impl.presentation.pincode.di.PinCodeComponen
 import jp.co.soramitsu.feature_main_impl.presentation.privacy.di.PrivacyComponent
 import jp.co.soramitsu.feature_main_impl.presentation.profile.di.ProfileComponent
 import jp.co.soramitsu.feature_main_impl.presentation.staking.di.StakingComponent
+import jp.co.soramitsu.feature_main_impl.presentation.switchaccount.di.SwitchAccountComponent
 import jp.co.soramitsu.feature_main_impl.presentation.terms.di.TermsComponent
 import jp.co.soramitsu.feature_main_impl.presentation.userverification.di.UserVerificationComponent
 import jp.co.soramitsu.feature_main_impl.presentation.version.di.UnsupportedVersionComponent
@@ -60,6 +61,8 @@ interface MainFeatureComponent : MainFeatureApi {
     fun passphraseComponentBuilder(): PassphraseComponent.Builder
 
     fun personalComponentBuilder(): PersonalDataEditComponent.Builder
+
+    fun switchAccountComponentBuilder(): SwitchAccountComponent.Builder
 
     fun pinCodeComponentBuilder(): PinCodeComponent.Builder
 

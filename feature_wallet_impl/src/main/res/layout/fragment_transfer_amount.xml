@@ -98,9 +98,11 @@
             <TextView
                 android:id="@+id/balanceValue"
                 style="@style/TextAppearance.Soramitsu.Neu.Semibold.21"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:includeFontPadding="false"
+                android:layout_marginStart="@dimen/x1"
+                android:gravity="end"
                 android:textColor="?attr/balanceColorDefault"
                 app:layout_constraintBottom_toBottomOf="@+id/balanceTitle"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -117,7 +119,7 @@
                 android:background="?attr/dividerColor"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/balanceTitle" />
+                app:layout_constraintTop_toBottomOf="@+id/balanceValue" />
 
             <TextView
                 android:id="@+id/recepientTitle"
@@ -231,8 +233,19 @@
         android:layout_marginBottom="@dimen/x4"
         android:enabled="false"
         android:text="@string/transaction_continue"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/amountPercentage"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <jp.co.soramitsu.common.view.AmountPercentageView
+        android:id="@+id/amountPercentage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

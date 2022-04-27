@@ -67,7 +67,15 @@ interface SubstrateApi {
 
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean
     suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): List<String>
-    suspend fun getSwapFees(tokenId1: String, tokenId2: String, amount: BigInteger, swapVariant: String, market: List<String>, filter: String): SwapFeeDto?
+    suspend fun getSwapFees(
+        tokenId1: String,
+        tokenId2: String,
+        amount: BigInteger,
+        swapVariant: String,
+        market: List<String>,
+        filter: String
+    ): SwapFeeDto?
+
     fun observeSwap(
         keypair: Sr25519Keypair,
         from: String,
@@ -93,7 +101,49 @@ interface SubstrateApi {
         limit: BigInteger,
     ): BigInteger
 
-    suspend fun getPoolReserveAccount(runtime: RuntimeSnapshot, tokenId: ByteArray): ByteArray
+    suspend fun calcRemoveLiquidityNetworkFee(
+        from: String,
+        runtime: RuntimeSnapshot,
+        outputAssetIdA: String,
+        outputAssetIdB: String,
+        markerAssetDesired: BigInteger,
+        outputAMin: BigInteger,
+        outputBMin: BigInteger
+    ): BigInteger
+
+    suspend fun calcAddLiquidityNetworkFee(
+        address: String,
+        runtime: RuntimeSnapshot,
+        inputAssetId: String,
+        outputAssetId: String,
+        baseAssetAmount: BigInteger,
+        targetAssetAmount: BigInteger,
+        amountFromMin: BigInteger,
+        amountToMin: BigInteger,
+        pairEnabled: Boolean,
+        pairPresented: Boolean
+    ): BigInteger
+
+    suspend fun observeAddLiquidity(
+        address: String,
+        keypair: Sr25519Keypair,
+        runtime: RuntimeSnapshot,
+        inputAssetId: String,
+        outputAssetId: String,
+        baseAssetAmount: BigInteger,
+        targetAssetAmount: BigInteger,
+        amountFromMin: BigInteger,
+        amountToMin: BigInteger,
+        pairEnabled: Boolean,
+        pairPresented: Boolean,
+    ): Flow<Pair<String, ExtrinsicStatusResponse>>
+
+    suspend fun getPoolReserveAccount(runtime: RuntimeSnapshot, tokenId: ByteArray): ByteArray?
+
+    suspend fun getPoolReserves(
+        runtime: RuntimeSnapshot,
+        tokenId: String
+    ): Pair<BigInteger, BigInteger>?
 
     suspend fun getUserPoolsData(
         runtime: RuntimeSnapshot,
@@ -101,8 +151,30 @@ interface SubstrateApi {
         tokensId: List<ByteArray>
     ): List<PoolDataDto>
 
+    suspend fun getUserPoolData(
+        runtime: RuntimeSnapshot,
+        address: String,
+        tokenId: ByteArray
+    ): PoolDataDto?
+
     suspend fun getUserPoolsTokenIds(
         runtime: RuntimeSnapshot,
         address: String
     ): List<ByteArray>
+
+    suspend fun isPairEnabled(
+        inputAssetId: String,
+        outputAssetId: String
+    ): Boolean
+
+    fun observeRemoveLiquidity(
+        keypair: Sr25519Keypair,
+        from: String,
+        runtime: RuntimeSnapshot,
+        token1: String,
+        token2: String,
+        markerAssetDesired: BigInteger,
+        firstAmountMin: BigInteger,
+        secondAmountMin: BigInteger
+    ): Flow<Pair<String, ExtrinsicStatusResponse>>
 }

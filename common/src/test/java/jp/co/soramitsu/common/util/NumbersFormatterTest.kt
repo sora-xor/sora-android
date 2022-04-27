@@ -36,6 +36,66 @@ class NumbersFormatterTest {
     }
 
     @Test
+    fun `should hide decimals for zero decimal`() {
+        val precision = 9
+
+        val toFormat = BigDecimal(0.000007364243)
+
+        val expected = "0.000007364"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `should hide decimals for zero decimal 2`() {
+        val precision = 2
+
+        val toFormat = BigDecimal(0.000007364243)
+
+        val expected = "0"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision, false)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `should hide decimals for zero decimal 3`() {
+        val precision = 2
+
+        val toFormat = BigDecimal(0.000007364243)
+
+        val expected = "0.000007"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `should hide decimals for zero decimal 4`() {
+        val precision = 2
+
+        val toFormat = BigDecimal(-0.000007364243)
+
+        val expected = "-0.000008"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `should hide decimals for zero decimal 5`() {
+        val precision = 9
+
+        val toFormat = BigDecimal(-0.000007364243)
+
+        val expected = "-0.000007365"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `should format with arbitrary precision`() {
         val precision = 9
 

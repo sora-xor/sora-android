@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Egiaztatu mnemonikoa</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Proiektua</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Helbidea ez da aurkitu, ziurtatu helbidea sare egokiarena dela.</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Transakzio kuota</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopiatu</string>
   <string name="common_copy_address">Kopiatu helbidea</string>
   <string name="common_croatian">Kroaziera</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Deskribapena</string>
   <string name="common_done">Eginda</string>
   <string name="common_donotallow">Ez Onartu</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">Indonesiarra</string>
   <string name="common_info">Informazioa</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italiarra</string>
   <string name="common_japanese">Japoniarra</string>
   <string name="common_khmer">Khmer</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">Ados</string>
   <string name="common_open_explorer">Ikusi Blockchain Explorer-en</string>
   <string name="common_options_title">Aukeratu aukera bat</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Konturako sarbidea berreskuratzeko erabiltzen da. Idatzi, ezin izango dugu kontua berreskuratu gabe!</string>
   <string name="common_passphrase_header">Pasaesaldia da\n pasahitz mota bat.</string>
   <string name="common_passphrase_save_mnemonic_title">Gorde edo bidali pasaesaldia</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Jaso</string>
   <string name="common_received">Jasota</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Berriro saiatu</string>
   <string name="common_russian">Errusiera</string>
   <string name="common_save">Gorde</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Egiaztapen kodea okerra da</string>
   <string name="common_spanish">Gaztelania</string>
   <string name="common_spanish_colombia">Gaztelania (Kolonbia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Suediera</string>
   <string name="common_terms_title">Baldintzak eta kondizioak</string>
   <string name="common_thai">Thailandiarra</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Bozkatu</string>
   <string name="common_yesterday">Atzo</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Hemen agertuko dira kontaktu garrantzitsuenak</string>
   <string name="contacts_scan">Eskaneatu QR kodea</string>
   <string name="contacts_search_empty_state_title">Bilaketaren emaitzarik ez</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">QR ezin da deszifratu</string>
   <string name="invoice_scan_error_user_not_found">Erabiltzailearen QR ezin da aurkitu</string>
   <string name="language_title">Hizkuntza aukeratu</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Ekintza hau gailu honen kontua ezabatzean sortuko da. Aurrera egin aurretik, ziurtatu zure pasaesaldiaren babeskopia egin duzula.</string>
   <string name="mnemonic_alert_text">Pasahitz mnemonikoa konturako sarbidea berreskuratzeko erabiltzen da. Idatzi, ezin izango dugu kontua berreskuratu hori gabe!</string>
   <string name="mnemonic_confirm_text">Egiaztatu hitzak orden egokian aukeratuz</string>
@@ -285,16 +303,18 @@
   <string name="pincode_updated">Pin kodea eguneratu da</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">Etorkizun elkarreragilearen DEX. Polkaswap zaintzarik gabeko AMM-DEX protokoloa da, tokenak trukatzeko Polkadot sarean, Parachains eta Bridge bidez konektatutako bloke kateak oinarritzat hartuta. Polkaswap protokoloak konfiantzazko bitartekariak modu eraginkorrean kentzen ditu eta merkataritza azkarragoa egiteko aukera eskaintzen du.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Trukaketa baieztatu</string>
   <string name="polkaswap_details">Xehetasunak</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap SORA komunitateak mantentzen du. Polkaswap funtzionalitatea erabili aurretik, berrikusi  %%Polkaswap FAQ%% eta dokumentazioa, Polkaswap-en funtzionamenduari buruzko azalpen zehatza, %%Polkaswap Memoria eta Zerbitzuen Baldintzak%% eta %%Pribatutasun Politika barne%%. Dokumentu hauek funtsezkoak dira erabiltzaile esperientzia segurua eta positiboa lortzeko. Polkaswap erabiliz, dokumentu hauek irakurri eta ulertu dituzula aitortzen duzu.</string>
   <string name="polkaswap_info_text_2">Polkaswap SORA komunitateak mantentzen du. Polkaswap funtzionalitatea erabili aurretik, berrikusi  %%Polkaswap FAQ%% eta dokumentazioa, Polkaswap-en funtzionamenduari buruzko azalpen zehatza, Polkaswap Memoria eta Zerbitzuen Baldintzak eta Pribatutasun Politika barne. Dokumentu hauek funtsezkoak dira erabiltzaile esperientzia segurua eta positiboa lortzeko. Polkaswap erabiliz, dokumentu hauek irakurri eta ulertu dituzula aitortzen duzu. \n\n Honako hau ere aitortzen duzu: \n\n 1) zure legezko jurisdikzioan Polkaswap-en erabilera partikularrean aplika daitezkeen lege guztiak betetzearen erantzukizun bakarra;\n 2) ulertzen duzu Polkaswap-en uneko bertsioa alfa bertsioa dela: ez da guztiz probatu, eta baliteke funtzio batzuek diseinatutakoa ez betetzea;\n 3) Polkaswap erabiltzeak dakartzan arriskuak ulertzea eta borondatez onartzea, besteak beste, tokens galtzeko arriskua barne. Beste behin ere, jarraitu ezazu FAQ, Polkaswap Memorandum eta Zerbitzu Baldintzak eta Pribatutasun Politika irakurri gabe.</string>
-  <string name="polkaswap_info_text_3">Polkaswap SORA komunitateak mantentzen du. Polkaswap funtzionalitatea erabili aurretik, berrikusi  %%Polkaswap FAQ%% eta dokumentazioa, Polkaswap-en funtzionamenduari buruzko azalpen zehatza, Polkaswap Memoria eta Zerbitzuen Baldintzak eta Pribatutasun Politika barne. Dokumentu hauek funtsezkoak dira erabiltzaile esperientzia segurua eta positiboa lortzeko. Polkaswap erabiliz, dokumentu hauek irakurri eta ulertu dituzula aitortzen duzu. \n\n Honako hau ere aitortzen duzu: \n\n 1) zure legezko jurisdikzioan Polkaswap-en erabilera partikularrean aplika daitezkeen lege guztiak betetzearen erantzukizun bakarra;\n 2) ulertzen duzu Polkaswap-en uneko bertsioa alfa bertsioa dela: ez da guztiz probatu, eta baliteke funtzio batzuek diseinatutakoa ez betetzea;\n 3) Polkaswap erabiltzeak dakartzan arriskuak ulertzea eta borondatez onartzea, besteak beste, tokens galtzeko arriskua barne. Beste behin ere, jarraitu ezazu FAQ, Polkaswap Memorandum eta Zerbitzu Baldintzak eta Pribatutasun Politika irakurri gabe.</string>
-  <string name="polkaswap_info_text_4">Polkaswap SORA komunitateak mantentzen du. Polkaswap funtzionalitatea erabili aurretik, berrikusi  %%Polkaswap FAQ%% eta dokumentazioa, Polkaswap-en funtzionamenduari buruzko azalpen zehatza, Polkaswap Memoria eta Zerbitzuen Baldintzak eta Pribatutasun Politika barne. Dokumentu hauek funtsezkoak dira erabiltzaile esperientzia segurua eta positiboa lortzeko. Polkaswap erabiliz, dokumentu hauek irakurri eta ulertu dituzula aitortzen duzu. \n\n Honako hau ere aitortzen duzu: \n\n 1) zure legezko jurisdikzioan Polkaswap-en erabilera partikularrean aplika daitezkeen lege guztiak betetzearen erantzukizun bakarra;\n 2) ulertzen duzu Polkaswap-en uneko bertsioa alfa bertsioa dela: ez da guztiz probatu, eta baliteke funtzio batzuek diseinatutakoa ez betetzea;\n 3) Polkaswap erabiltzeak dakartzan arriskuak ulertzea eta borondatez onartzea, besteak beste, tokens galtzeko arriskua barne. Beste behin ere, jarraitu ezazu FAQ, Polkaswap Memorandum eta Zerbitzu Baldintzak eta Pribatutasun Politika irakurri gabe.</string>
-  <string name="polkaswap_info_text_5">Polkaswap SORA komunitateak mantentzen du. Polkaswap funtzionalitatea erabili aurretik, berrikusi  %%Polkaswap FAQ%% eta dokumentazioa, Polkaswap-en funtzionamenduari buruzko azalpen zehatza, Polkaswap Memoria eta Zerbitzuen Baldintzak eta Pribatutasun Politika barne. Dokumentu hauek funtsezkoak dira erabiltzaile esperientzia segurua eta positiboa lortzeko. Polkaswap erabiliz, dokumentu hauek irakurri eta ulertu dituzula aitortzen duzu. \n\n Honako hau ere aitortzen duzu: \n\n 1) zure legezko jurisdikzioan Polkaswap-en erabilera partikularrean aplika daitezkeen lege guztiak betetzearen erantzukizun bakarra;\n 2) ulertzen duzu Polkaswap-en uneko bertsioa alfa bertsioa dela: ez da guztiz probatu, eta baliteke funtzio batzuek diseinatutakoa ez betetzea;\n 3) Polkaswap erabiltzeak dakartzan arriskuak ulertzea eta borondatez onartzea, besteak beste, tokens galtzeko arriskua barne. Beste behin ere, jarraitu ezazu FAQ, Polkaswap Memorandum eta Zerbitzu Baldintzak eta Pribatutasun Politika irakurri gabe.</string>
-  <string name="polkaswap_info_text_6">Polkaswap SORA komunitateak mantentzen du. Polkaswap funtzionalitatea erabili aurretik, berrikusi  %%Polkaswap FAQ%% eta dokumentazioa, Polkaswap-en funtzionamenduari buruzko azalpen zehatza, Polkaswap Memoria eta Zerbitzuen Baldintzak eta Pribatutasun Politika barne. Dokumentu hauek funtsezkoak dira erabiltzaile esperientzia segurua eta positiboa lortzeko. Polkaswap erabiliz, dokumentu hauek irakurri eta ulertu dituzula aitortzen duzu. \n\n Honako hau ere aitortzen duzu: \n\n 1) zure legezko jurisdikzioan Polkaswap-en erabilera partikularrean aplika daitezkeen lege guztiak betetzearen erantzukizun bakarra;\n 2) ulertzen duzu Polkaswap-en uneko bertsioa alfa bertsioa dela: ez da guztiz probatu, eta baliteke funtzio batzuek diseinatutakoa ez betetzea;\n 3) Polkaswap erabiltzeak dakartzan arriskuak ulertzea eta borondatez onartzea, besteak beste, tokens galtzeko arriskua barne. Beste behin ere, jarraitu ezazu FAQ, Polkaswap Memorandum eta Zerbitzu Baldintzak eta Pribatutasun Politika irakurri gabe.</string>
+  <string name="polkaswap_info_text_3">Zure legezko jurisdikzioan Polkaswap-en erabilera partikularrari aplika dakizkiokeen lege guztiak betetzearen erantzukizun bakarra;</string>
+  <string name="polkaswap_info_text_4">Polkaswap-en egungo bertsioa alfa bertsioa dela ulertzen duzu: ez da guztiz probatu, eta baliteke funtzio batzuk diseinatutako moduan ez funtzionatzea;</string>
+  <string name="polkaswap_info_text_5">Polkaswap erabiltzeak dakartzan arriskuak ulertzea eta borondatez onartzea, tokenak galtzeko arriskua barne, baina ez mugatuta.</string>
+  <string name="polkaswap_info_text_6">Beste behin, mesedez, ez jarraitu %% Polkaswap FAQ %% , %% Polkaswap Memorandum eta Zerbitzu-baldintzak %% , eta %% Pribatutasun Politika %% !</string>
   <string name="polkaswap_info_text_7">Ezespena jakinarazpena Trukatu fitxatik ezkutatzeko, irristatu beheko botoia. Egin ezazu aipatutako dokumentu guztiak ondo ulertu eta irakurri badituzu!</string>
   <string name="polkaswap_info_text_8">Pasatu hatza ezkutatzeko</string>
   <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">Zure transakzioa berreskuratuko da baieztatu baino lehen prezioen aurkako mugimendu handia badago.</string>
   <string name="polkaswap_network_fee">Sareko kuota</string>
   <string name="polkaswap_network_fee_info">Sareko kuota SORA sistemaren hazkundea eta errendimendu egonkorra bermatzeko erabiltzen da.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Irteera balioesten da. Gutxienez 1  jasoko duzu, edo trukea aldatuko da.</string>
   <string name="polkaswap_pool_not_created">Pool-a ez dago eraikia</string>
   <string name="polkaswap_pool_title">Pool-a</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Zure transakzioa aurrez aurre izan daiteke</string>
   <string name="polkaswap_slippage_info">Irristatzearen tolerantzia Jasotako Gutxieneko zenbatekoari eragiten dion azken zenbatekoaren ehunekoan onartutako atalasea da.</string>
   <string name="polkaswap_slippage_mayfail">Baliteke zure transakzioak huts egitea</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">Zangalatraba</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Gehitu</string>
   <string name="pool_button_remove">Kendu</string>
   <string name="pool_liqudity_title">likidezia</string>
   <string name="pool_liquidity_placeholder">Zure loturarik gabekoak hemen agertuko dira.</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Igerilekuaren kuota</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">{tokenSymbol} Pooled</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Boto guztiak</string>
   <string name="referendum_unsupport_title">Ez</string>
   <string name="referendum_voting_result">Bozketaren emaitza</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Ez hartu pantaila-argazkirik, hirugarrenen malware batek jaso ditzakeenak</string>
   <string name="screenshot_alert_title">Ez hartu pantaila-argazkirik</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Aukeratu hartzailea</string>
   <string name="set_amount">Zenbatekoa ezarri</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR titularrek beren XOR-ak jokoan jarri ahal izango dituzte, balidatzaileak izendatzeko eta sariak lortzeko.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA VALidator sariak</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">SORA NET kontura</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Nire %s jasotzeko sarearen helbidea %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Nire %s jasotzeko sarearen helbidea  %s  %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Jaso VAL</string>
   <string name="wallet_redeemable">Erabilgarria</string>
   <string name="wallet_send_existential_warning_message">Zure transferentziak blokeatutako kontua kenduko du, saldo osoa gordailu existentziala baino txikiagoa izango baita</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Transakzioa baztertuta</string>
   <string name="wallet_transaction_submitted">Aurkeztutako transakzioa</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Gehienez %s sinbolo</string>
   <string name="wallet_transfer_to_ethereum">Ethereum helbidera</string>
   <string name="wallet_unbonding">Lotu gabea</string>

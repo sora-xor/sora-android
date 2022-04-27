@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Xác nhận mnemonic</string>
   <string name="account_confirmation_title_v2">Xác nhận chuỗi từ khóa khôi phục</string>
   <string name="activity_project">Dự án</string>
+  <string name="add_liquidity_alert_text">Bạn sẽ kiếm được các khoản tương ứng với tỷ lệ chia sẻ của bạn trong nhóm từ việc cung cấp thanh khoản.</string>
+  <string name="add_liquidity_confirmation_title">Xác nhận supply</string>
+  <string name="add_liquidity_pool_share_description">Kết quả là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ hoàn tác.</string>
+  <string name="add_liquidity_pool_share_title">Pool share nhóm của bạn sẽ là</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Thêm thanh khoản</string>
   <string name="address_not_found">Địa chỉ không tìm thấy, hãy đảm bảo rằng bạn chọn đúng mạng (network)</string>
   <string name="address_not_found_1">Không tìm thấy người nhận</string>
   <string name="amount_default_fee">Phí giao dịch</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Sao chép</string>
   <string name="common_copy_address">Sao chép địa chỉ</string>
   <string name="common_croatian">Tiếng Croatia</string>
+  <string name="common_deposit">Tiền gửi</string>
+  <string name="common_deposit_symbol">%s nạp tiền</string>
   <string name="common_description">Mô tả</string>
   <string name="common_done">Hoàn tất</string>
   <string name="common_donotallow">Không được phép</string>
@@ -126,6 +134,7 @@
   </plurals>
   <string name="common_indonesian">Tiếng Indonesia</string>
   <string name="common_info">Thông tin</string>
+  <string name="common_insufficient_balance">Số dư không đủ</string>
   <string name="common_italian">Tiếng Ý</string>
   <string name="common_japanese">Tiếng Nhật</string>
   <string name="common_khmer">Tiếng Khmer</string>
@@ -141,6 +150,7 @@
   <string name="common_ok">Đồng ý</string>
   <string name="common_open_explorer">Xem trong Blockchain Explorer</string>
   <string name="common_options_title">Chọn một tùy chọn</string>
+  <string name="common_output">Đầu ra</string>
   <string name="common_passphrase_body">Bây giờ, khi tạo một tài khoản SORA mới, bạn sẽ nhận được một chuỗi từ khóa khôi phục gồm 12 từ. Còn nếu bạn đã từng có chuỗi từ khóa khôi phục SORA cũ gồm 15 từ, thì bạn vẫn có thể sử dụng ở đây - nó vẫn tương thích và hoạt động bình thường.</string>
   <string name="common_passphrase_header">Chuỗi từ khóa khôi phục ví là\n một loại mật khẩu.</string>
   <string name="common_passphrase_save_mnemonic_title">Lưu hoặc gửi chuỗi từ khóa khôi phục</string>
@@ -160,6 +170,7 @@
   <string name="common_receive">Nhận</string>
   <string name="common_received">Nhận</string>
   <string name="common_recipient">Người nhận</string>
+  <string name="common_remove">Gỡ bỏ</string>
   <string name="common_retry">Thử lại</string>
   <string name="common_russian">Tiếng Nga</string>
   <string name="common_save">Lưu</string>
@@ -179,6 +190,7 @@
   <string name="common_sms_code_not_correct">Mã xác minh không chính xác</string>
   <string name="common_spanish">Tiếng Tây Ban Nha</string>
   <string name="common_spanish_colombia">Tiếng Tây Ban Nha (Colombia)</string>
+  <string name="common_supply">Nguồn cung</string>
   <string name="common_swedish">Tiếng Thụy Điển</string>
   <string name="common_terms_title">Điều khoản và Điều kiện</string>
   <string name="common_thai">Tiếng Thái</string>
@@ -194,6 +206,8 @@
   <string name="common_update">Cập nhật</string>
   <string name="common_vote">Bỏ phiếu</string>
   <string name="common_yesterday">Hôm qua</string>
+  <string name="common_you_will_receive">Bạn sẽ nhận được</string>
+  <string name="common_your_position">Vị thế của bạn</string>
   <string name="contacts_empty_state_title">Hầu hết các liên hệ quan trọng sẽ xuất hiện ở đây</string>
   <string name="contacts_scan">Quét</string>
   <string name="contacts_search_empty_state_title">Không có kết quả tìm kiếm</string>
@@ -251,6 +265,10 @@
   <string name="invoice_scan_error_no_info">Không thể giải mã QR</string>
   <string name="invoice_scan_error_user_not_found">Không thể tìm thấy người dùng từ mã QR</string>
   <string name="language_title">Chọn ngôn ngữ</string>
+  <string name="liquidity_added">Đã thêm thanh khoản %s</string>
+  <string name="liquidity_pair_creation_description">Tỷ lệ token bạn thêm vào sẽ thiết lập giá của pool này. Một khi bạn hài lòng với tỷ lệ cung cấp hãy nhấp chuột để xem xét.</string>
+  <string name="liquidity_pair_creation_title">Bạn là nhà cung cấp thanh khoản đầu tiên</string>
+  <string name="liquidity_removed">Đã rút %s thanh khoản</string>
   <string name="logout_dialog_body">Hành động này sẽ dẫn đến việc xóa tài khoản khỏi thiết bị này. Đảm bảo rằng bạn đã sao lưu chuỗi từ khóa khôi phục của bạn trước khi tiếp tục.</string>
   <string name="mnemonic_alert_text">Chuỗi từ khóa khôi phục được sử dụng để khôi phục quyền truy cập vào tài khoản. Hãy viết nó ra, chúng tôi sẽ không thể khôi phục tài khoản của bạn nếu không có nó!</string>
   <string name="mnemonic_confirm_text">Xác nhận bằng cách chọn các từ theo đúng thứ tự</string>
@@ -284,10 +302,12 @@
   <string name="pincode_updated">Đã cập nhật mã pin</string>
   <string name="polkaswap_button_swap_again">Hoán đổi lần nữa</string>
   <string name="polkaswap_coming_soon">DEX cho một tương lai có thể tương tác. Polkaswap là một giao thức AMM-DEX không giám hộ tài sản để hoán đổi token dựa trên mạng Polkadot, Parachains và các blockchains được kết nối qua Bridge. Giao thức Polkaswap loại bỏ một cách hiệu quả các trung gian cần sự tin tưởng và mang lại cơ hội giao dịch nhanh hơn.</string>
+  <string name="polkaswap_common_info">Bạn sẽ kiếm được tỷ thuận với lượng tài sản đóng góp vào pool cung cấp thanh khoản.</string>
   <string name="polkaswap_confirm_swap">Xác nhận hoán đổi</string>
   <string name="polkaswap_details">Chi tiết</string>
   <string name="polkaswap_error_noswap">Không hoán đổi</string>
   <string name="polkaswap_info_faq">Câu hỏi thường gặp về Polkaswap</string>
+  <string name="polkaswap_info_prices_and_fees">Giá và phí</string>
   <string name="polkaswap_info_text_1">Polkaswap được duy trì bởi cộng đồng SORA. Trước khi tiếp tục sử dụng Polkaswap, vui lòng xem lại %% Câu hỏi thường gặp về Polkaswap %% và tài liệu, trong đó có giải thích chi tiết về cách Polkaswap hoạt động, cũng như %% Bản ghi nhớ Polkaswap và Điều khoản dịch vụ %% và %% Chính sách quyền riêng tư %% . \n\n Những tài liệu này rất quan trọng đối với trải nghiệm người dùng an toàn và tích cực. Bằng cách sử dụng Polkaswap, bạn xác nhận rằng bạn đã đọc và hiểu các tài liệu này.</string>
   <string name="polkaswap_info_text_2">Bạn cũng thừa nhận những điều sau:</string>
   <string name="polkaswap_info_text_3">trách nhiệm duy nhất của bạn đối với việc tuân thủ tất cả các luật có thể áp dụng cho việc sử dụng Polkaswap cụ thể của bạn trong khu vực pháp lý của bạn;</string>
@@ -316,9 +336,12 @@
   <string name="polkaswap_minimum_received_info">Giao dịch của bạn sẽ được hoàn tác nếu có một biến động giá lớn hay một biến động không thuận lợi trước khi nó được xác nhận.</string>
   <string name="polkaswap_network_fee">Phí Mạng</string>
   <string name="polkaswap_network_fee_info">Phí mạng được sử dụng để đảm bảo sự tăng trưởng và hiệu suất ổn định của hệ thống SORA.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Không đủ token trong pool</string>
   <string name="polkaswap_output_estimated">Kết quả là ước lượng. Bạn sẽ nhận ít nhất %s hoặc giao dịch sẽ hoàn tác.</string>
   <string name="polkaswap_pool_not_created">Pool chưa được tạo</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward cho việccung cấp thanh khoản</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Giao dịch của bạn có thể khiến giá biến động đáng kể</string>
   <string name="polkaswap_slippage_info">Các giao dịch của bạn sẽ hoàn tác nếu giá thay đổi bất lợi hơn tỷ lệ phần trăm này</string>
   <string name="polkaswap_slippage_mayfail">Giao dịch của bạn có thể thất bại</string>
@@ -328,11 +351,13 @@
   <string name="polkaswap_swapped">Đã hoán đổi</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Vị thế của bạn (ước tính)</string>
   <string name="pool_apy_title">Apy tiền thưởng chiến lược</string>
   <string name="pool_button_add">Thêm</string>
   <string name="pool_button_remove">Rút</string>
   <string name="pool_liqudity_title">Thanh khoản của bạn</string>
-  <string name="pool_liquidity_placeholder">Thanh khoản của bạn sẽ xuất hiện ở đây</string>
+  <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Cổ phần trong pool</string>
   <string name="pool_share_title_1">Những pool bạn tham gia</string>
   <string name="pool_token_pooled">Pool đã đóng góp</string>
@@ -387,6 +412,10 @@
   <string name="referendum_total_votes">Tổng số phiếu bầu</string>
   <string name="referendum_unsupport_title">Không</string>
   <string name="referendum_voting_result">Kết quả bỏ phiếu</string>
+  <string name="remove_liquidity_info_text">Rút thanh khoản sẽ chuyển đổi vị thế của bạn trở lại với tỷ giá hiện tại, tỷ lệ thuận với tỷ lệ chia sẻ của bạn trong nhóm.</string>
+  <string name="remove_liquidity_title">Rút thanh khoản</string>
+  <string name="remove_pool_confirmation_description">Kết quả là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ hoàn tác.</string>
+  <string name="remove_pool_confirmation_title">Xác nhận Rút</string>
   <string name="restart_required">Yêu cầu khởi động lại</string>
   <string name="screenshot_alert_text">Không chụp ảnh màn hình vì có thể bị phần mềm độc hại của bên thứ ba thu thập</string>
   <string name="screenshot_alert_title">Không chụp ảnh màn hình</string>
@@ -397,6 +426,10 @@
   <string name="select_asset_send">Chọn Tài sản để gửi</string>
   <string name="select_recipient">Chọn người nhận</string>
   <string name="set_amount">Đặt số tiền</string>
+  <string name="settings_accounts">Tài khoản</string>
+  <string name="settings_header_account">THIẾT LẬP TÀI KHOẢN</string>
+  <string name="settings_header_app">CÀI ĐẶT ỨNG DỤNG</string>
+  <string name="settings_header_other">KHÁC</string>
   <string name="staking_coming_soon">Người nắm giữ XOR sẽ có thể stake XOR của họ để đề cử người xác nhận và nhận phần thưởng.</string>
   <string name="staking_description">Nominating validator là một phần quan trọng của hệ sinh thái SORA vì nó giúp mạng tăng bảo mật và phi tập trung. Token VAL sẽ được trao cho người xác nhận và người đề cử như một phần thưởng cho việc staking.</string>
   <string name="staking_val_reward">Phần thưởng SORA VALidator</string>
@@ -482,8 +515,10 @@
   <string name="wallet_history_to_soranet_account">Đến tài khoản SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Địa chỉ ví để nhận %s :</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s . ID tài khoản của tôi %s: \n %s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Địa chỉ ví %s của tôi để nhận %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s %s . ID tài khoản của tôi %s: \n %s</string>
   <string name="wallet_receive_val">Nhận VAL</string>
   <string name="wallet_redeemable">Có thể hoán đổi</string>
   <string name="wallet_send_existential_warning_message">Việc chuyển khoản của bạn sẽ xóa tài khoản khỏi lưu trữ khối vì nó sẽ làm cho tổng số dư thấp hơn khoản tiền gửi hiện có.</string>
@@ -492,6 +527,8 @@
   <string name="wallet_transaction_rejected">Giao dịch bị từ chối</string>
   <string name="wallet_transaction_submitted">Giao dịch đã được gửi</string>
   <string name="wallet_transaction_submitted_1">Giao dịch\nđã được gửi</string>
+  <string name="wallet_transactions_unavailable_description">Sự cố đang được xử lý, \n vui lòng thử lại sau.</string>
+  <string name="wallet_transactions_unavailable_title">Không thể tải các giao dịch</string>
   <string name="wallet_transfer_description_hint">Tối đa %s ký hiệu</string>
   <string name="wallet_transfer_to_ethereum">Đến địa chỉ Ethereum</string>
   <string name="wallet_unbonding">Hủy liên kết</string>

@@ -36,6 +36,12 @@ class ViewPagerAdapter(fragment: Fragment) :
         }
     }
 
+    fun isVisibleMarketsTitle(position: Int): Boolean =
+        when (position) {
+            SwapFragment.ID -> true
+            else -> false
+        }
+
     fun getFragmentAtPosition(position: Int): Fragment {
         return when (position) {
             SwapFragment.ID -> swapFragment

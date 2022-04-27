@@ -73,6 +73,7 @@
             android:lines="1"
             android:maxLength="4"
             android:maxLines="1"
+            android:hint="0.0"
             tools:hint="0.3$" />
 
         <TextView

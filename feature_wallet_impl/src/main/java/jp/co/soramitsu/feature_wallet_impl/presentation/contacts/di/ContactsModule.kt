@@ -35,12 +35,33 @@ class ContactsModule {
     @Provides
     @IntoMap
     @ViewModelKey(ContactsViewModel::class)
-    fun provideViewModel(interactor: WalletInteractor, ethereumInteractor: EthereumInteractor, router: WalletRouter, preloader: WithPreloader, qrCodeDecoder: QrCodeDecoder, resourceManager: ResourceManager, ethereumAddressValidator: EthereumAddressValidator, avatarGenerator: AccountAvatarGenerator): ViewModel {
-        return ContactsViewModel(interactor, router, preloader, qrCodeDecoder, resourceManager, ethereumAddressValidator, ethereumInteractor, avatarGenerator)
+    fun provideViewModel(
+        interactor: WalletInteractor,
+        ethereumInteractor: EthereumInteractor,
+        router: WalletRouter,
+        preloader: WithPreloader,
+        qrCodeDecoder: QrCodeDecoder,
+        resourceManager: ResourceManager,
+        ethereumAddressValidator: EthereumAddressValidator,
+        avatarGenerator: AccountAvatarGenerator
+    ): ViewModel {
+        return ContactsViewModel(
+            interactor,
+            router,
+            preloader,
+            qrCodeDecoder,
+            resourceManager,
+            ethereumAddressValidator,
+            ethereumInteractor,
+            avatarGenerator
+        )
     }
 
     @Provides
-    fun provideViewModelCreator(fragment: Fragment, viewModelFactory: ViewModelProvider.Factory): ContactsViewModel {
+    fun provideViewModelCreator(
+        fragment: Fragment,
+        viewModelFactory: ViewModelProvider.Factory
+    ): ContactsViewModel {
         return ViewModelProviders.of(fragment, viewModelFactory).get(ContactsViewModel::class.java)
     }
 

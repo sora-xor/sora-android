@@ -13,9 +13,11 @@ object FirebaseWrapper {
     private val blackList = listOf(CancellationException::class)
 
     fun recordException(t: Throwable) {
-        if (t::class !in blackList) {
-            Logger.e(t, "ERROR")
-            FirebaseCrashlytics.getInstance().recordException(t)
+        blackList.forEach { kClass ->
+            if (!kClass.isInstance(t)) {
+                Logger.e(t, "ERROR")
+                FirebaseCrashlytics.getInstance().recordException(t)
+            }
         }
     }
 

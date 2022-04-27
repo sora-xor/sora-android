@@ -127,4 +127,5 @@
     <color name="neu_hint_background">#d0c5c5</color>
     <color name="neu_text_background">#efe9e9</color>
     <color name="tint_above_background">#ddcccc</color>
+    <color name="neu_fiat_balance_color">#8faac5</color>
 </resources>

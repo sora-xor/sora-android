@@ -47,6 +47,19 @@ sealed class EventUiModel {
             pending: Boolean,
             success: Boolean?,
         ) : EventTxUiModel(hash, timestamp, pending, success)
+
+        class EventLiquidityAddUiModel(
+            hash: String,
+            timestamp: Long,
+            pending: Boolean,
+            success: Boolean?,
+            val dateTime: String,
+            val icon1: Int,
+            val icon2: Int,
+            val amount1: Pair<String, String>,
+            val amount2: Pair<String, String>,
+            val add: Boolean,
+        ) : EventTxUiModel(hash, timestamp, pending, success)
     }
 }
 

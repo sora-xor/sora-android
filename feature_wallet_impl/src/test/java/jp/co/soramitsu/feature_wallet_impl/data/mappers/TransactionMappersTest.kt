@@ -30,6 +30,7 @@ class TransactionMappersTest {
     fun `map transaction local committed`() {
         val t = ExtrinsicLocal(
             "txhash",
+            "accadd",
             "blockHash",
             BigDecimal.ZERO,
             ExtrinsicStatus.PENDING,
@@ -56,7 +57,7 @@ class TransactionMappersTest {
             ),
             ExtrinsicParamLocal(
                 "txHash",
-                ExtrinsicParam.TRANSFER_TYPE.paramName,
+                ExtrinsicParam.EXTRINSIC_TYPE.paramName,
                 ExtrinsicTransferTypes.IN.name
             ),
         )
@@ -81,6 +82,7 @@ class TransactionMappersTest {
     fun `map transaction local rejected`() {
         val t = ExtrinsicLocal(
             "txhash",
+            "accadd",
             "blockHash",
             BigDecimal.ONE,
             ExtrinsicStatus.COMMITTED,
@@ -117,6 +119,7 @@ class TransactionMappersTest {
     fun `map transaction local pending`() {
         val t = ExtrinsicLocal(
             "txhash",
+            "accadd",
             "blockHash",
             BigDecimal.ONE,
             ExtrinsicStatus.COMMITTED,

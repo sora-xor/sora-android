@@ -55,7 +55,7 @@ object RuntimeHolder {
         metadataVersion = metadata
         FirebaseWrapper.log("Set Runtime $snapshotFromSora")
         val valueConstant =
-            getRuntime().metadata.module(Pallete.SYSTEM.palleteName).constants[Constants.SS58Prefix.constantName]
+            getRuntime().metadata.module(Pallete.SYSTEM.palletName).constants[Constants.SS58Prefix.constantName]
         prefix =
             (
             valueConstant?.type?.fromByteArrayOrNull(

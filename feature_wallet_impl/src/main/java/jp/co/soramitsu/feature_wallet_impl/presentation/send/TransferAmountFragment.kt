@@ -6,10 +6,9 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.send
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.date.DateTimeFormatter
@@ -24,7 +23,9 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.disable
 import jp.co.soramitsu.common.util.ext.doAnimation
 import jp.co.soramitsu.common.util.ext.enable
+import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
+import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
@@ -35,6 +36,8 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransferAmountBinding
 import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -127,19 +130,6 @@ class TransferAmountFragment :
     private lateinit var progressDialog: SoraProgressDialog
     private var keyboardHelper: KeyboardHelper? = null
 
-    private val amountTextWatcher = object : TextWatcher {
-        override fun afterTextChanged(s: Editable?) {
-        }
-
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-        }
-
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-            val currentAmount = viewBinding.amountInput.getBigDecimal() ?: BigDecimal.ZERO
-            viewModel.amountChanged(currentAmount)
-        }
-    }
-
     override fun inject() {
         val recipientId = requireArguments().getString(KEY_RECIPIENT_ID, "")
         val assetId = requireArguments().getString(KEY_ASSET_ID, "")
@@ -175,13 +165,16 @@ class TransferAmountFragment :
 
         progressDialog = SoraProgressDialog(requireActivity())
 
-        viewBinding.amountInput.addTextChangedListener(amountTextWatcher)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewBinding.amountInput.asFlowCurrency()
+                .collectLatest {
+                    viewModel.amountChanged(it)
+                }
+        }
 
         viewBinding.nextBtn.setOnClickListener(
             DebounceClickListener(debounceClickHandler) {
-                viewModel.nextButtonClicked(
-                    viewBinding.amountInput.getBigDecimal()
-                )
+                viewModel.nextButtonClicked()
                 if (keyboardHelper?.isKeyboardShowing == true) {
                     hideSoftKeyboard()
                 }
@@ -190,6 +183,12 @@ class TransferAmountFragment :
 
         viewBinding.recepientTitle.setDebouncedClickListener(debounceClickHandler) {
             viewModel.copyAddress()
+        }
+
+        viewBinding.amountInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                viewBinding.amountPercentage.show()
+            }
         }
 
         initListeners()
@@ -237,5 +236,37 @@ class TransferAmountFragment :
         viewModel.copiedAddressEvent.observe {
             Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
+
+        viewBinding.amountPercentage.setOnOptionClickListener(viewModel::optionSelected)
+        viewBinding.amountPercentage.setOnDoneButtonClickListener {
+            hideSoftKeyboard()
+        }
+
+        viewModel.amountPercentage.observeNonNull { amount ->
+            viewBinding.amountInput.setValue(amount)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        keyboardHelper = KeyboardHelper(
+            requireView(),
+            object : KeyboardHelper.KeyboardListener {
+                override fun onKeyboardShow() {
+                    viewBinding.amountPercentage.show()
+                }
+
+                override fun onKeyboardHide() {
+                    runDelayed(100) {
+                        viewBinding.amountPercentage.gone()
+                    }
+                }
+            }
+        )
+    }
+
+    override fun onPause() {
+        keyboardHelper?.release()
+        super.onPause()
     }
 }

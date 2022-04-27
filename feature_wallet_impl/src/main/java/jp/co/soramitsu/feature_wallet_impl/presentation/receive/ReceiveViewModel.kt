@@ -98,20 +98,21 @@ class ReceiveViewModel(
     }
 
     private fun generateMessage(amount: String): String {
-        val message = if (amount.isEmpty()) {
-            resourceManager.getString(R.string.wallet_qr_share_message_empty_template_v1)
+        return if (amount.isEmpty()) {
+            resourceManager.getString(R.string.wallet_qr_share_message_empty_template_v2)
                 .format(
+                    assetModel.tokenName,
                     resourceManager.getString(R.string.asset_sora_fullname),
-                    assetModel.tokenName
+                    userAddress
                 )
         } else {
-            resourceManager.getString(R.string.wallet_qr_share_message_template_v1)
+            resourceManager.getString(R.string.wallet_qr_share_message_template_v2)
                 .format(
-                    resourceManager.getString(R.string.asset_sora_fullname),
                     amount,
-                    assetModel.tokenName
+                    assetModel.tokenName,
+                    resourceManager.getString(R.string.asset_sora_fullname),
+                    userAddress
                 )
         }
-        return message + "\n$userAddress"
     }
 }

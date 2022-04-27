@@ -14,6 +14,7 @@ import androidx.paging.map
 import androidx.room.withTransaction
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.dto.PhaseRecord
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.data.network.substrate.Events
@@ -78,10 +79,19 @@ class WalletRepositoryImpl @Inject constructor(
     private val tokensDeferred = CompletableDeferred<List<Token>>()
 
     private lateinit var pager: Pager<Int, ExtrinsicLocal>
+    private lateinit var assetDetailsPager: Pager<Int, ExtrinsicLocal>
 
-    private fun getOrInitPager(
-        address: String,
-    ): Pager<Int, ExtrinsicLocal> {
+    private lateinit var csa: SoraAccount
+
+    private val mediator = TransactionsRemoteMediator(
+        soraScanApi,
+        db,
+        { csa.substrateAddress },
+        tokensDeferred,
+        gson
+    )
+
+    private fun getOrInitPager(): Pager<Int, ExtrinsicLocal> {
         return synchronized(this) {
             if (::pager.isInitialized) {
                 pager
@@ -90,52 +100,62 @@ class WalletRepositoryImpl @Inject constructor(
                     config = PagingConfig(
                         pageSize = 40,
                     ),
-                    remoteMediator = TransactionsRemoteMediator(
-                        soraScanApi,
-                        db,
-                        address,
-                        tokensDeferred,
-                        gson
-                    )
+                    remoteMediator = mediator
                 ) {
-                    db.transactionDao().getExtrinsicPaging()
+                    db.transactionDao().getExtrinsicPaging(csa.substrateAddress)
                 }
                 pager
             }
         }
     }
 
+    private fun getOrInitPager(assetId: String): Pager<Int, ExtrinsicLocal> {
+        return synchronized(this) {
+            assetDetailsPager = Pager(
+                config = PagingConfig(
+                    pageSize = 40,
+                ),
+                remoteMediator = TransactionsRemoteMediator(
+                    soraScanApi,
+                    db,
+                    { csa.substrateAddress },
+                    tokensDeferred,
+                    gson,
+                    assetId
+                )
+            ) {
+                db.transactionDao().getExtrinsicPaging(csa.substrateAddress, assetId)
+            }
+            assetDetailsPager
+        }
+    }
+
+    override fun setCurSoraAccount(soraAccount: SoraAccount) {
+        csa = soraAccount
+    }
+
     override fun getTransactionsFlow(
-        address: String,
         assetId: String
-    ): Flow<PagingData<Transaction>> =
-        getOrInitPager(address).flow.map { pagingData ->
+    ): Flow<PagingData<Transaction>> {
+        return if (assetId.isEmpty()) {
+            getOrInitPager()
+        } else {
+            getOrInitPager(assetId)
+        }.flow.map { pagingData ->
             pagingData
+                .filter {
+                    it.accountAddress == csa.substrateAddress
+                }
                 .map {
                     val tokens = tokensDeferred.await()
                     val params = db.transactionDao().getParamsOfExtrinsic(it.txHash)
                     mapTransactionLocalToTransaction(it, tokens, params)
                 }
-                .filter { tx ->
-                    when {
-                        assetId.isEmpty() -> {
-                            true
-                        }
-                        tx is Transaction.Transfer -> {
-                            tx.token.id == assetId
-                        }
-                        tx is Transaction.Swap -> {
-                            tx.tokenFrom.id == assetId || tx.tokenTo.id == assetId
-                        }
-                        else -> {
-                            false
-                        }
-                    }
-                }
         }
+    }
 
     override fun observeStorageAccount(account: Any): Flow<String> {
-        val key = RuntimeHolder.getRuntime().metadata.module(Pallete.SYSTEM.palleteName)
+        val key = RuntimeHolder.getRuntime().metadata.module(Pallete.SYSTEM.palletName)
             .storage(Storage.ACCOUNT.storageName).storageKey(RuntimeHolder.getRuntime(), account)
         return wsConnection.observeStorage(key)
     }
@@ -191,10 +211,10 @@ class WalletRepositoryImpl @Inject constructor(
                 }
 
                 val (moduleIndexSuccess, eventIndexSuccess) = RuntimeHolder.getRuntime().metadata.module(
-                    Pallete.SYSTEM.palleteName
+                    Pallete.SYSTEM.palletName
                 ).event(Events.EXTRINSIC_SUCCESS.eventName).index
                 val (moduleIndexFailed, eventIndexFailed) = RuntimeHolder.getRuntime().metadata.module(
-                    Pallete.SYSTEM.palleteName
+                    Pallete.SYSTEM.palletName
                 ).event(Events.EXTRINSIC_FAILED.eventName).index
                 val successEvent = events.find { event ->
                     event.module == moduleIndexSuccess && event.event == eventIndexSuccess && event.number == extrinsicId
@@ -299,7 +319,7 @@ class WalletRepositoryImpl @Inject constructor(
         } ?: throw IllegalArgumentException("Token ($assetId) not found in db")
     }
 
-    private suspend fun updateTokens(address: String) {
+    private suspend fun updateTokens() {
         val tokens = fetchTokensList()
         val whiteList = runCatching {
             val whileListRaw = fileManager.readAssetFile("whitelist.json")
@@ -307,10 +327,9 @@ class WalletRepositoryImpl @Inject constructor(
                 gson.fromJson(whileListRaw, object : TypeToken<List<String>>() {}.type)
             ids
         }.getOrDefault(emptyList())
-        val assets = db.assetDao().getAssets(address)
-        val tokensExist = db.assetDao().getTokensByList(assets.map { it.tokenLocal.id })
+        val tokensId = db.assetDao().getTokensIdWithAsset()
         val partition = tokens.partition {
-            tokensExist.find { t -> t.id == it.id } != null
+            it.id in tokensId
         }
         db.assetDao().insertTokenList(
             partition.second.map {
@@ -361,9 +380,9 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateWhitelistBalances(address: String) {
-        updateTokens(address)
+        updateTokens()
         val assetsLocal =
-            db.assetDao().getAssetsWhitelist(AssetHolder.DEFAULT_WHITE_LIST_NAME, address)
+            db.assetDao().getAssetsWhitelist(address)
         var amount = assetsLocal.count { it.assetLocal != null }
         val assetsLocalSorted = assetsLocal.sortedBy { it.tokenLocal.symbol }
         val balances = fetchBalances(address, assetsLocalSorted.map { it.tokenLocal.id })
@@ -395,7 +414,7 @@ class WalletRepositoryImpl @Inject constructor(
 
     override suspend fun getAssetsWhitelist(address: String): List<Asset> {
         val assetsLocal =
-            db.assetDao().getAssetsWhitelist(AssetHolder.DEFAULT_WHITE_LIST_NAME, address)
+            db.assetDao().getAssetsWhitelist(address)
         var amount = assetsLocal.count { it.assetLocal != null }
         val updated = assetsLocal.mapIndexed { _, assetTokenLocal ->
             val assetLocal = assetTokenLocal.assetLocal
@@ -492,12 +511,14 @@ class WalletRepositoryImpl @Inject constructor(
         status: ExtrinsicStatusResponse,
         hash: String,
         fee: BigDecimal,
-        eventSuccess: Boolean?
+        eventSuccess: Boolean?,
+        soraAccount: SoraAccount
     ) {
         db.withTransaction {
             db.transactionDao().insert(
                 ExtrinsicLocal(
                     hash,
+                    soraAccount.substrateAddress,
                     (status as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
                     fee,
                     when (status) {
@@ -529,7 +550,7 @@ class WalletRepositoryImpl @Inject constructor(
                     ),
                     ExtrinsicParamLocal(
                         hash,
-                        ExtrinsicParam.TRANSFER_TYPE.paramName,
+                        ExtrinsicParam.EXTRINSIC_TYPE.paramName,
                         ExtrinsicTransferTypes.OUT.name
                     )
                 )
@@ -538,20 +559,23 @@ class WalletRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getContacts(query: String): Set<String> =
-        db.transactionDao().getContacts(query).toSet()
+        db.transactionDao().getContacts(query).filter { it != csa.substrateAddress }.toSet()
 
-    override suspend fun hideAssets(assetIds: List<String>) {
-        db.assetDao().hideAssets(assetIds)
+    override suspend fun hideAssets(assetIds: List<String>, soraAccount: SoraAccount) {
+        db.assetDao().hideAssets(assetIds, soraAccount.substrateAddress)
     }
 
-    override suspend fun displayAssets(assetIds: List<String>) {
-        db.assetDao().displayAssets(assetIds)
+    override suspend fun displayAssets(assetIds: List<String>, soraAccount: SoraAccount) {
+        db.assetDao().displayAssets(assetIds, soraAccount.substrateAddress)
     }
 
-    override suspend fun updateAssetPositions(assetPositions: Map<String, Int>) {
+    override suspend fun updateAssetPositions(
+        assetPositions: Map<String, Int>,
+        soraAccount: SoraAccount
+    ) {
         db.withTransaction {
             assetPositions.entries.forEach {
-                db.assetDao().updateAssetPosition(it.key, it.value)
+                db.assetDao().updateAssetPosition(it.key, it.value, soraAccount.substrateAddress)
             }
         }
     }
@@ -601,7 +625,7 @@ class WalletRepositoryImpl @Inject constructor(
             )
         }
         db.assetDao().insertTokenListIgnore(tokenList)
-        db.assetDao().insertAssetListReplace(assetList)
+        db.assetDao().insertAssets(assetList)
         return List(tokenList.size) {
             AssetTokenLocal(assetList[it], tokenList[it])
         }

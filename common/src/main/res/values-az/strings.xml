@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Mnemonik olduğunu təsdiq edin</string>
   <string name="account_confirmation_title_v2">Parolu təsdiqləyin</string>
   <string name="activity_project">Layihə</string>
+  <string name="add_liquidity_alert_text">Likvidlik təminatından hovuzdakı payınıza mütənasib olaraq haqq qazanacaqsınız.</string>
+  <string name="add_liquidity_confirmation_title">Təchizatı təsdiqləyin</string>
+  <string name="add_liquidity_pool_share_description">Çıxış təxmin edilir. Qiymət %s%% -dən çox dəyişərsə, əməliyyatınız geri qayıdacaq.</string>
+  <string name="add_liquidity_pool_share_title">Hovuz payınız olacaq</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Hovuz</string>
+  <string name="add_liquidity_title">Likvidlik əlavə edin</string>
   <string name="address_not_found">Ünvan tapılmadı, ünvanın doğru şəbəkəyə aid olduğundan əmin olun.</string>
   <string name="address_not_found_1">Qəbul edənlər tapılmadı</string>
   <string name="amount_default_fee">Əməliyyat haqqı</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopyalayın</string>
   <string name="common_copy_address">Ünvanı kopyalayın</string>
   <string name="common_croatian">Xorvat dili</string>
+  <string name="common_deposit">Depozit</string>
+  <string name="common_deposit_symbol">%s depoziti</string>
   <string name="common_description">Təsvir</string>
   <string name="common_done">Tamamlandı</string>
   <string name="common_donotallow">İcazə verməyin</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">İndoneziya dili</string>
   <string name="common_info">Məlumat</string>
+  <string name="common_insufficient_balance">Qeyri-kafi balans</string>
   <string name="common_italian">İtalyan dili</string>
   <string name="common_japanese">Yapon dili</string>
   <string name="common_khmer">Xmer dili</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">Ok</string>
   <string name="common_open_explorer">Blockchain Explorer-də baxın</string>
   <string name="common_options_title">Bir seçim edin</string>
+  <string name="common_output">Çıxış</string>
   <string name="common_passphrase_body">Hesaba girişi bərpa etmək üçün istifadə olunur. Qeyd edin, bu məlumatsız hesabınızı bərpa edə bilməyəcəyik!</string>
   <string name="common_passphrase_header">Parol keçidi bir şifrə növüdür</string>
   <string name="common_passphrase_save_mnemonic_title">Parol keçidini saxlayın və ya göndərin</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">Qəbul edin</string>
   <string name="common_received">Alındı</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Sil</string>
   <string name="common_retry">Yenidən cəhd edin</string>
   <string name="common_russian">Rus dili</string>
   <string name="common_save">Yadda saxla</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">Doğrulama kodu səhvdir</string>
   <string name="common_spanish">İspan dili</string>
   <string name="common_spanish_colombia">İspan (Kolumbiya) dili</string>
+  <string name="common_supply">Təchizat</string>
   <string name="common_swedish">İsveç dili</string>
   <string name="common_terms_title">Şərtlər və Qaydalar</string>
   <string name="common_thai">Tay dili</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Yeniləyin</string>
   <string name="common_vote">Səs verin</string>
   <string name="common_yesterday">Dünən</string>
+  <string name="common_you_will_receive">alacaqsınız</string>
+  <string name="common_your_position">Vəzifəniz</string>
   <string name="contacts_empty_state_title">Ən vacib əlaqələr burada görünəcəkdir</string>
   <string name="contacts_scan">QR kodunu skan edin</string>
   <string name="contacts_search_empty_state_title">Axtarış nəticələri yoxdur</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">QR kodunu açmaq olmur</string>
   <string name="invoice_scan_error_user_not_found">QR-dən istifadəçi tapa bilinmir</string>
   <string name="language_title">Dil seçin</string>
+  <string name="liquidity_added">%s likvidlik əlavə edildi</string>
+  <string name="liquidity_pair_creation_description">Əlavə etdiyiniz tokenlərin nisbəti bu hovuzun qiymətini təyin edəcək. Məzənnədən məmnun olduqdan sonra nəzərdən keçirmək üçün təchizatı klikləyin.</string>
+  <string name="liquidity_pair_creation_title">Siz ilk likvidlik təminatçısısınız</string>
+  <string name="liquidity_removed">%s likvidlik silindi</string>
   <string name="logout_dialog_body">Bu əməliyyat hesabın bu cihazdan silinməsi ilə nəticələnəcəkdir. Davam etmədən əvvəl parol keçidinizi yedəklədiyinizə əmin olun.</string>
   <string name="mnemonic_alert_text">Mnemonic hesaba girişi bərpa etmək üçün istifadə olunur. Qeyd edin, bu məlumatsız hesabınızı bərpa edə bilməyəcəyik!</string>
   <string name="mnemonic_confirm_text">Sözləri düzgün qaydada seçərək təsdiq edin</string>
@@ -285,16 +303,18 @@
   <string name="pincode_updated">Pin kodu yeniləndi</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">Birləşə bilən Gələcək üçün DEX. Polkaswap, Polkadot şəbəkəsinə, Paraçeynlərə və bir körpüdən birləşdirilmiş blok zəncirlərinə əsaslanan tokenlərin dəyişdirilməsi üçün saxlanılmayan, AMM-DEX protokoludur. Polkaswap protokolu etibarlı vasitəçiləri effektiv şəkildə aradan qaldırır və daha sürətli ticarət imkanı yaradır.</string>
+  <string name="polkaswap_common_info">Siz likvidlik təminatından hovuzdakı payınıza mütənasib ödənişlər qazanacaqsınız.</string>
   <string name="polkaswap_confirm_swap">Mübadiləni təsdiq edin</string>
   <string name="polkaswap_details">Detallar</string>
   <string name="polkaswap_error_noswap">Mübadilə yoxdur</string>
   <string name="polkaswap_info_faq">Polkasvap FAQ (Çox Soruşulan Suallar)</string>
+  <string name="polkaswap_info_prices_and_fees">Qiymətlər və ödənişlər</string>
   <string name="polkaswap_info_text_1">Polkasvap SORA icması tərəfindən qorunur. Polkasvap funksiyasından istifadə etməzdən əvvəl, Polkasvapı istifadə etməzdən əvvəl, Polkasvap Memorandumu və Xidmət Şərtlərini və Məxfilik Siyasətini ətraflı izah edən Polkasvap Çox Soruşulan Sualları (FAQ) nəzərdən keçirdin. Bu sənədlər etibarlı və pozitiv istifadəçi təcrübəsi üçün çox vacibdir. Polkasvap istifadə etməklə, bu sənədləri oxuduğunuzu və başa düşdüyünüzü qəbul edirsiniz.</string>
   <string name="polkaswap_info_text_2">Polkasvap SORA icması tərəfindən qorunur. Polkasvap funksiyasından istifadə etməzdən əvvəl, Polkasvapı istifadə etməzdən əvvəl, Polkasvap Memorandumu və Xidmət Şərtlərini və Məxfilik Siyasətini ətraflı izah edən Polkasvap Çox Soruşulan Sualları (FAQ) nəzərdən keçirdin. Bu sənədlər etibarlı və pozitiv istifadəçi təcrübəsi üçün çox vacibdir. Polkasvap istifadə etməklə, bu sənədləri oxuduğunuzu və başa düşdüyünüzü qəbul edirsiniz. \n\n Həmçinin aşağıdakıları da qəbul edirsiniz: \n\n 1) qanuni yurisdiksiyanızda xüsusi olaraq Polkasvap istifadə etməyiniz üçün tətbiq oluna biləcək bütün qanunlara riayət etmək üçün tək məsuliyyət daşımağınız;\n 2) Polkasvap -ın cari versiyasının alfa versiyası olduğunu başa düşməyiniz: tam sınaqdan keçirilməmişdir və bəzi funksiyalar nəzərdə tutulduğu kimi yerinə yetirə bilinməz;\n 3) Polkaswap istifadə etməklə əlaqəli riskləri başa düşməyiniz və könüllü olaraq qəbul etməyiniz, tokenləri itirmək də daxil olmaqla, ancaq bununla məhdudlaşmır. Bir daha diqqətinizə çatdırırıq ki, FAQ, Polkasvap Memorandumu və Xidmət Şərtləri və Məxfilik Siyasətini oxumadan davam etməyin!</string>
-  <string name="polkaswap_info_text_3">Polkasvap SORA icması tərəfindən qorunur. Polkasvap funksiyasından istifadə etməzdən əvvəl, Polkasvapı istifadə etməzdən əvvəl, Polkasvap Memorandumu və Xidmət Şərtlərini və Məxfilik Siyasətini ətraflı izah edən Polkasvap Çox Soruşulan Sualları (FAQ) nəzərdən keçirdin. Bu sənədlər etibarlı və pozitiv istifadəçi təcrübəsi üçün çox vacibdir. Polkasvap istifadə etməklə, bu sənədləri oxuduğunuzu və başa düşdüyünüzü qəbul edirsiniz. \n\n Həmçinin aşağıdakıları da qəbul edirsiniz: \n\n 1) qanuni yurisdiksiyanızda xüsusi olaraq Polkasvap istifadə etməyiniz üçün tətbiq oluna biləcək bütün qanunlara riayət etmək üçün tək məsuliyyət daşımağınız;\n 2) Polkasvap -ın cari versiyasının alfa versiyası olduğunu başa düşməyiniz: tam sınaqdan keçirilməmişdir və bəzi funksiyalar nəzərdə tutulduğu kimi yerinə yetirə bilinməz;\n 3) Polkaswap istifadə etməklə əlaqəli riskləri başa düşməyiniz və könüllü olaraq qəbul etməyiniz, tokenləri itirmək də daxil olmaqla, ancaq bununla məhdudlaşmır. Bir daha diqqətinizə çatdırırıq ki, FAQ, Polkasvap Memorandumu və Xidmət Şərtləri və Məxfilik Siyasətini oxumadan davam etməyin!</string>
-  <string name="polkaswap_info_text_4">Polkasvap SORA icması tərəfindən qorunur. Polkasvap funksiyasından istifadə etməzdən əvvəl, Polkasvapı istifadə etməzdən əvvəl, Polkasvap Memorandumu və Xidmət Şərtlərini və Məxfilik Siyasətini ətraflı izah edən Polkasvap Çox Soruşulan Sualları (FAQ) nəzərdən keçirdin. Bu sənədlər etibarlı və pozitiv istifadəçi təcrübəsi üçün çox vacibdir. Polkasvap istifadə etməklə, bu sənədləri oxuduğunuzu və başa düşdüyünüzü qəbul edirsiniz. \n\n Həmçinin aşağıdakıları da qəbul edirsiniz: \n\n 1) qanuni yurisdiksiyanızda xüsusi olaraq Polkasvap istifadə etməyiniz üçün tətbiq oluna biləcək bütün qanunlara riayət etmək üçün tək məsuliyyət daşımağınız;\n 2) Polkasvap -ın cari versiyasının alfa versiyası olduğunu başa düşməyiniz: tam sınaqdan keçirilməmişdir və bəzi funksiyalar nəzərdə tutulduğu kimi yerinə yetirə bilinməz;\n 3) Polkaswap istifadə etməklə əlaqəli riskləri başa düşməyiniz və könüllü olaraq qəbul etməyiniz, tokenləri itirmək də daxil olmaqla, ancaq bununla məhdudlaşmır. Bir daha diqqətinizə çatdırırıq ki, FAQ, Polkasvap Memorandumu və Xidmət Şərtləri və Məxfilik Siyasətini oxumadan davam etməyin!</string>
-  <string name="polkaswap_info_text_5">Polkasvap SORA icması tərəfindən qorunur. Polkasvap funksiyasından istifadə etməzdən əvvəl, Polkasvapı istifadə etməzdən əvvəl, Polkasvap Memorandumu və Xidmət Şərtlərini və Məxfilik Siyasətini ətraflı izah edən Polkasvap Çox Soruşulan Sualları (FAQ) nəzərdən keçirdin. Bu sənədlər etibarlı və pozitiv istifadəçi təcrübəsi üçün çox vacibdir. Polkasvap istifadə etməklə, bu sənədləri oxuduğunuzu və başa düşdüyünüzü qəbul edirsiniz. \n\n Həmçinin aşağıdakıları da qəbul edirsiniz: \n\n 1) qanuni yurisdiksiyanızda xüsusi olaraq Polkasvap istifadə etməyiniz üçün tətbiq oluna biləcək bütün qanunlara riayət etmək üçün tək məsuliyyət daşımağınız;\n 2) Polkasvap -ın cari versiyasının alfa versiyası olduğunu başa düşməyiniz: tam sınaqdan keçirilməmişdir və bəzi funksiyalar nəzərdə tutulduğu kimi yerinə yetirə bilinməz;\n 3) Polkaswap istifadə etməklə əlaqəli riskləri başa düşməyiniz və könüllü olaraq qəbul etməyiniz, tokenləri itirmək də daxil olmaqla, ancaq bununla məhdudlaşmır. Bir daha diqqətinizə çatdırırıq ki, FAQ, Polkasvap Memorandumu və Xidmət Şərtləri və Məxfilik Siyasətini oxumadan davam etməyin!</string>
-  <string name="polkaswap_info_text_6">Polkasvap SORA icması tərəfindən qorunur. Polkasvap funksiyasından istifadə etməzdən əvvəl, Polkasvapı istifadə etməzdən əvvəl, Polkasvap Memorandumu və Xidmət Şərtlərini və Məxfilik Siyasətini ətraflı izah edən Polkasvap Çox Soruşulan Sualları (FAQ) nəzərdən keçirdin. Bu sənədlər etibarlı və pozitiv istifadəçi təcrübəsi üçün çox vacibdir. Polkasvap istifadə etməklə, bu sənədləri oxuduğunuzu və başa düşdüyünüzü qəbul edirsiniz. \n\n Həmçinin aşağıdakıları da qəbul edirsiniz: \n\n 1) qanuni yurisdiksiyanızda xüsusi olaraq Polkasvap istifadə etməyiniz üçün tətbiq oluna biləcək bütün qanunlara riayət etmək üçün tək məsuliyyət daşımağınız;\n 2) Polkasvap -ın cari versiyasının alfa versiyası olduğunu başa düşməyiniz: tam sınaqdan keçirilməmişdir və bəzi funksiyalar nəzərdə tutulduğu kimi yerinə yetirə bilinməz;\n 3) Polkaswap istifadə etməklə əlaqəli riskləri başa düşməyiniz və könüllü olaraq qəbul etməyiniz, tokenləri itirmək də daxil olmaqla, ancaq bununla məhdudlaşmır. Bir daha diqqətinizə çatdırırıq ki, FAQ, Polkasvap Memorandumu və Xidmət Şərtləri və Məxfilik Siyasətini oxumadan davam etməyin!</string>
+  <string name="polkaswap_info_text_3">Hüquqi yurisdiksiyanızda Polkaswap-dan xüsusi istifadəniz üçün tətbiq oluna biləcək bütün qanunlara uyğunluq üçün yeganə məsuliyyətiniz;</string>
+  <string name="polkaswap_info_text_4">Polkaswap-ın cari versiyasının alfa versiyası olduğunu başa düşürsünüz: o, tam sınaqdan keçirilməyib və bəzi funksiyalar nəzərdə tutulduğu kimi işləməyə bilər;</string>
+  <string name="polkaswap_info_text_5">Tokenlərin itirilməsi riski də daxil olmaqla, lakin bununla məhdudlaşmayaraq, Polkaswap-dan istifadə ilə bağlı riskləri başa düşməyiniz və könüllü olaraq qəbul etməyiniz.</string>
+  <string name="polkaswap_info_text_6">Bir daha, %%Polkaswap FAQ%% , %%Polkaswap Memorandumu və Xidmət Şərtləri%% və %%Məxfilik Siyasətini%% oxumadan davam etməyin!</string>
   <string name="polkaswap_info_text_7">İmtina bildirişini dəyişdirmə sekmesinden gizlətmək üçün aşağıdakı düyməni sürüşdürün. Yalnız qeyd olunan sənədləri tam başa düşdüyünüz və oxuduğunuz halda bunu edin!</string>
   <string name="polkaswap_info_text_8">Gizlətmək üçün sürüşdürün</string>
   <string name="polkaswap_info_text_9">İmtina bildirişi Polkaswap tabından gizlədilib. Bildirişi aktivləşdirmək istəyirsinizsə, aşağıdakı düyməni sürüşdürün.</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">Təsdiq edilməmişdən əvvəl böyük, əlverişsiz bir qiymət hərəkəti olarsa, əməliyyatınız geri qayıdacaq.</string>
   <string name="polkaswap_network_fee">Şəbəkə haqqı</string>
   <string name="polkaswap_network_fee_info">Şəbəkə haqqı SORA sisteminin böyüməsini və sabit performansını təmin etmək üçün istifadə olunur.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Hovuzda kifayət qədər token yoxdur</string>
   <string name="polkaswap_output_estimated">Çıxış hesablanır. Ən azı %s alacaqsınız və ya əməliyyat geri qaytarılacaq.</string>
   <string name="polkaswap_pool_not_created">Hovuz (pool) yaradılmadı</string>
   <string name="polkaswap_pool_title">Hovuz</string>
+  <string name="polkaswap_sb_apy_info">Likvidliyin təminatı üçün əkinçilik mükafatı</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Əməliyyatınız əvvəlcədən ola bilər</string>
   <string name="polkaswap_slippage_info">Qiymət bu faizdən çox əlverişsiz şəkildə dəyişərsə, əməliyyatlarınız geri qayıdacaq</string>
   <string name="polkaswap_slippage_mayfail">Əməliyyatınız uğursuz ola bilər</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">Dəyişdirildi</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Vəzifəniz (təxmin edilən)</string>
   <string name="pool_apy_title">Strateji bonus apy</string>
   <string name="pool_button_add">Əlavə et</string>
   <string name="pool_button_remove">Sil</string>
   <string name="pool_liqudity_title">Sizin likvidliyiniz</string>
   <string name="pool_liquidity_placeholder">Likvidliyiniz burada görünəcək</string>
+  <string name="pool_share_after_tx">tx-dən sonra hovuz paylaşımı</string>
   <string name="pool_share_title">Hovuzun payı</string>
   <string name="pool_share_title_1">Hovuz payınız</string>
   <string name="pool_token_pooled">Havuzlu</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">Cəmi səslər</string>
   <string name="referendum_unsupport_title">Xeyr</string>
   <string name="referendum_voting_result">Səsvermə nəticəsi</string>
+  <string name="remove_liquidity_info_text">Likvidliyin aradan qaldırılması mövqenizi hovuzdakı payınıza mütənasib olaraq cari məzənnə ilə geri çevirir.</string>
+  <string name="remove_liquidity_title">Likvidliyi aradan qaldırın</string>
+  <string name="remove_pool_confirmation_description">Çıxış təxmin edilir. Qiymət %s%% -dən çox dəyişərsə, əməliyyatınız geri qayıdacaq.</string>
+  <string name="remove_pool_confirmation_title">Silinməni təsdiqləyin</string>
   <string name="restart_required">Yenidən başlatma tələb olunur</string>
   <string name="screenshot_alert_text">Üçüncü tərəf zərərli proqram tərəfindən toplana bilən ekran görüntülərini çəkməyin</string>
   <string name="screenshot_alert_title">Ekran görüntüləri çəkməyin</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Göndərmək üçün Aktiv seçin</string>
   <string name="select_recipient">Alıcı seçin</string>
   <string name="set_amount">Məbləği təyin edin</string>
+  <string name="settings_accounts">Hesablar</string>
+  <string name="settings_header_account">HESAB TƏNZİMLƏMƏLƏRİ</string>
+  <string name="settings_header_app">TƏTBİQ PARAMETLƏRİ</string>
+  <string name="settings_header_other">DİGƏR</string>
   <string name="staking_coming_soon">XOR sahibləri təsdiqləyiciləri təyin etmək və mükafat almaq üçün öz XOR-larını paylaya biləcəklər.</string>
   <string name="staking_description">Validatorların irəli sürülməsi SORA ekosisteminin mühüm hissəsidir, çünki o, şəbəkənin təhlükəsizliyini təmin etməyə və mərkəzsizləşdirməyə kömək edir. VAL tokenləri staking üçün mükafat olaraq validatorlara və namizədlərə veriləcək.</string>
   <string name="staking_val_reward">SORA VALidator Mükafatları</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">SORA NET hesabına</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">%s qəbul etmək üçün mənim %s şəbəkə ünvanım:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network ünvan almaq üçün %s :</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Mənə %s göndərmək üçün bu QR-ni skan edin. Mənim %s Şəbəkə Hesabım ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">%s %sqəbul etmək üçün mənim %s şəbəkə ünvanım:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Mənim %s Network ünvan almaq üçün %s %s :</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Mənə %s %s göndərmək üçün bu QR-ni skan edin. Mənim %s Şəbəkə Hesabım ID:\n%s</string>
   <string name="wallet_receive_val">VAL qəbul edin</string>
   <string name="wallet_redeemable">Əldə edilə bilər</string>
   <string name="wallet_send_existential_warning_message">Transferiniz hesabınızı blockstore -dan çıxaracaq, çünki ümumi qalıq mövcud depozitdən daha aşağı olacaq.</string>
@@ -498,10 +533,10 @@
   <string name="wallet_transaction_rejected">Köçürmə əməliyyatı rədd edildi</string>
   <string name="wallet_transaction_submitted">Əməliyyat göndərildi</string>
   <string name="wallet_transaction_submitted_1">Əməliyyat \n təqdim edildi</string>
+  <string name="wallet_transactions_unavailable_description">Problem həll olunur,\n sonra yenidən cəhd edin.</string>
+  <string name="wallet_transactions_unavailable_title">Tranzaksiyaları yükləmək mümkün olmadı</string>
   <string name="wallet_transfer_description_hint">Maksimum %s simvol</string>
   <string name="wallet_transfer_to_ethereum">Ethereum ünvanına</string>
   <string name="wallet_unbonding">Bağlanmayan</string>
   <string name="wallet_val_to_my_eth">Ethereum hesabıma VAL</string>
-  <string name="wallet_transactions_unavailable_title">Tranzaksiyaları yükləmək mümkün olmadı</string>
-  <string name="wallet_transactions_unavailable_description">Problem həll olunur,\n sonra yenidən cəhd edin.</string>
 </resources>

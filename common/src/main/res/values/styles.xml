@@ -52,6 +52,7 @@
         <item name="balanceColorDefault">@color/neu_black_default</item>
         <item name="balanceColorPositive">@color/neu_positive</item>
         <item name="balanceColorNegative">@color/neu_negative</item>
+        <item name="fiatBalanceColorDefault">@color/neu_fiat_balance_color</item>
         <item name="tintColorDark">@color/neu_tint_dark</item>
         <item name="bottomMenuInactiveColor">@color/neu_bottom_menu_inactive</item>
         <item name="tintColorLight">@color/neu_tint_light</item>
@@ -221,6 +222,19 @@
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:textSize">21sp</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:textColor">@drawable/sora_button_primary_neu_text_selector</item>
+    </style>
+
+    <style name="Widget.Soramitsu.Button.Polkaswap.Neu.40" parent="Widget.MaterialComponents.Button">
+        <item name="android:layout_height">@dimen/x5</item>
+        <item name="cornerRadius">@dimen/x4</item>
+        <item name="backgroundTint">@drawable/sora_button_polkaswap_neu_bg_selector</item>
+        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Polkaswap.Button</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:textSize">18dp</item>
         <item name="textAllCaps">true</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:textColor">@drawable/sora_button_primary_neu_text_selector</item>

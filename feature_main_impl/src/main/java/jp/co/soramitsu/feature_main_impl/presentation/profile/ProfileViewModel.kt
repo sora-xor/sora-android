@@ -13,6 +13,9 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(
@@ -27,6 +30,12 @@ class ProfileViewModel(
     private val _biometryAvailableLiveData = MutableLiveData<Boolean>()
     val biometryAvailableLiveData: LiveData<Boolean> = _biometryAvailableLiveData
 
+    private val _ldAccountName = MutableLiveData<String>()
+    val accountName: LiveData<String> = _ldAccountName
+
+    private val _ldAccountAddress = MutableLiveData<String>()
+    val accountAddress: LiveData<String> = _ldAccountAddress
+
     init {
         viewModelScope.launch {
             tryCatch {
@@ -34,6 +43,13 @@ class ProfileViewModel(
                 _biometryEnabledLiveData.value = interactor.isBiometryEnabled()
             }
         }
+        interactor.flowCurSoraAccount()
+            .catch { onError(it) }
+            .onEach {
+                _ldAccountName.value = it.accountName
+                _ldAccountAddress.value = it.substrateAddress
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onVotesClick() {
@@ -83,5 +99,9 @@ class ProfileViewModel(
 
     fun onPersonalDetailsClicked() {
         router.showPersonalDataEdition()
+    }
+
+    fun onSwitchAccountClicked() {
+        router.showSwitchAccount()
     }
 }

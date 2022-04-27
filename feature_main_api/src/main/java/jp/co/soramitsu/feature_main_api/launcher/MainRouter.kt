@@ -20,6 +20,8 @@ interface MainRouter {
 
     fun showPersonalDataEdition()
 
+    fun showSwitchAccount()
+
     fun popBackStack()
 
     fun showTerms()

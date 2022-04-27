@@ -38,11 +38,14 @@ class SplashInteractorTest {
     @Mock
     private lateinit var credentialsRepository: CredentialsRepository
 
+    @Mock
+    private lateinit var migrationManager: MigrationManager
+
     private lateinit var splashInteractor: SplashInteractor
 
     @Before
     fun setUp() {
-        splashInteractor = SplashInteractor(userRepository, credentialsRepository)
+        splashInteractor = SplashInteractor(userRepository, credentialsRepository, migrationManager)
     }
 
     @Test

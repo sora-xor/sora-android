@@ -37,6 +37,7 @@ class ExtrinsicTypeConverter {
         return when (type) {
             ExtrinsicType.SWAP -> 0
             ExtrinsicType.TRANSFER -> 1
+            ExtrinsicType.ADD_REMOVE_LIQUIDITY -> 2
         }
     }
 
@@ -44,7 +45,8 @@ class ExtrinsicTypeConverter {
     fun toType(state: Int): ExtrinsicType {
         return when (state) {
             0 -> ExtrinsicType.SWAP
-            else -> ExtrinsicType.TRANSFER
+            1 -> ExtrinsicType.TRANSFER
+            else -> ExtrinsicType.ADD_REMOVE_LIQUIDITY
         }
     }
 }

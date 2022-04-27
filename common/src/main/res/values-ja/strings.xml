@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">ニーモニックパスフレーズを確認する</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">プロジェクト</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">アドレスが見つかりません。ネットワーク設定をお確かめください。</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">取引手数料</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">コピー</string>
   <string name="common_copy_address">アドレスをコピー</string>
   <string name="common_croatian">クロアチア語</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">説明</string>
   <string name="common_done">終了</string>
   <string name="common_donotallow">許可しない</string>
@@ -126,6 +134,7 @@
   </plurals>
   <string name="common_indonesian">インドネシア語</string>
   <string name="common_info">情報</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">イタリア語</string>
   <string name="common_japanese">日本語</string>
   <string name="common_khmer">クメール語</string>
@@ -141,6 +150,7 @@
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">ブロックチェーンエクスプローラーで見る</string>
   <string name="common_options_title">選択肢から一つ選択してください</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">アカウントを復元する際に使います。必ずどこかに書き留めてください。このパスフレーズを忘れてしまうと、デバイス故障や変更の際にアカウントを復元することができなくなります！</string>
   <string name="common_passphrase_header">パスフレーズはパスワードの一種です</string>
   <string name="common_passphrase_save_mnemonic_title">パスフレーズを保存または送信する</string>
@@ -160,6 +170,7 @@
   <string name="common_receive">受け取る</string>
   <string name="common_received">受け取った</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">リトライ</string>
   <string name="common_russian">ロシア語</string>
   <string name="common_save">保存</string>
@@ -179,6 +190,7 @@
   <string name="common_sms_code_not_correct">認証コードが正しくありません</string>
   <string name="common_spanish">スペイン語</string>
   <string name="common_spanish_colombia">スペイン語（コロンビア）</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">スウェーデン語</string>
   <string name="common_terms_title">利用規約</string>
   <string name="common_thai">タイ語</string>
@@ -194,6 +206,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">投票</string>
   <string name="common_yesterday">昨日</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">重要な連絡先がここに表示されます</string>
   <string name="contacts_scan">QRコードをスキャン</string>
   <string name="contacts_search_empty_state_title">検索結果が存在しません</string>
@@ -251,6 +265,10 @@
   <string name="invoice_scan_error_no_info">QRコードを読み取れません</string>
   <string name="invoice_scan_error_user_not_found">QRコードからユーザーを見つけることができません。</string>
   <string name="language_title">言語を選択</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">このアクションを行うと、このデバイスからアカウントが削除されます。続行する前に、パスフレーズのバックアップを取ったことを必ず確認してください。</string>
   <string name="mnemonic_alert_text">ニーモニックパスフレーズは、アカウントへのアクセスを復元するために使用されます。必ず紙などに書き留めてください。このパスフレーズを忘れてしまうと、アカウントの復元ができなくなってしまいます。</string>
   <string name="mnemonic_confirm_text">正しい順序で単語を選択し、確認する</string>
@@ -284,10 +302,12 @@
   <string name="pincode_updated">PINコードが更新されました</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">相互運用可能な未来のためのDEX。 Polkaswapは、ブリッジを介して接続されたPolkadotネットワーク、パラチェーン、およびブロックチェーンに基づいてトークンを交換するための非管理型のAMM-DEXプロトコルです。 Polkaswapプロトコルは、信頼できる仲介者を効果的に削除し、より高速な取引の機会を提供します。</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Confirm Swap</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
   <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
   <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
@@ -316,9 +336,12 @@
   <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
   <string name="polkaswap_network_fee">Network Fee</string>
   <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
   <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
   <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
@@ -328,11 +351,13 @@
   <string name="polkaswap_swapped">Swapped</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Add</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -387,6 +412,10 @@
   <string name="referendum_total_votes">総投票数</string>
   <string name="referendum_unsupport_title">いいえ</string>
   <string name="referendum_voting_result">投票結果</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">サードパーティのマルウェアによって収集される危険性があるため、スクリーンショットを撮らないでください</string>
   <string name="screenshot_alert_title">スクリーンショットを撮らないでください</string>
@@ -397,6 +426,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">受取人を選択</string>
   <string name="set_amount">金額を入力</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR保有者は、XORを賭けてバリデーターを指名し、報酬を得ることができます。</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA VALidator報酬</string>
@@ -482,8 +515,10 @@
   <string name="wallet_history_to_soranet_account">SORA NETアカウントへ</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">受取用%sネットワークアドレス%s ：</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">受取用%sネットワークアドレス%s %s ：</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">VALを受け取る</string>
   <string name="wallet_redeemable">Redeemable</string>
   <string name="wallet_send_existential_warning_message">本取引を行うと、残高不足のためアカウントがサーバーのブロックストアから削除されます。</string>
@@ -492,6 +527,8 @@
   <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">提出されたトランザクション</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">最大%sシンボル</string>
   <string name="wallet_transfer_to_ethereum">イーサリアムアドレスへ</string>
   <string name="wallet_unbonding">アンボンドする</string>

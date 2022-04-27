@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Potvrdiť mnemotechnickú pomôcku</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Projekt</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Adresa nebola nájdená. Skontrolujte, že adresa patrí do správnej siete.</string>
   <string name="address_not_found_1">Príjemcovia sa nenašli</string>
   <string name="amount_default_fee">Poplatok za transakciu</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopírovať</string>
   <string name="common_copy_address">Kopírovať adresu</string>
   <string name="common_croatian">Chorvátčina</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Popis</string>
   <string name="common_done">Hotovo</string>
   <string name="common_donotallow">Nepovoliť</string>
@@ -129,6 +137,7 @@
   </plurals>
   <string name="common_indonesian">Indonézština</string>
   <string name="common_info">Info</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Taliančina</string>
   <string name="common_japanese">Japončina</string>
   <string name="common_khmer">Khmérčina</string>
@@ -144,6 +153,7 @@
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Zobraziť v Blockchain prieskumníkovi</string>
   <string name="common_options_title">Vyberte možnosť</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Pri vytváraní nového účtu v SORA dostanete teraz prístupovú frázu obsahujúcu 12 slov. Ak už máte 15-slovnú prístupovú frázu, môžete si importovať váš účet pomocou nej - obe sú kompatibilné a zostanú naďalej funkčné.</string>
   <string name="common_passphrase_header">Prístupová fráza je typ hesla.</string>
   <string name="common_passphrase_save_mnemonic_title">Uložiť alebo odoslať prístupovú frázu</string>
@@ -163,6 +173,7 @@
   <string name="common_receive">Prijať</string>
   <string name="common_received">Prijaté</string>
   <string name="common_recipient">Príjemca</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Opakovať</string>
   <string name="common_russian">Ruština</string>
   <string name="common_save">Uložiť</string>
@@ -182,6 +193,7 @@
   <string name="common_sms_code_not_correct">Overovací kód je nesprávny</string>
   <string name="common_spanish">Španielčina</string>
   <string name="common_spanish_colombia">Španielčina (Kolumbia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Švédčina</string>
   <string name="common_terms_title">Podmienky a požiadavky</string>
   <string name="common_thai">Thajčina</string>
@@ -197,6 +209,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Hlasovať</string>
   <string name="common_yesterday">Včera</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Najdôležitejšie kontakty sa zobrazia tu</string>
   <string name="contacts_scan">Naskenovať QR kód</string>
   <string name="contacts_search_empty_state_title">Žiadne výsledky vyhľadávania</string>
@@ -254,6 +268,10 @@
   <string name="invoice_scan_error_no_info">QR kód nie je možné dekódovať</string>
   <string name="invoice_scan_error_user_not_found">Používateľ z QR sa nedá nájsť</string>
   <string name="language_title">Vybrať jazyk</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Táto akcia bude mať za následok odstránenie účtu z tohto zariadenia. Pred pokračovaním sa uistite, že ste si zazálohovali prístupovú frázu.</string>
   <string name="mnemonic_alert_text">Mnemotechnická pomôcka sa používa na obnovenie prístupu k účtu. Túto pomôcku si zapíšte, pretože bez nej váš účet nebude môcť  byť obnovený!</string>
   <string name="mnemonic_confirm_text">Potvrďte výberom slov v správnom poradí</string>
@@ -287,16 +305,18 @@
   <string name="pincode_updated">PIN kód bol aktualizovaný</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">DEX pre interoperabilnú budúcnosť. Polkaswap je neväzobný, cross-chain APM DEX protokol pre výmenu tokenov založený na Polkadot platforme, parachainoch a blockchainoch pripojených prostredníctvom Bridge. Polkaswap protokol odstraňuje dôveryhodných sprostredkovateľov a poskytuje možnosť rýchlejšieho obchodovania.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Potvrdiť výmenu</string>
   <string name="polkaswap_details">Podrobnosti</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Často kladené otázky týkajúce sa Polkaswap</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap je spravovaný komunitou SORA. Pred použitím aplikácie Polkaswap si prosím preštudujte %%Polkaswap - Často kladené otázky (FAQ)%% spolu s dokumentáciou obsahujúcou podrobné vysvetlenie, ako Polkaswap funguje, ako aj Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov. Tieto dokumenty sú nevyhnutné pre bezpečnú a pozitívnu používateľskú skúsenosť. Používaním Polkaswap potvrdzujete, že ste si tieto dokumenty preštudovali a porozumeli im.</string>
   <string name="polkaswap_info_text_2">Polkaswap je spravovaný komunitou SORA. Pred použitím aplikácie Polkaswap si prosím preštudujte %%Polkaswap - Často kladené otázky (FAQ)%% spolu s dokumentáciou obsahujúcou podrobné vysvetlenie, ako Polkaswap funguje, ako aj Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov. Tieto dokumenty sú nevyhnutné pre bezpečnú a pozitívnu používateľskú skúsenosť. Používaním Polkaswap potvrdzujete, že ste si tieto dokumenty preštudovali a porozumeli im.\n\nĎalej beriete na vedomie nasledujúce: \n\n 1) vašu výlučnú zodpovednosť za dodržiavanie všetkých zákonov, ktoré sa môžu vzťahovať na vaše konkrétne používanie programu Polkaswap vo vašej právnej jurisdikcii;\n 2) chápete, že súčasná verzia programu Polkaswap je verzia alfa: nebola úplne testovaná a niektoré funkcie nemusia fungovať tak, ako boli navrhnuté;\n 3) vaše porozumenie a dobrovoľné prijatie rizík spojených s používaním aplikácie Polkaswap, vrátane, ale nie výlučne, rizika straty tokenov. Ešte raz si, prosím, prečítajte Často kladené otázky (FAQ), Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov!</string>
-  <string name="polkaswap_info_text_3">Polkaswap je spravovaný komunitou SORA. Pred použitím aplikácie Polkaswap si prosím preštudujte %%Polkaswap - Často kladené otázky (FAQ)%% spolu s dokumentáciou obsahujúcou podrobné vysvetlenie, ako Polkaswap funguje, ako aj Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov. Tieto dokumenty sú nevyhnutné pre bezpečnú a pozitívnu používateľskú skúsenosť. Používaním Polkaswap potvrdzujete, že ste si tieto dokumenty preštudovali a porozumeli im.\n\nĎalej beriete na vedomie nasledujúce: \n\n 1) vašu výlučnú zodpovednosť za dodržiavanie všetkých zákonov, ktoré sa môžu vzťahovať na vaše konkrétne používanie programu Polkaswap vo vašej právnej jurisdikcii;\n 2) chápete, že súčasná verzia programu Polkaswap je verzia alfa: nebola úplne testovaná a niektoré funkcie nemusia fungovať tak, ako boli navrhnuté;\n 3) vaše porozumenie a dobrovoľné prijatie rizík spojených s používaním aplikácie Polkaswap, vrátane, ale nie výlučne, rizika straty tokenov. Ešte raz si, prosím, prečítajte Často kladené otázky (FAQ), Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov!</string>
-  <string name="polkaswap_info_text_4">Polkaswap je spravovaný komunitou SORA. Pred použitím aplikácie Polkaswap si prosím preštudujte %%Polkaswap - Často kladené otázky (FAQ)%% spolu s dokumentáciou obsahujúcou podrobné vysvetlenie, ako Polkaswap funguje, ako aj Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov. Tieto dokumenty sú nevyhnutné pre bezpečnú a pozitívnu používateľskú skúsenosť. Používaním Polkaswap potvrdzujete, že ste si tieto dokumenty preštudovali a porozumeli im.\n\nĎalej beriete na vedomie nasledujúce: \n\n 1) vašu výlučnú zodpovednosť za dodržiavanie všetkých zákonov, ktoré sa môžu vzťahovať na vaše konkrétne používanie programu Polkaswap vo vašej právnej jurisdikcii;\n 2) chápete, že súčasná verzia programu Polkaswap je verzia alfa: nebola úplne testovaná a niektoré funkcie nemusia fungovať tak, ako boli navrhnuté;\n 3) vaše porozumenie a dobrovoľné prijatie rizík spojených s používaním aplikácie Polkaswap, vrátane, ale nie výlučne, rizika straty tokenov. Ešte raz si, prosím, prečítajte Často kladené otázky (FAQ), Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov!</string>
-  <string name="polkaswap_info_text_5">Polkaswap je spravovaný komunitou SORA. Pred použitím aplikácie Polkaswap si prosím preštudujte %%Polkaswap - Často kladené otázky (FAQ)%% spolu s dokumentáciou obsahujúcou podrobné vysvetlenie, ako Polkaswap funguje, ako aj Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov. Tieto dokumenty sú nevyhnutné pre bezpečnú a pozitívnu používateľskú skúsenosť. Používaním Polkaswap potvrdzujete, že ste si tieto dokumenty preštudovali a porozumeli im.\n\nĎalej beriete na vedomie nasledujúce: \n\n 1) vašu výlučnú zodpovednosť za dodržiavanie všetkých zákonov, ktoré sa môžu vzťahovať na vaše konkrétne používanie programu Polkaswap vo vašej právnej jurisdikcii;\n 2) chápete, že súčasná verzia programu Polkaswap je verzia alfa: nebola úplne testovaná a niektoré funkcie nemusia fungovať tak, ako boli navrhnuté;\n 3) vaše porozumenie a dobrovoľné prijatie rizík spojených s používaním aplikácie Polkaswap, vrátane, ale nie výlučne, rizika straty tokenov. Ešte raz si, prosím, prečítajte Často kladené otázky (FAQ), Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov!</string>
-  <string name="polkaswap_info_text_6">Polkaswap je spravovaný komunitou SORA. Pred použitím aplikácie Polkaswap si prosím preštudujte %%Polkaswap - Často kladené otázky (FAQ)%% spolu s dokumentáciou obsahujúcou podrobné vysvetlenie, ako Polkaswap funguje, ako aj Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov. Tieto dokumenty sú nevyhnutné pre bezpečnú a pozitívnu používateľskú skúsenosť. Používaním Polkaswap potvrdzujete, že ste si tieto dokumenty preštudovali a porozumeli im.\n\nĎalej beriete na vedomie nasledujúce: \n\n 1) vašu výlučnú zodpovednosť za dodržiavanie všetkých zákonov, ktoré sa môžu vzťahovať na vaše konkrétne používanie programu Polkaswap vo vašej právnej jurisdikcii;\n 2) chápete, že súčasná verzia programu Polkaswap je verzia alfa: nebola úplne testovaná a niektoré funkcie nemusia fungovať tak, ako boli navrhnuté;\n 3) vaše porozumenie a dobrovoľné prijatie rizík spojených s používaním aplikácie Polkaswap, vrátane, ale nie výlučne, rizika straty tokenov. Ešte raz si, prosím, prečítajte Často kladené otázky (FAQ), Polkaswap Memorandum, Podmienky poskytovania služby a Zásady ochrany osobných údajov!</string>
+  <string name="polkaswap_info_text_3">Vaša výhradná zodpovednosť za dodržiavanie všetkých zákonov, ktoré sa môžu vzťahovať na vaše konkrétne používanie Polkaswapu vo vašej právnej jurisdikcii;</string>
+  <string name="polkaswap_info_text_4">Chápete, že aktuálna verzia Polkaswap je alfa verzia: nebola úplne otestovaná a niektoré funkcie nemusia fungovať tak, ako boli navrhnuté;</string>
+  <string name="polkaswap_info_text_5">Vaše pochopenie a dobrovoľné prijatie rizík spojených s používaním Polkaswap, vrátane, ale nie výlučne, rizika straty tokenov.</string>
+  <string name="polkaswap_info_text_6">Ešte raz, prosím, nepokračujte bez toho, aby ste si prečítali %%Polkaswap FAQ%% , %%Polkaswap Memorandum a Podmienky služieb%% a %%Zásady ochrany osobných údajov%%!</string>
   <string name="polkaswap_info_text_7">Ak chcete skryť upozornenie na vylúčenie zodpovednosti na karte Vymeniť, posuňte prstom nižšie. Urobte to iba vtedy, ak úplne rozumiete všetkým dokumentom a prečítate ich!</string>
   <string name="polkaswap_info_text_8">Skryte potiahnutím prstom</string>
   <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
@@ -319,9 +339,12 @@
   <string name="polkaswap_minimum_received_info">Ak dôjde k veľkému nepriaznivému pohybu ceny pred potvrdením transakcie, bude táto transakcia vrátená späť.</string>
   <string name="polkaswap_network_fee">Sieťový poplatok</string>
   <string name="polkaswap_network_fee_info">Sieťový poplatok slúži na zabezpečenie rastu a stabilného výkonu systému SORA.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Výsledná čiastka je len odhadom. Obdržíte minimálne %s, inak sa transakcia vráti späť.</string>
   <string name="polkaswap_pool_not_created">Fond nie je vytvorený</string>
   <string name="polkaswap_pool_title">Fond</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Vaša transakcia môže byť predbehnutá</string>
   <string name="polkaswap_slippage_info">Tolerancia sklzu je akceptovaná hranica pre konečnú sumu, stanovená v percentách, ktorá ovplyvňuje obdržané minimum.</string>
   <string name="polkaswap_slippage_mayfail">Vaša transakcia môže zlyhať</string>
@@ -331,11 +354,13 @@
   <string name="polkaswap_swapped">Zamenené</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Pridať</string>
   <string name="pool_button_remove">Odobrať</string>
   <string name="pool_liqudity_title">Vaša likvidita</string>
   <string name="pool_liquidity_placeholder">Vaša likvidita sa zobrazí tu</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -405,6 +430,10 @@
   <string name="referendum_total_votes">Celkový počet hlasov</string>
   <string name="referendum_unsupport_title">Nie</string>
   <string name="referendum_voting_result">Výsledok hlasovania</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Nevytvárajte snímky obrazovky, ktoré by mohli byť zhromažďované malvérom</string>
   <string name="screenshot_alert_title">Nevytvárajte snímky obrazovky</string>
@@ -415,6 +444,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Vyberte príjemcu</string>
   <string name="set_amount">Zadať čiastku</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Držitelia XOR tokenov ich budú môcť stakovať, aby nominovali validátorov a získali odmeny.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Odmeny SORA VALidator</string>
@@ -500,8 +533,10 @@
   <string name="wallet_history_to_soranet_account">Na SORA NET účet</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Moja %s sieťová adresa pre príjem %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Moja %s sieťová adresa pre príjem %s %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Prijať VAL</string>
   <string name="wallet_redeemable">K vyplateniu</string>
   <string name="wallet_send_existential_warning_message">Váš prevod odstráni účet z blockstore, pretože celkový zostatok bude nižší ako minimálny zostatok.</string>
@@ -510,6 +545,8 @@
   <string name="wallet_transaction_rejected">Transakcia zamietnutá</string>
   <string name="wallet_transaction_submitted">Transakcia bola odoslaná</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Max. %s symbolov</string>
   <string name="wallet_transfer_to_ethereum">Na Ethereum adresu</string>
   <string name="wallet_unbonding">Uvoľnené</string>

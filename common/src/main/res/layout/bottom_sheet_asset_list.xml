@@ -24,6 +24,7 @@
         android:layout_height="@dimen/x6"
         android:gravity="center_vertical"
         android:layout_marginStart="@dimen/x2"
+        android:layout_marginEnd="@dimen/x2"
         android:text="@string/common_select_asset"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

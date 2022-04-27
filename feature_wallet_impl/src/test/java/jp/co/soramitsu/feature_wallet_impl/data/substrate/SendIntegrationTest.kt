@@ -79,7 +79,7 @@ class SendIntegrationTest {
     fun `check prefix byte`() {
         val runtime = TestRuntimeProvider.buildRuntime("sora2")
         val valueConstant =
-            runtime.metadata.module(Pallete.SYSTEM.palleteName).constants[Constants.SS58Prefix.constantName]
+            runtime.metadata.module(Pallete.SYSTEM.palletName).constants[Constants.SS58Prefix.constantName]
         val prefix =
             (valueConstant?.type?.fromByteArrayOrNull(
                 runtime,

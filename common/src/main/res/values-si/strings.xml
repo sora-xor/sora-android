@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">මතක් කිරීමේ මුරපදය තහවුරු කරන්න</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">ව්යාපෘතිය</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">ලිපිනය හමු නොවීය, එම ලිපිනය නිවැරදි ජාලයට අයත් දැයි තහවුරු කර ගන්න.</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">ගනුදෙනුව ගාස්තු</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">පිටපත් කරන්න</string>
   <string name="common_copy_address">ලිපිනය පිටපත් කරන්න</string>
   <string name="common_croatian">ක්‍රොඒෂියානු</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">විස්තර</string>
   <string name="common_done">කරන ලදී</string>
   <string name="common_donotallow">ඉඩ නොදෙන්න</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">ඉන්දුනීසියානු</string>
   <string name="common_info">තොරතුරු</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">ඉතාලි</string>
   <string name="common_japanese">ජපන්</string>
   <string name="common_khmer">කෙමර්</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">හරි</string>
   <string name="common_open_explorer">බ්ලොක්චේන් එක්ස්ප්ලෝරර් හි බලන්න</string>
   <string name="common_options_title">විකල්පයක් තෝරන්න</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">SORA හි නව ගිණුමක් සෑදීමේදී ඔබට දැන් වචන 12 ක මුරපදයක් ලැබේ. ඔබට දැනටමත් වචන 15 ක සෝරා මුරපදයක් තිබේ නම්, ඔබට එය සමඟ ඔබේ ගිණුම ආනයනය කළ හැකිය - මේවා ද අනුකූල වන අතර ඒවා දිගටම වැඩ කරනු ඇත.</string>
   <string name="common_passphrase_header">මුරපද වාක්‍ය යනු මුරපද වර්ගයකි.</string>
   <string name="common_passphrase_save_mnemonic_title">මුරපද වාක්‍ය සුරකින්න හෝ යවන්න</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">ලබා ගන්න</string>
   <string name="common_received">ලැබුණි</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">නැවත උත්සාහ කරන්න</string>
   <string name="common_russian">රුසියානු</string>
   <string name="common_save">සුරකින්න</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">සත්‍යාපන කේතය වැරදි ය</string>
   <string name="common_spanish">ස්පාඤ්ඤ</string>
   <string name="common_spanish_colombia">ස්පාඤ්ඤ((කොලොම්බියා)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">ස්වීඩන්</string>
   <string name="common_terms_title">නියමයන් සහ කොන්දේසි</string>
   <string name="common_thai">තායි</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">ඡන්දය දෙන්න</string>
   <string name="common_yesterday">ඊයේ</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">වඩාත්ම වැදගත් සම්බන්ධතා මෙහි දිස්වනු ඇත</string>
   <string name="contacts_scan">QR කේතය පරිලෝකනය කරන්න</string>
   <string name="contacts_search_empty_state_title">සෙවුම් ප්‍රතිඵල නැත</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">QR විකේතනය කළ නොහැක</string>
   <string name="invoice_scan_error_user_not_found">QR වෙතින් පරිශීලකයෙකු සොයා ගත නොහැක</string>
   <string name="language_title">භාෂාව තෝරන්න</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">මෙම ක්‍රියාව හේතුවෙන් මෙම උපාංගයෙන් ගිණුම මැකෙනු ඇත. ඉදිරියට යාමට පෙර ඔබ ඔබේ මුරපද උපස්ථ කර ඇති බවට වග බලා ගන්න</string>
   <string name="mnemonic_alert_text">ගිණුමට නැවත  ප්‍රවේශය ලබා ගැනීම සඳහා මතක මුරපද භාවිතා කෙරේ. එය ලියා ගනු ලබන්න , එය නොමැතිව අපට ඔබේ ගිණුම ආපසු ලබා ගත නොහැක!</string>
   <string name="mnemonic_confirm_text">නිවැරදි අනුපිළිවෙලට වචන තෝරා තහවුරු කරන්න</string>
@@ -285,16 +303,18 @@
   <string name="pincode_updated">පින් කේතය යාවත්කාලීන කරන ලදි</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">අන්තර් ක්‍රියා කළ හැකි අනාගතය සඳහා වූ විමද්‍යගත හුවමාරු මධ්‍යස්ථානය (DEX). පොල්කස්වැප් යනු පාලමක් හරහා සම්බන්ධ කර ඇති පොල්කඩොට්  ජාලය, පැරචේන් සහ බ්ලොක්චේන් මත පදනම්ව ටෝකන් මාරු කිරීම සඳහා වූ භාරකාර නොවන, ඒඑම්එම්-ඩෙක්ස් ප්‍රොටෝකෝලයකි. පොල්කස්වාප් ප්‍රොටෝකෝලය විශ්වාසවන්ත අතරමැදියන් ඵලදායීව ඉවත් කරන අතර වේගවත් ගණුදෙනු  සඳහා අවස්ථාව සලසයි.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">හුවමාරුව තහවුරු කරන්න</string>
   <string name="polkaswap_details">විස්තර</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">පොල්කාස්වැප්  නිතර අසන පැන</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">පොල්කස්වැප් නඩත්තු කරන්නේ සෝරා ප්‍රජාව විසිනි. පොල්කස්වාප් ක්‍රියාකාරීත්වය භාවිතා කිරීමට පෙර, කරුණාකර %% පොල්කස්වාප් නිතර අසන ප්‍රශ්න%% හා පොල්කස්වැප් ක්‍රියා කරන ආකාරය පිළිබඳ සවිස්තරාත්මක පැහැදිලි කිරීමක් මෙන්ම පොල්කස්වැප් සංදේශ හා සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති ඇතුළත් ලියකියවිලි සමාලෝචනය කරන්න. සුරක්‍ෂිත හා ධනාත්මක පරිශීලක අත්දැකීමක් සඳහා මෙම ලිපි ලේඛන ඉතා වැදගත් වේ. පොල්කස්වැප් භාවිතා කිරීමෙන් ඔබ මෙම ලේඛන කියවා තේරුම් ගත් බව පිළිගනී. </string>
   <string name="polkaswap_info_text_2">පොල්කස්වැප් නඩත්තු කරන්නේ සෝරා ප්‍රජාව විසිනි. පොල්කස්වාප් ක්‍රියාකාරීත්වය භාවිතා කිරීමට පෙර, කරුණාකර %% පොල්කස්වාප් නිතර අසන ප්‍රශ්න%% හා පොල්කස්වැප් ක්‍රියා කරන ආකාරය පිළිබඳ සවිස්තරාත්මක පැහැදිලි කිරීමක් මෙන්ම පොල්කස්වැප් සංදේශ හා සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති ඇතුළත් ලියකියවිලි සමාලෝචනය කරන්න. සුරක්‍ෂිත හා ධනාත්මක පරිශීලක අත්දැකීමක් සඳහා මෙම ලිපි ලේඛන ඉතා වැදගත් වේ. පොල්කස්වැප් භාවිතා කිරීමෙන් ඔබ මෙම ලේඛන කියවා තේරුම් ගත් බව පිළිගනී. \n\n ඔබ පහත සඳහන් දෑ ද පිළිගනී: \n\n 1) ඔබේ නෛතික අධිකරණ බල ප්‍රදේශය තුළ පොල්කස්වැප් භාවිතා කිරීම සඳහා අදාළ විය හැකි සියළුම නීතිවලට අනුකූල වීම පිළිබඳ ඔබේ එකම වගකීම;\n 2) පොල්කස්වාප් හි වර්තමාන අනුවාදය ඇල්ෆා අනුවාදයක් බව ඔබේ අවබෝධය: එය සම්පූර්ණයෙන් පරීක්‍ෂා කර නොමැති අතර සමහර කාර්යයන් සැලසුම් කළ පරිදි සිදු නොවිය හැකිය;\n 3) සංකේත අහිමි වීමේ අවදානම ඇතුළුව, නමුත් ඒවාට පමණක් සීමා නොවී පොල්කස්වැප් භාවිතා කිරීමේ අවදානම පිළිබඳ ඔබේ අවබෝධය සහ ස්වේච්ඡාවෙන් පිළිගැනීම. නැවත වරක්, කරුණාකර අසන පැන අසන ප්‍රශ්න, පොල්කස්වාප් සංදේශය සහ සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති නොකියවා කරුණාකර ඉදිරියට නොයන්න!</string>
-  <string name="polkaswap_info_text_3">පොල්කස්වැප් නඩත්තු කරන්නේ සෝරා ප්‍රජාව විසිනි. පොල්කස්වාප් ක්‍රියාකාරීත්වය භාවිතා කිරීමට පෙර, කරුණාකර %% පොල්කස්වාප් නිතර අසන ප්‍රශ්න%% හා පොල්කස්වැප් ක්‍රියා කරන ආකාරය පිළිබඳ සවිස්තරාත්මක පැහැදිලි කිරීමක් මෙන්ම පොල්කස්වැප් සංදේශ හා සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති ඇතුළත් ලියකියවිලි සමාලෝචනය කරන්න. සුරක්‍ෂිත හා ධනාත්මක පරිශීලක අත්දැකීමක් සඳහා මෙම ලිපි ලේඛන ඉතා වැදගත් වේ. පොල්කස්වැප් භාවිතා කිරීමෙන් ඔබ මෙම ලේඛන කියවා තේරුම් ගත් බව පිළිගනී. \n\n ඔබ පහත සඳහන් දෑ ද පිළිගනී: \n\n 1) ඔබේ නෛතික අධිකරණ බල ප්‍රදේශය තුළ පොල්කස්වැප් භාවිතා කිරීම සඳහා අදාළ විය හැකි සියළුම නීතිවලට අනුකූල වීම පිළිබඳ ඔබේ එකම වගකීම;\n 2) පොල්කස්වාප් හි වර්තමාන අනුවාදය ඇල්ෆා අනුවාදයක් බව ඔබේ අවබෝධය: එය සම්පූර්ණයෙන් පරීක්‍ෂා කර නොමැති අතර සමහර කාර්යයන් සැලසුම් කළ පරිදි සිදු නොවිය හැකිය;\n 3) සංකේත අහිමි වීමේ අවදානම ඇතුළුව, නමුත් ඒවාට පමණක් සීමා නොවී පොල්කස්වැප් භාවිතා කිරීමේ අවදානම පිළිබඳ ඔබේ අවබෝධය සහ ස්වේච්ඡාවෙන් පිළිගැනීම. නැවත වරක්, කරුණාකර අසන පැන අසන ප්‍රශ්න, පොල්කස්වාප් සංදේශය සහ සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති නොකියවා කරුණාකර ඉදිරියට නොයන්න!</string>
-  <string name="polkaswap_info_text_4">පොල්කස්වැප් නඩත්තු කරන්නේ සෝරා ප්‍රජාව විසිනි. පොල්කස්වාප් ක්‍රියාකාරීත්වය භාවිතා කිරීමට පෙර, කරුණාකර %% පොල්කස්වාප් නිතර අසන ප්‍රශ්න%% හා පොල්කස්වැප් ක්‍රියා කරන ආකාරය පිළිබඳ සවිස්තරාත්මක පැහැදිලි කිරීමක් මෙන්ම පොල්කස්වැප් සංදේශ හා සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති ඇතුළත් ලියකියවිලි සමාලෝචනය කරන්න. සුරක්‍ෂිත හා ධනාත්මක පරිශීලක අත්දැකීමක් සඳහා මෙම ලිපි ලේඛන ඉතා වැදගත් වේ. පොල්කස්වැප් භාවිතා කිරීමෙන් ඔබ මෙම ලේඛන කියවා තේරුම් ගත් බව පිළිගනී. \n\n ඔබ පහත සඳහන් දෑ ද පිළිගනී: \n\n 1) ඔබේ නෛතික අධිකරණ බල ප්‍රදේශය තුළ පොල්කස්වැප් භාවිතා කිරීම සඳහා අදාළ විය හැකි සියළුම නීතිවලට අනුකූල වීම පිළිබඳ ඔබේ එකම වගකීම;\n 2) පොල්කස්වාප් හි වර්තමාන අනුවාදය ඇල්ෆා අනුවාදයක් බව ඔබේ අවබෝධය: එය සම්පූර්ණයෙන් පරීක්‍ෂා කර නොමැති අතර සමහර කාර්යයන් සැලසුම් කළ පරිදි සිදු නොවිය හැකිය;\n 3) සංකේත අහිමි වීමේ අවදානම ඇතුළුව, නමුත් ඒවාට පමණක් සීමා නොවී පොල්කස්වැප් භාවිතා කිරීමේ අවදානම පිළිබඳ ඔබේ අවබෝධය සහ ස්වේච්ඡාවෙන් පිළිගැනීම. නැවත වරක්, කරුණාකර අසන පැන අසන ප්‍රශ්න, පොල්කස්වාප් සංදේශය සහ සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති නොකියවා කරුණාකර ඉදිරියට නොයන්න!</string>
-  <string name="polkaswap_info_text_5">පොල්කස්වැප් නඩත්තු කරන්නේ සෝරා ප්‍රජාව විසිනි. පොල්කස්වාප් ක්‍රියාකාරීත්වය භාවිතා කිරීමට පෙර, කරුණාකර %% පොල්කස්වාප් නිතර අසන ප්‍රශ්න%% හා පොල්කස්වැප් ක්‍රියා කරන ආකාරය පිළිබඳ සවිස්තරාත්මක පැහැදිලි කිරීමක් මෙන්ම පොල්කස්වැප් සංදේශ හා සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති ඇතුළත් ලියකියවිලි සමාලෝචනය කරන්න. සුරක්‍ෂිත හා ධනාත්මක පරිශීලක අත්දැකීමක් සඳහා මෙම ලිපි ලේඛන ඉතා වැදගත් වේ. පොල්කස්වැප් භාවිතා කිරීමෙන් ඔබ මෙම ලේඛන කියවා තේරුම් ගත් බව පිළිගනී. \n\n ඔබ පහත සඳහන් දෑ ද පිළිගනී: \n\n 1) ඔබේ නෛතික අධිකරණ බල ප්‍රදේශය තුළ පොල්කස්වැප් භාවිතා කිරීම සඳහා අදාළ විය හැකි සියළුම නීතිවලට අනුකූල වීම පිළිබඳ ඔබේ එකම වගකීම;\n 2) පොල්කස්වාප් හි වර්තමාන අනුවාදය ඇල්ෆා අනුවාදයක් බව ඔබේ අවබෝධය: එය සම්පූර්ණයෙන් පරීක්‍ෂා කර නොමැති අතර සමහර කාර්යයන් සැලසුම් කළ පරිදි සිදු නොවිය හැකිය;\n 3) සංකේත අහිමි වීමේ අවදානම ඇතුළුව, නමුත් ඒවාට පමණක් සීමා නොවී පොල්කස්වැප් භාවිතා කිරීමේ අවදානම පිළිබඳ ඔබේ අවබෝධය සහ ස්වේච්ඡාවෙන් පිළිගැනීම. නැවත වරක්, කරුණාකර අසන පැන අසන ප්‍රශ්න, පොල්කස්වාප් සංදේශය සහ සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති නොකියවා කරුණාකර ඉදිරියට නොයන්න!</string>
-  <string name="polkaswap_info_text_6">පොල්කස්වැප් නඩත්තු කරන්නේ සෝරා ප්‍රජාව විසිනි. පොල්කස්වාප් ක්‍රියාකාරීත්වය භාවිතා කිරීමට පෙර, කරුණාකර %% පොල්කස්වාප් නිතර අසන ප්‍රශ්න%% හා පොල්කස්වැප් ක්‍රියා කරන ආකාරය පිළිබඳ සවිස්තරාත්මක පැහැදිලි කිරීමක් මෙන්ම පොල්කස්වැප් සංදේශ හා සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති ඇතුළත් ලියකියවිලි සමාලෝචනය කරන්න. සුරක්‍ෂිත හා ධනාත්මක පරිශීලක අත්දැකීමක් සඳහා මෙම ලිපි ලේඛන ඉතා වැදගත් වේ. පොල්කස්වැප් භාවිතා කිරීමෙන් ඔබ මෙම ලේඛන කියවා තේරුම් ගත් බව පිළිගනී. \n\n ඔබ පහත සඳහන් දෑ ද පිළිගනී: \n\n 1) ඔබේ නෛතික අධිකරණ බල ප්‍රදේශය තුළ පොල්කස්වැප් භාවිතා කිරීම සඳහා අදාළ විය හැකි සියළුම නීතිවලට අනුකූල වීම පිළිබඳ ඔබේ එකම වගකීම;\n 2) පොල්කස්වාප් හි වර්තමාන අනුවාදය ඇල්ෆා අනුවාදයක් බව ඔබේ අවබෝධය: එය සම්පූර්ණයෙන් පරීක්‍ෂා කර නොමැති අතර සමහර කාර්යයන් සැලසුම් කළ පරිදි සිදු නොවිය හැකිය;\n 3) සංකේත අහිමි වීමේ අවදානම ඇතුළුව, නමුත් ඒවාට පමණක් සීමා නොවී පොල්කස්වැප් භාවිතා කිරීමේ අවදානම පිළිබඳ ඔබේ අවබෝධය සහ ස්වේච්ඡාවෙන් පිළිගැනීම. නැවත වරක්, කරුණාකර අසන පැන අසන ප්‍රශ්න, පොල්කස්වාප් සංදේශය සහ සේවා කොන්දේසි සහ පෞද්ගලිකත්‍ව ප්‍රතිපත්ති නොකියවා කරුණාකර ඉදිරියට නොයන්න!</string>
+  <string name="polkaswap_info_text_3">ඔබේ නෛතික අධිකරණ බල ප්‍රදේශය තුළ ඔබේ විශේෂිත පොල්කාස්වාප් භාවිතයට අදාළ විය හැකි සියලුම නීතිවලට අනුකූල වීම සඳහා ඔබේ එකම වගකීම;</string>
+  <string name="polkaswap_info_text_4">Polkaswap හි වත්මන් අනුවාදය ඇල්ෆා අනුවාදයක් බව ඔබේ අවබෝධය: එය සම්පුර්ණයෙන්ම පරීක්ෂා කර නොමැති අතර සමහර කාර්යයන් සැලසුම් කර ඇති පරිදි ක්‍රියාත්මක නොවිය හැක;</string>
+  <string name="polkaswap_info_text_5">ටෝකන අහිමි වීමේ අවදානම ඇතුළුව, නමුත් ඒවාට සීමා නොවී Polkaswap භාවිතා කිරීමේදී ඇති වන අවදානම් පිළිබඳ ඔබේ අවබෝධය සහ ස්වේච්ඡා පිළිගැනීම.</string>
+  <string name="polkaswap_info_text_6">නැවත වරක්, කරුණාකර %%Polkaswap FAQ%% , %%Polkaswap සංදේශය සහ සේවා නියම%% , සහ %%රහස්‍යතා ප්‍රතිපත්තිය%% කියවීමෙන් තොරව ඉදිරියට යන්න එපා!</string>
   <string name="polkaswap_info_text_7">හුවමාරු පටිත්තෙන් වියාචනය පිළිබඳ දැනුම්දීම සැඟවීමට කරුණාකර පහත බොත්තම ස්වයිප් කරන්න. ඔබ එය සම්පූර්ණයෙන් තේරුම් ගෙන සඳහන් කර ඇති සියලුම ලියකියවිලි කියවා ඇත්නම් පමණක් එසේ කරන්න!</string>
   <string name="polkaswap_info_text_8">Swipe to hide</string>
   <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">එය තහවුරු කිරීමට පෙර විශාල අහිතකර මිල සංචලනයක් තිබේ නම් ඔබේ ගනුදෙනුව ආපසු හැරෙනු ඇත.</string>
   <string name="polkaswap_network_fee">ජාල ගාස්තුව</string>
   <string name="polkaswap_network_fee_info">සෝරා පද්ධතියේ වර්‍ධනය සහ ස්ථාවර ක්‍රියාකාරිත්වය සහතික කිරීම සඳහා ජාල ගාස්තුව භාවිතා කෙරේ.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">නිමැවුම ඇස්තමේන්තු කර ඇත. ඔබට අවම වශයෙන් %s වත් ලැබේ, නැතහොත් ගනුදෙනුව ආපසු හැරෙනු ඇත.</string>
   <string name="polkaswap_pool_not_created">සංචිතය නිර්මාණය වී නැත</string>
   <string name="polkaswap_pool_title">සංචිතය</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">අගය වෙනස් වීම දරා ගැනීම  යනු ලැබෙන  අවම ප්‍රමාණයට බලපාන අවසාන මුදල සඳහා ප්‍රතිශතයක් ලෙස සකස් කර ඇති පිළිගත් සීමාවකි.</string>
   <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">හුවමාරු කර ගත්තා</string>
   <string name="polkaswap_tbc">ටීබීසී</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Add</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">මුළු ඡන්ද</string>
   <string name="referendum_unsupport_title">නැත</string>
   <string name="referendum_voting_result">ඡන්ද ප්‍රතිඵලය</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">තෙවන පාර්ශවීය අනිෂ්ට මෘදුකාංග මඟින් එකතු කර ගත හැකි බැවින් තිර පිටපත් නොගන්න</string>
   <string name="screenshot_alert_title">තිරපිටපත් නොගන්න</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">ලබන්නා තෝරන්න</string>
   <string name="set_amount">ප්‍රමාණය සකසන්න</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">වලංගුකරුවන් නම් කිරීම සහ ත්‍යාග ලබා ගැනීම සඳහා XOR හිමියන්ට තම XOR අවස්ථා  තැන්පතු කර ගැනීමට හැකි වේ.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA වලංගුකාරක පාරිතෝෂික</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">සෝරා  ජාල  ගිණුමට</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">ලැබීමට මගේ %s ජාල ලිපිනය %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">ලැබීමට මගේ %s ජාල ලිපිනය %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">VAL ලබා ගන්න</string>
   <string name="wallet_redeemable">මුදවා ගත හැකි</string>
   <string name="wallet_send_existential_warning_message">ඔබේ මාරු කිරීම මුළු ශේෂය පැවැත්මේ තැන්පතුවට වඩා අඩු කරන බැවින් බ්ලොක්ස්ටෝර් වෙතින් ගිණුම ඉවත් කරයි.</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">ගනුදෙනුව ප්‍රතික්ෂේප කරන ලදි</string>
   <string name="wallet_transaction_submitted">ගනුදෙනුව ඉදිරිපත් කරන ලදි</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">උපරිම %s සංකේත</string>
   <string name="wallet_transfer_to_ethereum">එතෙරියම් ලිපිනයට</string>
   <string name="wallet_unbonding">බැඳීම නැති කිරීම</string>

@@ -5,7 +5,9 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
+import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
@@ -17,9 +19,17 @@ interface PolkaswapInteractor {
 
     fun subscribePoolsCache(): Flow<List<PoolData>>
 
+    fun subscribeReservesCache(assetId: String): Flow<LiquidityData?>
+
     fun subscribePoolsChanges(): Flow<String>
 
     suspend fun updatePools()
+
+    suspend fun getPoolStrategicBonusAPY(tokenId: String): BigDecimal?
+
+    fun getPoolData(assetId: String): Flow<PoolData?>
+
+    suspend fun updatePool(tokenId: String)
 
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean
 
@@ -63,6 +73,14 @@ interface PolkaswapInteractor {
         swapDetails: SwapDetails,
     ): Token?
 
+    fun checkLiquidityBalance(
+        fromTokenBalance: BigDecimal,
+        fromAmount: BigDecimal,
+        toTokenBalance: BigDecimal,
+        toAmount: BigDecimal,
+        networkFee: BigDecimal
+    ): Boolean
+
     suspend fun calcDetails(
         tokenFrom: Token,
         tokenTo: Token,
@@ -72,5 +90,67 @@ interface PolkaswapInteractor {
         slippageTolerance: Float
     ): SwapDetails?
 
-    suspend fun fetchNetworkFee(feeToken: Token): BigDecimal
+    suspend fun fetchSwapNetworkFee(feeToken: Token): BigDecimal
+
+    suspend fun fetchRemoveLiquidityNetworkFee(
+        tokenId1: Token,
+        tokenId2: Token
+    ): BigDecimal
+
+    suspend fun calcLiquidityDetails(
+        tokenFrom: Token,
+        tokenTo: Token,
+        reservesFrom: BigDecimal,
+        reservesTo: BigDecimal,
+        pooledTo: BigDecimal,
+        baseAmount: BigDecimal,
+        targetAmount: BigDecimal,
+        desired: WithDesired,
+        slippageTolerance: Float,
+        pairEnabled: Boolean,
+        pairPresented: Boolean
+    ): LiquidityDetails
+
+    suspend fun fetchAddLiquidityNetworkFee(
+        tokenFrom: Token,
+        tokenTo: Token,
+        tokenFromAmount: BigDecimal,
+        tokenToAmount: BigDecimal,
+        pairEnabled: Boolean,
+        pairPresented: Boolean,
+        slippageTolerance: Float,
+    ): BigDecimal
+
+    suspend fun observeAddLiquidity(
+        tokenFrom: Token,
+        tokenTo: Token,
+        amountFrom: BigDecimal,
+        amountTo: BigDecimal,
+        enabled: Boolean,
+        presented: Boolean,
+        slippageTolerance: Float
+    ): Boolean
+
+    suspend fun isPairEnabled(
+        inputAssetId: String,
+        outputAssetId: String
+    ): Flow<Boolean>
+
+    suspend fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean>
+
+    suspend fun removeLiquidity(
+        token1: Token,
+        token2: Token,
+        markerAssetDesired: BigDecimal,
+        firstAmountMin: BigDecimal,
+        secondAmountMin: BigDecimal,
+        networkFee: BigDecimal
+    ): Boolean
+
+    suspend fun getLiquidityData(
+        tokenFrom: Token,
+        tokenTo: Token,
+        enabled: Boolean,
+        presented: Boolean
+    ): LiquidityData
 }

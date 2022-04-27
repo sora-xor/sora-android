@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">تأكيد الاستذكار</string>
   <string name="account_confirmation_title_v2">تأكيد عبارة المرور</string>
   <string name="activity_project">المشروع</string>
+  <string name="add_liquidity_alert_text">ستكسب ارباح من الرسوم حسب نسبة حصتك من اجمالي اسهم حوض توفير السيولة.</string>
+  <string name="add_liquidity_confirmation_title">تأكيد العرض</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">اسهمك من الحوض ستكون</string>
+  <string name="add_liquidity_pool_title" formatted="false">حوض %s - %s</string>
+  <string name="add_liquidity_title">إضافة سيولة</string>
   <string name="address_not_found">لم يتم العثور على العنوان ، تأكد من أنه عنوان الشبكة الصحيحة.</string>
   <string name="address_not_found_1">لم يتم العثور على مستلمين</string>
   <string name="amount_default_fee">رسوم التحويل</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">نسخ</string>
   <string name="common_copy_address">نسخ العنوان</string>
   <string name="common_croatian">الكرواتية</string>
+  <string name="common_deposit">إيداع</string>
+  <string name="common_deposit_symbol">إيداع %s</string>
   <string name="common_description">الوصف</string>
   <string name="common_done">تم</string>
   <string name="common_donotallow">لا تسمح</string>
@@ -131,6 +139,7 @@
   </plurals>
   <string name="common_indonesian">الأندونيسية</string>
   <string name="common_info">المعلومات</string>
+  <string name="common_insufficient_balance">رصيد غير كافٍ</string>
   <string name="common_italian">الإيطالية</string>
   <string name="common_japanese">اليابانية</string>
   <string name="common_khmer">الخمير</string>
@@ -146,6 +155,7 @@
   <string name="common_ok">موافق</string>
   <string name="common_open_explorer">عرض على دفاتر البلوكشين</string>
   <string name="common_options_title">تحديد خيار</string>
+  <string name="common_output">المخرجات</string>
   <string name="common_passphrase_body">عند إنشاء حساب جديد في سورا، ستحصل على كلمات تولية مؤلفة من ١٢ كلمة. إذا كان لديك بالفعل كلمات اولية لسورا مكونة من ١٥ كلمة، فيمكنك استيراد حسابك بها - فهي ايضاً مفاتيح متوافقة وستبقى صالحة.</string>
   <string name="common_passphrase_header">كلمات الإستذكار الأولية تعتبر ككلمة مرور</string>
   <string name="common_passphrase_save_mnemonic_title">حفظ أو إرسال كلمات الإستذكار الأولية</string>
@@ -165,6 +175,7 @@
   <string name="common_receive">استلام</string>
   <string name="common_received">تم الاستلام</string>
   <string name="common_recipient">المستلم</string>
+  <string name="common_remove">إزالة</string>
   <string name="common_retry">أعد المحاولة</string>
   <string name="common_russian">الروسية</string>
   <string name="common_save">حفظ</string>
@@ -184,11 +195,12 @@
   <string name="common_sms_code_not_correct">رمز التحقق غير صحيح</string>
   <string name="common_spanish">الإسبانية</string>
   <string name="common_spanish_colombia">الإسبانية (كولومبيا)</string>
+  <string name="common_supply">المعروض</string>
   <string name="common_swedish">السويدية</string>
   <string name="common_terms_title">الشروط والأحكام</string>
   <string name="common_thai">التايلاندية</string>
   <string name="common_to">إلى</string>
-  <string name="common_to_estimated">To (estimated)</string>
+  <string name="common_to_estimated">إلى (تقديرياً)</string>
   <string name="common_today">اليوم</string>
   <string name="common_try_another">محاولة اخرى</string>
   <string name="common_turkish">التركية</string>
@@ -199,6 +211,8 @@
   <string name="common_update">تحديث</string>
   <string name="common_vote">التصويت</string>
   <string name="common_yesterday">أمس</string>
+  <string name="common_you_will_receive">ستستلم</string>
+  <string name="common_your_position">حالة مركزك</string>
   <string name="contacts_empty_state_title">هنا ستظهر أهم جهات الاتصال</string>
   <string name="contacts_scan">المسح الضوئي لرمز QR</string>
   <string name="contacts_search_empty_state_title">لا توجد نتائج بحث</string>
@@ -256,6 +270,10 @@
   <string name="invoice_scan_error_no_info">لا يمكن فك الشفرة QR</string>
   <string name="invoice_scan_error_user_not_found">تعذر العثور على مستخدم من مسح QR</string>
   <string name="language_title">اختيار اللغة</string>
+  <string name="liquidity_added">اضف %s سيولة</string>
+  <string name="liquidity_pair_creation_description"><![CDATA[سعر هذا الحوض سيحدد بناء على تقييم العملات الي تضيفها.<br/> عندما يكون معدل التقييم مرضياً بالنسبة لك، انقر للبت بالعرض.]]></string>
+  <string name="liquidity_pair_creation_title">انت اول موفر سيولة</string>
+  <string name="liquidity_removed">السيولة %s المزالة</string>
   <string name="logout_dialog_body">سيؤدي هذا الإجراء إلى حذف الحساب من هذا الجهاز. تأكد من حفظ نسخة احتياطية من كدمات الإستذكار الأولية قبل المتابعة.</string>
   <string name="mnemonic_alert_text">كلمات الإستذكار الأولية تستخدم لاستعادة الدخول إلى الحساب. اكتبها لديك، فلن نتمكن من استعادة حسابك بدونها!</string>
   <string name="mnemonic_confirm_text">قم بالتأكيد باختيار الكلمات بالترتيب الصحيح</string>
@@ -287,12 +305,14 @@
   <string name="pincode_set_your_pin_code">إعداد رمز الواجهة</string>
   <string name="pincode_touch_fingerprint_scanner">إلمس الماسح الضوئي للبصمة</string>
   <string name="pincode_updated">تم تحديث شفرة رمز الواجهة</string>
-  <string name="polkaswap_button_swap_again">Swap again</string>
+  <string name="polkaswap_button_swap_again">التبديل مرة اخرى</string>
   <string name="polkaswap_coming_soon">مستقبل منصة التداول اللامركزية للتشغيل البيني. بولكاسواب (PolkaSwap) هو بروتوكول AMM-DEX لا يخضع لأي وصاية مركزية لمبادلة الرموز بناءً على شبكة Polkadot و Parachains والشبكات الاخرى المتصلة عبر جسر. يزيل بروتوكول بولكاسواب بشكل فعال الوسطاء الموثوق بهم ويوفر فرصة لتداول أسرع.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">تأكيد المبادلة</string>
   <string name="polkaswap_details">تفاصيل</string>
-  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_error_noswap">لا مبادلة</string>
   <string name="polkaswap_info_faq">الأسئلة الشائعة حول بولكاسواب</string>
+  <string name="polkaswap_info_prices_and_fees">الأسعار والرسوم</string>
   <string name="polkaswap_info_text_1">يتم تسيير بولكاسواب من قبل مجتمع سورا. قبل الاستمرار في استخدام بولكاسواب ، يرجى مراجعة %% وثيقة الاسئلة الشائعة حول بولكاسواب %% والوثائق التي تتضمن شرحًا تفصيليًا حول آلية عملها، بالإضافة إلى %% مذكرة شروط استخدام بولكاسواب %% ، و %% احكام الخصوصية %% . \n\n هذه المستندات ضرورية لتجربة مستخدم آمنة وإيجابية. باستخدامك بولكاسواب، فإنك تقر بأنك قد قرأت هذه المستندات وفهمتها.</string>
   <string name="polkaswap_info_text_2">أنت تقر أيضًا بما يلي:</string>
   <string name="polkaswap_info_text_3">من مسؤوليتك الامتثال لجميع القوانين التي قد تشمل استخدامك لبولكاسواب في حدود منطقتك القانونية؛</string>
@@ -321,9 +341,12 @@
   <string name="polkaswap_minimum_received_info">ستتعثر وتسترجع معاملتك حال طرأت حركة سعرية بفارق كبير قبل اتمامها.</string>
   <string name="polkaswap_network_fee">رسوم الشبكة</string>
   <string name="polkaswap_network_fee_info">تُستخدم رسوم الشبكة لتأمين نمو نظام سورا بآداء مستقر.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">لا توجد عملات كافية في الحوض</string>
   <string name="polkaswap_output_estimated">يتم تقدير النتائج. سوف تتلقى على الأقل %s أو ستتعثر المعاملة وتسترجع.</string>
   <string name="polkaswap_pool_not_created">لم يتم إنشاء الحوض</string>
   <string name="polkaswap_pool_title">حوض</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">قد تكون معاملتك قيد التشغيل الأمامي</string>
   <string name="polkaswap_slippage_info">ستتعثر وتسترجع معاملتك حال تغير السعر بشكل غير مقبول يفوق هذه النسبة المئوية.</string>
   <string name="polkaswap_slippage_mayfail">معاملتك قد تفشل</string>
@@ -333,13 +356,15 @@
   <string name="polkaswap_swapped">تمت المبادلة</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">حالة عقدك (تقديرياً)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">اضافة</string>
   <string name="pool_button_remove">إزالة</string>
   <string name="pool_liqudity_title">سيولتك</string>
   <string name="pool_liquidity_placeholder">سيولتك ستظهر هنا</string>
+  <string name="pool_share_after_tx">سهم الحوض بعد الـTX</string>
   <string name="pool_share_title">اسهم الحوض</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">اسهمك من الحوض</string>
   <string name="pool_token_pooled">مكود للتحويض</string>
   <string name="profile_about_title">حول</string>
   <string name="profile_biometry_title">توثيق البصمة</string>
@@ -417,6 +442,10 @@
   <string name="referendum_total_votes">مجموع الأصوات</string>
   <string name="referendum_unsupport_title">لا</string>
   <string name="referendum_voting_result">نتيجة التصويت</string>
+  <string name="remove_liquidity_info_text">إزالة السيولة سيؤدي إلى تحويل حالة العقد الى العملات الاصلية بمعدل الصرف الحالي، وذلك بما يتناسب مع حصتك من اسهم الحوض. ارباحك من الرسوم ستكون مضمنة مع المبلغ الناتج عن سحب السيولة</string>
+  <string name="remove_liquidity_title">إزالة السيولة</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">تأكيد الإزالة</string>
   <string name="restart_required">إعادة التشغيل مطلوبة</string>
   <string name="screenshot_alert_text">لا تلتقط صورة للشاشة فقد ترصدها برمجيات ضارة من لطرف ثالث عابث.</string>
   <string name="screenshot_alert_title">لا تلتقط صور للشاشة</string>
@@ -427,6 +456,10 @@
   <string name="select_asset_send">تحديد الأصل لإرساله</string>
   <string name="select_recipient">حدد المستلم</string>
   <string name="set_amount">حدد الكمية</string>
+  <string name="settings_accounts">الحسابات</string>
+  <string name="settings_header_account">إعدادات الحساب</string>
+  <string name="settings_header_app">إعدادات التطبيق</string>
+  <string name="settings_header_other">أخرى</string>
   <string name="staking_coming_soon">سيتمكن حاملو XOR من رهنه ولترشيح مدققين والحصول على المكافآت.</string>
   <string name="staking_description">يُعد ترشيح المدققين جزءًا مهمًا من نظام بيئة سورا \"SORA\" حيث يساعد على تأمين الشبكة وإضفاء اللامركزية عليها. يتم منح عملة VAL للمدققين والمرشحين كمكافأة على التحصيص \"Staking\".</string>
   <string name="staking_val_reward">مكافآت مدققي شبكة سورا</string>
@@ -436,7 +469,7 @@
   <string name="status_rejected">مرفوض</string>
   <string name="status_success">نجاح</string>
   <string name="status_title">الحالة</string>
-  <string name="swap_input_title">Swap input</string>
+  <string name="swap_input_title">مدخلات المبادلة</string>
   <string name="tabbar_friends_title">الأصدقاء</string>
   <string name="tabbar_parliament_title">البرلمان</string>
   <string name="tabbar_polkaswap_title">بولكاسواب</string>
@@ -512,8 +545,10 @@
   <string name="wallet_history_to_soranet_account">الى حساب SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">عنواني على شبكة %s لاستلام %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s عنوان الشبكة لاستلام %s :</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">قم بمسح هذا الرمز الضوئي لإرسال %s إلي. رمز هويتي في %s هو: %s</string>
   <string name="wallet_qr_share_message_template" formatted="false">عنواني على شبكة  %s لاستقبال  %s%s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">عنواني على شبكة  %s لاستقبال  %s:%s</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">قم بمسح هذا الرمز الضوئي لإرسال %s%s إلي. رمز هويتي في %sهو: %s</string>
   <string name="wallet_receive_val">استلام VAL</string>
   <string name="wallet_redeemable">قابل للسحب</string>
   <string name="wallet_send_existential_warning_message">ستؤدي عملية التحويل الخاصة بك إلى إزالة الحساب من blockstore لأنها ستجعل الرصيد الإجمالي أقل من الإيداع الموجود.</string>
@@ -522,6 +557,8 @@
   <string name="wallet_transaction_rejected">المعاملة مرفوضة</string>
   <string name="wallet_transaction_submitted">تم تسجيل المعاملة</string>
   <string name="wallet_transaction_submitted_1">المعاملة \n تم تسجيلها</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">الحد الأقصى للرموز %s</string>
   <string name="wallet_transfer_to_ethereum">الى حساب محفظة الايثيريوم</string>
   <string name="wallet_unbonding">إلغاء السند</string>

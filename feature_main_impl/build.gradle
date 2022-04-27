@@ -67,6 +67,7 @@ dependencies {
     implementation project(':feature_ethereum_api')
     implementation project(":feature_wallet_api")
     implementation project(":feature_onboarding_api")
+    implementation project(":feature_multiaccount_api")
 
     implementation kotlinDep
 
@@ -108,7 +109,8 @@ dependencies {
     implementation daggerDep
     kapt daggerKapt
 
-    implementation lifecycleDep
+    implementation lifecycleKtxDep
+    implementation lifecycleExtDep
     kapt lifecycleKaptDep
 
     //implementation soraDep

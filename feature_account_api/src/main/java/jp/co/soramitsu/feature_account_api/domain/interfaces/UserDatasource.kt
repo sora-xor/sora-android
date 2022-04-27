@@ -35,15 +35,17 @@ interface UserDatasource {
 
     suspend fun isBiometryAvailable(): Boolean
 
-    suspend fun saveAccountName(accountName: String)
-
     suspend fun getAccountName(): String
 
-    suspend fun saveNeedsMigration(it: Boolean)
+    suspend fun saveNeedsMigration(it: Boolean, suffixAddress: String)
 
-    suspend fun needsMigration(): Boolean
+    suspend fun needsMigration(suffixAddress: String): Boolean
 
-    suspend fun isMigrationStatusFetched(): Boolean
+    suspend fun isMigrationStatusFetched(suffixAddress: String): Boolean
 
-    suspend fun saveIsMigrationFetched(it: Boolean)
+    suspend fun saveIsMigrationFetched(it: Boolean, suffixAddress: String)
+
+    suspend fun getCurAccountAddress(): String
+
+    suspend fun setCurAccountAddress(accountAddress: String)
 }

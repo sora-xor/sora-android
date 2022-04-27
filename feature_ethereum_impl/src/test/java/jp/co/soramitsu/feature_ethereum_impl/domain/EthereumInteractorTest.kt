@@ -17,9 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
@@ -51,7 +49,6 @@ class EthereumInteractorTest {
     fun setUp() = runBlockingTest {
         ethereumInteractorImpl =
             EthereumInteractorImpl(ethereumRepository, credentialsRepository, healthChecker)
-        given(credentialsRepository.getAddress()).willReturn(accountId)
         //given(credentialsRepository.retrieveKeyPair()).willReturn(Single.just(keyPair))
     }
 

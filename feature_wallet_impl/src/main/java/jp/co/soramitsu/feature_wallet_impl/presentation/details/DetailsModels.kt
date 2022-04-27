@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.details
 import android.os.Parcelable
 import androidx.annotation.AttrRes
 import androidx.annotation.DrawableRes
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import kotlinx.parcelize.Parcelize
@@ -32,6 +33,26 @@ data class TransferDetailsModel(
     val to: String,
     val fee: String,
     val statusText: String,
+) : Parcelable
+
+@Parcelize
+data class LiquidityDetailsModel(
+    val liquidityType: TransactionLiquidityType,
+    @DrawableRes val statusIcon: Int,
+    @DrawableRes val token1Icon: Int,
+    @DrawableRes val token2Icon: Int,
+    val status: TransactionStatus,
+    val statusText: String,
+    val statusDescription: String,
+    val txHash: String,
+    val fromAccount: String,
+    val networkFee: String,
+    val date: String,
+    val time: String,
+    val token1Name: String,
+    val token1Amount: String,
+    val token2Name: String,
+    val token2Amount: String,
 ) : Parcelable
 
 @Parcelize

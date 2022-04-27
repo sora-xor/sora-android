@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootEvent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:paddingHorizontal="@dimen/x2"
+    android:paddingVertical="@dimen/x1_5">
+
+    <ImageView
+        android:id="@+id/eventStatusIconImageView"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:src="@drawable/ic_neu_drop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="?attr/tintColorLight"
+        tools:ignore="ContentDescription" />
+
+    <TextView
+        android:id="@+id/tvHistorySwapDate"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15.HistoryEvents"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="13:37" />
+
+    <ImageView
+        android:id="@+id/eventStatusIconImageView2"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="@dimen/x1_2"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/eventItemTitleTextView"
+        app:layout_constraintStart_toEndOf="@id/eventItemTitleTextView"
+        app:layout_constraintTop_toTopOf="@id/eventItemTitleTextView"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_0x0200040000000000000000000000000000000000000000000000000000000000" />
+
+    <ImageView
+        android:id="@+id/eventStatusIconImageView3"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_marginStart="@dimen/x1_2"
+        android:visibility="visible"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView2"
+        app:layout_constraintTop_toTopOf="@id/eventStatusIconImageView2"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_0x0200050000000000000000000000000000000000000000000000000000000000" />
+
+    <ImageView
+        android:id="@+id/eventStatusIconImageViewSp"
+        android:layout_width="22dp"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:src="@drawable/animation_progress_dots"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/eventItemTitleTextView"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1_2"
+        android:text="@string/common_add"
+        android:textAllCaps="true"
+        app:layout_constraintBaseline_toBaselineOf="@id/tvHistorySwapDate"
+        app:layout_constraintStart_toEndOf="@id/tvHistorySwapDate" />
+
+    <TextView
+        android:id="@+id/tvAddAmount1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="end"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView3"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="1313123.123131 VAL" />
+
+    <TextView
+        android:id="@+id/tvAddAmount2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="end"
+        android:includeFontPadding="false"
+        android:singleLine="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView3"
+        app:layout_constraintTop_toBottomOf="@id/tvAddAmount1"
+        tools:text="1313123.123131 VAL" />
+
+    <TextView
+        android:id="@+id/tvFailed"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:singleLine="true"
+        android:text="@string/common_failed"
+        android:textColor="?attr/statusError"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/eventStatusIconImageView3"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Failed"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

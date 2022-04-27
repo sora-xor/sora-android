@@ -107,7 +107,7 @@ class PrefsDidDatasourceTest {
         val keyMnemonic = "prefs_mnemonic"
         val mnemonic = "mnemonic"
 
-        prefsCredentialsDatasource.saveMnemonic(mnemonic)
+        prefsCredentialsDatasource.saveMnemonic(mnemonic, "")
 
         verify(encryptedPreferences).putEncryptedString(keyMnemonic, mnemonic)
     }
@@ -118,6 +118,6 @@ class PrefsDidDatasourceTest {
         val mnemonic = "mnemonic"
         given(encryptedPreferences.getDecryptedString(keyMnemonic)).willReturn(mnemonic)
 
-        assertEquals(mnemonic, prefsCredentialsDatasource.retrieveMnemonic())
+        assertEquals(mnemonic, prefsCredentialsDatasource.retrieveMnemonic(""))
     }
 }

@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Gikumpirma ang mnemonic</string>
   <string name="account_confirmation_title_v2">ekumpirma ang passphrase</string>
   <string name="activity_project">proyekto</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Wala makit-an ang adres, siguruha nga ang adres nahisakop sa husto nga network.</string>
   <string name="address_not_found_1">Wala makit-an ang mga nakadawat</string>
   <string name="amount_default_fee">Bayad sa Transaksyon</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">kopya</string>
   <string name="common_copy_address">Pagkopya sa adres</string>
   <string name="common_croatian">Kroatiano</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Paghulagway</string>
   <string name="common_done">Nahimo na</string>
   <string name="common_donotallow">Ayaw itugot</string>
@@ -131,6 +139,7 @@
   </plurals>
   <string name="common_indonesian">Indonesian</string>
   <string name="common_info">Impormasyon</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italyano</string>
   <string name="common_japanese">Hapon</string>
   <string name="common_khmer">Khmer</string>
@@ -146,6 +155,7 @@
   <string name="common_ok">ok ra</string>
   <string name="common_open_explorer">Lantawa sa Blockchain Explorer</string>
   <string name="common_options_title">Pagpili ug kapilian</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Kung maghimo ug usa ka bag-ong account sa SORA, makakuha ka ug  12 nga words sa passphrase. Kung aduna na ika\'y 15 words nga SORA passphrase, mahimo nimo nga i-import ang imong account niini - kini katugbang ug magpadayon nga molihok.</string>
   <string name="common_passphrase_header">Ang passphrase usa ka matang sa password</string>
   <string name="common_passphrase_save_mnemonic_title">Pagtipig o pagpadala ug passphrase</string>
@@ -165,6 +175,7 @@
   <string name="common_receive">Pagdawat</string>
   <string name="common_received">Nadawat</string>
   <string name="common_recipient">Makadawat</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Sulayi usab</string>
   <string name="common_russian">Ruso</string>
   <string name="common_save">Pagtipig</string>
@@ -184,6 +195,7 @@
   <string name="common_sms_code_not_correct">Dili husto ang verification code</string>
   <string name="common_spanish">Espanyol (Colombia)</string>
   <string name="common_spanish_colombia">Espanyol (Colombia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Swedish</string>
   <string name="common_terms_title">Termino ug mga kondisyon</string>
   <string name="common_thai">Thai</string>
@@ -199,6 +211,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">boto</string>
   <string name="common_yesterday">gahapon</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Ang labing hinungdanon nga mga kontak makita dinhi</string>
   <string name="contacts_scan">I-scan ang QR code</string>
   <string name="contacts_search_empty_state_title">Wala’y mogawas na impormasyon sa gipangita</string>
@@ -256,6 +270,10 @@
   <string name="invoice_scan_error_no_info">Ang QR dili ma-decode</string>
   <string name="invoice_scan_error_user_not_found">Walay makita nga naggamit ini gikan sa QR</string>
   <string name="language_title">Pagpili ug sinultian</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Ang kini nga aksyon magresulta sa pagtangtang sa account sa kini nga aparato. Siguruha nga adunay kopya sa imong passphrase sa dili pa mopadayon.</string>
   <string name="mnemonic_alert_text">Gigamit ang Mnemonic passphrase aron makuha ang pag-access sa account. Isulat kini, dili namo marekober ang imong account kung wala kini!</string>
   <string name="mnemonic_confirm_text">Gikumpirma pinaagi sa pagpili sa mga pulong sa sakto nga pagkahan-ay</string>
@@ -289,10 +307,12 @@
   <string name="pincode_updated">na-update na ang pin code</string>
   <string name="polkaswap_button_swap_again">pagbaylo usab</string>
   <string name="polkaswap_coming_soon">Ang DEX alang sa Interoperable Future. Ang Polkaswap usa ka non-custodial, AMM-DEX nga protokol alang sa mga token sa pagbayloay nga gibase sa Polkadot network, Parachains, ug mga blockchain nga konektado pinaagi sa usa ka Bridge. Epektibo nga gitangtang sa Polkaswap protocol ang mga kasaligan nga tigpataliwala ug naghatag higayon nga alang sa dali nga pagpamaligya.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Pagkumpirma sa swap</string>
   <string name="polkaswap_details">detalye</string>
   <string name="polkaswap_error_noswap">walay pagbayloay</string>
   <string name="polkaswap_info_faq">FAQ sa Polkaswap</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Ang Polkaswap gipadayon sa komunidad sa SORA. Sa dili pa gamiton ang sa Polkaswap, palihug repasuha ang %% Polkaswap FAQ %% ug dokumentasyon, nga adunay usa ka detalyado nga pagklaro kung giunsa ang Polkaswap nagtrabaho, ingon man ang Polkaswap Memorandum ug Mga Termino sa Mga Serbisyo, ug Patakaran sa Pagkapribado\n\nKini nga mga dokumento hinungdanon sa usa ka sigurado ug positibo nga kasinatian sa tiggamit. Pinaagi sa paggamit sa Polkaswap, mahibal-an ug nabasa na nimo ug nasabtan ang kini nga mga dokumento.</string>
   <string name="polkaswap_info_text_2">Giila usab nimo ang mosunod:</string>
   <string name="polkaswap_info_text_3">Ang imong bugtong responsibilidad alang sa pagsunod sa tanan nga mga balaod nga mahimong magamit sa imong partikular sa paggamit sa Polkaswap sa imong ligal nga hurisdiksyon;</string>
@@ -321,9 +341,12 @@
   <string name="polkaswap_minimum_received_info">Mobalik ang imong transaksyon kung adunay usa ka dako, dili pabor nga paglihok sa presyo sa wala pa kini makumpirma.</string>
   <string name="polkaswap_network_fee">Bayad sa network</string>
   <string name="polkaswap_network_fee_info">Gigamit ang network fee aron masiguro ang pagtubo ug kalig-on sa paghimo sa sistema sa SORA.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Pagbanabana sa output. Ikaw makadawat ug labing menos %s o ang kining transakyona, mobalik.</string>
   <string name="polkaswap_pool_not_created">wala mahimo ang Pool</string>
   <string name="polkaswap_pool_title">pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Mahimong mapadayon ang imong transaksyon</string>
   <string name="polkaswap_slippage_info">Ang Slippage Tolerance usa ka gidawat nga threshold nga gitakda sa porsyento alang sa katapusang kantidad nga nakaapekto sa Minimum nga Nadawat nga kantidad.</string>
   <string name="polkaswap_slippage_mayfail">Mahimong mapakyas ang imong transaksyon</string>
@@ -333,11 +356,13 @@
   <string name="polkaswap_swapped">Gibayloan</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Idugang</string>
   <string name="pool_button_remove">Kuhaa</string>
   <string name="pool_liqudity_title">Imohang liquidity</string>
   <string name="pool_liquidity_placeholder">Ang imong liquidity makita dinhi</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">ambit gikan sa gipundok na kwarta</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Gipundok</string>
@@ -417,6 +442,10 @@
   <string name="referendum_total_votes">Kinatibuk-ang boto</string>
   <string name="referendum_unsupport_title">Dili</string>
   <string name="referendum_voting_result">Resulta sa pagboto</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Kinahanglan nga i-restart</string>
   <string name="screenshot_alert_text">Ayaw pagkuha ug mga screenshot, nga mahimong makolekta sa third-party malware</string>
   <string name="screenshot_alert_title">Ayaw pagkuha ug mga screenshot</string>
@@ -427,6 +456,10 @@
   <string name="select_asset_send">Pagpili ug asset nga ipadala</string>
   <string name="select_recipient">Pilia ang modawat</string>
   <string name="set_amount">pagtakda sa kantidad</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Ang mga naggunit ug XOR mahimo’g mopusta sa ilang XOR aron makapili sa mga nagpanghimatuud ug makakuha ug mga premyo.</string>
   <string name="staking_description">Ang pag-nominate sa mga validator usa ka importante nga bahin sa SORA ecosystem tungod kay kini makatabang sa pagsiguro ug pag-desentralisa sa network. Ang mga token sa VAL ihatag sa mga validator ug mga nominator isip ganti sa staking.</string>
   <string name="staking_val_reward">premyo sa SORA VALidator</string>
@@ -512,8 +545,10 @@
   <string name="wallet_history_to_soranet_account">Para sa account sa SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Akong %s Network address aron Makadawat %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address nga Modawat %s :</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Akong %s Network address aron Makadawat %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Akong %s Network address aron Makadawat %s %s :</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">pagdawat sa VAL</string>
   <string name="wallet_redeemable">Pwede matubos</string>
   <string name="wallet_send_existential_warning_message">Ang imong pagbalhin magtangtang sa account gikan sa blockstore tungod kay himuon niini ang kinatibuk-ang balanse nga mas ubos kaysa sa naa sa deposito.</string>
@@ -522,6 +557,8 @@
   <string name="wallet_transaction_rejected">Gisalikway ang transaksyon</string>
   <string name="wallet_transaction_submitted">Gisumite ang transaksyon</string>
   <string name="wallet_transaction_submitted_1">Gisumite ang transaksyon</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Max nga mga  simbolo %s</string>
   <string name="wallet_transfer_to_ethereum">Para sa Ethereum adres</string>
   <string name="wallet_unbonding">Wala’y katapusan</string>

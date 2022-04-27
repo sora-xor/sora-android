@@ -19,6 +19,7 @@ import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
@@ -76,7 +77,7 @@ class TransactionMappersTest {
 
     @Test
     fun `map transactions to SoraTransactions with headers`() {
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt())).willReturn("10.12")
+        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt(), anyBoolean())).willReturn("10.12")
         given(
             dateTimeFormatter.formatTimeWithoutSeconds(
                 Date(transactions.first().timestamp),

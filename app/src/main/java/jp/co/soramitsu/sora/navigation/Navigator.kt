@@ -8,7 +8,14 @@ package jp.co.soramitsu.sora.navigation
 import android.os.Bundle
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
+import jp.co.soramitsu.common.presentation.args.liquidityDetails
+import jp.co.soramitsu.common.presentation.args.slippageTolerance
+import jp.co.soramitsu.common.presentation.args.tokenFrom
+import jp.co.soramitsu.common.presentation.args.tokenTo
+import jp.co.soramitsu.common.presentation.args.tokenToNullable
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -25,11 +32,13 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragm
 import jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.remove.confirmation.RemoveLiquidityConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap.SwapFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmation.SwapConfirmationFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
 import jp.co.soramitsu.sora.R
+import jp.co.soramitsu.sora.navigation.args.withArgs
 import java.math.BigDecimal
 
 class Navigator : MainRouter, WalletRouter {
@@ -60,6 +69,10 @@ class Navigator : MainRouter, WalletRouter {
 
     override fun showPersonalDataEdition() {
         navController?.navigate(R.id.personalDataEditFragment)
+    }
+
+    override fun showSwitchAccount() {
+        navController?.navigate(R.id.switchAccountFragment)
     }
 
     override fun popBackStack() {
@@ -94,7 +107,17 @@ class Navigator : MainRouter, WalletRouter {
     }
 
     override fun showAssetList(mode: AssetListMode) {
-        navController?.navigate(R.id.assetListFragment, AssetListFragment.createBundle(mode))
+        navController?.navigate(
+            R.id.assetListFragment,
+            AssetListFragment.createBundle(mode)
+        )
+    }
+
+    override fun showSelectToken(mode: AssetListMode, hiddenAssetId: String?) {
+        navController?.navigate(
+            R.id.selectAssetForLiquidityFragment,
+            AssetListFragment.createBundle(mode, hiddenAssetId)
+        )
     }
 
     override fun showAssetDetails(assetId: String) {
@@ -223,6 +246,76 @@ class Navigator : MainRouter, WalletRouter {
             R.id.polkaswap_nav_graph,
             SwapFragment.createSwapData(tokenFrom, tokenTo, amountFrom),
             NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build()
+        )
+    }
+
+    override fun showAddLiquidity(tokenFrom: Token, tokenTo: Token?) {
+        navController?.navigate(
+            R.id.addLiquidityFragment,
+            args = withArgs {
+                this.tokenFrom = tokenFrom
+                this.tokenToNullable = tokenTo
+            },
+            NavOptions.Builder().setPopUpTo(R.id.addLiquidityFragment, true).build()
+        )
+    }
+
+    override fun showRemoveLiquidity(tokenFrom: Token, tokenTo: Token) {
+        navController?.navigate(
+            R.id.removeLiquidityFragment,
+            args = withArgs {
+                this.tokenFrom = tokenFrom
+                this.tokenTo = tokenTo
+            }
+        )
+    }
+
+    override fun showRemoveLiquidityConfirmation(
+        firstToken: Token,
+        firstAmount: BigDecimal,
+        secondToken: Token,
+        secondAmount: BigDecimal,
+        slippage: Float,
+        percent: Double,
+    ) {
+        navController?.navigate(
+            R.id.removeLiquidityConfirmationFragment,
+            RemoveLiquidityConfirmationFragment.createBundle(
+                firstToken,
+                firstAmount,
+                secondToken,
+                secondAmount,
+                slippage,
+                percent,
+            )
+        )
+    }
+
+    override fun returnToAddLiquidity(tokenFrom: Token, tokenTo: Token?) {
+        navController?.previousBackStackEntry?.savedStateHandle?.set(
+            BUNDLE_KEY,
+            withArgs {
+                this.tokenFrom = tokenFrom
+                this.tokenToNullable = tokenTo
+            }
+        )
+        navController?.popBackStack()
+    }
+
+    override fun confirmAddLiquidity(
+        tokenFrom: Token,
+        tokenTo: Token,
+        slippageTolerance: Float,
+        liquidityDetails: LiquidityDetails
+    ) {
+        navController?.navigate(
+            R.id.confirmAddLiquidityFragment,
+            withArgs {
+                this.tokenFrom = tokenFrom
+                this.tokenTo = tokenTo
+                this.slippageTolerance = slippageTolerance
+                this.liquidityDetails = liquidityDetails
+            }
         )
     }
 

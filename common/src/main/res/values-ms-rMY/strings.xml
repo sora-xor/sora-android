@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Sahkan mnemonik</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Projek</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Alamat tidak dijumpai, pastikan alamat tersebut tergolong dalam rangkaian yang betul.</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Bayaran transaksi</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Salinan</string>
   <string name="common_copy_address">Salin alamat</string>
   <string name="common_croatian">Bahasa Croatia</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Keterangan</string>
   <string name="common_done">Selesai</string>
   <string name="common_donotallow">Jangan Benarkan</string>
@@ -126,6 +134,7 @@
   </plurals>
   <string name="common_indonesian">Bahasa Indonesia</string>
   <string name="common_info">Maklumat</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Bahasa Itali</string>
   <string name="common_japanese">Bahasa Jepun</string>
   <string name="common_khmer">Orang Khmer</string>
@@ -141,6 +150,7 @@
   <string name="common_ok">OK</string>
   <string name="common_open_explorer">Lihat di Blockchain Explorer</string>
   <string name="common_options_title">Pilih pilihan</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Apabila membuat akaun baru dalam SORA, anda kini mendapat 12 perkataan frasa laluan. Jika anda sudah mempunyai 15 perkataan frasa laluan SORA, anda boleh mengimport akaun anda dengannya - ini juga serasi dan akan terus bekerja.</string>
   <string name="common_passphrase_header">Frasa Laluan ialah \n sejenis kata laluan.</string>
   <string name="common_passphrase_save_mnemonic_title">Simpan atau hantar frasa laluan</string>
@@ -160,6 +170,7 @@
   <string name="common_receive">Terima</string>
   <string name="common_received">Menerima</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Cuba lagi</string>
   <string name="common_russian">Bahasa Rusia</string>
   <string name="common_save">Simpan</string>
@@ -179,6 +190,7 @@
   <string name="common_sms_code_not_correct">Kod pengesahan tidak betul</string>
   <string name="common_spanish">Bahasa sepanyol</string>
   <string name="common_spanish_colombia">Sepanyol (Colombia)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Bahasa Sweden</string>
   <string name="common_terms_title">Terma &amp; Syarat</string>
   <string name="common_thai">Orang Thai</string>
@@ -194,6 +206,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Undi</string>
   <string name="common_yesterday">Semalam</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Kenalan yang paling penting akan muncul di sini</string>
   <string name="contacts_scan">Imbas kod QR</string>
   <string name="contacts_search_empty_state_title">Tiada hasil carian</string>
@@ -251,6 +265,10 @@
   <string name="invoice_scan_error_no_info">QR tidak boleh menyahkodkan</string>
   <string name="invoice_scan_error_user_not_found">Tidak dapat mencari pengguna dari QR</string>
   <string name="language_title">Pilih Bahasa</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Tindakan ini akan mengakibatkan penghapusan akaun dari peranti ini. Pastikan anda telah menyandarkan frasa laluan anda sebelum meneruskan.</string>
   <string name="mnemonic_alert_text">Mnemonik digunakan untuk memulihkan akses ke akaun. Tuliskan di atas kertas sebab kami tidak akan dapat memulihkan akaun anda tanpanya!</string>
   <string name="mnemonic_confirm_text">Sahkan dengan memilih perkataan mengikut urutan yang betul</string>
@@ -284,10 +302,12 @@
   <string name="pincode_updated">Kod pin dikemas kini</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">DEX untuk Masa Depan yang Boleh Beroperasi Polkaswap adalah protokol AMM-DEX bukan kustodian untuk menukar token berdasarkan rangkaian Polkadot, Parachains, dan blockchain yang dihubungkan melalui Bridge. Protokol Polkaswap secara berkesan menghilangkan perantara yang dipercayai dan memberi peluang untuk perdagangan yang lebih pantas.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Sahkan pertukaran</string>
   <string name="polkaswap_details">Butiran</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Soalan Lazim Polkaswap</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap diselenggara oleh komuniti SORA. Sebelum menggunakan fungsi Polkaswap, sila semak %% Polkaswap FAQ %% dan dokumentasi, termasuk penjelasan yang terperinci mengenai cara Polkaswap berfungsi, serta Memorandum Polkaswap dan Syarat Perkhidmatan dan Dasar Privasi. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang selamat dan positif. Dengan menggunakan Polkaswap, anda mengakui bahawa anda telah membaca dan memahami dokumen-dokumen ini.</string>
   <string name="polkaswap_info_text_2">Anda juga mengakui perkara-perkara berikut:</string>
   <string name="polkaswap_info_text_3">Tanggungjawab anda untuk mematuhi semua undang-undang yang mungkin terpakai untuk penggunaan Polkaswap tertentu dalam bidang kuasa undang-undang anda;</string>
@@ -316,9 +336,12 @@
   <string name="polkaswap_minimum_received_info">Transaksi anda akan kembali jika terdapat pergerakan harga yang besar dan tidak menguntungkan sebelum ia disahkan.</string>
   <string name="polkaswap_network_fee">Yuran Rangkaian</string>
   <string name="polkaswap_network_fee_info">Yuran rangkaian digunakan untuk memastikan pertumbuhan sistem SORA dan prestasi yang stabil.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Output dianggarkan. Anda akan menerima sekurang-kurangnya %s atau transaksi akan kembali.</string>
   <string name="polkaswap_pool_not_created">Kolam tidak dicipta</string>
   <string name="polkaswap_pool_title">Kolam</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Urus niaga anda mungkin dijalankan</string>
   <string name="polkaswap_slippage_info">Urus niaga anda akan kembali jika harga berubah dengan tidak menguntungkan lebih daripada peratusan ini</string>
   <string name="polkaswap_slippage_mayfail">Transaksi anda mungkin gagal</string>
@@ -328,11 +351,13 @@
   <string name="polkaswap_swapped">Ditukar</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Tambah</string>
   <string name="pool_button_remove">Buang</string>
   <string name="pool_liqudity_title">Kecairan anda</string>
   <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Bahagian Tabungan</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Terkumpul</string>
@@ -387,6 +412,10 @@
   <string name="referendum_total_votes">Jumlah undian</string>
   <string name="referendum_unsupport_title">Tidak</string>
   <string name="referendum_voting_result">Keputusan undian</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Jangan ambil tangkapan skrin, berkemungkinan dikumpulkan oleh perisian hasad pihak ketiga</string>
   <string name="screenshot_alert_title">Jangan ambil tangkapan skrin</string>
@@ -397,6 +426,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Pilih penerima</string>
   <string name="set_amount">Tetapkan Jumlah</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Pemegang XOR akan dapat mempertaruhkan XOR mereka untuk mencalonkan pengesah dan mendapat ganjaran.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">Ganjaran SALA VALidator</string>
@@ -482,8 +515,10 @@
   <string name="wallet_history_to_soranet_account">Ke akaun SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Alamat rangkaian saya %s untuk Menerima %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false"> %s Alamat rangkaian untuk Menerima %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Alamat Rangkaian %s saya untuk Menerima %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Alamat Rangkaian %s saya untuk Menerima %s %s :</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Terima VAL</string>
   <string name="wallet_redeemable">Boleh ditebus</string>
   <string name="wallet_send_existential_warning_message">Pemindahan akan memadamkan akaun anda dari blockstore kerana jumlah baki akan lebih rendah daripada simpanan yang wujud.</string>
@@ -492,6 +527,8 @@
   <string name="wallet_transaction_rejected">Transaksi ditolak</string>
   <string name="wallet_transaction_submitted">Transaksi dihantar</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Simbol maksimum %s</string>
   <string name="wallet_transfer_to_ethereum">Ke alamat Ethereum</string>
   <string name="wallet_unbonding">Nyahikat</string>

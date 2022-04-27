@@ -1,30 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-  <string name="about_announcements">Receive Announcements</string>
-  <string name="about_ask_support">Ask for Support</string>
+  <string name="about_announcements">Gaukite pranešimus</string>
+  <string name="about_ask_support">Prašyti pagalbos</string>
   <string name="about_contact_us">Susisiekite su mumis</string>
-  <string name="about_instagram">Like on Instagram</string>
-  <string name="about_medium">Read on Medium</string>
+  <string name="about_instagram">Sekite Instagram</string>
+  <string name="about_medium">Skaitykite „Medium“.</string>
   <string name="about_privacy">Privatumo politika</string>
   <string name="about_source_code">Pirminis kodas</string>
   <string name="about_telegram">Oficiali „Telegram“ grupė</string>
   <string name="about_title">Apie</string>
-  <string name="about_twitter">Follow on Twitter</string>
+  <string name="about_twitter">Sekite Twitter</string>
   <string name="about_website">Oficiali internetinė svetainė</string>
-  <string name="about_wiki">Learn on Wiki</string>
-  <string name="about_youtube">Subscribe on YouTube</string>
+  <string name="about_wiki">Sužinokite daugiau „Wiki“</string>
+  <string name="about_youtube">Prenumeruokite YouTube</string>
   <string name="account_confirmation_title">Patvirtinkite mnemoniką</string>
-  <string name="account_confirmation_title_v2">Confirm Passphrase</string>
+  <string name="account_confirmation_title_v2">Patvirtinkite slaptafrazę</string>
   <string name="activity_project">Projektas</string>
+  <string name="add_liquidity_alert_text">Už likvidumo suteikimą gausite mokesčius, proporcingus jūsų fondo daliai.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Pridėti likvidumo</string>
   <string name="address_not_found">Adresas nerastas, įsitikinkite, kad adresas priklauso tinkamam tinklui.</string>
-  <string name="address_not_found_1">Recipients not found</string>
+  <string name="address_not_found_1">Gavėjų nerasta</string>
   <string name="amount_default_fee">Operacijos mokestis</string>
   <string name="amount_error_no_funds">Deja, jums nepakanka lėšų pervesti nurodytą sumą.</string>
   <string name="amount_title">Suma</string>
   <string name="ask_biometry_message">Ar norėtumėte naudoti biometriniją autentifikacijai?</string>
   <string name="asset_add">Pridėti paskyrą</string>
   <string name="asset_details_title">Informacija apie išteklių</string>
-  <string name="asset_not_found">Asset not found</string>
+  <string name="asset_not_found">Išteklius nerastas</string>
   <string name="asset_settings_title">Paskyros</string>
   <string name="asset_state_associating">Siejama...</string>
   <string name="asset_state_error">Klaida</string>
@@ -32,8 +38,8 @@
   <string name="asset_val_name">SORA Validator žetonas</string>
   <string name="biometric_dialog_title">Autentifikuoti</string>
   <string name="block_id">Bloko „hash“ kodas</string>
-  <string name="choose_token">Choose\ntoken</string>
-  <string name="choose_tokens">Choose tokens</string>
+  <string name="choose_token">Pasirinkite žetoną</string>
+  <string name="choose_tokens">Pasirinkite žetonus</string>
   <string name="claim_contact">Jei turite klausimų ar rūpesčių, galite %% susisiekti su mumis.%%</string>
   <string name="claim_contact_1">Jei turite klausimų ar rūpesčių, galite</string>
   <string name="claim_contact_2">susisiekti su mumis.</string>
@@ -54,7 +60,7 @@
   <string name="common_add">Pridėti</string>
   <string name="common_advanced_settings">Išplėstiniai nustatymai</string>
   <string name="common_and">ir</string>
-  <string name="common_app_version">App version</string>
+  <string name="common_app_version">Programos versija</string>
   <string name="common_apply">Taikyti</string>
   <string name="common_arab">Arabų</string>
   <string name="common_asset">Išteklius</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopijuoti</string>
   <string name="common_copy_address">Kopijuoti adresą</string>
   <string name="common_croatian">Kroatų</string>
+  <string name="common_deposit">Depozitas</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Aprašymas</string>
   <string name="common_done">Baigta</string>
   <string name="common_donotallow">Neleisti</string>
@@ -129,21 +137,23 @@
   </plurals>
   <string name="common_indonesian">Indoneziečių</string>
   <string name="common_info">Informacija</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italų</string>
   <string name="common_japanese">Japonų</string>
   <string name="common_khmer">Khmerų</string>
   <string name="common_korean">Korėjiečių</string>
-  <string name="common_learn_more">Learn more</string>
+  <string name="common_learn_more">Sužinokite daugiau</string>
   <string name="common_malay">Malajų</string>
   <string name="common_manage">Tvarkyti</string>
   <string name="common_min">min</string>
   <string name="common_network_unavailable">Tinklas nepasiekiamas</string>
   <string name="common_next">Kitas</string>
   <string name="common_norwegian">Norvegų</string>
-  <string name="common_notsent">Not sent</string>
+  <string name="common_notsent">Neišsiųsta</string>
   <string name="common_ok">Gerai</string>
   <string name="common_open_explorer">Peržiūrėti „Blockchain Explorer“</string>
   <string name="common_options_title">Pasirinkite parinktį</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Kurdami naują paskyrą SORA sistemoje, dabar gausite 12 žodžių slaptafrazę. Jei jau turite 15 žodžių SORA slaptafrazę, galite su ja importuoti paskyrą - ji taip pat yra suderinama ir veiks toliau.</string>
   <string name="common_passphrase_header">Slaptafrazė yra\nslaptažodžio tipas.</string>
   <string name="common_passphrase_save_mnemonic_title">Išsaugoti arba siųsti slaptafrazę</string>
@@ -162,7 +172,8 @@
   <string name="common_please_wait">Prašome palaukti</string>
   <string name="common_receive">Gauti</string>
   <string name="common_received">Gauta</string>
-  <string name="common_recipient">Recipient</string>
+  <string name="common_recipient">Gavėjas</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Bandyti dar kartą</string>
   <string name="common_russian">Rusų</string>
   <string name="common_save">Išsaugoti</string>
@@ -172,21 +183,22 @@
   <string name="common_select_asset">Pasirinkite išteklių</string>
   <string name="common_select_email_app_title">Pasirinkti el. pašto programą</string>
   <string name="common_send">Siųsti</string>
-  <string name="common_sender">Sender</string>
+  <string name="common_sender">Siuntėjas</string>
   <string name="common_sent">Išsiųsta</string>
   <string name="common_settings">Nustatymai</string>
   <string name="common_share">Dalintis</string>
-  <string name="common_show">Show</string>
+  <string name="common_show">Rodyti</string>
   <string name="common_skip">Praleisti</string>
   <string name="common_sms_code_expired">Patvirtinimo kodo galiojimo laikas baigėsi. Bandykite kitą.</string>
   <string name="common_sms_code_not_correct">Neteisingas patvirtinimo kodas</string>
   <string name="common_spanish">Ispanų</string>
   <string name="common_spanish_colombia">Ispanų (Kolumbija)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Švedų</string>
   <string name="common_terms_title">Taisyklės ir nuostatos</string>
   <string name="common_thai">Tajų</string>
   <string name="common_to">Kam</string>
-  <string name="common_to_estimated">To (estimated)</string>
+  <string name="common_to_estimated">Į (apskaičiuota)</string>
   <string name="common_today">Šiandien</string>
   <string name="common_try_another">Bandykite kitą</string>
   <string name="common_turkish">Turkų</string>
@@ -194,9 +206,11 @@
   <string name="common_unsupported_version_body">Atnaujintą „Sora“ programėlę galima rasti „Google Play“. Tai apima patobulinimus ir klaidų pataisymus.</string>
   <string name="common_unsupported_version_open_google_play">Atidaryti „Google Play“</string>
   <string name="common_unsupported_version_title">Atnaujinkite „Sora“ programėlę</string>
-  <string name="common_update">Update</string>
+  <string name="common_update">Naujinimas</string>
   <string name="common_vote">Balsas</string>
   <string name="common_yesterday">Vakar</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Svarbiausi kontaktai pasirodys čia</string>
   <string name="contacts_scan">Nuskaitykite QR kodą</string>
   <string name="contacts_search_empty_state_title">Paieškos rezultatų nėra</string>
@@ -213,7 +227,7 @@
   <string name="details_total">Bendras balansas</string>
   <string name="details_transferable">Galima perleisti</string>
   <string name="empty_recent_recipients">Pastarųjų gavėjų nėra.\nČia bus rodomi išsiųsti adresai.</string>
-  <string name="empty_recent_recipients_2">Recipients will appear here</string>
+  <string name="empty_recent_recipients_2">Gavėjai bus rodomi čia</string>
   <string name="error_ethereum_account_subtitle">Norint atlikti šią operaciją, jums reikia susietos Ethereum sąskaitos su trupučiu lėšų kasėjų mokesčiui, kad operacija būtų įvykdytas.</string>
   <string name="error_ethereum_account_title">Ethereum paskyra nesusieta</string>
   <string name="error_miner_fee_subtitle">Norėdami tęsti šią operaciją, turite papildyti Ethereum paskyrą.</string>
@@ -254,6 +268,10 @@
   <string name="invoice_scan_error_no_info">Nepavyko iššifruoti QR kodo</string>
   <string name="invoice_scan_error_user_not_found">Nepavyksta rasti vartotojo pagal QR</string>
   <string name="language_title">Pasirinkite kalbą</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Atlikus šį veiksmą paskyra bus ištrinta iš šio įrenginio. Prieš tęsdami įsitikinkite, kad sukūrėte slaptafrazės atsarginę kopiją.</string>
   <string name="mnemonic_alert_text">Mnemoninė slaptafrazė naudojama atgauti prieigą prie paskyros. Užsirašykite ją, be jos negalėsime atkurti jūsų paskyros!</string>
   <string name="mnemonic_confirm_text">Patvirtinkite pasirinkdami žodžius teisinga tvarka</string>
@@ -285,12 +303,14 @@
   <string name="pincode_set_your_pin_code">Nustatyti PIN kodą</string>
   <string name="pincode_touch_fingerprint_scanner">Palieskite piršto antspaudo skaitytuvą</string>
   <string name="pincode_updated">PIN kodas atnaujintas</string>
-  <string name="polkaswap_button_swap_again">Swap again</string>
+  <string name="polkaswap_button_swap_again">Keisti dar kartą</string>
   <string name="polkaswap_coming_soon">Decentralizuota keitykla (DEX) sąveikaujančiai ateičiai. „Polkaswap“ – tai nepriklausomas AMM-DEX protokolas skirtas žetonų keitimui. Keitykla sukurta remiantis „Polkadot“ tinklu, paragrandinėmis ir blokų grandinėmis sujungtomis tilto. „Polkaswap“ protokolas efektyviai pašalina tarpininkus ir suteikia galimybę prekiauti greičiau.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Patvirti apsikeitimą</string>
   <string name="polkaswap_details">Išsami informacija</string>
-  <string name="polkaswap_error_noswap">No swap</string>
+  <string name="polkaswap_error_noswap">Nėra apsikeitimo</string>
   <string name="polkaswap_info_faq">Polkaswap DUK</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">„Polkaswap“ prižiūri SORA bendruomenė. Prieš naudodami „Polkaswap“, peržiūrėkite %%„Polkaswap“ DUK%% ir dokumentus, kuriuose yra išsamus paaiškinimas, kaip veikia „Polkaswap“, taip pat %%„Polkaswap“ memorandumą ir paslaugų teikimo sąlygas%% bei %%Privatumo politiką%%.\n\nŠie dokumentai yra labai svarbūs norint užtikrinti saugią ir teigiamą patirtį. Naudodamiesi „Polkaswap“, jūs pripažįstate, kad perskaitėte ir suprantate šiuos dokumentus.</string>
   <string name="polkaswap_info_text_2">Jūs taip pat pripažįstate, kad:</string>
   <string name="polkaswap_info_text_3">Jūs esate atsakingas už visų įstatymų, kurie gali būti taikomi konkrečiam jūsų naudojimui „Polkaswap“, laikymąsi jūsų teisinėje jurisdikcijoje;</string>
@@ -299,7 +319,7 @@
   <string name="polkaswap_info_text_6">Dar kartą prašome netęsti, neperskaitę %%Polkaswap DUK%%, %%Polkaswap memorandumo ir Paslaugų teikimo sąlygų%% bei %%Privatumo politikos%%!</string>
   <string name="polkaswap_info_text_7">Norėdami paslėpti atsisakymo pranešimą iš skirtuko „Apsikeisti“, perbraukite žemiau esantį mygtuką. Darykite tai tik tada, jei visiškai suprantate ir perskaitėte visus minėtus dokumentus!</string>
   <string name="polkaswap_info_text_8">Perbraukite, kad paslėptumėte</string>
-  <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
+  <string name="polkaswap_info_text_9">Atsakomybės atsisakymo pranešimas paslėptas Polkaswap skirtuke. Jei norite suaktyvinti pranešimą, braukite žemiau esantį mygtuką.</string>
   <string name="polkaswap_info_title">Atsakomybės apribojimas</string>
   <string name="polkaswap_info_title_main">Atsakomybės apribojimas: perskaitykite prieš toliau naudodami „Polkaswap“!</string>
   <string name="polkaswap_input_estimated">Įvestis apskaičiuota. Parduosite daugiausia %s arba operacija bus atšaukta.</string>
@@ -309,19 +329,22 @@
   <string name="polkaswap_liqudity_fee_info">Dalis kiekvieno sandorio sumos (0,3 %) atitenka likvidumo teikėjams kaip protokolo paskata.</string>
   <string name="polkaswap_market">Rinka</string>
   <string name="polkaswap_market_info">Rinkos algoritmas - galimybė pasirinkti tarp pirminės rinkos (TBC), antrinės rinkos (XYK) arba kombinuoto išmaniojo algoritmo geriausiai bet kurios operacijos kainai užtikrinti.</string>
-  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
-  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_smart_description">SMART likvidumo nukreipimas užtikrina geriausią kainą bet kokiam sandoriui, derindamas tik geriausias kainų parinktis iš visų galimų rinkų. Kai bus, žetonų obligacijų kreivė (TBC) bus naudojama likvidumui užtikrinti, kol turto kaina bus prieinamesnė nei iš kitų šaltinių, kuriais remiantis naudojamas XYK fondas.</string>
+  <string name="polkaswap_market_tbc_description">TBC – pirkimas tik iš Token Bonding Curve (pirminės rinkos). Yra tikimybė, kad kaina gali tapti nepalanki, palyginti su XYK baseinu (antrine rinka), tačiau laikui bėgant iš suteiktų atlygių gaunama vertė gali pasirodyti daug palankesnė.</string>
   <string name="polkaswap_market_title">Rinkos algoritmas</string>
-  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_market_xyk_description">XYK – pirkimas tik iš XYK fondo (antrinės rinkos). Tradicinis XYK baseino apsikeitimo sandoris, kai kiekvienas gali pirkti arba parduoti turtą, perkeldamas rinkos formuotojo poziciją x*y=k kreivėje.</string>
   <string name="polkaswap_maximum_sold">Maks. parduotas kiekis</string>
   <string name="polkaswap_maximum_sold_info">Jūsų sandoris bus atšauktas, jei iki jo patvirtinimo įvyks didelis, nepalankus kainos pokytis.</string>
   <string name="polkaswap_minimum_received">Min. gautas kiekis</string>
   <string name="polkaswap_minimum_received_info">Jūsų sandoris bus atšauktas, jei iki jo patvirtinimo įvyks didelis, nepalankus kainos pokytis.</string>
   <string name="polkaswap_network_fee">Tinklo mokestis</string>
   <string name="polkaswap_network_fee_info">Tinklo mokestis naudojamas SORA sistemos augimui ir stabiliam veikimui užtikrinti.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Išvestis apskaičiuota. Gausite bent %s arba operacija bus atšaukta.</string>
   <string name="polkaswap_pool_not_created">Baseinas nesukurtas</string>
   <string name="polkaswap_pool_title">Baseinas</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Prieš jūsų operaciją gali užbėgti kita (frontrun)</string>
   <string name="polkaswap_slippage_info">Jūsų sandoriai bus atšaukti, jei kaina pasikeis nepalankiai daugiau nei šiuo procentiniu dydžiu</string>
   <string name="polkaswap_slippage_mayfail">Jūsų operacija gali nepavykti</string>
@@ -331,13 +354,15 @@
   <string name="polkaswap_swapped">Apsikeista</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
+  <string name="pool_apy_title">Strateginė premija apy</string>
   <string name="pool_button_add">Pridėti</string>
   <string name="pool_button_remove">Pašalinti</string>
   <string name="pool_liqudity_title">Jūsų likvidumas</string>
   <string name="pool_liquidity_placeholder">Jūsų likvidumas bus rodomas čia</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Dalis baseine</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">Jūsų baseino dalis</string>
   <string name="pool_token_pooled">Baseine</string>
   <string name="profile_about_title">Apie</string>
   <string name="profile_biometry_title">Biometrijos autentifikacija</string>
@@ -405,18 +430,26 @@
   <string name="referendum_total_votes">Iš viso balsų</string>
   <string name="referendum_unsupport_title">Ne</string>
   <string name="referendum_voting_result">Balsavimo rezultatai</string>
-  <string name="restart_required">Restart required</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
+  <string name="restart_required">Būtina paleisti iš naujo</string>
   <string name="screenshot_alert_text">Nedarykite ekrano nuotraukų, kurias gali surinkti trečiųjų šalių kenkėjiškos programos</string>
   <string name="screenshot_alert_title">Nedarykite ekrano nuotraukų</string>
   <string name="search_asset_by_name">Ieškoti pagal ištekliaus pavadinimą arba simbolį</string>
   <string name="select_account_address">Ieškoti paskyros adreso</string>
-  <string name="select_account_address_1">Search or add a new address</string>
-  <string name="select_asset_receive">Select Asset to Receive</string>
-  <string name="select_asset_send">Select Asset to Send</string>
+  <string name="select_account_address_1">Ieškoti arba pridėti naują adresą</string>
+  <string name="select_asset_receive">Pasirinkite gaunamą išteklių</string>
+  <string name="select_asset_send">Pasirinkite siunčiamą išteklių</string>
   <string name="select_recipient">Pasirinkite gavėją</string>
   <string name="set_amount">Nustatyti sumą</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR sąvininkai galės steikinti savo XOR, kad nominuotų validatorius ir gautų atlygius.</string>
-  <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
+  <string name="staking_description">Validatorių nominavimas yra svarbi SORA ekosistemos dalis, nes padeda apsaugoti ir decentralizuoti tinklą. VAL žetonai bus skiriami validatoriams ir nominatoriams kaip atlygis už steikingą.</string>
   <string name="staking_val_reward">SORA VALidator atlygiai</string>
   <string name="startup_verification_title">Tikrinamas įgaliojimas...</string>
   <string name="status_error">Klaida</string>
@@ -424,7 +457,7 @@
   <string name="status_rejected">Atmesta</string>
   <string name="status_success">Pavyko</string>
   <string name="status_title">Būsena</string>
-  <string name="swap_input_title">Swap input</string>
+  <string name="swap_input_title">Apsikeitimo įvestis</string>
   <string name="tabbar_friends_title">Draugai</string>
   <string name="tabbar_parliament_title">Parlamentas</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
@@ -452,7 +485,7 @@
   <string name="transaction_send_back">Siųsti atgal</string>
   <string name="transaction_token">Žetonas</string>
   <string name="transaction_total">Iš viso</string>
-  <string name="transfer_amount_title">Enter Amount to Send</string>
+  <string name="transfer_amount_title">Įveskite siunčiamą sumą</string>
   <string name="tutorial_many_world">Daugybė pasaulių.\nViena ekonomika.</string>
   <string name="tutorial_many_world_desc">SORA siekia tapti decentralizuota daugialypės ekonomikos sistema, finansuojančia naujų ir įdomių programų kūrimą, prižiūrint SORA Parlamentui.</string>
   <string name="tutorial_one_world">Vienas pasaulis.\n Viena ekonomika.</string>
@@ -467,11 +500,11 @@
   <string name="tutorial_terms_and_conditions_2">Taisyklės ir nuostatos</string>
   <string name="tutorial_terms_and_conditions_3">Taisyklės ir nuostatos</string>
   <string name="tutorial_terms_and_conditions_recovery">Importuodami paskyrą sutinkate su %%Taisyklėmis ir nuostatomis%% bei %%Privatumo politika%%</string>
-  <string name="tutorial_terms_and_conditions_v4">By creating an account you are agreeing with\nTerms &amp; Conditions and Privacy Policy</string>
+  <string name="tutorial_terms_and_conditions_v4">Kurdami paskyrą sutinkate su\n taisyklėmis ir nuostatomis bei privatumo politika</string>
   <string name="tutorial_votes_desc">Vartotojai balsuoja už projektus ir nusprendžia, kuris projektas turėtų būti finansuojamas</string>
   <string name="unknown_balance">Nežinomas</string>
-  <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
-  <string name="update_install_now">Would you like to install the update now?</string>
+  <string name="update_downloaded">SORA programos naujinimas atsisiųstas ir paruoštas diegti. \n\n Svarbu naudoti naujausią programos versiją. \n\n Norint atnaujinti programą, reikia ją paleisti iš naujo.</string>
+  <string name="update_install_now">Ar norėtumėte įdiegti naujinimą dabar?</string>
   <string name="val_balance_title">VAL žetonas skirtinguose tinkluose</string>
   <string name="verification_enter_code_from_sms">Įveskite kodą, gautą SMS žinute</string>
   <string name="verification_request_new_code_time" formatted="false">Prašyti naujo kodo už %s:%s</string>
@@ -500,8 +533,10 @@
   <string name="wallet_history_to_soranet_account">Į SORA NET sąskaitą</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Mano %s tinklo adresas gauti %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s tinklo adresas gauti %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Mano %s tinklo adresas gauti %s %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Mano %s tinklo adresas gauti %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Gauti VAL</string>
   <string name="wallet_redeemable">Galima atsiimti</string>
   <string name="wallet_send_existential_warning_message">Pavedimas pašalins paskyrą iš blokų saugyklos, nes bendras likutis taps mažesniu už egzistencinį indėlį.</string>
@@ -509,7 +544,9 @@
   <string name="wallet_title">Piniginė</string>
   <string name="wallet_transaction_rejected">Operacija atmesta</string>
   <string name="wallet_transaction_submitted">Operacija pateikta</string>
-  <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transaction_submitted_1">Operacija\npateikta</string>
+  <string name="wallet_transactions_unavailable_description">Problema sprendžiama,\n bandykite dar kartą vėliau.</string>
+  <string name="wallet_transactions_unavailable_title">Nepavyko įkelti operacijų</string>
   <string name="wallet_transfer_description_hint">Maks. %s simbolių</string>
   <string name="wallet_transfer_to_ethereum">Į Ethereum adresą</string>
   <string name="wallet_unbonding">Atsiejimas (Unbonding)</string>

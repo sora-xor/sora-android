@@ -80,6 +80,17 @@ class ExtrinsicDetailsFragment :
                         .disallowAddToBackStack()
                         .commit()
                 }
+                is LiquidityDetailsModel -> {
+                    childFragmentManager.beginTransaction()
+                        .replace(
+                            viewBinding.fcvDetails.id,
+                            LiquidityDetailsFragment::class.java,
+                            LiquidityDetailsFragment.createBundle(it),
+                            ""
+                        )
+                        .disallowAddToBackStack()
+                        .commit()
+                }
             }
         }
     }

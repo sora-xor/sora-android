@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
+import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -59,7 +60,7 @@ class AssetSettingsViewModelTest {
 
     @Before
     fun setUp() = runBlockingTest {
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), ArgumentMatchers.anyInt()))
+        given(numbersFormatter.formatBigDecimal(anyNonNull(), ArgumentMatchers.anyInt(), anyBoolean()))
             .willReturn("0.6")
         given(walletInteractor.getWhitelistAssets()).willReturn(
             listOf(

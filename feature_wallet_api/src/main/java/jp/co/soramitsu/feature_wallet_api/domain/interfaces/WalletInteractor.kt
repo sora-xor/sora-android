@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import androidx.paging.PagingData
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
@@ -18,6 +19,8 @@ import java.math.BigDecimal
 interface WalletInteractor {
 
     fun observeCurAccountStorage(): Flow<String>
+
+    fun flowCurSoraAccount(): Flow<SoraAccount>
 
     suspend fun getFeeToken(): Token
 
@@ -39,7 +42,9 @@ interface WalletInteractor {
 
     suspend fun getWhitelistAssets(): List<Asset>
 
-    fun subscribeVisibleAssets(): Flow<List<Asset>>
+    fun subscribeVisibleAssetsOfCurAccount(): Flow<List<Asset>>
+
+    fun subscribeVisibleAssetsOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
 
     suspend fun updateBalancesVisibleAssets()
 
@@ -50,8 +55,6 @@ interface WalletInteractor {
     suspend fun calcTransactionFee(to: String, assetId: String, amount: BigDecimal): BigDecimal
 
     suspend fun getAddress(): String
-
-    suspend fun getPublicKey(): ByteArray
 
     suspend fun getPublicKeyHex(withPrefix: Boolean = false): String
 
@@ -71,7 +74,7 @@ interface WalletInteractor {
 
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
-    suspend fun getAsset(assetId: String): Asset?
+    suspend fun getAssetOrThrow(assetId: String): Asset
 
     suspend fun isWhitelistedToken(tokenId: String): Boolean
 }

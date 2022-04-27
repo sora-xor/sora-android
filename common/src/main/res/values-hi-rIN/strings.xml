@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">स्मृतिजनक सूत्र की पुष्टि करें</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">परियोजना</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Address not found, make sure that address belongs to the right network.</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">लेनदेन शुल्क</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">प्रतिलिपि</string>
   <string name="common_copy_address">पता प्रतिलिपि करें</string>
   <string name="common_croatian">क्रोएशियाई</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">विवरण</string>
   <string name="common_done">हो गया</string>
   <string name="common_donotallow">अनुमति न दें</string>
@@ -127,6 +135,7 @@
   </plurals>
   <string name="common_indonesian">इंडोनेशियाई</string>
   <string name="common_info">जानकारी</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">इटैलियन</string>
   <string name="common_japanese">जापानी</string>
   <string name="common_khmer">खमेर</string>
@@ -142,6 +151,7 @@
   <string name="common_ok">ठीक</string>
   <string name="common_open_explorer">ब्लॉकचेन अन्वेषक में देखें</string>
   <string name="common_options_title">एक विकल्प चुनें</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">इसका उपयोग खाता प्रवेश को पुनर्प्राप्त करने के लिए किया जाता है। इसे लिख लें, हम इसके बिना आपका खाता वापिस नहीं कर पाएंगे!</string>
   <string name="common_passphrase_header">पदबंध एक प्रकार का पासवर्ड है।</string>
   <string name="common_passphrase_save_mnemonic_title">पदबंध को सहेजें या भेजें</string>
@@ -161,6 +171,7 @@
   <string name="common_receive">प्राप्त करें</string>
   <string name="common_received">प्राप्त किया था</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">पुन: प्रयास करें</string>
   <string name="common_russian">रूसी</string>
   <string name="common_save">सहेजें</string>
@@ -180,6 +191,7 @@
   <string name="common_sms_code_not_correct">सत्यापन कोड गलत है</string>
   <string name="common_spanish">स्पैनिश</string>
   <string name="common_spanish_colombia">स्पेनिश (कोलंबिया)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">स्वीडिश</string>
   <string name="common_terms_title">नियम एवं शर्तें</string>
   <string name="common_thai">थाई</string>
@@ -195,6 +207,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">मतदान</string>
   <string name="common_yesterday">बिता हुआ कल</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">सबसे महत्वपूर्ण संपर्क यहां दिखाई देंगे</string>
   <string name="contacts_scan">क्यूआर कोड स्कैन</string>
   <string name="contacts_search_empty_state_title">खोजने पर कोई परिणाम नहीं मिला</string>
@@ -252,6 +266,10 @@
   <string name="invoice_scan_error_no_info">क्यूआर को डिकोड नहीं किया जा सकता है</string>
   <string name="invoice_scan_error_user_not_found">क्यूआर से उपयोगकर्ता नहीं मिल रहा है</string>
   <string name="language_title">भाषा का चयन करें</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">इस कार्रवाई के परिणामस्वरूप इस डिवाइस से खाता हटा दिया जाएगा। सुनिश्चित करें कि आपने आगे बढ़ने से पहले अपने पदबंध का बैकअप किया है।</string>
   <string name="mnemonic_alert_text">स्मृतिजनक सूत्र  का उपयोग खाता प्रवेश को पुनर्प्राप्त करने के लिए किया जाता है। इसे लिख लें, हम इसके बिना आपका खाता वापिस नहीं कर पाएंगे!</string>
   <string name="mnemonic_confirm_text">सही क्रम में शब्दों का चयन करके पुष्टि करें</string>
@@ -285,10 +303,12 @@
   <string name="pincode_updated">पिन कोड अपडेट किया गया</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">इंटरऑपरेबल फ्यूचर के लिए DEX। Polkaswap एक गैर-कस्टोडियल, AMM-DEX प्रोटोकॉल है जो पोलकडॉट नेटवर्क, पैराचिन्स और ब्रिज के माध्यम से जुड़े ब्लॉकचेन पर आधारित टोकन को स्वैप करने के लिए है। Polkaswap प्रोटोकॉल विश्वसनीय बिचौलियों को प्रभावी ढंग से हटा देता है और तेजी से व्यापार करने का अवसर प्रदान करता है।</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Confirm Swap</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
   <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
   <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
@@ -317,9 +337,12 @@
   <string name="polkaswap_minimum_received_info">Your transaction will revert if there is a large, unfavorable price movement before it is confirmed.</string>
   <string name="polkaswap_network_fee">Network Fee</string>
   <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
   <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
   <string name="polkaswap_pool_title">Pool</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
   <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
@@ -329,11 +352,13 @@
   <string name="polkaswap_swapped">Swapped</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">जोड़ें</string>
   <string name="pool_button_remove">हटाये</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -393,6 +418,10 @@
   <string name="referendum_total_votes">कुल वोट</string>
   <string name="referendum_unsupport_title">नहीं</string>
   <string name="referendum_voting_result">मतदान का परिणाम</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">स्क्रीनशॉट न लें, जिसे तीसरे पक्ष के मैलवेयर द्वारा एकत्र किया जा सकता है</string>
   <string name="screenshot_alert_title">स्क्रीनशॉट न लें</string>
@@ -403,6 +432,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Select recipient</string>
   <string name="set_amount">राशि निर्धारित करें</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR धारक सत्यापनकर्ताओं को मनोनीत करने और पुरस्कार प्राप्त करने के लिए अपने XOR को दांव पर लगाने में सक्षम होंगे।</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">सोरा सत्यापनकर्ता पुरस्कार</string>
@@ -488,8 +521,10 @@
   <string name="wallet_history_to_soranet_account">सोरा नेट खाते में</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">My %s Network address to Receive %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">मेरा %s प्राप्त करने के लिए नेटवर्क पता %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">VAL प्राप्त करें</string>
   <string name="wallet_redeemable">Redeemable</string>
   <string name="wallet_send_existential_warning_message">Your transfer will remove account from blockstore since it will make total balance lower than existential deposit.</string>
@@ -498,6 +533,8 @@
   <string name="wallet_transaction_rejected">Transaction rejected</string>
   <string name="wallet_transaction_submitted">लेन-देन प्रस्तुत किया</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">अधिकतम %s प्रतीक</string>
   <string name="wallet_transfer_to_ethereum">इथेरियम पते पर</string>
   <string name="wallet_unbonding">Unbonding</string>

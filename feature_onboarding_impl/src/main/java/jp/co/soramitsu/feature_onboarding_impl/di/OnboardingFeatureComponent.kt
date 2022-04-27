@@ -14,12 +14,6 @@ import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic.di.MnemonicComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.mnemonic_confirmation.di.MnemonicConfirmationComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.personal_info.di.PersonalInfoComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.privacy.di.PrivacyComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.recovery.di.RecoveryComponent
-import jp.co.soramitsu.feature_onboarding_impl.presentation.terms.di.TermsComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.tutorial.di.TutorialComponent
 import jp.co.soramitsu.feature_onboarding_impl.presentation.version.di.UnsupportedVersionComponent
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
@@ -37,21 +31,17 @@ interface OnboardingFeatureComponent : OnboardingFeatureApi {
 
     fun tutorialComponentBuilder(): TutorialComponent.Builder
 
-    fun mnemonicComponentBuilder(): MnemonicComponent.Builder
-
-    fun mnemonicConfirmationComponentBuilder(): MnemonicConfirmationComponent.Builder
-
     fun unsupportedVersionComponentBuilder(): UnsupportedVersionComponent.Builder
 
-    fun recoveryComponentBuilder(): RecoveryComponent.Builder
-
-    fun personalInfoComponentBuilder(): PersonalInfoComponent.Builder
-
-    fun termsComponentBuilder(): TermsComponent.Builder
-
-    fun privacyComponentBuilder(): PrivacyComponent.Builder
-
     fun onboardingComponentBuilder(): OnboardingComponent.Builder
+
+    @Component.Builder
+    interface Builder {
+
+        fun build(): OnboardingFeatureComponent
+
+        fun withDependencies(deps: OnboardingFeatureDependencies): Builder
+    }
 
     @Component(
         dependencies = [

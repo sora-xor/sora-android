@@ -29,6 +29,9 @@ interface AssetListComponent {
         @BindsInstance
         fun withAssetListMode(mode: AssetListMode): Builder
 
+        @BindsInstance
+        fun withHiddenAssetId(hiddenAssetId: String?): Builder
+
         fun build(): AssetListComponent
     }
 

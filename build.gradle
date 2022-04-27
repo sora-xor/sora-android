@@ -21,7 +21,7 @@ buildscript {
             iroha             : '5.1.2',
             shimmer           : '0.4.0',
             novaCrypto        : '0.1.9',
-            navigationFragment: '2.4.0-alpha08',
+            navigationFragment: '2.4.0-rc01',
             bouncyCastle      : '1.60',
             zXing             : '3.3.3',
             zXingEmbedded     : '3.6.0@aar',
@@ -35,18 +35,18 @@ buildscript {
             archCoreTest      : '2.0.0',
             archFragmentTest  : '1.1.0-beta01',
             archComponents    : '2.2.0',
-            room              : '2.4.0-beta02',
+            room              : '2.4.0',
             pagingLibrary     : '3.1.0',
             datastore         : '1.0.0',
             googleAuthApiPhone: '17.1.0',
             googleAuthApi     : '17.0.0',
             biometric         : '1.0.1',
             web3j             : '4.2.0-android',
-            workManager       : '2.7.1',
+            workerManager     : '2.7.1',
             emoji             : '0.3.0',
-            activityKtx       : '1.1.0',
+            activityKtx       : '1.4.0',
             fragmentKtx       : '1.4.0',
-            coreKtx           : '1.5.0-beta02',
+            coreKtx           : '1.7.0',
             fearlessLib       : '1.0.97',
             webSocketLib      : '2.10',
 			ed25519           : '2.0.1',
@@ -63,10 +63,10 @@ buildscript {
     ]
 
     ext {
-        // soralution 53 2.3.2 2022.1.20
-        // sora dae 59 2.3.3 2022.02.01
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 59)
-        appVersionName = '2.3.3'
+        // soralution 57 2.4.2 2022.04.03
+        // sora dae 60 2.4.0 2022.04.11
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 60)
+        appVersionName = '2.4.0'
 
         compileVersion = 31
         minVersion = 21
@@ -83,7 +83,7 @@ buildscript {
         fragmentKtxDep = "androidx.fragment:fragment-ktx:$versions.fragmentKtx"
         coreKtxDep = "androidx.core:core-ktx:$versions.coreKtx"
 
-        workManagerDep = "androidx.work:work-runtime-ktx:$versions.workManager"
+        workerManagerDep = "androidx.work:work-runtime-ktx:$versions.workerManager"
         coroutineDep = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.coroutines"
         coroutineAndroidDep = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.coroutines"
         coroutineTestDep = "org.jetbrains.kotlinx:kotlinx-coroutines-test:$versions.coroutines"
@@ -95,18 +95,19 @@ buildscript {
         daggerDep = "com.google.dagger:dagger:$versions.dagger"
         daggerKapt = "com.google.dagger:dagger-compiler:$versions.dagger"
 
-        lifecycleDep = "androidx.lifecycle:lifecycle-extensions:$versions.archComponents"
+        lifecycleExtDep = "androidx.lifecycle:lifecycle-extensions:$versions.archComponents"
         lifecycleKaptDep = "androidx.lifecycle:lifecycle-compiler:$versions.archComponents"
         viewmodelKtxDep = "androidx.lifecycle:lifecycle-viewmodel-ktx:$versions.archComponents"
         livedataKtxDep = "androidx.lifecycle:lifecycle-livedata-ktx:$versions.archComponents"
-        livecycleKtxDep = "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0-alpha01"
+        lifecycleKtxDep = "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
+        savedStateDep = "androidx.lifecycle:lifecycle-viewmodel-savedstate:$versions.archComponents"
+        processDep = "androidx.lifecycle:lifecycle-process:$versions.archComponents"
 
         roomDep = "androidx.room:room-runtime:$versions.room"
         roomKaptDep = "androidx.room:room-compiler:$versions.room"
         roomKtxDep = "androidx.room:room-ktx:$versions.room"
         roomPagingDep = "androidx.room:room-paging:$versions.room"
         roomTestHelpersDep = "androidx.room:room-testing:$versions.room"
-
         lottieDep = "com.airbnb.android:lottie:$versions.lottie"
 
         pagingLibraryDep = "androidx.paging:paging-runtime:$versions.pagingLibrary"
@@ -152,7 +153,6 @@ buildscript {
         birtDep = "org.eclipse.birt.runtime.3_7_1:org.apache.xerces:$versions.birt"
 
         roundedImageViewDep = "com.makeramen:roundedimageview:$versions.roundedImage"
-        progressButtonDep = "com.github.razir.progressbutton:progressbutton:$versions.progressButton"
 
         ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
 
@@ -186,7 +186,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:7.1.0'
+        classpath 'com.android.tools.build:gradle:7.1.2'
         classpath 'com.google.gms:google-services:4.3.10'
         classpath 'com.google.firebase:firebase-appdistribution-gradle:2.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'

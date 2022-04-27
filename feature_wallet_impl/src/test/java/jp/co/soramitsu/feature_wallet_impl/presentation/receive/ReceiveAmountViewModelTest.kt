@@ -109,10 +109,10 @@ class ReceiveAmountViewModelTest {
 
     @Test
     fun `share qr code with not empty amount`() {
-        val shareQrBodyTemplate = "My %1\$s network address to Receive %2\$s:"
-        val completeMessage = "My SORA network address to Receive VAL:\n0x123123"
+        val shareQrBodyTemplate = "Scan this QR to send me %1\$s. My %2\$s Network Account ID:\\n%3\$s"
+        val completeMessage = "Scan this QR to send me VAL. My SORA Network Account ID:\\n0x123123"
 
-        given(resourceManager.getString(R.string.wallet_qr_share_message_empty_template_v1)).willReturn(
+        given(resourceManager.getString(R.string.wallet_qr_share_message_empty_template_v2)).willReturn(
             shareQrBodyTemplate
         )
         given(resourceManager.getString(R.string.asset_sora_fullname)).willReturn("SORA")

@@ -16,6 +16,11 @@
         tools:layout="@layout/fragment_contacts" />
 
     <fragment
+        android:id="@+id/assetListFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment"
+        tools:layout="@layout/fragment_asset_list" />
+
+    <fragment
         android:id="@+id/transferAmountFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment"
         tools:layout="@layout/fragment_transfer_amount" />
@@ -34,11 +39,6 @@
         android:id="@+id/receiveFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment"
         tools:layout="@layout/fragment_receive" />
-
-    <fragment
-        android:id="@+id/assetListFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment"
-        tools:layout="@layout/fragment_asset_list" />
 
     <fragment
         android:id="@+id/assetDetailsFragment"

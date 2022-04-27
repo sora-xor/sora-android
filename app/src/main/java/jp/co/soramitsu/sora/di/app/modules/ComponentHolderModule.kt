@@ -19,6 +19,8 @@ import jp.co.soramitsu.feature_ethereum_api.di.EthereumFeatureApi
 import jp.co.soramitsu.feature_ethereum_impl.di.EthereumFeatureHolder
 import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.di.MainFeatureHolder
+import jp.co.soramitsu.feature_multiaccount_api.di.MultiaccountFeatureApi
+import jp.co.soramitsu.feature_multiaccount_impl.di.MultiaccountFeatureHolder
 import jp.co.soramitsu.feature_notification_api.di.NotificationFeatureApi
 import jp.co.soramitsu.feature_notification_impl.di.NotificationFeatureHolder
 import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
@@ -74,6 +76,12 @@ interface ComponentHolderModule {
     @ClassKey(OnboardingFeatureApi::class)
     @IntoMap
     fun provideOnboardingFeature(onboardingFeatureHolder: OnboardingFeatureHolder): FeatureApiHolder
+
+    @Singleton
+    @Binds
+    @ClassKey(MultiaccountFeatureApi::class)
+    @IntoMap
+    fun provideMultiaccountFeature(multiaccountFeatureHolder: MultiaccountFeatureHolder): FeatureApiHolder
 
     @Singleton
     @Binds

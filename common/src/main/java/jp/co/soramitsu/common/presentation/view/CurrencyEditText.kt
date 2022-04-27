@@ -11,6 +11,11 @@ import android.text.TextWatcher
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatEditText
 import jp.co.soramitsu.common.util.ext.decimalPartSized
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -20,14 +25,14 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
     private val doubleZero = "00"
     private var decimalSymbol = '.'
     private var groupingSymbol = ' '
-    var listenerEnabled = true
+
+    private val state = MutableStateFlow<BigDecimal?>(null)
+    private var lastEdited = ""
 
     val integerPartLength: Int = 27
     var decimalPartLength: Int = 2
 
     private val textWatcherListener = object : TextWatcher {
-
-        var lastEdited = ""
 
         override fun afterTextChanged(s: Editable) {}
         override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
@@ -45,36 +50,40 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
 
             if (newAmount.startsWith(decimalSymbol)) {
                 newAmount = "$zero$newAmount"
-                setText(newAmount.decimalPartSized(decimalSymbol.toString()))
-                setSelection(newAmount.length)
-                addTextChangedListener(this)
+                setValues(newAmount) { newAmount.length }
                 return
             }
 
-            val newAmountComponents = newAmount.split(decimalSymbol)
+            val newAmountComponents = newAmount.trim().split(decimalSymbol)
 
-            if (newAmountComponents.isNotEmpty() && newAmountComponents[0].replace(" ", "").length > integerPartLength && !newAmount.endsWith(decimalSymbol)) {
-                setText(lastEdited.decimalPartSized(decimalSymbol.toString()))
-                setSelection(getSelection(start, count, 0))
-                addTextChangedListener(this)
+            if (newAmountComponents.isNotEmpty() &&
+                newAmountComponents[0].length > integerPartLength &&
+                !newAmount.endsWith(decimalSymbol)
+            ) {
+                setValues(lastEdited) { getSelection(start, count, 0) }
                 return
             }
 
             if (newAmountComponents.size > 2 || newAmountComponents.size == 2 && newAmountComponents[1].length > decimalPartLength) {
-                setText(lastEdited.decimalPartSized(decimalSymbol.toString()))
-                setSelection(getSelection(start, count, 0))
-                addTextChangedListener(this)
+                setValues(lastEdited) { getSelection(start, count, 0) }
                 return
             }
 
-            val formattedString = format(newAmount).decimalPartSized(decimalSymbol.toString())
+            val formattedString = format(newAmount)
+            val lengthDifference = formattedString.length - newAmount.length
+            setValues(formattedString) {
+                getSelection(
+                    start,
+                    count,
+                    lengthDifference
+                )
+            }
+        }
 
-            setText(formattedString)
-
-            var groupingDiff = formattedString.length - newAmount.length
-            if (groupingDiff < 0) groupingDiff = 0
-            setSelection(getSelection(start, count, groupingDiff))
-
+        private fun setValues(value: String, selectionIndex: () -> Int) {
+            setText(value.decimalPartSized(decimalSymbol.toString()))
+            state.tryEmit(getBigDecimal(value))
+            setSelection(selectionIndex.invoke().coerceAtLeast(0))
             addTextChangedListener(this)
         }
 
@@ -85,56 +94,69 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
                 start + count + groupingDiff
             }
         }
+    }
 
-        private fun format(
-            amountString: String
-        ): String {
-            val formatter = DecimalFormat()
-            val decimalFormatSymbols = formatter.decimalFormatSymbols
-            decimalFormatSymbols.groupingSeparator = groupingSymbol
-            decimalFormatSymbols.decimalSeparator = decimalSymbol
-            formatter.decimalFormatSymbols = decimalFormatSymbols
-            formatter.maximumFractionDigits = decimalPartLength
-            var formattedString = formatter.format(getBigDecimal(amountString))
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        addTextChangedListener(textWatcherListener)
+    }
 
-            when {
-                amountString.endsWith(decimalSymbol) -> formattedString += decimalSymbol
-                amountString.endsWith("$decimalSymbol$zero") -> formattedString += "$decimalSymbol$zero"
-                amountString.endsWith("$decimalSymbol$doubleZero") -> {
-                    formattedString += "$decimalSymbol$doubleZero"
-                }
-                else -> {
-                    val parts = amountString.split(decimalSymbol)
-                    if (parts.size == 2) {
-                        when {
-                            parts[1].endsWith(zero) -> formattedString = amountString
-                        }
-                    }
-                }
-            }
-
-            return formattedString
-        }
+    override fun onDetachedFromWindow() {
+        removeTextChangedListener(textWatcherListener)
+        super.onDetachedFromWindow()
     }
 
     init {
-        addTextChangedListener(textWatcherListener)
+        isSaveEnabled = false
+    }
+
+    private fun format(amountString: String): String {
+        val formatter = DecimalFormat()
+        val decimalFormatSymbols = formatter.decimalFormatSymbols
+        decimalFormatSymbols.groupingSeparator = groupingSymbol
+        decimalFormatSymbols.decimalSeparator = decimalSymbol
+        formatter.decimalFormatSymbols = decimalFormatSymbols
+        formatter.maximumFractionDigits = decimalPartLength
+        var formattedString = formatter.format(getBigDecimal(amountString))
+
+        when {
+            amountString.endsWith(decimalSymbol) -> formattedString += decimalSymbol
+            amountString.endsWith("$decimalSymbol$zero") -> formattedString += "$decimalSymbol$zero"
+            amountString.endsWith("$decimalSymbol$doubleZero") -> {
+                formattedString += "$decimalSymbol$doubleZero"
+            }
+            else -> {
+                val parts = amountString.split(decimalSymbol)
+                if (parts.size == 2) {
+                    when {
+                        parts[1].endsWith(zero) -> formattedString = amountString
+                    }
+                }
+            }
+        }
+
+        return formattedString
     }
 
     private fun getBigDecimal(num: String): BigDecimal {
         return BigDecimal(num.replace(groupingSymbol.toString(), ""))
     }
 
-    fun getBigDecimal(): BigDecimal? {
+    private fun getBigDecimal(): BigDecimal? {
         if (text.isNullOrEmpty() || text?.first() == '.')
             return null
-
-        return BigDecimal(text.toString().replace(groupingSymbol.toString(), ""))
+        return getBigDecimal(text.toString())
     }
 
+    fun asFlowCurrency() = state.asStateFlow().filterNotNull().debounce(700).distinctUntilChanged()
+
     fun setValue(s: String) {
+        if (s == text.toString()) return
+        if (getBigDecimal() == getBigDecimal(s)) return
         removeTextChangedListener(textWatcherListener)
-        setText(s.decimalPartSized(decimalSymbol.toString()))
+        val text = s.decimalPartSized(decimalSymbol.toString())
+        setText(text)
+        // setSelection(text.length)
         addTextChangedListener(textWatcherListener)
     }
 }

@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Подтверждение</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Проект</string>
+  <string name="add_liquidity_alert_text">Вы будете получать комиссионные, пропорциональные вашей доле в пуле, от предоставления ликвидности.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Выходные данные оцениваются. Если цена изменится более чем на %s%%, ваша транзакция будет отменена.</string>
+  <string name="add_liquidity_pool_share_title">Ваша доля в пуле будет</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Пул</string>
+  <string name="add_liquidity_title">Добавить Ликвидность</string>
   <string name="address_not_found">Адрес не найден, убедитесь что адрес принадлежит корректной сети.</string>
   <string name="address_not_found_1">Получатели не найдены</string>
   <string name="amount_default_fee">Комиссия за транзакцию</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Копировать</string>
   <string name="common_copy_address">Копировать адрес</string>
   <string name="common_croatian">Хорватский</string>
+  <string name="common_deposit">Депозит</string>
+  <string name="common_deposit_symbol">%s депозит</string>
   <string name="common_description">Описание</string>
   <string name="common_done">Выполнено</string>
   <string name="common_donotallow">Не позволять</string>
@@ -130,6 +138,7 @@
   </plurals>
   <string name="common_indonesian">Индонезийский</string>
   <string name="common_info">Информация</string>
+  <string name="common_insufficient_balance">Недостаточный баланс</string>
   <string name="common_italian">Итальянский</string>
   <string name="common_japanese">Японский</string>
   <string name="common_khmer">Кхмерский</string>
@@ -145,6 +154,7 @@
   <string name="common_ok">Ок</string>
   <string name="common_open_explorer">Просмотреть в Blockchain обозревателе</string>
   <string name="common_options_title">Выберите опцию</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Она используется для восстановления доступа к аккаунту. В случае потери восстановить доступ будет невозможно!</string>
   <string name="common_passphrase_header">Парольная фраза – это\nвид пароля.</string>
   <string name="common_passphrase_save_mnemonic_title">Сохранить или отправить парольную фразу</string>
@@ -164,6 +174,7 @@
   <string name="common_receive">Получить</string>
   <string name="common_received">Получено</string>
   <string name="common_recipient">Получатель</string>
+  <string name="common_remove">Забрать</string>
   <string name="common_retry">Повторить</string>
   <string name="common_russian">Русский</string>
   <string name="common_save">Сохранить</string>
@@ -183,6 +194,7 @@
   <string name="common_sms_code_not_correct">Неверный код подтверждения</string>
   <string name="common_spanish">Испанский</string>
   <string name="common_spanish_colombia">Испанский (Колумбия)</string>
+  <string name="common_supply">Добавить</string>
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
@@ -198,6 +210,8 @@
   <string name="common_update">Обновление</string>
   <string name="common_vote">Голосовать</string>
   <string name="common_yesterday">Вчера</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Ваша Позиция</string>
   <string name="contacts_empty_state_title">Важные контакты будут отображаться здесь</string>
   <string name="contacts_scan">Сканировать QR-код</string>
   <string name="contacts_search_empty_state_title">Нет результатов</string>
@@ -255,6 +269,10 @@
   <string name="invoice_scan_error_no_info">Не удается декодировать QR</string>
   <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
   <string name="language_title">Выберите язык</string>
+  <string name="liquidity_added">Добавлена %s ликвидность</string>
+  <string name="liquidity_pair_creation_description">Соотношение токенов, которое вы добавляете, будет определять цену этого пула. Как только вы будете довольны ставкой, нажмите «Добавить», чтобы проверить данные.</string>
+  <string name="liquidity_pair_creation_title">Вы первый провайдер ликвидности</string>
+  <string name="liquidity_removed">Возвращена %s ликвидность</string>
   <string name="logout_dialog_body">Это действие приведет к удалению учетной записи с этого устройства. Перед продолжением убедитесь, что вы создали резервную копию своей ключевой фразы.</string>
   <string name="mnemonic_alert_text">Мнемоническая фраза используется для восстановления доступа к аккаунту. Запишите ее, мы не сможем восстановить доступ к аккаунту без нее!</string>
   <string name="mnemonic_confirm_text">Подтвердите, выбрав слова в правильном порядке</string>
@@ -288,10 +306,12 @@
   <string name="pincode_updated">Пин-код обновлен</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">DEX для интероперабельного будущего. Polkaswap - это протокол AMM-DEX, не связанный с хранением, для обмена токенов на основе сети Polkadot, парачейнов и блокчейнов, соединенных через мост. Протокол Polkaswap эффективно удаляет доверенных посредников и предоставляет возможность для более быстрой торговли.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Подтвердить обмен</string>
   <string name="polkaswap_details">Детали</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap разрабатывается сообществом SORA. Перед тем, как стать контрибьютером Polkaswap, ознакомьтесь с %%Polkaswap FAQ%% и документацией, которая описывает то, как работает Polkaswap, %%Polkaswap Меморандумом и Условиями и положениями%%, и %%Политикой конфиденциальности%%.\n\nЭти документы важны для безопасной и комфортной работы пользователей. Используя Polkaswap вы соглашаетесь, что вы прочли и поняли суть документов.</string>
   <string name="polkaswap_info_text_2">Вы также осознаете:</string>
   <string name="polkaswap_info_text_3">Вашу личную ответственность за соблюдение законов, которые могут применяться к использованию Polkaswap в вашей юрисдикции;</string>
@@ -320,9 +340,12 @@
   <string name="polkaswap_minimum_received_info">Ваша транзакция будет отменена, если произойдет значительное неблагоприятное изменение цены до ее подтверждения.</string>
   <string name="polkaswap_network_fee">Комиссия сети</string>
   <string name="polkaswap_network_fee_info">Комиссия сети используется для обеспечения роста и стабильности системы SORA.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Оценочная сумма. Минимально будет куплено %s или транзакция будет отменена.</string>
   <string name="polkaswap_pool_not_created">Пул не создан</string>
   <string name="polkaswap_pool_title">Пул</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Возможен фронтран транзакции</string>
   <string name="polkaswap_slippage_info">Ваши транзакции будут отменены, если цена изменится не в вашу пользу больше, чем на указанный процент.</string>
   <string name="polkaswap_slippage_mayfail">Транзакция может завершиться с ошибкой</string>
@@ -332,11 +355,13 @@
   <string name="polkaswap_swapped">Продано</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Добавить</string>
   <string name="pool_button_remove">Забрать</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">У вас пока нет активных пулов.\nДобавьте ликвидность, чтобы получить вознаграждение</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">В пуле</string>
@@ -411,6 +436,10 @@
   <string name="referendum_total_votes">Всего голосов</string>
   <string name="referendum_unsupport_title">Нет</string>
   <string name="referendum_voting_result">Результат</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Требуется перезапуск</string>
   <string name="screenshot_alert_text">Не делайте скриншоты, которые могут быть собраны сторонними вредоносными программами</string>
   <string name="screenshot_alert_title">Не делайте скриншоты</string>
@@ -421,6 +450,10 @@
   <string name="select_asset_send">Выбор ассета для отправки</string>
   <string name="select_recipient">Выбор получателя</string>
   <string name="set_amount">Установить сумму</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Настройки аккаунта</string>
+  <string name="settings_header_app">Настройки приложения</string>
+  <string name="settings_header_other">Другие</string>
   <string name="staking_coming_soon">Держатели XOR смогут ставить свои XOR, чтобы назначать валидаторов и получать вознаграждение.</string>
   <string name="staking_description">Номинирование валидаторов - важная часть экосистемы СОРЫ, поскольку это обеспечивает безопасность и децентрализацию сети. Токены VAL получат валидаторы и номинаторы как награду за стейкинг.</string>
   <string name="staking_val_reward">Награды SORA VALidator</string>
@@ -431,7 +464,7 @@
   <string name="status_success">Успешно</string>
   <string name="status_title">Статус</string>
   <string name="swap_input_title">Swap input</string>
-  <string name="tabbar_friends_title">Друзья</string>
+  <string name="tabbar_friends_title">Пригласить друзей</string>
   <string name="tabbar_parliament_title">Парламент</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
   <string name="tabbar_profile_title">Профиль</string>
@@ -506,8 +539,10 @@
   <string name="wallet_history_to_soranet_account">На аккаунт в SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Мой адрес в %s для получения %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Отсканируйте этот QR, чтобы отправить мне %s. Мой идентификатор в %s:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Мой адрес в %s для получения %s %s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Отсканируйте этот QR, чтобы отправить мне %s %s. Мой идентификатор в %s:\n%s</string>
   <string name="wallet_receive_val">Получить VAL</string>
   <string name="wallet_redeemable">Можно забрать</string>
   <string name="wallet_send_existential_warning_message">Трансфер приведет к удалению аккаунта, так как баланс станет меньше чем existential deposit.</string>
@@ -516,6 +551,8 @@
   <string name="wallet_transaction_rejected">Транзакция отклонена</string>
   <string name="wallet_transaction_submitted">Транзакция отправлена</string>
   <string name="wallet_transaction_submitted_1">Транзакция\nотправлена</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Максимум %s символов</string>
   <string name="wallet_transfer_to_ethereum">На Ethereum адрес</string>
   <string name="wallet_unbonding">Освобождаются</string>

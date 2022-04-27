@@ -21,11 +21,13 @@
     <TextView
         android:id="@+id/tvAmountSelectorTitle"
         style="@style/TextAppearance.Soramitsu.Paragraph_1"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="@dimen/x2"
         android:text="@string/amount_title"
         android:textColor="@color/subtitleGrey"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

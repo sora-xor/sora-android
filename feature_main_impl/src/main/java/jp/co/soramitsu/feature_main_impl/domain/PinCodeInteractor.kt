@@ -43,15 +43,16 @@ class PinCodeInteractor @Inject constructor(
     }
 
     suspend fun needsMigration(): Boolean {
-        val isFetched = userRepository.isMigrationFetched()
+        val soraAccount = userRepository.getCurSoraAccount()
+        val isFetched = userRepository.isMigrationFetched(soraAccount)
         return if (isFetched) {
-            userRepository.needsMigration()
+            userRepository.needsMigration(soraAccount)
         } else {
-            val irohaAddress = credentialsRepository.getIrohaAddress()
-            val needs = walletRepository.needsMigration(irohaAddress)
-            userRepository.saveNeedsMigration(needs)
-            userRepository.saveIsMigrationFetched(true)
-            userRepository.needsMigration()
+            val irohaData = credentialsRepository.getIrohaData(soraAccount)
+            val needs = walletRepository.needsMigration(irohaData.address)
+            userRepository.saveNeedsMigration(needs, soraAccount)
+            userRepository.saveIsMigrationFetched(true, soraAccount)
+            userRepository.needsMigration(soraAccount)
         }
     }
 

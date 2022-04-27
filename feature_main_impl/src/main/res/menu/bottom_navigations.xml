@@ -16,12 +16,12 @@
         android:title="@string/tabbar_polkaswap_title"
         app:showAsAction="ifRoom" />
 
-    <item
-        android:id="@+id/parliament_nav_graph"
-        android:enabled="true"
-        android:icon="@drawable/ic_parliament_24"
-        android:title="@string/tabbar_parliament_title"
-        app:showAsAction="ifRoom" />
+<!--    <item-->
+<!--        android:id="@+id/parliament_nav_graph"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/ic_parliament_24"-->
+<!--        android:title="@string/tabbar_parliament_title"-->
+<!--        app:showAsAction="ifRoom" />-->
 
     <item
         android:id="@+id/staking_nav_graph"

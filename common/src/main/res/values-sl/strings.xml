@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">Potrditev mnemonika</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">Projekt</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">Naslova ni mogoče najti. Preverite, ali naslov pripada pravemu omrežju.</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">Provizija za transakcijo</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">Kopiraj</string>
   <string name="common_copy_address">Kopiraj naslov</string>
   <string name="common_croatian">Hrvaščina</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">Opis</string>
   <string name="common_done">Končano</string>
   <string name="common_donotallow">Ne dovoli</string>
@@ -129,6 +137,7 @@
   </plurals>
   <string name="common_indonesian">Indonezijščina</string>
   <string name="common_info">Informacije</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">Italijanščina</string>
   <string name="common_japanese">Japonščina</string>
   <string name="common_khmer">Kmerščina</string>
@@ -144,6 +153,7 @@
   <string name="common_ok">V redu</string>
   <string name="common_open_explorer">Ogled v raziskovalcu blockchain</string>
   <string name="common_options_title">Izberite možnost</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">Ko ustvarite nov račun v SORA, zdaj dobite 12 besedno frazo. Če že imate 15 besedno zvezo SORA, lahko svoj račun uvozite z njim - ti so tudi združljivi in bodo še naprej delovali.</string>
   <string name="common_passphrase_header">Besedna fraza je\n vrsta gesla.</string>
   <string name="common_passphrase_save_mnemonic_title">Shranite ali pošljite besedno frazo</string>
@@ -163,6 +173,7 @@
   <string name="common_receive">Prejeti</string>
   <string name="common_received">Prejeto</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">Poskusite znova</string>
   <string name="common_russian">Ruščina</string>
   <string name="common_save">Shrani</string>
@@ -182,6 +193,7 @@
   <string name="common_sms_code_not_correct">Koda za preverjanje ni pravilna</string>
   <string name="common_spanish">Španščina</string>
   <string name="common_spanish_colombia">Španščina (Kolumbija)</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">Švedščina</string>
   <string name="common_terms_title">Splošni pogoji</string>
   <string name="common_thai">Tajščina</string>
@@ -197,6 +209,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">Glasujte</string>
   <string name="common_yesterday">Včeraj</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">Najpomembnejši stiki se bodo pojavili tukaj</string>
   <string name="contacts_scan">Skenirajte QR kodo</string>
   <string name="contacts_search_empty_state_title">Ni rezultatov iskanja</string>
@@ -254,6 +268,10 @@
   <string name="invoice_scan_error_no_info">QR ni mogoče dekodirati</string>
   <string name="invoice_scan_error_user_not_found">Ne morem najti uporabnika iz QR</string>
   <string name="language_title">Izberite jezik</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">Rezultat tega dejanja bo izbris računa iz te naprave. Pred nadaljevanjem se prepričajte, da ste besedno frazo varnostno kopirali.</string>
   <string name="mnemonic_alert_text">Mnemonik se uporablja za obnovitev dostopa do računa. Zapišite si ga, brez njega ne bomo mogli obnoviti vašega računa!</string>
   <string name="mnemonic_confirm_text">Potrdite z izbiro besed v pravilnem vrstnem redu</string>
@@ -287,10 +305,12 @@
   <string name="pincode_updated">Koda PIN posodobljena</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">DEX za interoperabilno prihodnost. Polkaswap je brezskrbniški AMM-DEX protokol za zamenjavo žetonov na podlagi omrežja Polkadot, Parachain-ev ter drugih blockchain-ev, povezanih prek mostu. Protokol Polkaswap učinkovito odstranjuje zaupanja vredne posrednike in ponuja priložnost za hitrejše trgovanje.</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">Potrdite zamenjavo</string>
   <string name="polkaswap_details">Podrobnosti</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Pogosta vprašanja o Polkaswap</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap vzdržuje skupnost SORA. Pred uporabo funkcije Polkaswap si oglejte %%Pogosta vprašanja o Polkaswap%% in dokumentacijo, ki vsebuje podrobno razlago o tem, kako deluje Polkaswap, pa tudi Memorandum in pogoje storitev Polkaswap ter Politiko zasebnosti. Ti dokumenti so ključnega pomena za varno in pozitivno uporabniško izkušnjo. Z uporabo Polkaswap potrjujete, da ste te dokumente prebrali in razumeli.</string>
   <string name="polkaswap_info_text_2">Potrjujete tudi naslednje:</string>
   <string name="polkaswap_info_text_3">Vaša izključna odgovornost za skladnost z vsemi zakoni, ki lahko veljajo za vašo konkretno uporabo Polkaswapa v vaši pravni pristojnosti;</string>
@@ -319,9 +339,12 @@
   <string name="polkaswap_minimum_received_info">Vaša transakcija se bo povrnila, če pride do velikega neugodnega gibanja cen, preden se potrdi.</string>
   <string name="polkaswap_network_fee">Provizija za omrežje</string>
   <string name="polkaswap_network_fee_info">Omrežnina se uporablja za zagotovitev rasti in stabilnega delovanja sistema SORA.</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">Rezultat je ocenjen. Prejeli boste najmanj %s ali pa se bo transakcija povrnila.</string>
   <string name="polkaswap_pool_not_created">Bazen ni ustvarjen</string>
   <string name="polkaswap_pool_title">Bazen</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Vaša transakcija je lahko izpodrinjena</string>
   <string name="polkaswap_slippage_info">Toleranca zdrsa je sprejet prag, določen v odstotkih za končni znesek, ki vpliva na minimalni prejeti znesek.</string>
   <string name="polkaswap_slippage_mayfail">Vaša transakcija morda ne bo uspela</string>
@@ -331,11 +354,13 @@
   <string name="polkaswap_swapped">Zamenjano</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Add</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -405,6 +430,10 @@
   <string name="referendum_total_votes">Skupno število glasov</string>
   <string name="referendum_unsupport_title">Ne</string>
   <string name="referendum_voting_result">Rezultat glasovanja</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">Ne delajte posnetkov zaslona, ki jih lahko zbira zlonamerna programska oprema</string>
   <string name="screenshot_alert_title">Ne delajte posnetkov zaslona</string>
@@ -415,6 +444,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">Izberite prejemnika</string>
   <string name="set_amount">Nastavitev zneska</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">Imetniki XOR bodo lahko zastavili svoj XOR, da bodo imenovali potrjevalce in prejeli nagrade.</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA VALidator nagrade</string>
@@ -500,8 +533,10 @@
   <string name="wallet_history_to_soranet_account">Na račun SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Moj %s omrežni naslov za prejemanje %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Moj %s omrežni naslov za prejemanje %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">Prejmite VAL</string>
   <string name="wallet_redeemable">Unovčljivo</string>
   <string name="wallet_send_existential_warning_message">Vaš prenos bo odstranil račun iz trgovine z bloki, saj bo skupno stanje manjše od obstoječega depozita</string>
@@ -510,6 +545,8 @@
   <string name="wallet_transaction_rejected">Transakcija zavrnjena</string>
   <string name="wallet_transaction_submitted">Transakcija oddana</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">Največ %s simbolov</string>
   <string name="wallet_transfer_to_ethereum">Na naslov Ethereum</string>
   <string name="wallet_unbonding">Razvezovanje</string>

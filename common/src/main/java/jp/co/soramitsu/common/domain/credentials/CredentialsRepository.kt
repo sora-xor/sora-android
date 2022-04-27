@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.common.domain.credentials
 
+import jp.co.soramitsu.common.account.IrohaData
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import java.security.KeyPair
 
@@ -12,25 +14,21 @@ interface CredentialsRepository {
 
     suspend fun isMnemonicValid(mnemonic: String): Boolean
 
-    suspend fun generateUserCredentials()
+    suspend fun generateUserCredentials(accountName: String): SoraAccount
 
-    suspend fun restoreUserCredentials(mnemonic: String)
+    suspend fun restoreUserCredentials(mnemonic: String, accountName: String): SoraAccount
 
-    suspend fun saveMnemonic(mnemonic: String)
+    suspend fun saveMnemonic(mnemonic: String, soraAccount: SoraAccount)
 
-    suspend fun retrieveMnemonic(): String
+    suspend fun retrieveMnemonic(soraAccount: SoraAccount): String
 
-    suspend fun retrieveIrohaKeyPair(): KeyPair
+    suspend fun retrieveKeyPair(soraAccount: SoraAccount): Sr25519Keypair
 
-    suspend fun retrieveKeyPair(): Sr25519Keypair
+    suspend fun saveKeyPair(key: Sr25519Keypair, soraAccount: SoraAccount)
 
-    suspend fun getIrohaAddress(): String
+    suspend fun getIrohaData(soraAccount: SoraAccount): IrohaData
 
-    suspend fun getClaimSignature(): String
-
-    suspend fun getAddress(): String
-
-    suspend fun getAccountId(): ByteArray
+    suspend fun getAddressForMigration(): String
 
     suspend fun isAddressOk(address: String): Boolean
 }

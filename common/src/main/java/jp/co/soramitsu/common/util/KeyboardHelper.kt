@@ -46,6 +46,7 @@ class KeyboardHelper(
 
     fun release() {
         contentView.viewTreeObserver.removeOnGlobalLayoutListener(globalLayoutListener)
+        listener = null
     }
 
     fun setKeyboardListener(listener: KeyboardListener) {

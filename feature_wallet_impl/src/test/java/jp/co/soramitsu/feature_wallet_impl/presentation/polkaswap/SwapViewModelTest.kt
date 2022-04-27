@@ -29,6 +29,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -38,6 +39,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.BDDMockito.eq
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
@@ -126,8 +129,8 @@ class SwapViewModelTest {
 
     @Before
     fun setUp() = runBlockingTest {
-        given(walletInteractor.subscribeVisibleAssets()).willReturn(assetFlow)
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), eq(AssetHolder.ROUNDING))).willReturn(
+        given(walletInteractor.subscribeVisibleAssetsOfCurAccount()).willReturn(assetFlow)
+        given(numbersFormatter.formatBigDecimal(anyNonNull(), eq(AssetHolder.ROUNDING), anyBoolean())).willReturn(
             "10.10"
         )
         given(polkaswapInteractor.observeSwap()).willReturn(
@@ -145,6 +148,9 @@ class SwapViewModelTest {
                 emit("")
             }
         )
+
+        given(polkaswapInteractor.getPolkaswapDisclaimerVisibility()).willReturn(flowOf(false))
+        given(resourceManager.getString(anyInt())).willReturn("Test string")
 
         viewModel = SwapViewModel(
             walletRouter,
@@ -208,14 +214,14 @@ class SwapViewModelTest {
             delay(3000)
 
             assertEquals(viewModel.fromAssetLiveData.getOrAwaitValue(), assets[0])
-            assertFalse(viewModel.swapButtonEnabledLiveData.getOrAwaitValue())
+            assertFalse(viewModel.swapButtonState.value.enabled)
             assertFalse(viewModel.detailsEnabledLiveData.getOrAwaitValue())
 
             viewModel.toAssetSelected(toAsset)
             delay(3000)
 
             assertEquals(viewModel.toAssetLiveData.getOrAwaitValue(), assets[1])
-            assertFalse(viewModel.swapButtonEnabledLiveData.getOrAwaitValue())
+            assertFalse(viewModel.swapButtonState.value.enabled)
             assertTrue(viewModel.detailsEnabledLiveData.getOrAwaitValue())
         }
     }

@@ -10,6 +10,7 @@ import dagger.BindsInstance
 import dagger.Subcomponent
 import jp.co.soramitsu.core_di.holder.scope.ScreenScope
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsFragment
+import jp.co.soramitsu.feature_wallet_impl.presentation.details.LiquidityDetailsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.SwapDetailsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.details.TransactionDetailsFragment
 
@@ -38,4 +39,6 @@ interface TransactionDetailsComponent {
     fun inject(fragment: TransactionDetailsFragment)
 
     fun inject(fragment: SwapDetailsFragment)
+
+    fun inject(fragment: LiquidityDetailsFragment)
 }

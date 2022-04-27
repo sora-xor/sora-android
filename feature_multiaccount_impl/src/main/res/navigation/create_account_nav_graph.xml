@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/create_account_nav_graph"
+    app:startDestination="@id/personalInfoFragment">
+
+    <fragment
+        android:id="@+id/personalInfoFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.personal_info.PersonalInfoFragment"
+        android:label="PersonalInfoFragment" />
+
+    <fragment
+        android:id="@+id/mnemonicFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic.MnemonicFragment"
+        android:label="MnemonicFragment" />
+
+    <fragment
+        android:id="@+id/mnemonicConfirmation"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic_confirmation.MnemonicConfirmationFragment"
+        android:label="MnemonicConfirmation" />
+
+    <include app:graph="@navigation/multiaccount_nav_graph" />
+
+</navigation>

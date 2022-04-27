@@ -7,11 +7,14 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
+import androidx.viewpager2.widget.ViewPager2
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.tabs.TabLayoutMediator
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
@@ -43,9 +46,20 @@ class PolkaSwapFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment_pol
             tab.setText((binding.viewpager.adapter as ViewPagerAdapter).getTitle(position))
         }.attach()
 
-        if (arguments != null) {
-            (binding.viewpager.adapter as ViewPagerAdapter).getFragmentAtPosition(arguments!!.getInt(SwapFragment.ARG_ID)).arguments = arguments
+        arguments?.let { args ->
+            (binding.viewpager.adapter as ViewPagerAdapter).getFragmentAtPosition(
+                args.getInt(SwapFragment.ARG_ID)
+            ).arguments = arguments
         }
+
+        binding.viewpager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                binding.grPolkaswapMarkets.isVisible =
+                    binding.viewpager.adapter?.safeCast<ViewPagerAdapter>()
+                    ?.isVisibleMarketsTitle(position) ?: false
+            }
+        })
 
         initListeners()
     }

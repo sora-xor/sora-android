@@ -52,7 +52,7 @@ android {
         develop {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/dev/\""
             buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-3.s3.dev.sora2.soramitsu.co.jp/\""
-            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"subquery.q1.dev.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora-dev/\""
             buildConfigField "String", "GENESIS_HASH", "\"bf7f611213e15c54023853eed206508be11ce69d8d94937157e44c7b7564714a\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"dev\""
             dimension 'default'
@@ -70,7 +70,7 @@ android {
         tsting {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/test/\""
             buildConfigField "String", "WS_HOST_URL", "\"wss://ws.tst.sora2.soramitsu.co.jp/\""
-            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"subquery.q1.tst.sora2.soramitsu.co.jp/\""
+            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora-test/\""
             buildConfigField "String", "GENESIS_HASH", "\"6f1056d58e73f16a5237e96afab618e9623652fa1cef3e67b0111bd6fd6790a7\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"test\""
             dimension 'default'
@@ -78,7 +78,7 @@ android {
 
         production {
             buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.alb.sora.org/\""
+            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.mof.sora.org/\""
             buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora\""
             buildConfigField "String", "GENESIS_HASH", "\"7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5\""
             buildConfigField "String", "TYPES_FILE_PATH", "\"prod\""
@@ -113,7 +113,8 @@ dependencies {
     implementation webSocketLibDep
     implementation ed25519Dep
 
-    implementation lifecycleDep
+    implementation lifecycleKtxDep
+    implementation processDep
     kapt lifecycleKaptDep
 
     implementation loggerDep
@@ -129,7 +130,6 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation progressButtonDep
     implementation neumorphismDep
 
     implementation retrofitDep

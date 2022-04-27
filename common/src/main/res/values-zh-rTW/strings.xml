@@ -16,6 +16,12 @@
   <string name="account_confirmation_title">確認助記符</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
   <string name="activity_project">項目</string>
+  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="add_liquidity_confirmation_title">Confirm supply</string>
+  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
+  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
+  <string name="add_liquidity_title">Add Liquidity</string>
   <string name="address_not_found">找不到地址，請確保該地址屬於正確的網絡。</string>
   <string name="address_not_found_1">Recipients not found</string>
   <string name="amount_default_fee">手續費</string>
@@ -72,6 +78,8 @@
   <string name="common_copy">複製</string>
   <string name="common_copy_address">複製地址</string>
   <string name="common_croatian">克羅地亞語</string>
+  <string name="common_deposit">Deposit</string>
+  <string name="common_deposit_symbol">%s deposit</string>
   <string name="common_description">描述</string>
   <string name="common_done">完成</string>
   <string name="common_donotallow">不允許</string>
@@ -126,6 +134,7 @@
   </plurals>
   <string name="common_indonesian">印度尼西亞</string>
   <string name="common_info">信息</string>
+  <string name="common_insufficient_balance">Insufficient balance</string>
   <string name="common_italian">義大利語</string>
   <string name="common_japanese">日語</string>
   <string name="common_khmer">高棉語</string>
@@ -141,6 +150,7 @@
   <string name="common_ok">好的</string>
   <string name="common_open_explorer">在區塊鏈瀏覽器中查看</string>
   <string name="common_options_title">選擇一個選項</string>
+  <string name="common_output">Output</string>
   <string name="common_passphrase_body">在 SORA 中創建新賬戶時，您現在會獲得一個 12 字的密碼短語。如果您已經有一個 15 字的 SORA 密碼短語，您可以使用它導入您的賬戶 -- 這些密碼短語也是兼容，并可以繼續使用。</string>
   <string name="common_passphrase_header">密碼短語為\n一種密碼。</string>
   <string name="common_passphrase_save_mnemonic_title">保存或發送密碼短語</string>
@@ -160,6 +170,7 @@
   <string name="common_receive">接收</string>
   <string name="common_received">已收到</string>
   <string name="common_recipient">Recipient</string>
+  <string name="common_remove">Remove</string>
   <string name="common_retry">重試</string>
   <string name="common_russian">俄語</string>
   <string name="common_save">保存</string>
@@ -179,6 +190,7 @@
   <string name="common_sms_code_not_correct">驗證碼不正確</string>
   <string name="common_spanish">西班牙語</string>
   <string name="common_spanish_colombia">西班牙語（哥倫比亞）</string>
+  <string name="common_supply">Supply</string>
   <string name="common_swedish">瑞典</string>
   <string name="common_terms_title">條款及細則</string>
   <string name="common_thai">泰國</string>
@@ -194,6 +206,8 @@
   <string name="common_update">Update</string>
   <string name="common_vote">投票</string>
   <string name="common_yesterday">昨天</string>
+  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_your_position">Your Position</string>
   <string name="contacts_empty_state_title">最重要的聯繫人將出現在這裡</string>
   <string name="contacts_scan">掃描二維碼</string>
   <string name="contacts_search_empty_state_title">無搜尋結果</string>
@@ -251,6 +265,10 @@
   <string name="invoice_scan_error_no_info">無法解讀二維碼</string>
   <string name="invoice_scan_error_user_not_found">從二維碼中找不到用戶</string>
   <string name="language_title">選擇語言</string>
+  <string name="liquidity_added">Added %s liquidity</string>
+  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
+  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
+  <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">此操作將導致從該設備刪除帳戶。在繼續操作之前，請確保已備份密碼短語。</string>
   <string name="mnemonic_alert_text">它用於恢復對帳戶的訪問。寫下來，沒有它我們將無法恢復您的帳戶！</string>
   <string name="mnemonic_confirm_text">通過按正確的順序選擇單詞來進行確認</string>
@@ -284,16 +302,18 @@
   <string name="pincode_updated">密碼已更新</string>
   <string name="polkaswap_button_swap_again">Swap again</string>
   <string name="polkaswap_coming_soon">面向可互操作未來的去中心化交易所。 Polkaswap是一種非託管的自動做市商去中心化交易所協議，用於基於通過橋接器連接的波卡網絡，平行鏈和區塊鏈交換令牌。 Polkaswap協議有效地去除了受信任的中介，並提供了更快交易的機會。</string>
+  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="polkaswap_confirm_swap">確認交換</string>
   <string name="polkaswap_details">細節</string>
   <string name="polkaswap_error_noswap">No swap</string>
   <string name="polkaswap_info_faq">Polkaswap 常見問題</string>
+  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
   <string name="polkaswap_info_text_1">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。</string>
   <string name="polkaswap_info_text_2">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。 \n\n您還承認以下幾點： \n\n 1) 您全權負責遵守在您的法律管轄範圍內可能適用於您對 Polkaswap 的特定使用的所有法律；\n 2）您對Polkaswap當前版本為alpha版本的理解：尚未經過全面測試，部分功能可能無法按設計執行；\n 3) 您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。再一次提醒，在您還沒閱讀常見問題解答、Polkaswap 備忘錄和服務條款以及隱私政策的情況下, 請不要繼續！</string>
-  <string name="polkaswap_info_text_3">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。 \n\n您還承認以下幾點： \n\n 1) 您全權負責遵守在您的法律管轄範圍內可能適用於您對 Polkaswap 的特定使用的所有法律；\n 2）您對Polkaswap當前版本為alpha版本的理解：尚未經過全面測試，部分功能可能無法按設計執行；\n 3) 您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。再一次提醒，在您還沒閱讀常見問題解答、Polkaswap 備忘錄和服務條款以及隱私政策的情況下, 請不要繼續！</string>
-  <string name="polkaswap_info_text_4">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。 \n\n您還承認以下幾點： \n\n 1) 您全權負責遵守在您的法律管轄範圍內可能適用於您對 Polkaswap 的特定使用的所有法律；\n 2）您對Polkaswap當前版本為alpha版本的理解：尚未經過全面測試，部分功能可能無法按設計執行；\n 3) 您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。再一次提醒，在您還沒閱讀常見問題解答、Polkaswap 備忘錄和服務條款以及隱私政策的情況下, 請不要繼續！</string>
-  <string name="polkaswap_info_text_5">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。 \n\n您還承認以下幾點： \n\n 1) 您全權負責遵守在您的法律管轄範圍內可能適用於您對 Polkaswap 的特定使用的所有法律；\n 2）您對Polkaswap當前版本為alpha版本的理解：尚未經過全面測試，部分功能可能無法按設計執行；\n 3) 您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。再一次提醒，在您還沒閱讀常見問題解答、Polkaswap 備忘錄和服務條款以及隱私政策的情況下, 請不要繼續！</string>
-  <string name="polkaswap_info_text_6">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。 \n\n您還承認以下幾點： \n\n 1) 您全權負責遵守在您的法律管轄範圍內可能適用於您對 Polkaswap 的特定使用的所有法律；\n 2）您對Polkaswap當前版本為alpha版本的理解：尚未經過全面測試，部分功能可能無法按設計執行；\n 3) 您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。再一次提醒，在您還沒閱讀常見問題解答、Polkaswap 備忘錄和服務條款以及隱私政策的情況下, 請不要繼續！</string>
+  <string name="polkaswap_info_text_3">您在您的法律管轄範圍內遵守可能適用於您對 Polkaswap 的特定使用的所有法律的全部責任；</string>
+  <string name="polkaswap_info_text_4">您對當前版本的 Polkaswap 為 alpha 版本的理解：尚未完全測試，部分功能可能無法按設計執行；</string>
+  <string name="polkaswap_info_text_5">您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。</string>
+  <string name="polkaswap_info_text_6">再一次，請不要繼續閱讀%% Polkaswap 常見問題%% 、 %%Polkaswap 備忘錄和服務條款%%和%%隱私政策%% ！</string>
   <string name="polkaswap_info_text_7">為了在“交換”選項卡中隱藏免責聲明通知，請滑動下面的按鈕。只有在您完全理解並閱讀了所有提到的文件後才能這樣做！</string>
   <string name="polkaswap_info_text_8">Swipe to hide</string>
   <string name="polkaswap_info_text_9">Disclaimer notification is hidden from the Polkaswap tab. Swipe the button below if you wish to activate the notification.</string>
@@ -316,9 +336,12 @@
   <string name="polkaswap_minimum_received_info">如果在確認之前出現較大的不利價格變動，您的交易將被取消。</string>
   <string name="polkaswap_network_fee">網絡費用</string>
   <string name="polkaswap_network_fee_info">網絡費用用於保證 SORA 系統的增長和穩定的性能。</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
   <string name="polkaswap_output_estimated">输出是估計的。您将收到至少 %s， 否則交易将被取消。</string>
   <string name="polkaswap_pool_not_created">未創建池</string>
   <string name="polkaswap_pool_title">池</string>
+  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">滑點容差是一個可接受的閾值，以百分比為單位設置，用於影響最小接收金額的最終金額。</string>
   <string name="polkaswap_slippage_mayfail">Your transaction may fail</string>
@@ -328,11 +351,13 @@
   <string name="polkaswap_swapped">已交換</string>
   <string name="polkaswap_tbc">待定</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkaswap_your_position">Your position (estimated)</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_add">Add</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_liqudity_title">Your liquidity</string>
-  <string name="pool_liquidity_placeholder">Your liquidity will appear here</string>
+  <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="pool_share_after_tx">Pool share after tx</string>
   <string name="pool_share_title">Share of Pool</string>
   <string name="pool_share_title_1">Your pool share</string>
   <string name="pool_token_pooled">Pooled</string>
@@ -387,6 +412,10 @@
   <string name="referendum_total_votes">總票數</string>
   <string name="referendum_unsupport_title">沒有</string>
   <string name="referendum_voting_result">投票結果</string>
+  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
+  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
   <string name="screenshot_alert_text">請勿截取可能由第三方惡意軟件收集的屏幕截圖</string>
   <string name="screenshot_alert_title">不要截屏</string>
@@ -397,6 +426,10 @@
   <string name="select_asset_send">Select Asset to Send</string>
   <string name="select_recipient">選擇收件人</string>
   <string name="set_amount">設定金額</string>
+  <string name="settings_accounts">Accounts</string>
+  <string name="settings_header_account">Account settings</string>
+  <string name="settings_header_app">App settings</string>
+  <string name="settings_header_other">Other</string>
   <string name="staking_coming_soon">XOR持有者將可以押注XOR來提名驗證者並獲得獎勵。</string>
   <string name="staking_description">Nominating validators is an important part of the SORA ecosystem as it helps to secure and decentralize the network. VAL tokens will be given to validators and nominators as a reward for staking.</string>
   <string name="staking_val_reward">SORA驗證者獎勵</string>
@@ -482,8 +515,10 @@
   <string name="wallet_history_to_soranet_account">到SORA NET帳戶</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">我用以接收的%s網絡地址%s：</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Network address to Receive %s:</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">我用以接收的%s網絡地址%s %s：</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">My %s Network address to Receive %s %s:</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
   <string name="wallet_receive_val">收到VAL</string>
   <string name="wallet_redeemable">可贖回</string>
   <string name="wallet_send_existential_warning_message">您的轉賬將會從blockstore清除賬戶，因為這會使得賬戶總額低於目前存有的質押。</string>
@@ -492,6 +527,8 @@
   <string name="wallet_transaction_rejected">交易被拒絕</string>
   <string name="wallet_transaction_submitted">交易已提交</string>
   <string name="wallet_transaction_submitted_1">Transaction\nsubmitted</string>
+  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
+  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
   <string name="wallet_transfer_description_hint">最多%s符號</string>
   <string name="wallet_transfer_to_ethereum">到以太坊地址</string>
   <string name="wallet_unbonding">取消綁定</string>

@@ -26,13 +26,11 @@ class AssetListViewModel(
     private val numbersFormatter: NumbersFormatter,
     private val router: WalletRouter,
     private val assetListMode: AssetListMode,
+    private val hiddenAssetId: String? = null
 ) : BaseViewModel() {
 
     private val _displayingAssetsLiveData = MutableLiveData<List<AssetListItemModel>>()
     val displayingAssetsLiveData: LiveData<List<AssetListItemModel>> = _displayingAssetsLiveData
-
-    private val _title = MutableLiveData<Int>()
-    val title: LiveData<Int> = _title
 
     private val assetsList: MutableList<AssetListItemModel> = mutableListOf()
     private var curFilter: String = ""
@@ -43,15 +41,14 @@ class AssetListViewModel(
 
     init {
         viewModelScope.launch {
-            val list = interactor.getVisibleAssets().map {
-                it.mapAssetToAssetModel(numbersFormatter, balanceStyle)
-            }.sortedBy { it.sortOrder }
+            val list = interactor.getVisibleAssets()
+                .map { it.mapAssetToAssetModel(numbersFormatter, balanceStyle) }
+                .filter { it.assetId != hiddenAssetId }
+                .sortedBy { it.sortOrder }
             assetsList.clear()
             assetsList.addAll(list)
             filterAssetsList()
         }
-        _title.value =
-            if (assetListMode == AssetListMode.RECEIVE) R.string.select_asset_receive else R.string.select_asset_send
     }
 
     private fun filterAssetsList() {
@@ -82,6 +79,13 @@ class AssetListViewModel(
             }
             AssetListMode.SEND -> {
                 router.showContacts(asset.assetId)
+            }
+            AssetListMode.SELECT_FOR_LIQUIDITY -> {
+                viewModelScope.launch {
+                    val xorToken = interactor.getFeeToken()
+                    val selectedToken = interactor.getAssetOrThrow(asset.assetId).token
+                    router.returnToAddLiquidity(xorToken, selectedToken)
+                }
             }
         }
     }

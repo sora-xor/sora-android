@@ -6,12 +6,16 @@
 package jp.co.soramitsu.sora.splash.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.every
+import io.mockk.mockkObject
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
 import jp.co.soramitsu.sora.splash.domain.SplashRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Rule
@@ -47,11 +51,14 @@ class SplashViewModelTest {
 
     @Before
     fun setUp() {
+        mockkObject(FirebaseWrapper)
+        every { FirebaseWrapper.log("Migration done true") } returns Unit
         splashViewModel = SplashViewModel(interactor, router, runtime)
     }
 
     @Test
     fun `nextScreen with REGISTRATION_FINISHED`() = runBlockingTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(async { true })
         given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
 
         splashViewModel.nextScreen()
@@ -63,6 +70,7 @@ class SplashViewModelTest {
     fun `nextScreen with INITIAL`() = runBlockingTest {
         val state = OnboardingState.INITIAL
 
+        given(interactor.getMigrationDoneAsync()).willReturn(async { true })
         given(interactor.getRegistrationState()).willReturn(state)
 
         splashViewModel.nextScreen()

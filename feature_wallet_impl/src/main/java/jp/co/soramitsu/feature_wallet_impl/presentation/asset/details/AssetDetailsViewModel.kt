@@ -127,7 +127,7 @@ class AssetDetailsViewModel(
         viewModelScope.launch {
             progress.showProgress()
             tryCatchFinally({ progress.hideProgress() }) {
-                val asset = interactor.getVisibleAssets().first { it.token.id == assetId }
+                val asset = interactor.getAssetOrThrow(assetId)
                 _assetIcon.value = asset.token.icon
                 _assetNameTitle.value = asset.token.name
                 _assetSymbolTitle.value = asset.token.symbol

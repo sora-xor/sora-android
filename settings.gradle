@@ -1,4 +1,6 @@
 include ':app', ':common', ':feature_onboarding_api', ':feature_onboarding_impl', ':feature_main_api', ':feature_main_impl', ':feature_account_api', ':feature_account_impl', ':feature_votable_api', ':feature_votable_impl', ':feature_wallet_api', ':feature_wallet_impl', ':core_di', ':test_shared', ':core_db', ':feature_ethereum_api', ':feature_ethereum_impl'
 include ':feature_notification_api'
 include ':feature_notification_impl'
+include ':feature_multiaccount_api'
+include ':feature_multiaccount_impl'
 rootProject.name = 'passport-android'

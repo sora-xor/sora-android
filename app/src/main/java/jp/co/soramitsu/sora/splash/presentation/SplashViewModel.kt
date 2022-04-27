@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
@@ -31,12 +32,18 @@ class SplashViewModel(
                 _runtimeInitiated.value = true
             }
         }
+        viewModelScope.launch {
+            interactor.checkMigration()
+        }
     }
 
     fun nextScreen() {
         viewModelScope.launch {
+            val migrationDone = interactor.getMigrationDoneAsync().await()
+            FirebaseWrapper.log("Migration done $migrationDone")
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
+                    interactor.initCurSoraAccount()
                     router.showMainScreen()
                 }
                 OnboardingState.INITIAL -> {

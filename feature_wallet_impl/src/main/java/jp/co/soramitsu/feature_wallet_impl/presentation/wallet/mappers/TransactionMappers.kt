@@ -11,6 +11,7 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
@@ -85,6 +86,32 @@ class TransactionMappers @Inject constructor(
                     tx.timestamp,
                     tx.status == TransactionStatus.PENDING,
                     !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
+                )
+            }
+            is Transaction.Liquidity -> {
+                return EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
+                    tx.txHash,
+                    tx.timestamp,
+                    tx.status == TransactionStatus.PENDING,
+                    !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false),
+                    dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
+                    tx.token1.icon,
+                    tx.token2.icon,
+                    Pair(
+                        numbersFormatter.formatBigDecimal(
+                            tx.amount1,
+                            AssetHolder.ROUNDING
+                        ),
+                        tx.token1.symbol
+                    ),
+                    Pair(
+                        numbersFormatter.formatBigDecimal(
+                            tx.amount2,
+                            AssetHolder.ROUNDING
+                        ),
+                        tx.token2.symbol
+                    ),
+                    tx.type == TransactionLiquidityType.ADD
                 )
             }
         }

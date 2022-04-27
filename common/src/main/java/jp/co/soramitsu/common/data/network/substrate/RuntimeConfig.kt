@@ -59,12 +59,12 @@ fun Any.createAsset(id: String): TokenInfoDto? =
     }
 
 fun RuntimeSnapshot.accountPoolsKey(address: String): String =
-    this.metadata.module(Pallete.POOL_XYK.palleteName)
+    this.metadata.module(Pallete.POOL_XYK.palletName)
         .storage(Storage.ACCOUNT_POOLS.storageName)
         .storageKey(this, address.toAccountId())
 
 fun RuntimeSnapshot.reservesKey(tokenId: ByteArray): String =
-    this.metadata.module(Pallete.POOL_XYK.palleteName)
+    this.metadata.module(Pallete.POOL_XYK.palletName)
         .storage(Storage.RESERVES.storageName)
         .storageKey(
             this,
@@ -72,7 +72,7 @@ fun RuntimeSnapshot.reservesKey(tokenId: ByteArray): String =
             tokenId
         )
 
-enum class Pallete(val palleteName: String) {
+enum class Pallete(val palletName: String) {
     ASSETS("Assets"),
     IROHA_MIGRATION("IrohaMigration"),
     SYSTEM("System"),
@@ -80,6 +80,8 @@ enum class Pallete(val palleteName: String) {
     POOL_XYK("PoolXYK"),
     POOL_TBC("MulticollateralBondingCurvePool"),
     STAKING("Staking"),
+    TRADING_PAIR("TradingPair"),
+    UTILITY("Utility"),
 }
 
 enum class Storage(val storageName: String) {
@@ -101,6 +103,12 @@ enum class Method(val methodName: String) {
     TRANSFER("transfer"),
     MIGRATE("migrate"),
     SWAP("swap"),
+    REGISTER("register"),
+    INITIALIZE_POOL("initialize_pool"),
+    DEPOSIT_LIQUIDITY("deposit_liquidity"),
+    WITHDRAW_LIQUIDITY("withdraw_liquidity"),
+    BATCH_ALL("batch_all"),
+    BATCH("batch"),
 }
 
 enum class Events(val eventName: String) {

@@ -6,6 +6,7 @@
 package jp.co.soramitsu.common.util.ext
 
 import android.content.res.ColorStateList
+import android.graphics.drawable.Animatable
 import android.text.Editable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -13,6 +14,7 @@ import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.text.style.TextAppearanceSpan
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.inputmethod.EditorInfo
 import android.webkit.WebView
@@ -23,15 +25,18 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.widget.ImageViewCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.findViewTreeLifecycleOwner
+import com.google.android.material.behavior.HideBottomViewOnScrollBehavior
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.presentation.view.CurrencyEditText
+import jp.co.soramitsu.common.presentation.FiatBalanceData
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -96,26 +101,22 @@ fun ImageView.setImageTint2(@ColorInt color: Int) {
     ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(color))
 }
 
+fun ImageView.animateLoader(animate: Boolean) {
+    this.showOrHide(animate)
+    this.drawable.safeCast<Animatable>()?.let {
+        if (animate) {
+            if (it.isRunning.not()) it.start()
+        } else {
+            if (it.isRunning) it.stop()
+        }
+    }
+}
+
 @ExperimentalCoroutinesApi
 fun EditText.asFlow() = callbackFlow {
 
     val onChanged: (CharSequence?, Int, Int, Int) -> Unit = { c, _, _, _ ->
         trySend(c.toString())
-    }
-
-    val listener = addTextChangedListener(
-        onTextChanged = onChanged
-    )
-
-    awaitClose { removeTextChangedListener(listener) }
-}
-
-@ExperimentalCoroutinesApi
-fun CurrencyEditText.asFlowCurrency() = callbackFlow {
-
-    val onChanged: (CharSequence?, Int, Int, Int) -> Unit = { c, _, _, _ ->
-        if (this@asFlowCurrency.listenerEnabled)
-            trySend(c.toString())
     }
 
     val listener = addTextChangedListener(
@@ -273,6 +274,80 @@ fun TextView.setBalance(amount: AssetBalanceData, decimalSeparator: Char = '.') 
             this.setText(builder, TextView.BufferType.SPANNABLE)
         } else {
             this.setText(text, TextView.BufferType.SPANNABLE)
+        }
+    }
+}
+
+private const val TILDA = "~"
+fun TextView.setFiatBalance(
+    amount: FiatBalanceData,
+    decimalSeparator: Char = '.'
+) {
+    if (amount.amount.isEmpty()) {
+        text = ""
+        return
+    }
+
+    val text = SpannableStringBuilder.valueOf(TILDA)
+
+    if (amount.symbol != null) {
+        text.append(amount.symbol)
+        text.append(" ")
+    }
+
+    val pos = amount.amount.indexOf(decimalSeparator)
+    val amountSpannable = SpannableString.valueOf(amount.amount)
+    amountSpannable.setSpan(
+        TextAppearanceSpan(context, amount.style.intStyle),
+        0,
+        text.length,
+        SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
+
+    when {
+        pos >= 0 -> {
+            amountSpannable.setSpan(
+                TextAppearanceSpan(context, amount.style.intStyle),
+                0,
+                pos,
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            amountSpannable.setSpan(
+                TextAppearanceSpan(context, amount.style.decStyle),
+                pos,
+                amountSpannable.length,
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        else -> {
+            amountSpannable.setSpan(
+                TextAppearanceSpan(context, amount.style.intStyle),
+                0,
+                amountSpannable.length,
+                SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
+    amountSpannable.setSpan(
+        ForegroundColorSpan(getColorAttr(amount.style.color)),
+        0,
+        amountSpannable.length,
+        SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+    )
+
+    this.setText(text.append(amountSpannable), TextView.BufferType.SPANNABLE)
+}
+
+fun FloatingActionButton.slideUpOrDown(isVisible: Boolean) {
+    val layoutParams: ViewGroup.LayoutParams = this.layoutParams
+    if (layoutParams is CoordinatorLayout.LayoutParams) {
+        val behavior = layoutParams.behavior
+        if (behavior is HideBottomViewOnScrollBehavior) {
+            if (isVisible) {
+                behavior.slideUp(this)
+            } else {
+                behavior.slideDown(this)
+            }
         }
     }
 }
