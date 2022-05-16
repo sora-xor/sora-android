@@ -40,7 +40,7 @@ class SplashViewModel(
     fun nextScreen() {
         viewModelScope.launch {
             val migrationDone = interactor.getMigrationDoneAsync().await()
-            FirebaseWrapper.log("Migration done $migrationDone")
+            FirebaseWrapper.log("Splash next screen $migrationDone")
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
                     interactor.initCurSoraAccount()

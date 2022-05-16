@@ -8,7 +8,6 @@ package jp.co.soramitsu.common.domain.credentials
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import java.security.KeyPair
 
 interface CredentialsRepository {
 

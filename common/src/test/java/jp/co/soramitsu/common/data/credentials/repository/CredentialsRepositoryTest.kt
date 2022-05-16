@@ -22,7 +22,6 @@ import jp.co.soramitsu.fearless_utils.encrypt.mnemonic.MnemonicCreator
 import jp.co.soramitsu.fearless_utils.encrypt.seed.SeedFactory
 import jp.co.soramitsu.fearless_utils.encrypt.seed.substrate.SubstrateSeedFactory
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.anyNonNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.bouncycastle.util.encoders.Hex
@@ -125,8 +124,6 @@ class CredentialsRepositoryTest {
         every { MnemonicCreator.fromWords(mnemonic) } returns mnmnc
         mockkObject(SubstrateKeypairFactory)
         every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
-        given(publicKey.encoded).willReturn(publicKeyBytes)
-        given(irohaKeypair.public).willReturn(publicKey)
         mockkStatic(SubstrateSeedFactory::deriveSeed32)
         every { SubstrateSeedFactory.deriveSeed32(any(), any()) } returns derivationResult
         mockkObject(FirebaseWrapper)
@@ -134,29 +131,9 @@ class CredentialsRepositoryTest {
         mockkStatic(ByteArray::toSoraAddress)
         every { keypair.publicKey.toSoraAddress() } returns "fooaddress"
 
-        given(
-            cryptoAssistant.generateScryptSeedForEd25519(
-                anyNonNull(),
-                anyNonNull(),
-                anyNonNull(),
-                anyNonNull()
-            )
-        ).willReturn(seed)
-        given(cryptoAssistant.generateEd25519Keys(seed)).willReturn(irohaKeypair)
-        given(
-            cryptoAssistant.signEd25519(
-                message.toByteArray(),
-                irohaKeypair
-            )
-        ).willReturn(signature)
-
         credentialsRepository.restoreUserCredentials(mnemonic, "")
 
         verify(datasource).saveMnemonic(mnemonic, "fooaddress")
-        verify(cryptoAssistant).signEd25519(message.toByteArray(), irohaKeypair)
-        verify(datasource).saveIrohaKeys(irohaKeypair, "fooaddress")
-        verify(datasource).saveIrohaAddress(irohaAddress, "fooaddress")
-        verify(datasource).saveSignature(signature, "fooaddress")
     }
 
     @Test
@@ -186,67 +163,4 @@ class CredentialsRepositoryTest {
         assertEquals(keypair, credentialsRepository.retrieveKeyPair(SoraAccount("", "")))
     }
 
-    @Test
-    fun `retrieve iroha keypair called`() = runBlockingTest {
-        val keypair = mock(KeyPair::class.java)
-        given(datasource.retrieveIrohaKeys("")).willReturn(keypair)
-
-        assertEquals(credentialsRepository.retrieveIrohaKeyPair(SoraAccount("", "")), keypair)
-    }
-
-    @Test
-    fun `get iroha address called`() = runBlockingTest {
-        val irohaAddress = "did_sora_7075626c69634b657942@sora"
-        given(datasource.getIrohaAddress("")).willReturn(irohaAddress)
-
-        assertEquals(credentialsRepository.getIrohaAddress(SoraAccount("", "")), irohaAddress)
-    }
-
-    @Test
-    fun `get iroha address if empty called`() = runBlockingTest {
-        val irohaAddress = "did_sora_7075626c69634b657942@sora"
-        val mnemonic =
-            "airport wish wish loan width country acoustic country ceiling good enact penalty"
-        val seed = "seed".toByteArray()
-        val publicKeyBytes = "publicKeyBytespublicKeyBytespublicKeyBytes".toByteArray()
-        val irohaKeypair = mock(KeyPair::class.java)
-        val message = irohaAddress + Hex.toHexString(publicKeyBytes)
-        val signature = irohaAddress.toByteArray()
-        val keypair = mock(Sr25519Keypair::class.java)
-        val publicKey = mock(PublicKey::class.java)
-        given(publicKey.encoded).willReturn(publicKeyBytes)
-        given(irohaKeypair.public).willReturn(publicKey)
-        given(
-            cryptoAssistant.generateScryptSeedForEd25519(
-                anyNonNull(),
-                anyNonNull(),
-                anyNonNull(),
-                anyNonNull()
-            )
-        ).willReturn(seed)
-        given(cryptoAssistant.generateEd25519Keys(seed)).willReturn(irohaKeypair)
-        given(
-            cryptoAssistant.signEd25519(
-                message.toByteArray(),
-                irohaKeypair
-            )
-        ).willReturn(signature)
-        given(datasource.getIrohaAddress("")).willReturn("", irohaAddress)
-        given(datasource.retrieveMnemonic("")).willReturn(mnemonic)
-        mockkStatic(ByteArray::toSoraAddress)
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log("Keys were created") } returns Unit
-        every { keypair.publicKey.toSoraAddress() } returns "fo oaddress"
-
-        assertEquals(credentialsRepository.getIrohaAddress(SoraAccount("", "")), irohaAddress)
-    }
-
-    @Test
-    fun `get claim signature called`() = runBlockingTest {
-        val signature = "did_sora_7075626c69634b657942@sora".toByteArray()
-        val signatureHex = Hex.toHexString(signature)
-        given(datasource.retrieveSignature("")).willReturn(signature)
-
-        assertEquals(credentialsRepository.getClaimSignature(SoraAccount("", "")), signatureHex)
-    }
 }

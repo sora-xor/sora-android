@@ -9,6 +9,7 @@ import androidx.room.withTransaction
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject constructor(
@@ -29,14 +31,22 @@ class UserRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
     private val appLinksProvider: AppLinksProvider,
     private val deviceParamsProvider: DeviceParamsProvider,
+    private val coroutineManager: CoroutineManager
 ) : UserRepository {
 
     private val currentSoraAccount = MutableStateFlow<SoraAccount?>(null)
 
+    init {
+        coroutineManager.applicationScope.launch {
+            initCurSoraAccount()
+        }
+    }
+
     override suspend fun initCurSoraAccount() {
         val curAddress = userDatasource.getCurAccountAddress()
-        val soraAccountLocal = db.accountDao().getAccount(curAddress)
-        currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+        db.accountDao().getAccount(curAddress)?.let { soraAccountLocal ->
+            currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+        }
     }
 
     override suspend fun getCurSoraAccount(): SoraAccount {
@@ -50,7 +60,9 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun setCurSoraAccount(accountAddress: String) {
         userDatasource.setCurAccountAddress(accountAddress)
-        currentSoraAccount.value = SoraAccountMapper.map(db.accountDao().getAccount(accountAddress))
+        db.accountDao().getAccount(accountAddress)?.let { soraAccountLocal ->
+            currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+        }
     }
 
     override fun flowCurSoraAccount(): Flow<SoraAccount> =

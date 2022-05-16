@@ -15,6 +15,7 @@ import io.mockk.slot
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
@@ -35,6 +36,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
@@ -68,6 +70,9 @@ class UserRepositoryTest {
     private lateinit var deviceParamsProvider: DeviceParamsProvider
 
     @Mock
+    private lateinit var coroutineManager: CoroutineManager
+
+    @Mock
     private lateinit var languagesHolder: LanguagesHolder
 
     private lateinit var userRepository: UserRepositoryImpl
@@ -75,13 +80,20 @@ class UserRepositoryTest {
     private val soraAccount = SoraAccount("a", "n")
 
     @Before
-    fun setUp() {
+    fun setUp() = runBlockingTest {
+        val accountName = "accountName"
+        val accountAddress = "accountAddress"
+        given(userDatasource.getCurAccountAddress()).willReturn(accountAddress)
+        given(db.accountDao()).willReturn(accountDao)
+        given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
+        given(coroutineManager.applicationScope).willReturn(this)
         userRepository = UserRepositoryImpl(
             userDatasource,
             appVersionProvider,
             db,
             appLinkProvider,
             deviceParamsProvider,
+            coroutineManager
         )
         mockkObject(LanguagesHolder)
     }
@@ -117,7 +129,7 @@ class UserRepositoryTest {
         given(db.accountDao()).willReturn(accountDao)
         given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
         userRepository.initCurSoraAccount()
-        verify(accountDao).getAccount(accountAddress)
+        verify(accountDao, times(2)).getAccount(accountAddress)
         userRepository.updateAccountName(soraAccount, accountName)
         verify(accountDao).updateAccountName(accountName, soraAccount.substrateAddress)
     }

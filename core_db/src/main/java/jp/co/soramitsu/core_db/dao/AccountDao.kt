@@ -22,7 +22,7 @@ interface AccountDao {
     fun flowAccounts(): Flow<List<SoraAccountLocal>>
 
     @Query("select * from accounts where substrateAddress = :address")
-    suspend fun getAccount(address: String): SoraAccountLocal
+    suspend fun getAccount(address: String): SoraAccountLocal?
 
     @Query("select count(*) from accounts")
     suspend fun getAccountsCount(): Int

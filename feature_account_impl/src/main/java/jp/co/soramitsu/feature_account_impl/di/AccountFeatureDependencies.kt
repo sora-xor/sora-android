@@ -9,6 +9,7 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.AppVersionProvider
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DeviceParamsProvider
@@ -26,6 +27,8 @@ interface AccountFeatureDependencies {
     fun resourceManager(): ResourceManager
 
     fun appDatabase(): AppDatabase
+
+    fun coroutineManager(): CoroutineManager
 
     fun appLinksProvider(): AppLinksProvider
 

@@ -7,6 +7,7 @@ package jp.co.soramitsu.feature_wallet_impl.domain
 
 import io.mockk.every
 import io.mockk.mockkStatic
+import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
@@ -80,6 +81,7 @@ class WalletInteractorTest {
     private lateinit var interactor: WalletInteractor
 
     private val soraAccount = SoraAccount("address", "name")
+    private val irohaData = IrohaData("irohaAddress", "irohaClaim", "irohaPublic")
 
     @Before
     fun setUp() = runBlockingTest {
@@ -100,7 +102,7 @@ class WalletInteractorTest {
 
     @Test
     fun `needs migration`() = runBlockingTest {
-        given(credentialsRepository.getIrohaAddress(soraAccount)).willReturn("irohaAddress")
+        given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
         given(walletRepository.needsMigration("irohaAddress")).willReturn(true)
         given(userRepository.saveNeedsMigration(anyBoolean(), anyNonNull())).willReturn(Unit)
         val result = interactor.needsMigration()
@@ -154,11 +156,7 @@ class WalletInteractorTest {
 
     @Test
     fun `migrate extrinsic`() = runBlockingTest {
-        given(credentialsRepository.getClaimSignature(soraAccount)).willReturn("signature")
-        given(credentialsRepository.getIrohaAddress(soraAccount)).willReturn("irohaAddress")
-        given(credentialsRepository.retrieveIrohaKeyPair(soraAccount)).willReturn(keyPair)
-        given(keyPair.public).willReturn(publicKey)
-        given(publicKey.encoded).willReturn(ByteArray(32) { 1 })
+        given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
         given(

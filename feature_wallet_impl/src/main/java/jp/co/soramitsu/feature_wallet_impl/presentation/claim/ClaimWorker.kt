@@ -74,11 +74,11 @@ class ClaimWorker(private val appContext: Context, workerParams: WorkerParameter
         val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification)
         setForegroundAsync(foregroundInfo)
 
-        FirebaseWrapper.log("Migration started")
         val result = runCatching { walletInteractor.migrate() }.getOrElse {
             FirebaseWrapper.recordException(it)
             false
         }
+        FirebaseWrapper.log("SORA migration done $result")
         walletInteractor.saveMigrationStatus(if (result) MigrationStatus.SUCCESS else MigrationStatus.FAILED)
 
         return Result.success()

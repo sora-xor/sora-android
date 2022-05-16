@@ -7,6 +7,7 @@ package jp.co.soramitsu.sora.splash.domain
 
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import javax.inject.Inject
@@ -33,6 +34,7 @@ class MigrationManager @Inject constructor(
                 credentialsRepository.saveKeyPair(soraKeys, soraAccount)
                 userRepository.insertSoraAccount(soraAccount)
                 userRepository.setCurSoraAccount(soraAccount)
+                FirebaseWrapper.log("Migration ma done")
             }
         }
         return true
