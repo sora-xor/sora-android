@@ -6,15 +6,17 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add.confirm
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import java.math.BigDecimal
+import io.mockk.mockkObject
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData
+import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.LIQUIDITY_DATA
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.STRATEGIC_BONUS_APY
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.TEST_ASSET
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.XOR_ASSET
@@ -23,8 +25,9 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -37,6 +40,8 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import java.math.BigDecimal
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -60,9 +65,6 @@ class ConfirmAddLiquidityViewModelTest {
     private lateinit var poolsManager: PoolsManager
 
     @Mock
-    private lateinit var numbersFormatter: NumbersFormatter
-
-    @Mock
     private lateinit var resourceManager: ResourceManager
 
     @Mock
@@ -74,7 +76,7 @@ class ConfirmAddLiquidityViewModelTest {
             walletInteractor,
             polkaswapInteractor,
             poolsManager,
-            numbersFormatter,
+            NumbersFormatter(),
             resourceManager,
             XOR_ASSET.token,
             TEST_ASSET.token,
@@ -85,22 +87,31 @@ class ConfirmAddLiquidityViewModelTest {
 
     @Before
     fun setUp() {
-        given(
-            numbersFormatter.formatBigDecimal(
-                PolkaswapTestData.LIQUIDITY_DETAILS.baseAmount,
-                precision = 8
-            )
-        ).willReturn("1")
-        given(
-            numbersFormatter.formatBigDecimal(
-                PolkaswapTestData.LIQUIDITY_DETAILS.shareOfPool,
-                precision = 8
-            )
-        ).willReturn("0.34678")
-        given(resourceManager.getString(R.string.common_confirm))
-            .willReturn("Confirm")
+        mockkObject(FirebaseWrapper)
+        given(resourceManager.getString(R.string.common_confirm)).willReturn("Confirm")
+        given(resourceManager.getString(R.string.common_insufficient_balance)).willReturn("Insufficient balance")
 
-        runBlocking {
+        runTest {
+            given(polkaswapInteractor.subscribeReservesCache(TEST_ASSET.token.id)).willReturn(
+                flowOf(
+                    LIQUIDITY_DATA
+                )
+            )
+            given(
+                polkaswapInteractor.calcLiquidityDetails(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any()
+                )
+            ).willReturn(PolkaswapTestData.LIQUIDITY_DETAILS)
             given(
                 polkaswapInteractor.isPairEnabled(
                     XOR_ASSET.token.id,
@@ -121,12 +132,17 @@ class ConfirmAddLiquidityViewModelTest {
             given(polkaswapInteractor.getPoolStrategicBonusAPY(TEST_ASSET.token.id))
                 .willReturn(STRATEGIC_BONUS_APY)
 
-            given(walletInteractor.subscribeVisibleAssetsOfCurAccount()).willReturn(
+            given(walletInteractor.subscribeActiveAssetsOfCurAccount()).willReturn(
                 flowOf(
                     listOf(XOR_ASSET, TEST_ASSET)
                 )
             )
         }
+    }
+
+    @After
+    fun tearDown() {
+        io.mockk.verify(exactly = 0) { FirebaseWrapper.recordException(any()) }
     }
 
     @Test
@@ -137,7 +153,7 @@ class ConfirmAddLiquidityViewModelTest {
     }
 
     @Test
-    fun `confirm clicked EXPECT observeAddLiquidity called`() = runBlockingTest {
+    fun `confirm clicked EXPECT observeAddLiquidity called`() = runTest {
         given(
             polkaswapInteractor.observeAddLiquidity(
                 XOR_ASSET.token,
@@ -151,6 +167,7 @@ class ConfirmAddLiquidityViewModelTest {
         ).willReturn(true)
 
         viewModel.onConfirm()
+        advanceUntilIdle()
 
         verify(polkaswapInteractor).observeAddLiquidity(
             XOR_ASSET.token,
@@ -164,7 +181,7 @@ class ConfirmAddLiquidityViewModelTest {
     }
 
     @Test
-    fun `transaction succeeded EXPECT extrinsic event is true`() = runBlockingTest {
+    fun `transaction succeeded EXPECT extrinsic event is true`() = runTest {
         given(
             polkaswapInteractor.observeAddLiquidity(
                 XOR_ASSET.token,
@@ -178,12 +195,13 @@ class ConfirmAddLiquidityViewModelTest {
         ).willReturn(true)
 
         viewModel.onConfirm()
+        advanceUntilIdle()
 
         assertTrue(viewModel.extrinsicEvent.value!!)
     }
 
     @Test
-    fun `transaction failed EXPECT extrinsic event is false`() = runBlockingTest {
+    fun `transaction failed EXPECT extrinsic event is false`() = runTest {
         given(
             polkaswapInteractor.observeAddLiquidity(
                 XOR_ASSET.token,
@@ -197,12 +215,13 @@ class ConfirmAddLiquidityViewModelTest {
         ).willReturn(false)
 
         viewModel.onConfirm()
+        advanceUntilIdle()
 
         assertFalse(viewModel.extrinsicEvent.value!!)
     }
 
     @Test
-    fun `confirm clicked EXPECT return to polkaswap`() = runBlockingTest {
+    fun `confirm clicked EXPECT return to polkaswap`() = runTest {
         given(
             polkaswapInteractor.observeAddLiquidity(
                 XOR_ASSET.token,
@@ -216,6 +235,7 @@ class ConfirmAddLiquidityViewModelTest {
         ).willReturn(true)
 
         viewModel.onConfirm()
+        advanceUntilIdle()
 
         verify(router).returnToPolkaswap()
     }

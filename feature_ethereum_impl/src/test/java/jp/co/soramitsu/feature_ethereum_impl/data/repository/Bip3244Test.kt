@@ -5,11 +5,11 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
-import org.bouncycastle.util.encoders.Hex
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
+import org.spongycastle.util.encoders.Hex
 import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.MnemonicUtils

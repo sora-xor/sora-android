@@ -8,9 +8,8 @@ package jp.co.soramitsu.feature_notification_impl.data.repository.datasource
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationDatasource
-import javax.inject.Inject
 
-class PrefsNotificationDatasource @Inject constructor(
+class PrefsNotificationDatasource(
     private val soraPreferences: SoraPreferences,
     private val encryptedPreferences: EncryptedPreferences
 ) : NotificationDatasource {

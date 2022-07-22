@@ -26,6 +26,21 @@ fun <T, V> LiveData<T>.map(mapper: (T) -> V): LiveData<V> {
     }
 }
 
+fun <A, B> LiveData<A>.zipWith(stream: LiveData<B>): LiveData<Pair<A, B>> {
+    val result = MediatorLiveData<Pair<A, B>>()
+    result.addSource(this) { a ->
+        if (a != null && stream.value != null) {
+            result.value = Pair(a, stream.value!!)
+        }
+    }
+    result.addSource(stream) { b ->
+        if (b != null && this.value != null) {
+            result.value = Pair(this.value!!, b)
+        }
+    }
+    return result
+}
+
 fun MutableLiveData<Event<Unit>>.sendEvent() {
     this.value = Event(Unit)
 }

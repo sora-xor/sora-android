@@ -13,36 +13,35 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.TransactionHistoryRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
-import jp.co.soramitsu.feature_wallet_api.domain.model.BlockEntry
-import jp.co.soramitsu.feature_wallet_api.domain.model.BlockResponse
-import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
-import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.anyNonNull
+import jp.co.soramitsu.sora.substrate.models.BlockEntry
+import jp.co.soramitsu.sora.substrate.models.BlockResponse
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
+import jp.co.soramitsu.test_data.TestTokens
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyBoolean
-import org.mockito.BDDMockito.anyLong
 import org.mockito.BDDMockito.anyString
+import org.mockito.BDDMockito.doNothing
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import java.math.BigDecimal
 import java.security.KeyPair
 import java.security.PublicKey
@@ -51,11 +50,11 @@ import java.security.PublicKey
 @ExperimentalCoroutinesApi
 class WalletInteractorTest {
 
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
     @Mock
     private lateinit var walletRepository: WalletRepository
+
+    @Mock
+    private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
     @Mock
     private lateinit var ethRepository: EthereumRepository
@@ -81,17 +80,20 @@ class WalletInteractorTest {
     private lateinit var interactor: WalletInteractor
 
     private val soraAccount = SoraAccount("address", "name")
-    private val irohaData = IrohaData("irohaAddress", "irohaClaim", "irohaPublic")
+    //private val irohaData = IrohaData("irohaAddress", "irohaClaim", "irohaPublic")
+
+    private val irohaData: IrohaData =
+        IrohaData(address = "abcdef", claimSignature = "qweasdzc", publicKey = "publickey")
 
     @Before
-    fun setUp() = runBlockingTest {
-        given(coroutineManager.applicationScope).willReturn(mainCoroutineRule)
-        mockkStatic(String::blake2b256String)
-        every { "0x112323345".blake2b256String() } returns "blake2b"
-        every { "0x35456472".blake2b256String() } returns "blake2b"
+    fun setUp() = runTest {
+        mockkStatic(String::extrinsicHash)
+        every { "0x112323345".extrinsicHash() } returns "blake2b"
+        every { "0x35456472".extrinsicHash() } returns "blake2b"
         given(userRepository.getCurSoraAccount()).willReturn(soraAccount)
         interactor = WalletInteractorImpl(
             walletRepository,
+            transactionHistoryRepository,
             ethRepository,
             userRepository,
             credentialsRepository,
@@ -101,16 +103,16 @@ class WalletInteractorTest {
     }
 
     @Test
-    fun `needs migration`() = runBlockingTest {
+    fun `needs migration`() = runTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
-        given(walletRepository.needsMigration("irohaAddress")).willReturn(true)
-        given(userRepository.saveNeedsMigration(anyBoolean(), anyNonNull())).willReturn(Unit)
+        given(walletRepository.needsMigration("abcdef")).willReturn(true)
+        given(userRepository.saveNeedsMigration(true, soraAccount)).willReturn(Unit)
         val result = interactor.needsMigration()
         assertEquals(true, result)
     }
 
     @Test
-    fun `get assets`() = runBlockingTest {
+    fun `get assets`() = runTest {
         given(
             walletRepository.getAssetsVisible(
                 "address",
@@ -120,42 +122,56 @@ class WalletInteractorTest {
     }
 
     @Test
-    fun `find other users`() = runBlockingTest {
+    fun `find other users`() = runTest {
         given(credentialsRepository.isAddressOk(anyString())).willReturn(true)
-        given(walletRepository.getContacts(anyString())).willReturn(
+        given(transactionHistoryRepository.getContacts(anyString())).willReturn(
             setOf(
                 "contact1",
                 "contact2"
             )
         )
-        assertEquals(accountList(), interactor.findOtherUsersAccounts("use"))
+        assertEquals(accountList(), interactor.getContacts("use"))
     }
 
     @Test
-    fun `just transfer`() = runBlockingTest {
+    fun `just transfer`() = runTest {
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
-        given(walletRepository.transfer(kp, "address", "to", "assetId", BigDecimal.ONE)).willReturn(
-            "hash"
+        given(
+            walletRepository.transfer(
+                kp,
+                "address",
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE
+            )
+        ).willReturn(
+            Result.success("")
         )
-        assertEquals("hash", interactor.transfer("to", "assetId", BigDecimal.ONE))
+        assertEquals(
+            Result.success(""),
+            interactor.transfer("to", TestTokens.xorToken, BigDecimal.ONE)
+        )
     }
 
     @Test
-    fun `calc transaction fee`() = runBlockingTest {
+    fun `calc transaction fee`() = runTest {
         given(
             walletRepository.calcTransactionFee(
                 "address",
                 "to",
-                "assetId",
+                TestTokens.xorToken,
                 BigDecimal.ONE
             )
         ).willReturn(BigDecimal.TEN)
-        assertEquals(BigDecimal.TEN, interactor.calcTransactionFee("to", "assetId", BigDecimal.ONE))
+        assertEquals(
+            BigDecimal.TEN,
+            interactor.calcTransactionFee("to", TestTokens.xorToken, BigDecimal.ONE)
+        )
     }
 
     @Test
-    fun `migrate extrinsic`() = runBlockingTest {
+    fun `migrate extrinsic`() = runTest {
         given(credentialsRepository.getIrohaData(soraAccount)).willReturn(irohaData)
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
@@ -164,97 +180,72 @@ class WalletInteractorTest {
                 anyString(),
                 anyString(),
                 anyString(),
-                anyNonNull(),
+                any(),
+                anyString(),
             )
         ).willReturn(
-            flow {
-                emit(
-                    "hash" to ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
-                        "sub",
-                        "block"
-                    )
-                )
-            }
+            ExtrinsicSubmitStatus(true, "", "")
         )
         val br = BlockResponse(
             "justification",
             BlockEntry("header", listOf("0x112323345", "0x35456472"))
         )
-        given(walletRepository.getBlock(anyString())).willReturn(br)
-        given(walletRepository.isTxSuccessful(anyLong(), anyString(), anyString())).willReturn(true)
-        given(userRepository.saveNeedsMigration(anyBoolean(), anyNonNull())).willReturn(Unit)
         assertEquals(true, interactor.migrate())
     }
 
     @Test
-    fun `observe transfer`() = runBlockingTest {
+    fun `observe transfer`() = runTest(UnconfinedTestDispatcher()) {
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
         given(
             walletRepository.observeTransfer(
-                kp,
-                "address",
-                "to",
-                "assetId",
-                BigDecimal.ONE,
-                BigDecimal.ONE
+                any(),
+                anyString(),
+                anyString(),
+                any(),
+                any(),
+                any(),
             )
         ).willReturn(
-            flow {
-                emit(
-                    "hash" to ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
-                        "sub",
-                        "block"
-                    )
-                )
-            }
+            ExtrinsicSubmitStatus(true, "", "")
         )
-        given(
-            walletRepository.saveTransfer(
-                anyString(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull(),
-                anyNonNull(),
-            )
-        ).willReturn(Unit)
+        doNothing().`when`(transactionHistoryRepository).saveTransaction(
+            any(),
+        )
         assertEquals(
             true,
-            interactor.observeTransfer("to", "assetId", BigDecimal.ONE, BigDecimal.ONE)
+            interactor.observeTransfer("to", TestTokens.xorToken, BigDecimal.ONE, BigDecimal.ONE)
         )
     }
 
     @Test
-    fun `hide assets`() = runBlockingTest {
+    fun `hide assets`() = runTest {
         val assets = listOf("id1", "id2")
         given(walletRepository.hideAssets(assets, soraAccount)).willReturn(Unit)
         assertEquals(Unit, interactor.hideAssets(assets))
     }
 
     @Test
-    fun `display assets`() = runBlockingTest {
+    fun `display assets`() = runTest {
         val assets = listOf("id1", "id2")
         given(walletRepository.displayAssets(assets, soraAccount)).willReturn(Unit)
         assertEquals(Unit, interactor.displayAssets(assets))
     }
 
     @Test
-    fun `update assets position`() = runBlockingTest {
+    fun `update assets position`() = runTest {
         val assets = mapOf("id1" to 1, "id2" to 2)
         given(walletRepository.updateAssetPositions(assets, soraAccount)).willReturn(Unit)
         assertEquals(Unit, interactor.updateAssetPositions(assets))
     }
 
     @Test
-    fun `get account id called`() = runBlockingTest {
+    fun `get account id called`() = runTest {
         assertEquals(soraAccount.substrateAddress, interactor.getAddress())
     }
 
     @Test
-    fun `process qr called`() = runBlockingTest {
+    fun `process qr called`() = runTest {
         val content = "substrate:notMyAddress:en:part4:part5"
         given(credentialsRepository.isAddressOk("notMyAddress")).willReturn(true)
         given(walletRepository.isWhitelistedToken("part5")).willReturn(true)
@@ -266,10 +257,9 @@ class WalletInteractorTest {
     }
 
     @Test
-    fun `process qr called with wrong qr data`() = runBlockingTest {
+    fun `process qr called with wrong qr data`() = runTest {
         val content = "substrate:notMyAddress:en:tjj:qwe"
         given(credentialsRepository.isAddressOk("notMyAddress")).willReturn(false)
-        given(walletRepository.isWhitelistedToken("qwe")).willReturn(true)
         val result = runCatching {
             interactor.processQr(content)
         }
@@ -281,7 +271,7 @@ class WalletInteractorTest {
     }
 
     @Test
-    fun `process qr called with users qr data`() = runBlockingTest {
+    fun `process qr called with users qr data`() = runTest {
         val content = "substrate:address:en:tjj:qwe"
         val result = runCatching {
             interactor.processQr(content)

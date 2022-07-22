@@ -1,70 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/baseBackground">
-
-    <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
-        android:id="@+id/toolbar"
+    android:overScrollMode="never"
+    android:fillViewport="true" >
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:textRight=""
-        app:titleText="@string/personal_info_username_v1" />
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:background="?attr/baseBackground">
 
-    <com.vanniktech.emoji.EmojiEditText
-        android:id="@+id/accountNameEt"
-        style="@style/TextAppearance.Soramitsu.Neu.Light.28"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:background="@null"
-        android:gravity="center_horizontal"
-        android:hint="@string/personal_info_username_v1"
-        android:maxLength="30"
-        app:layout_constraintBottom_toTopOf="@id/divider1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        <jp.co.soramitsu.common.presentation.view.SoraNeuToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/accountNameEt"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:titleText="@string/personal_info_username_v1" />
 
-    <View
-        android:id="@+id/divider1"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:background="@color/greyDivider"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar" />
+        <com.vanniktech.emoji.EmojiEditText
+            android:id="@+id/accountNameEt"
+            style="@style/TextAppearance.Soramitsu.Neu.EditText"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/x7"
+            android:gravity="center_horizontal"
+            android:hint="@string/personal_info_username_v1"
+            android:maxLength="30"
+            android:singleLine="true"
+            android:layout_marginStart="@dimen/x2"
+            android:layout_marginEnd="@dimen/x2"
+            app:layout_constraintBottom_toTopOf="@+id/accountNameHint"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.60"
+            app:layout_constraintVertical_chainStyle="packed" />
 
-    <TextView
-        style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/x3"
-        android:layout_marginTop="@dimen/x1"
-        android:layout_marginEnd="@dimen/x3"
-        android:gravity="center_horizontal"
-        android:text="@string/personal_details_info"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/divider1" />
+        <TextView
+            android:id="@+id/accountNameHint"
+            style="@style/TextAppearance.Soramitsu.Neu.13.Light"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x4"
+            android:layout_marginTop="@dimen/x1_5"
+            android:layout_marginEnd="@dimen/x4"
+            android:gravity="center_horizontal"
+            android:text="@string/personal_details_info"
+            app:layout_constraintBottom_toTopOf="@+id/tutorialTermsCondition"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/accountNameEt"
+            app:layout_constraintVertical_bias="0.0" />
 
-    <Button
-        android:id="@+id/btnAccountNameNext"
-        style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
-        android:layout_width="match_parent"
-        android:layout_marginStart="@dimen/x2"
-        android:layout_marginEnd="@dimen/x2"
-        android:layout_marginBottom="@dimen/x4"
-        android:enabled="false"
-        android:text="@string/transaction_continue"
-        android:textAllCaps="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/tutorialTermsCondition"
+            style="@style/TextAppearance.Soramitsu.Neu.13.Light"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x4"
+            android:layout_marginEnd="@dimen/x4"
+            android:layout_marginBottom="@dimen/x1_5"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toTopOf="@id/nextBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintVertical_bias="1.0"
+            tools:text="By signing up you are agreeing with Terams COnditions and Privacy Policy" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:id="@+id/nextBtn"
+            style="@style/Widget.Soramitsu.Button.Primary.Neu.56"
+            android:layout_width="0dp"
+            android:layout_marginStart="@dimen/x1"
+            android:layout_marginEnd="@dimen/x1"
+            android:layout_marginBottom="@dimen/x4"
+            android:layout_weight="0"
+            android:text="@string/transaction_continue"
+            android:textAllCaps="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

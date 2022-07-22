@@ -26,6 +26,8 @@ interface UserRepository {
 
     fun flowSoraAccountsList(): Flow<List<SoraAccount>>
 
+    suspend fun soraAccountsList(): List<SoraAccount>
+
     suspend fun insertSoraAccount(soraAccount: SoraAccount)
 
     suspend fun updateAccountName(soraAccount: SoraAccount, newName: String)
@@ -40,7 +42,7 @@ interface UserRepository {
 
     suspend fun clearUserData()
 
-    suspend fun getAppVersion(): String
+    suspend fun clearAccountData(address: String)
 
     suspend fun saveParentInviteCode(inviteCode: String)
 
@@ -49,8 +51,6 @@ interface UserRepository {
     suspend fun getAvailableLanguages(): Pair<List<Language>, String>
 
     suspend fun changeLanguage(language: String): String
-
-    suspend fun getInvitationLink(): String
 
     suspend fun getSelectedLanguage(): Language
 

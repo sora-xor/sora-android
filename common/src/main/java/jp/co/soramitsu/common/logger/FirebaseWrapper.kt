@@ -6,8 +6,8 @@
 package jp.co.soramitsu.common.logger
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.orhanobut.logger.Logger
 import kotlinx.coroutines.CancellationException
+import timber.log.Timber
 
 object FirebaseWrapper {
     private val blackList = listOf(CancellationException::class)
@@ -15,14 +15,14 @@ object FirebaseWrapper {
     fun recordException(t: Throwable) {
         blackList.forEach { kClass ->
             if (!kClass.isInstance(t)) {
-                Logger.e(t, "ERROR")
+                Timber.e(t, "ERROR")
                 FirebaseCrashlytics.getInstance().recordException(t)
             }
         }
     }
 
     fun log(message: String) {
-        Logger.d("SORALOG $message")
+        Timber.d(message)
         FirebaseCrashlytics.getInstance().log(message)
     }
 }

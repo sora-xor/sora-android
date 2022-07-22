@@ -21,7 +21,7 @@ import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -74,7 +74,7 @@ class ReceiveAmountViewModelTest {
     private val qrCodeBitmap = mock(Bitmap::class.java)
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         given(interactor.getAddress()).willReturn("0x123123")
         given(interactor.getPublicKeyHex(true)).willReturn("0xabc")
         given(interactor.getAccountName()).willReturn("0x98765")

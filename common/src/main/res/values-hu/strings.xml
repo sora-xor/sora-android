@@ -13,6 +13,8 @@
   <string name="about_website">Hivatalos honlap</string>
   <string name="about_wiki">További információ a Wiki-n</string>
   <string name="about_youtube">Feliratkozás a YouTube-ra</string>
+  <string name="account_already_imported">Already imported</string>
+  <string name="account_already_imported_description">This wallet is already imported</string>
   <string name="account_confirmation_title">Helyreállítási szavak megerősítése</string>
   <string name="account_confirmation_title_v2">Helyreállítási  megerősítése</string>
   <string name="activity_project">Projekt</string>
@@ -36,6 +38,7 @@
   <string name="asset_state_error">Hiba</string>
   <string name="asset_val_fullname">SORA Validator Token (VAL)</string>
   <string name="asset_val_name">SORA Validator Token</string>
+  <string name="backup_account_title">Backup Account</string>
   <string name="biometric_dialog_title">Hitelesítés</string>
   <string name="block_id">Block referencia szám</string>
   <string name="choose_token">Token kiválasztása</string>
@@ -64,6 +67,7 @@
   <string name="common_apply">Alkalmaz</string>
   <string name="common_arab">Arab</string>
   <string name="common_asset">Eszköz</string>
+  <string name="common_back">Back</string>
   <string name="common_balance">Egyenleg</string>
   <string name="common_bashkir">Baskír</string>
   <string name="common_camera">Kamera</string>
@@ -101,6 +105,7 @@
   <string name="common_error_mnemonic_is_not_valid">Az általad megadott helyreállítási szavak érvénytelenek. Kérjük próbálkozz egy másikkal.</string>
   <string name="common_error_mnemonic_length_error">A helyreállítási szavaknak 15 szót kell tartalmaznia</string>
   <string name="common_error_network">Kérjük ellenőrizd az internet kapcsolatot és próbáld újra később</string>
+  <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Sajnáljuk, de nincs meghívód, amit megoszthatnál.</string>
   <string name="common_error_not_found_title">Az erőforrás nem érhető el</string>
   <string name="common_error_phone_already_exists">Sajnáljuk, ez a telefonszám már használatban van. Kérjük próbálkozzon egy másikkal.</string>
@@ -110,6 +115,7 @@
   <string name="common_error_project_not_found">Sajnáljuk, de a projekt nem található.</string>
   <string name="common_error_retry">Kérlek próbáld újra</string>
   <string name="common_error_search_string_error">Minimum 3 és 64 karakter között kell lennie</string>
+  <string name="common_error_seed_is_not_valid">Please make sure that your input contains 64 hex symbols.</string>
   <string name="common_error_self_invitation">Nem használhatod fel a saját meghívó kódodat</string>
   <string name="common_error_unauthorized_body">Kérjük ellenőrizd az internet kapcsolatot és próbáld újra később.</string>
   <string name="common_error_unauthorized_title">A hitelesítés sikertelen</string>
@@ -144,6 +150,7 @@
   <string name="common_malay">Maláj</string>
   <string name="common_manage">Kezelés</string>
   <string name="common_min">perc</string>
+  <string name="common_name">Name</string>
   <string name="common_network_unavailable">A hálózati kapcsolat nem érhető el</string>
   <string name="common_next">Következő</string>
   <string name="common_norwegian">Norvég</string>
@@ -168,6 +175,7 @@
   <string name="common_personal_info_last_name_is_empty">A vezetéknév üres</string>
   <string name="common_personal_info_title">Személyes információk</string>
   <string name="common_please_wait">Kérem várjon</string>
+  <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Fogadás</string>
   <string name="common_received">Kapott</string>
   <string name="common_recipient">Címzett</string>
@@ -232,13 +240,26 @@
   <string name="error_miner_fee_title">Nincs elég pénz a bányászdíjhoz</string>
   <string name="error_transaction_fee_title">Nincs elég pénz a tranzakciós díjra</string>
   <string name="ethereum_config_unavailable">Ethereum csomópont nem érhető el</string>
+  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_options">Backup options</string>
+  <string name="export_account_details_show_passphrase">Show Passphrase</string>
+  <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
   <string name="faq_title">GYIK</string>
   <string name="friends_spread_word">Említs meg minket ismerőseidnek, barátaidnak is!</string>
   <string name="from_account">Fiókból</string>
+  <string name="history_bonded_tokens">Bonded XOR tokens</string>
   <string name="history_receive">Fogadás</string>
+  <string name="history_referral">Referral</string>
+  <string name="history_referral_bond_tokens">Bond tokens</string>
+  <string name="history_referral_set_referral">Set referral</string>
+  <string name="history_referral_set_referrer">Set referrer</string>
+  <string name="history_referral_unbond_tokens">Unbond tokens</string>
+  <string name="history_referrer">Referrer</string>
   <string name="history_send">Küldés</string>
   <string name="history_swap">Váltás</string>
   <string name="history_title">Előzmények</string>
+  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
+  <string name="import_account_raw_seed">You have imported this account via Raw Seed</string>
   <string name="invite_accepted_empty_state_title">Még nem fogadták el a meghívókat</string>
   <string name="invite_accepted_invitations_title">Elfogadott meghívások</string>
   <string name="invite_accepted_someone">Valaki elfogadta a meghívást</string>
@@ -289,6 +310,10 @@
   <string name="phone_number_sms_code_will_be_sent">SMS-kódot küldünk a telefonodra</string>
   <string name="phone_number_title">Regisztráció</string>
   <string name="phone_verification_too_frequent_message">Túl gyakori ellenőrző kód kérés. Kérjük, próbáld újra később.</string>
+  <string name="pin_update_button_text">SET NEW PIN</string>
+  <string name="pin_update_info_description">Security policy has been improved for your protection.</string>
+  <string name="pin_update_info_subtitle">Please set a new 6 digit PIN.</string>
+  <string name="pin_update_info_title">4 digit PIN is no longer supported</string>
   <string name="pincode_change_success">PIN-kód sikeresen frissítve</string>
   <string name="pincode_change_success_v1">PIN kód megváltozott</string>
   <string name="pincode_confirm_new_pin_code">Erősítsd meg az új PIN-kódot</string>
@@ -303,7 +328,7 @@
   <string name="pincode_updated">PIN-kód frissítve</string>
   <string name="polkaswap_button_swap_again">Váltás megint</string>
   <string name="polkaswap_coming_soon">A jövő decentralizált tőzsdéje. A Polkaswap nem végez kulcskezelést, decentralizált automata árjegyző tőzsde protokoll, amely a Polkadot hálózaton, párhuzamos láncokon és a hidakon keresztül tokenek cseréjére szolgál. A Polkaswap protokoll hatékonyan helyettesíti közvetítőket és lehetőséget nyújt a gyorsabb kereskedésre.</string>
-  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="polkaswap_common_info">A likviditási tartalékból a poolban való részesedésével arányos díjakat fog keresni.</string>
   <string name="polkaswap_confirm_swap">Váltás megerősítése</string>
   <string name="polkaswap_details">Részletek</string>
   <string name="polkaswap_error_noswap">Nincs váltás</string>
@@ -341,13 +366,15 @@
   <string name="polkaswap_output_estimated">Becsült eredmény. Legalább %s kapsz, vagy a tranzakció visszafordul.</string>
   <string name="polkaswap_pool_not_created">A pool nem jött létre</string>
   <string name="polkaswap_pool_title">Pool</string>
-  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_price_for_one">ÁR 1</string>
+  <string name="polkaswap_sb_apy_info">Farming jutalom a likviditás biztosításaért</string>
   <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Előfordulhat, hogy a tranzakció előre fut</string>
   <string name="polkaswap_slippage_info">A csúszási tolerancia egy elfogadott küszöbérték, amelyet százalékban határoznak meg a végösszegre, és befolyásolja a minimálisan kapott összeget.</string>
   <string name="polkaswap_slippage_mayfail">A tranzakció sikertelen lehet</string>
   <string name="polkaswap_slippage_tolerance">Csúszási tolerancia</string>
   <string name="polkaswap_smart">Okos</string>
+  <string name="polkaswap_swap_empty_list">Még nincs aktív pool részesedése.\nAdjon hozzá likviditást a jutalmak megszerzéséhez</string>
   <string name="polkaswap_swap_title">Váltás</string>
   <string name="polkaswap_swapped">Átváltva</string>
   <string name="polkaswap_tbc">TBC</string>
@@ -394,11 +421,15 @@
   <string name="project_you_can_vote_at_least_1_point">Legalább 1 ponttal szavazhatsz 😜</string>
   <string name="qr_code">QR-kód</string>
   <string name="qr_upload">Feltöltés a galériából</string>
+  <string name="recovery_alert_raw_seed_description">You will not be able to use passphrase when recovering using Raw Seed</string>
+  <string name="recovery_alert_raw_seed_title">Recovering from Raw Seed</string>
   <string name="recovery_body_subtitle">Sajnos nincs lehetőséged hozzáférni a fiókhoz, ha elfelejtetted a helyreállítási szavaid.</string>
   <string name="recovery_body_title">Helyreállítási szavak megadása</string>
+  <string name="recovery_input_raw_seed_hint">Raw Seed (64 hex symbols)</string>
   <string name="recovery_mnemonic_passphrase">Helyreállítási szavak</string>
   <string name="recovery_passphrase">Hozzáférés helyreállítása</string>
   <string name="recovery_source_type">Forrás típusa</string>
+  <string name="recovery_source_type_1">Choose source type</string>
   <string name="recovery_title">Fiók importálása</string>
   <string name="referenda_title">Népszavazás</string>
   <string name="referenda_title_vote">Szavazás a népszavazáson</string>
@@ -418,6 +449,26 @@
   <string name="referendum_total_votes">Összes szavazat</string>
   <string name="referendum_unsupport_title">Nem</string>
   <string name="referendum_voting_result">Szavazás eredménye</string>
+  <string name="referral_activate_button_title">Activate</string>
+  <string name="referral_bond_button_title">Bond XOR</string>
+  <string name="referral_enter_link_title">Enter referrer\'s link</string>
+  <string name="referral_get_more_invitation_button_title">Get more invitations</string>
+  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\n\nYou can unbond your XOR at any time for unused invitations.</string>
+  <string name="referral_input_reward_title">Enter desired amount of invitations</string>
+  <string name="referral_invitaion_link_title">Available invitations</string>
+  <string name="referral_referral_link">Referrer’s link or address</string>
+  <string name="referral_referrer_address">Referrer\'s address</string>
+  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_start_inviting">Start inviting</string>
+  <string name="referral_subtitle">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
+  <string name="referral_title">Get 10% of your referrals’ network fees</string>
+  <string name="referral_toolbar_title">Referral program</string>
+  <string name="referral_total_rewards">Total rewards</string>
+  <string name="referral_unbond_button_title">Unbond XOR</string>
+  <string name="referral_unbond_xor_description">You can unbond %s per 1 invitations. How many invitations do you want to withdraw?</string>
+  <string name="referral_your_invitation_link_title">Your invitation link</string>
+  <string name="referral_your_referrals">Your referrals</string>
+  <string name="referral_your_referrer">Your referrer</string>
   <string name="remove_liquidity_info_text">A likviditás eltávolítása visszaváltja a pozícióját az aktuális árfolyamon, arányosan a poolból való részesedésével.</string>
   <string name="remove_liquidity_title">Likviditás eltávolítása</string>
   <string name="remove_pool_confirmation_description">A kimenet becsült. Ha az ár több mint %s %% -nál változik, a tranzakció visszafordul.</string>
@@ -432,7 +483,7 @@
   <string name="select_asset_send">Küldendő eszköz kiválasztása</string>
   <string name="select_recipient">Címzett kiválasztása</string>
   <string name="set_amount">Állítsd be az összeget</string>
-  <string name="settings_accounts">Accounts</string>
+  <string name="settings_accounts">Fiókok</string>
   <string name="settings_header_account">FIÓK BEÁLLÍTÁSOK</string>
   <string name="settings_header_app">ALKALMAZÁS BEÁLLÍTÁSAI</string>
   <string name="settings_header_other">EGYÉB</string>
@@ -521,10 +572,10 @@
   <string name="wallet_history_to_soranet_account">SORA NET számlára</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">A %s Fogadásra jogosult hálózati címem %s:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Fogadásra jogosult hálózati cím %s:</string>
-  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Olvassa be ezt a QR-kódot, hogy elküldje nekem %s . %s hálózati fiókom azonosítója: \n %s</string>
   <string name="wallet_qr_share_message_template" formatted="false">A %s Fogadásra jogosult hálózati címem %s%s:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">%s Fogadásra jogosult hálózati címem %s%s:</string>
-  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Olvassa be ezt a QR-kódot, hogy elküldje nekem %s . %s hálózati fiókom azonosítója: \n %s</string>
   <string name="wallet_receive_val">VAL fogadása</string>
   <string name="wallet_redeemable">Beváltható</string>
   <string name="wallet_send_existential_warning_message">Az átutalás eltávolítja a fiókot, mivel ezáltal az egyenleg alacsonyabb lesz, mint a szükséges minimum.</string>

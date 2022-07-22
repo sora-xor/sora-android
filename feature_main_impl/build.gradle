@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
 
@@ -52,22 +52,29 @@ android {
 
     buildFeatures {
         viewBinding true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion versions.compose
+        kotlinCompilerVersion versions.kotlin
     }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation project(":core_di")
     implementation project(":common")
     implementation project(":feature_main_api")
     implementation project(":feature_account_api")
     implementation project(":feature_notification_api")
     implementation project(":feature_votable_api")
-    implementation project(':feature_ethereum_api')
+    implementation project(":feature_ethereum_api")
     implementation project(":feature_wallet_api")
     implementation project(":feature_onboarding_api")
     implementation project(":feature_multiaccount_api")
+    implementation project(":feature_referral_api")
+    implementation project(":sorasubstrate")
 
     implementation kotlinDep
 
@@ -80,9 +87,6 @@ dependencies {
 
     implementation coreKtxDep
 
-    implementation fearlessLibDep
-    implementation loggerDep
-
     implementation emojiDep
     implementation neumorphismDep
 
@@ -91,41 +95,38 @@ dependencies {
     implementation insetterDep
     implementation viewBindingDep
 
-    implementation shimmerDep
-
     implementation roundedImageViewDep
+
+    implementation composeUiDep
+    implementation composeCompilerDep
+    implementation composeThemeAdapterDep
+    implementation composeFoundationDep
+    implementation composeMaterialDep
+    implementation composeAnimationDep
+    implementation composeActivityDep
+    implementation composeViewModelDep
+    implementation composeToolingPreviewDep
+    debugImplementation composeToolingDep
 
     implementation picassoDep
 
     implementation gsonDep
-    implementation fearlessLibDep
     implementation webSocketLibDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
     implementation viewmodelKtxDep
 
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
 
-    implementation lifecycleKtxDep
-    implementation lifecycleExtDep
+    implementation lifecycleProcessDep
     kapt lifecycleKaptDep
-
-    //implementation soraDep
-    implementation birtDep
 
     implementation insetterDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
 }

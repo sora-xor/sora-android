@@ -1,0 +1,58 @@
+apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(":common")
+    implementation project(":sorasubstrate")
+    implementation navigationFragmentDep
+    implementation navigationUiDep
+
+    implementation xNetworkingDep
+    implementation fearlessLibDep
+
+    implementation daggerDep
+    kapt daggerKaptDep
+}

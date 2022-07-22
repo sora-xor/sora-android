@@ -13,6 +13,8 @@
   <string name="about_website">Offizielle Website</string>
   <string name="about_wiki">Auf Wiki lernen</string>
   <string name="about_youtube">YouTube abonnieren</string>
+  <string name="account_already_imported">Bereits importiert</string>
+  <string name="account_already_imported_description">Diese Wallet ist bereits importiert</string>
   <string name="account_confirmation_title">Mnemonik bestätigen</string>
   <string name="account_confirmation_title_v2">Passphrase bestätigen</string>
   <string name="activity_project">Projekt</string>
@@ -36,6 +38,7 @@
   <string name="asset_state_error">Fehler</string>
   <string name="asset_val_fullname">SORA Validator Token (VAL)</string>
   <string name="asset_val_name">SORA Validator Token</string>
+  <string name="backup_account_title">Backup-Konto</string>
   <string name="biometric_dialog_title">Authentifizieren</string>
   <string name="block_id">Block-Hash</string>
   <string name="choose_token">Token\nauswählen</string>
@@ -64,6 +67,7 @@
   <string name="common_apply">Anwenden</string>
   <string name="common_arab">Arabisch</string>
   <string name="common_asset">Asset</string>
+  <string name="common_back">Zurück</string>
   <string name="common_balance">Saldo</string>
   <string name="common_bashkir">Baschkirisch</string>
   <string name="common_camera">Kamera</string>
@@ -101,6 +105,7 @@
   <string name="common_error_mnemonic_is_not_valid">Bitte stell sicher, dass die Passphrase aus 12 oder 15 Wörtern besteht und dass sie alle korrekt sind.</string>
   <string name="common_error_mnemonic_length_error">Die Passphrase muss 15 Wörter enthalten</string>
   <string name="common_error_network">Bitte überprüfe die Internetverbindung und versuche es später noch einmal.</string>
+  <string name="common_error_no_browser_error">Bitte installiere einen Browser, um den Link zu öffnen</string>
   <string name="common_error_not_enough_invitations">Tut uns leid, Du hast keine Einladungen zum Teilen</string>
   <string name="common_error_not_found_title">Ressource nicht verfügbar</string>
   <string name="common_error_phone_already_exists">Diese Telefonnummer ist bereits in Verwendung. Bitte gib eine andere an.</string>
@@ -110,6 +115,7 @@
   <string name="common_error_project_not_found">Es tut uns leid, das Projekt wurde nicht gefunden.</string>
   <string name="common_error_retry">Bitte versuche es erneut</string>
   <string name="common_error_search_string_error">Die Suchlänge muss zwischen 3 und 64 Zeichen liegen</string>
+  <string name="common_error_seed_is_not_valid">Bitte achte darauf, dass die Eingabe 64 Hexadezimal-Symbole enthält.</string>
   <string name="common_error_self_invitation">Du kannst dein Einladungscode nicht für dich selbst anwenden</string>
   <string name="common_error_unauthorized_body">Bitte überprüfe die Internetverbindung und versuche es später noch einmal.</string>
   <string name="common_error_unauthorized_title">Autorisierung fehlgeschlagen</string>
@@ -144,6 +150,7 @@
   <string name="common_malay">Malaiisch</string>
   <string name="common_manage">Verwalten</string>
   <string name="common_min">min</string>
+  <string name="common_name">Name</string>
   <string name="common_network_unavailable">Netzwerkverbindung nicht verfügbar</string>
   <string name="common_next">Weiter</string>
   <string name="common_norwegian">Norwegisch</string>
@@ -168,6 +175,7 @@
   <string name="common_personal_info_last_name_is_empty">Nachname ist leer</string>
   <string name="common_personal_info_title">Persönliche Informationen</string>
   <string name="common_please_wait">Bitte warten</string>
+  <string name="common_raw_seed">Raw Seed</string>
   <string name="common_receive">Empfangen</string>
   <string name="common_received">Empfangen</string>
   <string name="common_recipient">Empfänger</string>
@@ -232,13 +240,26 @@
   <string name="error_miner_fee_title">Guthaben für die Miner-Gebühr nicht ausreichend</string>
   <string name="error_transaction_fee_title">Nicht genügend Guthaben für die Transaktionsgebühr</string>
   <string name="ethereum_config_unavailable">Ethereum-Node nicht verfügbar</string>
+  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_options">Backup options</string>
+  <string name="export_account_details_show_passphrase">Show Passphrase</string>
+  <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
   <string name="faq_title">FAQ (Häufig gestellte Fragen)</string>
   <string name="friends_spread_word">Teile die App mit deinen Freunden.</string>
   <string name="from_account">Von Konto</string>
+  <string name="history_bonded_tokens">Bonded XOR tokens</string>
   <string name="history_receive">Erhalten</string>
+  <string name="history_referral">Referral</string>
+  <string name="history_referral_bond_tokens">Bond tokens</string>
+  <string name="history_referral_set_referral">Set referral</string>
+  <string name="history_referral_set_referrer">Set referrer</string>
+  <string name="history_referral_unbond_tokens">Unbond tokens</string>
+  <string name="history_referrer">Referrer</string>
   <string name="history_send">Gesendet</string>
   <string name="history_swap">Geswapt</string>
   <string name="history_title">Verlauf</string>
+  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
+  <string name="import_account_raw_seed">Du hast dieses Konto über einen Raw Seed importiert</string>
   <string name="invite_accepted_empty_state_title">Es wurden noch keine Einladungen angenommen</string>
   <string name="invite_accepted_invitations_title">Angenommene Einladungen</string>
   <string name="invite_accepted_someone">Jemand hat die Einladung angenommen</string>
@@ -289,6 +310,10 @@
   <string name="phone_number_sms_code_will_be_sent">SMS Code wird an deine\nTelefonnummer gesendet</string>
   <string name="phone_number_title">Anmelden</string>
   <string name="phone_verification_too_frequent_message">Bestätigungscode zu oft angefragt. Bitte versuche es später noch einmal.</string>
+  <string name="pin_update_button_text">NEUE PIN FESTLEGEN</string>
+  <string name="pin_update_info_description">Die Sicherheitsrichtlinie wurde zu deinem Schutz verbessert.</string>
+  <string name="pin_update_info_subtitle">Bitte lege eine neue 6-stellige PIN fest.</string>
+  <string name="pin_update_info_title">4-stellige PIN wird nicht mehr unterstützt</string>
   <string name="pincode_change_success">PIN-Code erfolgreich geändert</string>
   <string name="pincode_change_success_v1">PIN-Code geändert</string>
   <string name="pincode_confirm_new_pin_code">PIN-Code bestätigen</string>
@@ -303,7 +328,7 @@
   <string name="pincode_updated">PIN-Code aktualisiert</string>
   <string name="polkaswap_button_swap_again">Erneut tauschen</string>
   <string name="polkaswap_coming_soon">Die DEX für die interoperable Zukunft. Polkaswap ist ein non-custodial AMM-DEX-Protokoll zum Austauschen von Token basierend auf dem Polkadot-Netzwerk, Parachains und Blockchains, die über eine Bridge (Brücke) verbunden sind. Das Polkaswap-Protokoll entfernt effektiv vertrauenswürdige Vermittler und bietet die Möglichkeit für einen schnelleren Handel.</string>
-  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="polkaswap_common_info">Du wirst Gebühren proportional zu deinem Anteil am Pool aus der Liquiditätsbereitstellung verdienen.</string>
   <string name="polkaswap_confirm_swap">Tausch bestätigen</string>
   <string name="polkaswap_details">Details</string>
   <string name="polkaswap_error_noswap">Kein swap</string>
@@ -341,13 +366,15 @@
   <string name="polkaswap_output_estimated">Die Ausgabe wird geschätzt. Du erhältst mindestens %s oder die Transaktion wird rückgängig gemacht.</string>
   <string name="polkaswap_pool_not_created">Pool nicht erstellt</string>
   <string name="polkaswap_pool_title">Pool</string>
-  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_price_for_one">PREIS 1</string>
+  <string name="polkaswap_sb_apy_info">Farming Belohungen für Liquiditätsbereitstellung</string>
   <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Deine Transaktion könnte frontrunnen</string>
   <string name="polkaswap_slippage_info">Deine Transaktionen wird rückgängig gemacht, wenn sich der Preis um mehr als diesen Prozentsatz ungünstig ändert</string>
   <string name="polkaswap_slippage_mayfail">Deine Transaktion könnte fehlschlagen</string>
   <string name="polkaswap_slippage_tolerance">Abweichungstoleranz</string>
   <string name="polkaswap_smart">Smart</string>
+  <string name="polkaswap_swap_empty_list">Du hast noch keine aktiven Pools. \n\nFüge Liquidität hinzu, um Belohnungen zu erhalten</string>
   <string name="polkaswap_swap_title">Tausch</string>
   <string name="polkaswap_swapped">Getauscht</string>
   <string name="polkaswap_tbc">TBC</string>
@@ -394,11 +421,15 @@
   <string name="project_you_can_vote_at_least_1_point">Du kannst mit mindestens 1 Punkt abstimmen 😜</string>
   <string name="qr_code">QR-Code</string>
   <string name="qr_upload">Aus Galerie hochladen</string>
+  <string name="recovery_alert_raw_seed_description">Bei der Wiederherstellung mit Raw Seed kannst du keine Passphrase verwenden.</string>
+  <string name="recovery_alert_raw_seed_title">Wiederherstellung mit Raw Seed</string>
   <string name="recovery_body_subtitle">Leider gibt es keine Möglichkeit auf Dein Konto zuzugreifen, wenn du deine Passphrase vergessen hast.</string>
   <string name="recovery_body_title">Gebe deine Passphrase ein</string>
+  <string name="recovery_input_raw_seed_hint">Raw Seed: 64 Hexadezimal-Symbole</string>
   <string name="recovery_mnemonic_passphrase">Mnemonische Passphrase</string>
   <string name="recovery_passphrase">Zugang wiederherstellen</string>
   <string name="recovery_source_type">Quellentyp</string>
+  <string name="recovery_source_type_1">Quelltyp auswählen</string>
   <string name="recovery_title">Konto importieren</string>
   <string name="referenda_title">Referenden</string>
   <string name="referenda_title_vote">Abstimmung über Referenden</string>
@@ -418,6 +449,26 @@
   <string name="referendum_total_votes">Gesamte Stimmen</string>
   <string name="referendum_unsupport_title">Nein</string>
   <string name="referendum_voting_result">Abstimmungsergebnis</string>
+  <string name="referral_activate_button_title">Aktivieren</string>
+  <string name="referral_bond_button_title">Bonde XOR</string>
+  <string name="referral_enter_link_title">Link des Referrers eingeben</string>
+  <string name="referral_get_more_invitation_button_title">Weitere Einladungen erhalten</string>
+  <string name="referral_input_reward_description">%s wird für jede Einladung gebondet, um die Netzwerkgebühr für den Beitritt deiner Freunde zu decken. \n\n Du kannst deine XOR jederzeit für ungenutzte Einladungen unbonden.</string>
+  <string name="referral_input_reward_title">Gewünschte Anzahl von Einladungen eingeben</string>
+  <string name="referral_invitaion_link_title">Verfügbare Einladungen</string>
+  <string name="referral_referral_link">Link oder Adresse des Referrers</string>
+  <string name="referral_referrer_address">Adresse des Referrers</string>
+  <string name="referral_referrer_description">Jedes Mal, wenn du eine Transaktion durchführst, gehen 10 % der gezahlten Netzwerkgebühr als Belohnung an deinen Referrer.</string>
+  <string name="referral_start_inviting">Beginne mit dem Einladen</string>
+  <string name="referral_subtitle">Jedes Mal, wenn deine Empfehlung eine Transaktion durchführt, erhälst du 10 % der gezahlten Netzwerkgebühr als Belohnung.</string>
+  <string name="referral_title">Erhalte 10 % der Netzwerkgebühren für deine Empfehlungen</string>
+  <string name="referral_toolbar_title">Empfehlungsprogramm</string>
+  <string name="referral_total_rewards">Gesamte Belohnung</string>
+  <string name="referral_unbond_button_title">Unbond XOR</string>
+  <string name="referral_unbond_xor_description">Du kannst %s pro EInladung unbonden. Wie viele Einladungen möchtest du zurückziehen?</string>
+  <string name="referral_your_invitation_link_title">Dein Einladungslink</string>
+  <string name="referral_your_referrals">Deine Empfehlungen</string>
+  <string name="referral_your_referrer">Dein Referrer</string>
   <string name="remove_liquidity_info_text">Das Entfernen von Liquidität wandelt deine Position zum aktuellen Kurs zurück, proportional zu deinem Anteil des Pools.</string>
   <string name="remove_liquidity_title">Liquidität entfernen</string>
   <string name="remove_pool_confirmation_description">Die Ausgabe wird geschätzt. Wenn sich der Preis um mehr als %s %% ändert, wird deine Transaktion rückgängig gemacht.</string>
@@ -432,10 +483,10 @@
   <string name="select_asset_send">Zu sendendes Asset auswählen</string>
   <string name="select_recipient">Empfänger auswählen</string>
   <string name="set_amount">Betrag festlegen</string>
-  <string name="settings_accounts">Accounts</string>
-  <string name="settings_header_account">Account settings</string>
-  <string name="settings_header_app">App settings</string>
-  <string name="settings_header_other">Other</string>
+  <string name="settings_accounts">Konten</string>
+  <string name="settings_header_account">Kontoeinstellungen</string>
+  <string name="settings_header_app">App-Einstellungen</string>
+  <string name="settings_header_other">Sonstiges</string>
   <string name="staking_coming_soon">XOR-Besitzer können ihre XOR staken, um Validatoren zu nominieren und somit Belohnungen zu erhalten.</string>
   <string name="staking_description">Die Nominierung von Validatoren ist ein wichtiger Teil des SORA-Ökosystems, da sie zur Sicherheit und Dezentralisierung des Netzwerks beiträgt. VAL-Token werden an Validatoren und Nominatoren als Belohnung für das staken ausgegeben.</string>
   <string name="staking_val_reward">SORA VALidator Belohnungen</string>
@@ -446,7 +497,7 @@
   <string name="status_success">Erfolg</string>
   <string name="status_title">Status</string>
   <string name="swap_input_title">Tauscheingabe</string>
-  <string name="tabbar_friends_title">Freunde</string>
+  <string name="tabbar_friends_title">Freunde einladen</string>
   <string name="tabbar_parliament_title">Parlament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
   <string name="tabbar_profile_title">Profil</string>
@@ -521,10 +572,10 @@
   <string name="wallet_history_to_soranet_account">Zum SORA NET Konto</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Meine %s Netzwerkadresse %s zum Empfangen:</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Netzwerkadresse um %s zu empfangen:</string>
-  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scanne diesen QR, um mir %s zu senden. Meine %s-Netzwerk-Konto-ID:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Meine %s Netzwerkadresse %s %s zum Empfangen:</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Meine %s Netzwerkadresse um %s %s  zu empfangen:</string>
-  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Scanne diesen QR, um mir %s %s zu senden. Meine %s-Netzwerk-Konto-ID:\n%s</string>
   <string name="wallet_receive_val">VAL erhalten</string>
   <string name="wallet_redeemable">Einlösbar</string>
   <string name="wallet_send_existential_warning_message">Durch diesen Transfer wird das Konto aus dem Blockstore entfernt, da der Restbetrag niedriger sein wird als das notwendige existenzielle Guthaben.</string>

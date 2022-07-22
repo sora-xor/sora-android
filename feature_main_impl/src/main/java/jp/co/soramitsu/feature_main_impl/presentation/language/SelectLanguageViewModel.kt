@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.language
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -15,8 +16,10 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.language.model.LanguageItem
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SelectLanguageViewModel(
+@HiltViewModel
+class SelectLanguageViewModel @Inject constructor(
     private val interactor: MainInteractor,
     private val router: MainRouter,
     private val resourceManager: ResourceManager

@@ -12,25 +12,24 @@ import android.view.View
 import androidx.core.os.bundleOf
 import androidx.core.text.set
 import androidx.core.text.toSpannable
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.ToastDialog
 import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentSwapConfirmationBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -39,6 +38,7 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 @FlowPreview
+@AndroidEntryPoint
 class SwapConfirmationFragment :
     BaseFragment<SwapConfirmationViewModel>(R.layout.fragment_swap_confirmation) {
 
@@ -74,34 +74,25 @@ class SwapConfirmationFragment :
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
-    private val binding by viewBinding(FragmentSwapConfirmationBinding::bind)
 
-    override fun inject() {
-        val inputToken = requireParcelable<Token>(ARG_INPUT_TOKEN)
-        val inputAmount = requireArguments().getSerializable(ARG_INPUT_AMOUNT) as BigDecimal
-        val outputToken = requireParcelable<Token>(ARG_OUTPUT_TOKEN)
-        val outputAmount = requireArguments().getSerializable(ARG_OUTPUT_AMOUNT) as BigDecimal
-        val desired = requireArguments().getSerializable(ARG_DESIRED) as WithDesired
-        val details = requireParcelable<SwapDetails>(ARG_DETAILS)
-        val feeToken = requireParcelable<Token>(ARG_FEE_TOKEN)
-        val slippageTolerance = requireArguments().getFloat(ARG_SLIPPAGE, 0.5f)
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
+    @Inject
+    lateinit var vmf: SwapConfirmationViewModel.SwapConfirmationViewModelFactory
+    private val binding by viewBinding(FragmentSwapConfirmationBinding::bind)
+    private val vm: SwapConfirmationViewModel by viewModels {
+        SwapConfirmationViewModel.provideFactory(
+            vmf,
+            requireParcelable(ARG_INPUT_TOKEN),
+            requireArguments().getSerializable(ARG_INPUT_AMOUNT) as BigDecimal,
+            requireParcelable(ARG_OUTPUT_TOKEN),
+            requireArguments().getSerializable(ARG_OUTPUT_AMOUNT) as BigDecimal,
+            requireArguments().getSerializable(ARG_DESIRED) as WithDesired,
+            requireParcelable<SwapDetails>(ARG_DETAILS),
+            requireParcelable<Token>(ARG_FEE_TOKEN),
+            requireArguments().getFloat(ARG_SLIPPAGE, 0.5f)
         )
-            .swapConfirmationComponentBuilder()
-            .withFragment(this)
-            .withInputToken(inputToken)
-            .withInputAmount(inputAmount)
-            .withOutputToken(outputToken)
-            .withOutputAmount(outputAmount)
-            .withDesired(desired)
-            .withSwapDetails(details)
-            .withFeeToken(feeToken)
-            .withSlippage(slippageTolerance)
-            .build()
-            .inject(this)
     }
+    override val viewModel: SwapConfirmationViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

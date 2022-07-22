@@ -5,14 +5,9 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.terms
 
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_multiaccount_impl.presentation.MultiaccountRouter
+import javax.inject.Inject
 
-class TermsViewModel(
-    private val router: MultiaccountRouter
-) : BaseViewModel() {
-
-    fun onBackPressed() {
-        router.onBackButtonPressed()
-    }
-}
+@HiltViewModel
+class TermsViewModel @Inject constructor() : BaseViewModel()

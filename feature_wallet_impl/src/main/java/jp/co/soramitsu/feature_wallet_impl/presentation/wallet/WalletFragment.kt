@@ -6,53 +6,51 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import android.Manifest
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.updatePadding
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
-import androidx.paging.LoadState
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.github.florent37.runtimepermission.RuntimePermission.askPermission
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.zxing.integration.android.IntentIntegrator
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
+import jp.co.soramitsu.common.util.ext.hide
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.common.util.ext.showOrHide
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.view.LoadMoreListener
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentWalletBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import jp.co.soramitsu.feature_wallet_impl.domain.HistoryState
 import jp.co.soramitsu.feature_wallet_impl.presentation.util.ScanQrBottomSheetDialog
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.asset.AssetAdapter
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.EventsLoadAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.HistoryAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events.LockBottomSheetBehavior
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
+import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChangedBy
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
     companion object {
-        private const val PICK_IMAGE_REQUEST = 101
         private const val HALF_MINUTE_IN_MS = 30000L
     }
 
@@ -60,22 +58,28 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
     lateinit var debounceClickHandler: DebounceClickHandler
 
     private lateinit var bottomSheetBehavior: LockBottomSheetBehavior<View>
-    private lateinit var integrator: IntentIntegrator
 
     private var bottomSheetCollapsedOrHalfExpanded = true
 
     private val viewBinding by viewBinding(FragmentWalletBinding::bind)
 
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .walletSubComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
+    private val processQrFromCameraContract = registerForActivityResult(ScanContract()) { result ->
+        if (result.contents != null) {
+            viewModel.qrResultProcess(result.contents)
+        }
     }
+    private val scanOptions = ScanOptions()
+
+    private val processQrFromGalleryContract =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
+            if (result != null) {
+                viewModel.decodeTextFromBitmapQr(result)
+            }
+        }
+
+    private val vm: WalletViewModel by viewModels()
+    override val viewModel: WalletViewModel
+        get() = vm
 
     private lateinit var historyAdapter: HistoryAdapter
 
@@ -84,8 +88,8 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
         (activity as BottomBarController).showBottomBar()
 
-        integrator = IntentIntegrator.forSupportFragment(this).apply {
-            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+        scanOptions.apply {
+            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
             setPrompt(getString(R.string.contacts_scan))
             setBeepEnabled(false)
         }
@@ -118,7 +122,6 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
         viewBinding.swipeLayout.setOnRefreshListener {
             viewModel.refreshAssets()
-            historyAdapter.refresh()
         }
 
         viewBinding.recentEventsBottomSheet.doOnLayout {
@@ -133,9 +136,6 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
             viewModel.eventClicked(it)
         }
         viewBinding.eventRecyclerView.adapter = historyAdapter
-            .withLoadStateFooter(
-                footer = EventsLoadAdapter()
-            )
         ContextCompat.getDrawable(
             viewBinding.eventRecyclerView.context,
             R.drawable.line_ver_divider
@@ -167,7 +167,7 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
     private fun initListeners() {
         viewModel.curSoraAccount.observe {
-            historyAdapter.refresh()
+            viewModel.refreshAssets()
         }
 
         viewModel.initiateGalleryChooserLiveData.observe {
@@ -214,35 +214,52 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
                     }
                 }
             }
+        }
 
-            viewModel.viewModelScope.launch {
-                delay(HALF_MINUTE_IN_MS)
-                historyAdapter.refresh()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.historyState.collectLatest {
+                    when (it) {
+                        HistoryState.Error -> {
+                            viewBinding.swipeLayout.isRefreshing = false
+                            if (historyAdapter.itemsCount() == 0) {
+                                viewBinding.transactionsUnavailablePlaceholder.container.show()
+                            }
+                        }
+                        HistoryState.Loading -> {
+                            viewBinding.swipeLayout.isRefreshing = true
+                        }
+                        HistoryState.NoData -> {
+                            viewBinding.swipeLayout.isRefreshing = false
+                            viewBinding.grEmptyHistoryWallet.show()
+                            viewBinding.transactionsUnavailablePlaceholder.container.hide()
+                            historyAdapter.update(emptyList())
+                        }
+                        is HistoryState.History -> {
+                            viewBinding.swipeLayout.isRefreshing = false
+                            viewBinding.grEmptyHistoryWallet.hide()
+                            viewBinding.transactionsUnavailablePlaceholder.container.hide()
+                            val list = if (it.endReached) it.events else buildList {
+                                addAll(it.events)
+                                add(EventUiModel.EventUiLoading)
+                            }
+                            historyAdapter.update(list)
+                            viewBinding.eventRecyclerView.clearOnScrollListeners()
+                            if (it.endReached.not()) {
+                                viewBinding.eventRecyclerView.addOnScrollListener(object :
+                                        LoadMoreListener() {
+                                        override fun onLoadMore(elements: Int) {
+                                            viewModel.onMoreHistoryEventsRequested()
+                                        }
+                                    })
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
-            viewModel.transactionsFlow.collectLatest {
-                historyAdapter.submitData(it)
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
-            historyAdapter.loadStateFlow.collectLatest {
-                viewBinding.swipeLayout.isRefreshing = it.mediator?.refresh is LoadState.Loading
-                viewBinding.transactionsUnavailablePlaceholder.container.showOrHide(it.refresh is LoadState.Error && historyAdapter.itemCount == 0)
-                val emptyList =
-                    it.refresh is LoadState.NotLoading && it.refresh !is LoadState.Error && historyAdapter.itemCount == 0
-                viewBinding.grEmptyHistoryWallet.showOrHide(emptyList)
-            }
-        }
-        viewLifecycleOwner.lifecycleScope.launchWhenCreated {
-            historyAdapter.loadStateFlow
-                .distinctUntilChangedBy { it.refresh }
-                .filter { it.refresh is LoadState.NotLoading }
-                .collect { viewBinding.eventRecyclerView.scrollToPosition(0) }
-        }
-
-        viewModel.showSwipeProgressLiveData.observe(viewLifecycleOwner) {
+        viewModel.showSwipeProgressLiveData.observe {
             viewBinding.swipeLayout.isRefreshing = true
         }
 
@@ -269,37 +286,11 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
 
     private fun initiateScan() {
         askPermission(this, Manifest.permission.CAMERA).onAccepted {
-            integrator.initiateScan()
+            processQrFromCameraContract.launch(scanOptions)
         }.ask()
     }
 
     private fun selectQrFromGallery() {
-        val intent = Intent().apply {
-            type = "image/*"
-            action = Intent.ACTION_GET_CONTENT
-        }
-
-        startActivityForResult(
-            Intent.createChooser(
-                intent,
-                getString(R.string.common_options_title)
-            ),
-            PICK_IMAGE_REQUEST
-        )
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null) {
-            if (result.contents != null) {
-                viewModel.qrResultProcess(result.contents)
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            viewModel.decodeTextFromBitmapQr(data.data!!)
-        }
+        processQrFromGalleryContract.launch("image/*")
     }
 }

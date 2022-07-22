@@ -16,6 +16,8 @@ interface MainRouter {
 
     fun showPin(action: PinCodeAction)
 
+    fun showPinLengthInfo()
+
     fun showFlexibleUpdateScreen()
 
     fun showPersonalDataEdition()
@@ -26,8 +28,6 @@ interface MainRouter {
 
     fun showTerms()
 
-    fun showReferendumDetails(referendumId: String)
-
     fun showPassphrase()
 
     fun showSelectLanguage()
@@ -35,8 +35,6 @@ interface MainRouter {
     fun showFaq()
 
     fun showVotesHistory()
-
-    fun showReferenda()
 
     fun showUnsupportedScreen(appUrl: String)
 
@@ -55,8 +53,6 @@ interface MainRouter {
     fun currentDestinationIsClaimFragment(): Boolean
 
     fun showProfile()
-
-    fun showFriends()
 
     fun showClaim()
 }

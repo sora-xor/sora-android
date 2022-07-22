@@ -19,6 +19,8 @@ enum class ResponseCode(val stringResource: Int) {
 
     MNEMONIC_IS_NOT_VALID(R.string.common_error_mnemonic_is_not_valid),
 
+    RAW_SEED_IS_NOT_VALID(R.string.common_error_seed_is_not_valid),
+
     USER_VALUES_NOT_FOUND(R.string.common_error_user_values_not_found),
 
     INVITATION_CODE_NOT_FOUND(R.string.common_error_invitation_code_not_found),
@@ -83,7 +85,9 @@ enum class ResponseCode(val stringResource: Int) {
 
     SELF_INVITATION(R.string.common_error_self_invitation),
 
-    BOUND_ETH_ADDRESS_NOT_FOUND(0);
+    BOUND_ETH_ADDRESS_NOT_FOUND(0),
+
+    NOW_BROWSER_FOUND(R.string.common_error_no_browser_error);
 
     companion object {
 

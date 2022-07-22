@@ -5,10 +5,13 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.faq
 
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import javax.inject.Inject
 
-class FaqViewModel(
+@HiltViewModel
+class FaqViewModel @Inject constructor(
     private val router: MainRouter
 ) : BaseViewModel() {
 

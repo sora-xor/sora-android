@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.rem
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -26,6 +26,7 @@ import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateOneAm
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateShareOfPoolFromAmount
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateTokenPerTokenRate
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateRemovingShareOfPool
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -34,8 +35,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import javax.inject.Inject
 
-class RemoveLiquidityViewModel(
+@HiltViewModel
+class RemoveLiquidityViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,
@@ -125,11 +128,11 @@ class RemoveLiquidityViewModel(
                 tokenTo
             )
 
-            walletInteractor.subscribeVisibleAssetsOfCurAccount()
+            walletInteractor.subscribeActiveAssetsOfCurAccount()
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest { assets ->
-                    assets.find { it.token.id == OptionsProvider.feeAssetId }?.let { asset ->
+                    assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let { asset ->
                         _fromToken.value = asset.token
                         _fromAssetAmount.value = numbersFormatter.formatBigDecimal(
                             amountFrom,

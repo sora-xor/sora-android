@@ -5,9 +5,9 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.mappers
 
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.core_db.model.AssetTokenLocal

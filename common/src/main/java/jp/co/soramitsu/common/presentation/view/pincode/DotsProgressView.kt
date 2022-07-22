@@ -20,17 +20,29 @@ class DotsProgressView @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyle) {
 
     companion object {
-        const val MAX_PROGRESS = 4
+        const val OLD_PINCODE_LENGTH = 4
+        const val PINCODE_LENGTH = 6
     }
 
-    private var circles: Array<View?>
+    private lateinit var circles: Array<View?>
 
-    private var emptyDrawable: Drawable
-    private var filledDrawable: Drawable
+    private lateinit var emptyDrawable: Drawable
+    private lateinit var filledDrawable: Drawable
+
+    var maxProgress: Int = PINCODE_LENGTH
+        set(value) {
+            field = value
+            setup()
+        }
 
     private val completeListener: () -> Unit = {}
 
     init {
+        setup()
+    }
+
+    private fun setup() {
+        removeAllViews()
         val itemWidth = context.resources.getDimensionPixelSize(R.dimen.uikit_dot_progress_view_dot_width_default)
         val itemHeight = context.resources.getDimensionPixelSize(R.dimen.uikit_dot_progress_view_dot_height_default)
         val itemMargin = context.resources.getDimensionPixelOffset(R.dimen.uikit_dot_progress_view_dot_margin_default)
@@ -38,9 +50,9 @@ class DotsProgressView @JvmOverloads constructor(
         emptyDrawable = ContextCompat.getDrawable(context, R.drawable.ic_dot_unchecked)!!
         filledDrawable = ContextCompat.getDrawable(context, R.drawable.ic_dot_checked)!!
 
-        circles = arrayOfNulls(MAX_PROGRESS)
+        circles = arrayOfNulls(maxProgress)
 
-        for (i in 0 until MAX_PROGRESS) {
+        for (i in 0 until maxProgress) {
             val circle = View(context)
             val params = LayoutParams(itemWidth, itemHeight)
             params.setMargins(0, itemMargin, 0, 0)
@@ -64,7 +76,7 @@ class DotsProgressView @JvmOverloads constructor(
         for (i in 0 until currentProgress) {
             circles[i]?.background = filledDrawable
         }
-        if (currentProgress >= MAX_PROGRESS) {
+        if (currentProgress >= maxProgress) {
             completeListener()
         }
     }

@@ -16,6 +16,10 @@
         tools:layout="@layout/fragment_pincode" />
 
     <fragment
+        android:id="@+id/pincodeLengthInfoFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PinLengthInfoFragment" />
+
+    <fragment
         android:id="@+id/userVerificationFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.userverification.UserVerificationFragment"
         tools:layout="@layout/fragment_user_verification" />
@@ -37,5 +41,6 @@
     <include app:graph="@navigation/wallet_nav_graph" />
     <include app:graph="@navigation/create_account_nav_graph" />
     <include app:graph="@navigation/recovery_account_nav_graph" />
+    <include app:graph="@navigation/referral_nav_graph" />
 
 </navigation>

@@ -8,7 +8,9 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -17,8 +19,10 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.display.AssetConfigurableModel
 import kotlinx.coroutines.launch
 import java.util.Locale
+import javax.inject.Inject
 
-class AssetSettingsViewModel(
+@HiltViewModel
+class AssetSettingsViewModel @Inject constructor(
     private val interactor: WalletInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
@@ -34,6 +38,7 @@ class AssetSettingsViewModel(
     private val curAssetList = mutableListOf<AssetConfigurableModel>()
     private var positions = mutableListOf<String>()
     private var curFilter: String = ""
+    private val tokensToMove = mutableListOf<Pair<String, Boolean>>()
 
     init {
         updateAssetList()
@@ -85,39 +90,92 @@ class AssetSettingsViewModel(
     }
 
     fun checkChanged(asset: AssetConfigurableModel, checked: Boolean) {
-        if (checked) {
-            curAssetList.find { it.id == asset.id }?.visible = true
-            viewModelScope.launch {
-                interactor.displayAssets(listOf(asset.id))
-            }
+        curAssetList.find { it.id == asset.id }?.visible = checked
+        val index = tokensToMove.indexOfFirst { it.first == asset.id }
+        if (index >= 0) {
+            tokensToMove.removeAt(index)
         } else {
-            curAssetList.find { it.id == asset.id }?.visible = false
-            viewModelScope.launch {
+            if (!AssetHolder.isKnownAsset(asset.id)) {
+                tokensToMove.add(asset.id to checked)
+            }
+        }
+        viewModelScope.launch {
+            if (checked) {
+                interactor.displayAssets(listOf(asset.id))
+            } else {
                 interactor.hideAssets(listOf(asset.id))
             }
         }
     }
 
     fun backClicked() {
-        router.popBackStackFragment()
+        val unknownVisibleCount =
+            curAssetList.count { it.visible && !AssetHolder.isKnownAsset(it.id) }
+        val position = AssetHolder.knownCount() + unknownVisibleCount
+        val lastUnknownVisibleIndex = curAssetList.indexOfLast { it.visible && !AssetHolder.isKnownAsset(it.id) }
+        val offTokensId = tokensToMove.filter { !it.second }.map { pair ->
+            curAssetList.indexOfFirst { it.id == pair.first }
+        }.filter { it in 0 until lastUnknownVisibleIndex }
+        moveTokens(offTokensId.sortedDescending(), position)
+        val firstUnknownInvisibleIndex = curAssetList.indexOfFirst { !it.visible && !AssetHolder.isKnownAsset(it.id) }
+        if (firstUnknownInvisibleIndex >= 0) {
+            val onTokensId = tokensToMove.filter { it.second }.map { pair ->
+                curAssetList.indexOfFirst { it.id == pair.first }
+            }.filter { it >= 0 && it > firstUnknownInvisibleIndex }
+            moveTokens(onTokensId.sortedDescending(), firstUnknownInvisibleIndex)
+        }
+        viewModelScope.launch {
+            updatePositions()
+            router.popBackStackFragment()
+        }
     }
 
     fun assetPositionChanged(from: Int, to: Int): Boolean {
-        if (!curAssetList[from].hideAllowed || !curAssetList[to].hideAllowed) return false
+        if (!curAssetList[from].hideAllowed ||
+            !curAssetList[to].hideAllowed ||
+            AssetHolder.isKnownAsset(curAssetList[from].id) ||
+            AssetHolder.isKnownAsset(curAssetList[to].id)
+        ) return false
+        val index = tokensToMove.indexOfFirst { it.first == curAssetList[from].id }
+        if (index >= 0) {
+            tokensToMove.removeAt(index)
+        }
+        moveToken(from, to)
+        viewModelScope.launch {
+            updatePositions()
+        }
+        _assetPositions.value = from to to
+        return true
+    }
+
+    private fun moveTokens(from: List<Int>, to: Int) {
+        if (from.isEmpty()) return
+        val removingIds = mutableListOf<String>()
+        val removingTokens = mutableListOf<AssetConfigurableModel>()
+        from.forEach {
+            val item = positions.removeAt(it)
+            removingIds.add(item)
+            val itemToken = curAssetList.removeAt(it)
+            removingTokens.add(itemToken)
+        }
+        positions.addAll(to, removingIds.reversed())
+        curAssetList.addAll(to, removingTokens.reversed())
+    }
+
+    private fun moveToken(from: Int, to: Int) {
         with(positions) {
             val item = removeAt(from)
             add(to, item)
-        }
-        viewModelScope.launch {
-            interactor.updateAssetPositions(
-                positions.mapIndexed { index, s -> s to index }.toMap()
-            )
         }
         with(curAssetList) {
             val item = removeAt(from)
             add(to, item)
         }
-        _assetPositions.value = from to to
-        return true
+    }
+
+    private suspend fun updatePositions() {
+        interactor.updateAssetPositions(
+            positions.mapIndexed { index, s -> s to index }.toMap()
+        )
     }
 }

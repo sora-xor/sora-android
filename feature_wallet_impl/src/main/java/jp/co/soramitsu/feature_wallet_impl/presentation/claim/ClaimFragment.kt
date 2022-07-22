@@ -12,10 +12,10 @@ import android.view.Gravity
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ext.createSendEmailIntent
@@ -23,13 +23,13 @@ import jp.co.soramitsu.common.util.ext.highlightWords
 import jp.co.soramitsu.common.util.ext.onBackPressed
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showOrHide
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentClaimBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class ClaimFragment : BaseFragment<ClaimViewModel>(R.layout.fragment_claim) {
 
     @Inject
@@ -41,16 +41,9 @@ class ClaimFragment : BaseFragment<ClaimViewModel>(R.layout.fragment_claim) {
     private lateinit var progressDialog: SoraProgressDialog
     private val viewBinding by viewBinding(FragmentClaimBinding::bind)
 
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .claimComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
-    }
+    private val vm: ClaimViewModel by viewModels()
+    override val viewModel: ClaimViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

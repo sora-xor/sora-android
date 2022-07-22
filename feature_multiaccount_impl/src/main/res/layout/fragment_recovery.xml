@@ -29,20 +29,23 @@
                 style="@style/TextAppearance.Soramitsu.Neu.18.Light"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:text="@string/recovery_source_type"
+                android:text="@string/recovery_source_type_1"
+                android:visibility="visible"
+                android:drawablePadding="@dimen/x1_2"
+                app:drawableTint="?attr/tintColorLight"
+                app:drawableEndCompat="@drawable/ic_chevron_down_rounded_16"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/sourceTypeValue"
+                style="@style/TextAppearance.Soramitsu.Neu.24.Light"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:visibility="gone"
-                style="@style/TextAppearance.Soramitsu.Neu.24.Light"
+                android:text="@string/common_passphrase_title"
                 android:textColor="?attr/onBackgroundColor"
-                android:text="Passphrase"
+                android:visibility="visible"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/sourceTypeTitle" />

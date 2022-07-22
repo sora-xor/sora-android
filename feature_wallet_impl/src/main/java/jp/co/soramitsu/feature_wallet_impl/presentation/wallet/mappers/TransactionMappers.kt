@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers
 
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -12,9 +13,9 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
-import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
+import java.math.BigDecimal
 import java.util.Date
 import javax.inject.Inject
 
@@ -24,44 +25,42 @@ class TransactionMappers @Inject constructor(
     val dateTimeFormatter: DateTimeFormatter,
 ) {
 
-    fun mapTransaction(tx: Transaction): EventUiModel.EventTxUiModel {
+    fun mapTransaction(tx: Transaction): EventUiModel.EventTxUiModel =
         when (tx) {
             is Transaction.Transfer -> {
-                return if (tx.transferType == TransactionTransferType.INCOMING)
+                if (tx.transferType == TransactionTransferType.INCOMING)
                     EventUiModel.EventTxUiModel.EventTransferInUiModel(
-                        tx.txHash,
+                        tx.base.txHash,
                         tx.token.icon,
                         tx.peer.truncateUserAddress(),
-                        dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
-                        tx.timestamp,
+                        dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                        tx.base.timestamp,
                         Pair(
                             "+%s".format(
                                 numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
                             ),
                             tx.token.symbol,
                         ),
-                        tx.status == TransactionStatus.PENDING,
-                        !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
+                        tx.base.status,
                     ) else
                     EventUiModel.EventTxUiModel.EventTransferOutUiModel(
-                        tx.txHash,
+                        tx.base.txHash,
                         tx.token.icon,
                         tx.peer.truncateUserAddress(),
-                        dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
-                        tx.timestamp,
+                        dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                        tx.base.timestamp,
                         Pair(
                             "-%s".format(
                                 numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
                             ),
                             tx.token.symbol,
                         ),
-                        tx.status == TransactionStatus.PENDING,
-                        !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
+                        tx.base.status,
                     )
             }
             is Transaction.Swap -> {
-                return EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel(
-                    tx.txHash,
+                EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel(
+                    tx.base.txHash,
                     tx.tokenFrom.icon,
                     tx.tokenTo.icon,
                     Pair(
@@ -82,19 +81,17 @@ class TransactionMappers @Inject constructor(
                         ),
                         tx.tokenTo.symbol
                     ),
-                    dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
-                    tx.timestamp,
-                    tx.status == TransactionStatus.PENDING,
-                    !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false)
+                    dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                    tx.base.timestamp,
+                    tx.base.status,
                 )
             }
             is Transaction.Liquidity -> {
-                return EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
-                    tx.txHash,
-                    tx.timestamp,
-                    tx.status == TransactionStatus.PENDING,
-                    !(tx.status == TransactionStatus.REJECTED || tx.successStatus == false),
-                    dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.timestamp)),
+                EventUiModel.EventTxUiModel.EventLiquidityAddUiModel(
+                    tx.base.txHash,
+                    tx.base.timestamp,
+                    tx.base.status,
+                    dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
                     tx.token1.icon,
                     tx.token2.icon,
                     Pair(
@@ -114,53 +111,59 @@ class TransactionMappers @Inject constructor(
                     tx.type == TransactionLiquidityType.ADD
                 )
             }
+            is Transaction.ReferralSetReferrer -> {
+                EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    description = if (tx.myReferrer) R.string.history_referral_set_referrer else R.string.history_referral_set_referral,
+                    plusAmount = false,
+                    tokenIcon = tx.token.icon,
+                    dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                    amountFormatted = Pair(
+                        "-%s".format(
+                            numbersFormatter.formatBigDecimal(
+                                if (tx.myReferrer) BigDecimal.ZERO else tx.base.fee,
+                                AssetHolder.ROUNDING
+                            )
+                        ),
+                        tx.token.symbol,
+                    ),
+                )
+            }
+            is Transaction.ReferralUnbond -> {
+                EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    description = R.string.history_referral_unbond_tokens,
+                    plusAmount = true,
+                    tokenIcon = tx.token.icon,
+                    dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                    amountFormatted = Pair(
+                        "+%s".format(
+                            numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
+                        ),
+                        tx.token.symbol,
+                    ),
+                )
+            }
+            is Transaction.ReferralBond -> {
+                EventUiModel.EventTxUiModel.EventReferralProgramUiModel(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    description = R.string.history_referral_bond_tokens,
+                    plusAmount = false,
+                    tokenIcon = tx.token.icon,
+                    dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                    amountFormatted = Pair(
+                        "-%s".format(
+                            numbersFormatter.formatBigDecimal(tx.amount, AssetHolder.ROUNDING)
+                        ),
+                        tx.token.symbol,
+                    ),
+                )
+            }
         }
-    }
-
-//    fun mapTransactionToSoraTransactionWithHeaders(
-//        transactions: List<Transaction>,
-//    ): List<Any> {
-//        val transactionsWithHeaders = mutableListOf<Any>()
-//        var lastDateString = ""
-//
-//        transactions.forEach {
-//            val createdAt = Date(it.timestamp)
-//
-//            val soraTransaction = with(it) {
-//                val title = it.peerId.orEmpty()
-//                val dateString = dateTimeFormatter.formatDateTime(createdAt)
-//                val assetName = this.token.symbol
-//
-//                val amountFormatted =
-//                    if (it.status == Transaction.Status.REJECTED || it.successStatus == false) "" else "${
-//                        numbersFormatter.formatBigDecimal(it.amount, AssetHolder.ROUNDING)
-//                    } $assetName"
-//                val amountFullFormatted =
-//                    if (it.status == Transaction.Status.REJECTED || it.successStatus == false) "" else numbersFormatter.formatBigDecimal(
-//                        it.amount,
-//                        this.token.precision
-//                    )
-//
-//                SoraTransaction(
-//                    it.soranetTxHash + it.ethTxHash,
-//                    Transaction.Type.OUTGOING != it.type && Transaction.Type.WITHDRAW != it.type,
-//                    this.token.icon,
-//                    title,
-//                    dateString,
-//                    amountFormatted,
-//                    amountFullFormatted,
-//                    status == Transaction.Status.PENDING,
-//                    it.successStatus
-//                )
-//            }
-//            val dayString = dateTimeFormatter.formatDate(createdAt, DateTimeFormatter.MMMM_YYYY)
-//
-//            if (lastDateString != dayString) {
-//                lastDateString = dayString
-//                transactionsWithHeaders.add(EventHeader(dayString))
-//            }
-//            transactionsWithHeaders.add(soraTransaction)
-//        }
-//        return transactionsWithHeaders
-//    }
 }

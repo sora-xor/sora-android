@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    compileSdk compileVersion
+
+    defaultConfig {
+        minSdk minVersion
+        targetSdk targetVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+
+    api novaCryptoDep
+    api ed25519Dep
+    api spongycastleDep
+    api fearlessLibDep
+
+}

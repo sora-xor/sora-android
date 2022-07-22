@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
@@ -17,8 +18,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class PolkaSwapViewModel(
+@HiltViewModel
+class PolkaSwapViewModel @Inject constructor(
     private val router: WalletRouter,
     private val polkaswapInteractor: PolkaswapInteractor,
 ) : BaseViewModel() {

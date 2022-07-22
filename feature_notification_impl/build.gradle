@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
@@ -54,25 +55,16 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(":common")
-    implementation project(":core_di")
     implementation project(":feature_notification_api")
 
     implementation kotlinDep
 
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
 
-    implementation retrofitDep
     implementation gsonDep
 
     implementation coroutineDep
-    implementation coroutineTestDep
 
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
 }

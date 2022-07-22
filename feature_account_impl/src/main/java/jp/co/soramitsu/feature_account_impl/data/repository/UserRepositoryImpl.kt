@@ -7,8 +7,6 @@ package jp.co.soramitsu.feature_account_impl.data.repository
 
 import androidx.room.withTransaction
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.AppLinksProvider
-import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
@@ -23,13 +21,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class UserRepositoryImpl @Inject constructor(
+class UserRepositoryImpl(
     private val userDatasource: UserDatasource,
-    private val appVersionProvider: AppVersionProvider,
     private val db: AppDatabase,
-    private val appLinksProvider: AppLinksProvider,
     private val deviceParamsProvider: DeviceParamsProvider,
     private val coroutineManager: CoroutineManager
 ) : UserRepository {
@@ -50,12 +45,17 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCurSoraAccount(): SoraAccount {
+        if (currentSoraAccount.value == null) {
+            initCurSoraAccount()
+        }
+
         return requireNotNull(currentSoraAccount.value)
     }
 
     override suspend fun setCurSoraAccount(soraAccount: SoraAccount) {
         userDatasource.setCurAccountAddress(soraAccount.substrateAddress)
         currentSoraAccount.value = soraAccount
+        db.referralsDao().clearTable()
     }
 
     override suspend fun setCurSoraAccount(accountAddress: String) {
@@ -63,6 +63,7 @@ class UserRepositoryImpl @Inject constructor(
         db.accountDao().getAccount(accountAddress)?.let { soraAccountLocal ->
             currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
         }
+        db.referralsDao().clearTable()
     }
 
     override fun flowCurSoraAccount(): Flow<SoraAccount> =
@@ -73,6 +74,11 @@ class UserRepositoryImpl @Inject constructor(
             list.map {
                 SoraAccountMapper.map(it)
             }
+        }
+
+    override suspend fun soraAccountsList(): List<SoraAccount> =
+        db.accountDao().getAccounts().map {
+            SoraAccountMapper.map(it)
         }
 
     override suspend fun getSoraAccountsCount(): Int {
@@ -90,20 +96,12 @@ class UserRepositoryImpl @Inject constructor(
         setCurSoraAccount(soraAccount.copy(accountName = newName))
     }
 
-    override suspend fun getAppVersion(): String {
-        return appVersionProvider.getVersionName()
-    }
-
     override suspend fun savePin(pin: String) {
         userDatasource.savePin(pin)
     }
 
     override suspend fun retrievePin(): String {
         return userDatasource.retrievePin()
-    }
-
-    override suspend fun getInvitationLink(): String {
-        return appLinksProvider.defaultMarketUrl
     }
 
     override suspend fun saveRegistrationState(onboardingState: OnboardingState) {
@@ -117,6 +115,14 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun clearUserData() {
         userDatasource.clearUserData()
         db.withTransaction { db.clearAllTables() }
+    }
+
+    override suspend fun clearAccountData(address: String) {
+        userDatasource.clearAccountData()
+        db.withTransaction {
+            db.accountDao().clearAccount(address)
+            db.referralsDao().clearTable()
+        }
     }
 
     override suspend fun saveParentInviteCode(inviteCode: String) {

@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.pool
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -25,10 +26,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 @FlowPreview
-class PoolViewModel(
+@HiltViewModel
+class PoolViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,

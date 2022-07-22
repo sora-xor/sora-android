@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 
 class EthereumStatusObserver(

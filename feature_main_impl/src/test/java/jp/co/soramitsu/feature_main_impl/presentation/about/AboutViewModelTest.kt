@@ -12,7 +12,8 @@ import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -53,7 +54,7 @@ class AboutViewModelTest {
     }
 
     @Test
-    fun `init called`() = runBlockingTest {
+    fun `init called`() = runTest {
         val version = "1.0"
         val title = "source"
         given(interactor.getAppVersion()).willReturn("1.0")
@@ -62,7 +63,7 @@ class AboutViewModelTest {
         given(interactor.getAppVersion()).willReturn("1.0")
         given(resourceManager.getString(anyInt())).willReturn("source")
         aboutViewModel.getAppVersion()
-
+        advanceUntilIdle()
         val res = aboutViewModel.sourceTitleLiveData.getOrAwaitValue()
         assertEquals("$title $version", res)
     }

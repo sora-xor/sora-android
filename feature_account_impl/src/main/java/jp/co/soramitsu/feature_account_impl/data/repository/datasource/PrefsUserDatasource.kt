@@ -10,9 +10,8 @@ import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import javax.inject.Inject
 
-class PrefsUserDatasource @Inject constructor(
+class PrefsUserDatasource(
     private val soraPreferences: SoraPreferences,
     private val encryptedPreferences: EncryptedPreferences
 ) : UserDatasource {
@@ -61,6 +60,11 @@ class PrefsUserDatasource @Inject constructor(
         soraPreferences.clearAll()
     }
 
+    // todo is it ok?
+    override suspend fun clearAccountData() {
+        soraPreferences.putString(KEY_CUR_ACCOUNT_ADDRESS, "")
+    }
+
     override suspend fun saveParentInviteCode(inviteCode: String) {
         soraPreferences.putString(KEY_PARENT_INVITE_CODE, inviteCode)
     }
@@ -70,11 +74,11 @@ class PrefsUserDatasource @Inject constructor(
     }
 
     override fun getCurrentLanguage(): String {
-        return ContextManager.getInstance()?.getCurrentLanguage().orEmpty()
+        return ContextManager.getCurrentLanguage().orEmpty()
     }
 
     override fun changeLanguage(language: String) {
-        ContextManager.getInstance()?.setCurrentLanguage(language)
+        ContextManager.setCurrentLanguage(language)
     }
 
     override suspend fun setBiometryEnabled(isEnabled: Boolean) {

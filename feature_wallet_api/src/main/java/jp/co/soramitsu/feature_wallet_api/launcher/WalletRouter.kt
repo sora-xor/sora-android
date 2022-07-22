@@ -11,7 +11,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import java.math.BigDecimal
 
 interface WalletRouter {

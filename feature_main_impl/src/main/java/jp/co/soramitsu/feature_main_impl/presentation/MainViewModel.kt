@@ -8,22 +8,25 @@ package jp.co.soramitsu.feature_main_impl.presentation
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.common.domain.HealthChecker
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.ext.setValueIfNew
+import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.sora.substrate.substrate.HealthChecker
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     healthChecker: HealthChecker,
     private val walletInteractor: WalletInteractor,
-    private val runtimeManager: RuntimeManager,
+    private val pinCodeInteractor: PinCodeInteractor,
 ) : BaseViewModel() {
 
     private val _showInviteErrorTimeIsUpLiveData = MutableLiveData<Event<Unit>>()
@@ -39,23 +42,36 @@ class MainViewModel(
     private val _invitationCodeAppliedSuccessful = MutableLiveData<Event<Unit>>()
     val invitationCodeAppliedSuccessful: LiveData<Event<Unit>> = _invitationCodeAppliedSuccessful
 
+    private val _isPincodeUpdateNeeded = MutableLiveData<Boolean>()
+    val isPincodeUpdateNeeded: LiveData<Boolean> = _isPincodeUpdateNeeded
+
     init {
         viewModelScope.launch {
             tryCatch {
-                runtimeManager.start()
                 healthChecker.observeHealthState()
                     .collectLatest {
                         _badConnectionVisibilityLiveData.setValueIfNew(!it)
                     }
             }
         }
+        walletInteractor.flowCurSoraAccount()
+            .catch { onError(it) }
+            .onEach { walletInteractor.updateWhitelistBalances() }
+            .launchIn(viewModelScope)
+
         walletInteractor.observeCurAccountStorage()
             .catch {
                 onError(it)
             }
             .onEach {
-                walletInteractor.updateBalancesVisibleAssets()
+                walletInteractor.updateBalancesActiveAssets()
             }
             .launchIn(viewModelScope)
+    }
+
+    fun showPinFragment() {
+        viewModelScope.launch {
+            _isPincodeUpdateNeeded.value = pinCodeInteractor.isPincodeUpdateNeeded()
+        }
     }
 }

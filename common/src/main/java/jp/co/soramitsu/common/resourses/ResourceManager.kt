@@ -5,46 +5,44 @@
 
 package jp.co.soramitsu.common.resourses
 
+import android.content.Context
 import android.util.TypedValue
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class ResourceManager @Inject constructor(
-    private val contextManager: ContextManager
+class ResourceManager constructor(
+    val context: Context
 ) {
 
     fun getString(resource: Int): String {
-        return contextManager.getContext().getString(resource)
+        return context.getString(resource)
     }
 
     @DrawableRes
     fun getResByName(drawableName: String): Int {
-        return contextManager.getContext().resources.getIdentifier(
+        return context.resources.getIdentifier(
             drawableName,
             "drawable",
-            contextManager.getContext().packageName
+            context.packageName
         )
     }
 
     fun getColor(res: Int): Int {
-        return ContextCompat.getColor(contextManager.getContext(), res)
+        return ContextCompat.getColor(context, res)
     }
 
     fun getQuantityString(id: Int, quantity: Int): String {
-        return contextManager.getContext().resources.getQuantityString(id, quantity)
+        return context.resources.getQuantityString(id, quantity)
     }
 
     fun getQuantityString(id: Int, quantity: Int, value: String): String {
-        return contextManager.getContext().resources.getQuantityString(id, quantity).format(value)
+        return context.resources.getQuantityString(id, quantity).format(value)
     }
 
     fun dp2px(dp: Int): Int =
         TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
             dp.toFloat(),
-            contextManager.getContext().resources.displayMetrics
+            context.resources.displayMetrics
         ).toInt()
 }

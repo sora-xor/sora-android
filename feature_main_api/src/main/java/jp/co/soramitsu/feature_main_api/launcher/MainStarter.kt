@@ -12,4 +12,6 @@ interface MainStarter {
     fun start(context: Context)
 
     fun startWithInvite(context: Context)
+
+    fun restartAfterAddAccount(context: Context)
 }

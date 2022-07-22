@@ -16,16 +16,16 @@ import jp.co.soramitsu.common.presentation.args.slippageTolerance
 import jp.co.soramitsu.common.presentation.args.tokenFrom
 import jp.co.soramitsu.common.presentation.args.tokenTo
 import jp.co.soramitsu.common.presentation.args.tokenToNullable
+import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment
 import jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment
+import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.details.AssetDetailsFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment
@@ -38,10 +38,10 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmati
 import jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment
 import jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment
 import jp.co.soramitsu.sora.R
-import jp.co.soramitsu.sora.navigation.args.withArgs
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import java.math.BigDecimal
 
-class Navigator : MainRouter, WalletRouter {
+class Navigator : MainRouter, WalletRouter, ReferralRouter {
 
     private var navController: NavController? = null
 
@@ -63,6 +63,10 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.pincodeFragment, bundle)
     }
 
+    override fun showPinLengthInfo() {
+        navController?.navigate(R.id.pincodeLengthInfoFragment)
+    }
+
     override fun showFlexibleUpdateScreen() {
         navController?.navigate(R.id.updateFlexibleFragment)
     }
@@ -81,13 +85,6 @@ class Navigator : MainRouter, WalletRouter {
 
     override fun showTerms() {
         navController?.navigate(R.id.termsFragment)
-    }
-
-    override fun showReferendumDetails(referendumId: String) {
-        navController?.navigate(
-            R.id.referendumDetailFragment,
-            DetailReferendumFragment.createBundle(referendumId)
-        )
     }
 
     override fun showPassphrase() {
@@ -129,10 +126,6 @@ class Navigator : MainRouter, WalletRouter {
 
     override fun showVotesHistory() {
         navController?.navigate(R.id.votesFragment)
-    }
-
-    override fun showReferenda() {
-        navController?.navigate(R.id.referendaFragment)
     }
 
     override fun showContacts(assetId: String) {
@@ -373,8 +366,8 @@ class Navigator : MainRouter, WalletRouter {
         navController?.navigate(R.id.profile_nav_graph)
     }
 
-    override fun showFriends() {
-        navController?.navigate(R.id.inviteFragment)
+    override fun showReferrals() {
+        navController?.navigate(R.id.referral_nav_graph)
     }
 
     override fun showClaim() {

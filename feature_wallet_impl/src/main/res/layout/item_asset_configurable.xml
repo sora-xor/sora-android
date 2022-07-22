@@ -34,6 +34,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x1"
         android:ellipsize="end"
+        android:textDirection="locale"
         android:singleLine="true"
         app:layout_constraintEnd_toStartOf="@id/swAssetManagementItem"
         app:layout_constraintStart_toEndOf="@id/tvAssetManagementItemTitle"

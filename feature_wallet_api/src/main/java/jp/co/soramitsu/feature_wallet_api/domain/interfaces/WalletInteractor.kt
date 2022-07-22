@@ -5,13 +5,11 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import androidx.paging.PagingData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
@@ -23,10 +21,6 @@ interface WalletInteractor {
     fun flowCurSoraAccount(): Flow<SoraAccount>
 
     suspend fun getFeeToken(): Token
-
-    fun getEventsFlow(assetId: String = ""): Flow<PagingData<Transaction>>
-
-    suspend fun getTransaction(txHash: String): Transaction
 
     suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
 
@@ -46,21 +40,32 @@ interface WalletInteractor {
 
     fun subscribeVisibleAssetsOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
 
-    suspend fun updateBalancesVisibleAssets()
+    suspend fun getActiveAssets(): List<Asset>
 
-    suspend fun transfer(to: String, assetId: String, amount: BigDecimal): String
+    fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset>
 
-    suspend fun observeTransfer(to: String, assetId: String, amount: BigDecimal, fee: BigDecimal): Boolean
+    fun subscribeActiveAssetsOfCurAccount(): Flow<List<Asset>>
 
-    suspend fun calcTransactionFee(to: String, assetId: String, amount: BigDecimal): BigDecimal
+    fun subscribeActiveAssetsOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
+
+    suspend fun updateBalancesActiveAssets()
+
+    suspend fun transfer(to: String, token: Token, amount: BigDecimal): Result<String>
+
+    suspend fun observeTransfer(
+        to: String,
+        token: Token,
+        amount: BigDecimal,
+        fee: BigDecimal
+    ): Boolean
+
+    suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal
 
     suspend fun getAddress(): String
 
     suspend fun getPublicKeyHex(withPrefix: Boolean = false): String
 
     suspend fun getAccountName(): String
-
-    suspend fun findOtherUsersAccounts(search: String): List<Account>
 
     suspend fun getContacts(query: String): List<Account>
 
@@ -77,4 +82,6 @@ interface WalletInteractor {
     suspend fun getAssetOrThrow(assetId: String): Asset
 
     suspend fun isWhitelistedToken(tokenId: String): Boolean
+
+    suspend fun isVisibleToken(tokenId: String): Boolean
 }

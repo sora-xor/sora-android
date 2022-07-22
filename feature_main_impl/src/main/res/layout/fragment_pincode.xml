@@ -50,10 +50,11 @@
                 android:layout_height="0dp"
                 android:layout_marginEnd="@dimen/x1"
                 android:src="@drawable/bg_egyptian_cat_ltr"
+                app:layout_constraintDimensionRatio="0.6"
                 app:layout_constraintBottom_toBottomOf="@+id/dotsProgressView"
-                app:layout_constraintDimensionRatio="W,0.6:1"
                 app:layout_constraintEnd_toStartOf="@+id/dotsProgressView"
                 app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/dotsProgressView" />
 
             <jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
@@ -77,9 +78,10 @@
                 android:layout_height="0dp"
                 android:layout_marginStart="@dimen/x1"
                 android:src="@drawable/bg_egyptian_cat"
+                app:layout_constraintDimensionRatio="0.6"
                 app:layout_constraintBottom_toBottomOf="@+id/dotsProgressView"
-                app:layout_constraintDimensionRatio="W,0.6:1"
                 app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/dotsProgressView"
                 app:layout_constraintTop_toTopOf="@+id/dotsProgressView" />
         </androidx.constraintlayout.widget.ConstraintLayout>

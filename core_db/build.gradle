@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
@@ -9,6 +10,14 @@ android {
     defaultConfig {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += [
+                        "room.schemaLocation":"$projectDir/schemas".toString(),
+                        "room.incremental":"true"]
+            }
+        }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,20 +63,16 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(":common")
-    implementation project(":core_di")
 
     implementation kotlinDep
 
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
 
     implementation coroutineDep
     implementation coroutineAndroidDep
 
     implementation roomDep
     implementation roomKtxDep
-    implementation roomPagingDep
     kapt roomKaptDep
-
-    implementation pagingLibraryDep
 }

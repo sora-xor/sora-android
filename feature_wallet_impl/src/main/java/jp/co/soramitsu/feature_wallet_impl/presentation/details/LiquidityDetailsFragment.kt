@@ -8,20 +8,20 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.details
 import android.graphics.drawable.Animatable
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentLiquidityDetailsBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class LiquidityDetailsFragment :
     BaseFragment<ExtrinsicDetailsViewModel>(R.layout.fragment_liquidity_details) {
 
@@ -41,20 +41,12 @@ class LiquidityDetailsFragment :
 
     private val viewBinding by viewBinding(FragmentLiquidityDetailsBinding::bind)
 
+    private val vm: ExtrinsicDetailsViewModel by viewModels(ownerProducer = { requireParentFragment() })
+    override val viewModel: ExtrinsicDetailsViewModel
+        get() = vm
+
     private val details: LiquidityDetailsModel by lazy {
         requireParcelable(ARG_DETAILS)
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .transactionDetailsComponentBuilder()
-            .withFragment(requireParentFragment())
-            .withTxHash("")
-            .build()
-            .inject(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

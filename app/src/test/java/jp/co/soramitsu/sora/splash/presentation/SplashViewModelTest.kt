@@ -8,15 +8,16 @@ package jp.co.soramitsu.sora.splash.presentation
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
-import jp.co.soramitsu.sora.splash.domain.SplashRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -41,66 +42,63 @@ class SplashViewModelTest {
     @Mock
     private lateinit var interactor: SplashInteractor
 
-    @Mock
-    private lateinit var router: SplashRouter
-
-    @Mock
-    private lateinit var runtime: RuntimeManager
-
     private lateinit var splashViewModel: SplashViewModel
 
     @Before
     fun setUp() {
         mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log("Migration done true") } returns Unit
-        splashViewModel = SplashViewModel(interactor, router, runtime)
+        every { FirebaseWrapper.log("Splash next screen true") } returns Unit
+        splashViewModel = SplashViewModel(interactor)
     }
 
     @Test
-    fun `nextScreen with REGISTRATION_FINISHED`() = runBlockingTest {
-        given(interactor.getMigrationDoneAsync()).willReturn(async { true })
+    fun `nextScreen with REGISTRATION_FINISHED`() = runTest {
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
         given(interactor.getRegistrationState()).willReturn(OnboardingState.REGISTRATION_FINISHED)
-
         splashViewModel.nextScreen()
-
-        verify(router).showMainScreen()
+        advanceUntilIdle()
+        val r = splashViewModel.showMainScreen.getOrAwaitValue()
+        assertEquals(Unit, r)
     }
 
     @Test
-    fun `nextScreen with INITIAL`() = runBlockingTest {
+    fun `nextScreen with INITIAL`() = runTest {
         val state = OnboardingState.INITIAL
 
-        given(interactor.getMigrationDoneAsync()).willReturn(async { true })
+        given(interactor.getMigrationDoneAsync()).willReturn(CompletableDeferred(true))
         given(interactor.getRegistrationState()).willReturn(state)
 
         splashViewModel.nextScreen()
-
-        verify(router).showOnBoardingScreen(state)
+        advanceUntilIdle()
+        val r = splashViewModel.showOnBoardingScreen.getOrAwaitValue()
+        assertEquals(OnboardingState.INITIAL, r)
     }
 
     @Test
-    fun `handleDeepLink before registration called`() = runBlockingTest {
+    fun `handleDeepLink before registration called`() = runTest {
         val state = OnboardingState.INITIAL
         val invitationCode = "INVITATION_CODE"
 
         given(interactor.getRegistrationState()).willReturn(state)
 
         splashViewModel.handleDeepLink(invitationCode)
-
+        advanceUntilIdle()
         verify(interactor).saveInviteCode(invitationCode)
-        verify(router).showOnBoardingScreenViaInviteLink()
+        val r = splashViewModel.showOnBoardingScreenViaInviteLink.getOrAwaitValue()
+        assertEquals(Unit, r)
     }
 
     @Test
-    fun `handleDeepLink after registration called`() = runBlockingTest {
+    fun `handleDeepLink after registration called`() = runTest {
         val state = OnboardingState.REGISTRATION_FINISHED
         val invitationCode = "INVITATION_CODE"
 
         given(interactor.getRegistrationState()).willReturn(state)
 
         splashViewModel.handleDeepLink(invitationCode)
-
+        advanceUntilIdle()
         verify(interactor).saveInviteCode(invitationCode)
-        verify(router).showMainScreenFromInviteLink()
+        val r = splashViewModel.showMainScreenFromInviteLink.getOrAwaitValue()
+        assertEquals(Unit, r)
     }
 }

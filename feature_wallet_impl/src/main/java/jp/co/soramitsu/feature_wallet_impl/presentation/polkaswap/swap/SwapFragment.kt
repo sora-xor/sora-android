@@ -10,12 +10,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
@@ -33,21 +34,22 @@ import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentSwapBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 @FlowPreview
+@AndroidEntryPoint
 class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
 
     companion object {
@@ -70,6 +72,10 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             ARG_OUTPUT_TOKEN to outputToken,
         )
     }
+
+    private val vm: SwapViewModel by viewModels()
+    override val viewModel: SwapViewModel
+        get() = vm
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
@@ -163,14 +169,22 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            binding.fromInput.asFlowCurrency()
+            binding.fromInput.asFlowCurrency2()
+                .onEach {
+                    viewModel.fromAmountOnEach()
+                }
+                .debounce(ViewHelper.debounce)
                 .collectLatest {
                     viewModel.fromAmountChanged(it)
                 }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            binding.toInput.asFlowCurrency()
+            binding.toInput.asFlowCurrency2()
+                .onEach {
+                    viewModel.toAmountOnEach()
+                }
+                .debounce(ViewHelper.debounce)
                 .collectLatest {
                     viewModel.toAmountChanged(it)
                 }
@@ -195,18 +209,17 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         initListeners()
     }
 
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .polkaswapComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
-    }
-
     private fun initListeners() {
+        viewModel.toEnabledLiveData.observe {
+            binding.toInput.isEnabled = it
+            binding.toCard.isEnabled = it
+        }
+
+        viewModel.fromEnabledLiveData.observe {
+            binding.fromInput.isEnabled = it
+            binding.fromCard.isEnabled = it
+        }
+
         viewModel.disclaimerVisibilityLiveData.observe {
             disclaimerVisibility = it
             binding.infoButtonWrapper.showOrGone(disclaimerVisibility)
@@ -310,10 +323,14 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             )
         }
 
+        viewModel.fromAndToAssetLiveData.observe {
+            binding.fromInput.isEnabled = true
+            binding.toInput.isEnabled = true
+        }
+
         viewModel.fromAssetLiveData.observe {
             binding.fromCard.setAsset(it.token)
             binding.fromInput.decimalPartLength = it.token.precision
-            binding.fromInput.isEnabled = true
 
             binding.detailPriceTitle1.text = "%s/%s".format(
                 viewModel.fromAssetLiveData.value?.token?.symbol,
@@ -329,7 +346,6 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
         viewModel.toAssetLiveData.observe {
             binding.toCard.setAsset(it.token)
             binding.toInput.decimalPartLength = it.token.precision
-            binding.toInput.isEnabled = true
 
             binding.detailPriceTitle1.text = "%s/%s".format(
                 viewModel.fromAssetLiveData.value?.token?.symbol,

@@ -7,20 +7,20 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.details
 
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.setImageTint2
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransactionDetailsBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class TransactionDetailsFragment :
     BaseFragment<ExtrinsicDetailsViewModel>(R.layout.fragment_transaction_details) {
 
@@ -40,20 +40,12 @@ class TransactionDetailsFragment :
 
     private val viewBinding by viewBinding(FragmentTransactionDetailsBinding::bind)
 
+    private val vm: ExtrinsicDetailsViewModel by viewModels(ownerProducer = { requireParentFragment() })
+    override val viewModel: ExtrinsicDetailsViewModel
+        get() = vm
+
     private val details: TransferDetailsModel by lazy {
         requireParcelable(ARG_DETAILS)
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .transactionDetailsComponentBuilder()
-            .withFragment(requireParentFragment())
-            .withTxHash("")
-            .build()
-            .inject(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

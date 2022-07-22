@@ -9,25 +9,36 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.databinding.FragmentMyMnemonicBinding
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.args.accountName
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.feature_multiaccount_api.di.MultiaccountFeatureApi
 import jp.co.soramitsu.feature_multiaccount_impl.R
-import jp.co.soramitsu.feature_multiaccount_impl.di.MultiaccountFeatureComponent
 import javax.inject.Inject
 import kotlin.math.ceil
 
+@AndroidEntryPoint
 class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_my_mnemonic) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var viewModelFactory: MnemonicViewModel.Factory
+
+    override val viewModel: MnemonicViewModel by viewModels {
+        MnemonicViewModel.provideFactory(
+            viewModelFactory,
+            requireArguments().accountName
+        )
+    }
 
     private lateinit var screenshotBlockHelper: ScreenshotBlockHelper
     private val binding by viewBinding(FragmentMyMnemonicBinding::bind)
@@ -51,7 +62,7 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_my_mn
         binding.nextBtn.show()
 
         binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.btnNextClicked()
+            viewModel.btnNextClicked(findNavController())
         }
 
         screenshotBlockHelper = ScreenshotBlockHelper(requireActivity())
@@ -73,17 +84,6 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_my_mn
                 List(words.size - rowCount) { words[it + rowCount] }.joinToString(separator = "\n")
         }
         viewModel.getPassphrase()
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<MultiaccountFeatureComponent>(
-            requireContext(),
-            MultiaccountFeatureApi::class.java
-        )
-            .mnemonicComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 
     override fun onResume() {

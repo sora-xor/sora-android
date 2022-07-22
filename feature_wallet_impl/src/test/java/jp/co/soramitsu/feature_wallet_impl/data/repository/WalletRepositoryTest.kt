@@ -6,68 +6,52 @@
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.ExperimentalPagingApi
-import androidx.room.withTransaction
 import com.google.gson.Gson
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.mockkStatic
-import io.mockk.slot
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.data.network.dto.EventRecord
-import jp.co.soramitsu.common.data.network.dto.InnerEventRecord
-import jp.co.soramitsu.common.data.network.dto.PhaseRecord
-import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
-import jp.co.soramitsu.common.domain.AppLinksProvider
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.Serializer
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AssetDao
-import jp.co.soramitsu.core_db.dao.TransferTransactionDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.AssetTokenLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_impl.data.mappers.AssetLocalToAssetMapper
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.AssetToAssetLocalMapper
-import jp.co.soramitsu.feature_wallet_impl.data.network.sorascan.SoraScanApi
-import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.SubstrateApi
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
-import jp.co.soramitsu.feature_wallet_impl.data.substrate.TestRuntimeProvider
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
+import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.anyNonNull
+import jp.co.soramitsu.test_shared.TestRuntimeProvider
+import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyList
+import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import java.math.BigDecimal
 import java.math.BigInteger
 
 @ExperimentalCoroutinesApi
-@ExperimentalPagingApi
 @RunWith(MockitoJUnitRunner::class)
 class WalletRepositoryTest {
 
@@ -84,16 +68,7 @@ class WalletRepositoryTest {
     private lateinit var db: AppDatabase
 
     @Mock
-    private lateinit var transactionDao: TransferTransactionDao
-
-    @Mock
     private lateinit var assetDao: AssetDao
-
-    @Mock
-    private lateinit var serializer: Serializer
-
-    @Mock
-    private lateinit var appLinksProvider: AppLinksProvider
 
     @Mock
     private lateinit var assetHolder: AssetHolder
@@ -102,19 +77,22 @@ class WalletRepositoryTest {
     private lateinit var assetLocalToAssetMapper: AssetLocalToAssetMapper
 
     @Mock
-    private lateinit var assetToAssetLocalMapper: AssetToAssetLocalMapper
+    private lateinit var extrinsicManager: ExtrinsicManager
 
     @Mock
-    private lateinit var subapi: SubstrateApi
+    private lateinit var substrateCalls: SubstrateCalls
 
     @Mock
-    private lateinit var soraScanApi: SoraScanApi
+    private lateinit var historyReader: SubQueryClient<*, *>
 
     @Mock
     private lateinit var fileManager: FileManager
 
     @Mock
     private lateinit var resourceManager: ResourceManager
+
+    @Mock
+    private lateinit var runtimeManager: RuntimeManager
 
     @Mock
     private lateinit var gson: Gson
@@ -127,194 +105,120 @@ class WalletRepositoryTest {
     private val soraAccount = SoraAccount("a", "n")
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         runtime = TestRuntimeProvider.buildRuntime("sora2")
         given(db.assetDao()).willReturn(assetDao)
-        given(assetDao.getPrecisionOfToken(anyString())).willReturn(1)
-        given(db.transactionDao()).willReturn(transactionDao)
-        mockkObject(RuntimeHolder)
-        every { RuntimeHolder.getRuntime() } returns runtime
         walletRepository = WalletRepositoryImpl(
             datasource,
             db,
-            subapi,
-            soraScanApi,
             fileManager,
             gson,
-            AssetHolder(),
             resourceManager,
             AssetLocalToAssetMapper(),
+            extrinsicManager,
+            substrateCalls,
+            runtimeManager
         )
     }
 
     @Test
-    fun `save migration status`() = runBlockingTest {
+    fun `save migration status`() = runTest {
         val m = MigrationStatus.SUCCESS
-        given(datasource.saveMigrationStatus(anyNonNull())).willReturn(Unit)
+        given(datasource.saveMigrationStatus(m)).willReturn(Unit)
         walletRepository.saveMigrationStatus(m)
         verify(datasource).saveMigrationStatus(m)
     }
 
     @Test
-    fun `retrieve claim block hash`() = runBlockingTest {
+    fun `retrieve claim block hash`() = runTest {
         given(datasource.retrieveClaimBlockAndTxHash()).willReturn("block" to "hash")
         assertEquals("block" to "hash", walletRepository.retrieveClaimBlockAndTxHash())
     }
 
     @Test
-    fun `get assets`() = runBlockingTest {
-        given(assetDao.getAssetsVisible(anyString(), anyString())).willReturn(emptyList())
-        assertEquals(assetList(), walletRepository.getAssetsVisible("address"))
+    fun `get assets`() = runTest {
+        given(assetDao.getAssetsVisible(anyString(), anyString())).willReturn(
+            assetTokenList()
+        )
+        val assets = walletRepository.getAssetsVisible("address")
+        val expected = assetList().subList(0, 2)
+        assertEquals(expected.size, assets.size)
+        repeat(2) {
+            assertEquals(expected[it], assets[it])
+        }
     }
 
     @Test
-    fun `calc fee`() = runBlockingTest {
+    fun `calc fee`() = runTest {
         given(
-            subapi.calcFee(
-                anyString(),
-                anyString(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull(),
-            )
+            extrinsicManager.calcFee(anyString(), anyBoolean(), any())
         ).willReturn(BigInteger("1000000000000000000"))
         val fee = walletRepository.calcTransactionFee(
             "from",
             "to",
-            "0x0200000000000000000000000000000000000000000000000000000000000000",
+            TestTokens.xorToken,
             BigDecimal.ONE
         )
-        assertEquals(BigDecimal("100000000000000000"), fee)
+        assertEquals(BigDecimal("1"), fee)
     }
 
     @Test
-    fun `observe migrate`() = runBlockingTest {
+    fun `observe migrate`() = runTest {
+        val key = Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6))
         given(
-            subapi.migrate(
+            extrinsicManager.submitAndWaitExtrinsic(
                 anyString(),
+                any(),
+                anyBoolean(),
                 anyString(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull()
+                any(),
             )
         ).willReturn(
-            flow {
-                emit(
-                    "id" to ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
-                        "sub",
-                        "block"
-                    )
-                )
-            }
+            ExtrinsicSubmitStatus(true, "txhash", "blockhash")
         )
         val test = walletRepository.migrate(
             "iroha address",
             "iroha public",
             "signature",
-            Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6)),
-        ).toList()
-
-        assertEquals(1, test.size)
-    }
-
-    @Test
-    fun `tx success`() = runBlockingTest {
-        given(subapi.checkEvents(anyNonNull(), anyNonNull())).willReturn(eventRecord())
-        assertEquals(true, walletRepository.isTxSuccessful(1, "blockhash", "txhash"))
-    }
-
-    @Test
-    fun `transfer simple`() = runBlockingTest {
-        given(
-            subapi.transfer(
-                anyNonNull(),
-                anyString(),
-                anyString(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull()
-            )
-        ).willReturn("hash")
-        val test = walletRepository.transfer(
-            Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6)),
+            key,
             "from",
-            "to",
-            "0x0200000000000000000000000000000000000000000000000000000000000000",
-            BigDecimal.ONE,
         )
-        assertEquals("hash", test)
+
+        assertEquals(true, test.success)
     }
 
     @Test
-    fun `observe transfer`() = runBlockingTest {
+    fun `observe transfer`() = runTest {
+        val key = Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6))
         given(
-            subapi.observeTransfer(
-                anyNonNull(),
+            extrinsicManager.submitAndWatchExtrinsic(
                 anyString(),
-                anyString(),
-                anyString(),
-                anyNonNull(),
-                anyNonNull()
+                any(),
+                anyBoolean(),
+                any()
             )
         ).willReturn(
-            flow {
-                emit(
-                    "id" to ExtrinsicStatusResponse.ExtrinsicStatusFinalized(
-                        "sub",
-                        "block"
-                    )
-                )
-            }
+            ExtrinsicSubmitStatus(true, "txhash", "blockhash")
         )
         val result = walletRepository.observeTransfer(
-            Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6)),
+            key,
             "from",
             "to",
-            "0x0200000000000000000000000000000000000000000000000000000000000000",
+            TestTokens.xorToken,
             BigDecimal.ONE,
             BigDecimal.ZERO
-        ).toList()
-        assertEquals(1, result.size)
-    }
-
-    @Test
-    fun `save transaction`() = runBlockingTest {
-        mockkStatic("androidx.room.RoomDatabaseKt")
-        val lambda = slot<suspend () -> Unit>()
-        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
-            lambda.captured.invoke()
-        }
-        given(transactionDao.insert(transaction = anyNonNull())).willReturn(Unit)
-        given(transactionDao.insertParams(transactions = anyList())).willReturn(Unit)
-        walletRepository.saveTransfer(
-            "from",
-            "assetId",
-            BigDecimal.ZERO,
-            ExtrinsicStatusResponse.ExtrinsicStatusFinalized("s", "b"),
-            "hash",
-            BigDecimal.ZERO,
-            true,
-            soraAccount,
         )
-        verify(transactionDao).insert(transaction = anyNonNull())
-        verify(transactionDao).insertParams(transactions = anyList())
+        assertEquals(true, result.success)
     }
 
     @Test
-    fun `display assets`() = runBlockingTest {
+    fun `display assets`() = runTest {
         walletRepository.displayAssets(listOf(), soraAccount)
     }
 
     @Test
-    fun `hide assets`() = runBlockingTest {
+    fun `hide assets`() = runTest {
         walletRepository.hideAssets(listOf(), soraAccount)
-    }
-
-    @Test
-    fun `get contacts`() = runBlockingTest {
-        given(transactionDao.getContacts("")).willReturn(listOf("contact"))
-        walletRepository.setCurSoraAccount(soraAccount)
-        assertEquals(setOf("contact"), walletRepository.getContacts(""))
     }
 
     private fun assetTokenList() = listOf(
@@ -332,7 +236,7 @@ class WalletRepositoryTest {
             "someaddress",
             true,
             1,
-            BigDecimal.ONE,
+            BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
@@ -344,8 +248,8 @@ class WalletRepositoryTest {
             "0x0200040000000000000000000000000000000000000000000000000000000000",
             "someaddress",
             true,
-            3,
-            BigDecimal.ONE,
+            2,
+            BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
@@ -392,7 +296,15 @@ class WalletRepositoryTest {
     )
 
     private fun oneTokenLocal() =
-        TokenLocal("token_id", "token name", "token symbol", 18, true, "whitelist", true)
+        TokenLocal(
+            "0x0200000000000000000000000000000000000000000000000000000000000000",
+            "SORA",
+            "XOR",
+            18,
+            true,
+            "whitelist",
+            false
+        )
 
     private fun oneToken2() = Token(
         "0x0200040000000000000000000000000000000000000000000000000000000000",
@@ -404,7 +316,15 @@ class WalletRepositoryTest {
     )
 
     private fun oneTokenLocal2() =
-        TokenLocal("token2_id", "token2 name", "token2 symbol", 18, true, "whitelist", true)
+        TokenLocal(
+            "0x0200040000000000000000000000000000000000000000000000000000000000",
+            "SORA Validator Token",
+            "VAL",
+            18,
+            true,
+            "whitelist",
+            true
+        )
 
     private fun oneToken3() = Token(
         "0x0200050000000000000000000000000000000000000000000000000000000000",
@@ -432,26 +352,5 @@ class WalletRepositoryTest {
         BigDecimal.ZERO,
         BigDecimal.ZERO,
         BigDecimal.ZERO
-    )
-
-    private fun assetInfoDtoList() = listOf(
-        TokenInfoDto(
-            "0x0200000000000000000000000000000000000000000000000000000000000000",
-            "sora",
-            "xor",
-            18,
-            true,
-        ),
-        TokenInfoDto(
-            "0x0200040000000000000000000000000000000000000000000000000000000000",
-            "soranet",
-            "val",
-            18,
-            true,
-        ),
-    )
-
-    private fun eventRecord() = listOf(
-        EventRecord(PhaseRecord.ApplyExtrinsic(BigInteger.ONE), InnerEventRecord(0, 0, null))
     )
 }

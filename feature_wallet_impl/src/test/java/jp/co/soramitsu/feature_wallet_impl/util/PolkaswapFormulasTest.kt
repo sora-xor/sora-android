@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.util
 import java.math.BigDecimal
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.safeDivide
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

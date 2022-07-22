@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
@@ -64,6 +65,9 @@ dependencies {
     implementation project(":feature_wallet_api")
     implementation project(":feature_ethereum_api")
     implementation project(":feature_account_api")
+    implementation project(":sorasubstrate")
+
+    implementation fearlessLibDep
 
     implementation kotlinDep
 
@@ -78,64 +82,41 @@ dependencies {
     implementation insetterDep
     implementation viewBindingDep
 
-    implementation loggerDep
+    implementation timberDep
 
     implementation lottieDep
 
     implementation neumorphismDep
     implementation swipeButtonDep
 
-    implementation workerManagerDep
+    implementation workManagerDep
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
     implementation viewmodelKtxDep
+    implementation runtimeKtxDep
     implementation fragmentKtxDep
-    implementation lifecycleKtxDep
 
     implementation runtimePermissionsDep
 
     implementation daggerDep
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    kapt daggerKapt
+    kapt daggerKaptDep
+    implementation hiltWorkManagerDep
+    kapt hiltWorkManagerKaptDep
+    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
-    implementation retrofitDep
-    implementation gsonConvertedDep
+    implementation gsonDep
 
-    implementation lifecycleKtxDep
-    implementation lifecycleExtDep
+    implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
     implementation roomDep
     implementation roomKtxDep
-    implementation roomPagingDep
-    kapt roomKaptDep
 
-    implementation pagingLibraryDep
-
-    //implementation soraDep
-    implementation birtDep
-
-    //implementation irohaDep
-    implementation fearlessLibDep
-    implementation bouncyCastleDep
+    implementation xNetworkingDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 
-    implementation(crashlyticsDep) {
-        transitive = true
-    }
-
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation mockkDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
-    testImplementation fearlessLibDep
-    testImplementation webSocketLibDep
-    testImplementation truthDep
+    testImplementation project(":test_data")
 }

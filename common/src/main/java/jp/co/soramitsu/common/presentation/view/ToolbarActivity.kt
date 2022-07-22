@@ -12,27 +12,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.viewbinding.ViewBinding
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.di.api.FeatureContainer
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.util.EventObserver
-import javax.inject.Inject
 
 abstract class ToolbarActivity<T : BaseViewModel, VB : ViewBinding> : AppCompatActivity() {
 
-    @Inject
-    protected open lateinit var viewModel: T
+    abstract val viewModel: T
 
     protected lateinit var binding: VB
 
     override fun attachBaseContext(base: Context) {
-        val commonApi = (base.applicationContext as FeatureContainer).commonApi()
-        val contextManager = commonApi.contextManager()
-        applyOverrideConfiguration(contextManager.setLocale(base).resources.configuration)
-        super.attachBaseContext(contextManager.setLocale(base))
+        applyOverrideConfiguration(ContextManager.setLocale(base).resources.configuration)
+        super.attachBaseContext(ContextManager.setLocale(base))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        inject()
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = layoutResource()
@@ -83,8 +78,6 @@ abstract class ToolbarActivity<T : BaseViewModel, VB : ViewBinding> : AppCompatA
     abstract fun layoutResource(): VB
 
     abstract fun initViews()
-
-    abstract fun inject()
 
     abstract fun subscribe(viewModel: T)
 }

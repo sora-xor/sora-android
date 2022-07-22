@@ -9,12 +9,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.args.tokenFrom
 import jp.co.soramitsu.common.presentation.args.tokenTo
@@ -22,22 +23,25 @@ import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.presentation.view.slippagebottomsheet.SlippageBottomSheet
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentRemoveLiquidityBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class RemoveLiquidityFragment : BaseFragment<RemoveLiquidityViewModel>(R.layout.fragment_remove_liquidity) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
     private val binding by viewBinding(FragmentRemoveLiquidityBinding::bind)
+
+    private val vm: RemoveLiquidityViewModel by viewModels()
+    override val viewModel: RemoveLiquidityViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -185,16 +189,5 @@ class RemoveLiquidityFragment : BaseFragment<RemoveLiquidityViewModel>(R.layout.
                     binding.nextButton.showLoader(state.loading)
                 }
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .liquidityComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 }

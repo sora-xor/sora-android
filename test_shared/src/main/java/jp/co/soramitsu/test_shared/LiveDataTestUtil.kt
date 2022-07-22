@@ -46,3 +46,16 @@ fun <T> LiveData<T>.getOrAwaitValue(
     @Suppress("UNCHECKED_CAST")
     return data as T
 }
+
+suspend fun <T> LiveData<T>.observeForTesting(checker: (Int, T) -> Unit, block: suspend () -> Unit) {
+    var i = 0
+    val observer = Observer<T> {
+        checker(i++, it)
+    }
+    try {
+        observeForever(observer)
+        block()
+    } finally {
+        removeObserver(observer)
+    }
+}

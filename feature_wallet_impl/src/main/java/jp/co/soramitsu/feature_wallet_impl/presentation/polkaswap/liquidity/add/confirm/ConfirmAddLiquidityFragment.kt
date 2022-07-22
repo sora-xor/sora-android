@@ -8,12 +8,13 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.args.liquidityDetails
@@ -23,11 +24,9 @@ import jp.co.soramitsu.common.presentation.args.tokenTo
 import jp.co.soramitsu.common.presentation.view.ToastDialog
 import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.presentation.view.table.RowsView
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentConfirmAddLiquidityBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
@@ -37,6 +36,7 @@ import javax.inject.Inject
 
 @FlowPreview
 @ExperimentalCoroutinesApi
+@AndroidEntryPoint
 class ConfirmAddLiquidityFragment : BaseFragment<ConfirmAddLiquidityViewModel>(
     R.layout.fragment_confirm_add_liquidity
 ) {
@@ -53,6 +53,21 @@ class ConfirmAddLiquidityFragment : BaseFragment<ConfirmAddLiquidityViewModel>(
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
+    @Inject
+    lateinit var vmf: ConfirmAddLiquidityViewModel.ConfirmAddLiquidityViewModelFactory
+
+    private val vm: ConfirmAddLiquidityViewModel by viewModels {
+        ConfirmAddLiquidityViewModel.provideFactory(
+            vmf,
+            requireArguments().tokenFrom,
+            requireArguments().tokenTo,
+            requireArguments().slippageTolerance,
+            requireArguments().liquidityDetails
+        )
+    }
+    override val viewModel: ConfirmAddLiquidityViewModel
+        get() = vm
 
     private val binding by viewBinding(FragmentConfirmAddLiquidityBinding::bind)
     private lateinit var tokenFrom: Token
@@ -173,20 +188,5 @@ class ConfirmAddLiquidityFragment : BaseFragment<ConfirmAddLiquidityViewModel>(
                 ).show()
             }
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .confirmAddLiquidityComponentBuilder()
-            .withFragment(this)
-            .withTokenFrom(requireArguments().tokenFrom)
-            .withTokenTo(requireArguments().tokenTo)
-            .withSlippageTolerance(requireArguments().slippageTolerance)
-            .withLiquidityDetails(requireArguments().liquidityDetails)
-            .build()
-            .inject(this)
     }
 }

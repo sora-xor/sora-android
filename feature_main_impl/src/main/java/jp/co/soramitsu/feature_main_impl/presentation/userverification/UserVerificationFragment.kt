@@ -7,28 +7,23 @@ package jp.co.soramitsu.feature_main_impl.presentation.userverification
 
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.util.ext.onBackPressed
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentUserVerificationBinding
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 
+@AndroidEntryPoint
 class UserVerificationFragment :
     BaseFragment<UserVerificationViewModel>(R.layout.fragment_user_verification) {
 
     private val binding by viewBinding(FragmentUserVerificationBinding::bind)
-
-    override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
-            .verificationComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
-    }
+    private val vm: UserVerificationViewModel by viewModels()
+    override val viewModel: UserVerificationViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

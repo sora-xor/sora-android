@@ -56,8 +56,7 @@
             android:layout_width="@dimen/profile_icon"
             android:layout_height="@dimen/profile_icon"
             android:layout_marginTop="@dimen/x1"
-            android:padding="@dimen/x1"
-            android:src="@drawable/ic_switch_arrows"
+            android:src="@drawable/ic_neu_account_40"
             app:layout_constraintStart_toStartOf="@id/glLeft"
             app:layout_constraintTop_toBottomOf="@id/tvProfileAccountSettingsGroup"
             app:tint="?attr/tintColorLight"
@@ -108,61 +107,6 @@
             app:layout_constraintTop_toBottomOf="@id/ivSwitchAccount" />
 
         <ImageView
-            android:id="@+id/ivProfileAccount"
-            android:layout_width="@dimen/profile_icon"
-            android:layout_height="@dimen/profile_icon"
-            android:padding="@dimen/x1"
-            android:src="@drawable/ic_pencil"
-            app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv0"
-            app:tint="?attr/tintColorLight"
-            tools:ignore="ContentDescription" />
-
-        <TextView
-            android:id="@+id/profilePersonalDetailsTextView"
-            style="@style/TextAppearance.Soramitsu.Neu.18.Regular"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:padding="@dimen/x1"
-            android:text="@string/personal_info_username_v1"
-            app:layout_constraintBottom_toBottomOf="@id/ivProfileAccount"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintStart_toEndOf="@id/ivProfileAccount"
-            app:layout_constraintTop_toTopOf="@id/ivProfileAccount" />
-
-        <TextView
-            android:id="@+id/tvAccountNameValue"
-            style="@style/TextAppearance.Soramitsu.Neu.Regular.11"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:paddingEnd="@dimen/x2"
-            android:textColor="?attr/tintColorLight"
-            app:layout_constraintBaseline_toBaselineOf="@id/profilePersonalDetailsTextView"
-            app:layout_constraintEnd_toStartOf="@id/ivSwitchAccount2"
-            tools:text="my supe...ount" />
-
-        <ImageView
-            android:id="@+id/profilePersonalDetailsArrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_neu_chevron_right"
-            app:layout_constraintBottom_toBottomOf="@+id/profilePersonalDetailsTextView"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintTop_toTopOf="@+id/profilePersonalDetailsTextView"
-            tools:ignore="ContentDescription" />
-
-        <View
-            android:id="@+id/vProfileDiv1"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:background="?attr/dividerColor"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/ivProfileAccount" />
-
-        <ImageView
             android:id="@+id/ivProfileFriends"
             android:layout_width="@dimen/profile_icon"
             android:layout_height="@dimen/profile_icon"
@@ -205,49 +149,6 @@
             app:layout_constraintEnd_toEndOf="@id/glRight"
             app:layout_constraintStart_toStartOf="@id/glLeft"
             app:layout_constraintTop_toBottomOf="@id/ivProfileFriends" />
-
-        <ImageView
-            android:id="@+id/ivProfilePassphrase"
-            android:layout_width="@dimen/profile_icon"
-            android:layout_height="@dimen/profile_icon"
-            android:padding="@dimen/x1"
-            android:src="@drawable/ic_neu_lock"
-            app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv1"
-            app:tint="?attr/tintColorLight"
-            tools:ignore="ContentDescription" />
-
-        <TextView
-            android:id="@+id/profilePassphraseTextView"
-            style="@style/TextAppearance.Soramitsu.Neu.18.Regular"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:padding="@dimen/x1"
-            android:text="@string/profile_passphrase_title_v1"
-            app:layout_constraintBottom_toBottomOf="@id/ivProfilePassphrase"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintStart_toEndOf="@id/ivProfilePassphrase"
-            app:layout_constraintTop_toTopOf="@id/ivProfilePassphrase" />
-
-        <ImageView
-            android:id="@+id/profilePassphraseArrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_neu_chevron_right"
-            app:layout_constraintBottom_toBottomOf="@+id/profilePassphraseTextView"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintTop_toTopOf="@+id/profilePassphraseTextView"
-            tools:ignore="ContentDescription" />
-
-        <View
-            android:id="@+id/vProfileDiv3"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:background="?attr/dividerColor"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/ivProfilePassphrase" />
 
         <ImageView
             android:id="@+id/ivProfilePin"
@@ -511,62 +412,19 @@
             app:layout_constraintStart_toStartOf="@id/glLeft"
             app:layout_constraintTop_toBottomOf="@id/ivProfileDisclaimer" />
 
-        <ImageView
-            android:id="@+id/ivProfileLogout"
-            android:layout_width="@dimen/profile_icon"
-            android:layout_height="@dimen/profile_icon"
-            android:padding="@dimen/x1"
-            android:src="@drawable/ic_neu_logout"
-            app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv3"
-            app:tint="?attr/tintColorLight"
-            tools:ignore="ContentDescription" />
-
-        <TextView
-            android:id="@+id/profileLogoutTextView"
-            style="@style/TextAppearance.Soramitsu.Neu.18.Regular"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="?selectableItemBackground"
-            android:padding="@dimen/x1"
-            android:text="@string/profile_logout_title"
-            app:layout_constraintBottom_toBottomOf="@id/ivProfileLogout"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintStart_toEndOf="@id/ivProfileLogout"
-            app:layout_constraintTop_toTopOf="@id/ivProfileLogout" />
-
-        <ImageView
-            android:id="@+id/profileLogoutArrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_neu_chevron_right"
-            app:layout_constraintBottom_toBottomOf="@id/profileLogoutTextView"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintTop_toTopOf="@id/profileLogoutTextView"
-            tools:ignore="ContentDescription" />
-
-        <View
-            android:id="@+id/vProfileDiv9"
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:background="?attr/dividerColor"
-            app:layout_constraintEnd_toEndOf="@id/glRight"
-            app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/ivProfileLogout" />
-
         <TextView
             android:id="@+id/tvProfileAppSettingsGroup"
             style="@style/TextAppearance.Soramitsu.Neu.Light.15"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/x2"
             android:letterSpacing="-0.02"
             android:text="@string/settings_header_app"
             android:textAllCaps="true"
             android:textColor="?attr/titleColor"
+            android:layout_marginTop="@dimen/x3"
             app:layout_constraintEnd_toEndOf="@id/glRight"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/vProfileDiv9" />
+            app:layout_constraintTop_toBottomOf="@+id/vProfileDiv0" />
 
         <TextView
             android:id="@+id/tvProfileOtherSettingsGroup"

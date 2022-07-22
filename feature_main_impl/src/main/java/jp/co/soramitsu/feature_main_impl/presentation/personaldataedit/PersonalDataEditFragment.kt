@@ -9,24 +9,25 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ByteSizeTextWatcher
 import jp.co.soramitsu.common.util.KeyboardHelper
+import jp.co.soramitsu.common.util.bindTextWatcher
 import jp.co.soramitsu.common.util.ext.enableIf
 import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.nameByteSizeTextWatcher
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentPersonalDataEditBinding
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class PersonalDataEditFragment :
     BaseFragment<PersonalDataEditViewModel>(R.layout.fragment_personal_data_edit) {
 
@@ -39,21 +40,14 @@ class PersonalDataEditFragment :
 
     private lateinit var nameSizeTextWatcher: ByteSizeTextWatcher
     private val binding by viewBinding(FragmentPersonalDataEditBinding::bind)
-
-    override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
-            .personalComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
-    }
+    override val viewModel: PersonalDataEditViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
         binding.toolbar.setHomeButtonListener { viewModel.backPressed() }
-        binding.btnAccountNameNext.setDebouncedClickListener(debounceClickHandler) {
+        binding.nextBtn.setDebouncedClickListener(debounceClickHandler) {
             viewModel.saveData(binding.accountNameEt.text?.toString().orEmpty())
         }
 
@@ -66,6 +60,8 @@ class PersonalDataEditFragment :
                 Toast.LENGTH_SHORT
             ).show()
         }
+
+        viewLifecycleOwner.bindTextWatcher(nameSizeTextWatcher)
         binding.accountNameEt.addTextChangedListener(nameSizeTextWatcher)
 
         progressDialog = SoraProgressDialog(requireContext())
@@ -85,7 +81,7 @@ class PersonalDataEditFragment :
             if (it) progressDialog.show() else progressDialog.dismiss()
         }
         viewModel.nextButtonEnableLiveData.observe {
-            binding.btnAccountNameNext.enableIf(it)
+            binding.nextBtn.enableIf(it)
         }
     }
 
@@ -100,10 +96,5 @@ class PersonalDataEditFragment :
         }
         keyboardHelper?.release()
         super.onPause()
-    }
-
-    override fun onDestroyView() {
-        nameSizeTextWatcher.destroy()
-        super.onDestroyView()
     }
 }

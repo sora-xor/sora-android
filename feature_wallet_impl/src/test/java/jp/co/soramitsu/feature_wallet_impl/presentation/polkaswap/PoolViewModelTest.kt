@@ -26,7 +26,7 @@
 //import kotlinx.coroutines.FlowPreview
 //import kotlinx.coroutines.flow.Flow
 //import kotlinx.coroutines.flow.flow
-//import kotlinx.coroutines.test.runBlockingTest
+//import kotlinx.coroutines.test.runTest
 //import org.junit.Assert.assertEquals
 //import org.junit.Before
 //import org.junit.Rule
@@ -101,7 +101,7 @@
 ////    )
 ////
 ////    @Before
-////    fun setUp() = runBlockingTest {
+////    fun setUp() = runTest {
 ////        given(polkaswapInteractor.subscribePoolsCache()).willReturn(poolsFlow)
 ////        //given(walletInteractor.getAsset("tokenId1")).willReturn(getAsset1())
 ////
@@ -123,7 +123,7 @@
 ////    }
 ////
 ////    @Test
-////    fun init() = runBlockingTest {
+////    fun init() = runTest {
 ////        assertEquals(viewModel.poolModelLiveData.getOrAwaitValue(), poolModels)
 ////
 //////        verify(polkaswapInteractor).updatePools()

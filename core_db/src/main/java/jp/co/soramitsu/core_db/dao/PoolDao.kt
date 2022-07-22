@@ -19,11 +19,11 @@ interface PoolDao {
     @Query("DELETE FROM pools")
     suspend fun clearTable()
 
-    @Query("SELECT * FROM pools")
-    fun getPools(): Flow<List<PoolLocal>>
+    @Query("SELECT * FROM pools where accountAddress = :accountAddress")
+    fun getPools(accountAddress: String): Flow<List<PoolLocal>>
 
-    @Query("SELECT * FROM pools WHERE assetId = :assetId")
-    fun getPool(assetId: String): Flow<PoolLocal?>
+    @Query("SELECT * FROM pools WHERE assetId = :assetId and accountAddress = :accountAddress")
+    fun getPool(assetId: String, accountAddress: String): Flow<PoolLocal?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(pools: List<PoolLocal>)
@@ -35,10 +35,11 @@ interface PoolDao {
             "totalIssuance = :totalIssuance," +
             "strategicBonusApy = :strategicBonusApy," +
             "poolProvidersBalance = :poolProvidersBalance" +
-            " WHERE assetId = :assetId"
+            " WHERE assetId = :assetId and accountAddress = :accountAddress"
     )
     suspend fun updatePool(
         assetId: String,
+        accountAddress: String,
         reservesFirst: BigDecimal,
         reservesSecond: BigDecimal,
         totalIssuance: BigDecimal,

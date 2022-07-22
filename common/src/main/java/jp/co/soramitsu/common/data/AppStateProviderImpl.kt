@@ -6,16 +6,15 @@
 package jp.co.soramitsu.common.data
 
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import jp.co.soramitsu.common.domain.AppStateProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
 
-class AppStateProviderImpl @Inject constructor() : AppStateProvider, LifecycleObserver {
+class AppStateProviderImpl : AppStateProvider, LifecycleEventObserver {
 
     private val subject = MutableStateFlow(AppStateProvider.AppEvent.ON_CREATE)
 
@@ -30,23 +29,20 @@ class AppStateProviderImpl @Inject constructor() : AppStateProvider, LifecycleOb
 
     override fun observeState(): Flow<AppStateProvider.AppEvent> = subject.asStateFlow()
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onForeground() {
-        subject.value = AppStateProvider.AppEvent.ON_RESUME
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onBackground() {
-        subject.value = AppStateProvider.AppEvent.ON_PAUSE
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate() {
-        subject.value = AppStateProvider.AppEvent.ON_CREATE
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
-        subject.value = AppStateProvider.AppEvent.ON_DESTROY
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        when (event) {
+            Lifecycle.Event.ON_START -> {
+                subject.value = AppStateProvider.AppEvent.ON_RESUME
+            }
+            Lifecycle.Event.ON_STOP -> {
+                subject.value = AppStateProvider.AppEvent.ON_PAUSE
+            }
+            Lifecycle.Event.ON_CREATE -> {
+                subject.value = AppStateProvider.AppEvent.ON_CREATE
+            }
+            Lifecycle.Event.ON_DESTROY -> {
+                subject.value = AppStateProvider.AppEvent.ON_DESTROY
+            }
+        }
     }
 }

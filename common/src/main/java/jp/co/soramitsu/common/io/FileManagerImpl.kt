@@ -9,7 +9,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.core.content.FileProvider
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import jp.co.soramitsu.common.domain.OptionsProvider
 import java.io.File
 import java.io.FileOutputStream
 
@@ -32,7 +32,7 @@ class FileManagerImpl(private val context: Context) : FileManager {
      */
     @Suppress("DEPRECATION")
     override val logStorageDir: String by lazy {
-        context.externalMediaDirs.firstOrNull()?.absolutePath ?: externalCacheDir
+        (context.externalMediaDirs.firstOrNull()?.absolutePath ?: externalCacheDir) + File.separator + "logs.txt"
     }
 
     override fun readInternalCacheFile(fileName: String): String? =

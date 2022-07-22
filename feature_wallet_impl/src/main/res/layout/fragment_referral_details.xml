@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/svTransactionDetails"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/baseBackground"
+    android:overScrollMode="never">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/x2"
+        android:paddingTop="@dimen/x2"
+        android:paddingEnd="@dimen/x2">
+
+        <ImageView
+            android:id="@+id/ivExDetailsTokenIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="@dimen/x1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/ic_0x00a7243e8e01e4f503b06bc957d57e81edcfb362b44e42be1d09418989c017ba" />
+
+        <TextView
+            android:id="@+id/tvExDetailsTokenName"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/x1"
+            android:text="@string/asset_sora_fullname"
+            app:layout_constraintBottom_toTopOf="@id/transactionTotalAmountTitle"
+            app:layout_constraintStart_toEndOf="@id/ivExDetailsTokenIcon" />
+
+        <TextView
+            android:id="@+id/transactionTotalAmountTitle"
+            style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.21"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:letterSpacing="-0.02"
+            app:layout_constraintBottom_toBottomOf="@id/ivExDetailsTokenIcon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvExDetailsTokenName"
+            app:layout_constraintTop_toTopOf="@id/ivExDetailsTokenIcon"
+            tools:text="-1,000.1 VAL" />
+
+        <TextView
+            android:id="@+id/transactionTotalAmountTitleFiat"
+            style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvExDetailsTokenName"
+            app:layout_constraintTop_toBottomOf="@id/transactionTotalAmountTitle"
+            tools:text="-1,000.1 VAL" />
+
+        <TextView
+            android:id="@+id/transactionStatusTitle"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x4"
+            android:text="@string/status_title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/transactionTotalAmountTitleFiat" />
+
+        <TextView
+            android:id="@+id/transactionStatusText"
+            style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/x1_2"
+            app:layout_constraintBaseline_toBaselineOf="@id/transactionStatusTitle"
+            app:layout_constraintEnd_toStartOf="@id/transactionStatusIcon"
+            tools:text="Success" />
+
+        <ImageView
+            android:id="@+id/transactionStatusIcon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:adjustViewBounds="true"
+            app:layout_constraintBottom_toBottomOf="@id/transactionStatusText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/transactionStatusText"
+            tools:ignore="ContentDescription"
+            tools:src="@drawable/ic_neu_dots" />
+
+        <TextView
+            android:id="@+id/tvTxDetailsStatusType"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/transactionStatusIcon"
+            tools:text="SENT" />
+
+        <View
+            android:id="@+id/vDivider1"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTxDetailsStatusType" />
+
+        <TextView
+            android:id="@+id/tvTxDetailsDateTime"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:text="@string/transaction_date"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider1" />
+
+        <TextView
+            android:id="@+id/tvTxDetailsDateValue"
+            style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBaseline_toBaselineOf="@id/tvTxDetailsDateTime"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:text="12 December 2021" />
+
+        <TextView
+            android:id="@+id/transactionDateText"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTxDetailsDateValue"
+            tools:text="22:36:45" />
+
+        <View
+            android:id="@+id/vDivider11"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/transactionDateText" />
+
+        <TextView
+            android:id="@+id/transactionFeeAmountTitle"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:text="@string/amount_default_fee"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider11" />
+
+        <TextView
+            android:id="@+id/transactionFeeAmountText"
+            style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            app:layout_constraintBaseline_toBaselineOf="@id/transactionFeeAmountTitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/transactionFeeAmountTitle"
+            tools:text="100" />
+
+        <TextView
+            android:id="@+id/tvTxDetailsFeeFiatValue"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/transactionFeeAmountText"
+            tools:text="$ 123.34"
+            tools:visibility="visible" />
+
+        <View
+            android:id="@+id/vDivider12"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTxDetailsFeeFiatValue" />
+
+        <TextView
+            android:id="@+id/tvTransactionHashTitle"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:text="@string/transaction_id"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider12" />
+
+        <TextView
+            android:id="@+id/tvTransactionHash"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="@drawable/text_background"
+            android:drawablePadding="@dimen/x1"
+            app:drawableEndCompat="@drawable/ic_copy_16"
+            app:layout_constrainedHeight="true"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvTransactionHashTitle"
+            app:layout_constraintTop_toBottomOf="@id/vDivider12"
+            tools:text="0xabc...23f67" />
+
+        <View
+            android:id="@+id/vDivider3"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTransactionHash" />
+
+        <TextView
+            android:id="@+id/tvBlockHashTitle"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:text="@string/block_id"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider3" />
+
+        <TextView
+            android:id="@+id/tvBlockHash"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="@drawable/text_background"
+            android:drawablePadding="@dimen/x1"
+            app:drawableEndCompat="@drawable/ic_copy_16"
+            app:layout_constrainedHeight="true"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/tvBlockHashTitle"
+            app:layout_constraintTop_toBottomOf="@id/vDivider3"
+            tools:text="s9d9asdassdlkdc8vqqwe8s9v7c" />
+
+        <View
+            android:id="@+id/vDivider3_2"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvBlockHash" />
+
+        <TextView
+            android:id="@+id/toTitleTv"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:text="@string/history_referral"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider3_2" />
+
+        <TextView
+            android:id="@+id/toInfoTv"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="@drawable/text_background"
+            android:drawablePadding="@dimen/x1"
+            app:drawableEndCompat="@drawable/ic_copy_16"
+            app:layout_constrainedHeight="true"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/fromTitleTv"
+            app:layout_constraintTop_toBottomOf="@id/vDivider3_2"
+            tools:text="7sdfhksdf6sqwdhksdfsi6d7f" />
+
+        <View
+            android:id="@+id/vDivider4"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/toInfoTv" />
+
+        <TextView
+            android:id="@+id/fromTitleTv"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:text="@string/common_sender"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/vDivider4" />
+
+        <TextView
+            android:id="@+id/fromInfoTv"
+            style="@style/TextAppearance.Soramitsu.Neu.Light.13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="@drawable/text_background"
+            android:drawablePadding="@dimen/x1"
+            app:drawableEndCompat="@drawable/ic_copy_16"
+            app:layout_constrainedHeight="true"
+            app:layout_constrainedWidth="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1"
+            app:layout_constraintStart_toEndOf="@id/toTitleTv"
+            app:layout_constraintTop_toBottomOf="@id/vDivider4"
+            tools:text="did_sora_12312caledlawmdlw@sora" />
+
+        <View
+            android:id="@+id/vDivider5"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="@dimen/x1_5"
+            android:background="?attr/dividerColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/fromInfoTv" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.core.widget.NestedScrollView>

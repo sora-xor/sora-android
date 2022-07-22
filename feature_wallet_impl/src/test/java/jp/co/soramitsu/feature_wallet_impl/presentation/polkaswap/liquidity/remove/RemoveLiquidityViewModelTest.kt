@@ -9,6 +9,7 @@ import android.text.SpannableString
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkStatic
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.decimalPartSized
@@ -16,7 +17,6 @@ import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.NETWORK_FEE
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.TEST_ASSET
@@ -26,7 +26,8 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -81,7 +82,7 @@ class RemoveLiquidityViewModelTest {
     }
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         given(resourceManager.getString(R.string.common_enter_amount)).willReturn("Enter amount")
         given(resourceManager.getString(R.string.pool_button_remove)).willReturn("Remove")
         given(resourceManager.getString(R.string.polkaswap_insufficient_balance)).willReturn("Insufficient %s balance")
@@ -89,7 +90,7 @@ class RemoveLiquidityViewModelTest {
         given(resourceManager.getString(R.string.polkaswap_sbapy)).willReturn(sbApyText)
         given(resourceManager.getString(R.string.polkaswap_network_fee)).willReturn(networkFeeText)
         given(walletInteractor.getFeeToken()).willReturn(XOR_ASSET.token)
-        given(walletInteractor.subscribeVisibleAssetsOfCurAccount()).willReturn(
+        given(walletInteractor.subscribeActiveAssetsOfCurAccount()).willReturn(
             flowOf(
                 listOf(
                     XOR_ASSET,
@@ -117,14 +118,14 @@ class RemoveLiquidityViewModelTest {
     }
 
     @Test
-    fun `init viewModel EXPECT xor token setted`() {
+    fun `init viewModel EXPECT xor token setted`() = runTest {
         setUpViewModel()
-
+        advanceUntilIdle()
         assertEquals(viewModel.fromToken.value, XOR_ASSET.token)
     }
 
     @Test
-    fun `slippage tolerance changed EXPECT update slippageTolerance`() = runBlockingTest {
+    fun `slippage tolerance changed EXPECT update slippageTolerance`() = runTest {
         setUpViewModel()
 
         viewModel.slippageChanged(1.0f)
@@ -143,7 +144,7 @@ class RemoveLiquidityViewModelTest {
     }
 
     @Test
-    fun `amount from changed EXPECT update toAssetAmount`() = runBlockingTest {
+    fun `amount from changed EXPECT update toAssetAmount`() = runTest {
         val amount = BigDecimal.valueOf(0.5)
         given(
             numbersFormatter.formatBigDecimal(
@@ -162,9 +163,11 @@ class RemoveLiquidityViewModelTest {
         mockkStatic("jp.co.soramitsu.common.util.ext.StringExtKt")
         every { any<String>().decimalPartSized(ticker = any()) } returns SpannableString("sized")
         setUpViewModel()
-
+        advanceUntilIdle()
         viewModel.setTokensFromArgs(tokenFrom = XOR_ASSET.token, tokenTo = TEST_ASSET.token)
+        advanceUntilIdle()
         viewModel.fromAmountChanged(amount)
+        advanceUntilIdle()
 
         assertEquals("0.5", viewModel.fromAssetAmount.value)
         assertEquals("0.5", viewModel.toAssetAmount.value)
@@ -173,7 +176,7 @@ class RemoveLiquidityViewModelTest {
     }
 
     @Test
-    fun `amount to changed EXPECT update fromAssetAmount`() = runBlockingTest {
+    fun `amount to changed EXPECT update fromAssetAmount`() = runTest {
         val amount = BigDecimal.valueOf(0.35)
         given(
             numbersFormatter.formatBigDecimal(
@@ -192,9 +195,11 @@ class RemoveLiquidityViewModelTest {
         mockkStatic("jp.co.soramitsu.common.util.ext.StringExtKt")
         every { any<String>().decimalPartSized(ticker = any()) } returns SpannableString("sized")
         setUpViewModel()
-
+        advanceUntilIdle()
         viewModel.setTokensFromArgs(tokenFrom = XOR_ASSET.token, tokenTo = TEST_ASSET.token)
+        advanceUntilIdle()
         viewModel.toAmountChanged(amount)
+        advanceUntilIdle()
 
         assertEquals("0.35", viewModel.fromAssetAmount.value)
         assertEquals("0.35", viewModel.toAssetAmount.value)
@@ -203,7 +208,7 @@ class RemoveLiquidityViewModelTest {
 
     @Test
     fun `amount from changed EXPECT button disabled and insufficient balance text added`() =
-        runBlockingTest {
+        runTest {
             val amount = BigDecimal.valueOf(0.5)
             given(
                 numbersFormatter.formatBigDecimal(
@@ -219,7 +224,7 @@ class RemoveLiquidityViewModelTest {
                 )
             ).willReturn("0.5")
 
-            given(walletInteractor.subscribeVisibleAssetsOfCurAccount()).willReturn(
+            given(walletInteractor.subscribeActiveAssetsOfCurAccount()).willReturn(
                 flowOf(
                     listOf(
                         XOR_ASSET_ZERO_BALANCE,
@@ -230,12 +235,14 @@ class RemoveLiquidityViewModelTest {
             mockkStatic("jp.co.soramitsu.common.util.ext.StringExtKt")
             every { any<String>().decimalPartSized(ticker = any()) } returns SpannableString("sized")
             setUpViewModel()
-
+            advanceUntilIdle()
             viewModel.setTokensFromArgs(
                 tokenFrom = XOR_ASSET_ZERO_BALANCE.token,
                 tokenTo = TEST_ASSET.token
             )
+            advanceUntilIdle()
             viewModel.fromAmountChanged(amount)
+            advanceUntilIdle()
 
             assertEquals(
                 "Insufficient ${XOR_ASSET_ZERO_BALANCE.token.symbol} balance",
@@ -258,9 +265,11 @@ class RemoveLiquidityViewModelTest {
     }
 
     @Test
-    fun `setTokenFromArgsCalled EXPECT subscribe to pooldata`() {
+    fun `setTokenFromArgsCalled EXPECT subscribe to pooldata`() = runTest {
         setUpViewModel()
+        advanceUntilIdle()
         viewModel.setTokensFromArgs(XOR_ASSET.token, TEST_ASSET.token)
+        advanceUntilIdle()
 
         verify(polkaswapInteractor).subscribePoolsCache()
     }

@@ -24,6 +24,16 @@ class NumbersFormatterTest {
     }
 
     @Test
+    fun `should calc the same`() {
+        val toFormat = BigDecimal("0.00014")
+
+        val expected = "0.00014"
+        val actual = numbersFormatter.formatBigDecimal(toFormat, 18)
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `should hide decimals for zero`() {
         val precision = 9
 

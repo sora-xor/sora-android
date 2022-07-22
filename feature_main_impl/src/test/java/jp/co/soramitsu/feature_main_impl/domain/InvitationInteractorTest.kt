@@ -5,17 +5,16 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
+import io.mockk.mockkObject
+import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
-import org.junit.Assert.assertEquals
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.MockitoJUnitRunner
 
 @ExperimentalCoroutinesApi
@@ -33,12 +32,10 @@ class InvitationInteractorTest {
     }
 
     @Test
-    fun `getInviteLink() calls getInvitationLink from userRepository`() = runBlockingTest {
-        val invitationLink = "test invite link"
-        given(userRepository.getInvitationLink()).willReturn(invitationLink)
-
-        assertEquals(invitationLink, interactor.getInviteLink())
-        verify(userRepository).getInvitationLink()
-        verifyNoMoreInteractions(userRepository)
+    fun `getInviteLink() calls getInvitationLink from userRepository`() = runTest {
+        val invitationLink = "github.io"
+        mockkObject(FlavorOptionsProvider)
+        val link = interactor.getInviteLink()
+        assertTrue(link.contains(invitationLink))
     }
 }

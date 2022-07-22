@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: "kotlin-kapt"
 apply from: '../tests.gradle'
@@ -52,22 +53,21 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":common")
-    implementation project(":core_di")
     implementation project(":core_db")
-    implementation project(':feature_ethereum_api')
-    implementation project(':feature_wallet_api')
+    implementation project(":feature_account_api")
+    implementation project(":feature_ethereum_api")
+    implementation project(":feature_wallet_api")
+    implementation project(":sorasubstrate")
+    implementation project(":soracrypro")
 
     implementation kotlinDep
 
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
-    //implementation soraDep
-    implementation birtDep
-    implementation web3j
+    implementation web3jDep
     implementation gsonDep
 
     //implementation irohaDep
@@ -75,21 +75,5 @@ dependencies {
     implementation roomDep
     kapt roomKaptDep
 
-    implementation retrofitDep
-    implementation gsonConvertedDep
-    implementation fearlessLibDep
-
-    implementation workerManagerDep
-
-    implementation(crashlyticsDep) {
-        transitive = true
-    }
-
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
 }

@@ -9,13 +9,13 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.interfaces.WithPreloader
+import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -24,20 +24,19 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.Contact
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactMenuItem
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.EthListItem
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
-import jp.co.soramitsu.feature_wallet_impl.presentation.util.EthereumAddressValidator
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import javax.inject.Inject
 
-class ContactsViewModel(
+@HiltViewModel
+class ContactsViewModel @Inject constructor(
     private val interactor: WalletInteractor,
     private val router: WalletRouter,
-    private val preloader: WithPreloader,
     private val qrCodeDecoder: QrCodeDecoder,
     private val resourceManager: ResourceManager,
-    private val ethereumAddressValidator: EthereumAddressValidator,
-    private val ethereumInteractor: EthereumInteractor,
     private val avatarGenerator: AccountAvatarGenerator,
-) : BaseViewModel(), WithPreloader by preloader {
+    private val withProgress: WithProgress,
+) : BaseViewModel(), WithProgress by withProgress {
 
     val contactsLiveData = MutableLiveData<List<Any>>()
     val emptySearchResultVisibilityLiveData = MutableLiveData<Boolean>()
@@ -67,46 +66,40 @@ class ContactsViewModel(
 
     fun getContacts(showLoading: Boolean) {
         viewModelScope.launch {
-            if (showLoading) preloader.showPreloader()
+            if (showLoading) showProgress()
             try {
-                val accounts = interactor.getContacts("")
-                    .map {
-                        ContactListItem(it, avatarGenerator.createAvatar(it.address, 35))
-                    }
-                accounts.lastOrNull()?.isLast = true
-                contactsLiveData.value = accounts
-                emptyContactsVisibilityLiveData.value = accounts.isEmpty()
+                searchUser("")
             } catch (t: Throwable) {
                 onError(t)
             } finally {
-                if (showLoading) preloader.hidePreloader()
+                if (showLoading) hideProgress()
             }
         }
     }
 
     fun search(contents: String) {
         viewModelScope.launch {
-            searchUser(contents)
+            showProgress()
+            emptySearchResultVisibilityLiveData.value = false
+            emptyContactsVisibilityLiveData.value = false
+            try {
+                searchUser(contents)
+            } catch (t: Throwable) {
+                onError(t)
+            } finally {
+                hideProgress()
+            }
         }
     }
 
     private suspend fun searchUser(userRequest: String) {
-        preloader.showPreloader()
-        emptySearchResultVisibilityLiveData.value = false
-        emptyContactsVisibilityLiveData.value = false
-        try {
-            val accounts = interactor.findOtherUsersAccounts(userRequest)
-                .map {
-                    ContactListItem(it, avatarGenerator.createAvatar(it.address, 35))
-                }
-            accounts.lastOrNull()?.isLast = true
-            contactsLiveData.value = accounts
-            emptySearchResultVisibilityLiveData.value = accounts.isEmpty()
-        } catch (t: Throwable) {
-            onError(t)
-        } finally {
-            preloader.hidePreloader()
-        }
+        val accounts = interactor.getContacts(userRequest)
+            .map {
+                ContactListItem(it, avatarGenerator.createAvatar(it.address, 35))
+            }
+        accounts.lastOrNull()?.isLast = true
+        contactsLiveData.value = accounts
+        emptySearchResultVisibilityLiveData.value = accounts.isEmpty()
     }
 
 //    private fun proccessEthAddress(contents: String) {
@@ -128,7 +121,7 @@ class ContactsViewModel(
 
     fun qrResultProcess(contents: String) {
         viewModelScope.launch {
-            preloader.showPreloader()
+            showProgress()
             emptySearchResultVisibilityLiveData.value = false
             emptyContactsVisibilityLiveData.value = false
             try {
@@ -137,7 +130,7 @@ class ContactsViewModel(
             } catch (t: Throwable) {
                 handleQrErrors(t)
             } finally {
-                preloader.hidePreloader()
+                hideProgress()
             }
         }
     }

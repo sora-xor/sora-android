@@ -7,10 +7,10 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.Observer
-import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
-import jp.co.soramitsu.common.domain.Token
+import io.mockk.every
+import io.mockk.mockkObject
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -19,19 +19,28 @@ import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.test_data.TestAssets
+import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyBoolean
+import org.mockito.BDDMockito.anyInt
+import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.times
+import org.mockito.BDDMockito.verifyNoInteractions
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
@@ -75,40 +84,39 @@ class TransactionConfirmationViewModelTest {
     private lateinit var viewModel: TransactionConfirmationViewModel
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
+        given(walletInteractor.getAssetOrThrow(any())).willReturn(assetList().first())
+        given(walletInteractor.getFeeToken()).willReturn(tokens().first())
+        given(
+            numbersFormatter.formatBigDecimal(
+                any(),
+                anyInt(),
+                anyBoolean()
+            )
+        ).willReturn("123.456")
         viewModel = TransactionConfirmationViewModel(
             walletInteractor,
-            ethInteractor,
             router,
-            progress,
             resourceManager,
             numbersFormatter,
-            textFormatter,
+            clip,
+            progress,
             BigDecimal.ONE,
             BigDecimal.TEN,
-            BigDecimal.ZERO,
-            BigDecimal.ONE,
             "id2",
             "peerFullName",
-            "peerId",
             TransferType.VAL_TRANSFER,
-            "",
-            clip,
         )
     }
 
     @Test
     fun `test init`() {
-        viewModel.balanceFormattedLiveData.observeForever {
-            assertEquals("0.34", it)
-        }
-        viewModel.inputTokenSymbolLiveData.observeForever {
-            assertEquals("pswap", it)
-        }
-
-        viewModel.inputTokenNameLiveData.observeForever {
-            assertEquals("pswap", it)
-        }
+        val b = viewModel.balanceFormattedLiveData.getOrAwaitValue()
+        assertEquals("123.456", b.amount)
+        val i = viewModel.inputTokenSymbolLiveData.getOrAwaitValue()
+        assertEquals("XOR", i)
+        val t = viewModel.inputTokenNameLiveData.getOrAwaitValue()
+        assertEquals("Sora token", t)
     }
 
     @Test
@@ -125,39 +133,65 @@ class TransactionConfirmationViewModelTest {
     }
 
     @Test
-    fun `next click`() = runBlockingTest {
+    fun `next click`() = runTest {
+        given(
+            walletInteractor.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).willReturn(true)
         viewModel.nextClicked()
+        advanceUntilIdle()
+        val success = viewModel.transactionSuccessEvent.getOrAwaitValue()
+        assertEquals(Unit, success)
         verify(router).returnToWalletFragment()
     }
 
-    private fun assetList() = listOf(
-        Asset(
-            Token("token_id", "token name", "token symbol", 18, true, 0),
-            true,
-            1,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
-        ),
-        Asset(
-            Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
-            true,
-            2,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
+    @Test
+    fun `next click false`() = runTest {
+        given(
+            walletInteractor.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any()
             )
-        )
+        ).willReturn(false)
+        viewModel.nextClicked()
+        advanceUntilIdle()
+        viewModel.transactionSuccessEvent.observeForever(mockOb)
+        verifyNoInteractions(mockOb)
+        verify(router).returnToWalletFragment()
+    }
+
+    @Test
+    fun `next click error`() = runTest {
+        val t = IllegalStateException()
+        given(
+            walletInteractor.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).willThrow(t)
+        mockkObject(FirebaseWrapper)
+        every { FirebaseWrapper.recordException(t) } returns Unit
+        viewModel.nextClicked()
+        advanceUntilIdle()
+        viewModel.transactionSuccessEvent.observeForever(mockOb)
+        verifyNoInteractions(mockOb)
+        io.mockk.verify(exactly = 1) { FirebaseWrapper.recordException(t) }
+        verify(router).returnToWalletFragment()
+    }
+
+    private fun tokens() = listOf(
+        TestTokens.xorToken, TestTokens.valToken,
+    )
+
+    private fun assetList() = listOf(
+        TestAssets.xorAsset(), TestAssets.valAsset(), TestAssets.pswapAsset()
     )
 }

@@ -7,7 +7,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
@@ -20,8 +25,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.TextFormatter
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -29,25 +32,52 @@ import jp.co.soramitsu.feature_wallet_impl.R
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
-class TransactionConfirmationViewModel(
+class TransactionConfirmationViewModel @AssistedInject constructor(
     private val walletInteractor: WalletInteractor,
-    private val ethereumInteractor: EthereumInteractor,
     private val router: WalletRouter,
-    private val progress: WithProgress,
     private val resourceManager: ResourceManager,
     private val numbersFormatter: NumbersFormatter,
-    private val textFormatter: TextFormatter,
-    private val partialAmount: BigDecimal,
-    private val amount: BigDecimal,
-    private val minerFee: BigDecimal,
-    private val transactionFee: BigDecimal,
-    private val assetId: String,
-    private val peerFullName: String,
-    private val peerId: String,
-    private val transferType: TransferType,
-    private val retrySoranetHash: String,
     private val clipboardManager: ClipboardManager,
+    private val progress: WithProgress,
+    @Assisted("amount") private val amount: BigDecimal,
+    @Assisted("transactionFee") private val transactionFee: BigDecimal,
+    @Assisted("assetId") private val assetId: String,
+    @Assisted("peerId") private val peerId: String,
+    @Assisted private val transferType: TransferType,
 ) : BaseViewModel(), WithProgress by progress {
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("amount") amount: BigDecimal,
+            @Assisted("transactionFee") transactionFee: BigDecimal,
+            @Assisted("assetId") assetId: String,
+            @Assisted("peerId") peerId: String,
+            transferType: TransferType
+        ): TransactionConfirmationViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        fun provideFactory(
+            f: Factory,
+            amount: BigDecimal,
+            transactionFee: BigDecimal,
+            assetId: String,
+            peerId: String,
+            transferType: TransferType
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return f.create(
+                    amount,
+                    transactionFee,
+                    assetId,
+                    peerId,
+                    transferType
+                ) as T
+            }
+        }
+    }
 
     private val _amountFormattedLiveData = MutableLiveData<String>()
     val amountFormattedLiveData: LiveData<String> = _amountFormattedLiveData
@@ -145,7 +175,7 @@ class TransactionConfirmationViewModel(
             try {
                 val success = walletInteractor.observeTransfer(
                     peerId,
-                    curAsset.token.id,
+                    curAsset.token,
                     amount,
                     transactionFee
                 )

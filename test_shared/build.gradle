@@ -31,13 +31,22 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation kotlinDep
+    api coroutineTestDep
+    api gsonDep
+    api fearlessLibDep
 
-    implementation coroutineTestDep
+    api jUnitDep
+    api mockitoDep
+    api mockitoKotlinDep
+    api archCoreTestDep
+    api archFragmentTestDep
+    api truthDep
+    api mockkDep
 
-    implementation jUnitDep
-    implementation mockitoDep
-    implementation archCoreTestDep
-    implementation archFragmentTestDep
-    implementation truthDep
+    api robolectricDep
+    api robolectricMultidexDep
+    api powerMockDep
+    api powerMockMockitoDep
+
+    api roomTestHelpersDep
 }

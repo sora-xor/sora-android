@@ -10,9 +10,10 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -40,19 +41,25 @@ class ProfileViewModelTest {
     private lateinit var router: MainRouter
 
     @Mock
-    private lateinit var numbersFormatter: NumbersFormatter
+    private lateinit var referralRouter: ReferralRouter
 
     private lateinit var profileViewModel: ProfileViewModel
 
     @Before
-    fun setUp() = runBlockingTest {
-        profileViewModel = ProfileViewModel(interactor, router, numbersFormatter)
+    fun setUp() = runTest {
+        profileViewModel = ProfileViewModel(interactor, router, referralRouter)
     }
 
     @Test
     fun `help card clicked`() {
         profileViewModel.btnHelpClicked()
         verify(router).showFaq()
+    }
+
+    @Test
+    fun `invite card clicked`() {
+        profileViewModel.profileFriendsClicked()
+        verify(referralRouter).showReferrals()
     }
 
     @Test

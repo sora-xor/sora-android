@@ -11,7 +11,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 
@@ -25,7 +25,7 @@ interface PolkaswapInteractor {
 
     suspend fun updatePools()
 
-    suspend fun getPoolStrategicBonusAPY(tokenId: String): BigDecimal?
+    suspend fun getPoolStrategicBonusAPY(tokenId: String): Double?
 
     fun getPoolData(assetId: String): Flow<PoolData?>
 
@@ -131,12 +131,12 @@ interface PolkaswapInteractor {
         slippageTolerance: Float
     ): Boolean
 
-    suspend fun isPairEnabled(
+    fun isPairEnabled(
         inputAssetId: String,
         outputAssetId: String
     ): Flow<Boolean>
 
-    suspend fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean>
+    fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean>
 
     suspend fun removeLiquidity(
         token1: Token,

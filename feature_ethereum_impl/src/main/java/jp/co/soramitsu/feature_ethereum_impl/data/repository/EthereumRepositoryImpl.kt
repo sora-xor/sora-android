@@ -6,9 +6,10 @@
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
 import jp.co.soramitsu.common.domain.AssetBalance
-import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.fearless_utils.extensions.fromHex
+import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
@@ -23,7 +24,6 @@ import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiC
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
-import org.bouncycastle.util.encoders.Hex
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.utils.Numeric
@@ -37,7 +37,6 @@ class EthereumRepositoryImpl @Inject constructor(
     private val ethereumCredentialsMapper: EthereumCredentialsMapper,
     private val web3jProvider: Web3jProvider,
     private val web3jBip32Crypto: Web3jBip32Crypto,
-    private val serializer: Serializer,
     private val contractApiProvider: ContractsApiProvider,
     private val etherWeiConverter: EtherWeiConverter,
     private val db: AppDatabase,
@@ -189,12 +188,12 @@ class EthereumRepositoryImpl @Inject constructor(
             publicKey.toString(),
             KeccakProof(
                 signature.v.toString(charset("UTF-16")),
-                Hex.toHexString(signature.r),
-                Hex.toHexString(signature.s)
+                signature.r.toHexString(),
+                signature.s.toHexString()
             )
         )
 
-        return serializer.serialize(proof)
+        return proof.toString()
     }
 
     private fun sign(message: ByteArray, privateKey: BigInteger): Sign.SignatureData {
@@ -303,7 +302,7 @@ class EthereumRepositoryImpl @Inject constructor(
         from: String,
         tokenAddress: String
     ): String {
-        val txHashBytes = Hex.decode(txHash)
+        val txHashBytes = txHash.fromHex()
         val result = contractApiProvider.getSmartContractApi(ethCredentials)
             .mintTokensByPeers(amount, beneficiary, txHashBytes, v, r, s, from, tokenAddress)
             .send()

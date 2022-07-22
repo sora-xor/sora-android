@@ -8,40 +8,36 @@ package jp.co.soramitsu.feature_account_impl.data.repository
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.withTransaction
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.verify
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.AppLinksProvider
-import jp.co.soramitsu.common.domain.AppVersionProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
+import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.feature_account_impl.R
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
-import org.mockito.Mock
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.junit.MockitoJUnitRunner
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class UserRepositoryTest {
 
     @Rule
@@ -51,47 +47,49 @@ class UserRepositoryTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @Mock
-    private lateinit var userDatasource: UserDatasource
+    @get:Rule
+    val mockkRule = MockKRule(this)
 
-    @Mock
-    private lateinit var appVersionProvider: AppVersionProvider
+    @MockK
+    lateinit var userDatasource: UserDatasource
 
-    @Mock
-    private lateinit var db: AppDatabase
+    @MockK
+    lateinit var db: AppDatabase
 
-    @Mock
-    private lateinit var accountDao: AccountDao
+    @MockK
+    lateinit var accountDao: AccountDao
 
-    @Mock
-    private lateinit var appLinkProvider: AppLinksProvider
+    @MockK
+    lateinit var referralsDao: ReferralsDao
 
-    @Mock
-    private lateinit var deviceParamsProvider: DeviceParamsProvider
+    @MockK
+    lateinit var deviceParamsProvider: DeviceParamsProvider
 
-    @Mock
-    private lateinit var coroutineManager: CoroutineManager
+    @MockK
+    lateinit var coroutineManager: CoroutineManager
 
-    @Mock
-    private lateinit var languagesHolder: LanguagesHolder
+    @MockK
+    lateinit var languagesHolder: LanguagesHolder
 
     private lateinit var userRepository: UserRepositoryImpl
 
     private val soraAccount = SoraAccount("a", "n")
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         val accountName = "accountName"
         val accountAddress = "accountAddress"
-        given(userDatasource.getCurAccountAddress()).willReturn(accountAddress)
-        given(db.accountDao()).willReturn(accountDao)
-        given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
-        given(coroutineManager.applicationScope).willReturn(this)
+        coEvery { userDatasource.getCurAccountAddress() } returns accountAddress
+        every { db.accountDao() } returns accountDao
+        every { db.referralsDao() } returns referralsDao
+        coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
+            accountAddress,
+            accountName
+        )
+        every { coroutineManager.applicationScope } returns this
         userRepository = UserRepositoryImpl(
             userDatasource,
-            appVersionProvider,
             db,
-            appLinkProvider,
             deviceParamsProvider,
             coroutineManager
         )
@@ -99,140 +97,128 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `get Selected Language`() = runBlockingTest {
+    fun `get Selected Language`() = runTest {
         val languages = listOf(
             Language("ru", R.string.common_russian, R.string.common_russian_native),
             Language("en", R.string.common_english, R.string.common_english_native)
         )
         every { LanguagesHolder.getLanguages() } returns languages
-        given(userDatasource.getCurrentLanguage()).willReturn(languages.first().iso)
+        every { userDatasource.getCurrentLanguage() } returns languages.first().iso
 
         assertEquals(languages.first(), userRepository.getSelectedLanguage())
     }
 
     @Test
-    fun `get account name`() = runBlockingTest {
+    fun `get account name`() = runTest {
         val accountName = "accountName"
-        val accountAddress = "accountAddress"
-        given(userDatasource.getCurAccountAddress()).willReturn(accountAddress)
-        given(db.accountDao()).willReturn(accountDao)
-        given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
         userRepository.initCurSoraAccount()
         assertEquals(accountName, userRepository.getCurSoraAccount().accountName)
     }
 
     @Test
-    fun `save Account name called`() = runBlockingTest {
+    fun `save Account name called`() = runTest {
         val accountName = "accountName"
         val accountAddress = "accountAddress"
-        given(userDatasource.getCurAccountAddress()).willReturn(accountAddress)
-        given(db.accountDao()).willReturn(accountDao)
-        given(accountDao.getAccount(accountAddress)).willReturn(SoraAccountLocal(accountAddress, accountName))
+        coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
+        coEvery { accountDao.updateAccountName(accountName, soraAccount.substrateAddress) } returns Unit
+        coEvery { referralsDao.clearTable() } returns Unit
         userRepository.initCurSoraAccount()
-        verify(accountDao, times(2)).getAccount(accountAddress)
+        coVerify(exactly = 2) { accountDao.getAccount(accountAddress) }
         userRepository.updateAccountName(soraAccount, accountName)
-        verify(accountDao).updateAccountName(accountName, soraAccount.substrateAddress)
+        coVerify { accountDao.updateAccountName(accountName, soraAccount.substrateAddress) }
     }
 
     @Test
-    fun `set biometry enabled called`() = runBlockingTest {
+    fun `set biometry enabled called`() = runTest {
         val isEnabled = true
+        coEvery { userDatasource.setBiometryEnabled(isEnabled) } returns Unit
         assertEquals(Unit, userRepository.setBiometryEnabled(isEnabled))
-        verify(userDatasource).setBiometryEnabled(isEnabled)
+        coVerify { userDatasource.setBiometryEnabled(isEnabled) }
     }
 
     @Test
-    fun `set biometry available called`() = runBlockingTest {
+    fun `set biometry available called`() = runTest {
         val isAvailable = true
+        coEvery { userDatasource.setBiometryAvailable(isAvailable) } returns Unit
         assertEquals(Unit, userRepository.setBiometryAvailable(isAvailable))
-        verify(userDatasource).setBiometryAvailable(isAvailable)
+        coVerify { userDatasource.setBiometryAvailable(isAvailable) }
     }
 
     @Test
-    fun `is biometry enabled called`() = runBlockingTest {
+    fun `is biometry enabled called`() = runTest {
         val isEnabled = true
-        given(userDatasource.isBiometryEnabled()).willReturn(isEnabled)
+        coEvery { userDatasource.isBiometryEnabled() } returns isEnabled
         assertEquals(isEnabled, userRepository.isBiometryEnabled())
     }
 
     @Test
-    fun `is biometry available called`() = runBlockingTest {
+    fun `is biometry available called`() = runTest {
         val isAvailable = true
-        given(userDatasource.isBiometryAvailable()).willReturn(isAvailable)
+        coEvery { userDatasource.isBiometryAvailable() } returns isAvailable
         assertEquals(isAvailable, userRepository.isBiometryAvailable())
     }
 
     @Test
-    fun `get AppVersion called`() = runBlockingTest {
-        val version = "1.0"
-        given(appVersionProvider.getVersionName()).willReturn(version)
-
-        assertEquals(version, userRepository.getAppVersion())
-        verify(appVersionProvider).getVersionName()
-    }
-
-    @Test
-    fun `save pin called`() = runBlockingTest {
+    fun `save pin called`() = runTest {
         val pin = "1234"
+        coEvery { userDatasource.savePin(pin) } returns Unit
         userRepository.savePin(pin)
-        verify(userDatasource).savePin(pin)
+        coVerify { userDatasource.savePin(pin) }
     }
 
     @Test
-    fun `retrieve pin called`() = runBlockingTest {
+    fun `retrieve pin called`() = runTest {
         val pin = "1234"
-        given(userDatasource.retrievePin()).willReturn(pin)
-
+        coEvery { userDatasource.retrievePin() } returns pin
         assertEquals(pin, userRepository.retrievePin())
     }
 
     @Test
-    fun `save registration state called`() = runBlockingTest {
+    fun `save registration state called`() = runTest {
         val registrationState = OnboardingState.REGISTRATION_FINISHED
+        coEvery { userDatasource.saveRegistrationState(registrationState) } returns Unit
         userRepository.saveRegistrationState(registrationState)
-
-        verify(userDatasource).saveRegistrationState(registrationState)
+        coVerify { userDatasource.saveRegistrationState(registrationState) }
     }
 
     @Test
-    fun `get registration state called`() = runBlockingTest {
+    fun `get registration state called`() = runTest {
         val registrationState = OnboardingState.REGISTRATION_FINISHED
-        given(userDatasource.retrieveRegistratrionState()).willReturn(registrationState)
-
+        coEvery { userDatasource.retrieveRegistratrionState() } returns registrationState
         assertEquals(registrationState, userRepository.getRegistrationState())
     }
 
     @Test
-    fun `clear user data called`() = runBlockingTest {
+    fun `clear user data called`() = runTest {
+        coEvery { userDatasource.clearUserData() } returns Unit
+        every { db.clearAllTables() } returns Unit
         mockkStatic("androidx.room.RoomDatabaseKt")
         val lambda = slot<suspend () -> R>()
         coEvery { db.withTransaction(capture(lambda)) } coAnswers {
             lambda.captured.invoke()
         }
         userRepository.clearUserData()
-        verify(db).clearAllTables()
-        verify(userDatasource).clearUserData()
+        verify { db.clearAllTables() }
+        coVerify { userDatasource.clearUserData() }
     }
 
     @Test
-    fun `save parent invite code called`() = runBlockingTest {
+    fun `save parent invite code called`() = runTest {
         val parentInviteCode = "parentInviteCode"
-
+        coEvery { userDatasource.saveParentInviteCode(parentInviteCode) } returns Unit
         userRepository.saveParentInviteCode(parentInviteCode)
-
-        verify(userDatasource).saveParentInviteCode(parentInviteCode)
+        coVerify { userDatasource.saveParentInviteCode(parentInviteCode) }
     }
 
     @Test
-    fun `get parent invite code called`() = runBlockingTest {
+    fun `get parent invite code called`() = runTest {
         val parentInviteCode = "parentInviteCode"
-        given(userDatasource.getParentInviteCode()).willReturn(parentInviteCode)
-
+        coEvery { userDatasource.getParentInviteCode() } returns parentInviteCode
         assertEquals(parentInviteCode, userRepository.getParentInviteCode())
     }
 
     @Test
-    fun `get available languages called`() = runBlockingTest {
+    fun `get available languages called`() = runTest {
         val languages = mutableListOf(
             Language("ru", R.string.common_russian, R.string.common_russian_native),
             Language("en", R.string.common_english, R.string.common_english_native),
@@ -240,15 +226,15 @@ class UserRepositoryTest {
             Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
         )
         every { LanguagesHolder.getLanguages() } returns languages
-        given(userDatasource.getCurrentLanguage()).willReturn(languages[0].iso)
-
+        every { userDatasource.getCurrentLanguage() } returns languages[0].iso
         assertEquals(languages to languages[0].iso, userRepository.getAvailableLanguages())
     }
 
     @Test
-    fun `change language called`() = runBlockingTest {
+    fun `change language called`() = runTest {
         val language = "ru"
+        every { userDatasource.changeLanguage(language) } returns Unit
         assertEquals(language, userRepository.changeLanguage(language))
-        verify(userDatasource).changeLanguage(language)
+        verify { userDatasource.changeLanguage(language) }
     }
 }

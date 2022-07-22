@@ -19,6 +19,8 @@ interface UserDatasource {
 
     suspend fun clearUserData()
 
+    suspend fun clearAccountData()
+
     suspend fun saveParentInviteCode(inviteCode: String)
 
     suspend fun getParentInviteCode(): String

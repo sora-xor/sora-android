@@ -5,461 +5,242 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.mappers
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.orhanobut.logger.Logger
-import jp.co.soramitsu.common.data.network.substrate.Method
-import jp.co.soramitsu.common.data.network.substrate.Pallete
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
-import jp.co.soramitsu.core_db.model.ExtrinsicLiquidityType
-import jp.co.soramitsu.core_db.model.ExtrinsicLocal
-import jp.co.soramitsu.core_db.model.ExtrinsicParam
-import jp.co.soramitsu.core_db.model.ExtrinsicParamLocal
-import jp.co.soramitsu.core_db.model.ExtrinsicStatus
-import jp.co.soramitsu.core_db.model.ExtrinsicTransferTypes
-import jp.co.soramitsu.core_db.model.ExtrinsicType
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionBase
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseBatchItem
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItem
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItemLiquidity
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItemLiquidityBatch
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItemSwap
-import jp.co.soramitsu.feature_wallet_impl.data.network.response.HistoryResponseItemTransfer
+import jp.co.soramitsu.sora.substrate.runtime.Method
+import jp.co.soramitsu.sora.substrate.runtime.Pallete
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
+import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItemParam
 import java.math.BigDecimal
-import java.math.BigInteger
-import kotlin.math.pow
 
-fun mapRemoteTransfersToLocal(
-    txs: List<HistoryResponseItem>,
+fun mapHistoryItemsToTransactions(
+    txs: List<SubQueryHistoryItem>,
     myAddress: String,
     tokens: List<Token>,
-    gson: Gson
-): Pair<List<ExtrinsicLocal>, List<ExtrinsicParamLocal>> {
-    val params = mutableListOf<ExtrinsicParamLocal>()
-    val extrinsic = mutableListOf<ExtrinsicLocal>()
-
-    txs.forEach { historyItem ->
-
-        var type: ExtrinsicType? = null
-
-        if (historyItem.isMatch(Pallete.ASSETS, Method.TRANSFER)) {
-            val transfer = gson.fromJson(historyItem.data, HistoryResponseItemTransfer::class.java)
-            val curToken: Token? = tokens.find { it.id == transfer.assetId }
-
-            if (curToken != null) {
-                val (transferType, peer) = if (transfer.from == myAddress)
-                    ExtrinsicTransferTypes.OUT to transfer.to
-                else
-                    ExtrinsicTransferTypes.IN to transfer.from
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.TOKEN.paramName,
-                        transfer.assetId
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.PEER.paramName,
-                        peer
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.EXTRINSIC_TYPE.paramName,
-                        transferType.name
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.AMOUNT.paramName,
-                        transfer.amount
-                    )
-                )
-                type = ExtrinsicType.TRANSFER
-            }
-        } else if (historyItem.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP)) {
-            val swap = gson.fromJson(historyItem.data, HistoryResponseItemSwap::class.java)
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.TOKEN.paramName,
-                    swap.baseAssetId,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.TOKEN2.paramName,
-                    swap.targetAssetId,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.AMOUNT.paramName,
-                    swap.baseAssetAmount.takeIf { it.isNotEmpty() }
-                        ?: "0.0",
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.AMOUNT2.paramName,
-                    swap.targetAssetAmount.takeIf { it.isNotEmpty() }
-                        ?: "0.0",
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.AMOUNT3.paramName,
-                    swap.liquidityProviderFee,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.SWAP_MARKET.paramName,
-                    swap.selectedMarket,
-                )
-            )
-            type = ExtrinsicType.SWAP
-        } else if (historyItem.isMatch(
-                Pallete.POOL_XYK,
-                Method.DEPOSIT_LIQUIDITY
-            ) || historyItem.isMatch(Pallete.POOL_XYK, Method.WITHDRAW_LIQUIDITY)
-        ) {
-            val liquidity =
-                gson.fromJson(historyItem.data, HistoryResponseItemLiquidity::class.java)
-            val extrinsicLiquidityType = if (historyItem.isMatch(
-                    Pallete.POOL_XYK,
-                    Method.DEPOSIT_LIQUIDITY
-                )
-            ) ExtrinsicLiquidityType.ADD else ExtrinsicLiquidityType.WITHDRAW
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.EXTRINSIC_TYPE.paramName,
-                    extrinsicLiquidityType.name,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.TOKEN.paramName,
-                    liquidity.baseAssetId,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.TOKEN2.paramName,
-                    liquidity.targetAssetId,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.AMOUNT.paramName,
-                    liquidity.baseAssetAmount,
-                )
-            )
-            params.add(
-                ExtrinsicParamLocal(
-                    historyItem.id,
-                    ExtrinsicParam.AMOUNT2.paramName,
-                    liquidity.targetAssetAmount,
-                )
-            )
-            type = ExtrinsicType.ADD_REMOVE_LIQUIDITY
-        } else if (historyItem.isMatch(
-                Pallete.UTILITY,
-                Method.BATCH
-            ) || historyItem.isMatch(Pallete.UTILITY, Method.BATCH_ALL)
-        ) {
-            val batchItem = gson.fromJson<List<HistoryResponseBatchItem>>(
-                historyItem.data,
-                object : TypeToken<List<HistoryResponseBatchItem>>() {}.type
-            )
-            val dl = batchItem.find { it.method.isMatch(Method.DEPOSIT_LIQUIDITY) }
-            if (dl != null) {
-                val liquidity =
-                    gson.fromJson(dl.data.args, HistoryResponseItemLiquidityBatch::class.java)
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.EXTRINSIC_TYPE.paramName,
-                        ExtrinsicLiquidityType.ADD.name,
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.TOKEN.paramName,
-                        liquidity.input_asset_a,
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.TOKEN2.paramName,
-                        liquidity.input_asset_b,
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.AMOUNT.paramName,
-                        liquidity.input_a_desired,
-                    )
-                )
-                params.add(
-                    ExtrinsicParamLocal(
-                        historyItem.id,
-                        ExtrinsicParam.AMOUNT2.paramName,
-                        liquidity.input_b_desired,
-                    )
-                )
-                type = ExtrinsicType.ADD_REMOVE_LIQUIDITY
-            } else {
-                val wl = batchItem.find { it.method.isMatch(Method.WITHDRAW_LIQUIDITY) }
-                if (wl != null) {
-                    val liquidity =
-                        gson.fromJson(wl.data.args, HistoryResponseItemLiquidityBatch::class.java)
-                    params.add(
-                        ExtrinsicParamLocal(
-                            historyItem.id,
-                            ExtrinsicParam.EXTRINSIC_TYPE.paramName,
-                            ExtrinsicLiquidityType.WITHDRAW.name,
-                        )
-                    )
-                    params.add(
-                        ExtrinsicParamLocal(
-                            historyItem.id,
-                            ExtrinsicParam.TOKEN.paramName,
-                            liquidity.input_asset_a,
-                        )
-                    )
-                    params.add(
-                        ExtrinsicParamLocal(
-                            historyItem.id,
-                            ExtrinsicParam.TOKEN2.paramName,
-                            liquidity.input_asset_b,
-                        )
-                    )
-                    params.add(
-                        ExtrinsicParamLocal(
-                            historyItem.id,
-                            ExtrinsicParam.AMOUNT.paramName,
-                            liquidity.input_a_desired,
-                        )
-                    )
-                    params.add(
-                        ExtrinsicParamLocal(
-                            historyItem.id,
-                            ExtrinsicParam.AMOUNT2.paramName,
-                            liquidity.input_b_desired,
-                        )
-                    )
-                    type = ExtrinsicType.ADD_REMOVE_LIQUIDITY
-                }
-            }
-        }
-        if (type != null) {
-            val e = ExtrinsicLocal(
-                txHash = historyItem.id,
-                accountAddress = myAddress,
-                blockHash = historyItem.blockHash,
-                fee = historyItem.networkFee.toBigDecimalOrDefault(),
-                status = ExtrinsicStatus.COMMITTED,
-                timestamp = (
-                    historyItem.timestamp.substringBefore(".").toLongOrNull()
-                        ?: 0
-                    ) * 1000,
-                type = type,
-                eventSuccess = historyItem.execution.success,
-                localPending = false,
-            )
-            extrinsic.add(e)
-        }
+): List<Transaction> {
+    return txs.mapNotNull {
+        mapHistoryItemToTransaction(it, myAddress, tokens)
     }
-
-    return extrinsic to params
 }
 
-fun mapBalance(
-    bigInteger: BigInteger,
-    precision: Int,
-): BigDecimal =
-    bigInteger.toBigDecimal().divide(BigDecimal(10.0.pow(precision)))
-
-fun mapBalance(balance: BigDecimal, precision: Int): BigInteger =
-    balance.multiply(BigDecimal(10.0.pow(precision))).toBigInteger()
-
-fun mapTransactionLocalToTransaction(
-    extrinsicLocal: ExtrinsicLocal,
+private fun mapHistoryItemToTransaction(
+    tx: SubQueryHistoryItem,
+    myAddress: String,
     tokens: List<Token>,
-    extrinsicParamLocal: List<ExtrinsicParamLocal>,
-): Transaction {
-    return with(extrinsicLocal) {
-        when (type) {
-            ExtrinsicType.TRANSFER -> Transaction.Transfer(
-                txHash,
-                blockHash,
-                fee,
-                mapTransactionStatusLocalToTransactionStatus(status),
-                timestamp,
-                eventSuccess,
-                extrinsicParamLocal.valueOrDefault(
-                    ExtrinsicParam.AMOUNT.paramName,
-                    "0.0",
-                    txHash
-                ).toBigDecimalOrDefault(),
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.PEER.paramName, "", txHash),
-                mapTransactionTransferType(extrinsicParamLocal, txHash),
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN.paramName, "", txHash)
-                    .let { tokenId ->
-                        tokens.getByIdOrEmpty(tokenId)
-                    },
-            )
-            ExtrinsicType.SWAP -> Transaction.Swap(
-                txHash,
-                blockHash,
-                fee,
-                mapTransactionStatusLocalToTransactionStatus(status),
-                timestamp,
-                eventSuccess,
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN.paramName, "", txHash)
-                    .let { tokenId ->
-                        tokens.getByIdOrEmpty(tokenId)
-                    },
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN2.paramName, "", txHash)
-                    .let { tokenId ->
-                        tokens.getByIdOrEmpty(tokenId)
-                    },
-                extrinsicParamLocal.valueOrDefault(
-                    ExtrinsicParam.AMOUNT.paramName,
-                    "0.0",
-                    txHash
-                ).toBigDecimalOrDefault(),
-                extrinsicParamLocal.valueOrDefault(
-                    ExtrinsicParam.AMOUNT2.paramName,
-                    "0.0",
-                    txHash
-                ).toBigDecimalOrDefault(),
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.SWAP_MARKET.paramName, "", txHash)
-                    .let {
-                        Market.values().find { m -> m.backString == it } ?: Market.SMART
-                    },
-                extrinsicParamLocal.valueOrDefault(
-                    ExtrinsicParam.AMOUNT3.paramName,
-                    "0.0",
-                    txHash
-                ).toBigDecimalOrDefault()
-            )
-            ExtrinsicType.ADD_REMOVE_LIQUIDITY -> Transaction.Liquidity(
-                txHash,
-                blockHash,
-                fee,
-                mapTransactionStatusLocalToTransactionStatus(status),
-                timestamp,
-                eventSuccess,
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN.paramName, "", txHash)
-                    .let { tokenId ->
-                        tokens.getByIdOrEmpty(tokenId)
-                    },
-                extrinsicParamLocal.valueOrDefault(ExtrinsicParam.TOKEN2.paramName, "", txHash)
-                    .let { tokenId ->
-                        tokens.getByIdOrEmpty(tokenId)
-                    },
-                extrinsicParamLocal.valueOrDefault(
-                    ExtrinsicParam.AMOUNT.paramName,
-                    "0.0",
-                    txHash
-                ).toBigDecimalOrDefault(),
-                extrinsicParamLocal.valueOrDefault(
-                    ExtrinsicParam.AMOUNT2.paramName,
-                    "0.0",
-                    txHash
-                ).toBigDecimalOrDefault(),
-                mapTransactionLiquidityType(extrinsicParamLocal, txHash)
+): Transaction? {
+    val transactionBase = TransactionBase(
+        txHash = tx.id,
+        blockHash = tx.blockHash,
+        fee = tx.networkFee.toBigDecimalOrDefault(),
+        status = tx.getSuccess(),
+        timestamp = tx.getTimestamp(),
+    )
+    val transaction = if (tx.isMatch(Pallete.ASSETS, Method.TRANSFER)) {
+        tx.data?.toTransfer { to, from, amount, tokenId ->
+            Transaction.Transfer(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                peer = if (to == myAddress) from else to,
+                transferType = if (to == myAddress) TransactionTransferType.INCOMING else TransactionTransferType.OUTGOING,
+                token = tokens.getByIdOrEmpty(tokenId),
             )
         }
-    }
-}
-
-private fun mapTransactionLiquidityType(
-    extrinsicParamLocal: List<ExtrinsicParamLocal>,
-    txHash: String
-): TransactionLiquidityType {
-    return when (
-        ExtrinsicLiquidityType.valueOf(
-            extrinsicParamLocal.valueOrDefault(
-                ExtrinsicParam.EXTRINSIC_TYPE.paramName,
-                "ADD",
-                txHash
+    } else if (tx.isMatch(Pallete.Referrals, Method.RESERVE)) {
+        tx.data?.toReferralBond { amount ->
+            Transaction.ReferralBond(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                token = tokens.getByIdOrEmpty(SubstrateOptionsProvider.feeAssetId)
             )
+        }
+    } else if (tx.isMatch(Pallete.Referrals, Method.UNRESERVE)) {
+        tx.data?.toReferralUnbond { amount ->
+            Transaction.ReferralUnbond(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                token = tokens.getByIdOrEmpty(SubstrateOptionsProvider.feeAssetId)
+            )
+        }
+    } else if (tx.isMatch(Pallete.Referrals, Method.SET_REFERRER)) {
+        tx.data?.toReferralSetReferrer(myAddress) { address, my ->
+            Transaction.ReferralSetReferrer(
+                base = transactionBase,
+                who = address,
+                myReferrer = my,
+                token = tokens.getByIdOrEmpty(SubstrateOptionsProvider.feeAssetId)
+            )
+        }
+    } else if (tx.isMatch(Pallete.LIQUIDITY_PROXY, Method.SWAP)) {
+        tx.data?.toSwap { selectedMarket, liquidityProviderFee, baseTokenId, targetTokenId, baseTokenAmount, targetTokenAmount ->
+            Transaction.Swap(
+                base = transactionBase,
+                tokenFrom = tokens.getByIdOrEmpty(baseTokenId),
+                tokenTo = tokens.getByIdOrEmpty(targetTokenId),
+                amountFrom = baseTokenAmount.toBigDecimalOrDefault(),
+                amountTo = targetTokenAmount.toBigDecimalOrDefault(),
+                market = Market.values().find { m -> m.backString == selectedMarket }
+                    ?: Market.SMART,
+                lpFee = liquidityProviderFee.toBigDecimalOrDefault(),
+            )
+        }
+    } else if (tx.isMatch(
+            Pallete.POOL_XYK,
+            Method.DEPOSIT_LIQUIDITY
+        ) || tx.isMatch(Pallete.POOL_XYK, Method.WITHDRAW_LIQUIDITY)
+    ) {
+        tx.data?.toLiquidity { baseTokenId, targetTokenId, baseTokenAmount, targetTokenAmount ->
+            Transaction.Liquidity(
+                base = transactionBase,
+                token1 = tokens.getByIdOrEmpty(baseTokenId),
+                token2 = tokens.getByIdOrEmpty(targetTokenId),
+                amount1 = baseTokenAmount.toBigDecimalOrDefault(),
+                amount2 = targetTokenAmount.toBigDecimalOrDefault(),
+                type = if (tx.isMatch(
+                        Pallete.POOL_XYK,
+                        Method.DEPOSIT_LIQUIDITY
+                    )
+                ) TransactionLiquidityType.ADD else TransactionLiquidityType.WITHDRAW,
+            )
+        }
+    } else if (tx.isMatch(Pallete.UTILITY, Method.BATCH) || tx.isMatch(
+            Pallete.UTILITY,
+            Method.BATCH_ALL
         )
     ) {
-        ExtrinsicLiquidityType.ADD -> TransactionLiquidityType.ADD
-        ExtrinsicLiquidityType.WITHDRAW -> TransactionLiquidityType.WITHDRAW
+        val dl = tx.nestedData?.find { it.method.isMatch(Method.DEPOSIT_LIQUIDITY) }
+        if (dl != null) {
+            dl.data.toLiquidityBatch { baseTokenId, targetTokenId, baseTokenAmount, targetTokenAmount ->
+                Transaction.Liquidity(
+                    base = transactionBase,
+                    token1 = tokens.getByIdOrEmpty(baseTokenId),
+                    token2 = tokens.getByIdOrEmpty(targetTokenId),
+                    amount1 = baseTokenAmount.toBigDecimalOrDefault(),
+                    amount2 = targetTokenAmount.toBigDecimalOrDefault(),
+                    type = TransactionLiquidityType.ADD,
+                )
+            }
+        } else {
+            val wl = tx.nestedData?.find { it.method.isMatch(Method.WITHDRAW_LIQUIDITY) }
+            wl?.data?.toLiquidityBatch { baseTokenId, targetTokenId, baseTokenAmount, targetTokenAmount ->
+                Transaction.Liquidity(
+                    base = transactionBase,
+                    token1 = tokens.getByIdOrEmpty(baseTokenId),
+                    token2 = tokens.getByIdOrEmpty(targetTokenId),
+                    amount1 = baseTokenAmount.toBigDecimalOrDefault(),
+                    amount2 = targetTokenAmount.toBigDecimalOrDefault(),
+                    type = TransactionLiquidityType.WITHDRAW,
+                )
+            }
+        }
+    } else {
+        null
     }
+    return transaction
 }
 
-private fun mapTransactionTransferType(
-    extrinsicParamLocal: List<ExtrinsicParamLocal>,
-    txHash: String
-): TransactionTransferType {
-    return when (
-        ExtrinsicTransferTypes.valueOf(
-            extrinsicParamLocal.valueOrDefault(
-                ExtrinsicParam.EXTRINSIC_TYPE.paramName,
-                "IN",
-                txHash
-            )
-        )
-    ) {
-        ExtrinsicTransferTypes.OUT -> TransactionTransferType.OUTGOING
-        ExtrinsicTransferTypes.IN -> TransactionTransferType.INCOMING
-    }
-}
+private fun SubQueryHistoryItem.getSuccess(): TransactionStatus =
+    if (this.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED
 
-private fun mapTransactionStatusLocalToTransactionStatus(statusRemote: ExtrinsicStatus): TransactionStatus {
-    return when (statusRemote) {
-        ExtrinsicStatus.COMMITTED -> TransactionStatus.COMMITTED
-        ExtrinsicStatus.PENDING -> TransactionStatus.PENDING
-        ExtrinsicStatus.REJECTED -> TransactionStatus.REJECTED
-    }
-}
+private fun SubQueryHistoryItem.getTimestamp(): Long =
+    (this.timestamp.substringBefore(".").toLongOrNull() ?: 0) * 1000
 
 private fun String.toBigDecimalOrDefault(v: BigDecimal = BigDecimal.ZERO): BigDecimal =
     runCatching { BigDecimal(this) }.getOrDefault(v)
 
-private fun List<ExtrinsicParamLocal>.valueOrDefault(
-    paramName: String,
-    default: String,
-    txHash: String
-): String {
-    val v = this.find { it.paramName == paramName }?.paramValue
-    return if (v == null) {
-        Logger.d("Extrinsic [$paramName] param not found in ${this.size} params in $txHash")
-        default
-    } else {
-        v
-    }
+private fun List<SubQueryHistoryItemParam>.toReferralBond(block: (amount: String) -> Transaction.ReferralBond): Transaction.ReferralBond? {
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    return if (amount != null) {
+        block.invoke(amount.paramValue)
+    } else null
 }
 
-private fun HistoryResponseItem.isMatch(pallet: Pallete, method: Method): Boolean =
+private fun List<SubQueryHistoryItemParam>.toReferralUnbond(block: (amount: String) -> Transaction.ReferralUnbond): Transaction.ReferralUnbond? {
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    return if (amount != null) {
+        block.invoke(amount.paramValue)
+    } else null
+}
+
+private fun List<SubQueryHistoryItemParam>.toReferralSetReferrer(myAddress: String, block: (String, Boolean) -> Transaction.ReferralSetReferrer): Transaction.ReferralSetReferrer? {
+    val to = this.firstOrNull { it.paramName == "to" }
+    val from = this.firstOrNull { it.paramName == "from" }
+    return if (to != null && from != null && (to.paramValue == myAddress || from.paramValue == myAddress)) {
+        val f = from.paramValue == myAddress
+        block.invoke(if (f) to.paramValue else from.paramValue, f)
+    } else null
+}
+
+private fun List<SubQueryHistoryItemParam>.toTransfer(block: (to: String, from: String, amount: String, tokenId: String) -> Transaction.Transfer): Transaction.Transfer? {
+    val to = this.firstOrNull { it.paramName == "to" }
+    val from = this.firstOrNull { it.paramName == "from" }
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    val tokenId = this.firstOrNull { it.paramName == "assetId" }
+    return if (to != null && from != null && amount != null && tokenId != null)
+        block.invoke(to.paramValue, from.paramValue, amount.paramValue, tokenId.paramValue)
+    else null
+}
+
+private fun List<SubQueryHistoryItemParam>.toSwap(block: (selectedMarket: String, liquidityProviderFee: String, baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Swap): Transaction.Swap? {
+    val selectedMarket = this.firstOrNull { it.paramName == "selectedMarket" }
+    val liquidityProviderFee = this.firstOrNull { it.paramName == "liquidityProviderFee" }
+    val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
+    val targetTokenId = this.firstOrNull { it.paramName == "targetAssetId" }
+    val baseTokenAmount = this.firstOrNull { it.paramName == "baseAssetAmount" }
+    val targetTokenAmount = this.firstOrNull { it.paramName == "targetAssetAmount" }
+    return if (selectedMarket != null && liquidityProviderFee != null &&
+        baseTokenId != null && targetTokenId != null &&
+        baseTokenAmount != null && targetTokenAmount != null
+    ) block.invoke(
+        selectedMarket.paramValue,
+        liquidityProviderFee.paramValue,
+        baseTokenId.paramValue,
+        targetTokenId.paramValue,
+        baseTokenAmount.paramValue,
+        targetTokenAmount.paramValue
+    ) else null
+}
+
+private fun List<SubQueryHistoryItemParam>.toLiquidity(block: (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity): Transaction.Liquidity? {
+    val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
+    val targetTokenId = this.firstOrNull { it.paramName == "targetAssetId" }
+    val baseTokenAmount = this.firstOrNull { it.paramName == "baseAssetAmount" }
+    val targetTokenAmount = this.firstOrNull { it.paramName == "targetAssetAmount" }
+    return if (baseTokenId != null &&
+        targetTokenId != null && baseTokenAmount != null &&
+        targetTokenAmount != null
+    ) block.invoke(
+        baseTokenId.paramValue,
+        targetTokenId.paramValue,
+        baseTokenAmount.paramValue,
+        targetTokenAmount.paramValue
+    ) else null
+}
+
+private fun List<SubQueryHistoryItemParam>.toLiquidityBatch(block: (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity): Transaction.Liquidity? {
+    val baseTokenId = this.firstOrNull { it.paramName == "input_asset_a" }
+    val targetTokenId = this.firstOrNull { it.paramName == "input_asset_b" }
+    val baseTokenAmount = this.firstOrNull { it.paramName == "input_a_desired" }
+    val targetTokenAmount = this.firstOrNull { it.paramName == "input_b_desired" }
+    return if (baseTokenId != null &&
+        targetTokenId != null && baseTokenAmount != null &&
+        targetTokenAmount != null
+    ) block.invoke(
+        baseTokenId.paramValue,
+        targetTokenId.paramValue,
+        baseTokenAmount.paramValue,
+        targetTokenAmount.paramValue
+    ) else null
+}
+
+private fun SubQueryHistoryItem.isMatch(pallet: Pallete, method: Method): Boolean =
     this.module.lowercase() == pallet.palletName.lowercase() && this.method.isMatch(method)
 
 private fun String.isMatch(method: Method): Boolean {

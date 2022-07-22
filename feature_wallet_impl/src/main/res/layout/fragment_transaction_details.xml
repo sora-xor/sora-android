@@ -203,18 +203,18 @@
         <TextView
             android:id="@+id/tvTransactionHash"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1_5"
             android:background="@drawable/text_background"
             android:drawablePadding="@dimen/x1"
             app:drawableEndCompat="@drawable/ic_copy_16"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvTransactionHashTitle"
             app:layout_constraintTop_toBottomOf="@id/vDivider12"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="0xabc...23f67" />
 
         <View
@@ -240,18 +240,18 @@
         <TextView
             android:id="@+id/tvBlockHash"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1_5"
             android:background="@drawable/text_background"
             android:drawablePadding="@dimen/x1"
             app:drawableEndCompat="@drawable/ic_copy_16"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvBlockHashTitle"
             app:layout_constraintTop_toBottomOf="@id/vDivider3"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="s9d9asdassdlkdc8vqqwe8s9v7c" />
 
         <View
@@ -277,18 +277,18 @@
         <TextView
             android:id="@+id/toInfoTv"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1_5"
             android:background="@drawable/text_background"
             android:drawablePadding="@dimen/x1"
             app:drawableEndCompat="@drawable/ic_copy_16"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/fromTitleTv"
             app:layout_constraintTop_toBottomOf="@id/vDivider3_2"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="7sdfhksdf6sqwdhksdfsi6d7f" />
 
         <View
@@ -314,18 +314,18 @@
         <TextView
             android:id="@+id/fromInfoTv"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1_5"
             android:background="@drawable/text_background"
             android:drawablePadding="@dimen/x1"
             app:drawableEndCompat="@drawable/ic_copy_16"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/toTitleTv"
             app:layout_constraintTop_toBottomOf="@id/vDivider4"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="did_sora_12312caledlawmdlw@sora" />
 
         <View

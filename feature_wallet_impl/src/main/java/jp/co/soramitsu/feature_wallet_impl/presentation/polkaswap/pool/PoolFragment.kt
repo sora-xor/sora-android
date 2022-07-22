@@ -9,27 +9,31 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.animateLoader
 import jp.co.soramitsu.common.util.ext.slideUpOrDown
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentPoolBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class PoolFragment : BaseFragment<PoolViewModel>(R.layout.fragment_pool) {
 
     companion object {
         const val ID = 1
         val TITLE_RESOURCE = R.string.polkaswap_pool_title
     }
+
+    private val vm: PoolViewModel by viewModels()
+    override val viewModel: PoolViewModel
+        get() = vm
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
@@ -109,13 +113,5 @@ class PoolFragment : BaseFragment<PoolViewModel>(R.layout.fragment_pool) {
         if (activity?.isChangingConfigurations == false)
             viewModelStore.clear()
         super.onDestroy()
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(requireContext(), WalletFeatureApi::class.java)
-            .polkaswapComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 }

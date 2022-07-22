@@ -8,27 +8,27 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.rem
 import android.os.Bundle
 import android.view.View
 import androidx.core.os.bundleOf
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.ToastDialog
 import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentRemoveLiquidityConfirmationBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class RemoveLiquidityConfirmationFragment : BaseFragment<RemoveLiquidityConfirmationViewModel>(R.layout.fragment_remove_liquidity_confirmation) {
 
     companion object {
@@ -58,6 +58,10 @@ class RemoveLiquidityConfirmationFragment : BaseFragment<RemoveLiquidityConfirma
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
+    private val vm: RemoveLiquidityConfirmationViewModel by viewModels()
+    override val viewModel: RemoveLiquidityConfirmationViewModel
+        get() = vm
 
     private val binding by viewBinding(FragmentRemoveLiquidityConfirmationBinding::bind)
 
@@ -138,16 +142,5 @@ class RemoveLiquidityConfirmationFragment : BaseFragment<RemoveLiquidityConfirma
                 ).show()
             }
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .liquidityComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 }

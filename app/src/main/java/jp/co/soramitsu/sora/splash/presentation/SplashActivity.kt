@@ -7,22 +7,25 @@ package jp.co.soramitsu.sora.splash.presentation
 
 import android.animation.ValueAnimator
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import jp.co.soramitsu.common.di.api.FeatureUtils
-import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
+import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.feature_main_api.launcher.MainStarter
+import jp.co.soramitsu.feature_onboarding_api.OnboardingStarter
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
-import jp.co.soramitsu.sora.di.app_feature.AppFeatureComponent
-import jp.co.soramitsu.sora.splash.domain.SplashRouter
 import javax.inject.Inject
 
-class SplashActivity : AppCompatActivity(), SplashRouter {
+@AndroidEntryPoint
+class SplashActivity : AppCompatActivity() {
 
-    @Inject
-    lateinit var splashViewModel: SplashViewModel
+    private val splashViewModel: SplashViewModel by viewModels()
 
     private lateinit var viewBinding: ActivitySplashBinding
+
+    @Inject
+    lateinit var onbnbst: OnboardingStarter
+    @Inject
+    lateinit var mainStarter: MainStarter
 
     private var isFirstPartFinished = false
     private var isSecondPartStarted = false
@@ -44,7 +47,6 @@ class SplashActivity : AppCompatActivity(), SplashRouter {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        inject()
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
 
         viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
@@ -57,51 +59,25 @@ class SplashActivity : AppCompatActivity(), SplashRouter {
                 viewBinding.animationView.resumeAnimation()
             }
         }
+
+        splashViewModel.showMainScreen.observe(this) {
+            mainStarter.start(this)
+        }
+        splashViewModel.showOnBoardingScreen.observe(this) {
+            onbnbst.start(this, it)
+        }
+        splashViewModel.showOnBoardingScreenViaInviteLink.observe(this) {
+            onbnbst.startWithInviteLink(this)
+            finish()
+        }
+        splashViewModel.showMainScreenFromInviteLink.observe(this) {
+            mainStarter.startWithInvite(this)
+            finish()
+        }
     }
 
     private fun goNext() {
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         splashViewModel.nextScreen()
-    }
-
-    private fun inject() {
-        FeatureUtils.getFeature<AppFeatureComponent>(this, AppFeatureComponent::class.java)
-            .splashComponentBuilder()
-            .withActivity(this)
-            .withRouter(this)
-            .build()
-            .inject(this)
-    }
-
-    override fun showOnBoardingScreen(onBoardingState: OnboardingState) {
-        FeatureUtils.getFeature<OnboardingFeatureApi>(
-            application,
-            OnboardingFeatureApi::class.java
-        )
-            .provideOnboardingStarter()
-            .start(this, onBoardingState)
-    }
-
-    override fun showOnBoardingScreenViaInviteLink() {
-        FeatureUtils.getFeature<OnboardingFeatureApi>(
-            application,
-            OnboardingFeatureApi::class.java
-        )
-            .provideOnboardingStarter()
-            .startWithInviteLink(this)
-        finish()
-    }
-
-    override fun showMainScreen() {
-        FeatureUtils.getFeature<MainFeatureApi>(application, MainFeatureApi::class.java)
-            .provideMainStarter()
-            .start(this)
-    }
-
-    override fun showMainScreenFromInviteLink() {
-        FeatureUtils.getFeature<MainFeatureApi>(application, MainFeatureApi::class.java)
-            .provideMainStarter()
-            .startWithInvite(this)
-        finish()
     }
 }

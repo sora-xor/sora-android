@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
@@ -12,18 +13,6 @@ android {
         targetSdkVersion targetVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-        buildConfigField 'String', 'WEBSITE', "\"https://sora.org\""
-        buildConfigField 'String', 'SOURCE_LINK', "\"https://github.com/sora-xor/Sora-Android\""
-        buildConfigField 'String', 'TELEGRAM_LINK', "\"https://t.me/sora_xor\""
-        buildConfigField 'String', 'TELEGRAM_ANNOUNCEMENTS_LINK', "\"https://t.me/sora_announcements\""
-        buildConfigField 'String', 'TELEGRAM_HAPPINESS_LINK', "\"https://t.me/sorahappiness\""
-        buildConfigField 'String', 'EMAIL', "\"support@sora.org\""
-        buildConfigField 'String', 'TWITTER_LINK', "\"https://twitter.com/sora_xor\""
-        buildConfigField 'String', 'YOUTUBE_LINK', "\"https://youtube.com/sora_xor\""
-        buildConfigField 'String', 'INSTAGRAM_LINK', "\"https://instagram.com/sora_xor\""
-        buildConfigField 'String', 'MEDIUM_LINK', "\"https://medium.com/sora_xor\""
-        buildConfigField 'String', 'WIKI_LINK', "\"https://wiki.sora.org\""
     }
 
     buildTypes {
@@ -42,46 +31,32 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion versions.compose
+    }
+
     buildFeatures {
         viewBinding true
+        compose true
+        buildConfig true
     }
 
     flavorDimensions "default"
 
     productFlavors {
         develop {
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/dev/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.framenode-3.s3.dev.sora2.soramitsu.co.jp/\""
-            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora-dev/\""
-            buildConfigField "String", "GENESIS_HASH", "\"bf7f611213e15c54023853eed206508be11ce69d8d94937157e44c7b7564714a\""
-            buildConfigField "String", "TYPES_FILE_PATH", "\"dev\""
             dimension 'default'
         }
 
         soralution {
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/stage/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.stage.sora2.soramitsu.co.jp/\""
-            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora-staging/\""
-            buildConfigField "String", "GENESIS_HASH", "\"cc145a1f96972181accc1785b062ab8c2773ae7c02846ad26d35af9a27571242\""
-            buildConfigField "String", "TYPES_FILE_PATH", "\"stage\""
             dimension 'default'
         }
 
         tsting {
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/test/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.tst.sora2.soramitsu.co.jp/\""
-            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora-test/\""
-            buildConfigField "String", "GENESIS_HASH", "\"6f1056d58e73f16a5237e96afab618e9623652fa1cef3e67b0111bd6fd6790a7\""
-            buildConfigField "String", "TYPES_FILE_PATH", "\"test\""
             dimension 'default'
         }
 
         production {
-            buildConfigField "String", "DEFAULT_MARKET_URL", "\"https://sora-xor.github.io/sora-join-page/\""
-            buildConfigField "String", "WS_HOST_URL", "\"wss://ws.mof.sora.org/\""
-            buildConfigField "String", "SORA_SCAN_HOST_URL", "\"api.subquery.network/sq/sora-xor/sora\""
-            buildConfigField "String", "GENESIS_HASH", "\"7e4e32d0feafd4f9c9414b0be86373f9a1efa904809b683453a9af6856d38ad5\""
-            buildConfigField "String", "TYPES_FILE_PATH", "\"prod\""
             dimension 'default'
         }
     }
@@ -89,8 +64,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    implementation project(':core_di')
+    implementation project(":soracrypro")
 
     implementation kotlinDep
 
@@ -103,28 +77,22 @@ dependencies {
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
 
     implementation googlePlayCoreDep
 
-    //implementation soraDep
-    implementation novaCryptoDep
-    implementation fearlessLibDep
+    implementation xNetworkingDep
     implementation webSocketLibDep
-    implementation ed25519Dep
+    implementation uiCoreDep
 
-    implementation lifecycleKtxDep
-    implementation processDep
+    implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
-    implementation loggerDep
+    implementation timberDep
     implementation svgDep
     implementation jdenticonDep
 
-    implementation shimmerDep
-
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
 
     implementation datastoreDep
     implementation navigationFragmentDep
@@ -132,25 +100,22 @@ dependencies {
 
     implementation neumorphismDep
 
-    implementation retrofitDep
-    implementation gsonConvertedDep
-    implementation scalarsConverterDep
+    implementation gsonDep
 
     implementation platform(firebaseBomDep)
-
-    implementation(crashlyticsDep) {
-        transitive = true
-    }
+    implementation crashlyticsDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation mockkDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
+    implementation composeUiDep
+    implementation composeLiveDataDep
+    implementation composeFoundationDep
+    implementation composeMaterialDep
+    implementation composeAnimationGraphicsDep
+    implementation composeToolingPreviewDep
+    implementation composeNeumorphDep
+    debugImplementation composeToolingDep
+
     testImplementation project(":test_shared")
 }

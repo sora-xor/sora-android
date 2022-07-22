@@ -5,7 +5,8 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import javax.inject.Inject
@@ -28,6 +29,10 @@ class PinCodeInteractor @Inject constructor(
 
     suspend fun resetUser() {
         userRepository.clearUserData()
+    }
+
+    suspend fun clearAccountData(address: String) {
+        userRepository.clearAccountData(address)
     }
 
     suspend fun setBiometryAvailable(isBiometryAvailable: Boolean) {
@@ -58,5 +63,10 @@ class PinCodeInteractor @Inject constructor(
 
     suspend fun setBiometryEnabled(isEnabled: Boolean) {
         userRepository.setBiometryEnabled(isEnabled)
+    }
+
+    suspend fun isPincodeUpdateNeeded(): Boolean {
+        val pinLength = userRepository.retrievePin().length
+        return pinLength > 0 && pinLength != DotsProgressView.PINCODE_LENGTH
     }
 }

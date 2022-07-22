@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.switchmaterial.SwitchMaterial
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.feature_wallet_impl.R
 
 class AssetConfigurableAdapter(

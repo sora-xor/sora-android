@@ -2,17 +2,19 @@
 <resources>
   <string name="about_announcements">Duyuruları Alın</string>
   <string name="about_ask_support">Destek İsteyin</string>
-  <string name="about_contact_us">Bize Ulaşın</string>
+  <string name="about_contact_us">İletişim Epostası</string>
   <string name="about_instagram">Instagram\'da beğen</string>
   <string name="about_medium">Medium\'da Okuyun</string>
   <string name="about_privacy">Gizlilik Politikası</string>
-  <string name="about_source_code">Kaynak Kodu</string>
-  <string name="about_telegram">Resmi Telegram Grubu</string>
+  <string name="about_source_code">Github Kaynak Kodu</string>
+  <string name="about_telegram">Telegram\'a Katıl</string>
   <string name="about_title">Hakkında</string>
   <string name="about_twitter">Twitter\'da Takip Edin</string>
   <string name="about_website">Resmi Web Sitesi</string>
   <string name="about_wiki">Wiki\'de Öğrenin</string>
   <string name="about_youtube">YouTube\'da Abone Olun</string>
+  <string name="account_already_imported">Already imported</string>
+  <string name="account_already_imported_description">This wallet is already imported</string>
   <string name="account_confirmation_title">Anımsatıcıyı onayla</string>
   <string name="account_confirmation_title_v2">Kurtarma Kelimelerini Onaylayın</string>
   <string name="activity_project">Proje</string>
@@ -36,6 +38,7 @@
   <string name="asset_state_error">Hata</string>
   <string name="asset_val_fullname">SORA Validator Tokeni (VAL)</string>
   <string name="asset_val_name">SORA Validator Tokeni (VAL)</string>
+  <string name="backup_account_title">Backup Account</string>
   <string name="biometric_dialog_title">Doğrulama</string>
   <string name="block_id">Blok Id</string>
   <string name="choose_token">Token seçin</string>
@@ -64,6 +67,7 @@
   <string name="common_apply">Uygula</string>
   <string name="common_arab">Arapça</string>
   <string name="common_asset">Varlık</string>
+  <string name="common_back">Back</string>
   <string name="common_balance">Bakiye</string>
   <string name="common_bashkir">Başkurtça</string>
   <string name="common_camera">Kamera</string>
@@ -101,6 +105,7 @@
   <string name="common_error_mnemonic_is_not_valid">Anımsatıcı Dizi geçersiz. Lütfen başka bir Dizi deneyin.</string>
   <string name="common_error_mnemonic_length_error">Anımsatıcı Dizi 15 kelime içermelidir</string>
   <string name="common_error_network">Lütfen internet bağlantısını kontrol edin ve daha sonra tekrar deneyin.</string>
+  <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">Maalesef paylaşacak herhangi bir davetiyen yok</string>
   <string name="common_error_not_found_title">Kaynak kullanılamıyor</string>
   <string name="common_error_phone_already_exists">Üzgünüz, bu telefon numarası zaten kullanılıyor. Lütfen başka bir numara deneyin.</string>
@@ -110,6 +115,7 @@
   <string name="common_error_project_not_found">Üzgünüz, proje bulunamadı.</string>
   <string name="common_error_retry">Lütfen tekrar deneyin</string>
   <string name="common_error_search_string_error">Arama boyutu 3 ile 64 karakter arasında olmalıdır</string>
+  <string name="common_error_seed_is_not_valid">Lütfen girdinin 64 hex sembolü içerdiğinden emin olun.</string>
   <string name="common_error_self_invitation">Davet kodunuzu kendiniz için kullanamazsınız</string>
   <string name="common_error_unauthorized_body">Lütfen internet bağlantısını kontrol edin ve daha sonra tekrar deneyin.</string>
   <string name="common_error_unauthorized_title">Yetkilendirme Başarısız</string>
@@ -144,6 +150,7 @@
   <string name="common_malay">Malayca</string>
   <string name="common_manage">Düzenle</string>
   <string name="common_min">dk</string>
+  <string name="common_name">Name</string>
   <string name="common_network_unavailable">Ağ bağlantısı kullanılamıyor</string>
   <string name="common_next">Sonraki</string>
   <string name="common_norwegian">Norveççe</string>
@@ -168,6 +175,7 @@
   <string name="common_personal_info_last_name_is_empty">Soyadı kısmı boş</string>
   <string name="common_personal_info_title">Kişisel bilgiler</string>
   <string name="common_please_wait">Lütfen bekleyin</string>
+  <string name="common_raw_seed">Kurtarma Kelimeleri</string>
   <string name="common_receive">Al</string>
   <string name="common_received">Alınan</string>
   <string name="common_recipient">Alıcı</string>
@@ -207,10 +215,10 @@
   <string name="common_update">Güncelle</string>
   <string name="common_vote">Oy</string>
   <string name="common_yesterday">Dün</string>
-  <string name="common_you_will_receive">You will receive</string>
+  <string name="common_you_will_receive">Alacağınız</string>
   <string name="common_your_position">Pozisyonunuz</string>
   <string name="contacts_empty_state_title">En önemli kişiler burada görünecektir</string>
-  <string name="contacts_scan">QR kodunu tara</string>
+  <string name="contacts_scan">Tara</string>
   <string name="contacts_search_empty_state_title">Arama sonucu bulunamadı</string>
   <string name="contacts_search_hint_v1">Hesap kimliği, telefon numarası, adres</string>
   <string name="contacts_search_results">Arama sonuçları</string>
@@ -232,13 +240,26 @@
   <string name="error_miner_fee_title">Madenci ücreti için yeterli bakiye yok</string>
   <string name="error_transaction_fee_title">İşlem ücreti için yeterli miktar yok</string>
   <string name="ethereum_config_unavailable">Ethereum node\'u kullanılamıyor</string>
+  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_options">Backup options</string>
+  <string name="export_account_details_show_passphrase">Show Passphrase</string>
+  <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
   <string name="faq_title">SSS</string>
-  <string name="friends_spread_word">Uygulamayı arkadaşlarınızla paylaşın.</string>
+  <string name="friends_spread_word">SORA\'yı arkadaşlarınızla paylaşın.</string>
   <string name="from_account">Hesaptan</string>
+  <string name="history_bonded_tokens">Bonded XOR tokens</string>
   <string name="history_receive">Al</string>
+  <string name="history_referral">Referral</string>
+  <string name="history_referral_bond_tokens">Bond tokens</string>
+  <string name="history_referral_set_referral">Set referral</string>
+  <string name="history_referral_set_referrer">Set referrer</string>
+  <string name="history_referral_unbond_tokens">Unbond tokens</string>
+  <string name="history_referrer">Referrer</string>
   <string name="history_send">Gönder</string>
   <string name="history_swap">Takas et</string>
   <string name="history_title">Geçmiş</string>
+  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
+  <string name="import_account_raw_seed">You have imported this account via Raw Seed</string>
   <string name="invite_accepted_empty_state_title">Henüz davet kabul edilmedi</string>
   <string name="invite_accepted_invitations_title">Kabul edilen davetler</string>
   <string name="invite_accepted_someone">Birisi davetini kabul etti</string>
@@ -276,7 +297,7 @@
   <string name="mnemonic_confirm_text_v2">Kelimeleri doğru sırada seçerek parolayı onaylayın</string>
   <string name="mnemonic_invalid">Geçersiz anımsatıcı parola, lütfen sözcük sırasını bir kez daha kontrol edin.</string>
   <string name="mnemonic_invalid_title">Geçersiz anımsatıcı cümle</string>
-  <string name="mnemonic_text">Kağıda yazmak gibi \"dijital olmayan\" bir yedekleme yöntemi kullanın.</string>
+  <string name="mnemonic_text">Yedeklemek için kağıda yazmak ve onu güvenli bir ortamda saklamak gibi dijital olmayan bir yöntem öneriyoruz.</string>
   <string name="mnemonic_title">Anımsatıcıyı yedekle</string>
   <string name="parliament_coming_soon">SORA ağı yönetişimi</string>
   <string name="personal_details_info">Bu hesabın adı ve adresinizin altında nasıl görüneceği. Zincir üzerinde bir kimlikle, başkalarının kullanımına sunulabilir.</string>
@@ -284,11 +305,15 @@
   <string name="personal_info_invitation_description">👋Davetiye bağlantınız var mı? Kodu uygulamak için üzerine dokunun veya kodu manuel olarak girin.</string>
   <string name="personal_info_invitation_is_invalid">Davetiye kodu geçersiz</string>
   <string name="personal_info_username">Hesap adı (isteğe bağlı)</string>
-  <string name="personal_info_username_v1">Hesap adı</string>
+  <string name="personal_info_username_v1">Hesap Adı</string>
   <string name="phone_number_mobile">Cep telefonu numarası</string>
   <string name="phone_number_sms_code_will_be_sent">SMS kodu telefonunuza gönderilecektir</string>
   <string name="phone_number_title">Kayıt ol</string>
   <string name="phone_verification_too_frequent_message">Çok sık doğrulama kodu isteği gönderdiniz. Lütfen daha sonra tekrar deneyin.</string>
+  <string name="pin_update_button_text">SET NEW PIN</string>
+  <string name="pin_update_info_description">Security policy has been improved for your protection.</string>
+  <string name="pin_update_info_subtitle">Please set a new 6 digit PIN.</string>
+  <string name="pin_update_info_title">4 digit PIN is no longer supported</string>
   <string name="pincode_change_success">PIN kodu başarıyla değiştirildi</string>
   <string name="pincode_change_success_v1">PIN kodu değiştirildi</string>
   <string name="pincode_confirm_new_pin_code">Yeni PIN kodunu onaylayın</string>
@@ -303,18 +328,18 @@
   <string name="pincode_updated">PIN kodu güncellendi</string>
   <string name="polkaswap_button_swap_again">Yeniden takas et</string>
   <string name="polkaswap_coming_soon">Birlikte çalışabilir bir gelecek için tasarlanan merkeziyetsiz borsa (DEX) Polkaswap; Polkadot ağı, Parachain\'ler ve bir köprü aracılığıyla bağlanmış blokzincirlerde çalışan tokenların takasının yapıldığı, gözetimsiz bir AMM-DEX protokolüdür. Polkaswap protokolü, tüm aracıları etkin bir şekilde ortadan kaldırır ve daha hızlı alım-satım işlemleri için fırsat sağlar.</string>
-  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
-  <string name="polkaswap_confirm_swap">Takası onayla</string>
+  <string name="polkaswap_common_info">Likidite sağladığınızdan dolayı havuzdaki payınıza göre ödüller kazanırsınız.</string>
+  <string name="polkaswap_confirm_swap">Takası Onayla</string>
   <string name="polkaswap_details">Detaylar</string>
   <string name="polkaswap_error_noswap">Takas yok</string>
   <string name="polkaswap_info_faq">Polkaswap SSS</string>
-  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
-  <string name="polkaswap_info_text_1">Polkaswap, SORA topluluğu tarafından korunur. Polkaswap işlevini kullanmadan önce, lütfen %% Polkaswap SSS %% ve Polkaswap\'ın nasıl çalıştığına dair ayrıntılı bir açıklamanın yanı sıra Polkaswap Memorandumu ve Hizmet Şartları ile Gizlilik Politikasını içeren belgeleri inceleyin. Bu belgeler, güvenli ve olumlu bir kullanıcı deneyimi için çok önemlidir. Polkaswap\'ı kullanarak, bu belgeleri okuyup anladığınızı kabul etmektesiniz. </string>
-  <string name="polkaswap_info_text_2">Ayrıca aşağıdakileri de kabul edersiniz:</string>
-  <string name="polkaswap_info_text_3">Yasal yargı yetki alanınızda Polkaswap\'ı özel kullanımınız için geçerli olabilecek tüm yasalara uyum konusunda yegane sorumluluğunuz;</string>
-  <string name="polkaswap_info_text_4">Polkaswap\'ın mevcut sürümünün bir alfa sürümü olduğu konusundaki anlayışınız: tam olarak test edilmemiştir ve bazı işlevler tasarlandığı gibi çalışmayabilir;</string>
-  <string name="polkaswap_info_text_5">Jeton kaybetme riski dahil ancak bunlarla sınırlı olmamak üzere Polkaswap\'ı kullanmanın içerdiği riskleri anlamanız ve gönüllü olarak kabul etmeniz.</string>
-  <string name="polkaswap_info_text_6">Bir kez daha, lütfen %%Polkaswap SSS%% , %%Polkaswap Memorandumu ve Hizmet Şartları%% ve %%Gizlilik Politikası%% yi okumadan devam etmeyin!</string>
+  <string name="polkaswap_info_prices_and_fees">Fiyatlar ve komisyonlar</string>
+  <string name="polkaswap_info_text_1">Polkaswap, SORA topluluğu tarafından korunur. Polkaswap işlevini kullanmadan önce, lütfen %% Polkaswap SSS %% ve Polkaswap\'ın nasıl çalıştığına dair ayrıntılı bir açıklamanın yanı sıra %%Polkaswap Memorandumu ve Hizmet Şartları%% ile %%Gizlilik Politikasını içeren belgeleri inceleyin%%. Bu belgeler, güvenli ve olumlu bir kullanıcı deneyimi için çok önemlidir. Polkaswap\'ı kullanarak, bu belgeleri okuyup anladığınızı kabul etmektesiniz. </string>
+  <string name="polkaswap_info_text_2">Ayrıca aşağıdakileri de kabul ediyorsunuz:</string>
+  <string name="polkaswap_info_text_3">Yasal yargı yetki alanınızda Polkaswap\'ı özel kullanımınız için geçerli olabilecek tüm yasalara uyum konusunda yegane sorumlu sizsinizdir;</string>
+  <string name="polkaswap_info_text_4">Polkaswap\'ın mevcut sürümünün bir alfa sürümü olduğu anlayın: tam olarak test edilmemiştir ve bazı işlevler tasarlandığı gibi çalışmayabilir;</string>
+  <string name="polkaswap_info_text_5">Jeton kaybetme riski dahil ancak bunlarla sınırlı olmamak üzere Polkaswap\'ı kullanmanın içerdiği riskleri anlıyor ve gönüllü olarak kabul ediyorsunuz.</string>
+  <string name="polkaswap_info_text_6">Lütfen, bir kez daha %%Polkaswap SSS%% , %%Polkaswap Memorandumu ve Hizmet Şartları%% ve %%Gizlilik Politikası%%\'nı okumadan devam etmeyin!</string>
   <string name="polkaswap_info_text_7">Takas sekmesinden sorumluluk reddi bildirimini gizlemek için lütfen aşağıdaki düğmeyi kaydırın. Bunu yalnızca, belirtilen tüm belgeleri tam olarak anlayıp okuduysanız yapın!</string>
   <string name="polkaswap_info_text_8">Gizlemek için kaydırın</string>
   <string name="polkaswap_info_text_9">Sorumluluk reddi bildirimi Polkaswap sekmesinden gizlendi. Bildirimi etkinleştirmek istiyorsanız düğmeyi aşağıya kaydırın.</string>
@@ -331,7 +356,7 @@
   <string name="polkaswap_market_tbc_description">TBC — sadece Token Tahvil Eğrisinden (Birincil Piyasadan) satın alınması. Fiyat, XYK havuzuna (İkincil Piyasaya) göre daha olumsuz olabilir, ama bir süre sonra kilidi açılan ödüllerden gelen değer, daha olumlu olabilir.</string>
   <string name="polkaswap_market_title">Pazar algoritması</string>
   <string name="polkaswap_market_xyk_description">XYK — sadece XYK havuzundan (İkincil Piyasadan) satın alınması. Herkesin, piyasa yapıcının pozisyonunu x*y=k formülüyle değiştirerek, varlık alımı ve satımı yapabileceği geleneksel XYK havuzu takası.</string>
-  <string name="polkaswap_maximum_sold">Maksimum Satılan</string>
+  <string name="polkaswap_maximum_sold">Maks Satılmış</string>
   <string name="polkaswap_maximum_sold_info">İşleminiz onaylanmadan önce büyük veya olumsuz bir fiyat hareketi olursa işleminiz geri alınır.</string>
   <string name="polkaswap_minimum_received">Minimum Alınan</string>
   <string name="polkaswap_minimum_received_info">İşleminiz onaylanmadan önce büyük veya olumsuz bir fiyat hareketi olursa işleminiz geri alınır.</string>
@@ -341,18 +366,20 @@
   <string name="polkaswap_output_estimated">Çıktı tahminidir. En az %s alacaksınız veya işlem geri alınacak.</string>
   <string name="polkaswap_pool_not_created">Havuz oluşturulmadı</string>
   <string name="polkaswap_pool_title">Havuz</string>
-  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
-  <string name="polkaswap_sbapy">SB APY</string>
+  <string name="polkaswap_price_for_one">FİYAT 1</string>
+  <string name="polkaswap_sb_apy_info">Likidite karşılığında farming ödülü</string>
+  <string name="polkaswap_sbapy">SB Faizi</string>
   <string name="polkaswap_slippage_frontrun">İşleminiz sizden önce başkası tarafından yapılabilir</string>
-  <string name="polkaswap_slippage_info">Kayma toleransı, Minimum Alınan tutarı etkileyen son tutar için yüzde olarak ayarlanmış kabul edilen bir eşiktir.</string>
+  <string name="polkaswap_slippage_info">Eğer fiyat bu yüzdeden daha fazla değişirse, işleminiz geri çekilecektir.</string>
   <string name="polkaswap_slippage_mayfail">İşleminiz hatayla sonuçlanabilir</string>
   <string name="polkaswap_slippage_tolerance">Kayma Toleransı</string>
   <string name="polkaswap_smart">Akıllı</string>
+  <string name="polkaswap_swap_empty_list">Henüz hiç aktif havuzunuz yok.\nÖdül kazanmak için likidite ekleyin</string>
   <string name="polkaswap_swap_title">Takas</string>
   <string name="polkaswap_swapped">Takas edildi</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
-  <string name="polkaswap_your_position">Your position (estimated)</string>
+  <string name="polkaswap_your_position">Pozisyonunuz (tahmini)</string>
   <string name="pool_apy_title">Önemli bonus faizi</string>
   <string name="pool_button_add">Ekle</string>
   <string name="pool_button_remove">Kaldır</string>
@@ -393,12 +420,16 @@
   <string name="project_voted">Oylandı</string>
   <string name="project_you_can_vote_at_least_1_point">En az 1 puanla oy verebilirsiniz 😜</string>
   <string name="qr_code">QR Kodu</string>
-  <string name="qr_upload">Galeriden yükle</string>
+  <string name="qr_upload">Galeriden</string>
+  <string name="recovery_alert_raw_seed_description">You will not be able to use passphrase when recovering using Raw Seed</string>
+  <string name="recovery_alert_raw_seed_title">Recovering from Raw Seed</string>
   <string name="recovery_body_subtitle">Anımsatıcı Dizi\'nizi unuttuysanız maalesef hesabınıza erişmenizin bir yolu yoktur.</string>
   <string name="recovery_body_title">Anımsatıcı Dizi\'nizi yazın</string>
+  <string name="recovery_input_raw_seed_hint">Ham Kurtarma Anahtarı (64 hex karakteri)</string>
   <string name="recovery_mnemonic_passphrase">Anımsatıcı sözcük dizisi</string>
   <string name="recovery_passphrase">Erişimi geri yükle</string>
   <string name="recovery_source_type">Kaynak türü</string>
+  <string name="recovery_source_type_1">Kaynak türünü seçin</string>
   <string name="recovery_title">Hesabı içe aktar</string>
   <string name="referenda_title">Referandum</string>
   <string name="referenda_title_vote">Referanduma oy ver</string>
@@ -418,6 +449,26 @@
   <string name="referendum_total_votes">Toplam oy</string>
   <string name="referendum_unsupport_title">Hayır</string>
   <string name="referendum_voting_result">Oylama sonucu</string>
+  <string name="referral_activate_button_title">Activate</string>
+  <string name="referral_bond_button_title">Bond XOR</string>
+  <string name="referral_enter_link_title">Enter referrer\'s link</string>
+  <string name="referral_get_more_invitation_button_title">Get more invitations</string>
+  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\n\nYou can unbond your XOR at any time for unused invitations.</string>
+  <string name="referral_input_reward_title">Enter desired amount of invitations</string>
+  <string name="referral_invitaion_link_title">Available invitations</string>
+  <string name="referral_referral_link">Referrer’s link or address</string>
+  <string name="referral_referrer_address">Referrer\'s address</string>
+  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_start_inviting">Start inviting</string>
+  <string name="referral_subtitle">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
+  <string name="referral_title">Get 10% of your referrals’ network fees</string>
+  <string name="referral_toolbar_title">Referral program</string>
+  <string name="referral_total_rewards">Total rewards</string>
+  <string name="referral_unbond_button_title">Unbond XOR</string>
+  <string name="referral_unbond_xor_description">You can unbond %s per 1 invitations. How many invitations do you want to withdraw?</string>
+  <string name="referral_your_invitation_link_title">Your invitation link</string>
+  <string name="referral_your_referrals">Your referrals</string>
+  <string name="referral_your_referrer">Your referrer</string>
   <string name="remove_liquidity_info_text">Likiditeyi kaldırmak, konumunuzu havuzdaki payınızla orantılı olarak mevcut oranda geri dönüştürür.</string>
   <string name="remove_liquidity_title">Likiditeyi Kaldır</string>
   <string name="remove_pool_confirmation_description">Çıktı tahminidir. Fiyat %s%% değerden fazla değişirse, işleminiz geri döner.</string>
@@ -432,10 +483,10 @@
   <string name="select_asset_send">Gönderilecek Varlığı Seçin</string>
   <string name="select_recipient">Alıcıyı seçin</string>
   <string name="set_amount">Miktarı belirle</string>
-  <string name="settings_accounts">Accounts</string>
-  <string name="settings_header_account">Account settings</string>
-  <string name="settings_header_app">App settings</string>
-  <string name="settings_header_other">Other</string>
+  <string name="settings_accounts">Hesaplar</string>
+  <string name="settings_header_account">Hesap ayarları</string>
+  <string name="settings_header_app">Uygulama ayarları</string>
+  <string name="settings_header_other">Diğer</string>
   <string name="staking_coming_soon">XOR sahipleri, ağın doğrulayıcılarını aday gösterebilmek ve ödül kazanmak için XOR\'larını stake edebilecektir.</string>
   <string name="staking_description">Validatörler atamak, ağı merkeziyetsizleştirdiği ve ağın güvenliğini sağladığı için SORA ekosisteminin büyük bir parçasıdır. VAL tokenleri validatörlere ve onları atayan kişilere staking ödülü olarak verilecektir.</string>
   <string name="staking_val_reward">SORA VALidator Ödülleri</string>
@@ -446,7 +497,7 @@
   <string name="status_success">Başarılı</string>
   <string name="status_title">Durum</string>
   <string name="swap_input_title">Takas girdisi</string>
-  <string name="tabbar_friends_title">Arkadaşlar</string>
+  <string name="tabbar_friends_title">Arkadaşlarıını Davet Et</string>
   <string name="tabbar_parliament_title">Parlamento</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
   <string name="tabbar_profile_title">Profil</string>
@@ -456,7 +507,7 @@
   <string name="transaction_bridge_not_active_error">Ethereum köprüsü devre dışı</string>
   <string name="transaction_confirm">İşlemi Onayla</string>
   <string name="transaction_continue">Devam et</string>
-  <string name="transaction_date">Tarih ve saat</string>
+  <string name="transaction_date">Tarih / Saat</string>
   <string name="transaction_details">İşlem detayları</string>
   <string name="transaction_fee_estimated_time">Tahmini işlem süresi ~ %s</string>
   <string name="transaction_fee_fast">Hızlı</string>
@@ -465,7 +516,7 @@
   <string name="transaction_fee_regular">Normal</string>
   <string name="transaction_fee_set_recommended">Önerileni seç</string>
   <string name="transaction_fee_slow">Yavaş</string>
-  <string name="transaction_id">İşlem Kimliği</string>
+  <string name="transaction_id">Dışsal Kimlik</string>
   <string name="transaction_miner_fee_title">Madenci Ücreti</string>
   <string name="transaction_miner_help">Ethereum hesabınızdan alınacaktır</string>
   <string name="transaction_note">Not</string>
@@ -519,12 +570,12 @@
   <string name="wallet_history_to_my_ethereum_title">Ethereum adresime</string>
   <string name="wallet_history_to_my_soranet_title">SORA NET hesabıma</string>
   <string name="wallet_history_to_soranet_account">SORA NET hesabına</string>
-  <string name="wallet_qr_share_message_empty_template" formatted="false">%s Almak için %s adresim</string>
+  <string name="wallet_qr_share_message_empty_template" formatted="false">%s Almak için %s Ağ Adresim</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Almak için %s Ağı adresi:</string>
-  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Bana %s göndermek için bu karekodu tara. Benim %s Ağı Hesap Kimliğim:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">%s %s Almak için %s adresim</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">%s %s Almak için %s Ağı adresim:</string>
-  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Bana %s %s göndermek için bu karekodu tara. Benim %s Ağı Hesap Kimliğim:\n%s</string>
   <string name="wallet_receive_val">VAL Alın</string>
   <string name="wallet_redeemable">Kullanılabilir</string>
   <string name="wallet_send_existential_warning_message">Transferiniz, toplam bakiyeyi ilk bakiyeden daha düşük yapacağı için hesabı blockstore\'dan kaldıracaktır.</string>

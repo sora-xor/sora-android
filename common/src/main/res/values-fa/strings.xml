@@ -13,6 +13,8 @@
   <string name="about_website">وب سایت رسمی</string>
   <string name="about_wiki">در ویکی بیاموزید</string>
   <string name="about_youtube">در یوتیوب مشترک شوید</string>
+  <string name="account_already_imported">Already imported</string>
+  <string name="account_already_imported_description">This wallet is already imported</string>
   <string name="account_confirmation_title">تایید کلمات</string>
   <string name="account_confirmation_title_v2">تایید رمز عبور</string>
   <string name="activity_project">پروژه</string>
@@ -36,6 +38,7 @@
   <string name="asset_state_error">خطا</string>
   <string name="asset_val_fullname">ارز تایید کنندگان SORA (VAL)</string>
   <string name="asset_val_name">ارز تایید کنندگان Sora</string>
+  <string name="backup_account_title">Backup Account</string>
   <string name="biometric_dialog_title">تایید</string>
   <string name="block_id">بلاک هش</string>
   <string name="choose_token">توکن را انتخاب کنید</string>
@@ -64,6 +67,7 @@
   <string name="common_apply">اعمال</string>
   <string name="common_arab">عرب</string>
   <string name="common_asset">دارایی</string>
+  <string name="common_back">بازگشت</string>
   <string name="common_balance">موجودی</string>
   <string name="common_bashkir">باشکر</string>
   <string name="common_camera">دوربین</string>
@@ -101,6 +105,7 @@
   <string name="common_error_mnemonic_is_not_valid">لطفاً مطمئن شوید که عبارت عبور شما شامل 12 یا 15 کلمه است و همه آنها صحیح هستند.</string>
   <string name="common_error_mnemonic_length_error">عبارت عبور باید شامل 15 حرف باشد</string>
   <string name="common_error_network">لطفاً، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
+  <string name="common_error_no_browser_error">Please install a browser to open the link</string>
   <string name="common_error_not_enough_invitations">با عرض پوزش، شما هیچ دعوتنامه ای برای اشتراک گذاری ندارید.</string>
   <string name="common_error_not_found_title">منبع در دسترس نیست</string>
   <string name="common_error_phone_already_exists">متاسفانه این شماره تلفن از پیش استفاده شده است. شماره ای دیگر امتحان کنید.</string>
@@ -110,6 +115,7 @@
   <string name="common_error_project_not_found">متأسفانه پروژه یافت نشد.</string>
   <string name="common_error_retry">لطفا دوباره تلاش کنید</string>
   <string name="common_error_search_string_error">اندازه جستجو باید بین 3 تا 64 کارکتر باشد</string>
+  <string name="common_error_seed_is_not_valid">لطفاً مطمئن شوید که ورودی شما دارای 64 نماد هگز (hex symbol) است.</string>
   <string name="common_error_self_invitation">نمیتوانید از کد دعوت خودتان برای خود استفاده کنید.</string>
   <string name="common_error_unauthorized_body">لطفاً، اتصال اینترنت را بررسی کنید و بعداً دوباره امتحان کنید.</string>
   <string name="common_error_unauthorized_title">تایید ناموفق بود</string>
@@ -144,6 +150,7 @@
   <string name="common_malay">مالاییایی</string>
   <string name="common_manage">مدیریت کنید</string>
   <string name="common_min">دقیقه</string>
+  <string name="common_name">Name</string>
   <string name="common_network_unavailable">اتصال شبکه در دسترس نیست</string>
   <string name="common_next">بعدی</string>
   <string name="common_norwegian">نروژی</string>
@@ -168,6 +175,7 @@
   <string name="common_personal_info_last_name_is_empty">نام خانوادگی خالی است</string>
   <string name="common_personal_info_title">اطلاعات شخصی</string>
   <string name="common_please_wait">لطفا صبر کنید</string>
+  <string name="common_raw_seed">دانه خام (Raw seed)</string>
   <string name="common_receive">دريافت كردن</string>
   <string name="common_received">دریافت شده</string>
   <string name="common_recipient">گیرنده</string>
@@ -232,13 +240,26 @@
   <string name="error_miner_fee_title">موجودی کافی برای هزینه تراکنش نیست</string>
   <string name="error_transaction_fee_title">بودجه کافی برای هزینه تراکنش وجود ندارد</string>
   <string name="ethereum_config_unavailable">گره اتریوم در دسترس نیست</string>
+  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_options">Backup options</string>
+  <string name="export_account_details_show_passphrase">Show Passphrase</string>
+  <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
   <string name="faq_title">سوالات متداول</string>
   <string name="friends_spread_word">SORA را با دوستان خود به اشتراک بگذارید.</string>
   <string name="from_account">از حساب</string>
+  <string name="history_bonded_tokens">Bonded XOR tokens</string>
   <string name="history_receive">دریافت</string>
+  <string name="history_referral">Referral</string>
+  <string name="history_referral_bond_tokens">Bond tokens</string>
+  <string name="history_referral_set_referral">Set referral</string>
+  <string name="history_referral_set_referrer">Set referrer</string>
+  <string name="history_referral_unbond_tokens">Unbond tokens</string>
+  <string name="history_referrer">Referrer</string>
   <string name="history_send">ارسال</string>
   <string name="history_swap">تبدیل</string>
   <string name="history_title">تاریخچه</string>
+  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
+  <string name="import_account_raw_seed">You have imported this account via Raw Seed</string>
   <string name="invite_accepted_empty_state_title">هنوز هیچ دعوت نامه ای پذیرفته نشده است</string>
   <string name="invite_accepted_invitations_title">دعوتنامه‌های پذیرفته شده</string>
   <string name="invite_accepted_someone">شخصی دعوت را پذیرفت</string>
@@ -289,6 +310,10 @@
   <string name="phone_number_sms_code_will_be_sent">پیامک برای شما ارسال خواهد شد.</string>
   <string name="phone_number_title">ثبت نام</string>
   <string name="phone_verification_too_frequent_message">شما تعداد زیادی کد تایید درخواست کرده اید. لطفا بعداً امتحان کنید.</string>
+  <string name="pin_update_button_text">SET NEW PIN</string>
+  <string name="pin_update_info_description">Security policy has been improved for your protection.</string>
+  <string name="pin_update_info_subtitle">Please set a new 6 digit PIN.</string>
+  <string name="pin_update_info_title">4 digit PIN is no longer supported</string>
   <string name="pincode_change_success">پین کد با موفقیت تغییر شد</string>
   <string name="pincode_change_success_v1">پین کد تغییر کرد</string>
   <string name="pincode_confirm_new_pin_code">پین کد جدید را تایید کنید</string>
@@ -303,7 +328,7 @@
   <string name="pincode_updated">کد با موفقیت به روز رسانی شد</string>
   <string name="polkaswap_button_swap_again">دوباره مبادله کنید</string>
   <string name="polkaswap_coming_soon">یک DEX برای آینده ای با قابلیت همکاری Polkaswap یک پروتکل غیر مالکیتی ، AMM-DEX برای مبادله رمزهای مبتنی بر شبکه پلکادات، پاراچین ها و بلاک چین های متصل از طریق Bridge است. پروتکل Polkaswap به طور موثر واسطه ها را از بین می برد و فرصت تجارت سریعتر را فراهم می کند.</string>
-  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="polkaswap_common_info">شما متناسب با سهم خود از مخزن بابت تامین نقدینگی کارمزد دریافت خواهید کرد.</string>
   <string name="polkaswap_confirm_swap">مبادله را تایید کنید</string>
   <string name="polkaswap_details">جزئیات</string>
   <string name="polkaswap_error_noswap">بدون مبادله</string>
@@ -341,13 +366,15 @@
   <string name="polkaswap_output_estimated">مقدار دریافتی تخمینی است. حداقل مقدار %s دریافت خواهید کرد، در غیر اینصورت تراکنش برگشت خواهد خورد.</string>
   <string name="polkaswap_pool_not_created">استخر ایجاد نشده</string>
   <string name="polkaswap_pool_title">استخر</string>
-  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_price_for_one">قیمت 1</string>
+  <string name="polkaswap_sb_apy_info">پاداش فارمینگ حاصل از تامین نقدینگی</string>
   <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">تراکنش شما ممکن است پیشتاز (frontrun) باشد</string>
   <string name="polkaswap_slippage_info">در صورتی که قیمت بیش از مقدار تایین شده توسط شما جا به جا شود (اگر باعث ضرر شما شود) این تراکنش برگشت میخورد</string>
   <string name="polkaswap_slippage_mayfail">تراکنش شما ممکن است انجام نشود</string>
   <string name="polkaswap_slippage_tolerance">تغییرات محتمل در قیمت</string>
   <string name="polkaswap_smart">هوشمند</string>
+  <string name="polkaswap_swap_empty_list">شما هنوز هیچ مخزن فعالی ندارید. \n برای کسب پاداش نقدینگی اضافه کنید</string>
   <string name="polkaswap_swap_title">تبدیل</string>
   <string name="polkaswap_swapped">مبادله شد</string>
   <string name="polkaswap_tbc">TBC</string>
@@ -394,11 +421,15 @@
   <string name="project_you_can_vote_at_least_1_point">میتوانید با حداقل یک امتیاز رای دهید. 😜</string>
   <string name="qr_code">کد QR</string>
   <string name="qr_upload">بارگیری از گالری</string>
+  <string name="recovery_alert_raw_seed_description">You will not be able to use passphrase when recovering using Raw Seed</string>
+  <string name="recovery_alert_raw_seed_title">Recovering from Raw Seed</string>
   <string name="recovery_body_subtitle">متأسفانه در صورت فراموش کردن عبارت عبور ، راهی برای دسترسی به حساب شما وجود ندارد.</string>
   <string name="recovery_body_title">رمز عبور را وارد کنید</string>
+  <string name="recovery_input_raw_seed_hint">دانه (Seed) خام (نماد 64 هکسی)</string>
   <string name="recovery_mnemonic_passphrase">عبارات عبور منمونیک</string>
   <string name="recovery_passphrase">بازیابی دسترسی</string>
   <string name="recovery_source_type">نوع منبع</string>
+  <string name="recovery_source_type_1">نوع منبع را مشخص کنید</string>
   <string name="recovery_title">بازیابی حساب</string>
   <string name="referenda_title">همه پرسی</string>
   <string name="referenda_title_vote">به همه پرسی رأی دهید</string>
@@ -418,6 +449,26 @@
   <string name="referendum_total_votes">کل آرا</string>
   <string name="referendum_unsupport_title">نه</string>
   <string name="referendum_voting_result">نتیجه رأی گیری</string>
+  <string name="referral_activate_button_title">Activate</string>
+  <string name="referral_bond_button_title">Bond XOR</string>
+  <string name="referral_enter_link_title">Enter referrer\'s link</string>
+  <string name="referral_get_more_invitation_button_title">Get more invitations</string>
+  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\n\nYou can unbond your XOR at any time for unused invitations.</string>
+  <string name="referral_input_reward_title">Enter desired amount of invitations</string>
+  <string name="referral_invitaion_link_title">Available invitations</string>
+  <string name="referral_referral_link">Referrer’s link or address</string>
+  <string name="referral_referrer_address">Referrer\'s address</string>
+  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
+  <string name="referral_start_inviting">شروع به دعوت کنید</string>
+  <string name="referral_subtitle">هر زمان که ارجاع شما معامله ای انجام دهد، 10٪ از کارمزد شبکه پرداختی به عنوان پاداش به شما تعلق می‌گیرد.</string>
+  <string name="referral_title">10٪ از کارمزد شبکه ارجاعات خود را دریافت کنید</string>
+  <string name="referral_toolbar_title">برنامه ارجاع</string>
+  <string name="referral_total_rewards">مجموع پاداش‌ها</string>
+  <string name="referral_unbond_button_title">Unbond XOR</string>
+  <string name="referral_unbond_xor_description">You can unbond %s per 1 invitations. How many invitations do you want to withdraw?</string>
+  <string name="referral_your_invitation_link_title">Your invitation link</string>
+  <string name="referral_your_referrals">ارجاعات شما</string>
+  <string name="referral_your_referrer">Your referrer</string>
   <string name="remove_liquidity_info_text">برداشت نقدینگی، موقعیت شما را با نرخ فعلی، متناسب با سهم شما از مخزن، برمی‌گرداند.</string>
   <string name="remove_liquidity_title">برداشت نقدینگی</string>
   <string name="remove_pool_confirmation_description">نتیجه تخمینی میباشد. اگر قیمت بیش از %s%% تغییر کند، تراکنش شما لغو و برگشت میشود.</string>
@@ -435,7 +486,7 @@
   <string name="settings_accounts">حساب‌ها</string>
   <string name="settings_header_account">تنظیمات حساب</string>
   <string name="settings_header_app">تنظیمات برنامه</string>
-  <string name="settings_header_other">دیگر</string>
+  <string name="settings_header_other">بقیه</string>
   <string name="staking_coming_soon">دارندگان XOR می توانند XOR خود را برای نامزدی تایید کننده‌ها سپرده کنند تا پاداش دریافت کنند.</string>
   <string name="staking_description">اعتبارسنج‌های نامزدکننده (Nominating validators) بخش مهمی از اکوسیستم SORA هستند زیرا به امنیت و تمرکززدایی شبکه کمک می‌کنند. توکن‌های VAL به اعتبارسنج‌ها و نامزدکنندگان به عنوان پاداش گروگذاری (staking) آن‌ها اعطا خواهد شد.</string>
   <string name="staking_val_reward">جوایز تایید کنندگان SORA</string>
@@ -446,7 +497,7 @@
   <string name="status_success">موفقیت</string>
   <string name="status_title">وضعیت</string>
   <string name="swap_input_title">ورودی مبادله</string>
-  <string name="tabbar_friends_title">دوستان</string>
+  <string name="tabbar_friends_title">دوستان را دعوت کنید</string>
   <string name="tabbar_parliament_title">مجلس</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
   <string name="tabbar_profile_title">پروفایل</string>

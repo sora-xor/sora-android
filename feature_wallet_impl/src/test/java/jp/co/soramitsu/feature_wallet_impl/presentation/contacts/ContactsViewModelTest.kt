@@ -9,7 +9,7 @@ import android.graphics.drawable.PictureDrawable
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.interfaces.WithPreloader
+import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -21,14 +21,17 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.util.EthereumAddressVali
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.*
+import org.mockito.BDDMockito.anyInt
+import org.mockito.BDDMockito.anyString
+import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
@@ -55,7 +58,7 @@ class ContactsViewModelTest {
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var preloader: WithPreloader
+    private lateinit var withProgress: WithProgress
 
     @Mock
     private lateinit var avatar: AccountAvatarGenerator
@@ -86,12 +89,13 @@ class ContactsViewModelTest {
     private val accounts = mutableListOf(account)
 
     @Before
-    fun setUp() {
+    fun setUp() = runTest {
         given(avatar.createAvatar(anyString(), anyInt())).willReturn(drawable)
+        given(walletInteractor.getContacts("")).willReturn(accounts)
 
         contactsViewModel = ContactsViewModel(
-            walletInteractor, router, preloader, qrCodeDecoder,
-            resourceManager, ethereumAddressValidator, ethereumInteractor, avatar
+            walletInteractor, router, qrCodeDecoder,
+            resourceManager, avatar, withProgress
         )
     }
 
@@ -119,7 +123,7 @@ class ContactsViewModelTest {
     }
 
     @Test
-    fun `decode text from qr method and proccess result`() = runBlockingTest {
+    fun `decode text from qr method and proccess result`() = runTest {
         val qrResponse = "response"
 
         given(qrCodeDecoder.decodeQrFromUri(uri)).willReturn(qrResponse)
@@ -132,13 +136,13 @@ class ContactsViewModelTest {
         )
 
         contactsViewModel.decodeTextFromBitmapQr(uri)
+        advanceUntilIdle()
 
         verify(router).showValTransferAmount(accountId, "$firstName $lastName", BigDecimal.ZERO)
     }
 
     @Test
-    fun `fetch contacts`() = runBlockingTest {
-        given(walletInteractor.getContacts("")).willReturn(accounts)
+    fun `fetch contacts`() = runTest {
         val expected = mutableListOf(
             ContactListItem(account, drawable, true)
         )
@@ -150,12 +154,12 @@ class ContactsViewModelTest {
     }
 
     @Test
-    fun `search event`() = runBlockingTest {
+    fun `search event`() = runTest {
         val query = "query"
         val expected = mutableListOf(
             ContactListItem(account, drawable, true)
         )
-        given(walletInteractor.findOtherUsersAccounts(query)).willReturn(accounts)
+        given(walletInteractor.getContacts(query)).willReturn(accounts)
 
         contactsViewModel.search(query)
 

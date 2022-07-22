@@ -6,11 +6,10 @@
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.domain.HealthChecker
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -38,22 +37,19 @@ class EthereumInteractorTest {
     @Mock
     private lateinit var credentialsRepository: CredentialsRepository
 
-    @Mock
-    private lateinit var healthChecker: HealthChecker
-
     private lateinit var ethereumInteractorImpl: EthereumInteractorImpl
 
     private val accountId = "accountId"
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         ethereumInteractorImpl =
-            EthereumInteractorImpl(ethereumRepository, credentialsRepository, healthChecker)
+            EthereumInteractorImpl(ethereumRepository, credentialsRepository)
         //given(credentialsRepository.retrieveKeyPair()).willReturn(Single.just(keyPair))
     }
 
     @Test
-    fun `start withdraw called`() = runBlockingTest {
+    fun `start withdraw called`() = runTest {
         val amount = BigDecimal.ONE
         val minerFee = "11.0"
         val ethAddress = "0xaddress"

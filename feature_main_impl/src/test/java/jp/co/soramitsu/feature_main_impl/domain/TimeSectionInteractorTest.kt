@@ -5,11 +5,10 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.presentation.voteshistory.model.VotesHistoryItem
-import jp.co.soramitsu.test_shared.anyNonNull
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -18,14 +17,16 @@ import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import java.math.BigDecimal
-import java.util.*
+import java.util.Date
 
 @RunWith(MockitoJUnitRunner::class)
 class TimeSectionInteractorTest {
 
     @Mock
     private lateinit var resourceManager: ResourceManager
+
     @Mock
     private lateinit var dateTimeFormatter: DateTimeFormatter
 
@@ -35,7 +36,7 @@ class TimeSectionInteractorTest {
     fun setUp() {
         given(resourceManager.getString(R.string.common_yesterday)).willReturn("Yesterday")
         given(resourceManager.getString(R.string.common_today)).willReturn("Today")
-        given(dateTimeFormatter.formatDate(anyNonNull(), anyString())).willReturn("01 January")
+        given(dateTimeFormatter.formatDate(any(), anyString())).willReturn("01 January")
 
         interactor = TimeSectionInteractor(resourceManager, dateTimeFormatter)
     }

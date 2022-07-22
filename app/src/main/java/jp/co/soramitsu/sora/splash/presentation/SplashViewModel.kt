@@ -8,27 +8,34 @@ package jp.co.soramitsu.sora.splash.presentation
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.sora.splash.domain.SplashInteractor
-import jp.co.soramitsu.sora.splash.domain.SplashRouter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SplashViewModel(
+@HiltViewModel
+class SplashViewModel @Inject constructor(
     private val interactor: SplashInteractor,
-    private val router: SplashRouter,
-    private val runtimeManager: RuntimeManager,
 ) : BaseViewModel() {
 
     private val _runtimeInitiated = MutableLiveData<Boolean>()
     val runtimeInitiated: LiveData<Boolean> = _runtimeInitiated
 
+    val showMainScreen = SingleLiveEvent<Unit>()
+    val showOnBoardingScreen = SingleLiveEvent<OnboardingState>()
+    val showOnBoardingScreenViaInviteLink = SingleLiveEvent<Unit>()
+    val showMainScreenFromInviteLink = SingleLiveEvent<Unit>()
+
     init {
         viewModelScope.launch {
             tryCatch {
-                runtimeManager.start()
+                delay(500)
                 _runtimeInitiated.value = true
             }
         }
@@ -44,10 +51,10 @@ class SplashViewModel(
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
                     interactor.initCurSoraAccount()
-                    router.showMainScreen()
+                    showMainScreen.trigger()
                 }
                 OnboardingState.INITIAL -> {
-                    router.showOnBoardingScreen(state)
+                    showOnBoardingScreen.value = state
                 }
             }
         }
@@ -59,9 +66,9 @@ class SplashViewModel(
             interactor.saveInviteCode(invitationCode)
 
             if (OnboardingState.INITIAL == state) {
-                router.showOnBoardingScreenViaInviteLink()
+                showOnBoardingScreenViaInviteLink.trigger()
             } else {
-                router.showMainScreenFromInviteLink()
+                showMainScreenFromInviteLink.trigger()
             }
         }
     }

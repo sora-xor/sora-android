@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.SuspendableProperty
@@ -19,15 +19,19 @@ import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.A
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.zipWith
+import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.model.ButtonState
 import jp.co.soramitsu.feature_wallet_impl.presentation.util.mapAssetToAssetModel
+import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapMath.isZero
+import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -41,10 +45,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
 @FlowPreview
-class SwapViewModel(
+@HiltViewModel
+class SwapViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,
@@ -59,7 +65,22 @@ class SwapViewModel(
     private val assetsList = mutableListOf<Asset>()
     private var feeAsset: Asset? = null
 
-    private val onChangedProperty = SuspendableProperty<Boolean>(1)
+    private class PropertyValue(var reloadMarkets: Boolean = false) {
+        @Synchronized
+        fun reset() {
+            reloadMarkets = false
+        }
+
+        @Synchronized
+        fun newReloadMarkets(v: Boolean): PropertyValue {
+            reloadMarkets = reloadMarkets or v
+            return this
+        }
+    }
+
+    private val property = PropertyValue()
+
+    private val onChangedProperty = SuspendableProperty<PropertyValue>(1)
 
     private val _showFromAssetSelectBottomSheet = SingleLiveEvent<List<AssetListItemModel>>()
     val showFromAssetSelectBottomSheet: LiveData<List<AssetListItemModel>> =
@@ -78,6 +99,8 @@ class SwapViewModel(
     private val _toAssetLiveData = MutableLiveData<Asset>()
     val toAssetLiveData: LiveData<Asset> = _toAssetLiveData
 
+    val fromAndToAssetLiveData = _fromAssetLiveData.zipWith(_toAssetLiveData)
+
     private val _slippageToleranceLiveData = MutableLiveData<Float>()
     val slippageToleranceLiveData: LiveData<Float> = _slippageToleranceLiveData
 
@@ -86,6 +109,12 @@ class SwapViewModel(
 
     private val _swapButtonState: MutableStateFlow<ButtonState> = MutableStateFlow(ButtonState())
     val swapButtonState: StateFlow<ButtonState> = _swapButtonState
+
+    private val _toEnabledLiveData = MutableLiveData<Boolean>()
+    val toEnabledLiveData: LiveData<Boolean> = _toEnabledLiveData
+
+    private val _fromEnabledLiveData = MutableLiveData<Boolean>()
+    val fromEnabledLiveData: LiveData<Boolean> = _fromEnabledLiveData
 
     private val _detailsEnabledLiveData = MutableLiveData(false)
     val detailsEnabledLiveData: LiveData<Boolean> = _detailsEnabledLiveData
@@ -156,89 +185,89 @@ class SwapViewModel(
                     onError(it)
                 }
                 .collectLatest {
-                    onChangedProperty.set(false)
+                    onChangedProperty.set(property.newReloadMarkets(false))
                 }
         }
-        viewModelScope.launch {
-            polkaswapInteractor.observeSwap()
-                .catch {
-                    onError(it)
+        polkaswapInteractor.observeSwap()
+            .catch {
+                onError(it)
+            }
+            .onEach {
+                amountFrom = BigDecimal.ZERO
+                amountTo = BigDecimal.ZERO
+                _fromAmountLiveData.value = ""
+                _toAmountLiveData.value = ""
+                swapDetails = null
+                updateDetailsView()
+                onChangedProperty.set(property.newReloadMarkets(false))
+            }
+            .launchIn(viewModelScope)
+        walletInteractor.subscribeActiveAssetsOfCurAccount()
+            .catch { onError(it) }
+            .distinctUntilChanged()
+            .onEach { assets ->
+                assetsList.clear()
+                assetsList.addAll(assets)
+
+                assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let {
+                    feeAsset = it
+                    if (_fromAssetLiveData.value == null) {
+                        _fromAssetLiveData.value = it
+                    }
                 }
-                .collectLatest {
-                    amountFrom = BigDecimal.ZERO
-                    amountTo = BigDecimal.ZERO
-                    _fromAmountLiveData.value = ""
-                    _toAmountLiveData.value = ""
-                    swapDetails = null
-                    updateDetailsView()
-                    onChangedProperty.set(false)
+
+                _fromAssetLiveData.value?.let { asset ->
+                    assets.find { it.token.id == asset.token.id }?.let {
+                        _fromBalanceLiveData.value = numbersFormatter.formatBigDecimal(
+                            it.balance.transferable,
+                            AssetHolder.ROUNDING
+                        ) to it.token.symbol
+                    }
                 }
-        }
-        viewModelScope.launch {
-            walletInteractor.subscribeVisibleAssetsOfCurAccount()
-                .catch { onError(it) }
-                .distinctUntilChanged()
-                .collectLatest { assets ->
-                    assetsList.clear()
-                    assetsList.addAll(assets)
 
-                    assets.find { it.token.id == OptionsProvider.feeAssetId }?.let {
-                        feeAsset = it
-                        if (_fromAssetLiveData.value == null) {
-                            _fromAssetLiveData.value = it
-                        }
+                _toAssetLiveData.value?.let { asset ->
+                    assets.find { it.token.id == asset.token.id }?.let {
+                        _toBalanceLiveData.value = numbersFormatter.formatBigDecimal(
+                            it.balance.transferable,
+                            AssetHolder.ROUNDING
+                        ) to it.token.symbol
                     }
-
-                    _fromAssetLiveData.value?.let { asset ->
-                        assets.find { it.token.id == asset.token.id }?.let {
-                            _fromAssetLiveData.value = it
-                            _fromBalanceLiveData.value = numbersFormatter.formatBigDecimal(
-                                it.balance.transferable,
-                                AssetHolder.ROUNDING
-                            ) to it.token.symbol
-                        }
-                    }
-
-                    _toAssetLiveData.value?.let { asset ->
-                        assets.find { it.token.id == asset.token.id }?.let {
-                            _toAssetLiveData.value = it
-                            _toBalanceLiveData.value = numbersFormatter.formatBigDecimal(
-                                it.balance.transferable,
-                                AssetHolder.ROUNDING
-                            ) to it.token.symbol
-                        }
-                    }
-
-                    if (networkFee == null) {
-                        assets.find { it.token.id == OptionsProvider.feeAssetId }?.let {
-                            networkFee = polkaswapInteractor.fetchSwapNetworkFee(it.token)
-                        }
-                    }
-
-                    onChangedProperty.set(false)
-                    _dataInitiatedEvent.call()
                 }
-        }
+
+                if (networkFee == null) {
+                    assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let {
+                        networkFee = polkaswapInteractor.fetchSwapNetworkFee(it.token)
+                    }
+                }
+
+                onChangedProperty.set(property.newReloadMarkets(false))
+                _dataInitiatedEvent.call()
+            }
+            .launchIn(viewModelScope)
+
         polkaswapInteractor.observePoolReserves()
             .catch {
                 onError(it)
             }
             .onEach {
-                onChangedProperty.set(false)
+                onChangedProperty.set(property.newReloadMarkets(false))
             }
             .launchIn(viewModelScope)
-        onChangedProperty.observe()
-            .debounce(700)
-            .catch {
-                onError(it)
-            }
-            .onEach {
-                if (it) getMarkets()
-                recalcDetails()
-                toggleSwapButtonStatus()
-                toggleDetailsStatus()
-            }
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            onChangedProperty.observe()
+                .debounce(ViewHelper.debounce)
+                .catch {
+                    onError(it)
+                }
+                .collectLatest {
+                    if (it.reloadMarkets) getMarkets()
+                    recalcDetails()
+                    toggleSwapButtonStatus()
+                    toggleDetailsStatus()
+                    resetLoading()
+                    property.reset()
+                }
+        }
     }
 
     fun fromCardClicked() {
@@ -283,7 +312,7 @@ class SwapViewModel(
 
                         delay(800L)
                         fromAmountChanged(inputAmount)
-                        onChangedProperty.set(true)
+                        onChangedProperty.set(property.newReloadMarkets(true))
                     }
                 }
             }
@@ -294,14 +323,20 @@ class SwapViewModel(
         to?.let {
             _toAssetLiveData.value = it
             _toBalanceLiveData.value =
-                numbersFormatter.formatBigDecimal(it.balance.transferable, AssetHolder.ROUNDING) to it.token.symbol
+                numbersFormatter.formatBigDecimal(
+                it.balance.transferable,
+                AssetHolder.ROUNDING
+            ) to it.token.symbol
         }
         from?.let {
             _fromAssetLiveData.value = it
             _fromBalanceLiveData.value =
-                numbersFormatter.formatBigDecimal(it.balance.transferable, AssetHolder.ROUNDING) to it.token.symbol
+                numbersFormatter.formatBigDecimal(
+                it.balance.transferable,
+                AssetHolder.ROUNDING
+            ) to it.token.symbol
         }
-        onChangedProperty.set(true)
+        onChangedProperty.set(property.newReloadMarkets(true))
     }
 
     private fun toggleSwapButtonStatus() {
@@ -313,10 +348,10 @@ class SwapViewModel(
             availableMarkets.isEmpty() -> {
                 resourceManager.getString(R.string.polkaswap_pool_not_created) to false
             }
-            _fromAssetLiveData.value != null && amountFrom == BigDecimal.ZERO && desired == WithDesired.INPUT -> {
+            _fromAssetLiveData.value != null && amountFrom.isZero() && desired == WithDesired.INPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
-            _toAssetLiveData.value != null && amountTo == BigDecimal.ZERO && desired == WithDesired.OUTPUT -> {
+            _toAssetLiveData.value != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
             ok?.isEmpty() == true -> {
@@ -403,15 +438,20 @@ class SwapViewModel(
         _swapButtonState.value = _swapButtonState.value.copy(loading = loading)
     }
 
+    private fun resetLoading() {
+        setSwapButtonLoading(false)
+        _fromEnabledLiveData.value = true
+        _toEnabledLiveData.value = true
+    }
+
     private suspend fun recalcDetails() {
         feeAsset?.let { feeAsset ->
             _fromAssetLiveData.value?.let { fromAsset ->
                 _toAssetLiveData.value?.let { toAsset ->
                     val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
                     if (amountToCalc > BigDecimal.ZERO) {
-                        setSwapButtonLoading(true)
                         tryCatchFinally(
-                            finally = { setSwapButtonLoading(false) },
+                            finally = {},
                             block = {
                                 val details = polkaswapInteractor.calcDetails(
                                     fromAsset.token,
@@ -492,31 +532,47 @@ class SwapViewModel(
         }
     }
 
+    fun fromAmountOnEach() {
+        setSwapButtonLoading(true)
+        _toEnabledLiveData.value = false
+    }
+
     fun fromAmountChanged(amount: BigDecimal) {
-        if (amount == amountFrom && desired == WithDesired.INPUT) return
+        if (amount == amountFrom && desired == WithDesired.INPUT) {
+            resetLoading()
+            return
+        }
         amountFrom = amount
         desired = WithDesired.INPUT
-        onChangedProperty.set(false)
+        onChangedProperty.set(property.newReloadMarkets(false))
+    }
+
+    fun toAmountOnEach() {
+        setSwapButtonLoading(true)
+        _fromEnabledLiveData.value = false
     }
 
     fun toAmountChanged(amount: BigDecimal) {
-        if (amount == amountTo && desired == WithDesired.OUTPUT) return
+        if (amount == amountTo && desired == WithDesired.OUTPUT) {
+            resetLoading()
+            return
+        }
         amountTo = amount
         desired = WithDesired.OUTPUT
-        onChangedProperty.set(false)
+        onChangedProperty.set(property.newReloadMarkets(false))
     }
 
     fun fromAmountFocused() {
         if (desired != WithDesired.INPUT) {
             desired = WithDesired.INPUT
-            onChangedProperty.set(false)
+            onChangedProperty.set(property.newReloadMarkets(false))
         }
     }
 
     fun toAmountFocused() {
         if (desired != WithDesired.OUTPUT) {
             desired = WithDesired.OUTPUT
-            onChangedProperty.set(false)
+            onChangedProperty.set(property.newReloadMarkets(false))
         }
     }
 
@@ -566,7 +622,7 @@ class SwapViewModel(
 
     fun slippageChanged(slippageTolerance: Float) {
         _slippageToleranceLiveData.value = slippageTolerance
-        onChangedProperty.set(false)
+        onChangedProperty.set(property.newReloadMarkets(false))
     }
 
     fun slippageToleranceClicked() {
@@ -577,7 +633,7 @@ class SwapViewModel(
 
     fun detailsClicked() {
         detailsShowLiveData.value?.let {
-            _detailsShowLiveData.value = !it
+            _detailsShowLiveData.value = !it && swapDetails != null
         }
     }
 
@@ -592,12 +648,11 @@ class SwapViewModel(
 
     fun fromInputPercentClicked(percent: Int) {
         _fromAssetLiveData.value?.let { assetModel ->
-            val scale = assetModel.token.precision
-
             var amount = assetModel.balance.transferable.divide(
                 BigDecimal(100)
             ) * BigDecimal(percent)
-            if (assetModel.token.id == OptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
+
+            if (assetModel.token.id == SubstrateOptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
                 amount = subtractFee(amount, assetModel.balance.transferable)
             }
             val amountFormatted = numbersFormatter.formatBigDecimal(amount, AssetHolder.ROUNDING)
@@ -606,16 +661,20 @@ class SwapViewModel(
             amountFrom = amount
             desired = WithDesired.INPUT
 
-            onChangedProperty.set(false)
+            onChangedProperty.set(property.newReloadMarkets(false))
         }
     }
 
     private fun subtractFee(amount: BigDecimal, balance: BigDecimal): BigDecimal {
         networkFee?.let { fee ->
-            return if (amount + fee > balance) {
-                amount - fee
-            } else {
+            return if (amount < fee) {
                 amount
+            } else {
+                if (amount + fee > balance) {
+                    amount - fee
+                } else {
+                    amount
+                }
             }
         }
         return amount
