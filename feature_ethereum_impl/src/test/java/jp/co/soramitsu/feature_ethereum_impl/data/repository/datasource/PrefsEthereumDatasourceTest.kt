@@ -11,7 +11,7 @@ import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -49,13 +49,13 @@ class PrefsEthereumDatasourceTest {
     private val ethRegisterState = EthRegisterState.State.NONE.toString()
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         //given(soraPreferences.getString(PREFS_ETH_REGISTER_STATE)).willReturn(ethRegisterState)
         prefsEthereumDatasource = PrefsEthereumDatasource(encryptedPreferences, soraPreferences)
     }
 
     @Test
-    fun `save eth private key called`() = runBlockingTest {
+    fun `save eth private key called`() = runTest {
         prefsEthereumDatasource.saveEthereumCredentials(credentials)
 
         verify(encryptedPreferences).putEncryptedString(
@@ -65,7 +65,7 @@ class PrefsEthereumDatasourceTest {
     }
 
     @Test
-    fun `retrieve eth private key called`() = runBlockingTest {
+    fun `retrieve eth private key called`() = runTest {
         given(encryptedPreferences.getDecryptedString(PREFS_ETH_PRIVATE)).willReturn("1")
 
         val actualCredentials = prefsEthereumDatasource.retrieveEthereumCredentials()
@@ -74,7 +74,7 @@ class PrefsEthereumDatasourceTest {
     }
 
     @Test
-    fun `save val address called`() = runBlockingTest {
+    fun `save val address called`() = runTest {
         val valAddressKey = "prefs_val_address"
 
         prefsEthereumDatasource.saveVALAddress(address)

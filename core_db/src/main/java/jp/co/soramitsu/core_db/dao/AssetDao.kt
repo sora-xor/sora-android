@@ -28,6 +28,10 @@ interface AssetDao {
         private const val QUERY_ASSET_TOKEN =
             """select * from assets inner join tokens on tokens.id = assets.tokenId
                 where assets.accountAddress = :address"""
+        private const val QUERY_ASSET_TOKEN_ACTIVE =
+            """select * from assets inner join tokens on tokens.id = assets.tokenId
+                where assets.accountAddress = :address and tokens.whitelistName = :whitelist
+                and ((assets.displayAsset = 1 or (assets.displayAsset = 0 and tokens.isHidable = 0)) or (tokens.id in (select assetId from pools)))"""
     }
 
     @Query("DELETE FROM assets")
@@ -38,6 +42,15 @@ interface AssetDao {
 
     @Query(QUERY_ASSET_TOKEN_VISIBLE)
     suspend fun getAssetsVisible(address: String, whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME): List<AssetTokenLocal>
+
+    @Query(QUERY_ASSET_TOKEN_ACTIVE)
+    suspend fun getAssetsActive(address: String, whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME): List<AssetTokenLocal>
+
+    @Query(QUERY_ASSET_TOKEN_ACTIVE)
+    fun subscribeAssetsActive(address: String, whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME): Flow<List<AssetTokenLocal>>
+
+    @Query("select * from assets inner join tokens on tokens.id = assets.tokenId where assets.accountAddress = :address and tokens.id = :tokenId")
+    fun subscribeAsset(address: String, tokenId: String): Flow<AssetTokenLocal>
 
     @Query(QUERY_ASSET_TOKEN)
     suspend fun getAssets(address: String): List<AssetTokenLocal>

@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.common.base
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.LayoutRes
@@ -15,17 +14,10 @@ import androidx.lifecycle.LiveData
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.EventObserver
-import javax.inject.Inject
 
 abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Fragment(layoutRes) {
 
-    @Inject
-    protected open lateinit var viewModel: T
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        inject()
-    }
+    abstract val viewModel: T
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -66,8 +58,6 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
             .setPositiveButton(android.R.string.ok) { _, _ -> }
             .show()
     }
-
-    abstract fun inject()
 
     fun <V> LiveData<V>.observe(observer: (V) -> Unit) {
         observe(viewLifecycleOwner, observer)

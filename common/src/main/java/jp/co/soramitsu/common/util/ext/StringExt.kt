@@ -8,7 +8,7 @@ package jp.co.soramitsu.common.util.ext
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.style.RelativeSizeSpan
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.SoraColoredClickableSpan
 import java.math.BigDecimal
 import java.util.Locale

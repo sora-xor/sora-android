@@ -6,10 +6,9 @@
 package jp.co.soramitsu.feature_main_impl.domain
 
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.Language
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -20,9 +19,7 @@ class MainInteractor @Inject constructor(
 ) {
 
     suspend fun getMnemonic(): String {
-        return credentialsRepository.retrieveMnemonic(userRepository.getCurSoraAccount()).ifEmpty {
-            throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
-        }
+        return credentialsRepository.retrieveMnemonic(userRepository.getCurSoraAccount())
     }
 
     suspend fun voteForReferendum(referendumId: String, votes: Long) {
@@ -38,9 +35,7 @@ class MainInteractor @Inject constructor(
         return userRepository.getCurSoraAccount().substrateAddress
     }
 
-    suspend fun getAppVersion(): String {
-        return userRepository.getAppVersion()
-    }
+    fun getAppVersion(): String = OptionsProvider.CURRENT_VERSION_NAME
 
     suspend fun getInviteCode(): String {
         return userRepository.getParentInviteCode()
@@ -76,6 +71,12 @@ class MainInteractor @Inject constructor(
 
     fun flowSoraAccountsList(): Flow<List<SoraAccount>> =
         userRepository.flowSoraAccountsList()
+
+    suspend fun soraAccountsList(): List<SoraAccount> =
+        userRepository.soraAccountsList()
+
+    suspend fun getSoraAccountsCount(): Int =
+        userRepository.getSoraAccountsCount()
 
     fun flowCurSoraAccount(): Flow<SoraAccount> =
         userRepository.flowCurSoraAccount()

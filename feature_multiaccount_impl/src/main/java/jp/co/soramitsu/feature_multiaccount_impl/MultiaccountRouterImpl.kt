@@ -7,36 +7,28 @@ package jp.co.soramitsu.feature_multiaccount_impl
 
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.presentation.args.accountName
+import jp.co.soramitsu.common.presentation.args.soraAccount
+import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.MultiaccountRouter
-import javax.inject.Inject
 
-class MultiaccountRouterImpl @Inject constructor() : MultiaccountRouter {
+class MultiaccountRouterImpl : MultiaccountRouter {
 
-    private var navController: NavController? = null
-
-    override fun attachNavController(navController: NavController) {
-        this.navController = navController
+    override fun showMnemonic(navController: NavController?, accountName: String) {
+        navController?.navigate(
+            R.id.mnemonicFragment,
+            withArgs {
+                this.accountName = accountName
+            }
+        )
     }
 
-    override fun detachNavController(navController: NavController) {
-        if (this.navController == navController) {
-            this.navController = null
-        }
-    }
-
-    override fun showMnemonic() {
-        navController?.navigate(R.id.mnemonicFragment)
-    }
-
-    override fun onBackButtonPressed() {
-        navController?.popBackStack()
-    }
-
-    override fun showTermsScreen() {
+    override fun showTermsScreen(navController: NavController?) {
         navController?.navigate(R.id.multiaccount_nav_graph)
     }
 
-    override fun showPrivacyScreen() {
+    override fun showPrivacyScreen(navController: NavController?) {
         navController?.navigate(R.id.multiaccount_nav_graph)
         navController?.navigate(
             R.id.privacyFragment,
@@ -47,7 +39,12 @@ class MultiaccountRouterImpl @Inject constructor() : MultiaccountRouter {
         )
     }
 
-    override fun showMnemonicConfirmation() {
-        navController?.navigate(R.id.mnemonicConfirmation)
+    override fun showMnemonicConfirmation(navController: NavController?, soraAccount: SoraAccount) {
+        navController?.navigate(
+            R.id.mnemonicConfirmation,
+            withArgs {
+                this.soraAccount = soraAccount
+            }
+        )
     }
 }

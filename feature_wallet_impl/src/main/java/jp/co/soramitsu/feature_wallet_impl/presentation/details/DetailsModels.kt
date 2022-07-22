@@ -14,6 +14,26 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
+data class ReferralDetailsModel(
+    val status: String,
+    val amount: String,
+    @DrawableRes val statusIcon: Int,
+    @AttrRes val statusIconTintAttr: Int,
+    val statusText: String,
+    val date: String,
+    val time: String,
+    val fee: String,
+    val txHash: String,
+    @DrawableRes val txHashIcon: Int,
+    val blockHash: String,
+    @DrawableRes val blockHashIcon: Int,
+    val from: String,
+    @DrawableRes val tokenIcon: Int,
+    val ref: String? = null,
+    val refValue: String? = null,
+) : Parcelable
+
+@Parcelize
 data class TransferDetailsModel(
     val transferType: TransactionTransferType,
     val amount1: String,

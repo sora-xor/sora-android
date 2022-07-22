@@ -12,20 +12,21 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
+import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentExtrinsicDetailsBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class ExtrinsicDetailsFragment :
     BaseFragment<ExtrinsicDetailsViewModel>(R.layout.fragment_extrinsic_details) {
 
@@ -36,19 +37,12 @@ class ExtrinsicDetailsFragment :
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var vmf: ExtrinsicDetailsViewModel.ExtrinsicDetailsViewModelFactory
     private val viewBinding by viewBinding(FragmentExtrinsicDetailsBinding::bind)
 
-    override fun inject() {
-        val txHash = requireArguments().getString(ARG_TX_HASH, "")
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .transactionDetailsComponentBuilder()
-            .withFragment(this)
-            .withTxHash(txHash)
-            .build()
-            .inject(this)
+    override val viewModel: ExtrinsicDetailsViewModel by viewModels {
+        CustomViewModelFactory { vmf.create(requireArguments().getString(ARG_TX_HASH, "")) }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -58,6 +52,17 @@ class ExtrinsicDetailsFragment :
         initListeners()
         viewModel.details.observe {
             when (it) {
+                is ReferralDetailsModel -> {
+                    childFragmentManager.beginTransaction()
+                        .replace(
+                            viewBinding.fcvDetails.id,
+                            ReferralDetailsFragment::class.java,
+                            ReferralDetailsFragment.createBundle(it),
+                            ""
+                        )
+                        .disallowAddToBackStack()
+                        .commit()
+                }
                 is TransferDetailsModel -> {
                     childFragmentManager.beginTransaction()
                         .replace(

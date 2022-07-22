@@ -8,16 +8,17 @@ package jp.co.soramitsu.feature_main_impl.presentation.passphrase
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.interfaces.WithPreloader
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class PassphraseViewModel(
+@HiltViewModel
+class PassphraseViewModel @Inject constructor(
     private val interactor: MainInteractor,
-    private val preloader: WithPreloader
-) : BaseViewModel(), WithPreloader by preloader {
+) : BaseViewModel() {
 
     private var mnemonic: String? = null
 

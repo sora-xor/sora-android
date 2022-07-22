@@ -6,11 +6,11 @@
 package jp.co.soramitsu.feature_onboarding_impl.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
+import androidx.navigation.NavController
 import jp.co.soramitsu.common.domain.InvitationHandler
+import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -35,13 +35,16 @@ class OnboardingViewModelTest {
     private lateinit var invitationHandler: InvitationHandler
 
     @Mock
-    private lateinit var runtime: RuntimeManager
+    private lateinit var multiaccountStarter: MultiaccountStarter
+
+    @Mock
+    private lateinit var navController: NavController
 
     private lateinit var onboardingViewModel: OnboardingViewModel
 
     @Before
-    fun setUp() = runBlockingTest {
-        onboardingViewModel = OnboardingViewModel(invitationHandler, runtime)
+    fun setUp() {
+        onboardingViewModel = OnboardingViewModel(invitationHandler, multiaccountStarter)
     }
 
     @Test
@@ -49,5 +52,19 @@ class OnboardingViewModelTest {
         onboardingViewModel.startedWithInviteAction()
 
         verify(invitationHandler).invitationApplied()
+    }
+
+    @Test
+    fun `sign up clicked EXPECT start create account flow`() {
+        onboardingViewModel.onSignUpClicked(navController)
+
+        verify(multiaccountStarter).startCreateAccount(navController)
+    }
+
+    @Test
+    fun `recovery clicked EXPECT start recovery account flow`() {
+        onboardingViewModel.onRecoveryClicked(navController)
+
+        verify(multiaccountStarter).startRecoveryAccount(navController)
     }
 }

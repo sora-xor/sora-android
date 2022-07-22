@@ -10,27 +10,31 @@ import android.os.Bundle
 import android.text.method.LinkMovementMethod
 import android.view.View
 import android.widget.TextView
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.ncorti.slidetoact.SlideToActView
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.highlightWords
 import jp.co.soramitsu.common.util.ext.showBrowser
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentPolkaSwapInfoBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class PolkaSwapInfoFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment_polka_swap_info) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
     private val binding by viewBinding(FragmentPolkaSwapInfoBinding::bind)
+
+    private val vm: PolkaSwapViewModel by viewModels()
+    override val viewModel: PolkaSwapViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -100,16 +104,5 @@ class PolkaSwapInfoFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment
                 getString(if (it) R.string.common_hide else R.string.common_show)
             binding.sbtnPolkaswapInfo.resetSlider()
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .polkaswapComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 }

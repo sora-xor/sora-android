@@ -14,7 +14,8 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -60,7 +61,8 @@ class ClaimViewModelTest {
     }
 
     @Test
-    fun `check init`() = runBlockingTest {
+    fun `check init`() = runTest {
+        advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
 
@@ -74,9 +76,10 @@ class ClaimViewModelTest {
     }
 
     @Test
-    fun `next click`() = runBlockingTest {
+    fun `next click`() = runTest {
         given(walletInteractor.needsMigration()).willReturn(false)
         viewModel.checkMigrationIsAlreadyFinished()
+        advanceUntilIdle()
         verify(router, times(2)).popBackStackFragment()
     }
 }

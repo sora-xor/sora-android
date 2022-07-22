@@ -7,8 +7,14 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic_confirma
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.interfaces.WithPreloader
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -16,15 +22,31 @@ import jp.co.soramitsu.common.util.ext.map
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
-import jp.co.soramitsu.feature_multiaccount_impl.presentation.MultiaccountRouter
 import kotlinx.coroutines.launch
 
-class MnemonicConfirmationViewModel(
+class MnemonicConfirmationViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val deviceVibrator: DeviceVibrator,
-    private val router: MultiaccountRouter,
-    private val preloader: WithPreloader
-) : BaseViewModel(), WithPreloader by preloader {
+    private val withProgress: WithProgress,
+    @Assisted private val soraAccount: SoraAccount
+) : BaseViewModel(), WithProgress by withProgress {
+
+    @AssistedFactory
+    interface Factory {
+        fun create(soraAccount: SoraAccount): MnemonicConfirmationViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        fun provideFactory(
+            factory: Factory,
+            soraAccount: SoraAccount
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return factory.create(soraAccount) as T
+            }
+        }
+    }
 
     var mnemonicList = emptyList<String>()
 
@@ -48,20 +70,16 @@ class MnemonicConfirmationViewModel(
     private val _matchingMnemonicErrorAnimationEvent = SingleLiveEvent<Unit>()
     val matchingMnemonicErrorAnimationEvent: LiveData<Unit> = _matchingMnemonicErrorAnimationEvent
 
-    private val _showMainScreen = SingleLiveEvent<Unit>()
-    val showMainScreen: LiveData<Unit> = _showMainScreen
+    private val _showMainScreen = SingleLiveEvent<Boolean>()
+    val showMainScreen: LiveData<Boolean> = _showMainScreen
 
     init {
         viewModelScope.launch {
-            mnemonicList = interactor.getMnemonic().run {
+            mnemonicList = interactor.getMnemonic(soraAccount).run {
                 split(" ").toList()
             }
             _shuffledMnemonicLiveData.value = mnemonicList.shuffled()
         }
-    }
-
-    fun homeButtonClicked() {
-        router.onBackButtonPressed()
     }
 
     fun resetConfirmationClicked() {
@@ -111,8 +129,12 @@ class MnemonicConfirmationViewModel(
 
     private fun proceed() {
         viewModelScope.launch {
+            showProgress()
+            interactor.createUser(soraAccount)
             interactor.saveRegistrationStateFinished()
-            _showMainScreen.call()
+            val multiAccount = interactor.isMultiAccount()
+            hideProgress()
+            _showMainScreen.value = multiAccount
         }
     }
 

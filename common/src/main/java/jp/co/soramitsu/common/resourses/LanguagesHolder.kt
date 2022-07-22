@@ -20,7 +20,7 @@ object LanguagesHolder {
     private val FINNISH = Language("fi_FI", R.string.common_finnish, R.string.common_finnish_native)
     private val FILLIPINO = Language("fil", R.string.common_filipino, R.string.common_filipino_native)
     private val CROATIAN = Language("hr", R.string.common_croatian, R.string.common_croatian_native)
-    private val INDONESIAN = Language("id", R.string.common_indonesian, R.string.common_indonesian_native)
+    private val INDONESIAN = Language("in", R.string.common_indonesian, R.string.common_indonesian_native)
     private val ITALIAN = Language("it_IT", R.string.common_italian, R.string.common_italian_native)
     private val GERMAN = Language("de_DE", R.string.common_german, R.string.common_german_native)
     private val NORWEGIAN = Language("no", R.string.common_norwegian, R.string.common_norwegian_native)

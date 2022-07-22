@@ -7,45 +7,41 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation.personal_info
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.interfaces.WithProgress
+import androidx.navigation.NavController
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.MultiaccountRouter
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class PersonalInfoViewModel(
-    private val interactor: MultiaccountInteractor,
-    private val router: MultiaccountRouter,
-    private val progress: WithProgress
-) : BaseViewModel(), WithProgress by progress {
+@HiltViewModel
+class PersonalInfoViewModel @Inject constructor(
+    private val router: MultiaccountRouter
+) : BaseViewModel() {
 
     private val _screenshotAlertDialogEvent = SingleLiveEvent<Unit>()
     val screenshotAlertDialogEvent: LiveData<Unit> = _screenshotAlertDialogEvent
 
-    fun register(accountName: String) {
+    private var accountName: String = ""
+
+    fun register(name: String) {
         viewModelScope.launch {
-            showProgress()
-            interactor.createUser(accountName)
-            hideProgress()
+            accountName = name
             _screenshotAlertDialogEvent.trigger()
         }
     }
 
-    fun backButtonClick() {
-        router.onBackButtonPressed()
+    fun screenshotAlertOkClicked(navController: NavController) {
+        router.showMnemonic(navController, accountName)
     }
 
-    fun screenshotAlertOkClicked() {
-        router.showMnemonic()
+    fun showTermsScreen(navController: NavController) {
+        router.showTermsScreen(navController)
     }
 
-    fun showTermsScreen() {
-        router.showTermsScreen()
-    }
-
-    fun showPrivacyScreen() {
-        router.showPrivacyScreen()
+    fun showPrivacyScreen(navController: NavController?) {
+        router.showPrivacyScreen(navController)
     }
 }

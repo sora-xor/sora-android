@@ -6,12 +6,14 @@
 package jp.co.soramitsu.sora.splash.domain
 
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class MigrationManager @Inject constructor(
     private val userRepository: UserRepository,
     private val credentialsRepository: CredentialsRepository

@@ -34,22 +34,44 @@ class PoolAdapter(
     private val numbersFormatter: NumbersFormatter
 ) : ListAdapter<PoolModel, PoolViewHolder>(DiffCallback) {
 
+    private val stateList = mutableMapOf<String, Boolean>()
+
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): PoolViewHolder {
         return PoolViewHolder(
             LayoutInflater.from(viewGroup.context).inflate(R.layout.item_pool, viewGroup, false),
-            onCollapseTriggered,
+            onExpandTriggered = {
+                stateList[it] = true
+            },
+            onCollapseTriggered = {
+                stateList[it] = false
+                onCollapseTriggered.invoke()
+            },
             numbersFormatter
         )
     }
 
     override fun onBindViewHolder(poolViewHolder: PoolViewHolder, position: Int) {
-        poolViewHolder.bind(getItem(position), debounceClickHandler, onAddLiquidity, onRemoveLiquidity)
+        val item = getItem(position)
+        poolViewHolder.bind(
+            item,
+            stateList[item.tokenTo.id]
+                ?: false,
+            debounceClickHandler, onAddLiquidity, onRemoveLiquidity
+        )
+    }
+
+    override fun submitList(list: List<PoolModel>?) {
+        list?.forEach {
+            stateList.getOrPut(it.tokenTo.id) { false }
+        }
+        super.submitList(list)
     }
 }
 
 class PoolViewHolder(
     itemView: View,
-    val onCollapseTriggered: () -> Unit,
+    val onExpandTriggered: (String) -> Unit,
+    val onCollapseTriggered: (String) -> Unit,
     val numbersFormatter: NumbersFormatter
 ) : RecyclerView.ViewHolder(itemView) {
 
@@ -99,17 +121,19 @@ class PoolViewHolder(
         }
     }
 
-    private fun handleClick() {
+    private fun handleClick(id: String) {
         if (chevronIconButton.tag == true) {
             collapseView()
-            onCollapseTriggered()
+            onCollapseTriggered(id)
         } else {
             expandView()
+            onExpandTriggered(id)
         }
     }
 
     fun bind(
         pool: PoolModel,
+        expandedState: Boolean,
         debounceClickHandler: DebounceClickHandler,
         onAddLiquidity: (Token, Token) -> Unit,
         onRemoveLiquidity: (Token, Token) -> Unit
@@ -137,7 +161,8 @@ class PoolViewHolder(
             numbersFormatter.formatBigDecimal(
                 pool.strategicBonusApy,
                 POOL_SHARE_PRECISION
-            )}%"
+            )
+            }%"
             apyTitle.tag = true
         } else {
             apyTitle.tag = false
@@ -147,11 +172,11 @@ class PoolViewHolder(
         }
 
         selectablePartWrapper.setDebouncedClickListener(debounceClickHandler) {
-            handleClick()
+            handleClick(pool.tokenTo.id)
         }
 
         chevronIconButton.setDebouncedClickListener(debounceClickHandler) {
-            handleClick()
+            handleClick(pool.tokenTo.id)
         }
 
         addButton.setDebouncedClickListener(debounceClickHandler) {
@@ -160,6 +185,12 @@ class PoolViewHolder(
 
         removeButton.setDebouncedClickListener(debounceClickHandler) {
             onRemoveLiquidity(pool.tokenFrom, pool.tokenTo)
+        }
+
+        if (expandedState) {
+            expandView()
+        } else {
+            collapseView()
         }
     }
 }

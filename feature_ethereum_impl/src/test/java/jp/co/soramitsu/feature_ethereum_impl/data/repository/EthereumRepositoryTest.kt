@@ -6,9 +6,7 @@
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.domain.Serializer
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.dao.TransferTransactionDao
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
@@ -25,10 +23,7 @@ import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runBlockingTest
-import org.bouncycastle.util.encoders.Hex
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -40,6 +35,7 @@ import org.mockito.BDDMockito.verify
 import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.spongycastle.util.encoders.Hex
 import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
 import org.web3j.protocol.core.RemoteCall
@@ -70,9 +66,6 @@ class EthereumRepositoryTest {
 
     @Mock
     private lateinit var ethereumCredentialsMapper: EthereumCredentialsMapper
-
-    @Mock
-    private lateinit var serializer: Serializer
 
     @Mock
     private lateinit var contractApiProvider: ContractsApiProvider
@@ -128,7 +121,6 @@ class EthereumRepositoryTest {
             ethereumCredentialsMapper,
             web3jProvider,
             web3jBip32Crypto,
-            serializer,
             contractApiProvider,
             etherWeiConverter,
             db,
@@ -138,7 +130,6 @@ class EthereumRepositoryTest {
 
     @Test
     fun `transfer Xor ERC20 transfer called`() {
-        val transactionDao = mock(TransferTransactionDao::class.java)
         val remoteCall = mock(RemoteCall::class.java)
         val transactionReceipt = mock(TransactionReceipt::class.java)
 
@@ -160,7 +151,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `get eth registration state`() = runBlockingTest {
+    fun `get eth registration state`() = runTest {
         val state = EthRegisterState(EthRegisterState.State.NONE, "")
         given(ethereumDatasource.getEthRegisterState()).willReturn(state)
 
@@ -169,7 +160,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `registration state called`() = runBlockingTest {
+    fun `registration state called`() = runTest {
         val operationId = "operationId"
         val ethRegisterState = EthRegisterState(EthRegisterState.State.IN_PROGRESS, operationId)
 
@@ -179,7 +170,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `registration completed called`() = runBlockingTest {
+    fun `registration completed called`() = runTest {
         val operationId = "operationId"
         val ethRegisterState = EthRegisterState(EthRegisterState.State.REGISTERED, operationId)
 
@@ -189,7 +180,7 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `registration failed called`() = runBlockingTest {
+    fun `registration failed called`() = runTest {
         val operationId = "operationId"
         val ethRegisterState = EthRegisterState(EthRegisterState.State.FAILED, operationId)
 
@@ -231,14 +222,14 @@ class EthereumRepositoryTest {
     }
 
     @Test
-    fun `get eth credentials from cache called`() = runBlockingTest {
+    fun `get eth credentials from cache called`() = runTest {
         given(ethereumDatasource.retrieveEthereumCredentials()).willReturn(ethereumCredentials)
 
         assertEquals(ethereumCredentials, ethereumRepository.getEthCredentials(mnemonic))
     }
 
     @Test
-    fun `get eth credentials called`() = runBlockingTest {
+    fun `get eth credentials called`() = runTest {
         val masterKeypair = Bip32ECKeyPair(BigInteger.ONE, BigInteger.ONE, 0, seed, null)
         val childKeypair =
             Bip32ECKeyPair(ethereumCredentials.privateKey, BigInteger.TEN, 1, seed, masterKeypair)

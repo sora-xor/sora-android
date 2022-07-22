@@ -5,8 +5,7 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
-import jp.co.soramitsu.common.domain.HealthChecker
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
@@ -18,7 +17,6 @@ import java.math.BigInteger
 class EthereumInteractorImpl(
     private val ethereumRepository: EthereumRepository,
     private val credentialsRepository: CredentialsRepository,
-    private val healthChecker: HealthChecker
 ) : EthereumInteractor {
 
     override fun transferValERC20(to: String, amount: BigDecimal) {

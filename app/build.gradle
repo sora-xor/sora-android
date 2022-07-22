@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
@@ -28,8 +29,8 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            //shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro', 'proguard-rules-noobfuscation.pro'
         }
         debug {
@@ -73,6 +74,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        buildConfig true
     }
     packagingOptions {
         resources {
@@ -125,27 +127,34 @@ android {
     }
 }
 
+hilt {
+    enableAggregatingTask = true
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(":core_di")
     implementation project(":common")
-    implementation project(':core_db')
+    implementation project(":core_db")
     implementation project(":feature_onboarding_api")
     implementation project(":feature_onboarding_impl")
     implementation project(":feature_main_api")
     implementation project(":feature_main_impl")
     implementation project(":feature_multiaccount_api")
     implementation project(":feature_multiaccount_impl")
+    implementation project(":feature_referral_api")
+    implementation project(":feature_referral_impl")
     implementation project(":feature_account_api")
     implementation project(":feature_account_impl")
-    implementation project(':feature_ethereum_api')
-    implementation project(':feature_ethereum_impl')
+    implementation project(":feature_ethereum_api")
+    implementation project(":feature_ethereum_impl")
     implementation project(":feature_votable_api")
     implementation project(":feature_votable_impl")
     implementation project(":feature_wallet_api")
     implementation project(":feature_wallet_impl")
     implementation project(":feature_notification_api")
     implementation project(":feature_notification_impl")
+    implementation project(":sorasubstrate")
+    implementation project(":soracrypro")
 
     implementation kotlinDep
 
@@ -158,57 +167,42 @@ dependencies {
     implementation navigationUiDep
 
     implementation neumorphismDep
+    implementation emojiDep
 
     implementation lottieDep
 
-    implementation loggerDep
+    implementation timberDep
 
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
+    implementation hiltWorkManagerDep
+    kapt hiltWorkManagerKaptDep
 
-    implementation lifecycleKtxDep
-    implementation lifecycleExtDep
+    implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
 
     implementation platform(firebaseBomDep)
-    implementation firebaseMessagingDep
     implementation crashlyticsDep
-    implementation googleAnalyticsDep
 
     implementation multidexDep
 
-    //implementation irohaDep
-
-    //implementation soraDep
-    implementation novaCryptoDep
-    implementation fearlessLibDep
+    implementation xNetworkingDep
     implementation webSocketLibDep
-
-    implementation shimmerDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 
-    implementation retrofitDep
-    implementation gsonConvertedDep
-
-    implementation (crashlyticsDep) {
-        transitive = true
-    }
-
+    implementation gsonDep
+    
     // Tests
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation mockkDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
     testImplementation project(":test_shared")
+}
+
+kapt {
+    correctErrorTypes true
 }
 
 apply plugin: 'com.google.gms.google-services'

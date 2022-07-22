@@ -6,32 +6,24 @@
 package jp.co.soramitsu.sora
 
 import android.content.Context
-import android.content.res.Configuration
+import androidx.hilt.work.HiltWorkerFactory
 import androidx.multidex.MultiDexApplication
+import androidx.work.Configuration
 import com.google.firebase.FirebaseApp
-import com.orhanobut.logger.Logger
-import com.orhanobut.logger.PrettyFormatStrategy
-import jp.co.soramitsu.common.data.network.NetworkApi
-import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
-import jp.co.soramitsu.common.di.api.CommonApi
-import jp.co.soramitsu.common.di.api.FeatureContainer
+import com.vanniktech.emoji.EmojiManager
+import com.vanniktech.emoji.google.GoogleEmojiProvider
+import dagger.hilt.android.HiltAndroidApp
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.logger.DiskLoggerAdapter
-import jp.co.soramitsu.common.logger.LoggerAdapter
 import jp.co.soramitsu.common.resourses.ContextManager
-import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.sora.di.app.AppComponent
-import jp.co.soramitsu.sora.di.app.DaggerAppComponent
-import jp.co.soramitsu.sora.di.app.FeatureHolderManager
+import jp.co.soramitsu.common.util.BuildType
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import timber.log.Timber
 import javax.inject.Inject
 
-const val TAG = "SORA"
-
-class SoraApp : MultiDexApplication(), FeatureContainer {
-
-    @Inject
-    lateinit var featureHolderManager: FeatureHolderManager
+@HiltAndroidApp
+open class SoraApp : MultiDexApplication(), Configuration.Provider {
 
     @Inject
     lateinit var connectionManager: ConnectionManager
@@ -39,61 +31,49 @@ class SoraApp : MultiDexApplication(), FeatureContainer {
     @Inject
     lateinit var fileManager: FileManager
 
-    private lateinit var appComponent: AppComponent
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
 
     override fun attachBaseContext(base: Context) {
-        val contextManager = ContextManager.getInstanceOrInit(base, LanguagesHolder)
-        super.attachBaseContext(contextManager.setLocale(base))
+        super.attachBaseContext(ContextManager.setLocale(base))
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
+    override fun getWorkManagerConfiguration(): Configuration =
+        Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
-        val contextManager = ContextManager.getInstanceOrInit(this, LanguagesHolder)
-        contextManager.setLocale(this)
+        ContextManager.setLocale(this)
     }
 
     override fun onCreate() {
         super.onCreate()
-        val contextManger = ContextManager.getInstanceOrInit(this, LanguagesHolder)
-
-        appComponent = DaggerAppComponent
-            .builder()
-            .application(this)
-            .contextManager(contextManger)
-            .build()
-
-        appComponent.inject(this)
 
         initLogger()
 
         FirebaseApp.initializeApp(this)
 
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
+        OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME
         OptionsProvider.APPLICATION_ID = BuildConfig.APPLICATION_ID
+        EmojiManager.install(GoogleEmojiProvider())
     }
 
     private fun initLogger() {
-        val formatStrategy = PrettyFormatStrategy.newBuilder()
-            .tag(TAG)
-            .build()
-
-        Logger.addLogAdapter(LoggerAdapter(formatStrategy))
-        Logger.addLogAdapter(DiskLoggerAdapter(fileManager.logStorageDir))
-    }
-
-    override fun <T> getFeature(key: Class<*>): T {
-        return featureHolderManager.getFeature<T>(key)!!
-    }
-
-    override fun releaseFeature(key: Class<*>) {
-        featureHolderManager.releaseFeature(key)
-    }
-
-    override fun commonApi(): CommonApi {
-        return appComponent
-    }
-
-    override fun networkApi(): NetworkApi {
-        return appComponent
+        if (BuildUtils.isBuildType(BuildType.FIREBASE, BuildType.DEBUG)) {
+            Timber.plant(object : Timber.DebugTree() {
+                override fun createStackElementTag(element: StackTraceElement): String {
+                    return "SORA_LOG: ${Thread.currentThread().name}"
+                }
+            })
+            try {
+                Runtime.getRuntime().exec("logcat -f ${fileManager.logStorageDir} -v threadtime -r ${1024 * 4} -n 5")
+            } catch (t: Throwable) {
+                Timber.e(t)
+            }
+            Timber.d("logger has been started ${BuildConfig.BUILD_TYPE} ${BuildConfig.FLAVOR} ${BuildConfig.VERSION_NAME}")
+        }
     }
 }

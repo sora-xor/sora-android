@@ -8,56 +8,68 @@ package jp.co.soramitsu.feature_wallet_api.domain.model
 import jp.co.soramitsu.common.domain.Token
 import java.math.BigDecimal
 
-sealed class Transaction(
+class TransactionsInfo(
+    val transactions: List<Transaction>,
+    val endReached: Boolean,
+)
+
+class TransactionBase(
     val txHash: String,
     val blockHash: String? = null,
     val fee: BigDecimal,
-    val status: TransactionStatus,
+    var status: TransactionStatus,
     val timestamp: Long,
-    val successStatus: Boolean? = null,
+)
+
+sealed class Transaction(
+    val base: TransactionBase,
 ) {
 
+    class ReferralBond(
+        base: TransactionBase,
+        val amount: BigDecimal,
+        val token: Token,
+    ) : Transaction(base)
+
+    class ReferralUnbond(
+        base: TransactionBase,
+        val amount: BigDecimal,
+        val token: Token,
+    ) : Transaction(base)
+
+    class ReferralSetReferrer(
+        base: TransactionBase,
+        val who: String,
+        val myReferrer: Boolean,
+        val token: Token,
+    ) : Transaction(base)
+
     class Transfer(
-        txHash: String,
-        blockHash: String?,
-        fee: BigDecimal,
-        status: TransactionStatus,
-        timestamp: Long,
-        successStatus: Boolean?,
+        base: TransactionBase,
         val amount: BigDecimal,
         val peer: String,
         val transferType: TransactionTransferType,
         val token: Token
-    ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
+    ) : Transaction(base)
 
     class Swap(
-        txHash: String,
-        blockHash: String?,
-        fee: BigDecimal,
-        status: TransactionStatus,
-        timestamp: Long,
-        successStatus: Boolean?,
+        base: TransactionBase,
         val tokenFrom: Token,
         val tokenTo: Token,
         val amountFrom: BigDecimal,
         val amountTo: BigDecimal,
         val market: Market,
         val lpFee: BigDecimal,
-    ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
+    ) : Transaction(base)
 
     class Liquidity(
-        txHash: String,
-        blockHash: String?,
-        fee: BigDecimal,
-        status: TransactionStatus,
-        timestamp: Long,
-        successStatus: Boolean?,
+        base: TransactionBase,
         val token1: Token,
         val token2: Token,
         val amount1: BigDecimal,
         val amount2: BigDecimal,
         val type: TransactionLiquidityType,
-    ) : Transaction(txHash, blockHash, fee, status, timestamp, successStatus)
+    ) : Transaction(base)
 }
 
 enum class TransactionStatus {

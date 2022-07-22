@@ -7,7 +7,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.assetlist
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -21,13 +26,34 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.util.mapAssetToAssetMode
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-class AssetListViewModel(
+class AssetListViewModel @AssistedInject constructor(
     private val interactor: WalletInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val router: WalletRouter,
-    private val assetListMode: AssetListMode,
-    private val hiddenAssetId: String? = null
+    @Assisted private val assetListMode: AssetListMode,
+    @Assisted private val hiddenAssetId: String? = null
 ) : BaseViewModel() {
+
+    @AssistedFactory
+    interface AssetListViewModelFactory {
+        fun create(
+            assetListMode: AssetListMode,
+            hiddenAssetId: String? = null
+        ): AssetListViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        fun provideFactory(
+            factory: AssetListViewModelFactory,
+            assetListMode: AssetListMode,
+            hiddenAssetId: String? = null
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return factory.create(assetListMode, hiddenAssetId) as T
+            }
+        }
+    }
 
     private val _displayingAssetsLiveData = MutableLiveData<List<AssetListItemModel>>()
     val displayingAssetsLiveData: LiveData<List<AssetListItemModel>> = _displayingAssetsLiveData
@@ -41,7 +67,7 @@ class AssetListViewModel(
 
     init {
         viewModelScope.launch {
-            val list = interactor.getVisibleAssets()
+            val list = interactor.getActiveAssets()
                 .map { it.mapAssetToAssetModel(numbersFormatter, balanceStyle) }
                 .filter { it.assetId != hiddenAssetId }
                 .sortedBy { it.sortOrder }

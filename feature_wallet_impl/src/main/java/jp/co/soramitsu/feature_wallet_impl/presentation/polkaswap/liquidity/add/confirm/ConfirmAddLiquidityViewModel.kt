@@ -7,8 +7,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
@@ -16,14 +20,16 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.model.ButtonState
+import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,26 +42,47 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
-import javax.inject.Inject
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-class ConfirmAddLiquidityViewModel @Inject constructor(
+class ConfirmAddLiquidityViewModel @AssistedInject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,
     private val poolsManager: PoolsManager,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
-    private val tokenFrom: Token,
-    private val tokenTo: Token,
-    private val slippageTolerance: Float,
-    private var liquidityDetails: LiquidityDetails
+    @Assisted("tokenFrom") private val tokenFrom: Token,
+    @Assisted("tokenTo") private val tokenTo: Token,
+    @Assisted private val slippageTolerance: Float,
+    @Assisted private var liquidityDetails: LiquidityDetails
 ) : BaseViewModel() {
 
-    private companion object {
-        const val SHARE_OF_POOL_FORMAT = "%s%%"
-        const val DEFAULT_PRECISION = 8
+    @AssistedFactory
+    interface ConfirmAddLiquidityViewModelFactory {
+        fun create(
+            @Assisted("tokenFrom") tokenFrom: Token,
+            @Assisted("tokenTo") tokenTo: Token,
+            slippageTolerance: Float,
+            liquidityDetails: LiquidityDetails
+        ): ConfirmAddLiquidityViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        fun provideFactory(
+            factory: ConfirmAddLiquidityViewModelFactory,
+            tokenFrom: Token,
+            tokenTo: Token,
+            slippageTolerance: Float,
+            liquidityDetails: LiquidityDetails,
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return factory.create(tokenFrom, tokenTo, slippageTolerance, liquidityDetails) as T
+            }
+        }
+        private const val SHARE_OF_POOL_FORMAT = "%s%%"
+        private const val DEFAULT_PRECISION = 8
     }
 
     private val onChangedProperty = SuspendableProperty<Boolean>(1)
@@ -148,7 +175,7 @@ class ConfirmAddLiquidityViewModel @Inject constructor(
             .launchIn(viewModelScope)
 
         onChangedProperty.observe()
-            .debounce(700)
+            .debounce(ViewHelper.debounce)
             .catch {
                 onError(it)
             }
@@ -159,7 +186,7 @@ class ConfirmAddLiquidityViewModel @Inject constructor(
 
         viewModelScope.launch {
             polkaswapInteractor.getPoolStrategicBonusAPY(tokenTo.id)?.let { strategicBonusAPY ->
-                _strategicBonusAPY.value = numbersFormatter.formatBigDecimal(
+                _strategicBonusAPY.value = numbersFormatter.format(
                     strategicBonusAPY,
                     DEFAULT_PRECISION
                 )
@@ -172,11 +199,11 @@ class ConfirmAddLiquidityViewModel @Inject constructor(
 
     private fun subscribeToAssets() {
         viewModelScope.launch {
-            walletInteractor.subscribeVisibleAssetsOfCurAccount()
+            walletInteractor.subscribeActiveAssetsOfCurAccount()
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest { assets ->
-                    assets.find { it.token.id == OptionsProvider.feeAssetId }?.let { asset ->
+                    assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let { asset ->
                         balanceFrom = asset.balance.transferable
                         onChangedProperty.set(false)
                     }
@@ -210,7 +237,8 @@ class ConfirmAddLiquidityViewModel @Inject constructor(
 
     private fun fetchPoolData() {
         viewModelScope.launch {
-            liquidityData = polkaswapInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
+            liquidityData =
+                polkaswapInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
         }
     }
 

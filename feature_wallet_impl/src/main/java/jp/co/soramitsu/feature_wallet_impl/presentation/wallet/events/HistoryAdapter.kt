@@ -9,7 +9,6 @@ import android.graphics.drawable.Animatable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.presentation.AssetBalanceData
@@ -22,10 +21,12 @@ import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.common.util.ext.showOrHide
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionHeaderBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemInBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemOutBinding
+import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionItemReferralBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionLiquidityAddBinding
 import jp.co.soramitsu.feature_wallet_impl.databinding.EventSectionLiquiditySwapBinding
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
@@ -34,17 +35,30 @@ class HistoryAdapter(
     private val debounceClickHandler: DebounceClickHandler,
     private val clickListener: (String) -> Unit
 ) :
-    PagingDataAdapter<EventUiModel, EventItemViewHolder>(EventUiModelDiffCallback) {
+    RecyclerView.Adapter<EventItemViewHolder>() {
+
+    private val items = mutableListOf<EventUiModel>()
+
+    fun update(newEvents: List<EventUiModel>) {
+        val result = DiffUtil.calculateDiff(EventUiModelDiffCallback(items, newEvents))
+        items.clear()
+        items.addAll(newEvents)
+        result.dispatchUpdatesTo(this)
+    }
+
+    fun itemsCount() = items.size
+
+    override fun getItemCount(): Int = items.size
 
     override fun getItemViewType(position: Int): Int =
-        when (getItem(position)) {
+        when (items[position]) {
             is EventUiModel.EventTimeSeparatorUiModel -> R.layout.event_section_header
             is EventUiModel.EventTxUiModel.EventTransferInUiModel -> R.layout.event_section_item_in
             is EventUiModel.EventTxUiModel.EventTransferOutUiModel -> R.layout.event_section_item_out
             is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel -> R.layout.event_section_liquidity_swap
             is EventUiModel.EventTxUiModel.EventLiquidityAddUiModel -> R.layout.event_section_liquidity_add
-            null -> R.layout.event_section_header
-            else -> throw IllegalStateException("Unknown view type ${getItem(position)?.javaClass?.simpleName}")
+            is EventUiModel.EventUiLoading -> R.layout.event_section_load_state
+            is EventUiModel.EventTxUiModel.EventReferralProgramUiModel -> R.layout.event_section_item_referral
         }
 
     override fun onCreateViewHolder(
@@ -68,40 +82,80 @@ class HistoryAdapter(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.event_section_item_out, parent, false)
             )
-            else -> EventItemViewHolder.EventTransactionInViewHolder(
+            R.layout.event_section_item_in -> EventItemViewHolder.EventTransactionInViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.event_section_item_in, parent, false)
             )
+            R.layout.event_section_item_referral -> EventItemViewHolder.EventTransactionReferralViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.event_section_item_referral, parent, false)
+            )
+            R.layout.event_section_load_state -> EventItemViewHolder.EventItemLoadingViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.event_section_load_state, parent, false)
+            )
+            else -> throw IllegalArgumentException("Unsupported view type: $viewType")
         }
     }
 
     override fun onBindViewHolder(holder: EventItemViewHolder, position: Int) {
-        val eventUiModel = getItem(position)
-        if (holder is EventItemViewHolder.EventTimeSeparatorViewHolder && (eventUiModel is EventUiModel.EventTimeSeparatorUiModel || eventUiModel == null)) {
-            holder.bind(eventUiModel)
-        } else if (holder is EventItemViewHolder.EventTransactionInViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventTransferInUiModel) {
-            holder.bind(eventUiModel, debounceClickHandler, clickListener)
-        } else if (holder is EventItemViewHolder.EventTransactionOutViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventTransferOutUiModel) {
-            holder.bind(eventUiModel, debounceClickHandler, clickListener)
-        } else if (holder is EventItemViewHolder.EventLiquiditySwapViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel) {
-            holder.bind(eventUiModel, debounceClickHandler, clickListener)
-        } else if (holder is EventItemViewHolder.EventLiquidityAddViewHolder && eventUiModel is EventUiModel.EventTxUiModel.EventLiquidityAddUiModel) {
-            holder.bind(eventUiModel, debounceClickHandler, clickListener)
+        when (holder) {
+            is EventItemViewHolder.EventTimeSeparatorViewHolder -> {
+                holder.bind(items[position])
+            }
+            is EventItemViewHolder.EventTransactionInViewHolder -> {
+                holder.bind(
+                    items[position] as EventUiModel.EventTxUiModel.EventTransferInUiModel,
+                    debounceClickHandler,
+                    clickListener
+                )
+            }
+            is EventItemViewHolder.EventTransactionOutViewHolder -> {
+                holder.bind(
+                    items[position] as EventUiModel.EventTxUiModel.EventTransferOutUiModel,
+                    debounceClickHandler,
+                    clickListener
+                )
+            }
+            is EventItemViewHolder.EventTransactionReferralViewHolder -> {
+                holder.bind(
+                    items[position] as EventUiModel.EventTxUiModel.EventReferralProgramUiModel,
+                    debounceClickHandler,
+                    clickListener,
+                )
+            }
+            is EventItemViewHolder.EventLiquiditySwapViewHolder -> {
+                holder.bind(
+                    items[position] as EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel,
+                    debounceClickHandler,
+                    clickListener
+                )
+            }
+            is EventItemViewHolder.EventLiquidityAddViewHolder -> {
+                holder.bind(
+                    items[position] as EventUiModel.EventTxUiModel.EventLiquidityAddUiModel,
+                    debounceClickHandler,
+                    clickListener
+                )
+            }
         }
     }
 }
 
-object EventUiModelDiffCallback : DiffUtil.ItemCallback<EventUiModel>() {
-    override fun areContentsTheSame(oldItem: EventUiModel, newItem: EventUiModel): Boolean {
-        return oldItem == newItem
+private class EventUiModelDiffCallback(val old: List<EventUiModel>, val new: List<EventUiModel>) :
+    DiffUtil.Callback() {
+    override fun getNewListSize(): Int = new.size
+    override fun getOldListSize(): Int = old.size
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return old[oldItemPosition] == new[newItemPosition]
     }
 
-    override fun areItemsTheSame(oldItem: EventUiModel, newItem: EventUiModel): Boolean {
-        val isSameItem =
-            oldItem is EventUiModel.EventTxUiModel && newItem is EventUiModel.EventTxUiModel && oldItem.txHash == newItem.txHash
-        val isSameSeparatorItem =
-            oldItem is EventUiModel.EventTimeSeparatorUiModel && newItem is EventUiModel.EventTimeSeparatorUiModel && oldItem.title == newItem.title
-        return isSameSeparatorItem || isSameItem
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        val oldItem = old[oldItemPosition]
+        val newItem = new[newItemPosition]
+        if (oldItem is EventUiModel.EventUiLoading && newItem is EventUiModel.EventUiLoading) return true
+        if (oldItem is EventUiModel.EventTimeSeparatorUiModel && newItem is EventUiModel.EventTimeSeparatorUiModel && oldItem.title == newItem.title) return true
+        return oldItem is EventUiModel.EventTxUiModel && newItem is EventUiModel.EventTxUiModel && oldItem.txHash == newItem.txHash
     }
 }
 
@@ -129,6 +183,8 @@ private val neutralBalanceStyle = AssetBalanceStyle(
 
 sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
+    class EventItemLoadingViewHolder(view: View) : EventItemViewHolder(view)
+
     class EventLiquidityAddViewHolder(view: View) : EventItemViewHolder(view) {
 
         private val viewBinding = EventSectionLiquidityAddBinding.bind(view)
@@ -147,10 +203,10 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
                     neutralBalanceStyle
                 ) else Triple(R.string.common_remove, "+", positiveBalanceStyle)
             viewBinding.eventItemTitleTextView.setText(title)
-            viewBinding.tvAddAmount1.showOrHide(soraTransaction.success != false)
-            viewBinding.tvAddAmount2.showOrHide(soraTransaction.success != false)
-            viewBinding.tvFailed.showOrHide(soraTransaction.success == false)
-            if (soraTransaction.success != false) {
+            viewBinding.tvAddAmount1.showOrHide(soraTransaction.status != TransactionStatus.REJECTED)
+            viewBinding.tvAddAmount2.showOrHide(soraTransaction.status != TransactionStatus.REJECTED)
+            viewBinding.tvFailed.showOrHide(soraTransaction.status == TransactionStatus.REJECTED)
+            if (soraTransaction.status != TransactionStatus.REJECTED) {
                 viewBinding.tvAddAmount1.setBalance(
                     AssetBalanceData(
                         amount = "$prefix${soraTransaction.amount1.first}",
@@ -169,7 +225,7 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             viewBinding.tvHistorySwapDate.text = soraTransaction.dateTime
             viewBinding.eventStatusIconImageView2.setImageResource(soraTransaction.icon1)
             viewBinding.eventStatusIconImageView3.setImageResource(soraTransaction.icon2)
-            if (soraTransaction.pending) {
+            if (soraTransaction.status == TransactionStatus.PENDING) {
                 viewBinding.eventStatusIconImageView.hide()
                 viewBinding.eventStatusIconImageViewSp.show()
                 viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
@@ -191,7 +247,7 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             viewBinding.rootEvent.setDebouncedClickListener(debounceClickHandler) {
                 itemClickedListener.invoke(soraTransaction.txHash)
             }
-            if (soraTransaction.success == false) {
+            if (soraTransaction.status == TransactionStatus.REJECTED) {
                 viewBinding.tvAmountFrom.hide()
                 viewBinding.tvAmountTo.hide()
                 viewBinding.tvFailed.show()
@@ -217,7 +273,7 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             viewBinding.tvHistorySwapDate.text = soraTransaction.dateTime
             viewBinding.eventStatusIconImageView2.setImageResource(soraTransaction.iconFrom)
             viewBinding.eventStatusIconImageView3.setImageResource(soraTransaction.iconTo)
-            if (soraTransaction.pending) {
+            if (soraTransaction.status == TransactionStatus.PENDING) {
                 viewBinding.eventStatusIconImageView.hide()
                 viewBinding.eventStatusIconImageViewSp.show()
                 viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
@@ -244,7 +300,7 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             viewBinding.eventItemDateTextView.text = soraTransaction.peerAddress
             viewBinding.tvHistoryTransferDate.text = soraTransaction.dateTime
             viewBinding.ivHistoryTransferToken.setImageResource(soraTransaction.tokenIcon)
-            if (soraTransaction.success == false) {
+            if (soraTransaction.status == TransactionStatus.REJECTED) {
                 viewBinding.eventItemFailedTextView.show()
                 viewBinding.eventItemAmountTextView.gone()
             } else {
@@ -258,7 +314,48 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
                     )
                 )
             }
-            if (soraTransaction.pending) {
+            if (soraTransaction.status == TransactionStatus.PENDING) {
+                viewBinding.eventStatusIconImageView.hide()
+                viewBinding.eventStatusIconImageViewSp.show()
+                viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
+            } else {
+                viewBinding.eventStatusIconImageView.show()
+                viewBinding.eventStatusIconImageViewSp.hide()
+            }
+        }
+    }
+
+    class EventTransactionReferralViewHolder(containerView: View) : EventItemViewHolder(containerView) {
+
+        private val viewBinding = EventSectionItemReferralBinding.bind(containerView)
+
+        fun bind(
+            soraTransaction: EventUiModel.EventTxUiModel.EventReferralProgramUiModel,
+            debounceClickHandler: DebounceClickHandler,
+            itemClickedListener: (String) -> Unit
+        ) {
+            viewBinding.rootEvent.setDebouncedClickListener(debounceClickHandler) {
+                itemClickedListener(soraTransaction.txHash)
+            }
+
+            viewBinding.eventStatusIconImageView.setImageResource(soraTransaction.tokenIcon)
+            viewBinding.eventItemDateTextView.setText(soraTransaction.description)
+            viewBinding.tvHistoryTransferDate.text = soraTransaction.dateTime
+            if (soraTransaction.status == TransactionStatus.REJECTED) {
+                viewBinding.eventItemFailedTextView.show()
+                viewBinding.eventItemAmountTextView.gone()
+            } else {
+                viewBinding.eventItemFailedTextView.gone()
+                viewBinding.eventItemAmountTextView.show()
+                viewBinding.eventItemAmountTextView.setBalance(
+                    AssetBalanceData(
+                        amount = soraTransaction.amountFormatted.first,
+                        ticker = soraTransaction.amountFormatted.second,
+                        style = if (soraTransaction.plusAmount) positiveBalanceStyle else neutralBalanceStyle
+                    )
+                )
+            }
+            if (soraTransaction.status == TransactionStatus.PENDING) {
                 viewBinding.eventStatusIconImageView.hide()
                 viewBinding.eventStatusIconImageViewSp.show()
                 viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()
@@ -285,7 +382,7 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             viewBinding.eventItemDateTextView.text = soraTransaction.peerAddress
             viewBinding.tvHistoryTransferDate.text = soraTransaction.dateTime
             viewBinding.ivHistoryTransferToken.setImageResource(soraTransaction.tokenIcon)
-            if (soraTransaction.success == false) {
+            if (soraTransaction.status == TransactionStatus.REJECTED) {
                 viewBinding.eventItemFailedTextView.show()
                 viewBinding.eventItemAmountTextView.gone()
             } else {
@@ -299,7 +396,7 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
                     )
                 )
             }
-            if (soraTransaction.pending) {
+            if (soraTransaction.status == TransactionStatus.PENDING) {
                 viewBinding.eventStatusIconImageView.hide()
                 viewBinding.eventStatusIconImageViewSp.show()
                 viewBinding.eventStatusIconImageViewSp.drawable.safeCast<Animatable>()?.start()

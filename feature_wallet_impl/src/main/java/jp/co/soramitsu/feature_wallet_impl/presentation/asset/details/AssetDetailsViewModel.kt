@@ -10,11 +10,10 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
-import androidx.paging.map
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
@@ -27,27 +26,33 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.feature_wallet_impl.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.details.model.FrozenXorDetailsModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
-import jp.co.soramitsu.feature_wallet_impl.presentation.util.insertHistorySeparators
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.BigInteger
 
-class AssetDetailsViewModel(
+class AssetDetailsViewModel @AssistedInject constructor(
     private val interactor: WalletInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val transactionMappers: TransactionMappers,
     private val avatarGenerator: AccountAvatarGenerator,
     private val clipboardManager: ClipboardManager,
     private val progress: WithProgress,
-    private val assetId: String,
+    @Assisted private val assetId: String,
     private val qrCodeDecoder: QrCodeDecoder,
-    private val router: WalletRouter
+    private val router: WalletRouter,
+    private val transactionHistoryHandler: TransactionHistoryHandler,
 ) : BaseViewModel(), WithProgress by progress {
+
+    @AssistedFactory
+    interface AssetDetailsViewModelFactory {
+        fun create(assetId: String): AssetDetailsViewModel
+    }
 
     private val _initiateScannerLiveData = SingleLiveEvent<Unit>()
     val initiateScannerLiveData: LiveData<Unit> = _initiateScannerLiveData
@@ -98,16 +103,7 @@ class AssetDetailsViewModel(
     private val _frozenBalanceDialogEvent = SingleLiveEvent<FrozenXorDetailsModel>()
     val frozenBalanceDialogEvent: LiveData<FrozenXorDetailsModel> = _frozenBalanceDialogEvent
 
-    val transactionsFlow = interactor.getEventsFlow(assetId)
-        .catch {
-            this.emit(PagingData.empty())
-        }
-        .map { pagingData ->
-            pagingData.map { tx ->
-                transactionMappers.mapTransaction(tx)
-            }.insertHistorySeparators(transactionMappers)
-        }
-        .cachedIn(viewModelScope)
+    val historyState = transactionHistoryHandler.historyState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -132,7 +128,7 @@ class AssetDetailsViewModel(
                 _assetNameTitle.value = asset.token.name
                 _assetSymbolTitle.value = asset.token.symbol
                 _precision.value = asset.token.precision
-                if (asset.token.id == OptionsProvider.feeAssetId) {
+                if (asset.token.id == SubstrateOptionsProvider.feeAssetId) {
                     if (asset.balance.transferable != BigDecimal.ZERO) {
                         fetchBalanceForXor(asset.token.precision, asset.balance.transferable)
                     } else {
@@ -159,6 +155,14 @@ class AssetDetailsViewModel(
                 }
             }
         }
+
+        viewModelScope.launch {
+            transactionHistoryHandler.refreshHistoryEvents(assetId)
+        }
+    }
+
+    fun onMoreHistoryEventsRequested() {
+        transactionHistoryHandler.onMoreHistoryEventsRequested(viewModelScope)
     }
 
     private suspend fun fetchBalanceForXor(precision: Int, totalBalance: BigDecimal) {

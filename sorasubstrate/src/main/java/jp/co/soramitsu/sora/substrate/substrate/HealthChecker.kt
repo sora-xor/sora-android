@@ -1,0 +1,24 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
+package jp.co.soramitsu.sora.substrate.substrate
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+
+class HealthChecker(private val cm: ConnectionManager) {
+
+    private val health = MutableStateFlow<Boolean?>(null)
+
+    fun connectionErrorHandled() {
+        health.value = false
+    }
+
+    fun connectionStable() {
+        health.value = true
+    }
+
+    fun observeHealthState(): Flow<Boolean> = cm.connectionState()
+}

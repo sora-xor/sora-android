@@ -19,4 +19,8 @@ class MainStarterImpl @Inject constructor() : MainStarter {
     override fun startWithInvite(context: Context) {
         MainActivity.startWithInvite(context)
     }
+
+    override fun restartAfterAddAccount(context: Context) {
+        MainActivity.restartAfterAddAccount(context)
+    }
 }

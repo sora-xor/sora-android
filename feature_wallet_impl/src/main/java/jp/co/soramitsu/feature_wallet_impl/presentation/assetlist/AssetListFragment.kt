@@ -9,21 +9,22 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListAdapter
 import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentAssetListBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_asset_list) {
 
     companion object {
@@ -37,9 +38,22 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
         }
     }
 
+    @Inject
+    lateinit var vmf: AssetListViewModel.AssetListViewModelFactory
+
     private val mode: AssetListMode by lazy { requireArguments().get(ARG_MODE) as AssetListMode }
     private val hiddenAssetId: String? by lazy { requireArguments().getString(ARG_HIDDEN_ASSET_ID) }
     private val viewBinding by viewBinding(FragmentAssetListBinding::bind)
+
+    private val vm: AssetListViewModel by viewModels {
+        AssetListViewModel.provideFactory(
+            vmf,
+            requireArguments().get(ARG_MODE) as AssetListMode,
+            requireArguments().getString(ARG_HIDDEN_ASSET_ID)
+        )
+    }
+    override val viewModel: AssetListViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -74,19 +88,6 @@ class AssetListFragment : BaseFragment<AssetListViewModel>(R.layout.fragment_ass
             (viewBinding.rvAssetList.adapter as AssetListAdapter).submitList(it)
             viewBinding.grAssetNotFound.showOrGone(it.isEmpty())
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .assetListComponentBuilder()
-            .withFragment(this)
-            .withAssetListMode(mode)
-            .withHiddenAssetId(hiddenAssetId)
-            .build()
-            .inject(this)
     }
 
     private val queryListener = object : SearchView.OnQueryTextListener {

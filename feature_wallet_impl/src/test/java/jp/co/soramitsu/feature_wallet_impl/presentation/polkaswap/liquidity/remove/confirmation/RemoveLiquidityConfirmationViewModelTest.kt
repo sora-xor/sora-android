@@ -9,31 +9,30 @@ import android.text.SpannableString
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkStatic
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.decimalPartSized
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.NETWORK_FEE
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.TEST_ASSET
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.anyNonNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.eq
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -59,9 +58,6 @@ class RemoveLiquidityConfirmationViewModelTest {
     private lateinit var polkaswapInteractor: PolkaswapInteractor
 
     @Mock
-    private lateinit var numbersFormatter: NumbersFormatter
-
-    @Mock
     private lateinit var resourceManager: ResourceManager
 
     @Mock
@@ -78,11 +74,22 @@ class RemoveLiquidityConfirmationViewModelTest {
     private val networkFeeText = "network fee"
 
     @Before
-    fun setUp() = runBlockingTest {
-        given(polkaswapInteractor.fetchRemoveLiquidityNetworkFee(XOR_ASSET.token, TEST_ASSET.token)).willReturn(NETWORK_FEE)
-        given(walletInteractor.subscribeVisibleAssetsOfCurAccount()).willReturn(flowOf(listOf(XOR_ASSET, TEST_ASSET)))
+    fun setUp() = runTest {
+        given(
+            polkaswapInteractor.fetchRemoveLiquidityNetworkFee(
+                XOR_ASSET.token,
+                TEST_ASSET.token
+            )
+        ).willReturn(NETWORK_FEE)
+        given(walletInteractor.subscribeActiveAssetsOfCurAccount()).willReturn(
+            flowOf(
+                listOf(
+                    XOR_ASSET,
+                    TEST_ASSET
+                )
+            )
+        )
         given(polkaswapInteractor.subscribePoolsCache()).willReturn(flowOf(listOf(POOL_DATA)))
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), eq(8), eq(true))).willReturn(amountString)
         given(resourceManager.getString(R.string.remove_pool_confirmation_description)).willReturn("string %s string")
         given(resourceManager.getString(R.string.pool_share_title)).willReturn(poolShareAfterTxText)
         given(resourceManager.getString(R.string.polkaswap_sbapy)).willReturn(sbApyText)
@@ -95,28 +102,54 @@ class RemoveLiquidityConfirmationViewModelTest {
         every { any<String>().decimalPartSized() } returns SpannableString("sized")
 
         viewModel = RemoveLiquidityConfirmationViewModel(
-            router, walletInteractor, polkaswapInteractor, numbersFormatter, resourceManager
+            router, walletInteractor, polkaswapInteractor, NumbersFormatter(), resourceManager
         )
     }
 
     @Test
-    fun `set bundle args called EXPECT fromToken, fromAmount, toToken, toAmount, description`() = runBlockingTest {
-        viewModel.setBundleArgs(XOR_ASSET.token, amount, TEST_ASSET.token, amount, slippage, 10.0)
+    fun `set bundle args called EXPECT fromToken, fromAmount, toToken, toAmount, description`() =
+        runTest {
+            viewModel.setBundleArgs(
+                XOR_ASSET.token,
+                amount,
+                TEST_ASSET.token,
+                amount,
+                slippage,
+                10.0
+            )
 
-        assertEquals(viewModel.fromToken.value, XOR_ASSET.token)
-        assertEquals(viewModel.toToken.value, TEST_ASSET.token)
-        assertEquals(viewModel.fromAssetAmount.value, amountString)
-        assertEquals(viewModel.toAssetAmount.value, amountString)
-        assertEquals(viewModel.descriptionTextLiveData.value, descriptionText)
-    }
+            assertEquals(viewModel.fromToken.value, XOR_ASSET.token)
+            assertEquals(viewModel.toToken.value, TEST_ASSET.token)
+            assertEquals("1", viewModel.fromAssetAmount.value)
+            assertEquals("1", viewModel.toAssetAmount.value)
+            assertEquals(viewModel.descriptionTextLiveData.value, descriptionText)
+        }
 
     @Test
-    fun `next button clicked EXPECT polkaswapInteractor removeLiquidity is called`() = mainCoroutineRule.runBlockingTest {
-        given(polkaswapInteractor.removeLiquidity(XOR_ASSET.token, TEST_ASSET.token, 1.0.toBigDecimal(), 0.995.toBigDecimal(), 0.995.toBigDecimal(), NETWORK_FEE)).willReturn(true)
+    fun `next button clicked EXPECT polkaswapInteractor removeLiquidity is called`() = runTest {
+        given(
+            polkaswapInteractor.removeLiquidity(
+                XOR_ASSET.token,
+                TEST_ASSET.token,
+                1.0.toBigDecimal(),
+                0.995.toBigDecimal(),
+                0.995.toBigDecimal(),
+                NETWORK_FEE
+            )
+        ).willReturn(true)
         viewModel.setBundleArgs(XOR_ASSET.token, amount, TEST_ASSET.token, amount, slippage, 10.0)
+        advanceUntilIdle()
         viewModel.nextBtnClicked()
+        advanceUntilIdle()
         delay(1000)
-        verify(polkaswapInteractor).removeLiquidity(XOR_ASSET.token, TEST_ASSET.token, 1.0.toBigDecimal(), 0.995.toBigDecimal(), 0.995.toBigDecimal(), NETWORK_FEE)
+        verify(polkaswapInteractor).removeLiquidity(
+            XOR_ASSET.token,
+            TEST_ASSET.token,
+            1.0.toBigDecimal(),
+            0.995.toBigDecimal(),
+            0.995.toBigDecimal(),
+            NETWORK_FEE
+        )
         verify(router).returnToPolkaswap()
     }
 }

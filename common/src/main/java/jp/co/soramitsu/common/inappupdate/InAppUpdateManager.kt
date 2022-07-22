@@ -21,11 +21,10 @@ import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.util.ext.safeCast
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class InAppUpdateManager @Inject constructor(
+class InAppUpdateManager(
     context: Context,
     private val soraPreferences: SoraPreferences
 ) : LifecycleObserver {

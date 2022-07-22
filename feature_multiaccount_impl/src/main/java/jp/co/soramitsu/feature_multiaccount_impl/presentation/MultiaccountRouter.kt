@@ -6,20 +6,15 @@
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
 
 import androidx.navigation.NavController
+import jp.co.soramitsu.common.account.SoraAccount
 
 interface MultiaccountRouter {
 
-    fun attachNavController(navController: NavController)
+    fun showMnemonic(navController: NavController?, accountName: String)
 
-    fun detachNavController(navController: NavController)
+    fun showTermsScreen(navController: NavController?)
 
-    fun showMnemonic()
+    fun showPrivacyScreen(navController: NavController?)
 
-    fun onBackButtonPressed()
-
-    fun showTermsScreen()
-
-    fun showPrivacyScreen()
-
-    fun showMnemonicConfirmation()
+    fun showMnemonicConfirmation(navController: NavController?, soraAccount: SoraAccount)
 }

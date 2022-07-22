@@ -6,16 +6,17 @@
 package jp.co.soramitsu.feature_main_impl.presentation.language
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.presentation.language.model.LanguageItem
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -57,7 +58,7 @@ class SelectLanguageViewModelTest {
     )
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         given(interactor.getAvailableLanguagesWithSelected()).willReturn(
             Pair(
                 languages,
@@ -75,11 +76,11 @@ class SelectLanguageViewModelTest {
     }
 
     @Test
-    fun `language selected`() = runBlockingTest {
+    fun `language selected`() = runTest {
         given(interactor.changeLanguage(languages.first().iso)).willReturn(languages.first().iso)
 
         selectLanguageViewModel.languageSelected(languageItems.first())
-
+        advanceUntilIdle()
         val res = selectLanguageViewModel.languageChangedLiveData.getOrAwaitValue()
         assertEquals("ru", res)
     }

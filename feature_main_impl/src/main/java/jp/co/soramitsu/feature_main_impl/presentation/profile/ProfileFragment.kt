@@ -7,33 +7,28 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentProfileBinding
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
     private val binding by viewBinding(FragmentProfileBinding::bind)
-
-    override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
-            .profileSubComponentBuilder()
-            .withProfileFragment(this)
-            .build()
-            .inject(this)
-    }
+    private val vm: ProfileViewModel by viewModels()
+    override val viewModel: ProfileViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,11 +36,11 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
         (activity as BottomBarController).showBottomBar()
 
         binding.tvSwitchAccount.setDebouncedClickListener(debounceClickHandler) {
-            // viewModel.onSwitchAccountClicked()
+            viewModel.onSwitchAccountClicked()
         }
 
         binding.tvSwitchAccountName.setDebouncedClickListener(debounceClickHandler) {
-            // viewModel.onSwitchAccountClicked()
+            viewModel.onSwitchAccountClicked()
         }
 
         binding.profileFriendsTextView.setDebouncedClickListener(debounceClickHandler) {
@@ -56,20 +51,8 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
             viewModel.profileChangePin()
         }
 
-        binding.profilePersonalDetailsTextView.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.onPersonalDetailsClicked()
-        }
-
-        binding.profilePassphraseTextView.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.onPassphraseClick()
-        }
-
         binding.profileFaqTextView.setDebouncedClickListener(debounceClickHandler) {
             viewModel.btnHelpClicked()
-        }
-
-        binding.profileLogoutTextView.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.logoutClicked()
         }
 
         binding.profileBiometryAuthSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -92,9 +75,6 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
     }
 
     private fun initListeners() {
-        viewModel.accountName.observe {
-            binding.tvAccountNameValue.text = it.truncateUserAddress()
-        }
         viewModel.accountAddress.observe {
             binding.tvSwitchAccountName.text = it.truncateUserAddress()
         }

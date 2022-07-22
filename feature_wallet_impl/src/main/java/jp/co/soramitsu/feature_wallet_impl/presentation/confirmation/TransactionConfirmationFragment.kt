@@ -8,9 +8,10 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.confirmation
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.presentation.view.ToastDialog
@@ -18,15 +19,14 @@ import jp.co.soramitsu.common.util.ext.enable
 import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransactionConfirmationBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class TransactionConfirmationFragment :
     BaseFragment<TransactionConfirmationViewModel>(R.layout.fragment_transaction_confirmation) {
 
@@ -67,38 +67,21 @@ class TransactionConfirmationFragment :
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
+    @Inject
+    lateinit var vmf: TransactionConfirmationViewModel.Factory
+
     private lateinit var progressDialog: SoraProgressDialog
 
     private val viewBinding by viewBinding(FragmentTransactionConfirmationBinding::bind)
-
-    override fun inject() {
-        val partialAmount = requireArguments().getSerializable(KEY_PARTIAL_AMOUNT) as BigDecimal
-        val amount = requireArguments().getSerializable(KEY_AMOUNT) as BigDecimal
-        val assetId = requireArguments().getString(KEY_ASSET_ID, "")
-        val minerFee = requireArguments().getSerializable(KEY_MINER_FEE) as BigDecimal
-        val transactionFee = requireArguments().getSerializable(KEY_TRANSACTION_FEE) as BigDecimal
-        val peerFullName = requireArguments().getString(KEY_PEER_FULL_NAME, "")
-        val peerId = requireArguments().getString(KEY_PEER_ID, "")
-        val transferType = requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
-        val retrySoranetHash = requireArguments().getString(KEY_RETRY_SORANET_HASH, "")
-
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
+    override val viewModel: TransactionConfirmationViewModel by viewModels {
+        TransactionConfirmationViewModel.provideFactory(
+            vmf,
+            requireArguments().getSerializable(KEY_AMOUNT) as BigDecimal,
+            requireArguments().getSerializable(KEY_TRANSACTION_FEE) as BigDecimal,
+            requireArguments().getString(KEY_ASSET_ID, ""),
+            requireArguments().getString(KEY_PEER_ID, ""),
+            requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
         )
-            .transactionConfirmationComponentBuilder()
-            .withFragment(this)
-            .withPartialAmount(partialAmount)
-            .withAmount(amount)
-            .withMinerFee(minerFee)
-            .withTransactionFee(transactionFee)
-            .withDescription(assetId)
-            .withPeerFullName(peerFullName)
-            .withPeerId(peerId)
-            .withTransferType(transferType)
-            .withRetrySoranetHash(retrySoranetHash)
-            .build()
-            .inject(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -157,7 +140,12 @@ class TransactionConfirmationFragment :
         }
         viewModel.transactionSuccessEvent.observe {
             activity?.let {
-                ToastDialog(R.drawable.ic_green_pin, R.string.wallet_transaction_submitted_1, 1000, it).show()
+                ToastDialog(
+                    R.drawable.ic_green_pin,
+                    R.string.wallet_transaction_submitted_1,
+                    1000,
+                    it
+                ).show()
             }
         }
     }

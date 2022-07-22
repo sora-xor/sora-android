@@ -14,6 +14,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
+import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
@@ -22,10 +23,10 @@ import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.NavigationUI
+import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.insetter.Insetter
 import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.EventObserver
@@ -33,18 +34,17 @@ import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.ActivityMainBinding
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
-import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
+import jp.co.soramitsu.feature_onboarding_api.OnboardingStarter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity :
     ToolbarActivity<MainViewModel, ActivityMainBinding>(),
     BottomBarController,
@@ -55,6 +55,9 @@ class MainActivity :
 
         private const val ACTION_CHANGE_LANGUAGE =
             "jp.co.soramitsu.feature_main_impl.ACTION_CHANGE_LANGUAGE"
+
+        private const val ACTION_ACCOUNT_ADDED =
+            "jp.co.soramitsu.feature_main_impl.ACTION_ACCOUNT_ADDED"
 
         private const val IDLE_MINUTES: Long = 5
         private const val ANIM_START_POSITION = 100f
@@ -92,6 +95,14 @@ class MainActivity :
             }
             context.startActivity(intent)
         }
+
+        fun restartAfterAddAccount(context: Context) {
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                action = ACTION_ACCOUNT_ADDED
+            }
+            context.startActivity(intent)
+        }
     }
 
     @Inject
@@ -104,15 +115,12 @@ class MainActivity :
 
     private var navController: NavController? = null
 
-    override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
+    private val vm: MainViewModel by viewModels()
 
-    override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(this, MainFeatureApi::class.java)
-            .mainComponentBuilder()
-            .withActivity(this)
-            .build()
-            .inject(this)
-    }
+    override val viewModel: MainViewModel
+        get() = vm
+
+    override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -163,10 +171,10 @@ class MainActivity :
                 NavigationUI.setupWithNavController(binding.bottomNavigationView, it)
             }
 
-            if (ACTION_CHANGE_LANGUAGE == intent.action) {
-                chooseBottomNavigationItem(R.id.profile_nav_graph)
-            } else {
-                showPin(PinCodeAction.TIMEOUT_CHECK)
+            when (intent.action) {
+                ACTION_CHANGE_LANGUAGE -> chooseBottomNavigationItem(R.id.profile_nav_graph)
+                ACTION_ACCOUNT_ADDED -> {}
+                else -> viewModel.showPinFragment()
             }
         }
 
@@ -206,15 +214,14 @@ class MainActivity :
         )
 
         viewModel.badConnectionVisibilityLiveData.observe(
-            this,
-            {
-                if (it) {
-                    showBadConnectionView()
-                } else {
-                    hideBadConnectionView()
-                }
+            this
+        ) {
+            if (it) {
+                showBadConnectionView()
+            } else {
+                hideBadConnectionView()
             }
-        )
+        }
 
         viewModel.invitationCodeAppliedSuccessful.observe(
             this,
@@ -226,6 +233,14 @@ class MainActivity :
                     .show()
             }
         )
+
+        viewModel.isPincodeUpdateNeeded.observe(this) { isUpdateNeeded ->
+            if (isUpdateNeeded) {
+                mainRouter.showPin(PinCodeAction.CHANGE_PIN_CODE)
+            } else {
+                mainRouter.showPin(PinCodeAction.TIMEOUT_CHECK)
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -276,10 +291,6 @@ class MainActivity :
         }
     }
 
-    private fun showPin(action: PinCodeAction) {
-        mainRouter.showPin(action)
-    }
-
     fun checkInviteAction() {
 //        if (ACTION_INVITE == intent.action) {
 //            viewModel.startedWithInviteAction()
@@ -306,10 +317,11 @@ class MainActivity :
         finish()
     }
 
+    @Inject
+    lateinit var onbs: OnboardingStarter
+
     fun restartApp() {
-        FeatureUtils.getFeature<OnboardingFeatureApi>(application, OnboardingFeatureApi::class.java)
-            .provideOnboardingStarter()
-            .start(this, OnboardingState.INITIAL)
+        onbs.start(this, OnboardingState.INITIAL)
     }
 
     override fun onTrimMemory(i: Int) {
@@ -320,7 +332,7 @@ class MainActivity :
 
     public override fun onResume() {
         if (timeInBackground != null && idleTimePassedFrom(timeInBackground!!)) {
-            showPin(PinCodeAction.TIMEOUT_CHECK)
+            viewModel.showPinFragment()
         }
         timeInBackground = null
         super.onResume()

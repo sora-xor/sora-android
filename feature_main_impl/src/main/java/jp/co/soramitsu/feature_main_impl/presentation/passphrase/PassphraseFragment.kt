@@ -9,21 +9,21 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.databinding.FragmentMyMnemonicBinding
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_impl.R
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import javax.inject.Inject
 import kotlin.math.ceil
 
+@AndroidEntryPoint
 class PassphraseFragment : BaseFragment<PassphraseViewModel>(R.layout.fragment_my_mnemonic) {
 
     @Inject
@@ -31,6 +31,10 @@ class PassphraseFragment : BaseFragment<PassphraseViewModel>(R.layout.fragment_m
 
     private lateinit var screenshotBlockHelper: ScreenshotBlockHelper
     private val binding by viewBinding(FragmentMyMnemonicBinding::bind)
+
+    private val vm: PassphraseViewModel by viewModels()
+    override val viewModel: PassphraseViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -68,14 +72,6 @@ class PassphraseFragment : BaseFragment<PassphraseViewModel>(R.layout.fragment_m
                 List(words.size - rowCount) { words[it + rowCount] }.joinToString(separator = "\n")
         }
         viewModel.getPassphrase()
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
-            .passphraseComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 
     override fun onResume() {

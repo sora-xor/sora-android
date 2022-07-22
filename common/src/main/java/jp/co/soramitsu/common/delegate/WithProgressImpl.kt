@@ -8,9 +8,8 @@ package jp.co.soramitsu.common.delegate
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import jp.co.soramitsu.common.interfaces.WithProgress
-import javax.inject.Inject
 
-class WithProgressImpl @Inject constructor() : WithProgress {
+class WithProgressImpl : WithProgress {
 
     private val progressVisibilityLiveData = MutableLiveData<Boolean>()
 

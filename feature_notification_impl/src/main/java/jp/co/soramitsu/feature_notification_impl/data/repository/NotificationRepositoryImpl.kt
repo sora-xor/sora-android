@@ -7,9 +7,8 @@ package jp.co.soramitsu.feature_notification_impl.data.repository
 
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationDatasource
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
-import javax.inject.Inject
 
-class NotificationRepositoryImpl @Inject constructor(
+class NotificationRepositoryImpl(
     private val notificationDatasource: NotificationDatasource
 ) : NotificationRepository {
 

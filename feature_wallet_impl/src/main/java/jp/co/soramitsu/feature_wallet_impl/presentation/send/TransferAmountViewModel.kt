@@ -8,8 +8,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.send
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.presentation.AssetBalanceData
@@ -25,22 +29,46 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
-class TransferAmountViewModel(
+class TransferAmountViewModel @AssistedInject constructor(
     private val interactor: WalletInteractor,
     private val router: WalletRouter,
     private val numbersFormatter: NumbersFormatter,
-    private val recipientId: String,
-    private val assetId: String,
-    private val recipientFullName: String,
-    private var transferType: TransferType,
     private val clipboardManager: ClipboardManager,
+    @Assisted("recipientId") private val recipientId: String,
+    @Assisted("assetId") private val assetId: String,
+    @Assisted("recipientFullName") private val recipientFullName: String,
+    @Assisted private var transferType: TransferType,
 ) : BaseViewModel() {
 
-    private companion object {
-        val PERCENT_100: BigDecimal = BigDecimal.valueOf(100L)
+    @AssistedFactory
+    interface TransferAmountViewModelFactory {
+        fun create(
+            @Assisted("recipientId") recipientId: String,
+            @Assisted("assetId") assetId: String,
+            @Assisted("recipientFullName") recipientFullName: String,
+            transferType: TransferType
+        ): TransferAmountViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        fun provideFactory(
+            factory: TransferAmountViewModelFactory,
+            recipientId: String,
+            assetId: String,
+            recipientFullName: String,
+            transferType: TransferType,
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return factory.create(recipientId, assetId, recipientFullName, transferType) as T
+            }
+        }
+
+        private val PERCENT_100: BigDecimal = BigDecimal.valueOf(100L)
     }
 
     private val _balanceFormattedLiveData = MediatorLiveData<AssetBalanceData>()
@@ -87,7 +115,7 @@ class TransferAmountViewModel(
         viewModelScope.launch {
             tryCatch {
                 curAsset = interactor.getAssetOrThrow(assetId)
-                feeAsset = interactor.getAssetOrThrow(OptionsProvider.feeAssetId)
+                feeAsset = interactor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
                 _balanceFormattedLiveData.value =
                     AssetBalanceData(
                         amount = numbersFormatter.formatBigDecimal(
@@ -109,7 +137,7 @@ class TransferAmountViewModel(
     private suspend fun calcTransactionFee() {
         _transactionFeeProgressVisibilityLiveData.value = true
         transactionFeeLiveData.value = interactor.calcTransactionFee(
-            recipientId, assetId,
+            recipientId, feeAsset.token,
             amountLiveData.value
                 ?: BigDecimal.ZERO
         )
@@ -137,7 +165,7 @@ class TransferAmountViewModel(
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable < amount + fee) -> onError(
                 R.string.amount_error_no_funds
             )
-            (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable - amount - fee < OptionsProvider.existentialDeposit.toBigDecimal()) -> onError(
+            (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable - amount - fee < SubstrateOptionsProvider.existentialDeposit.toBigDecimal()) -> onError(
                 R.string.wallet_send_existential_warning_message
             )
             else -> router.showTransactionConfirmation(
@@ -149,7 +177,7 @@ class TransferAmountViewModel(
     }
 
     fun amountChanged(amount: BigDecimal) {
-        amountLiveData.setValueIfNew(amount)
+        setSentValue(amount)
     }
 
     private fun configureScreenByTransferType() {
@@ -181,15 +209,24 @@ class TransferAmountViewModel(
     }
 
     fun optionSelected(percent: Int) {
-        val amount = curAsset.balance.transferable
-            .subtract(transactionFeeLiveData.value)
-            .multiply(
-                percent.toBigDecimal()
-                    .divideBy(PERCENT_100, curAsset.token.precision)
-            )
+        transactionFeeLiveData.value?.let { fee ->
+            if (curAsset.balance.transferable < fee) {
+                setSentValue(BigDecimal.ZERO)
+            } else {
+                val amount = curAsset.balance.transferable
+                    .subtract(fee)
+                    .multiply(
+                        percent.toBigDecimal()
+                            .divideBy(PERCENT_100, curAsset.token.precision)
+                    )
+                setSentValue(amount)
+            }
+        }
+    }
 
+    private fun setSentValue(amount: BigDecimal) {
         amountLiveData.setValueIfNew(amount)
-        amountPercentage.setValueIfNew(
+        _amountPercentage.setValueIfNew(
             numbersFormatter.formatBigDecimal(
                 amount,
                 curAsset.token.precision

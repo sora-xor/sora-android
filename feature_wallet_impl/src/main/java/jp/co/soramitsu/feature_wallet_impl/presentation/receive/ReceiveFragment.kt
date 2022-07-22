@@ -9,22 +9,22 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentReceiveBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive) {
 
     companion object {
@@ -36,22 +36,17 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+    @Inject
+    lateinit var vmf: ReceiveViewModel.ReceiveViewModelFactory
 
     private val model: ReceiveAssetModel by lazy { requireArguments().getSerializable(ARG_ASSET) as ReceiveAssetModel }
     private val viewBinding by viewBinding(FragmentReceiveBinding::bind)
 
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .receiveAmountComponentBuilder()
-            .withFragment(this)
-            .withReceiveModel(model)
-            .withQrBackgroundColor(context.attrColor(R.attr.flatAboveBackground))
-            .build()
-            .inject(this)
+    private val vm: ReceiveViewModel by viewModels {
+        ReceiveViewModel.provideFactory(vmf, requireArguments().getSerializable(ARG_ASSET) as ReceiveAssetModel, context.attrColor(R.attr.flatAboveBackground))
     }
+    override val viewModel: ReceiveViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

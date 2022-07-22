@@ -9,23 +9,27 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_onboarding_api.di.OnboardingFeatureApi
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentUnsupportedVersionBinding
-import jp.co.soramitsu.feature_onboarding_impl.di.OnboardingFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class UnsupportedVersionFragment :
     BaseFragment<UnsupportedVersionViewModel>(R.layout.fragment_unsupported_version) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
+    private val vm: UnsupportedVersionViewModel by viewModels()
+    override val viewModel: UnsupportedVersionViewModel
+        get() = vm
 
     companion object {
         private const val KEY_APP_URL = "app_url"
@@ -40,17 +44,6 @@ class UnsupportedVersionFragment :
     }
 
     private val viewBinding by viewBinding(FragmentUnsupportedVersionBinding::bind)
-
-    override fun inject() {
-        FeatureUtils.getFeature<OnboardingFeatureComponent>(
-            requireContext(),
-            OnboardingFeatureApi::class.java
-        )
-            .unsupportedVersionComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

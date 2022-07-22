@@ -6,13 +6,16 @@
 package jp.co.soramitsu.feature_main_impl.presentation.userverification
 
 import androidx.lifecycle.LiveData
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
+import javax.inject.Inject
 
-class UserVerificationViewModel(
+@HiltViewModel
+class UserVerificationViewModel @Inject constructor(
     private val router: MainRouter,
     private val interactor: PinCodeInteractor
 ) : BaseViewModel() {

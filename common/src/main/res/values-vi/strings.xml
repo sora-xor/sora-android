@@ -13,16 +13,18 @@
   <string name="about_website">Trang web chính thức</string>
   <string name="about_wiki">Tìm hiểu trên Wiki</string>
   <string name="about_youtube">Đăng ký YouTube</string>
-  <string name="account_confirmation_title">Xác nhận mnemonic</string>
+  <string name="account_already_imported">Đã nhập</string>
+  <string name="account_already_imported_description">Ví này đã được nhập</string>
+  <string name="account_confirmation_title">Xác nhận từ khóa khôi phục</string>
   <string name="account_confirmation_title_v2">Xác nhận chuỗi từ khóa khôi phục</string>
   <string name="activity_project">Dự án</string>
-  <string name="add_liquidity_alert_text">Bạn sẽ kiếm được các khoản tương ứng với tỷ lệ chia sẻ của bạn trong nhóm từ việc cung cấp thanh khoản.</string>
-  <string name="add_liquidity_confirmation_title">Xác nhận supply</string>
+  <string name="add_liquidity_alert_text">Bạn sẽ kiếm được tương ứng với tỷ lệ chia sẻ của bạn trong pool từ việc cung cấp thanh khoản.</string>
+  <string name="add_liquidity_confirmation_title">Xác nhận cung cấp</string>
   <string name="add_liquidity_pool_share_description">Kết quả là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ hoàn tác.</string>
   <string name="add_liquidity_pool_share_title">Pool share nhóm của bạn sẽ là</string>
   <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
   <string name="add_liquidity_title">Thêm thanh khoản</string>
-  <string name="address_not_found">Địa chỉ không tìm thấy, hãy đảm bảo rằng bạn chọn đúng mạng (network)</string>
+  <string name="address_not_found">Địa chỉ không tìm thấy, hãy đảm bảo rằng bạn chọn đúng mạng.</string>
   <string name="address_not_found_1">Không tìm thấy người nhận</string>
   <string name="amount_default_fee">Phí giao dịch</string>
   <string name="amount_error_no_funds">Xin lỗi, bạn không có đủ tiền để chuyển số tiền đã chỉ định.</string>
@@ -36,8 +38,9 @@
   <string name="asset_state_error">Lỗi</string>
   <string name="asset_val_fullname">SORA Validator Token (VAL)</string>
   <string name="asset_val_name">SORA Validator Token</string>
+  <string name="backup_account_title">Sao lưu tài khoản</string>
   <string name="biometric_dialog_title">Xác thực</string>
-  <string name="block_id">Khối băm</string>
+  <string name="block_id">Block hash</string>
   <string name="choose_token">Chọn\ntoken</string>
   <string name="choose_tokens">Chọn token</string>
   <string name="claim_contact">Nếu bạn có bất kỳ câu hỏi hoặc thắc mắc nào, bạn có thể %% liên hệ với chúng tôi.%%</string>
@@ -50,20 +53,21 @@
   <string name="claim_skip">Bỏ qua quá trình</string>
   <string name="claim_subtitle">Chúng tôi cần sự đồng ý của bạn để thực hiện chuyển đổi tiền của bạn từ SORA để bạn có thể sử dụng chúng. SORA bây giờ sẽ hoạt động trên mạng Substrate. Vui lòng xác nhận chuyển đổi.</string>
   <string name="claim_subtitle_confirmed">Cảm ơn bạn đã xác nhận!</string>
-  <string name="claim_subtitle_confirmed_2">Đang chuyển tài sản. Vui lòng chờ.</string>
+  <string name="claim_subtitle_confirmed_2">Đang chuyển. Vui lòng chờ.</string>
   <string name="claim_subtitle_v1">Chúng tôi cần sự đồng ý của bạn để thực hiện chuyển đổi nội dung của bạn từ SORA v1. Điều này sẽ cho phép bạn sử dụng nội dung của mình trên SORA v2 dựa trên chất nền. \n\nCác tài sản trên mạng Ethereum không bị ảnh hưởng, bạn vẫn có thể truy cập chúng bằng cách nhập chuỗi từ khóa khôi phục của mình vào bất kỳ ví tương thích nào.</string>
   <string name="claim_subtitle_v2">• Chúng tôi cần sự đồng ý của bạn để chuyển đổi tài sản từ SORA v1 qua SORA v2\n\n• Mạng SORA v2 được xây dựng với Substrate, có khả năng tương thích cao với hệ sinh thái Polkadot và Kusama\n\n• Tài sản trên Ethereum không bị ảnh hưởng, bạn vẫn có thể truy cập chúng bằng cách nhập chuỗi từ khóa khôi phục của mình vào bất kỳ ví tương thích nào</string>
   <string name="claim_welcome_sora2">Chào mừng bạn đến với SORA v2</string>
   <string name="claim_welcome_sora2_v1">Chào mừng bạn đến với\n%%SORA v2%%</string>
   <string name="coming_soon">Sắp ra mắt...</string>
   <string name="common_account">Tài khoản</string>
-  <string name="common_add">Thêm vào</string>
+  <string name="common_add">Thêm</string>
   <string name="common_advanced_settings">Cài đặt nâng cao</string>
   <string name="common_and">và</string>
   <string name="common_app_version">Phiên bản ứng dụng</string>
   <string name="common_apply">Áp dụng</string>
   <string name="common_arab">Tiếng Ả Rập</string>
   <string name="common_asset">Tài sản</string>
+  <string name="common_back">Trở lại</string>
   <string name="common_balance">Số dư</string>
   <string name="common_bashkir">Tiếng Bashkir</string>
   <string name="common_camera">Máy ảnh</string>
@@ -78,7 +82,7 @@
   <string name="common_copy">Sao chép</string>
   <string name="common_copy_address">Sao chép địa chỉ</string>
   <string name="common_croatian">Tiếng Croatia</string>
-  <string name="common_deposit">Tiền gửi</string>
+  <string name="common_deposit">Gửi tiền</string>
   <string name="common_deposit_symbol">%s nạp tiền</string>
   <string name="common_description">Mô tả</string>
   <string name="common_done">Hoàn tất</string>
@@ -101,6 +105,7 @@
   <string name="common_error_mnemonic_is_not_valid">Hãy kiểm tra, chuỗi từ khóa khôi phục của bạn gồm 12 hoặc 15 từ được nhập chính xác.</string>
   <string name="common_error_mnemonic_length_error">Chuỗi từ khóa khôi phục chứa 15 từ</string>
   <string name="common_error_network">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
+  <string name="common_error_no_browser_error">Vui lòng cài đặt trình duyệt để mở liên kết</string>
   <string name="common_error_not_enough_invitations">Xin lỗi, nhưng bạn không có bất kỳ lời mời nào để chia sẻ</string>
   <string name="common_error_not_found_title">Tài nguyên không có sẵn</string>
   <string name="common_error_phone_already_exists">Xin lỗi, số điện thoại này đã được sử dụng. Vui lòng thử một số khác.</string>
@@ -110,6 +115,7 @@
   <string name="common_error_project_not_found">Xin lỗi, nhưng dự án không được tìm thấy.</string>
   <string name="common_error_retry">Vui lòng thử lại</string>
   <string name="common_error_search_string_error">Kích thước tìm kiếm phải từ 3 đến 64 ký tự</string>
+  <string name="common_error_seed_is_not_valid">Hãy đảm bảo rằng kí tự bạn nhập vào chứa 64 ký tự hex.</string>
   <string name="common_error_self_invitation">Bạn không thể sử dụng mã mời cho chính mình</string>
   <string name="common_error_unauthorized_body">Vui lòng kiểm tra kết nối internet và thử lại sau.</string>
   <string name="common_error_unauthorized_title">Ủy quyển thất bại</string>
@@ -143,6 +149,7 @@
   <string name="common_malay">Tiếng Mã Lai</string>
   <string name="common_manage">Quản lý</string>
   <string name="common_min">phút</string>
+  <string name="common_name">Tên</string>
   <string name="common_network_unavailable">Kết nối mạng không khả dụng</string>
   <string name="common_next">Kế tiếp</string>
   <string name="common_norwegian">Tiếng Nauy</string>
@@ -167,6 +174,7 @@
   <string name="common_personal_info_last_name_is_empty">Họ trống</string>
   <string name="common_personal_info_title">Thông tin cá nhân</string>
   <string name="common_please_wait">Vui lòng đợi</string>
+  <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Nhận</string>
   <string name="common_received">Nhận</string>
   <string name="common_recipient">Người nhận</string>
@@ -231,13 +239,26 @@
   <string name="error_miner_fee_title">Không đủ tiền cho phí khai thác</string>
   <string name="error_transaction_fee_title">Không đủ tiền cho phí giao dịch</string>
   <string name="ethereum_config_unavailable">Nút Ethereum không khả dụng</string>
+  <string name="export_account_details_backup_description">Nếu bạn mất quyền truy cập vào thiết bị này, tiền của bạn sẽ bị mất, trừ khi bạn sao lưu!</string>
+  <string name="export_account_details_backup_options">Các tùy chọn sao lưu</string>
+  <string name="export_account_details_show_passphrase">Hiển thị cụm mật khẩu</string>
+  <string name="export_account_details_show_raw_seed">Hiển thị Raw Seed</string>
   <string name="faq_title">Câu hỏi thường gặp</string>
   <string name="friends_spread_word">Chia sẻ SORA với bạn bè.</string>
   <string name="from_account">Từ tài khoản</string>
+  <string name="history_bonded_tokens">Bonded XOR tokens</string>
   <string name="history_receive">Nhận</string>
+  <string name="history_referral">Referral</string>
+  <string name="history_referral_bond_tokens">Bond tokens</string>
+  <string name="history_referral_set_referral">Set referral</string>
+  <string name="history_referral_set_referrer">Set referrer</string>
+  <string name="history_referral_unbond_tokens">Unbond tokens</string>
+  <string name="history_referrer">Referrer</string>
   <string name="history_send">Gửi</string>
   <string name="history_swap">Hoán đổi</string>
   <string name="history_title">Lịch sử</string>
+  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
+  <string name="import_account_raw_seed">Bạn đã nhập tài khoản này qua Raw Seed</string>
   <string name="invite_accepted_empty_state_title">Chưa có lời mời nào được chấp nhận</string>
   <string name="invite_accepted_invitations_title">Lời mời được chấp nhận</string>
   <string name="invite_accepted_someone">Ai đó đã chấp nhận lời mời</string>
@@ -265,7 +286,7 @@
   <string name="invoice_scan_error_no_info">Không thể giải mã QR</string>
   <string name="invoice_scan_error_user_not_found">Không thể tìm thấy người dùng từ mã QR</string>
   <string name="language_title">Chọn ngôn ngữ</string>
-  <string name="liquidity_added">Đã thêm thanh khoản %s</string>
+  <string name="liquidity_added">Đã thêm %s thanh khoản</string>
   <string name="liquidity_pair_creation_description">Tỷ lệ token bạn thêm vào sẽ thiết lập giá của pool này. Một khi bạn hài lòng với tỷ lệ cung cấp hãy nhấp chuột để xem xét.</string>
   <string name="liquidity_pair_creation_title">Bạn là nhà cung cấp thanh khoản đầu tiên</string>
   <string name="liquidity_removed">Đã rút %s thanh khoản</string>
@@ -273,9 +294,9 @@
   <string name="mnemonic_alert_text">Chuỗi từ khóa khôi phục được sử dụng để khôi phục quyền truy cập vào tài khoản. Hãy viết nó ra, chúng tôi sẽ không thể khôi phục tài khoản của bạn nếu không có nó!</string>
   <string name="mnemonic_confirm_text">Xác nhận bằng cách chọn các từ theo đúng thứ tự</string>
   <string name="mnemonic_confirm_text_v2">Xác nhận chuỗi từ khóa khôi phục bằng cách chọn các từ theo đúng thứ tự</string>
-  <string name="mnemonic_invalid">Mật khẩu ghi nhớ không hợp lệ, vui lòng kiểm tra một lần nữa thứ tự các từ.</string>
-  <string name="mnemonic_invalid_title">Chuỗi từ khóa khôi phục ghi nhớ không hợp lệ</string>
-  <string name="mnemonic_text">Chúng tôi khuyên bạn nên sao lưu không dùng phương tiện kỹ thuật số, chẳng hạn như viết nó xuống giấy.</string>
+  <string name="mnemonic_invalid">Từ khóa khôi phục ghi nhớ không hợp lệ, vui lòng kiểm tra một lần nữa thứ tự các từ.</string>
+  <string name="mnemonic_invalid_title">Chuỗi từ khóa khôi phục không hợp lệ</string>
+  <string name="mnemonic_text">Chúng tôi khuyên bạn không nên sao lưu bằng phương tiện kỹ thuật số, chẳng hạn như viết nó xuống giấy.</string>
   <string name="mnemonic_title">Sao lưu chuỗi từ khóa khôi phục</string>
   <string name="parliament_coming_soon">Quản trị mạng SORA</string>
   <string name="personal_details_info">Tên cho tài khoản này và cách nó sẽ xuất hiện dưới địa chỉ của bạn. Với danh tính trực tuyến, nó có thể được cung cấp cho những người khác.</string>
@@ -288,6 +309,10 @@
   <string name="phone_number_sms_code_will_be_sent">Mã SMS sẽ được gửi\n đến điện thoại của bạn</string>
   <string name="phone_number_title">Đăng ký</string>
   <string name="phone_verification_too_frequent_message">Yêu cầu mã xác minh quá thường xuyên. Vui lòng thử lại sau.</string>
+  <string name="pin_update_button_text">ĐẶT MÃ PIN MỚI</string>
+  <string name="pin_update_info_description">Chính sách bảo mật đã được cải thiện để bảo vệ bạn.</string>
+  <string name="pin_update_info_subtitle">Vui lòng đặt mã PIN 6 số mới.</string>
+  <string name="pin_update_info_title">Mã PIN 4 số không còn được hỗ trợ</string>
   <string name="pincode_change_success">Đã thay đổi mã pin thành công</string>
   <string name="pincode_change_success_v1">Đã thay đổi mã pin thành công</string>
   <string name="pincode_confirm_new_pin_code">Xác nhận mã pin mới</string>
@@ -310,8 +335,8 @@
   <string name="polkaswap_info_prices_and_fees">Giá và phí</string>
   <string name="polkaswap_info_text_1">Polkaswap được duy trì bởi cộng đồng SORA. Trước khi tiếp tục sử dụng Polkaswap, vui lòng xem lại %% Câu hỏi thường gặp về Polkaswap %% và tài liệu, trong đó có giải thích chi tiết về cách Polkaswap hoạt động, cũng như %% Bản ghi nhớ Polkaswap và Điều khoản dịch vụ %% và %% Chính sách quyền riêng tư %% . \n\n Những tài liệu này rất quan trọng đối với trải nghiệm người dùng an toàn và tích cực. Bằng cách sử dụng Polkaswap, bạn xác nhận rằng bạn đã đọc và hiểu các tài liệu này.</string>
   <string name="polkaswap_info_text_2">Bạn cũng thừa nhận những điều sau:</string>
-  <string name="polkaswap_info_text_3">trách nhiệm duy nhất của bạn đối với việc tuân thủ tất cả các luật có thể áp dụng cho việc sử dụng Polkaswap cụ thể của bạn trong khu vực pháp lý của bạn;</string>
-  <string name="polkaswap_info_text_4">bạn hiểu rằng phiên bản Polkaswap hiện tại là phiên bản alpha: nó chưa được kiểm tra đầy đủ và một số chức năng có thể không hoạt động như thiết kế;</string>
+  <string name="polkaswap_info_text_3">Trách nhiệm duy nhất của bạn đối với việc tuân thủ tất cả các luật có thể áp dụng cho việc sử dụng Polkaswap cụ thể của bạn trong khu vực pháp lý của bạn;</string>
+  <string name="polkaswap_info_text_4">Bạn hiểu rằng phiên bản Polkaswap hiện tại là phiên bản alpha: nó chưa được kiểm tra đầy đủ và một số chức năng có thể không hoạt động như thiết kế;</string>
   <string name="polkaswap_info_text_5">Bạn hiểu và tự nguyện chấp nhận các rủi ro liên quan đến việc sử dụng Polkaswap, bao gồm, nhưng không giới hạn, rủi ro mất token.</string>
   <string name="polkaswap_info_text_6">Một lần nữa, vui lòng đọc trước khi tiếp tục%% Câu hỏi thường gặp về Polkaswap %%, %% Bản ghi nhớ Polkaswap và Điều khoản dịch vụ %% và %% Chính sách quyền riêng tư %%!</string>
   <string name="polkaswap_info_text_7">Để ẩn thông báo từ chối trách nhiệm khỏi tab Hoán đổi, vui lòng vuốt nút bên dưới. Chỉ làm như vậy nếu bạn hiểu đầy đủ và đã đọc tất cả các tài liệu được đề cập!</string>
@@ -322,31 +347,33 @@
   <string name="polkaswap_input_estimated">Dự tính đầu vào. Bạn sẽ bán tối đa %s hoặc giao dịch sẽ hoàn tác.</string>
   <string name="polkaswap_insufficient_balance">Số dư không đủ %s</string>
   <string name="polkaswap_insufficient_liqudity">Không đủ thanh khoản</string>
-  <string name="polkaswap_liqudity_fee">Phí pool thanh khoản</string>
+  <string name="polkaswap_liqudity_fee">Phí thanh khoản</string>
   <string name="polkaswap_liqudity_fee_info">Một phần của mỗi giao dịch (0,3%) được chuyển đến các nhà cung cấp thanh khoản như một biện pháp khuyến khích.</string>
   <string name="polkaswap_market">Thị trường</string>
   <string name="polkaswap_market_info">Thuật toán thị trường - tùy chọn lựa chọn giữa Thị trường sơ cấp (TBC), Thị trường thứ cấp (XYK) hoặc kết hợp thuật toán thông minh để đảm bảo mức giá tốt nhất cho bất kỳ giao dịch nào.</string>
-  <string name="polkaswap_market_smart_description">SMART liquidity routing đảm bảo giá tốt nhất cho giao dịch bất kỳ bằng cách kết hợp mức giá tốt nhất hiện có trên thị trường. Khi thuận lợi, Token Bonding Curve (TBC) sẽ dùng để tạo thanh khoản miễn là giá của tài sản hợp lý hơn các nguồn khác như pool (XYK).</string>
-  <string name="polkaswap_market_tbc_description">TBC - chỉ mua từ Token Bonding Curve (Primary Market). Có khả năng giá có thể trở nên bất lợi so với nhóm XYK (Secondary Market), nhưng về lâu dài giá trị nhận được từ phần thưởng có thể lớn hơn nhiều.</string>
+  <string name="polkaswap_market_smart_description">SMART liquidity routing đảm bảo giá tốt nhất cho giao dịch bất kỳ bằng cách kết hợp mức giá tốt nhất hiện có trên thị trường. Khi thuận lợi, Token Bonding Curve (TBC) sẽ được dùng để tạo thanh khoản miễn là giá của tài sản hợp lý hơn các nguồn khác như pool (XYK).</string>
+  <string name="polkaswap_market_tbc_description">TBC - chỉ mua từ Token Bonding Curve (Primary Market). Giá có thể trở nên bất lợi so với XYK pool (Secondary Market), nhưng về lâu dài giá trị nhận được từ phần thưởng có thể lớn hơn nhiều.</string>
   <string name="polkaswap_market_title">Thuật toán thị trường</string>
   <string name="polkaswap_market_xyk_description">XYK — chỉ mua từ XYK pool (Secondary Market). Với XYK pool hoán đổi truyền thống bất cứ ai cũng có thể mua hoặc bán tài sản bằng theo công thức curve x * y = k.</string>
-  <string name="polkaswap_maximum_sold">Bán tối đa</string>
+  <string name="polkaswap_maximum_sold">Tối đa đã bán</string>
   <string name="polkaswap_maximum_sold_info">Giao dịch của bạn sẽ được hoàn tác nếu có một biến động giá lớn hay một biến động không thuận lợi trước khi nó được xác nhận.</string>
   <string name="polkaswap_minimum_received">Tối thiểu đã nhận</string>
   <string name="polkaswap_minimum_received_info">Giao dịch của bạn sẽ được hoàn tác nếu có một biến động giá lớn hay một biến động không thuận lợi trước khi nó được xác nhận.</string>
-  <string name="polkaswap_network_fee">Phí Mạng</string>
+  <string name="polkaswap_network_fee">Phí mạng</string>
   <string name="polkaswap_network_fee_info">Phí mạng được sử dụng để đảm bảo sự tăng trưởng và hiệu suất ổn định của hệ thống SORA.</string>
   <string name="polkaswap_not_enough_tokens_in_pool">Không đủ token trong pool</string>
   <string name="polkaswap_output_estimated">Kết quả là ước lượng. Bạn sẽ nhận ít nhất %s hoặc giao dịch sẽ hoàn tác.</string>
   <string name="polkaswap_pool_not_created">Pool chưa được tạo</string>
   <string name="polkaswap_pool_title">Pool</string>
-  <string name="polkaswap_sb_apy_info">Farming reward cho việccung cấp thanh khoản</string>
+  <string name="polkaswap_price_for_one">GIÁ 1</string>
+  <string name="polkaswap_sb_apy_info">Farming reward cho cung cấp thanh khoản</string>
   <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">Giao dịch của bạn có thể khiến giá biến động đáng kể</string>
   <string name="polkaswap_slippage_info">Các giao dịch của bạn sẽ hoàn tác nếu giá thay đổi bất lợi hơn tỷ lệ phần trăm này</string>
   <string name="polkaswap_slippage_mayfail">Giao dịch của bạn có thể thất bại</string>
   <string name="polkaswap_slippage_tolerance">Mức trượt giá</string>
   <string name="polkaswap_smart">Thông minh</string>
+  <string name="polkaswap_swap_empty_list">Bạn chưa tham gia pool nào.\nThêm thanh khoản để nhận thưởng</string>
   <string name="polkaswap_swap_title">Đổi</string>
   <string name="polkaswap_swapped">Đã hoán đổi</string>
   <string name="polkaswap_tbc">TBC</string>
@@ -363,7 +390,7 @@
   <string name="pool_token_pooled">Pool đã đóng góp</string>
   <string name="profile_about_title">Giới thiệu</string>
   <string name="profile_biometry_title">Xác thực sinh trắc học</string>
-  <string name="profile_change_pin_title">Thay đổi mã PIN</string>
+  <string name="profile_change_pin_title">Mã PIN</string>
   <string name="profile_language_title">Ngôn ngữ</string>
   <string name="profile_logout_title">Đăng xuất</string>
   <string name="profile_passphrase_title_v1">Chuỗi từ khóa khôi phục</string>
@@ -389,11 +416,15 @@
   <string name="project_you_can_vote_at_least_1_point">Bạn có thể bỏ phiếu với ít nhất 1 điểm 😜</string>
   <string name="qr_code">Mã QR</string>
   <string name="qr_upload">Từ bộ sưu tập</string>
+  <string name="recovery_alert_raw_seed_description">Bạn sẽ không thể sử dụng cụm mật khẩu khi phục hồi bằng cách sử dụng Raw Seed</string>
+  <string name="recovery_alert_raw_seed_title">Phục hồi từ Raw Seed</string>
   <string name="recovery_body_subtitle">Rất tiếc, không có cách nào để truy cập vào tài khoản của bạn nếu bạn quên chuỗi từ khóa khôi phục của mình.</string>
   <string name="recovery_body_title">Nhập chuỗi từ khóa khôi phục của bạn</string>
+  <string name="recovery_input_raw_seed_hint">Raw Seed (64 ký tự hex)</string>
   <string name="recovery_mnemonic_passphrase">Chuỗi từ khóa khôi phục</string>
   <string name="recovery_passphrase">Khôi phục quyền truy cập</string>
   <string name="recovery_source_type">Loại nguồn</string>
+  <string name="recovery_source_type_1">Chọn loại nguồn</string>
   <string name="recovery_title">Nhập tài khoản</string>
   <string name="referenda_title">Trưng cầu dân ý</string>
   <string name="referenda_title_vote">Bỏ phiếu trưng cầu dân ý</string>
@@ -412,9 +443,29 @@
   <string name="referendum_total_votes">Tổng số phiếu bầu</string>
   <string name="referendum_unsupport_title">Không</string>
   <string name="referendum_voting_result">Kết quả bỏ phiếu</string>
+  <string name="referral_activate_button_title">Hoạt động</string>
+  <string name="referral_bond_button_title">Bond XOR</string>
+  <string name="referral_enter_link_title">Nhập liên kết của người giới thiệu</string>
+  <string name="referral_get_more_invitation_button_title">Nhận thêm lời mời</string>
+  <string name="referral_input_reward_description">%s được bond cho mỗi lời mời để trang trải phí mạng cho bạn bè của bạn tham gia.\n\nBạn có thể unbond bất kỳ lúc nào đối với những lời mời chưa sử dụng.</string>
+  <string name="referral_input_reward_title">Nhập số lượng lời mời\nmong muốn</string>
+  <string name="referral_invitaion_link_title">Lời mời có sẵn</string>
+  <string name="referral_referral_link">Liên kết hoặc địa chỉ của người giới thiệu</string>
+  <string name="referral_referrer_address">Địa chỉ người giới thiệu</string>
+  <string name="referral_referrer_description">Bất cứ khi bạn thực hiện một giao dịch, 10% phí mạng được trả cho người giới thiệu như một phần thưởng.</string>
+  <string name="referral_start_inviting">Bắt đầu mời</string>
+  <string name="referral_subtitle">Bất cứ khi nào giới thiệu của bạn thực hiện một giao dịch, 10% phí mạng được trả cho bạn như một phần thưởng.</string>
+  <string name="referral_title">Nhận 10% phí mạng từ những người được bạn giới thiệu</string>
+  <string name="referral_toolbar_title">Chương trình giới thiệu</string>
+  <string name="referral_total_rewards">Tổng phần thưởng</string>
+  <string name="referral_unbond_button_title">Unbond XOR</string>
+  <string name="referral_unbond_xor_description">Bạn có thể unbond %s cho mỗi 1 lời mời. Bạn muốn rút bao nhiêu lời mời?</string>
+  <string name="referral_your_invitation_link_title">Liên kết lời mời của bạn</string>
+  <string name="referral_your_referrals">Người được bạn giới thiệu</string>
+  <string name="referral_your_referrer">Người giới thiệu của bạn</string>
   <string name="remove_liquidity_info_text">Rút thanh khoản sẽ chuyển đổi vị thế của bạn trở lại với tỷ giá hiện tại, tỷ lệ thuận với tỷ lệ chia sẻ của bạn trong nhóm.</string>
   <string name="remove_liquidity_title">Rút thanh khoản</string>
-  <string name="remove_pool_confirmation_description">Kết quả là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ hoàn tác.</string>
+  <string name="remove_pool_confirmation_description">Kết quả chỉ là ước lượng. Nếu giá biến động hơn %s%% thì giao dịch của bạn sẽ bị hoàn tác.</string>
   <string name="remove_pool_confirmation_title">Xác nhận Rút</string>
   <string name="restart_required">Yêu cầu khởi động lại</string>
   <string name="screenshot_alert_text">Không chụp ảnh màn hình vì có thể bị phần mềm độc hại của bên thứ ba thu thập</string>
@@ -425,11 +476,11 @@
   <string name="select_asset_receive">Chọn Tài sản để nhận</string>
   <string name="select_asset_send">Chọn Tài sản để gửi</string>
   <string name="select_recipient">Chọn người nhận</string>
-  <string name="set_amount">Đặt số tiền</string>
+  <string name="set_amount">Nhập số tiền</string>
   <string name="settings_accounts">Tài khoản</string>
-  <string name="settings_header_account">THIẾT LẬP TÀI KHOẢN</string>
-  <string name="settings_header_app">CÀI ĐẶT ỨNG DỤNG</string>
-  <string name="settings_header_other">KHÁC</string>
+  <string name="settings_header_account">Thiết lập tài khoản</string>
+  <string name="settings_header_app">Thiết lập ứng dụng</string>
+  <string name="settings_header_other">Khác</string>
   <string name="staking_coming_soon">Người nắm giữ XOR sẽ có thể stake XOR của họ để đề cử người xác nhận và nhận phần thưởng.</string>
   <string name="staking_description">Nominating validator là một phần quan trọng của hệ sinh thái SORA vì nó giúp mạng tăng bảo mật và phi tập trung. Token VAL sẽ được trao cho người xác nhận và người đề cử như một phần thưởng cho việc staking.</string>
   <string name="staking_val_reward">Phần thưởng SORA VALidator</string>
@@ -440,7 +491,7 @@
   <string name="status_success">Thành công</string>
   <string name="status_title">Trạng thái</string>
   <string name="swap_input_title">Hoán đổi đầu vào</string>
-  <string name="tabbar_friends_title">Bạn bè</string>
+  <string name="tabbar_friends_title">Mời bạn bè</string>
   <string name="tabbar_parliament_title">Nghị viện</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
   <string name="tabbar_profile_title">Hồ sơ</string>
@@ -468,7 +519,7 @@
   <string name="transaction_token">Token</string>
   <string name="transaction_total">Toàn bộ</string>
   <string name="transfer_amount_title">Nhập số tiền cần gửi</string>
-  <string name="tutorial_many_world">Nhiều thế giới.\n Một nền kinh tế.</string>
+  <string name="tutorial_many_world">Nhiều thế giới.\nMột nền kinh tế.</string>
   <string name="tutorial_many_world_desc">SORA đang nỗ lực để trở thành một hệ thống kinh tế đa vũ trụ phi tập trung, cung cấp tài chính cho việc tạo ra các ứng dụng mới và thú vị, dưới sự giám sát dân chủ của Nghị viện SORA.</string>
   <string name="tutorial_one_world">Một thế giới.\nMột nền kinh tế.</string>
   <string name="tutorial_one_world_desc">SORA đang nỗ lực để trở thành một hệ thống kinh tế đa vũ trụ phi tập trung, cung cấp tài chính cho việc tạo ra các ứng dụng mới và thú vị, dưới sự giám sát dân chủ của Nghị viện SORA.</string>
@@ -482,9 +533,9 @@
   <string name="tutorial_terms_and_conditions_2">Điều khoản và điều kiện</string>
   <string name="tutorial_terms_and_conditions_3">Điều khoản &amp; Điều kiện</string>
   <string name="tutorial_terms_and_conditions_recovery">Nhập tài khoản là bạn đã đồng ý với %% Điều khoản &amp; Điều kiện %% và %% Chính sách quyền riêng tư %%</string>
-  <string name="tutorial_terms_and_conditions_v4">Tạo tài khoản là bạn đồng ý với \n Điều khoản &amp; Điều kiện và Chính sách Bảo mật</string>
+  <string name="tutorial_terms_and_conditions_v4">Tạo tài khoản là bạn đồng ý với\nĐiều khoản &amp; Điều kiện và Chính sách Bảo mật</string>
   <string name="tutorial_votes_desc">Người dùng bỏ phiếu cho các dự án quyết định dự án nào nên được tài trợ</string>
-  <string name="unknown_balance">không xác định</string>
+  <string name="unknown_balance">Không xác định</string>
   <string name="update_downloaded">Bản cập nhật cho ứng dụng SORA đã được tải xuống và sẵn sàng cài đặt. \n\n Hãy sử dụng phiên bản mới nhất của ứng dụng. \n\n Để cập nhật ứng dụng thành công, bạn cần khởi động lại ứng dụng.</string>
   <string name="update_install_now">Bạn có muốn cài đặt bản cập nhật ngay bây giờ không?</string>
   <string name="val_balance_title">Token VAL trên các mạng khác nhau</string>
@@ -515,10 +566,10 @@
   <string name="wallet_history_to_soranet_account">Đến tài khoản SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">%s Địa chỉ ví để nhận %s :</string>
-  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s . ID tài khoản của tôi %s: \n %s</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s. ID tài khoản của tôi %s:\n%s</string>
   <string name="wallet_qr_share_message_template" formatted="false">Địa chỉ mạng %s của tôi để nhận %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">Địa chỉ ví %s của tôi để nhận %s %s:</string>
-  <string name="wallet_qr_share_message_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s %s . ID tài khoản của tôi %s: \n %s</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Quét mã QR này để gửi cho tôi %s %s. ID tài khoản của tôi %s:\n%s</string>
   <string name="wallet_receive_val">Nhận VAL</string>
   <string name="wallet_redeemable">Có thể hoán đổi</string>
   <string name="wallet_send_existential_warning_message">Việc chuyển khoản của bạn sẽ xóa tài khoản khỏi lưu trữ khối vì nó sẽ làm cho tổng số dư thấp hơn khoản tiền gửi hiện có.</string>
@@ -527,7 +578,7 @@
   <string name="wallet_transaction_rejected">Giao dịch bị từ chối</string>
   <string name="wallet_transaction_submitted">Giao dịch đã được gửi</string>
   <string name="wallet_transaction_submitted_1">Giao dịch\nđã được gửi</string>
-  <string name="wallet_transactions_unavailable_description">Sự cố đang được xử lý, \n vui lòng thử lại sau.</string>
+  <string name="wallet_transactions_unavailable_description">Sự cố đang được xử lý,\n vui lòng thử lại sau.</string>
   <string name="wallet_transactions_unavailable_title">Không thể tải các giao dịch</string>
   <string name="wallet_transfer_description_hint">Tối đa %s ký hiệu</string>
   <string name="wallet_transfer_to_ethereum">Đến địa chỉ Ethereum</string>

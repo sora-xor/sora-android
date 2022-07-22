@@ -9,46 +9,51 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.presentation.args.soraAccount
+import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ScreenshotBlockHelper
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_multiaccount_api.di.MultiaccountFeatureApi
+import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.databinding.FragmentMnemonicConfirmationBinding
-import jp.co.soramitsu.feature_multiaccount_impl.di.MultiaccountFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class MnemonicConfirmationFragment :
     BaseFragment<MnemonicConfirmationViewModel>(R.layout.fragment_mnemonic_confirmation) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
+    @Inject
+    lateinit var viewModelFactory: MnemonicConfirmationViewModel.Factory
+
     private lateinit var screenshotBlockHelper: ScreenshotBlockHelper
+    private lateinit var progressDialog: SoraProgressDialog
     private val binding by viewBinding(FragmentMnemonicConfirmationBinding::bind)
 
-    override fun inject() {
-        FeatureUtils.getFeature<MultiaccountFeatureComponent>(
-            requireContext(),
-            MultiaccountFeatureApi::class.java
+    override val viewModel: MnemonicConfirmationViewModel by viewModels {
+        MnemonicConfirmationViewModel.provideFactory(
+            viewModelFactory,
+            requireArguments().soraAccount
         )
-            .mnemonicConfirmationComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        progressDialog = SoraProgressDialog(requireContext())
+
         binding.confirmBtn.setDebouncedClickListener(debounceClickHandler) {
             viewModel.nextButtonClicked()
         }
 
-        binding.toolbar.setHomeButtonListener { viewModel.homeButtonClicked() }
+        binding.toolbar.setHomeButtonListener { findNavController().popBackStack() }
 
         binding.toolbar.setRightActionClickListener { viewModel.resetConfirmationClicked() }
 
@@ -80,6 +85,9 @@ class MnemonicConfirmationFragment :
         super.onPause()
     }
 
+    @Inject
+    lateinit var ms: MainStarter
+
     private fun initListeners() {
         viewModel.shuffledMnemonicLiveData.observe {
             populateMnemonicContainer(it)
@@ -98,10 +106,16 @@ class MnemonicConfirmationFragment :
         viewModel.matchingMnemonicErrorAnimationEvent.observe {
             playMatchingMnemonicErrorAnimation()
         }
-        viewModel.showMainScreen.observeForever {
-            FeatureUtils.getFeature<MainFeatureApi>(requireActivity().applicationContext, MainFeatureApi::class.java)
-                .provideMainStarter()
-                .start(requireContext())
+        viewModel.showMainScreen.observeForever { multiAccount ->
+            if (multiAccount) {
+                ms.restartAfterAddAccount(requireContext())
+            } else {
+                ms.start(requireContext())
+            }
+        }
+
+        viewModel.getProgressVisibility().observe {
+            if (it) progressDialog.show() else progressDialog.dismiss()
         }
     }
 

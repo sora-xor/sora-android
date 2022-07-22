@@ -8,7 +8,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.rem
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -25,6 +25,7 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.mode
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateMinAmount
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateTokenPerTokenRate
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateRemovingShareOfPool
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,8 +34,10 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import javax.inject.Inject
 
-class RemoveLiquidityConfirmationViewModel(
+@HiltViewModel
+class RemoveLiquidityConfirmationViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,
@@ -193,12 +196,12 @@ class RemoveLiquidityConfirmationViewModel(
         }
 
         viewModelScope.launch {
-            walletInteractor.subscribeVisibleAssetsOfCurAccount()
+            walletInteractor.subscribeActiveAssetsOfCurAccount()
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest {
                     balanceFrom =
-                        it.first { it.token.id == OptionsProvider.feeAssetId }.balance.transferable
+                        it.first { it.token.id == SubstrateOptionsProvider.feeAssetId }.balance.transferable
                     checkErrors()
                 }
         }

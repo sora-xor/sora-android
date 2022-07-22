@@ -2,26 +2,28 @@
 <resources>
   <string name="about_announcements">Rebre anuncis</string>
   <string name="about_ask_support">Demana Assistència</string>
-  <string name="about_contact_us">Contacta amb nosaltres</string>
+  <string name="about_contact_us">Contacta amb nosaltres per correu electrònic</string>
   <string name="about_instagram">Like a Instagram</string>
   <string name="about_medium">Llegeix més a Medium</string>
   <string name="about_privacy">Política de Privacitat</string>
-  <string name="about_source_code">Codi font</string>
+  <string name="about_source_code">Codi font a GitHub</string>
   <string name="about_telegram">Grup oficial de Telegram</string>
   <string name="about_title">Sobre el projecte</string>
   <string name="about_twitter">Segueix a Twitter</string>
   <string name="about_website">Pàgina web oficial</string>
   <string name="about_wiki">Aprèn més a la Wiki</string>
   <string name="about_youtube">Subscriure a YouTube</string>
+  <string name="account_already_imported">Importada prèviament</string>
+  <string name="account_already_imported_description">Aquesta cartera ja ha estat importada</string>
   <string name="account_confirmation_title">Confirmeu el mnemotècnic</string>
   <string name="account_confirmation_title_v2">Confirma la Contrasenya</string>
   <string name="activity_project">Projecte</string>
-  <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
-  <string name="add_liquidity_confirmation_title">Confirm supply</string>
-  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
-  <string name="add_liquidity_pool_share_title">Your pool share will be</string>
-  <string name="add_liquidity_pool_title" formatted="false">%s - %s Pool</string>
-  <string name="add_liquidity_title">Add Liquidity</string>
+  <string name="add_liquidity_alert_text">Guanyaràs comissions proporcionals a la teva participació al pool per provisió de liquiditat.</string>
+  <string name="add_liquidity_confirmation_title">Confirma la teva aportació</string>
+  <string name="add_liquidity_pool_share_description">La quantitat obtinguda és aproximada. Si el preu canvia més d\'un %s%, la teva transacció serà cancel·lada.</string>
+  <string name="add_liquidity_pool_share_title">La teva participació al pool serà de</string>
+  <string name="add_liquidity_pool_title" formatted="false">Pool %s - %s</string>
+  <string name="add_liquidity_title">Afegeix liquiditat</string>
   <string name="address_not_found">No s\'ha trobat l\'adreça, comproveu que l\'adreça pertanyi a la xarxa adequada.</string>
   <string name="address_not_found_1">No s\'han trobat els destinataris</string>
   <string name="amount_default_fee">Comissió de la transacció</string>
@@ -36,6 +38,7 @@
   <string name="asset_state_error">Error</string>
   <string name="asset_val_fullname">Token de Validació de SORA (VAL)</string>
   <string name="asset_val_name">Token de Validació de SORA</string>
+  <string name="backup_account_title">Còpia de seguretat del compte</string>
   <string name="biometric_dialog_title">Autenticar</string>
   <string name="block_id">Bloqueja el hash</string>
   <string name="choose_token">Escull el token</string>
@@ -64,6 +67,7 @@
   <string name="common_apply">Aplicar</string>
   <string name="common_arab">Àrab</string>
   <string name="common_asset">Actiu</string>
+  <string name="common_back">Tornar</string>
   <string name="common_balance">Equilibri</string>
   <string name="common_bashkir">Baixkir</string>
   <string name="common_camera">Càmera</string>
@@ -78,8 +82,8 @@
   <string name="common_copy">Copiar</string>
   <string name="common_copy_address">Copiar adreça</string>
   <string name="common_croatian">Croata</string>
-  <string name="common_deposit">Deposit</string>
-  <string name="common_deposit_symbol">%s deposit</string>
+  <string name="common_deposit">Dipositar</string>
+  <string name="common_deposit_symbol">Dipòsit de %s</string>
   <string name="common_description">Descripció</string>
   <string name="common_done">Fet</string>
   <string name="common_donotallow">No ho permetis</string>
@@ -101,6 +105,7 @@
   <string name="common_error_mnemonic_is_not_valid">Assegureu-vos que la vostra frase de contrasenya consti de 12 o 15 paraules i que totes siguin correctes.</string>
   <string name="common_error_mnemonic_length_error">Les paraules de pas es componen de 15 paraules</string>
   <string name="common_error_network">Si us plau, comproveu la connexió a Internet i torneu a provar més tard.</string>
+  <string name="common_error_no_browser_error">Si us plau, instal·la un buscador per a obrir l\'enllaç</string>
   <string name="common_error_not_enough_invitations">Ho sentim, però no teniu cap invitació per compartir</string>
   <string name="common_error_not_found_title">Recurs no disponible</string>
   <string name="common_error_phone_already_exists">Ho sentim, aquest número de telèfon ja s\'està utilitzant. Si us plau, proveu-ne un altre.</string>
@@ -110,6 +115,7 @@
   <string name="common_error_project_not_found">Ho sentim, però el projecte no s\'ha trobat.</string>
   <string name="common_error_retry">Siusplau torna-ho a provar</string>
   <string name="common_error_search_string_error">La mida de la cerca ha d\'estar entre 3 i 64 caràcters</string>
+  <string name="common_error_seed_is_not_valid">Si us plau, assegura\'t que les dades introduïdes contenen 64 símbols hexadecimals.</string>
   <string name="common_error_self_invitation">No podeu utilitzar el codi d\'invitació per a vosaltres mateixos</string>
   <string name="common_error_unauthorized_body">Si us plau, comproveu la connexió a Internet i torneu a provar més tard.</string>
   <string name="common_error_unauthorized_title">L\'autorització ha fallat</string>
@@ -135,7 +141,7 @@
   </plurals>
   <string name="common_indonesian">Indonesi</string>
   <string name="common_info">Informació</string>
-  <string name="common_insufficient_balance">Insufficient balance</string>
+  <string name="common_insufficient_balance">Balanç insuficient</string>
   <string name="common_italian">Italià</string>
   <string name="common_japanese">Japonès</string>
   <string name="common_khmer">Khmer</string>
@@ -144,6 +150,7 @@
   <string name="common_malay">Malai</string>
   <string name="common_manage">Gestiona</string>
   <string name="common_min">min</string>
+  <string name="common_name">Name</string>
   <string name="common_network_unavailable">Connexió de xarxa no disponible</string>
   <string name="common_next">Següent</string>
   <string name="common_norwegian">Noruec</string>
@@ -151,7 +158,7 @@
   <string name="common_ok">D\'acord</string>
   <string name="common_open_explorer">Veure a l\'Explorador blockchain</string>
   <string name="common_options_title">Seleccioneu una opció</string>
-  <string name="common_output">Output</string>
+  <string name="common_output">Quantitat obtinguda</string>
   <string name="common_passphrase_body">Quan creeu un compte nou a SORA, ara obtindreu una frase de contrasenya de 12 paraules. Si ja teniu una frase de contrasenya SORA de 15 paraules, podeu importar-hi el compte; també són compatibles i continuaran funcionant.</string>
   <string name="common_passphrase_header">Les paraules de pas son\nun tipus de contrasenya.</string>
   <string name="common_passphrase_save_mnemonic_title">Desar o enviar paraules de pas</string>
@@ -168,10 +175,11 @@
   <string name="common_personal_info_last_name_is_empty">El cognom és buit</string>
   <string name="common_personal_info_title">Informació personal</string>
   <string name="common_please_wait">Si us plau espera</string>
+  <string name="common_raw_seed">Raw Seed</string>
   <string name="common_receive">Rebre</string>
   <string name="common_received">Rebut</string>
   <string name="common_recipient">Destinatari</string>
-  <string name="common_remove">Remove</string>
+  <string name="common_remove">Retirar</string>
   <string name="common_retry">Reintentar</string>
   <string name="common_russian">Rus</string>
   <string name="common_save">Desar</string>
@@ -191,7 +199,7 @@
   <string name="common_sms_code_not_correct">El codi de verificació és incorrecte</string>
   <string name="common_spanish">Espanyol</string>
   <string name="common_spanish_colombia">Espanyol (Colòmbia)</string>
-  <string name="common_supply">Supply</string>
+  <string name="common_supply">Subministrament</string>
   <string name="common_swedish">Suec</string>
   <string name="common_terms_title">Termes i Condicions</string>
   <string name="common_thai">Tailandès</string>
@@ -207,10 +215,10 @@
   <string name="common_update">Actualització</string>
   <string name="common_vote">Vota</string>
   <string name="common_yesterday">Ahir</string>
-  <string name="common_you_will_receive">You will receive</string>
-  <string name="common_your_position">Your Position</string>
+  <string name="common_you_will_receive">Rebràs</string>
+  <string name="common_your_position">La teva posició</string>
   <string name="contacts_empty_state_title">Els contactes més importants apareixeran aquí</string>
-  <string name="contacts_scan">Escanejar codi QR</string>
+  <string name="contacts_scan">Escanejar</string>
   <string name="contacts_search_empty_state_title">No hi ha resultats de cerca</string>
   <string name="contacts_search_hint_v1">ID del compte, número de telèfon, adreça</string>
   <string name="contacts_search_results">Resultats de la cerca</string>
@@ -232,13 +240,26 @@
   <string name="error_miner_fee_title">No hi ha prou fons per a la tarifa de Mineria</string>
   <string name="error_transaction_fee_title">No hi ha prou fons per a la comissió de transacció</string>
   <string name="ethereum_config_unavailable">Node d\'Ethereum no disponible</string>
+  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_options">Backup options</string>
+  <string name="export_account_details_show_passphrase">Show Passphrase</string>
+  <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
   <string name="faq_title">Preguntes freqüents</string>
-  <string name="friends_spread_word">Difoneu la paraula, compartiu l\'aplicació amb els vostres amics.</string>
+  <string name="friends_spread_word">Compartiu l\'aplicació de SORA amb els vostres amics.</string>
   <string name="from_account">Des del compte</string>
+  <string name="history_bonded_tokens">Bonded XOR tokens</string>
   <string name="history_receive">Rep</string>
+  <string name="history_referral">Referral</string>
+  <string name="history_referral_bond_tokens">Bond tokens</string>
+  <string name="history_referral_set_referral">Set referral</string>
+  <string name="history_referral_set_referrer">Set referrer</string>
+  <string name="history_referral_unbond_tokens">Unbond tokens</string>
+  <string name="history_referrer">Referrer</string>
   <string name="history_send">Enviar</string>
   <string name="history_swap">Intercanvia</string>
   <string name="history_title">Historial</string>
+  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
+  <string name="import_account_raw_seed">Heu importat aquest compte mitjançant la llavor</string>
   <string name="invite_accepted_empty_state_title">Encara no hi han invitacions acceptades</string>
   <string name="invite_accepted_invitations_title">Invitacions acceptades</string>
   <string name="invite_accepted_someone">Algú ha acceptat la invitació</string>
@@ -266,10 +287,10 @@
   <string name="invoice_scan_error_no_info">El QR no es pot descodificar</string>
   <string name="invoice_scan_error_user_not_found">No puc trobar un usuari des del QR</string>
   <string name="language_title">Seleccioneu l\'idioma</string>
-  <string name="liquidity_added">Added %s liquidity</string>
-  <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
-  <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
-  <string name="liquidity_removed">Removed %s liquidity</string>
+  <string name="liquidity_added">Liquiditat de %s afegida</string>
+  <string name="liquidity_pair_creation_description">La relació entre els tokens que afegeixis establirà el preu d\'aquest pool. Una vegada estiguis satisfet amb la relació, clica el botó d\'Aportar per a revisar</string>
+  <string name="liquidity_pair_creation_title">Ets el primer proveïdor de liquiditat</string>
+  <string name="liquidity_removed">Liquiditat de %s retirada</string>
   <string name="logout_dialog_body">Aquesta acció comportarà la supressió del compte d\'aquest dispositiu. Assegureu-vos que heu fet una còpia de seguretat de les vostres paraules de pas abans de continuar.</string>
   <string name="mnemonic_alert_text">Mnemonic s\'utilitza per recuperar l\'accés al compte. Escriu-lo, no podrem recuperar el teu compte sense ell!</string>
   <string name="mnemonic_confirm_text">Confirmeu triant les paraules en l’ordre correcte</string>
@@ -289,6 +310,10 @@
   <string name="phone_number_sms_code_will_be_sent">S’enviarà el codi SMS\n al vostre telèfon</string>
   <string name="phone_number_title">Registra\'t</string>
   <string name="phone_verification_too_frequent_message">Sol·licituds de codi de verificació massa freqüents. Si us plau, intenteu-ho més tard.</string>
+  <string name="pin_update_button_text">Estableix un nou codi PIN</string>
+  <string name="pin_update_info_description">La pòlissa de seguretat ha estat millorada per la teva seguretat</string>
+  <string name="pin_update_info_subtitle">Si us plau, introdueix un nou codi PIN de 6 dígits</string>
+  <string name="pin_update_info_title">El codi PIN de 4 dígits ja no és compatible.</string>
   <string name="pincode_change_success">El codi PIN ha sigut canviat correctament</string>
   <string name="pincode_change_success_v1">El codi PIN ha canviat</string>
   <string name="pincode_confirm_new_pin_code">Confirmeu el nou codi PIN</string>
@@ -303,13 +328,13 @@
   <string name="pincode_updated">Codi PIN actualitzat</string>
   <string name="polkaswap_button_swap_again">Intercanvia de nou</string>
   <string name="polkaswap_coming_soon">El DEX per al futur interoperable. Polkaswap és un protocol AMM-DEX sense custòdia per intercanviar tokens basat en la xarxa Polkadot, Parachains i blockchains connectades mitjançant un Pont. El protocol Polkaswap elimina eficaçment els intermediaris de confiança i proporciona l’oportunitat de fer trading més ràpidament.</string>
-  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
-  <string name="polkaswap_confirm_swap">Confirma el canvi</string>
+  <string name="polkaswap_common_info">Obtindràs comissions proporcionals a la teva participació al pool de liquiditat.</string>
+  <string name="polkaswap_confirm_swap">Confirma l\'intercanvi</string>
   <string name="polkaswap_details">Detalls</string>
   <string name="polkaswap_error_noswap">No hi ha cap intercanvi disponible</string>
   <string name="polkaswap_info_faq">Polkaswap FAQ (Preguntes més freqüents)</string>
-  <string name="polkaswap_info_prices_and_fees">Prices and fees</string>
-  <string name="polkaswap_info_text_1">Polkaswap és mantingut per la comunitat SORA. Abans d’utilitzar la funcionalitat de Polkaswap, consulteu la %% Polkaswap FAQ (Preguntes més freqüents) %% i la documentació, que inclou una explicació detallada sobre el funcionament de Polkaswap, així com el %%Memoràndum i Termes de serveis de Polkaswap%% i %%la Política de privacitat%%. Aquests documents són crucials per a una experiència d\'usuari segura i positiva. A l\'utilitzar Polkaswap, reconeixeu que heu llegit i entès aquests documents.</string>
+  <string name="polkaswap_info_prices_and_fees">Preus i taxes</string>
+  <string name="polkaswap_info_text_1">Polkaswap és mantingut per la comunitat SORA. Abans d’utilitzar Polkaswap, consulteu la %% Polkaswap FAQ (Preguntes més freqüents) %% i la documentació, que inclou una explicació detallada sobre el funcionament de Polkaswap, així com el %%Memoràndum i Termes de serveis de Polkaswap%% i %%la Política de privacitat%%. \n\nAquests documents són crucials per a una experiència d\'usuari segura i positiva. A l\'utilitzar Polkaswap, reconeixeu que heu llegit i entès aquests documents.</string>
   <string name="polkaswap_info_text_2">També reconeixeu el següent:</string>
   <string name="polkaswap_info_text_3">La seva única responsabilitat pel compliment de totes les lleis que puguin aplicar-se a l\'ús particular de Polkaswap en la seva jurisdicció legal;</string>
   <string name="polkaswap_info_text_4">Enteneu que la versió actual de Polkaswap és una versió alfa: no s\'ha provat completament, i algunes funcions poden no funcionar com s\'ha dissenyat;</string>
@@ -337,30 +362,32 @@
   <string name="polkaswap_minimum_received_info">La vostra transacció es revertirà si hi ha un gran moviment de preus desfavorable abans que es confirmi.</string>
   <string name="polkaswap_network_fee">Tarifa de xarxa</string>
   <string name="polkaswap_network_fee_info">La tarifa de xarxa s’utilitza per garantir el creixement i el rendiment estable del sistema SORA.</string>
-  <string name="polkaswap_not_enough_tokens_in_pool">Not enough tokens in pool</string>
+  <string name="polkaswap_not_enough_tokens_in_pool">No hi ha suficients tokens al pool</string>
   <string name="polkaswap_output_estimated">Sortida estimada. Rebràs almenys %s o la transacció es revertirà.</string>
   <string name="polkaswap_pool_not_created">La piscina no està creada</string>
   <string name="polkaswap_pool_title">Piscina</string>
-  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_price_for_one">PREU 1</string>
+  <string name="polkaswap_sb_apy_info">Recompenses obtingudes per la provisió de liquiditat.</string>
   <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">La teva transacció pot estar </string>
   <string name="polkaswap_slippage_info">Les transaccions es revertiran si el preu canvia de manera desfavorable per sobre d’aquest percentatge</string>
   <string name="polkaswap_slippage_mayfail">La teva transacció pot </string>
   <string name="polkaswap_slippage_tolerance">Tolerància al lliscament</string>
   <string name="polkaswap_smart">Intel·ligent</string>
+  <string name="polkaswap_swap_empty_list">Encara no tens cap pool activa.\n Afegiu liquiditat per a obtenir recompenses.</string>
   <string name="polkaswap_swap_title">Intercanvi</string>
   <string name="polkaswap_swapped">Canviat</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
-  <string name="polkaswap_your_position">Your position (estimated)</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="polkaswap_your_position">La teva posició (aproximada)</string>
+  <string name="pool_apy_title">APY de la bonificació estratègica </string>
   <string name="pool_button_add">Afegeix</string>
   <string name="pool_button_remove">Esborra</string>
   <string name="pool_liqudity_title">La teva liquiditat</string>
-  <string name="pool_liquidity_placeholder">La teva liquiditat apareixerà aquí</string>
-  <string name="pool_share_after_tx">Pool share after tx</string>
+  <string name="pool_liquidity_placeholder">No tens cap pool activa en aquests moments. Afegeix liquiditat per a obtenir les recompenses</string>
+  <string name="pool_share_after_tx">La teva participació al pool després de la transacció</string>
   <string name="pool_share_title">Participació a la pool</string>
-  <string name="pool_share_title_1">Your pool share</string>
+  <string name="pool_share_title_1">La teva participació al pool</string>
   <string name="pool_token_pooled">Dipositat al pool</string>
   <string name="profile_about_title">Sobre el projecte</string>
   <string name="profile_biometry_title">Autenticació de biometria</string>
@@ -394,11 +421,15 @@
   <string name="project_you_can_vote_at_least_1_point">Pots votar amb almenys 1 punt 😜</string>
   <string name="qr_code">codi QR</string>
   <string name="qr_upload">Pujar des de la galeria</string>
+  <string name="recovery_alert_raw_seed_description">No podràs utilitzar la paraula de pas quan recuperis el compte utilitzant la llavor.</string>
+  <string name="recovery_alert_raw_seed_title">Recuperació a través de la llavor</string>
   <string name="recovery_body_subtitle">Malauradament, no hi ha cap manera d’accedir al vostre compte si heu oblidat les paraules de pas.</string>
   <string name="recovery_body_title">Introdueix les paraules de pas</string>
+  <string name="recovery_input_raw_seed_hint">Raw Seed (64 símbols hexadecimals)</string>
   <string name="recovery_mnemonic_passphrase">Frase de pas mnemotècnica</string>
   <string name="recovery_passphrase">Restaurar l\'accés</string>
   <string name="recovery_source_type">Tipus de font</string>
+  <string name="recovery_source_type_1">Trieu el tipus de font</string>
   <string name="recovery_title">Importar compte</string>
   <string name="referenda_title">Referèndum</string>
   <string name="referenda_title_vote">Votar en referèndums</string>
@@ -418,10 +449,30 @@
   <string name="referendum_total_votes">Vots totals</string>
   <string name="referendum_unsupport_title">No</string>
   <string name="referendum_voting_result">Resultat de la votació</string>
-  <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
-  <string name="remove_liquidity_title">Remove Liquidity</string>
-  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
-  <string name="remove_pool_confirmation_title">Confirm Remove</string>
+  <string name="referral_activate_button_title">Activate</string>
+  <string name="referral_bond_button_title">Bond XOR</string>
+  <string name="referral_enter_link_title">Enter referrer\'s link</string>
+  <string name="referral_get_more_invitation_button_title">Get more invitations</string>
+  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\n\nYou can unbond your XOR at any time for unused invitations.</string>
+  <string name="referral_input_reward_title">Enter desired amount of invitations</string>
+  <string name="referral_invitaion_link_title">Available invitations</string>
+  <string name="referral_referral_link">Referrer’s link or address</string>
+  <string name="referral_referrer_address">Adreça de referit</string>
+  <string name="referral_referrer_description">Quan facis una transacció, el 10% de les comissions de la xarxa pagades seran destinades al teu referent com a recompensa.</string>
+  <string name="referral_start_inviting">Comença a convidar</string>
+  <string name="referral_subtitle">Quan el teu referit faci una transacció, el 10% de les comissions de xarxa pagades se\'t destinaran en concepte de recompensa.</string>
+  <string name="referral_title">Obté el 10% de les comissions de xarxa dels teus referits</string>
+  <string name="referral_toolbar_title">Programa de referits</string>
+  <string name="referral_total_rewards">Recompensa total</string>
+  <string name="referral_unbond_button_title">Unbond XOR</string>
+  <string name="referral_unbond_xor_description">You can unbond %s per 1 invitations. How many invitations do you want to withdraw?</string>
+  <string name="referral_your_invitation_link_title">Your invitation link</string>
+  <string name="referral_your_referrals">Els teus referits</string>
+  <string name="referral_your_referrer">El teu referent</string>
+  <string name="remove_liquidity_info_text">Retirar la liquiditat et retorna la teva posició amb la relació actual, proporcional a la teva participació en el pool.</string>
+  <string name="remove_liquidity_title">Retirar liquiditat</string>
+  <string name="remove_pool_confirmation_description">La quantitat obtinguda és aproximada. Si el preu canvia més d\'un %s%, la teva transacció serà cancel·lada.</string>
+  <string name="remove_pool_confirmation_title">Confirma la retirada</string>
   <string name="restart_required">Cal reiniciar</string>
   <string name="screenshot_alert_text">No feu captures de pantalla, que poden ser recollides per programari maliciós de tercers</string>
   <string name="screenshot_alert_title">No feu captures de pantalla</string>
@@ -432,10 +483,10 @@
   <string name="select_asset_send">Selecciona l\'actiu a enviar</string>
   <string name="select_recipient">Selecciona el destinatari</string>
   <string name="set_amount">Introuduir quantitat</string>
-  <string name="settings_accounts">Accounts</string>
-  <string name="settings_header_account">Account settings</string>
-  <string name="settings_header_app">App settings</string>
-  <string name="settings_header_other">Other</string>
+  <string name="settings_accounts">Comptes</string>
+  <string name="settings_header_account">Opcions del compte</string>
+  <string name="settings_header_app">Configuració de l\'aplicació</string>
+  <string name="settings_header_other">Altres</string>
   <string name="staking_coming_soon">Les persones que tinguen XOR podran estacar el seu XOR per designar validadors i obtenir recompenses.</string>
   <string name="staking_description">Els validadors nominals són una part important de l\'ecosistema de Sora, ja que ajuden a assegurar i descentralitzar la xarxa. Els tokens VAL seran atorgats als validadors i nominadors com a premi per fer staking.</string>
   <string name="staking_val_reward">Recompenses del VALidador de SORA</string>
@@ -446,7 +497,7 @@
   <string name="status_success">Éxit</string>
   <string name="status_title">Estat</string>
   <string name="swap_input_title">Entrada de l\'intercanvi</string>
-  <string name="tabbar_friends_title">Amics</string>
+  <string name="tabbar_friends_title">Convida els amics</string>
   <string name="tabbar_parliament_title">Parlament</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
   <string name="tabbar_profile_title">Perfil</string>
@@ -456,7 +507,7 @@
   <string name="transaction_bridge_not_active_error">El pont d\'Ethereum no està actiu.</string>
   <string name="transaction_confirm">Confirmar transacció</string>
   <string name="transaction_continue">Continuar</string>
-  <string name="transaction_date">Data i hora</string>
+  <string name="transaction_date">Data /  Hora</string>
   <string name="transaction_details">Detalls de la Transacció</string>
   <string name="transaction_fee_estimated_time">Temps estimat de transacció ~ %s</string>
   <string name="transaction_fee_fast">Ràpid</string>
@@ -521,10 +572,10 @@
   <string name="wallet_history_to_soranet_account">Al compte de SORA NET</string>
   <string name="wallet_qr_share_message_empty_template" formatted="false">La meva adreça de xarxa %s per rebre %s :</string>
   <string name="wallet_qr_share_message_empty_template_v1" formatted="false">Adreça de xarxa %s per a rebre %s:</string>
-  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Scan this QR to send me %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_empty_template_v2" formatted="false">Escaneja aquest codi QR per enviar-me %s. La meva ID del compte de %s:\n %s</string>
   <string name="wallet_qr_share_message_template" formatted="false">La meva adreça de xarxa %s per rebre %s %s :</string>
   <string name="wallet_qr_share_message_template_v1" formatted="false">La meva adreça %s de xarxa per a rebre %s%s:</string>
-  <string name="wallet_qr_share_message_template_v2" formatted="false">Scan this QR to send me %s %s. My %s Network Account ID:\n%s</string>
+  <string name="wallet_qr_share_message_template_v2" formatted="false">Escaneja aques codi QR per enviar-me %s %s. La meva ID del compte de %s:\n %s</string>
   <string name="wallet_receive_val">Rebre VAL</string>
   <string name="wallet_redeemable">Bescanviable</string>
   <string name="wallet_send_existential_warning_message">La vostra transferència eliminarà el compte de blockstore, ja que farà que el saldo total sigui inferior al dipòsit existencial.</string>
@@ -533,8 +584,8 @@
   <string name="wallet_transaction_rejected">Transacció rebutjada.</string>
   <string name="wallet_transaction_submitted">Transacció enviada</string>
   <string name="wallet_transaction_submitted_1">Transacció/Transaccions entregades</string>
-  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
-  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
+  <string name="wallet_transactions_unavailable_description">L\'assumpte està sent tractat,\n si us plau, prova-ho més endavant.</string>
+  <string name="wallet_transactions_unavailable_title">No s\'han pogut carregar les transaccions</string>
   <string name="wallet_transfer_description_hint">Símbols màxims %s</string>
   <string name="wallet_transfer_to_ethereum">A l\'adreça d\'Ethereum</string>
   <string name="wallet_unbonding">Deslligant</string>

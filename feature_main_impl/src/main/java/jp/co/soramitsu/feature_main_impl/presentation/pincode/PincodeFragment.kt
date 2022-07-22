@@ -12,51 +12,60 @@ import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import android.widget.Toast
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
-import jp.co.soramitsu.common.di.api.FeatureUtils
+import jp.co.soramitsu.common.io.MainThreadExecutor
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.ext.onBackPressed
 import jp.co.soramitsu.common.util.ext.restartApplication
 import jp.co.soramitsu.common.util.ext.runDelayed
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentPincodeBinding
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
+import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintCallback
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintWrapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode) {
 
     companion object {
         private const val DATA_CLEAR_DELAY = 500L
     }
 
-    @Inject
-    lateinit var fingerprintWrapper: FingerprintWrapper
+    private val fingerprintWrapper: FingerprintWrapper by lazy {
+        val biometricManager = BiometricManager.from(context?.applicationContext!!)
+        val biometricPrompt =
+            BiometricPrompt(this, MainThreadExecutor(), FingerprintCallback(viewModel))
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.biometric_dialog_title))
+            .setNegativeButtonText(getString(R.string.common_cancel))
+            .build()
+        FingerprintWrapper(
+            biometricManager,
+            biometricPrompt,
+            promptInfo
+        )
+    }
 
     @Inject
     lateinit var cma: ConnectionManager
 
+    override val viewModel: PinCodeViewModel by viewModels()
+
     private lateinit var fingerprintDialog: BottomSheetDialog
     private lateinit var progressDialog: SoraProgressDialog
     private val binding by viewBinding(FragmentPincodeBinding::bind)
-
-    override fun inject() {
-        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
-            .pinCodeComponentBuilder()
-            .withFragment(this)
-            .withMaxPinCodeLength(DotsProgressView.MAX_PROGRESS)
-            .build()
-            .inject(this)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -76,7 +85,8 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         }
 
         with(binding.pinCodeView) {
-            pinCodeListener = { viewModel.pinCodeNumberClicked(it) }
+            pinCodeListener =
+                { viewModel.pinCodeNumberClicked(it, binding.dotsProgressView.maxProgress) }
             deleteClickListener = { viewModel.pinCodeDeleteClicked() }
             fingerprintClickListener = { fingerprintWrapper.toggleScanner() }
         }
@@ -85,7 +95,12 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
 
         initListeners()
 
-        val action = requireArguments().getSerializable(Const.PIN_CODE_ACTION) as PinCodeAction
+        val action = if (viewModel.isReturningFromInfo) {
+            PinCodeAction.CREATE_PIN_CODE
+        } else {
+            requireArguments().getSerializable(Const.PIN_CODE_ACTION) as PinCodeAction
+        }
+
         viewModel.startAuth(action)
     }
 
@@ -118,6 +133,12 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         viewModel.resetApplicationEvent.observe {
             runDelayed(DATA_CLEAR_DELAY) {
                 requireContext().restartApplication()
+            }
+        }
+
+        viewModel.switchAccountEvent.observe {
+            runDelayed(DATA_CLEAR_DELAY) {
+                findNavController().popBackStack()
             }
         }
 
@@ -163,6 +184,9 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         }
         viewModel.checkInviteLiveData.observe {
             (activity as? MainActivity)?.checkInviteAction()
+        }
+        viewModel.currentPincodeLength.observe {
+            binding.dotsProgressView.maxProgress = it
         }
     }
 

@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_wallet_impl.domain
 
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
 import kotlinx.coroutines.CoroutineScope
@@ -15,6 +16,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -37,7 +39,9 @@ class PoolsManagerImpl(
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope.launch {
             loadingState.value = true
-            polkaswapInteractor.updatePools()
+            try {
+                polkaswapInteractor.updatePools()
+            } catch (t: Throwable) { FirebaseWrapper.recordException(t) }
             loadingState.value = false
         }
         polkaswapInteractor.subscribePoolsChanges()
@@ -47,7 +51,7 @@ class PoolsManagerImpl(
                 loadingState.value = true
                 polkaswapInteractor.updatePools()
                 loadingState.value = false
-            }
+            }.catch { FirebaseWrapper.recordException(it) }
             .launchIn(scope)
     }
 

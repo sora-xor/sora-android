@@ -7,9 +7,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.swapconfirmat
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.distinctUntilChanged
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -18,10 +21,11 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.model.ButtonState
+import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,23 +37,53 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 
 @FlowPreview
-class SwapConfirmationViewModel(
+class SwapConfirmationViewModel @AssistedInject constructor(
     private val router: WalletRouter,
     walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
-    private val fromToken: Token,
-    private val fromAmount: BigDecimal,
-    private val toToken: Token,
-    private val toAmount: BigDecimal,
-    private val desired: WithDesired,
-    private val details: SwapDetails,
-    private val feeToken: Token,
-    private val slippageTolerance: Float,
+    @Assisted("fromToken") private val fromToken: Token,
+    @Assisted("fromAmount") private val fromAmount: BigDecimal,
+    @Assisted("toToken") private val toToken: Token,
+    @Assisted("toAmount") private val toAmount: BigDecimal,
+    @Assisted private val desired: WithDesired,
+    @Assisted private val details: SwapDetails,
+    @Assisted("feeToken") private val feeToken: Token,
+    @Assisted private val slippageTolerance: Float,
 ) : BaseViewModel() {
 
+    @AssistedFactory
+    interface SwapConfirmationViewModelFactory {
+        fun create(
+            @Assisted("fromToken") fromToken: Token,
+            @Assisted("fromAmount") fromAmount: BigDecimal,
+            @Assisted("toToken") toToken: Token,
+            @Assisted("toAmount") toAmount: BigDecimal,
+            @Assisted desired: WithDesired,
+            @Assisted details: SwapDetails,
+            @Assisted("feeToken") feeToken: Token,
+            @Assisted slippageTolerance: Float,
+        ): SwapConfirmationViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
     companion object {
+        fun provideFactory(
+            factory: SwapConfirmationViewModelFactory,
+            fromToken: Token,
+            fromAmount: BigDecimal,
+            toToken: Token,
+            toAmount: BigDecimal,
+            desired: WithDesired,
+            details: SwapDetails,
+            feeToken: Token,
+            slippageTolerance: Float,
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return factory.create(fromToken, fromAmount, toToken, toAmount, desired, details, feeToken, slippageTolerance) as T
+            }
+        }
         const val ROUNDING_SWAP = 7
     }
 
@@ -68,13 +102,13 @@ class SwapConfirmationViewModel(
     val outputAmountLiveData: LiveData<String> = _outputAmountLiveData
 
     private val _per1LiveData = MutableLiveData<Pair<String, String>>()
-    val per1LiveData: LiveData<Pair<String, String>> = _per1LiveData.distinctUntilChanged()
+    val per1LiveData: LiveData<Pair<String, String>> = _per1LiveData
 
     private val _per2LiveData = MutableLiveData<Pair<String, String>>()
-    val per2LiveData: LiveData<Pair<String, String>> = _per2LiveData.distinctUntilChanged()
+    val per2LiveData: LiveData<Pair<String, String>> = _per2LiveData
 
     private val _minmaxLiveData = MutableLiveData<Pair<String, String?>>()
-    val minmaxLiveData: LiveData<Pair<String, String?>> = _minmaxLiveData.distinctUntilChanged()
+    val minmaxLiveData: LiveData<Pair<String, String?>> = _minmaxLiveData
 
     private val _liquidityLiveData = MutableLiveData<String?>()
     val liquidityLiveData: LiveData<String?> = _liquidityLiveData
@@ -102,14 +136,14 @@ class SwapConfirmationViewModel(
 
     init {
         updateScreen()
-        walletInteractor.subscribeVisibleAssetsOfCurAccount()
+        walletInteractor.subscribeActiveAssetsOfCurAccount()
             .catch { onError(it) }
             .onEach {
                 fromTokenBalance =
                     it.find { a -> a.token.id == fromToken.id }?.balance?.transferable
                 toTokenBalance = it.find { a -> a.token.id == toToken.id }?.balance?.transferable
                 feeTokenBalance =
-                    it.find { a -> a.token.id == OptionsProvider.feeAssetId }?.balance?.transferable
+                    it.find { a -> a.token.id == SubstrateOptionsProvider.feeAssetId }?.balance?.transferable
                 onChangeAssetsOrReserves()
             }
             .launchIn(viewModelScope)

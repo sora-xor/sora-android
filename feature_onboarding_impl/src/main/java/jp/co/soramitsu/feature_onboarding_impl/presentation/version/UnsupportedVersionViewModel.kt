@@ -5,6 +5,9 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.version
 
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import javax.inject.Inject
 
-class UnsupportedVersionViewModel : BaseViewModel()
+@HiltViewModel
+class UnsupportedVersionViewModel @Inject constructor() : BaseViewModel()

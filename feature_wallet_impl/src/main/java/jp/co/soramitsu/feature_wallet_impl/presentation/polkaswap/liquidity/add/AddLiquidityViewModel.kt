@@ -9,7 +9,7 @@ import android.text.SpannableString
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.SuspendableProperty
@@ -21,12 +21,12 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.decimalPartSized
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.model.ButtonState
@@ -34,6 +34,9 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.model.DetailsI
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.model.DetailsSection
 import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.model.MessageAlert
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateAddingShareOfPool
+import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapMath.isZero
+import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -47,10 +50,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
+import javax.inject.Inject
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-class AddLiquidityViewModel(
+@HiltViewModel
+class AddLiquidityViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
     private val polkaswapInteractor: PolkaswapInteractor,
@@ -123,7 +128,7 @@ class AddLiquidityViewModel(
     init {
         viewModelScope.launch {
             tryCatch {
-                val asset = walletInteractor.getAssetOrThrow(OptionsProvider.feeAssetId)
+                val asset = walletInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
                 _fromToken.value = asset.token
                 _fromAssetBalance.value = numbersFormatter.formatBigDecimal(
                     asset.balance.transferable,
@@ -133,7 +138,7 @@ class AddLiquidityViewModel(
         }
 
         onChangedProperty.observe()
-            .debounce(700)
+            .debounce(ViewHelper.debounce)
             .catch {
                 onError(it)
             }
@@ -152,7 +157,7 @@ class AddLiquidityViewModel(
 
     private fun subscribeToAssets() {
         viewModelScope.launch {
-            walletInteractor.subscribeVisibleAssetsOfCurAccount()
+            walletInteractor.subscribeActiveAssetsOfCurAccount()
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest(::updateData)
@@ -160,7 +165,7 @@ class AddLiquidityViewModel(
     }
 
     private fun updateData(assets: List<Asset>) {
-        assets.find { it.token.id == OptionsProvider.feeAssetId }?.let { asset ->
+        assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let { asset ->
             balanceFrom = asset.balance.transferable
             _fromToken.value = asset.token
             _fromAssetBalance.value = numbersFormatter.formatBigDecimal(
@@ -367,7 +372,7 @@ class AddLiquidityViewModel(
                         DetailsItem(
                             resourceManager.getString(R.string.polkaswap_sbapy),
                             PERCENT_FORMAT.format(
-                                numbersFormatter.formatBigDecimal(
+                                numbersFormatter.format(
                                     sbApy,
                                     DEFAULT_PRECISION
                                 )
@@ -409,7 +414,7 @@ class AddLiquidityViewModel(
 
     private fun fetchAssetData() {
         viewModelScope.launch {
-            val assets = walletInteractor.getVisibleAssets()
+            val assets = walletInteractor.getActiveAssets()
             updateData(assets)
         }
     }
@@ -436,23 +441,27 @@ class AddLiquidityViewModel(
     }
 
     private fun subscribePoolChanges(tokenFromId: String, tokenToId: String) {
-        viewModelScope.launch {
-            polkaswapInteractor.isPairEnabled(tokenFromId, tokenToId)
-                .distinctUntilChanged()
-                .collectLatest {
-                    pairEnabled = it
-                    onChangedProperty.set(false)
-                }
-        }
+        polkaswapInteractor.isPairEnabled(tokenFromId, tokenToId)
+            .catch {
+                onError(it)
+            }
+            .distinctUntilChanged()
+            .onEach {
+                pairEnabled = it
+                onChangedProperty.set(false)
+            }
+            .launchIn(viewModelScope)
 
-        viewModelScope.launch {
-            polkaswapInteractor.isPairPresentedInNetwork(tokenToId)
-                .distinctUntilChanged()
-                .collectLatest {
-                    pairPresented = it
-                    onChangedProperty.set(false)
-                }
-        }
+        polkaswapInteractor.isPairPresentedInNetwork(tokenToId)
+            .catch {
+                onError(it)
+            }
+            .distinctUntilChanged()
+            .onEach {
+                pairPresented = it
+                onChangedProperty.set(false)
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun subscribeReserves(tokenToId: String) {
@@ -485,9 +494,8 @@ class AddLiquidityViewModel(
         viewModelScope.launch {
             liquidityData =
                 polkaswapInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
-            _pairNotExists.value = liquidityData.secondReserves == BigDecimal.ZERO &&
-                liquidityData.firstReserves == BigDecimal.ZERO
-
+            _pairNotExists.value =
+                liquidityData.secondReserves.isZero() && liquidityData.firstReserves.isZero()
             onChangedProperty.set(false)
         }
     }
@@ -504,7 +512,10 @@ class AddLiquidityViewModel(
     }
 
     fun onChooseToken() {
-        router.showSelectToken(AssetListMode.SELECT_FOR_LIQUIDITY, OptionsProvider.feeAssetId)
+        router.showSelectToken(
+            AssetListMode.SELECT_FOR_LIQUIDITY,
+            SubstrateOptionsProvider.feeAssetId
+        )
     }
 
     fun fromAmountChanged(amount: BigDecimal) {

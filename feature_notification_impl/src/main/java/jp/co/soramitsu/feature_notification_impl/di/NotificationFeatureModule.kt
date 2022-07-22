@@ -7,6 +7,10 @@ package jp.co.soramitsu.feature_notification_impl.di
 
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import jp.co.soramitsu.common.data.EncryptedPreferences
+import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationDatasource
 import jp.co.soramitsu.feature_notification_api.domain.interfaces.NotificationRepository
 import jp.co.soramitsu.feature_notification_impl.data.repository.NotificationRepositoryImpl
@@ -14,13 +18,20 @@ import jp.co.soramitsu.feature_notification_impl.data.repository.datasource.Pref
 import javax.inject.Singleton
 
 @Module
+@InstallIn(SingletonComponent::class)
 class NotificationFeatureModule {
 
     @Provides
     @Singleton
-    fun provideNotificationRepository(notificationRepository: NotificationRepositoryImpl): NotificationRepository = notificationRepository
+    fun provideNotificationRepository(
+        notificationDatasource: NotificationDatasource
+    ): NotificationRepository =
+        NotificationRepositoryImpl(notificationDatasource)
 
     @Provides
     @Singleton
-    fun provideNotificationDatasource(prefsNotificationDatasource: PrefsNotificationDatasource): NotificationDatasource = prefsNotificationDatasource
+    fun provideNotificationDatasource(
+        sp: SoraPreferences,
+        ep: EncryptedPreferences
+    ): NotificationDatasource = PrefsNotificationDatasource(sp, ep)
 }

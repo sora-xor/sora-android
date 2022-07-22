@@ -17,11 +17,6 @@ enum class Market(@StringRes val titleResource: Int, @StringRes val descriptionR
     XYK(R.string.polkaswap_xyk, R.string.polkaswap_market_xyk_description, "XYKPool")
 }
 
-enum class WithDesired(val backString: String) {
-    INPUT("WithDesiredInput"),
-    OUTPUT("WithDesiredOutput")
-}
-
 @Parcelize
 data class SwapDetails(
     val amount: BigDecimal,

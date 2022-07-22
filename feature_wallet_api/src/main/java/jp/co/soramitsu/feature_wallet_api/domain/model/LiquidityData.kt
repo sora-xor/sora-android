@@ -12,5 +12,5 @@ data class LiquidityData(
     val secondReserves: BigDecimal = BigDecimal.ZERO,
     val firstPooled: BigDecimal = BigDecimal.ZERO,
     val secondPooled: BigDecimal = BigDecimal.ZERO,
-    val sbApy: BigDecimal? = null
+    val sbApy: Double? = null
 )

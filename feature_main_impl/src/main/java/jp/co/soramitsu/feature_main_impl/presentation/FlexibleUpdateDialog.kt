@@ -7,20 +7,18 @@ package jp.co.soramitsu.feature_main_impl.presentation
 
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
-import jp.co.soramitsu.common.di.api.FeatureUtils
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.DialogFlexibleUpdateBinding
-import jp.co.soramitsu.feature_main_impl.di.MainFeatureComponent
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class FlexibleUpdateDialog : Fragment(R.layout.dialog_flexible_update) {
 
     companion object {
@@ -34,15 +32,6 @@ class FlexibleUpdateDialog : Fragment(R.layout.dialog_flexible_update) {
     lateinit var debounceClickHandler: DebounceClickHandler
 
     private val binding by viewBinding(DialogFlexibleUpdateBinding::bind)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        FeatureUtils.getFeature<MainFeatureComponent>(requireContext(), MainFeatureApi::class.java)
-            .mainComponentBuilder()
-            .withActivity(activity as AppCompatActivity)
-            .build()
-            .inject(this)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

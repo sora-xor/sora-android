@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.Color
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -23,11 +22,9 @@ class ResourceManagerTest {
         val expectedString = "some string"
 
         val context = mock(Context::class.java)
-        val contextManager = mock(ContextManager::class.java)
-        given(contextManager.getContext()).willReturn(context)
         given(context.getString(R.string.activity_project)).willReturn(expectedString)
 
-        val resourceManager = ResourceManager(contextManager)
+        val resourceManager = ResourceManager(context)
 
         assertEquals(expectedString, resourceManager.getString(R.string.activity_project))
     }
@@ -38,14 +35,11 @@ class ResourceManagerTest {
 
         val context = mock(Context::class.java)
 
-        val contextManager = mock(ContextManager::class.java)
-        given(contextManager.getContext()).willReturn(context)
-
         val resources = mock(Resources::class.java)
         given(context.resources).willReturn(resources)
         given(resources.getColor(R.color.backgroundGrey)).willReturn(expectedColor)
 
-        val resourceManager = ResourceManager(contextManager)
+        val resourceManager = ResourceManager(context)
 
         assertEquals(expectedColor, resourceManager.getColor(R.color.backgroundGrey))
     }
@@ -57,14 +51,11 @@ class ResourceManagerTest {
 
         val context = mock(Context::class.java)
 
-        val contextManager = mock(ContextManager::class.java)
-        given(contextManager.getContext()).willReturn(context)
-
         val resources = mock(Resources::class.java)
         given(context.resources).willReturn(resources)
         given(resources.getQuantityString(R.string.activity_project, quantity)).willReturn(expectedString)
 
-        val resourceManager = ResourceManager(contextManager)
+        val resourceManager = ResourceManager(context)
 
         assertEquals(expectedString, resourceManager.getQuantityString(R.string.activity_project, quantity))
     }

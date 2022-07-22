@@ -7,7 +7,7 @@ package jp.co.soramitsu.common.data
 
 import jp.co.soramitsu.common.util.EncryptionUtil
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -36,7 +36,7 @@ class EncryptedPreferencesTest {
         encryptedPreferences = EncryptedPreferences(preferences, encryptedUtil)
     }
 
-    @Test fun `put encrypted string called`() = runBlockingTest {
+    @Test fun `put encrypted string called`() = runTest {
         given(encryptedUtil.encrypt(value)).willReturn(encryptedValue)
 
         encryptedPreferences.putEncryptedString(key, value)
@@ -45,7 +45,7 @@ class EncryptedPreferencesTest {
         verify(preferences).putString(key, encryptedValue)
     }
 
-    @Test fun `get decrypted string called`() = runBlockingTest {
+    @Test fun `get decrypted string called`() = runTest {
         given(encryptedUtil.decrypt(encryptedValue)).willReturn(value)
         given(preferences.getString(key)).willReturn(encryptedValue)
 
@@ -56,7 +56,7 @@ class EncryptedPreferencesTest {
         verify(preferences).getString(key)
     }
 
-    @Test fun `get empty string called`() = runBlockingTest {
+    @Test fun `get empty string called`() = runTest {
         given(preferences.getString(key)).willReturn("")
 
         val actual = encryptedPreferences.getDecryptedString(key)

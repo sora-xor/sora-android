@@ -12,22 +12,23 @@ import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import javax.inject.Inject
 
-class ClaimWorker(private val appContext: Context, workerParams: WorkerParameters) :
+@HiltWorker
+class ClaimWorker @AssistedInject constructor(@Assisted val appContext: Context, @Assisted workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -52,11 +53,6 @@ class ClaimWorker(private val appContext: Context, workerParams: WorkerParameter
         appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     override suspend fun doWork(): Result {
-        FeatureUtils.getFeature<WalletFeatureComponent>(appContext, WalletFeatureApi::class.java)
-            .claimWorkerComponent()
-            .build()
-            .inject(this)
-
         createNotificationChannel()
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setSmallIcon(R.drawable.icon_small_notification)

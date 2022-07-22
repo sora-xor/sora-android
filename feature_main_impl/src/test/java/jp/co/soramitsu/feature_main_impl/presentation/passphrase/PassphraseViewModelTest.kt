@@ -6,12 +6,12 @@
 package jp.co.soramitsu.feature_main_impl.presentation.passphrase
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -36,23 +36,20 @@ class PassphraseViewModelTest {
     @Mock
     lateinit var interactor: MainInteractor
 
-    @Mock
-    lateinit var preloader: WithPreloader
-
     private lateinit var passphraseViewModel: PassphraseViewModel
 
     @Before
     fun setUp() {
-        passphraseViewModel = PassphraseViewModel(interactor, preloader)
+        passphraseViewModel = PassphraseViewModel(interactor)
     }
 
     @Test
-    fun `get passphrase`() = runBlockingTest {
+    fun `get passphrase`() = runTest {
         val mnemonic = "mnemonic1 mnemonic2"
         given(interactor.getMnemonic()).willReturn(mnemonic)
 
         passphraseViewModel.getPassphrase()
-
+        advanceUntilIdle()
         val r = passphraseViewModel.mnemonicWords.getOrAwaitValue()
         assertEquals(mnemonic.split(" "), r)
     }

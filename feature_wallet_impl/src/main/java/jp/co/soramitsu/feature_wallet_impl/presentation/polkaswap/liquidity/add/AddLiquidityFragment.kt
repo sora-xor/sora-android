@@ -8,13 +8,14 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.add
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.tokenFrom
@@ -28,11 +29,9 @@ import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentAddLiquidityBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
@@ -42,12 +41,17 @@ import javax.inject.Inject
 
 @FlowPreview
 @ExperimentalCoroutinesApi
+@AndroidEntryPoint
 class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragment_add_liquidity) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
     private val binding by viewBinding(FragmentAddLiquidityBinding::bind)
+
+    private val vm: AddLiquidityViewModel by viewModels()
+    override val viewModel: AddLiquidityViewModel
+        get() = vm
 
     private lateinit var keyboardHelper: KeyboardHelper
 
@@ -74,7 +78,9 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
 
         findNavController().currentBackStackEntry?.savedStateHandle
             ?.getLiveData<Bundle?>(BUNDLE_KEY)?.observe(viewLifecycleOwner) { args ->
-                setUpTokensFromArgs(args)
+                if (args != null) {
+                    setUpTokensFromArgs(args)
+                }
             }
     }
 
@@ -221,16 +227,5 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
     override fun onPause() {
         keyboardHelper.release()
         super.onPause()
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .liquidityComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 }

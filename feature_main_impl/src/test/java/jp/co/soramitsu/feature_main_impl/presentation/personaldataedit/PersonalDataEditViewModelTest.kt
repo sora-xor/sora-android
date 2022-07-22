@@ -11,7 +11,8 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -48,7 +49,7 @@ class PersonalDataEditViewModelTest {
     private val accountName = "AccountName"
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         given(interactor.getAccountName()).willReturn(accountName)
         personalDataEditViewModel = PersonalDataEditViewModel(interactor, router, progress)
     }
@@ -76,9 +77,9 @@ class PersonalDataEditViewModelTest {
     }
 
     @Test
-    fun `account name input done`() {
+    fun `account name input done`() = runTest {
         personalDataEditViewModel.saveData(accountName)
-
+        advanceUntilIdle()
         verify(router).popBackStack()
     }
 }

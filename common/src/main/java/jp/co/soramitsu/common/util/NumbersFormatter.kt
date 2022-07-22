@@ -8,6 +8,7 @@ package jp.co.soramitsu.common.util
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
@@ -17,8 +18,17 @@ private const val TWO_DIGITS_PATTERN = "00"
 
 private const val DEFAULT_PRECISION = 2
 
-private const val GROUPING_SEPARATOR = ' '
-private const val DECIMAL_SEPARATOR = '.'
+val GROUPING_SEPARATOR: Char
+    get() {
+        return if (Locale.getDefault().toString() == "ar") {
+            ','
+        } else {
+            ' '
+        }
+    }
+
+const val DECIMAL_SEPARATOR = '.'
+
 private val precisionsMap: Map<Int, BigDecimal> = mapOf(
     0 to BigDecimal(1),
     1 to BigDecimal(0.1),
@@ -87,9 +97,9 @@ class NumbersFormatter {
     }
 
     private fun decimalFormatterFor(pattern: String): DecimalFormat {
-        return DecimalFormat(pattern).apply {
+        val symbols = DecimalFormatSymbols(Locale.getDefault())
+        return DecimalFormat(pattern, symbols).apply {
             val symbols = decimalFormatSymbols
-
             symbols.groupingSeparator = GROUPING_SEPARATOR
             symbols.decimalSeparator = DECIMAL_SEPARATOR
 
@@ -103,6 +113,7 @@ class NumbersFormatter {
     private fun patternWith(precision: Int) = "$DECIMAL_PATTERN_BASE${"#".repeat(precision)}"
 
     fun getNumberFromString(string: String): Int {
-        return string.trim().replace(GROUPING_SEPARATOR.toString(), "", ignoreCase = false).toIntOrNull() ?: 0
+        return string.trim().replace(GROUPING_SEPARATOR.toString(), "", ignoreCase = false)
+            .toIntOrNull() ?: 0
     }
 }

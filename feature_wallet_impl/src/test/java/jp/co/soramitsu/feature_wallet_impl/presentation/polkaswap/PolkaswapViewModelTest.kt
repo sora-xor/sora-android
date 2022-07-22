@@ -10,7 +10,7 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -40,7 +40,7 @@ class PolkaswapViewModelTest {
     private lateinit var viewModel: PolkaSwapViewModel
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
         viewModel = PolkaSwapViewModel(walletRouter, polkaswapInteractor)
     }
 

@@ -10,32 +10,30 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.interfaces.WithPreloader
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionBase
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.feature_wallet_impl.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.AssetModel
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventHeader
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.SoraTransaction
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.anyNonNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyBoolean
-import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -60,9 +58,6 @@ class WalletViewModelTest {
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var preloader: WithPreloader
-
-    @Mock
     private lateinit var numbersFormatter: NumbersFormatter
 
     @Mock
@@ -75,18 +70,28 @@ class WalletViewModelTest {
     private lateinit var qrCodeDecoder: QrCodeDecoder
 
     @Mock
+    private lateinit var transactionHistoryHandler: TransactionHistoryHandler
+
+    @Mock
     private lateinit var uriMock: Uri
 
     private lateinit var walletViewModel: WalletViewModel
 
     @Before
-    fun setUp() = runBlockingTest {
+    fun setUp() = runTest {
 //        given(numbersFormatter.formatBigDecimal(anyNonNull(), anyInt(), anyBoolean())).willReturn("10.12")
 //        given(interactor.getVisibleAssets()).willReturn(assets)
+//        mockkObject(FirebaseWrapper)
+//        every { FirebaseWrapper.log(anyString()) } returns Unit
+        given(interactor.flowCurSoraAccount()).willReturn(
+            emptyFlow()
+        )
+        given(transactionHistoryHandler.flowLocalTransactions()).willReturn(emptyFlow())
         walletViewModel = WalletViewModel(
-            interactor, router, preloader,
+            interactor, router,
             numbersFormatter, clipboardManager, transactionMappers,
             qrCodeDecoder,
+            transactionHistoryHandler,
         )
     }
 
@@ -115,7 +120,7 @@ class WalletViewModelTest {
     }
 
     @Test
-    fun `decode qr`() = runBlockingTest {
+    fun `decode qr`() = runTest {
         val content = "qr_content"
         given(interactor.processQr(content)).willReturn(
             Triple(
@@ -125,14 +130,13 @@ class WalletViewModelTest {
             )
         )
         walletViewModel.qrResultProcess(content)
-        verify(preloader).showPreloader()
-        verify(preloader).hidePreloader()
+        advanceUntilIdle()
         verify(router).showValTransferAmount("recipient", "asset", BigDecimal.ZERO)
     }
 
     @Test
-    fun `decode qr uri`() = runBlockingTest {
-        given(qrCodeDecoder.decodeQrFromUri(anyNonNull())).willReturn("content")
+    fun `decode qr uri`() = runTest {
+        given(qrCodeDecoder.decodeQrFromUri(uriMock)).willReturn("content")
         given(interactor.processQr("content")).willReturn(
             Triple(
                 "recipient",
@@ -141,6 +145,7 @@ class WalletViewModelTest {
             )
         )
         walletViewModel.decodeTextFromBitmapQr(uriMock)
+        advanceUntilIdle()
         verify(router).showValTransferAmount("recipient", "asset", BigDecimal.ZERO)
     }
 
@@ -185,12 +190,13 @@ class WalletViewModelTest {
 
     private val transactions = mutableListOf(
         Transaction.Transfer(
-            "",
-            "",
-            BigDecimal.ZERO,
-            TransactionStatus.COMMITTED,
-            1000,
-            true,
+            TransactionBase(
+                "",
+                "",
+                BigDecimal.ZERO,
+                TransactionStatus.COMMITTED,
+                1000,
+            ),
             BigDecimal.ONE,
             "peerId",
             TransactionTransferType.INCOMING,
@@ -199,21 +205,6 @@ class WalletViewModelTest {
     )
 
     private fun oneToken() = Token("token_id", "token name", "token symbol", 18, true, 0)
-
-    private val transactionsWithHeaders = mutableListOf(
-        EventHeader("today"),
-        SoraTransaction(
-            "transactionId",
-            true,
-            0,
-            "PL",
-            "peername lastname",
-            "01 Jan 1970 00:00",
-            "10.12 VAL",
-            false,
-            null
-        )
-    )
 
     private val assets = mutableListOf(assetXor, assetXorErc, assetEth)
 
@@ -224,8 +215,7 @@ class WalletViewModelTest {
         "",
         100000,
         "10" to "10",
-        false,
-        true
+        TransactionStatus.COMMITTED,
     )
 
     private fun assetModel() = AssetModel(

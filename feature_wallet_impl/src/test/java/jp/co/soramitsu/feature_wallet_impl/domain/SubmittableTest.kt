@@ -5,10 +5,10 @@
 
 package jp.co.soramitsu.feature_wallet_impl.domain
 
-import jp.co.soramitsu.feature_wallet_impl.util.SubmittableUtils.decodeMortalEra
-import jp.co.soramitsu.feature_wallet_impl.util.SubmittableUtils.encodeMortalEra
-import jp.co.soramitsu.feature_wallet_impl.util.SubmittableUtils.getEraMortal
-import jp.co.soramitsu.feature_wallet_impl.util.SubmittableUtils.getMortalEraPeriodAndPhase
+import jp.co.soramitsu.sora.substrate.substrate.SubmittableUtils.decodeMortalEra
+import jp.co.soramitsu.sora.substrate.substrate.SubmittableUtils.encodeMortalEra
+import jp.co.soramitsu.sora.substrate.substrate.SubmittableUtils.getEraMortal
+import jp.co.soramitsu.sora.substrate.substrate.SubmittableUtils.getMortalEraPeriodAndPhase
 import org.junit.Test
 
 class SubmittableTest {

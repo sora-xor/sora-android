@@ -11,9 +11,11 @@ import android.text.InputFilter
 import android.text.method.LinkMovementMethod
 import android.view.View
 import androidx.core.widget.doOnTextChanged
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
 import jp.co.soramitsu.common.util.ext.attrColor
@@ -23,15 +25,14 @@ import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.highlightWords
 import jp.co.soramitsu.common.util.ext.openSoftKeyboard
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.feature_main_api.di.MainFeatureApi
-import jp.co.soramitsu.feature_multiaccount_api.di.MultiaccountFeatureApi
+import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.databinding.FragmentRecoveryBinding
-import jp.co.soramitsu.feature_multiaccount_impl.di.MultiaccountFeatureComponent
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.MultiaccountRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recovery) {
 
     @Inject
@@ -40,15 +41,20 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
     @Inject
     lateinit var router: MultiaccountRouter
 
+    @Inject
+    lateinit var ms: MainStarter
+
     private lateinit var progressDialog: SoraProgressDialog
     private val viewBinding by viewBinding(FragmentRecoveryBinding::bind)
+
+    override val viewModel: RecoveryViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as? BottomBarController)?.hideBottomBar()
         progressDialog = SoraProgressDialog(requireContext())
 
-        viewBinding.toolbar.setHomeButtonListener { viewModel.backButtonClick() }
+        viewBinding.toolbar.setHomeButtonListener { findNavController().popBackStack() }
 
         val termsContent =
             getString(R.string.tutorial_terms_and_conditions_recovery).highlightWords(
@@ -56,7 +62,10 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
                     requireContext().attrColor(R.attr.onBackgroundColor),
                     requireContext().attrColor(R.attr.onBackgroundColor)
                 ),
-                listOf({ viewModel.showTermsScreen() }, { viewModel.showPrivacyScreen() }),
+                listOf(
+                    { viewModel.showTermsScreen(findNavController()) },
+                    { viewModel.showPrivacyScreen(findNavController()) }
+                ),
                 true
             )
         viewBinding.tutorialTermsCondition.text = termsContent
@@ -70,15 +79,21 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
             true
         }
 
-        viewBinding.mnemonicInput.doOnTextChanged { _, _, _, _ ->
-            viewModel.onInputChanged(
-                viewBinding.mnemonicInput.text.toString()
-            )
+        viewBinding.mnemonicInput.doOnTextChanged { text, _, _, _ ->
+            viewModel.onInputChanged(text.toString())
         }
         viewBinding.accountNameEt.doOnTextChanged { _, _, _, _ ->
             viewModel.onInputChanged(
                 viewBinding.mnemonicInput.text.toString()
             )
+        }
+
+        viewBinding.sourceTypeTitle.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.sourceTypeClicked()
+        }
+
+        viewBinding.sourceTypeValue.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.sourceTypeClicked()
         }
 
         viewBinding.nextBtn.disable()
@@ -89,6 +104,7 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
             )
         }
         initListeners()
+        viewModel.sourceTypeSelected(SourceType.PASSPHRASE)
     }
 
     private fun initListeners() {
@@ -98,27 +114,31 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
         viewModel.mnemonicInputLengthLiveData.observe {
             viewBinding.mnemonicInput.filters = arrayOf(
                 InputFilter.LengthFilter(it),
-                InputFilter { source, _, _, _, _, _ -> source.toString().toLowerCase() }
+                InputFilter { source, _, _, _, _, _ -> source.toString().lowercase() }
             )
         }
         viewModel.nextButtonEnabledLiveData.observe {
             viewBinding.nextBtn.enableIf(it)
         }
-        viewModel.showMainScreen.observeForever {
-            FeatureUtils.getFeature<MainFeatureApi>(requireContext(), MainFeatureApi::class.java)
-                .provideMainStarter()
-                .start(requireContext())
+        viewModel.showMainScreen.observeForever { multiAccount ->
+            if (multiAccount) {
+                ms.restartAfterAddAccount(requireContext())
+            } else {
+                ms.start(requireContext())
+            }
         }
-    }
 
-    override fun inject() {
-        FeatureUtils.getFeature<MultiaccountFeatureComponent>(
-            requireContext(),
-            MultiaccountFeatureApi::class.java
-        )
-            .recoveryComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
+        viewModel.showSourceTypeDialog.observe {
+            SourceTypeBottomSheetDialog(
+                context = requireActivity(),
+                sourceTypeSelected = { viewModel.sourceTypeSelected(it) },
+                it
+            ).show()
+        }
+
+        viewModel.sourceTypeAndHintLiveData.observe {
+            viewBinding.sourceTypeValue.text = it.first
+            viewBinding.mnemonicInput.hint = it.second
+        }
     }
 }

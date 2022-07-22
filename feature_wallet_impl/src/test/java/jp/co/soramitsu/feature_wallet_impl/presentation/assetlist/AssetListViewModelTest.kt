@@ -6,6 +6,7 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.assetlist
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
@@ -14,11 +15,10 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.anyNonNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -47,25 +47,20 @@ class AssetListViewModelTest {
     private lateinit var walletInteractor: WalletInteractor
 
     @Mock
-    private lateinit var numbersFormatter: NumbersFormatter
-
-    @Mock
     private lateinit var router: WalletRouter
 
     private lateinit var viewModel: AssetListViewModel
 
     @Before
-    fun setUp() = runBlockingTest {
-        given(numbersFormatter.formatBigDecimal(anyNonNull(), ArgumentMatchers.anyInt(), anyBoolean()))
-            .willReturn("0.6")
-        given(walletInteractor.getVisibleAssets()).willReturn(AssetListTestData.ASSET_LIST)
+    fun setUp() = runTest {
+        given(walletInteractor.getActiveAssets()).willReturn(AssetListTestData.ASSET_LIST)
     }
 
     @Test
-    fun `test back click`() = runBlockingTest {
+    fun `test back click`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.RECEIVE
         )
@@ -74,10 +69,10 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test router receive mode`() = runBlockingTest {
+    fun `test router receive mode`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.RECEIVE
         )
@@ -96,10 +91,10 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test router send mode`() = runBlockingTest {
+    fun `test router send mode`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.SEND
         )
@@ -118,18 +113,20 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `test router select for liquidity mode`() = runBlockingTest {
+    fun `test router select for liquidity mode`() = runTest {
         given(walletInteractor.getFeeToken()).willReturn(AssetListTestData.FIRST_TOKEN)
         given(walletInteractor.getAssetOrThrow(AssetListTestData.SECOND_TOKEN.id)).willReturn(
             AssetListTestData.SECOND_ASSET
         )
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.SELECT_FOR_LIQUIDITY
         )
+        advanceUntilIdle()
         viewModel.itemClicked(AssetListTestData.SECOND_ASSET_LIST_ITEM_MODEL)
+        advanceUntilIdle()
         verify(router).returnToAddLiquidity(
             AssetListTestData.FIRST_TOKEN,
             AssetListTestData.SECOND_TOKEN
@@ -137,38 +134,42 @@ class AssetListViewModelTest {
     }
 
     @Test
-    fun `set filter value`() = runBlockingTest {
+    fun `set filter value`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.SEND
         )
+        advanceUntilIdle()
         viewModel.searchAssets("token name")
+        advanceUntilIdle()
         viewModel.displayingAssetsLiveData.observeForever {
             Assert.assertEquals(1, it.size)
         }
     }
 
     @Test
-    fun `set filter value empty`() = runBlockingTest {
+    fun `set filter value empty`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.SEND
         )
+        advanceUntilIdle()
         viewModel.searchAssets("")
+        advanceUntilIdle()
         viewModel.displayingAssetsLiveData.observeForever {
             Assert.assertEquals(2, it.size)
         }
     }
 
     @Test
-    fun `test init receive asset`() = runBlockingTest {
+    fun `test init receive asset`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
-            numbersFormatter,
+            NumbersFormatter(),
             router,
             AssetListMode.RECEIVE
         )

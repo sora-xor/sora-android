@@ -8,20 +8,23 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ProfileViewModel(
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
     private val interactor: MainInteractor,
     private val router: MainRouter,
-    private val numbersFormatter: NumbersFormatter
+    private val referralRouter: ReferralRouter
 ) : BaseViewModel() {
 
     private val _biometryEnabledLiveData = MutableLiveData<Boolean>()
@@ -29,9 +32,6 @@ class ProfileViewModel(
 
     private val _biometryAvailableLiveData = MutableLiveData<Boolean>()
     val biometryAvailableLiveData: LiveData<Boolean> = _biometryAvailableLiveData
-
-    private val _ldAccountName = MutableLiveData<String>()
-    val accountName: LiveData<String> = _ldAccountName
 
     private val _ldAccountAddress = MutableLiveData<String>()
     val accountAddress: LiveData<String> = _ldAccountAddress
@@ -46,7 +46,6 @@ class ProfileViewModel(
         interactor.flowCurSoraAccount()
             .catch { onError(it) }
             .onEach {
-                _ldAccountName.value = it.accountName
                 _ldAccountAddress.value = it.substrateAddress
             }
             .launchIn(viewModelScope)
@@ -90,15 +89,7 @@ class ProfileViewModel(
     }
 
     fun profileFriendsClicked() {
-        router.showFriends()
-    }
-
-    fun logoutClicked() {
-        router.showPin(PinCodeAction.LOGOUT)
-    }
-
-    fun onPersonalDetailsClicked() {
-        router.showPersonalDataEdition()
+        referralRouter.showReferrals()
     }
 
     fun onSwitchAccountClicked() {

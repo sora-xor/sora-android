@@ -9,9 +9,8 @@ import android.content.Context
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_onboarding_api.OnboardingStarter
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingActivity
-import javax.inject.Inject
 
-class OnboardingStarterImpl @Inject constructor() : OnboardingStarter {
+class OnboardingStarterImpl : OnboardingStarter {
 
     override fun startWithInviteLink(context: Context) {
         OnboardingActivity.startWithInviteLink(context)

@@ -21,6 +21,7 @@ import jp.co.soramitsu.feature_main_impl.databinding.ItemListSwitchAccountBindin
 class SwitchAccountAdapter(
     private val debounceClickHandler: DebounceClickHandler,
     private val onItemClickListener: (SwitchAccountItem) -> Unit,
+    private val onItemLongClickListener: (SwitchAccountItem) -> Unit,
 ) :
     ListAdapter<SwitchAccountItem, SwitchAccountViewHolder>(DiffCallback) {
 
@@ -34,6 +35,10 @@ class SwitchAccountAdapter(
         val item = getItem(position)
         holder.itemView.setDebouncedClickListener(debounceClickHandler) {
             onItemClickListener.invoke(item)
+        }
+        holder.itemView.setOnLongClickListener {
+            onItemLongClickListener.invoke(item)
+            true
         }
         holder.bind(item)
     }

@@ -5,53 +5,50 @@
 
 package jp.co.soramitsu.feature_wallet_impl.domain
 
-import jp.co.soramitsu.common.data.network.substrate.OptionsProvider
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeHolder
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
-import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.TransactionHistoryRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
-import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.blake2b256String
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionBuilder
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
+import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateAddLiquidityAmount
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateAddingShareOfPool
+import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transformWhile
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Date
 import kotlin.math.max
 
 @ExperimentalCoroutinesApi
 class PolkaswapInteractorImpl(
     private val credentialsRepository: CredentialsRepository,
     private val userRepository: UserRepository,
+    private val transactionHistoryRepository: TransactionHistoryRepository,
     private val coroutineManager: CoroutineManager,
     private val polkaswapRepository: PolkaswapRepository,
     private val walletRepository: WalletRepository,
@@ -284,7 +281,6 @@ class PolkaswapInteractorImpl(
     ): Boolean {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-
         val networkFee = getLiquidityNetworkFee(
             tokenFrom,
             tokenTo,
@@ -295,7 +291,7 @@ class PolkaswapInteractorImpl(
             slippageTolerance
         )
 
-        return polkaswapRepository.observeAddLiquidity(
+        val status = polkaswapRepository.observeAddLiquidity(
             soraAccount.substrateAddress,
             keypair,
             tokenFrom,
@@ -306,43 +302,23 @@ class PolkaswapInteractorImpl(
             presented,
             slippageTolerance.toDouble()
         )
-            .catch {
-                FirebaseWrapper.recordException(it)
-                emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
-            }
-            .map {
-                if (it.first.isNotEmpty()) {
-                    polkaswapRepository.saveAddLiquidity(
-                        txHash = it.first,
-                        status = it.second,
-                        eventSuccess = null,
-                        networkFee = networkFee,
-                        tokenIdFrom = tokenFrom.id,
-                        tokenIdTo = tokenTo.id,
-                        amountFrom = amountFrom,
-                        amountTo = amountTo,
-                        soraAccount = soraAccount,
-                    )
-                }
-                Triple(
-                    it.first,
-                    (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
-                    it.second.subscription
+        if (status.success) {
+            transactionHistoryRepository.saveTransaction(
+                TransactionBuilder.buildLiquidity(
+                    txHash = status.txHash,
+                    blockHash = status.blockHash,
+                    fee = networkFee,
+                    status = TransactionStatus.PENDING,
+                    date = Date().time,
+                    token1 = tokenFrom,
+                    token2 = tokenTo,
+                    amount1 = amountFrom,
+                    amount2 = amountTo,
+                    type = TransactionLiquidityType.ADD,
                 )
-            }
-            .transformWhile { value ->
-                this.emit(value.first.isNotEmpty())
-                value.second?.let { blockHash ->
-                    val txHash = value.first
-                    val blockResponse = walletRepository.getBlock(blockHash)
-                    val extrinsicId = blockResponse.block.extrinsics.indexOfFirst { s ->
-                        s.blake2b256String() == txHash
-                    }.toLong()
-                    val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
-                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
-                }
-                value.second.isNullOrEmpty() && value.first.isNotEmpty()
-            }.stateIn(coroutineManager.applicationScope).first()
+            )
+        }
+        return status.success
     }
 
     override fun setSwapMarket(market: Market) {
@@ -393,21 +369,21 @@ class PolkaswapInteractorImpl(
             }.flatMapLatest {
                 val flows = mutableListOf<Flow<String>>()
                 if (it.second == Market.XYK || it.second == Market.SMART) {
-                    if (it.first.first != OptionsProvider.feeAssetId) {
+                    if (it.first.first != SubstrateOptionsProvider.feeAssetId) {
                         flows.add(polkaswapRepository.observePoolXYKReserves(it.first.first))
                     }
-                    if (it.first.second != OptionsProvider.feeAssetId) {
+                    if (it.first.second != SubstrateOptionsProvider.feeAssetId) {
                         flows.add(polkaswapRepository.observePoolXYKReserves(it.first.second))
                     }
                 }
                 if (it.second == Market.TBC || it.second == Market.SMART) {
-                    if (it.first.first != OptionsProvider.feeAssetId) {
+                    if (it.first.first != SubstrateOptionsProvider.feeAssetId) {
                         flows.add(polkaswapRepository.observePoolTBCReserves(it.first.first))
                     }
-                    if (it.first.second != OptionsProvider.feeAssetId) {
+                    if (it.first.second != SubstrateOptionsProvider.feeAssetId) {
                         flows.add(polkaswapRepository.observePoolTBCReserves(it.first.second))
                     }
-                    flows.add(polkaswapRepository.observePoolTBCReserves(OptionsProvider.feeAssetId))
+                    flows.add(polkaswapRepository.observePoolTBCReserves(SubstrateOptionsProvider.feeAssetId))
                 }
                 flows.merge()
             }.debounce(500)
@@ -440,7 +416,7 @@ class PolkaswapInteractorImpl(
             polkaswapRepository.subscribeLocalPoolReserves(it.substrateAddress, assetId)
         }
 
-    override suspend fun getPoolStrategicBonusAPY(tokenId: String): BigDecimal? =
+    override suspend fun getPoolStrategicBonusAPY(tokenId: String): Double? =
         PolkaswapFormulas.calculateStrategicBonusAPY(
             polkaswapRepository.getPoolStrategicBonusAPY(tokenId)
         )
@@ -455,12 +431,12 @@ class PolkaswapInteractorImpl(
         availableMarkets.addAll(sources)
         if (availableMarkets.isEmpty()) {
             if ((
-                tokenId1.equals(OptionsProvider.xstTokenId, true) &&
-                    OptionsProvider.xstPoolTokens.contains(tokenId2)
+                tokenId1.equals(SubstrateOptionsProvider.xstTokenId, true) &&
+                    SubstrateOptionsProvider.xstPoolTokens.contains(tokenId2)
                 ) ||
                 (
-                    tokenId2.equals(OptionsProvider.xstTokenId, true) &&
-                        OptionsProvider.xstPoolTokens.contains(tokenId1)
+                    tokenId2.equals(SubstrateOptionsProvider.xstTokenId, true) &&
+                        SubstrateOptionsProvider.xstPoolTokens.contains(tokenId1)
                     )
             ) {
                 availableMarkets.add(Market.SMART)
@@ -506,55 +482,42 @@ class PolkaswapInteractorImpl(
             amount,
             limit,
         )
-            .catch {
-                FirebaseWrapper.recordException(it)
-                emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
-            }
-            .map {
-                if (it.first.isNotEmpty()) {
-                    polkaswapRepository.saveSwap(
-                        txHash = it.first,
-                        status = it.second,
-                        fee = networkFee,
-                        eventSuccess = null,
-                        tokenIdFrom = tokenInput.id,
-                        tokenIdTo = tokenOutput.id,
-                        amountFrom = if (desired == WithDesired.INPUT) amount else limit,
-                        amountTo = if (desired == WithDesired.INPUT) limit else amount,
-                        market = selectedSwapMarket.value,
-                        liquidityFee = liquidityFee,
-                        soraAccount = soraAccount,
-                    )
-                }
-                Triple(
-                    it.first,
-                    (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
-                    it.second.subscription
+        swapResult.set(result.success)
+        if (result.success) {
+            transactionHistoryRepository.saveTransaction(
+                TransactionBuilder.buildSwap(
+                    txHash = result.txHash,
+                    blockHash = result.blockHash,
+                    fee = networkFee,
+                    status = TransactionStatus.PENDING,
+                    date = Date().time,
+                    tokenFrom = tokenInput,
+                    tokenTo = tokenOutput,
+                    amountFrom = amount,
+                    amountTo = limit,
+                    market = selectedSwapMarket.value,
+                    liquidityFee = liquidityFee,
                 )
-            }
-            .transformWhile { value ->
-                emit(value.first.isNotEmpty())
-
-                value.second?.let { blockHash ->
-                    val txHash = value.first
-                    val blockResponse = walletRepository.getBlock(blockHash)
-                    val extrinsicId = blockResponse.block.extrinsics.indexOfFirst { s ->
-                        s.blake2b256String() == txHash
-                    }.toLong()
-                    val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
-                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
-                }
-                value.second.isNullOrEmpty() && value.first.isNotEmpty()
-            }.stateIn(coroutineManager.applicationScope).first()
-        swapResult.set(result)
-        return result
+            )
+        }
+        return result.success
     }
 
-    override suspend fun isPairEnabled(inputAssetId: String, outputAssetId: String): Flow<Boolean> =
-        polkaswapRepository.isPairEnabled(inputAssetId, outputAssetId)
+    override fun isPairEnabled(inputAssetId: String, outputAssetId: String): Flow<Boolean> = flow {
+        val address = userRepository.getCurSoraAccount().substrateAddress
+        emitAll(
+            polkaswapRepository.isPairEnabled(
+                inputAssetId,
+                outputAssetId,
+                address
+            )
+        )
+    }
 
-    override suspend fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean> =
-        polkaswapRepository.isPairPresentedInNetwork(tokenId)
+    override fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean> = flow {
+        val address = userRepository.getCurSoraAccount().substrateAddress
+        emitAll(polkaswapRepository.isPairPresentedInNetwork(tokenId, address))
+    }
 
     override suspend fun getLiquidityData(
         tokenFrom: Token,
@@ -564,7 +527,6 @@ class PolkaswapInteractorImpl(
     ): LiquidityData {
         return polkaswapRepository.getRemotePoolReserves(
             userRepository.getCurSoraAccount().substrateAddress,
-            RuntimeHolder.getRuntime(),
             tokenFrom,
             tokenTo,
             enabled,
@@ -582,7 +544,7 @@ class PolkaswapInteractorImpl(
     ): Boolean {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val result = polkaswapRepository.observeRemoveLiquidity(
+        val status = polkaswapRepository.observeRemoveLiquidity(
             soraAccount.substrateAddress,
             keypair,
             token1,
@@ -591,44 +553,22 @@ class PolkaswapInteractorImpl(
             firstAmountMin,
             secondAmountMin
         )
-            .catch {
-                FirebaseWrapper.recordException(it)
-                emit("" to ExtrinsicStatusResponse.ExtrinsicStatusPending(""))
-            }
-            .map {
-                if (it.first.isNotEmpty()) {
-                    polkaswapRepository.saveRemoveLiquidity(
-                        txHash = it.first,
-                        status = it.second,
-                        fee = networkFee,
-                        eventSuccess = null,
-                        tokenIdFrom = token1.id,
-                        tokenIdTo = token2.id,
-                        amountFrom = firstAmountMin,
-                        amountTo = secondAmountMin,
-                        soraAccount = soraAccount,
-                    )
-                }
-                Triple(
-                    it.first,
-                    (it.second as? ExtrinsicStatusResponse.ExtrinsicStatusFinalized)?.inBlock,
-                    it.second.subscription
+        if (status.success) {
+            transactionHistoryRepository.saveTransaction(
+                TransactionBuilder.buildLiquidity(
+                    txHash = status.txHash,
+                    blockHash = status.blockHash,
+                    fee = networkFee,
+                    status = TransactionStatus.PENDING,
+                    date = Date().time,
+                    token1 = token1,
+                    token2 = token2,
+                    amount1 = firstAmountMin,
+                    amount2 = secondAmountMin,
+                    type = TransactionLiquidityType.WITHDRAW,
                 )
-            }
-            .transformWhile { value ->
-                emit(value.first.isNotEmpty())
-
-                value.second?.let { blockHash ->
-                    val txHash = value.first
-                    val blockResponse = walletRepository.getBlock(blockHash)
-                    val extrinsicId = blockResponse.block.extrinsics.indexOfFirst { s ->
-                        s.blake2b256String() == txHash
-                    }.toLong()
-                    val isSuccess = walletRepository.isTxSuccessful(extrinsicId, blockHash, txHash)
-                    walletRepository.updateTransactionSuccess(txHash, isSuccess)
-                }
-                value.second.isNullOrEmpty() && value.first.isNotEmpty()
-            }.stateIn(coroutineManager.applicationScope).first()
-        return result
+            )
+        }
+        return status.success
     }
 }

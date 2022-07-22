@@ -8,7 +8,8 @@ package jp.co.soramitsu.feature_main_impl.presentation.about
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.BuildConfig
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -16,8 +17,10 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AboutViewModel(
+@HiltViewModel
+class AboutViewModel @Inject constructor(
     private val interactor: MainInteractor,
     private val router: MainRouter,
     private val resourceManager: ResourceManager
@@ -36,23 +39,23 @@ class AboutViewModel(
     }
 
     fun openSourceClicked() {
-        _showBrowserLiveData.value = BuildConfig.SOURCE_LINK
+        _showBrowserLiveData.value = OptionsProvider.sourceLink
     }
 
     fun websiteClicked() {
-        _showBrowserLiveData.value = BuildConfig.WEBSITE
+        _showBrowserLiveData.value = OptionsProvider.website
     }
 
     fun telegramClicked() {
-        _showBrowserLiveData.value = BuildConfig.TELEGRAM_LINK
+        _showBrowserLiveData.value = OptionsProvider.telegramLink
     }
 
     fun telegramAnnouncementsClicked() {
-        _showBrowserLiveData.value = BuildConfig.TELEGRAM_ANNOUNCEMENTS_LINK
+        _showBrowserLiveData.value = OptionsProvider.telegramAnnouncementsLink
     }
 
     fun telegramAskSupportClicked() {
-        _showBrowserLiveData.value = BuildConfig.TELEGRAM_HAPPINESS_LINK
+        _showBrowserLiveData.value = OptionsProvider.telegramHappinessLink
     }
 
     fun termsClicked() {
@@ -72,26 +75,26 @@ class AboutViewModel(
     }
 
     fun contactsClicked() {
-        openSendEmailEvent.value = BuildConfig.EMAIL
+        openSendEmailEvent.value = OptionsProvider.email
     }
 
     fun twitterClicked() {
-        _showBrowserLiveData.value = BuildConfig.TWITTER_LINK
+        _showBrowserLiveData.value = OptionsProvider.twitterLink
     }
 
     fun youtubeClicked() {
-        _showBrowserLiveData.value = BuildConfig.YOUTUBE_LINK
+        _showBrowserLiveData.value = OptionsProvider.youtubeLink
     }
 
     fun instagramClicked() {
-        _showBrowserLiveData.value = BuildConfig.INSTAGRAM_LINK
+        _showBrowserLiveData.value = OptionsProvider.instagramLink
     }
 
     fun mediumClicked() {
-        _showBrowserLiveData.value = BuildConfig.MEDIUM_LINK
+        _showBrowserLiveData.value = OptionsProvider.mediumLink
     }
 
     fun wikiClicked() {
-        _showBrowserLiveData.value = BuildConfig.WIKI_LINK
+        _showBrowserLiveData.value = OptionsProvider.wikiLink
     }
 }

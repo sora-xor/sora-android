@@ -5,26 +5,28 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation
 
-import androidx.lifecycle.viewModelScope
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
+import androidx.navigation.NavController
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import kotlinx.coroutines.launch
+import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
+import javax.inject.Inject
 
-class OnboardingViewModel(
+@HiltViewModel
+class OnboardingViewModel @Inject constructor(
     private val invitationHandler: InvitationHandler,
-    private val runtimeManager: RuntimeManager,
+    private val multiaccountStarter: MultiaccountStarter
 ) : BaseViewModel() {
-
-    init {
-        viewModelScope.launch {
-            tryCatch {
-                runtimeManager.start()
-            }
-        }
-    }
 
     fun startedWithInviteAction() {
         invitationHandler.invitationApplied()
+    }
+
+    fun onSignUpClicked(navController: NavController) {
+        multiaccountStarter.startCreateAccount(navController)
+    }
+
+    fun onRecoveryClicked(navController: NavController) {
+        multiaccountStarter.startRecoveryAccount(navController)
     }
 }

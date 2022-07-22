@@ -11,8 +11,14 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
@@ -26,17 +32,35 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import kotlinx.coroutines.launch
 
-class ReceiveViewModel(
+class ReceiveViewModel @AssistedInject constructor(
     private val interactor: WalletInteractor,
     private val walletRouter: WalletRouter,
     private val resourceManager: ResourceManager,
     private val qrCodeGenerator: QrCodeGenerator,
-    private val assetModel: ReceiveAssetModel,
+    @Assisted private val assetModel: ReceiveAssetModel,
     private val clipboardManager: ClipboardManager,
     private val avatarGenerator: AccountAvatarGenerator,
     private val fileManager: FileManager,
-    private val backgroundQrColor: Int,
+    @Assisted private val backgroundQrColor: Int,
 ) : BaseViewModel() {
+
+    @AssistedFactory
+    interface ReceiveViewModelFactory {
+        fun create(assetModel: ReceiveAssetModel, backgroundQrColor: Int): ReceiveViewModel
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    companion object {
+        fun provideFactory(
+            factory: ReceiveViewModelFactory,
+            assetModel: ReceiveAssetModel,
+            backgroundQrColor: Int,
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return factory.create(assetModel, backgroundQrColor) as T
+            }
+        }
+    }
 
     val qrBitmapLiveData = MediatorLiveData<Bitmap>()
     val shareQrCodeLiveData = SingleLiveEvent<Pair<Uri, String>>()
@@ -71,7 +95,7 @@ class ReceiveViewModel(
         runCatching {
             qrBitmapLiveData.value =
                 qrCodeGenerator.generateQrBitmap(
-                    "substrate:$userAddress:$userPublicKey:$userName:${assetModel.assetId}",
+                    "${OptionsProvider.substrate}:$userAddress:$userPublicKey:$userName:${assetModel.assetId}",
                     backgroundQrColor
                 )
         }.getOrElse {

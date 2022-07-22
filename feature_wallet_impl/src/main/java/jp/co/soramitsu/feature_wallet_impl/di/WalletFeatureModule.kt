@@ -6,25 +6,25 @@
 package jp.co.soramitsu.feature_wallet_impl.di
 
 import android.content.Context
-import androidx.paging.ExperimentalPagingApi
 import dagger.Module
 import dagger.Provides
-import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PoolsManager
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.TransactionHistoryRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.feature_wallet_impl.data.network.sorascan.SoraScanApi
-import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.SubstrateApi
-import jp.co.soramitsu.feature_wallet_impl.data.network.substrate.SubstrateApiImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.PolkaswapRepositoryImpl
+import jp.co.soramitsu.feature_wallet_impl.data.repository.TransactionHistoryRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.feature_wallet_impl.domain.PolkaswapInteractorImpl
@@ -36,17 +36,18 @@ import javax.inject.Singleton
 
 @FlowPreview
 @Module
+@InstallIn(SingletonComponent::class)
 class WalletFeatureModule {
 
-    @ExperimentalPagingApi
+    @Provides
+    @Singleton
+    fun provideTransactionHistoryRepository(repositoryImpl: TransactionHistoryRepositoryImpl): TransactionHistoryRepository =
+        repositoryImpl
+
     @Provides
     @Singleton
     fun provideWalletRepository(walletRepositoryImpl: WalletRepositoryImpl): WalletRepository =
         walletRepositoryImpl
-
-    @Provides
-    @Singleton
-    fun provideSubstrateApi(api: SubstrateApiImpl): SubstrateApi = api
 
     @Provides
     @Singleton
@@ -55,7 +56,7 @@ class WalletFeatureModule {
 
     @Singleton
     @Provides
-    fun provideQrCodeDecoder(context: Context): QrCodeDecoder {
+    fun provideQrCodeDecoder(@ApplicationContext context: Context): QrCodeDecoder {
         return QrCodeDecoder(context.contentResolver)
     }
 
@@ -63,6 +64,7 @@ class WalletFeatureModule {
     @Provides
     fun provideWalletInteractor(
         walletRepository: WalletRepository,
+        transactionHistoryRepository: TransactionHistoryRepository,
         ethRepository: EthereumRepository,
         credentialsRepository: CredentialsRepository,
         userRepository: UserRepository,
@@ -71,6 +73,7 @@ class WalletFeatureModule {
     ): WalletInteractor {
         return WalletInteractorImpl(
             walletRepository,
+            transactionHistoryRepository,
             ethRepository,
             userRepository,
             credentialsRepository,
@@ -88,6 +91,7 @@ class WalletFeatureModule {
     fun providePolkaswapInteractor(
         credentialsRepository: CredentialsRepository,
         userRepository: UserRepository,
+        transactionHistoryRepository: TransactionHistoryRepository,
         walletRepository: WalletRepository,
         coroutineManager: CoroutineManager,
         polkaswapRepository: PolkaswapRepository,
@@ -95,16 +99,12 @@ class WalletFeatureModule {
         return PolkaswapInteractorImpl(
             credentialsRepository,
             userRepository,
+            transactionHistoryRepository,
             coroutineManager,
             polkaswapRepository,
             walletRepository,
         )
     }
-
-    @Singleton
-    @Provides
-    fun provideSoraScanApi(sora2CoroutineApiCreator: Sora2CoroutineApiCreator): SoraScanApi =
-        sora2CoroutineApiCreator.create(SoraScanApi::class.java)
 
     @Singleton
     @Provides

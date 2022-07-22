@@ -8,10 +8,10 @@ package jp.co.soramitsu.feature_notification_impl.data.repository.datasource
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.util.Const.Companion.DEVICE_TOKEN
-import jp.co.soramitsu.common.util.Const.Companion.IS_PUSH_UPDATE_NEEDED
+import jp.co.soramitsu.common.util.Const.DEVICE_TOKEN
+import jp.co.soramitsu.common.util.Const.IS_PUSH_UPDATE_NEEDED
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -47,7 +47,7 @@ class PrefsNotificationDatasourceTest {
     }
 
     @Test
-    fun `save pushToken calls prefsutil putEncryptedString for DEVICE_TOKEN`() = runBlockingTest {
+    fun `save pushToken calls prefsutil putEncryptedString for DEVICE_TOKEN`() = runTest {
         val notificationToken = "1234"
 
         prefsNotificationDatasource.savePushToken(notificationToken)
@@ -56,7 +56,7 @@ class PrefsNotificationDatasourceTest {
     }
 
     @Test
-    fun `save IsPushTokenUpdateNeeded calls prefsutil putBoolean for IS_PUSH_UPDATE_NEEDED`() = runBlockingTest {
+    fun `save IsPushTokenUpdateNeeded calls prefsutil putBoolean for IS_PUSH_UPDATE_NEEDED`() = runTest {
         val isUpdateNeeded = true
 
         prefsNotificationDatasource.saveIsPushTokenUpdateNeeded(isUpdateNeeded)

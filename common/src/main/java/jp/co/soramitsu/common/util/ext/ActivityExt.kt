@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 fun Activity.unregisterReceiverIfNeeded(receiver: BroadcastReceiver) {
@@ -28,5 +29,5 @@ fun FragmentActivity.runDelayed(
     block: () -> Unit,
 ): Job = lifecycleScope.launch(dispatcher) {
     delay(durationInMillis)
-    block.invoke()
+    if (isActive) block.invoke()
 }

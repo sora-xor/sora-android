@@ -7,7 +7,7 @@ package jp.co.soramitsu.feature_wallet_impl.util
 
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.safeDivide
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import java.math.BigDecimal
 
 object PolkaswapFormulas {
@@ -87,9 +87,9 @@ object PolkaswapFormulas {
     ): BigDecimal = fromAmount.safeDivide(firstReserves).multiply(totalIssuance)
 
     fun calculateStrategicBonusAPY(
-        strategicBonusApy: BigDecimal?
-    ): BigDecimal? {
-        return strategicBonusApy?.multiply(BigDecimal(100))
+        strategicBonusApy: Double?
+    ): Double? {
+        return strategicBonusApy?.times(100)
     }
 
     fun calculateAmountByPercentage(

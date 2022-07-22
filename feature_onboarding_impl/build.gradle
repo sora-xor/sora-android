@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-kapt'
@@ -29,8 +30,14 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion versions.compose
+        kotlinCompilerVersion versions.kotlin
+    }
+
     buildFeatures {
         viewBinding true
+        compose true
     }
 
     flavorDimensions "default"
@@ -58,14 +65,14 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(":common")
-    implementation project(":core_di")
     implementation project(":feature_account_api")
-    implementation project(':feature_ethereum_api')
+    implementation project(":feature_ethereum_api")
     implementation project(":feature_wallet_api")
     implementation project(":feature_onboarding_api")
     implementation project(":feature_main_api")
     implementation project(":feature_multiaccount_api")
     implementation project(":feature_multiaccount_impl")
+    implementation project(":sorasubstrate")
 
     implementation kotlinDep
 
@@ -75,38 +82,37 @@ dependencies {
     implementation constraintDep
     implementation viewBindingDep
 
-    implementation novaCryptoDep
     implementation navigationFragmentDep
     implementation navigationUiDep
+    implementation navigationComposeDep
 
     implementation neumorphismDep
 
     implementation daggerDep
-    kapt daggerKapt
+    kapt daggerKaptDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
     implementation viewmodelKtxDep
 
     implementation gsonDep
 
-    implementation emojiDep
-
-    implementation authApiPhoneDep
-    implementation authGmsDep
-
     implementation insetterDep
 
-    implementation lifecycleKtxDep
-    implementation lifecycleExtDep
+    implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
+    implementation hiltNavComposeDep
+    implementation composeUiDep
+    implementation composeCompilerDep
+    implementation composeThemeAdapterDep
+    implementation composeFoundationDep
+    implementation composeMaterialDep
+    implementation composeAnimationDep
+    implementation composeActivityDep
+    implementation composeViewModelDep
+    implementation composeToolingPreviewDep
+    debugImplementation composeToolingDep
+
     testImplementation project(":test_shared")
 }

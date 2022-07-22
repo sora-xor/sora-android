@@ -11,7 +11,8 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -44,7 +45,7 @@ class PoolsManagerImplTest {
 
     @Before
     fun setUp() {
-        runBlockingTest {
+        runTest {
             given(polkaswapInteractor.subscribePoolsChanges()).willReturn(emptyFlow())
         }
     }

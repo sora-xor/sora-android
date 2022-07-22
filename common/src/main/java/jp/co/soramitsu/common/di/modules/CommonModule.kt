@@ -12,32 +12,31 @@ import android.os.Vibrator
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl
-import jp.co.soramitsu.common.data.AppVersionProviderImpl
 import jp.co.soramitsu.common.data.EncryptedPreferences
-import jp.co.soramitsu.common.data.GsonSerializerImpl
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.data.network.Sora2CoroutineApiCreator
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
-import jp.co.soramitsu.common.data.network.substrate.ConnectionManager
-import jp.co.soramitsu.common.data.network.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.common.data.network.substrate.runtime.SubstrateTypesApi
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.AppVersionProvider
-import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.HealthChecker
+import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
-import jp.co.soramitsu.common.domain.Serializer
+import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
+import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
@@ -46,37 +45,50 @@ import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
+import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
+import jp.co.soramitsu.xnetworking.subquery.factory.SubQueryClientForSora
+import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
+import jp.co.soramitsu.xnetworking.subquery.history.sora.SoraSubqueryResponse
 import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
 
+@InstallIn(SingletonComponent::class)
 @Module
 class CommonModule {
 
     @Singleton
     @Provides
-    fun provideAppVersionProvider(appVersionProvider: AppVersionProviderImpl): AppVersionProvider =
-        appVersionProvider
+    fun provideSoraPreferences(@ApplicationContext c: Context): SoraPreferences = SoraPreferences(c)
 
     @Singleton
     @Provides
-    fun provideAppStateManager(appStateManager: AppStateProviderImpl): AppStateProvider =
-        appStateManager
+    fun provideEncryptionUtil(@ApplicationContext c: Context): EncryptionUtil = EncryptionUtil(c)
+
+    @Singleton
+    @Provides
+    fun provideInAppUpdateManager(
+        @ApplicationContext c: Context,
+        sp: SoraPreferences
+    ): InAppUpdateManager = InAppUpdateManager(c, sp)
+
+    @Singleton
+    @Provides
+    fun provideAppStateManager(): AppStateProvider = AppStateProviderImpl()
 
     @Singleton
     @Provides
     fun provideCoroutineManager(): CoroutineManager =
         CoroutineManager()
 
-    @Singleton
     @Provides
-    fun providesPushHandler(): PushHandler = PushHandler()
+    fun provideWithProgress(): WithProgress = WithProgressImpl()
 
     @Singleton
     @Provides
-    fun provideHealthChecker(cm: ConnectionManager): HealthChecker = HealthChecker(cm)
+    fun providesPushHandler(): PushHandler = PushHandler()
 
     @Singleton
     @Provides
@@ -90,28 +102,29 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideTypesApi(sora2CoroutineApiCreator: Sora2CoroutineApiCreator): SubstrateTypesApi =
-        sora2CoroutineApiCreator.create(SubstrateTypesApi::class.java)
+    fun provideSoramitsuCommonNetworking(): SoramitsuNetworkClient =
+        SoramitsuNetworkClient(logging = BuildConfig.DEBUG)
 
     @Singleton
     @Provides
-    fun provideRuntimeManager(
-        fileManager: FileManager,
-        gson: Gson,
-        soraPreferences: SoraPreferences,
-        socketService: SocketService,
-        typesApi: SubstrateTypesApi,
-    ): RuntimeManager =
-        RuntimeManager(fileManager, gson, soraPreferences, socketService, typesApi)
+    fun provideSubQueryClient(
+        client: SoramitsuNetworkClient,
+        @ApplicationContext context: Context
+    ): SubQueryClient<SoraSubqueryResponse, SubQueryHistoryItem> = SubQueryClientForSora.build(
+        context = context,
+        soramitsuNetworkClient = client,
+        baseUrl = FlavorOptionsProvider.soraScanHostUrl,
+        pageSize = Const.HISTORY_PAGE_SIZE,
+    )
 
     @Singleton
     @Provides
-    fun provideFileManager(context: Context): FileManager =
+    fun provideFileManager(@ApplicationContext context: Context): FileManager =
         FileManagerImpl(context)
 
     @Singleton
     @Provides
-    fun provideDeviceParams(context: Context): DeviceParamsProvider {
+    fun provideDeviceParams(@ApplicationContext context: Context): DeviceParamsProvider {
         return DeviceParamsProvider(
             context.resources.displayMetrics.widthPixels,
             context.resources.displayMetrics.heightPixels,
@@ -147,18 +160,6 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideSerializer(gson: Gson): Serializer = GsonSerializerImpl(gson)
-
-    @Provides
-    @Singleton
-    fun providePreferences(
-        context: Context
-    ): SoraPreferences {
-        return SoraPreferences(context)
-    }
-
-    @Provides
-    @Singleton
     fun provideEncryptedPreferences(
         soraPreferences: SoraPreferences,
         encryptionUtil: EncryptionUtil
@@ -175,29 +176,17 @@ class CommonModule {
     fun provideTextFormatter(): TextFormatter = TextFormatter()
 
     @Provides
-    fun provideLocale(contextManager: ContextManager): Locale {
-        return contextManager.getLocale()
-    }
-
-    @Provides
     fun provideDateTimeFormatter(
-        locale: Locale,
         resourceManager: ResourceManager,
-        context: Context,
+        @ApplicationContext context: Context,
     ): DateTimeFormatter {
-        return DateTimeFormatter(locale, resourceManager, context)
+        return DateTimeFormatter(ContextManager.getLocale(), resourceManager, context)
     }
 
     @Provides
     @Singleton
-    fun provideClipBoardManager(context: Context): ClipboardManager {
+    fun provideClipBoardManager(@ApplicationContext context: Context): ClipboardManager {
         return ClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
-    }
-
-    @Provides
-    @Singleton
-    fun provideAssetHolder(): AssetHolder {
-        return AssetHolder()
     }
 
     @Provides
@@ -208,7 +197,7 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideDeviceVibrator(context: Context): DeviceVibrator {
+    fun provideDeviceVibrator(@ApplicationContext context: Context): DeviceVibrator {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         return DeviceVibrator(vibrator)
     }

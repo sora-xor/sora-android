@@ -1,5 +1,7 @@
 apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion compileVersion
@@ -35,15 +37,11 @@ dependencies {
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
 
     implementation gsonDep
 
-    testImplementation jUnitDep
-    testImplementation mockitoDep
-    testImplementation robolectricDep
-    testImplementation robolectricMultidexDep
-    testImplementation archCoreTestDep
-    testImplementation archFragmentTestDep
+    implementation daggerDep
+    kapt daggerKaptDep
+
     testImplementation project(":test_shared")
 }

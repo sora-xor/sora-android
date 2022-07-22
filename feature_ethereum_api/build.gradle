@@ -5,5 +5,4 @@ dependencies {
     implementation kotlinDep
     implementation coroutineAndroidDep
     implementation coroutineDep
-    implementation coroutineTestDep
 }

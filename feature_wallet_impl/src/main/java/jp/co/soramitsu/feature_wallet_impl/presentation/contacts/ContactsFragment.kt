@@ -7,38 +7,37 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity.RESULT_OK
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.github.florent37.runtimepermission.RuntimePermission.askPermission
-import com.google.zxing.integration.android.IntentIntegrator
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.KeyboardHelper
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentContactsBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactsAdapter
 import jp.co.soramitsu.feature_wallet_impl.presentation.util.ScanQrBottomSheetDialog
 import javax.inject.Inject
 
+@AndroidEntryPoint
 @SuppressLint("CheckResult")
 class ContactsFragment :
     BaseFragment<ContactsViewModel>(R.layout.fragment_contacts),
     SearchView.OnQueryTextListener {
 
     companion object {
-        private const val PICK_IMAGE_REQUEST = 101
         private const val ARG_ASSET = "arg_asset"
         fun createBundle(assetId: String) = Bundle().apply {
             putString(ARG_ASSET, assetId)
@@ -47,9 +46,23 @@ class ContactsFragment :
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
-    private lateinit var integrator: IntentIntegrator
     private var keyboardHelper: KeyboardHelper? = null
     private val viewBinding by viewBinding(FragmentContactsBinding::bind)
+
+    private val processQrFromCameraContract = registerForActivityResult(ScanContract()) { result ->
+        if (result.contents != null) {
+            viewModel.qrResultProcess(result.contents)
+        }
+    }
+    private val scanOptions = ScanOptions()
+
+    private val processQrFromGalleryContract =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
+            if (result != null) {
+                viewModel.decodeTextFromBitmapQr(result)
+            }
+        }
+    override val viewModel: ContactsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -67,12 +80,17 @@ class ContactsFragment :
             }
         }
         viewBinding.contactsSearchView.setOnQueryTextListener(this)
-        integrator = IntentIntegrator.forSupportFragment(this).apply {
-            setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+
+        initListeners()
+        initScanOptions()
+    }
+
+    private fun initScanOptions() {
+        scanOptions.apply {
+            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
             setPrompt(getString(R.string.contacts_scan))
             setBeepEnabled(false)
         }
-        initListeners()
     }
 
     private fun initListeners() {
@@ -117,23 +135,12 @@ class ContactsFragment :
             viewBinding.emptyStatePlaceholder.gone()
             viewBinding.emptySearchResultPlaceholder.showOrGone(it)
         }
-        viewModel.getPreloadVisibility().observe {
+        viewModel.getProgressVisibility().observe {
             viewBinding.preloaderView.showOrGone(it)
         }
         viewModel.qrErrorLiveData.observe {
             showErrorFromResponse(it)
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .contactsComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 
     override fun onResume() {
@@ -144,21 +151,6 @@ class ContactsFragment :
     override fun onPause() {
         super.onPause()
         keyboardHelper?.release()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null) {
-            if (result.contents != null) {
-                viewModel.qrResultProcess(result.contents)
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
-        }
-
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.data != null) {
-            viewModel.decodeTextFromBitmapQr(data.data!!)
-        }
     }
 
     override fun onQueryTextSubmit(query: String?): Boolean {
@@ -174,22 +166,11 @@ class ContactsFragment :
 
     private fun initiateScan() {
         askPermission(this, Manifest.permission.CAMERA).onAccepted {
-            integrator.initiateScan()
+            processQrFromCameraContract.launch(scanOptions)
         }.ask()
     }
 
     private fun selectQrFromGallery() {
-        val intent = Intent().apply {
-            type = "image/*"
-            action = Intent.ACTION_GET_CONTENT
-        }
-
-        startActivityForResult(
-            Intent.createChooser(
-                intent,
-                getString(R.string.common_options_title)
-            ),
-            PICK_IMAGE_REQUEST
-        )
+        processQrFromGalleryContract.launch("image/*")
     }
 }

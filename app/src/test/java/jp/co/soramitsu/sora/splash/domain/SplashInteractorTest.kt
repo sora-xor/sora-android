@@ -6,12 +6,10 @@
 package jp.co.soramitsu.sora.splash.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,36 +34,24 @@ class SplashInteractorTest {
     private lateinit var userRepository: UserRepository
 
     @Mock
-    private lateinit var credentialsRepository: CredentialsRepository
-
-    @Mock
     private lateinit var migrationManager: MigrationManager
 
     private lateinit var splashInteractor: SplashInteractor
 
     @Before
     fun setUp() {
-        splashInteractor = SplashInteractor(userRepository, credentialsRepository, migrationManager)
+        splashInteractor = SplashInteractor(userRepository, migrationManager)
     }
 
     @Test
-    fun `getRegistrationState calls userRepository getRegistrationState`() = runBlockingTest {
+    fun `getRegistrationState calls userRepository getRegistrationState`() = runTest {
         splashInteractor.getRegistrationState()
 
         verify(userRepository).getRegistrationState()
     }
 
     @Test
-    fun `saveRegistrationState calls userRepository saveRegistrationState`() = runBlockingTest {
-        val state = OnboardingState.INITIAL
-
-        splashInteractor.saveRegistrationState(state)
-
-        verify(userRepository).saveRegistrationState(state)
-    }
-
-    @Test
-    fun `saveInviteCode calls userRepository saveInviteCode`() = runBlockingTest {
+    fun `saveInviteCode calls userRepository saveInviteCode`() = runTest {
         val inviteCode = "inviteCode"
 
         splashInteractor.saveInviteCode(inviteCode)

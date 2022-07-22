@@ -8,11 +8,12 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.send
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.date.DateTimeFormatter
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.DebounceClickListener
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
@@ -30,19 +31,33 @@ import jp.co.soramitsu.common.util.ext.setBalance
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.show
 import jp.co.soramitsu.common.util.ext.showOrGone
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransferType
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentTransferAmountBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class TransferAmountFragment :
     BaseFragment<TransferAmountViewModel>(R.layout.fragment_transfer_amount) {
+
+    @Inject
+    lateinit var vmf: TransferAmountViewModel.TransferAmountViewModelFactory
+
+    private val vm: TransferAmountViewModel by viewModels {
+        TransferAmountViewModel.provideFactory(
+            vmf,
+            requireArguments().getString(KEY_RECIPIENT_ID, ""),
+            requireArguments().getString(KEY_ASSET_ID, ""),
+            requireArguments().getString(KEY_FULL_NAME, ""),
+            requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
+        )
+    }
+    override val viewModel: TransferAmountViewModel
+        get() = vm
 
     companion object {
         private const val KEY_TRANSFER_TYPE = "transfer_type"
@@ -129,26 +144,6 @@ class TransferAmountFragment :
 
     private lateinit var progressDialog: SoraProgressDialog
     private var keyboardHelper: KeyboardHelper? = null
-
-    override fun inject() {
-        val recipientId = requireArguments().getString(KEY_RECIPIENT_ID, "")
-        val assetId = requireArguments().getString(KEY_ASSET_ID, "")
-        val recipientFullName = requireArguments().getString(KEY_FULL_NAME, "")
-        val transferType = requireArguments().getSerializable(KEY_TRANSFER_TYPE) as TransferType
-
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .transferAmountComponentBuilder()
-            .withFragment(this)
-            .withRecipientId(recipientId)
-            .withAssetId(assetId)
-            .withRecipientFullName(recipientFullName)
-            .withTransferType(transferType)
-            .build()
-            .inject(this)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

@@ -5,16 +5,14 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.feature_wallet_api.domain.model.ExtrinsicStatusResponse
 import jp.co.soramitsu.feature_wallet_api.domain.model.LiquidityData
 import jp.co.soramitsu.feature_wallet_api.domain.model.Market
 import jp.co.soramitsu.feature_wallet_api.domain.model.PoolData
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapQuote
-import jp.co.soramitsu.feature_wallet_api.domain.model.WithDesired
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 
@@ -26,7 +24,7 @@ interface PolkaswapRepository {
 
     suspend fun subscribeToPoolsData(address: String): Flow<String>
 
-    suspend fun getPoolStrategicBonusAPY(tokenId: String): BigDecimal?
+    suspend fun getPoolStrategicBonusAPY(tokenId: String): Double?
 
     fun getPoolData(address: String, tokenId: String): Flow<PoolData?>
 
@@ -48,7 +46,7 @@ interface PolkaswapRepository {
 
     fun observePoolTBCReserves(tokenId: String): Flow<String>
 
-    fun observeSwap(
+    suspend fun observeSwap(
         tokenId1: Token,
         tokenId2: Token,
         keypair: Sr25519Keypair,
@@ -57,7 +55,7 @@ interface PolkaswapRepository {
         swapVariant: WithDesired,
         amount: BigDecimal,
         limit: BigDecimal,
-    ): Flow<Pair<String, ExtrinsicStatusResponse>>
+    ): ExtrinsicSubmitStatus
 
     suspend fun calcSwapNetworkFee(
         tokenId1: Token,
@@ -91,7 +89,7 @@ interface PolkaswapRepository {
         pairEnabled: Boolean,
         pairPresented: Boolean,
         slippageTolerance: Double
-    ): Flow<Pair<String, ExtrinsicStatusResponse>>
+    ): ExtrinsicSubmitStatus
 
     suspend fun getSwapQuote(
         tokenId1: String,
@@ -101,49 +99,23 @@ interface PolkaswapRepository {
         markets: List<Market>
     ): SwapQuote?
 
-    suspend fun saveSwap(
-        txHash: String,
-        status: ExtrinsicStatusResponse,
-        fee: BigDecimal,
-        eventSuccess: Boolean?,
-        tokenIdFrom: String,
-        tokenIdTo: String,
-        amountFrom: BigDecimal,
-        amountTo: BigDecimal,
-        market: Market,
-        liquidityFee: BigDecimal,
-        soraAccount: SoraAccount,
-    )
-
-    suspend fun saveAddLiquidity(
-        txHash: String,
-        status: ExtrinsicStatusResponse,
-        eventSuccess: Boolean?,
-        networkFee: BigDecimal,
-        tokenIdFrom: String,
-        tokenIdTo: String,
-        amountFrom: BigDecimal,
-        amountTo: BigDecimal,
-        soraAccount: SoraAccount
-    )
-
-    suspend fun isPairEnabled(
+    fun isPairEnabled(
         inputAssetId: String,
-        outputAssetId: String
+        outputAssetId: String,
+        accountAddress: String,
     ): Flow<Boolean>
 
-    suspend fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean>
+    fun isPairPresentedInNetwork(tokenId: String, accountAddress: String): Flow<Boolean>
 
     suspend fun getRemotePoolReserves(
         address: String,
-        runtime: RuntimeSnapshot,
         tokenFrom: Token,
         tokenTo: Token,
         enabled: Boolean,
         presented: Boolean
     ): LiquidityData
 
-    fun observeRemoveLiquidity(
+    suspend fun observeRemoveLiquidity(
         address: String,
         keypair: Sr25519Keypair,
         token1: Token,
@@ -151,17 +123,5 @@ interface PolkaswapRepository {
         markerAssetDesired: BigDecimal,
         firstAmountMin: BigDecimal,
         secondAmountMin: BigDecimal
-    ): Flow<Pair<String, ExtrinsicStatusResponse>>
-
-    suspend fun saveRemoveLiquidity(
-        txHash: String,
-        status: ExtrinsicStatusResponse,
-        fee: BigDecimal,
-        eventSuccess: Nothing?,
-        tokenIdFrom: String,
-        tokenIdTo: String,
-        amountFrom: BigDecimal,
-        amountTo: BigDecimal,
-        soraAccount: SoraAccount
-    )
+    ): ExtrinsicSubmitStatus
 }

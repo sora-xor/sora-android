@@ -5,9 +5,8 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.domain
 
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.domain.credentials.CredentialsRepository
+import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import javax.inject.Inject
@@ -17,27 +16,38 @@ class MultiaccountInteractor @Inject constructor(
     private val credentialsRepository: CredentialsRepository
 ) {
 
-    suspend fun isMnemonicValid(mnemonic: String): Boolean {
-        return credentialsRepository.isMnemonicValid(mnemonic)
+    private companion object {
+        const val MULTIPLE_ACCOUNT_COUNT = 2
     }
 
-    suspend fun runRecoverFlow(mnemonic: String, accountName: String) {
-        val soraAccount = credentialsRepository.restoreUserCredentials(mnemonic, accountName)
+    suspend fun isMnemonicValid(mnemonic: String) = credentialsRepository.isMnemonicValid(mnemonic)
+
+    suspend fun isRawSeedValid(rawSeed: String) = credentialsRepository.isRawSeedValid(rawSeed)
+
+    suspend fun continueRecoverFlow(soraAccount: SoraAccount) {
         userRepository.insertSoraAccount(soraAccount)
         userRepository.setCurSoraAccount(soraAccount)
-        getMnemonic()
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
 
-    suspend fun getMnemonic(): String {
-        val m = credentialsRepository.retrieveMnemonic(userRepository.getCurSoraAccount())
-        return m.ifEmpty {
-            throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
-        }
+    suspend fun recoverSoraAccountFromMnemonic(input: String, accountName: String) = credentialsRepository.restoreUserCredentialsFromMnemonic(input, accountName)
+
+    suspend fun recoverSoraAccountFromRawSeed(input: String, accountName: String): SoraAccount {
+        val soraAccount = credentialsRepository.restoreUserCredentialsFromRawSeed(input, accountName)
+        userRepository.saveNeedsMigration(false, soraAccount)
+        userRepository.saveIsMigrationFetched(true, soraAccount)
+        return soraAccount
     }
 
-    suspend fun createUser(accountName: String) {
-        val soraAccount = credentialsRepository.generateUserCredentials(accountName)
+    suspend fun generateUserCredentials(accountName: String): SoraAccount {
+        return credentialsRepository.generateUserCredentials(accountName)
+    }
+
+    suspend fun getMnemonic(soraAccount: SoraAccount? = null): String {
+        return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())
+    }
+
+    suspend fun createUser(soraAccount: SoraAccount) {
         userRepository.insertSoraAccount(soraAccount)
         userRepository.setCurSoraAccount(soraAccount)
         userRepository.saveRegistrationState(OnboardingState.INITIAL)
@@ -48,4 +58,7 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun saveRegistrationStateFinished() {
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
+
+    suspend fun isMultiAccount(): Boolean =
+        userRepository.getSoraAccountsCount() >= MULTIPLE_ACCOUNT_COUNT
 }

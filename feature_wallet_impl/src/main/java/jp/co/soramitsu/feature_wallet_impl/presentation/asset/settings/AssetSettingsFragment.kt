@@ -8,19 +8,19 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.widget.SearchView
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import by.kirich1409.viewbindingdelegate.viewBinding
+import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
-import jp.co.soramitsu.common.di.api.FeatureUtils
 import jp.co.soramitsu.common.util.ext.hideSoftKeyboard
-import jp.co.soramitsu.feature_wallet_api.di.WalletFeatureApi
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentAssetSettingsBinding
-import jp.co.soramitsu.feature_wallet_impl.di.WalletFeatureComponent
 import jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.display.AssetConfigurableAdapter
 
+@AndroidEntryPoint
 class AssetSettingsFragment :
     BaseFragment<AssetSettingsViewModel>(R.layout.fragment_asset_settings) {
 
@@ -30,6 +30,10 @@ class AssetSettingsFragment :
     private val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
 
     private val binding by viewBinding(FragmentAssetSettingsBinding::bind)
+
+    private val vm: AssetSettingsViewModel by viewModels()
+    override val viewModel: AssetSettingsViewModel
+        get() = vm
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -54,17 +58,6 @@ class AssetSettingsFragment :
                 it.second
             )
         }
-    }
-
-    override fun inject() {
-        FeatureUtils.getFeature<WalletFeatureComponent>(
-            requireContext(),
-            WalletFeatureApi::class.java
-        )
-            .assetSettingsComponentBuilder()
-            .withFragment(this)
-            .build()
-            .inject(this)
     }
 
     private val queryListener = object : SearchView.OnQueryTextListener {

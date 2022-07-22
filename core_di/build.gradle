@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply from: '../tests.gradle'
 
 android {
     compileSdkVersion compileVersion
@@ -22,6 +20,26 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -32,11 +50,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    implementation androidDep
-
-    implementation kotlinDep
-
-    implementation daggerDep
-    kapt daggerKapt
+    implementation project(":common")
+    implementation viewmodelKtxDep
 }

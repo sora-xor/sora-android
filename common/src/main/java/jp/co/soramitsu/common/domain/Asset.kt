@@ -7,6 +7,7 @@ package jp.co.soramitsu.common.domain
 
 import android.os.Parcelable
 import androidx.annotation.DrawableRes
+import jp.co.soramitsu.common.util.NumbersFormatter
 import kotlinx.parcelize.Parcelize
 import java.math.BigDecimal
 
@@ -43,3 +44,10 @@ fun List<Token>.getByIdOrEmpty(id: String): Token =
     this.find {
         it.id == id
     } ?: AssetHolder.emptyToken
+
+fun Token.printBalance(
+    balance: BigDecimal,
+    nf: NumbersFormatter,
+    precision: Int = this.precision
+): String =
+    String.format("%s %s", nf.formatBigDecimal(balance, precision), symbol)

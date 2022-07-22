@@ -6,11 +6,6 @@
     app:startDestination="@id/profileFragment">
 
     <fragment
-        android:id="@+id/inviteFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.invite.InviteFragment"
-        tools:layout="@layout/fragment_invite" />
-
-    <fragment
         android:id="@+id/votesFragment"
         android:name="jp.co.soramitsu.feature_main_impl.presentation.voteshistory.VotesHistoryFragment"
         tools:layout="@layout/fragment_votes_history" />

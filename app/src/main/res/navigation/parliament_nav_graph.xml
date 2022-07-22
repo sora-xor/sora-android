@@ -9,14 +9,4 @@
         android:name="jp.co.soramitsu.feature_main_impl.presentation.parliament.ParliamentFragment"
         tools:layout="@layout/fragment_parliament" />
 
-    <fragment
-        android:id="@+id/referendumDetailFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.detail.referendum.DetailReferendumFragment"
-        tools:layout="@layout/fragment_referendum_detail" />
-
-    <fragment
-        android:id="@+id/referendaFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.main.ReferendaFragment"
-        tools:layout="@layout/fragment_referenda" />
-
 </navigation>

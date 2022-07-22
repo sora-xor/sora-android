@@ -29,8 +29,8 @@
             style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.21"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@+id/ivIconToken1"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/ivIconToken1"
             app:layout_constraintStart_toStartOf="@id/tvToken1Name"
             app:layout_constraintTop_toBottomOf="@id/tvToken1Name"
             tools:text="-1,00374830.1 VAL" />
@@ -83,8 +83,8 @@
             style="@style/TextAppearance.Soramitsu.Neu.ExtraBold.21"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@+id/ivIconToken2"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/ivIconToken2"
             app:layout_constraintStart_toStartOf="@id/tvToken2Name"
             app:layout_constraintTop_toBottomOf="@id/tvToken2Name"
             tools:text="-1,000.1 VAL" />
@@ -169,36 +169,36 @@
         <TextView
             android:id="@+id/tvLiquidityDateValue"
             style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1_5"
             android:ellipsize="middle"
             android:gravity="end"
             android:singleLine="true"
+            app:layout_constrainedHeight="true"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvLiquidityDateTimeTitle"
             app:layout_constraintTop_toBottomOf="@id/vDivider0"
-            app:layout_constraintWidth_default="wrap"
             tools:text="30 December 2022" />
 
         <TextView
             android:id="@+id/tvLiquidityTimeValue"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/x1_2"
             android:ellipsize="middle"
             android:gravity="end"
             android:includeFontPadding="false"
             android:singleLine="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintTop_toBottomOf="@id/tvLiquidityDateValue"
             app:layout_constraintVertical_bias="1.0"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="21:35:21" />
 
         <TextView
@@ -277,8 +277,8 @@
         <TextView
             android:id="@+id/tvLiquidityFromAccountValue"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="@drawable/text_background"
             android:drawablePadding="@dimen/x1"
             android:ellipsize="middle"
@@ -288,11 +288,11 @@
             app:drawableEndCompat="@drawable/ic_copy_16"
             app:layout_constraintBottom_toTopOf="@id/vDivider6"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvLiquidityAccountTitle"
             app:layout_constraintTop_toBottomOf="@id/vDivider3"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="cnFoweiv20nveiowofjldfn" />
 
         <TextView
@@ -310,8 +310,8 @@
         <TextView
             android:id="@+id/tvLiquidityHash"
             style="@style/TextAppearance.Soramitsu.Neu.Light.13"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="@drawable/text_background"
             android:drawablePadding="@dimen/x1"
             android:ellipsize="middle"
@@ -320,11 +320,11 @@
             app:drawableEndCompat="@drawable/ic_copy_16"
             app:layout_constraintBottom_toTopOf="@id/vDivider3"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHeight_default="wrap"
+            app:layout_constrainedHeight="true"
             app:layout_constraintHorizontal_bias="1"
             app:layout_constraintStart_toEndOf="@id/tvLiquidityHashTitle"
             app:layout_constraintTop_toBottomOf="@id/vDivider5"
-            app:layout_constraintWidth_default="wrap"
+            app:layout_constrainedWidth="true"
             tools:text="0x3328ofh...928h3f928fh9" />
 
         <View
