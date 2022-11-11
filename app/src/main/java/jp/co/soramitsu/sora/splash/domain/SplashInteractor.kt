@@ -23,10 +23,6 @@ class SplashInteractor @Inject constructor(
         migrationsDone.complete(migrationManager.start())
     }
 
-    suspend fun initCurSoraAccount() {
-        userRepository.initCurSoraAccount()
-    }
-
     fun getMigrationDoneAsync(): Deferred<Boolean> = migrationsDone
 
     suspend fun getRegistrationState() = userRepository.getRegistrationState()

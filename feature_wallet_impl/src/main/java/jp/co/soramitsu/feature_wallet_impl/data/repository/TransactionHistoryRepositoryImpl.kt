@@ -15,9 +15,8 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionStatus
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionsInfo
 import jp.co.soramitsu.feature_wallet_impl.data.mappers.mapHistoryItemsToTransactions
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
-import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
-import jp.co.soramitsu.xnetworking.subquery.history.sora.SoraSubqueryResponse
+import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItem
+import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWallet
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.debounce
 import javax.inject.Inject
@@ -26,7 +25,7 @@ import javax.inject.Singleton
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class TransactionHistoryRepositoryImpl @Inject constructor(
-    private val subQueryClient: SubQueryClient<SoraSubqueryResponse, SubQueryHistoryItem>,
+    private val subQueryClient: SubQueryClientForSoraWallet,
     extrinsicManager: ExtrinsicManager,
 ) : TransactionHistoryRepository {
 
@@ -109,7 +108,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
         _state.set(true)
     }
 
-    private fun filterHistoryItem(item: SubQueryHistoryItem, tokenId: String): Boolean {
+    private fun filterHistoryItem(item: TxHistoryItem, tokenId: String): Boolean {
         return (
             item.data?.find {
                 it.paramValue == tokenId

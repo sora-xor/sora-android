@@ -59,9 +59,7 @@ class RemoveLiquidityConfirmationFragment : BaseFragment<RemoveLiquidityConfirma
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
-    private val vm: RemoveLiquidityConfirmationViewModel by viewModels()
-    override val viewModel: RemoveLiquidityConfirmationViewModel
-        get() = vm
+    override val viewModel: RemoveLiquidityConfirmationViewModel by viewModels()
 
     private val binding by viewBinding(FragmentRemoveLiquidityConfirmationBinding::bind)
 

@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.sora.navigation
 
-import android.os.Bundle
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import jp.co.soramitsu.common.domain.LiquidityDetails
@@ -14,14 +13,25 @@ import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.liquidityDetails
 import jp.co.soramitsu.common.presentation.args.slippageTolerance
 import jp.co.soramitsu.common.presentation.args.tokenFrom
+import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenTo
 import jp.co.soramitsu.common.presentation.args.tokenToNullable
 import jp.co.soramitsu.common.presentation.args.withArgs
-import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.presentation.compose.webview.title
+import jp.co.soramitsu.common.presentation.compose.webview.url
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_main_impl.presentation.util.action
 import jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtectionViewModel
+import jp.co.soramitsu.feature_multiaccount_impl.util.address
+import jp.co.soramitsu.feature_multiaccount_impl.util.addresses
+import jp.co.soramitsu.feature_multiaccount_impl.util.type
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
+import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
+import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
+import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
 import jp.co.soramitsu.feature_wallet_api.domain.model.SwapDetails
@@ -41,7 +51,7 @@ import jp.co.soramitsu.sora.R
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 import java.math.BigDecimal
 
-class Navigator : MainRouter, WalletRouter, ReferralRouter {
+class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter {
 
     private var navController: NavController? = null
 
@@ -57,10 +67,32 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter {
     }
 
     override fun showPin(action: PinCodeAction) {
-        val bundle = Bundle().apply {
-            putSerializable(Const.PIN_CODE_ACTION, action)
-        }
-        navController?.navigate(R.id.pincodeFragment, bundle)
+        navController?.navigate(
+            R.id.pincodeFragment,
+            withArgs {
+                this.action = action
+            }
+        )
+    }
+
+    override fun showPinForLogout(address: String) {
+        navController?.navigate(
+            R.id.pincodeFragment,
+            args = withArgs {
+                this.action = PinCodeAction.LOGOUT
+                this.addresses = listOf(address)
+            }
+        )
+    }
+
+    override fun showPinForBackup(action: PinCodeAction, addresses: List<String>) {
+        navController?.navigate(
+            R.id.pincodeFragment,
+            args = withArgs {
+                this.action = action
+                this.addresses = addresses
+            }
+        )
     }
 
     override fun showPinLengthInfo() {
@@ -83,12 +115,16 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter {
         navController?.popBackStack()
     }
 
-    override fun showTerms() {
-        navController?.navigate(R.id.termsFragment)
+    override fun popBackStackToAccountList() {
+        navController?.popBackStack(R.id.accountListFragment, false)
     }
 
-    override fun showPassphrase() {
-        navController?.navigate(R.id.passphraseFragment)
+    override fun popBackStackToAccountDetails() {
+        navController?.popBackStack(R.id.accoundDetailsFragment, false)
+    }
+
+    override fun showTerms() {
+        navController?.navigate(R.id.termsFragment)
     }
 
     override fun showSelectLanguage() {
@@ -284,11 +320,11 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter {
         )
     }
 
-    override fun returnToAddLiquidity(tokenFrom: Token, tokenTo: Token?) {
+    override fun returnToAddLiquidity(tokenFrom: Token?, tokenTo: Token?) {
         navController?.previousBackStackEntry?.savedStateHandle?.set(
             BUNDLE_KEY,
             withArgs {
-                this.tokenFrom = tokenFrom
+                this.tokenFromNullable = tokenFrom
                 this.tokenToNullable = tokenTo
             }
         )
@@ -355,6 +391,10 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter {
         return navController?.currentDestination != null && navController?.currentDestination!!.id == R.id.claimFragment
     }
 
+    override fun currentDestinationIsPinCheckNeeded(): Boolean {
+        return navController?.currentDestination != null && (navController?.currentDestination!!.id == R.id.backupFragment || navController?.currentDestination!!.id == R.id.backupJsonFragment)
+    }
+
     override fun showTransactionDetails(
         txHash: String
     ) {
@@ -376,6 +416,124 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter {
             null,
             NavOptions.Builder().setPopUpTo(R.id.walletFragment, false).build()
         )
+    }
+
+    override fun showAccountList() {
+        navController?.navigate(
+            R.id.export_account_nav_graph,
+            null,
+        )
+    }
+
+    override fun showExportPassphraseProtection(address: String) {
+        navController?.navigate(
+            R.id.exportProtectionFragment,
+            withArgs {
+                this.type = ExportProtectionViewModel.Type.PASSPHRASE
+                this.address = address
+            },
+        )
+    }
+
+    override fun showExportSeedProtection(address: String) {
+        navController?.navigate(
+            R.id.exportProtectionFragment,
+            withArgs {
+                this.type = ExportProtectionViewModel.Type.SEED
+                this.address = address
+            },
+        )
+    }
+
+    override fun showExportJSONProtection(addresses: List<String>) {
+        navController?.navigate(
+            R.id.exportProtectionFragment,
+            withArgs {
+                this.type = ExportProtectionViewModel.Type.JSON
+                this.addresses = addresses as ArrayList<String>
+                this.address = ""
+            }
+        )
+    }
+
+    override fun showAccountDetails(address: String) {
+        navController?.navigate(
+            R.id.accoundDetailsFragment,
+            withArgs {
+                this.address = address
+            },
+        )
+    }
+
+    override fun showBackupPassphrase(address: String) {
+        navController?.navigate(
+            R.id.backupFragment,
+            withArgs {
+                this.type = ExportProtectionViewModel.Type.PASSPHRASE
+                this.address = address
+            },
+        )
+    }
+
+    override fun showBackupSeed(address: String) {
+        navController?.navigate(
+            R.id.backupFragment,
+            withArgs {
+                this.type = ExportProtectionViewModel.Type.SEED
+                this.address = address
+            },
+        )
+    }
+
+    override fun showBackupJson(addresses: List<String>) {
+        navController?.navigate(
+            R.id.backupJsonFragment,
+            withArgs {
+                this.addresses = addresses
+            }
+        )
+    }
+
+    override fun showWebView(title: String, url: String) {
+        navController?.navigate(
+            R.id.webViewFragment,
+            withArgs {
+                this.title = title
+                this.url = url
+            },
+        )
+    }
+
+    override fun showSelectNode() {
+        navController?.navigate(
+            R.id.select_node_nav_graph
+        )
+    }
+
+    override fun showAddCustomNode() {
+        navController?.navigate(
+            R.id.nodeDetailsFragment
+        )
+    }
+
+    override fun showEditNode(nodeName: String, nodeAddress: String) {
+        navController?.navigate(
+            R.id.nodeDetailsFragment,
+            withArgs {
+                this.nodeName = nodeName
+                this.nodeAddress = nodeAddress
+            }
+        )
+    }
+
+    override fun returnFromPinCodeCheck() {
+        navController?.previousBackStackEntry?.savedStateHandle?.set(
+            BUNDLE_KEY,
+            withArgs {
+                this.pinCodeChecked = true
+            }
+        )
+        navController?.popBackStack()
     }
 
     override fun popBackStackFragment() {

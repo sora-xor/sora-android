@@ -37,6 +37,7 @@ class ExtrinsicDetailsFragment :
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
     @Inject
     lateinit var vmf: ExtrinsicDetailsViewModel.ExtrinsicDetailsViewModelFactory
     private val viewBinding by viewBinding(FragmentExtrinsicDetailsBinding::bind)

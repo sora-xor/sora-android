@@ -84,4 +84,6 @@ interface WalletInteractor {
     suspend fun isWhitelistedToken(tokenId: String): Boolean
 
     suspend fun isVisibleToken(tokenId: String): Boolean
+
+    suspend fun getSoraAccounts(): List<SoraAccount>
 }

@@ -8,10 +8,10 @@ package jp.co.soramitsu.sora.substrate.substrate
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.fearless_utils.runtime.definitions.types.fromHex
 import jp.co.soramitsu.fearless_utils.runtime.metadata.module
 import jp.co.soramitsu.fearless_utils.runtime.metadata.storage
 import jp.co.soramitsu.fearless_utils.runtime.metadata.storageKey
@@ -25,11 +25,12 @@ import jp.co.soramitsu.fearless_utils.wsrpc.mappers.scale
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.storage.GetStorageRequest
 import jp.co.soramitsu.sora.substrate.request.IsPairEnabledRequest
+import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.runtime.accountPoolsKey
+import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
 import java.math.BigInteger
 import javax.inject.Inject
@@ -37,9 +38,104 @@ import javax.inject.Inject
 // todo refactor it after migrate to substrate 4
 class SubstrateApiImpl @Inject constructor(
     private val socketService: SocketService,
-    private val cryptoAssistant: CryptoAssistant,
     private val runtimeManager: RuntimeManager,
 ) : SubstrateApi {
+
+    override suspend fun getPoolBaseTokens(): List<Pair<Int, String>> {
+        val metadataStorage =
+            runtimeManager.getRuntimeSnapshot().metadata
+                .module(Pallete.DEX_MANAGER.palletName)
+                .storage(Storage.DEX_INFOS.storageName)
+        val partialKey = metadataStorage.storageKey()
+        val dexIdsList = socketService.executeAsync(
+            request = RuntimeRequest(
+                "dexManager_listDEXIds",
+                emptyList(),
+            ),
+            mapper = pojoList<Int>().nonNull()
+        )
+        return runCatching {
+            socketService.executeAsync(
+                request = StateKeys(listOf(partialKey)),
+                mapper = pojoList<String>().nonNull()
+            ).let { storageKeys ->
+                storageKeys.mapIndexedNotNull { storageIndex, storageKey ->
+                    socketService.executeAsync(
+                        request = GetStorageRequest(listOf(storageKey)),
+                        mapper = pojo<String>().nonNull(),
+                    )
+                        .let { storage ->
+                            val storageType = metadataStorage.type.value!!
+                            val storageRawData =
+                                storageType.fromHex(runtimeManager.getRuntimeSnapshot(), storage)
+                            (storageRawData as? Struct.Instance)?.let { instance ->
+                                instance.get<Struct.Instance>("baseAssetId")?.let { id ->
+                                    id.get<List<*>>("code")?.let { code ->
+                                        code.map {
+                                            (it as BigInteger).toByte()
+                                        }
+                                    }?.toByteArray()?.toHexString(true)
+                                }?.let { token ->
+                                    dexIdsList.getOrNull(storageIndex)?.let { index ->
+                                        index to token
+                                    }
+                                }
+                            }
+                        }
+                }
+            }
+        }
+            .onFailure(FirebaseWrapper::recordException)
+            .getOrThrow()
+    }
+
+    override suspend fun getUserPoolsTokenIds22StateKeys(address: String): List<String> {
+        val accountPoolsKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
+        return runCatching {
+            socketService.executeAsync(
+                request = StateKeys(listOf(accountPoolsKey)),
+                mapper = pojoList<String>().nonNull()
+            )
+        }.onFailure(
+            FirebaseWrapper::recordException
+        ).getOrThrow()
+    }
+
+    override suspend fun getUserPoolsTokenIds22(
+        address: String
+    ): List<Pair<String, List<ByteArray>>> {
+        return runCatching {
+            val storageKeys = getUserPoolsTokenIds22StateKeys(address)
+            storageKeys.map { storageKey ->
+                socketService.executeAsync(
+                    request = GetStorageRequest(listOf(storageKey)),
+                    mapper = pojo<String>().nonNull(),
+                )
+                    .let { storage ->
+                        val storageType =
+                            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
+                                .storage(Storage.ACCOUNT_POOLS.storageName).type.value!!
+                        val storageRawData =
+                            storageType.fromHex(runtimeManager.getRuntimeSnapshot(), storage)
+                        val tokens: List<ByteArray> = if (storageRawData is List<*>) {
+                            storageRawData.filterIsInstance<Struct.Instance>()
+                                .mapNotNull { struct ->
+                                    struct.get<List<*>>("code")?.let { code ->
+                                        code.map {
+                                            (it as BigInteger).toByte()
+                                        }
+                                    }?.toByteArray()
+                                }
+                        } else {
+                            emptyList()
+                        }
+                        storageKey.assetIdFromKey() to tokens
+                    }
+            }
+        }.onFailure(
+            FirebaseWrapper::recordException
+        ).getOrThrow()
+    }
 
     override suspend fun getUserPoolsTokenIds(
         address: String
@@ -62,26 +158,29 @@ class SubstrateApiImpl @Inject constructor(
 
     override suspend fun getUserPoolsData(
         address: String,
+        baseTokenId: String,
         tokensId: List<ByteArray>
     ): List<PoolDataDto> {
         return tokensId.mapNotNull { tokenId ->
-            getUserPoolData(address, tokenId)
+            getUserPoolData(address, baseTokenId, tokenId)
         }
     }
 
     override suspend fun getUserPoolData(
         address: String,
+        baseTokenId: String,
         tokenId: ByteArray
     ): PoolDataDto? {
-        val reserves = getPairWithXorReserves(tokenId)
+        val reserves = getPairWithXorReserves(baseTokenId, tokenId)
         val totalIssuanceAndProperties =
-            getPoolTotalIssuanceAndProperties(tokenId, address)
+            getPoolTotalIssuanceAndProperties(baseTokenId, tokenId, address)
 
         if (reserves == null || totalIssuanceAndProperties == null) {
             return null
         }
 
         return PoolDataDto(
+            baseTokenId,
             tokenId.toHexString(true),
             reserves.first,
             reserves.second,
@@ -91,9 +190,11 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     private suspend fun getPairWithXorReserves(
+        baseTokenId: String,
         tokenId: ByteArray
     ): Pair<BigInteger, BigInteger>? {
-        val storageKey = runtimeManager.getRuntimeSnapshot().reservesKey(runtimeManager, tokenId)
+        val storageKey =
+            runtimeManager.getRuntimeSnapshot().reservesKey(runtimeManager, baseTokenId, tokenId)
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(ReservesResponse),
@@ -105,16 +206,17 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     override suspend fun getPoolReserveAccount(
+        baseTokenId: String,
         tokenId: ByteArray
     ): ByteArray? {
         val storageKey =
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
                 .storage(Storage.PROPERTIES.storageName).storageKey(
                     runtimeManager.getRuntimeSnapshot(),
-                    if (runtimeManager.getMetadataVersion() < 14) SubstrateOptionsProvider.feeAssetId.fromHex() else
+                    if (runtimeManager.getMetadataVersion() < 14) baseTokenId.fromHex() else
                         Struct.Instance(
                             mapOf(
-                                "code" to SubstrateOptionsProvider.feeAssetId.fromHex().toList()
+                                "code" to baseTokenId.fromHex().toList()
                                     .map { it.toInt().toBigInteger() }
                             )
                         ),
@@ -136,16 +238,18 @@ class SubstrateApiImpl @Inject constructor(
     }
 
     override suspend fun getPoolReserves(
+        baseTokenId: String,
         tokenId: String
     ): Pair<BigInteger, BigInteger>? {
-        return getPairWithXorReserves(tokenId.fromHex())
+        return getPairWithXorReserves(baseTokenId, tokenId.fromHex())
     }
 
     private suspend fun getPoolTotalIssuanceAndProperties(
+        baseTokenId: String,
         tokenId: ByteArray,
         address: String
     ): Pair<BigInteger, BigInteger>? {
-        return getPoolReserveAccount(tokenId)?.let { account ->
+        return getPoolReserveAccount(baseTokenId, tokenId)?.let { account ->
             getPoolTotalIssuances(
                 account
             )?.let {
@@ -201,20 +305,24 @@ class SubstrateApiImpl @Inject constructor(
         }
     }
 
-    override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean =
+    override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean =
         socketService.executeAsync(
             request = RuntimeRequest(
                 "liquidityProxy_isPathAvailable",
-                listOf(SubstrateOptionsProvider.dexId, tokenId1, tokenId2)
+                listOf(dexId, tokenId1, tokenId2)
             ),
             mapper = pojo<Boolean>().nonNull(),
         )
 
-    override suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): List<String> =
+    override suspend fun fetchAvailableSources(
+        tokenId1: String,
+        tokenId2: String,
+        dexId: Int
+    ): List<String> =
         socketService.executeAsync(
             request = RuntimeRequest(
                 "liquidityProxy_listEnabledSourcesForPath",
-                listOf(SubstrateOptionsProvider.dexId, tokenId1, tokenId2)
+                listOf(dexId, tokenId1, tokenId2)
             ),
             mapper = pojoList<String>().nonNull(),
         )
@@ -225,13 +333,14 @@ class SubstrateApiImpl @Inject constructor(
         amount: BigInteger,
         swapVariant: String,
         market: List<String>,
-        filter: String
+        filter: String,
+        dexId: Int,
     ): SwapFeeDto? =
         socketService.executeAsync(
             request = RuntimeRequest(
                 "liquidityProxy_quote",
                 listOf(
-                    SubstrateOptionsProvider.dexId,
+                    dexId,
                     tokenId1,
                     tokenId2,
                     amount.toString(),
@@ -243,9 +352,13 @@ class SubstrateApiImpl @Inject constructor(
             mapper = pojo<SwapFeeDto>(),
         ).result
 
-    override suspend fun isPairEnabled(inputAssetId: String, outputAssetId: String): Boolean {
+    override suspend fun isPairEnabled(
+        inputAssetId: String,
+        outputAssetId: String,
+        dexId: Int
+    ): Boolean {
         return socketService.executeAsync(
-            request = IsPairEnabledRequest(inputAssetId, outputAssetId),
+            request = IsPairEnabledRequest(inputAssetId, outputAssetId, dexId),
             mapper = pojo<Boolean>().nonNull()
         )
     }

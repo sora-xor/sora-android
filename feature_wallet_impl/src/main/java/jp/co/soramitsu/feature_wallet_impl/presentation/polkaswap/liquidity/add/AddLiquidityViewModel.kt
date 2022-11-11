@@ -36,7 +36,6 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.model.MessageA
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateAddingShareOfPool
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapMath.isZero
 import jp.co.soramitsu.sora.substrate.models.WithDesired
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -126,17 +125,6 @@ class AddLiquidityViewModel @Inject constructor(
     private var pairPresented: Boolean = true
 
     init {
-        viewModelScope.launch {
-            tryCatch {
-                val asset = walletInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
-                _fromToken.value = asset.token
-                _fromAssetBalance.value = numbersFormatter.formatBigDecimal(
-                    asset.balance.transferable,
-                    DEFAULT_PRECISION
-                )
-            }
-        }
-
         onChangedProperty.observe()
             .debounce(ViewHelper.debounce)
             .catch {
@@ -165,7 +153,7 @@ class AddLiquidityViewModel @Inject constructor(
     }
 
     private fun updateData(assets: List<Asset>) {
-        assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let { asset ->
+        assets.find { it.token.id == fromToken.value?.id }?.let { asset ->
             balanceFrom = asset.balance.transferable
             _fromToken.value = asset.token
             _fromAssetBalance.value = numbersFormatter.formatBigDecimal(
@@ -243,11 +231,7 @@ class AddLiquidityViewModel @Inject constructor(
         val basedAmount = if (desired == WithDesired.INPUT) amountFrom else amountTo
         val targetAmount = if (desired == WithDesired.INPUT) amountTo else amountFrom
 
-        if (tokenFrom == null || tokenTo == null || basedAmount <= BigDecimal.ZERO) {
-            return
-        }
-
-        if (_pairNotExists.value == true) {
+        if (tokenFrom == null || tokenTo == null || basedAmount < BigDecimal.ZERO || targetAmount < BigDecimal.ZERO) {
             return
         }
 
@@ -370,14 +354,19 @@ class AddLiquidityViewModel @Inject constructor(
                     add(
                         SB_APY_POSITION,
                         DetailsItem(
-                            resourceManager.getString(R.string.polkaswap_sbapy),
-                            PERCENT_FORMAT.format(
+                            title = resourceManager.getString(R.string.polkaswap_sbapy),
+                            value = PERCENT_FORMAT.format(
                                 numbersFormatter.format(
                                     sbApy,
                                     DEFAULT_PRECISION
                                 )
                             )
-                                .decimalPartSized()
+                                .decimalPartSized(),
+                            messageAlert = MessageAlert(
+                                title = R.string.polkaswap_sbapy,
+                                message = R.string.polkaswap_sb_apy_info,
+                                positiveButton = android.R.string.ok
+                            )
                         )
                     )
                 }
@@ -387,20 +376,24 @@ class AddLiquidityViewModel @Inject constructor(
         _liquidityDetailsItems.value = listOf(positionDetails, feesDetails)
     }
 
-    fun setTokensFromArgs(tokenFrom: Token, tokenTo: Token? = null) {
-        if (_toToken.value != tokenTo) {
+    fun setTokensFromArgs(tokenFrom: Token? = null, tokenTo: Token? = null) {
+        if (_toToken.value != tokenTo || _fromToken.value != tokenFrom) {
             cleanUpSubscriptions()
         }
 
-        _fromToken.value = tokenFrom
-        _toToken.value = tokenTo
+        tokenFrom?.let {
+            _fromToken.value = it
+        }
+        tokenTo?.let {
+            _toToken.value = it
+        }
 
         fetchAssetData()
         fetchNetworkFee()
 
-        if (tokenTo != null) {
-            subscribePoolChanges(tokenFrom.id, tokenTo.id)
-            subscribeReserves(tokenTo.id)
+        if (_fromToken.value != null && _toToken.value != null) {
+            subscribePoolChanges(_fromToken.value?.id!!, _toToken.value?.id!!)
+            subscribeReserves(_fromToken.value?.id!!, _toToken.value?.id!!)
         } else {
             onChangedProperty.set(false)
         }
@@ -452,7 +445,7 @@ class AddLiquidityViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        polkaswapInteractor.isPairPresentedInNetwork(tokenToId)
+        polkaswapInteractor.isPairPresentedInNetwork(tokenFromId, tokenToId)
             .catch {
                 onError(it)
             }
@@ -464,23 +457,24 @@ class AddLiquidityViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun subscribeReserves(tokenToId: String) {
-        liquidityDataSubscriptionJob = polkaswapInteractor.subscribeReservesCache(tokenToId)
-            .distinctUntilChanged()
-            .debounce(500)
-            .catch {
-                onError(it)
-            }
-            .onEach { localData ->
-                if (localData == null) {
-                    fetchLiquidityData()
-                } else {
-                    liquidityData = localData
-                    _pairNotExists.value = false
-                    onChangedProperty.set(false)
+    private fun subscribeReserves(baseTokenId: String, tokenToId: String) {
+        liquidityDataSubscriptionJob =
+            polkaswapInteractor.subscribeReservesCache(baseTokenId, tokenToId)
+                .distinctUntilChanged()
+                .debounce(500)
+                .catch {
+                    onError(it)
                 }
-            }
-            .launchIn(viewModelScope)
+                .onEach { localData ->
+                    if (localData == null) {
+                        fetchLiquidityData()
+                    } else {
+                        liquidityData = localData
+                        _pairNotExists.value = false
+                        onChangedProperty.set(false)
+                    }
+                }
+                .launchIn(viewModelScope)
     }
 
     private fun fetchLiquidityData() {
@@ -511,10 +505,17 @@ class AddLiquidityViewModel @Inject constructor(
         onChangedProperty.set(false)
     }
 
-    fun onChooseToken() {
+    fun onChooseFromToken() {
+        router.showSelectToken(
+            AssetListMode.SELECT_FOR_LIQUIDITY_BASE,
+            _toToken.value?.id
+        )
+    }
+
+    fun onChooseToToken() {
         router.showSelectToken(
             AssetListMode.SELECT_FOR_LIQUIDITY,
-            SubstrateOptionsProvider.feeAssetId
+            _fromToken.value?.id
         )
     }
 

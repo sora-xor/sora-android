@@ -13,5 +13,6 @@ interface FileManager {
     fun readInternalCacheFile(fileName: String): String?
     fun writeInternalCacheFile(fileName: String, content: String)
     fun writeExternalCacheBitmap(bitmap: Bitmap, fileName: String, format: Bitmap.CompressFormat, quality: Int): Uri
+    fun writeExternalCacheText(fileName: String, body: String): Uri
     val logStorageDir: String
 }

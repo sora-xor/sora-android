@@ -7,12 +7,16 @@ package jp.co.soramitsu.feature_multiaccount_impl.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.Keypair
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,10 +42,11 @@ class MultiaccountInteractorTest {
 
     private val userRepository = mock(UserRepository::class.java)
     private val credentialsRepository = mock(CredentialsRepository::class.java)
+    private val fileManager = mock(FileManager::class.java)
 
     @Before
     fun setup() {
-        multiaccountInteractor = MultiaccountInteractor(userRepository, credentialsRepository)
+        multiaccountInteractor = MultiaccountInteractor(userRepository, credentialsRepository, fileManager)
     }
 
     @Test
@@ -110,5 +115,71 @@ class MultiaccountInteractorTest {
         multiaccountInteractor.saveRegistrationStateFinished()
 
         verify(userRepository).saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+    }
+
+    @Test
+    fun `update name is called`() = runTest {
+        val address = "address"
+        val soraAccount = SoraAccount("address", "name")
+        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+
+        multiaccountInteractor.updateName(address, "newName")
+
+        verify(userRepository).updateAccountName(soraAccount, "newName")
+    }
+
+    @Test
+    fun `get mnemonic is called`() = runTest {
+        val address = "address"
+        val soraAccount = SoraAccount("address", "name")
+        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+        val mnemonic = "mnemonic"
+        given(credentialsRepository.retrieveMnemonic(soraAccount)).willReturn(mnemonic)
+
+        val result = multiaccountInteractor.getMnemonic(address)
+
+        assertEquals(mnemonic, result)
+    }
+
+    @Test
+    fun `get seed is called`() = runTest {
+        val address = "address"
+        val soraAccount = SoraAccount("address", "name")
+        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+        val seed = "seed"
+        given(credentialsRepository.retrieveSeed(soraAccount)).willReturn(seed)
+
+        val result = multiaccountInteractor.getSeed(address)
+
+        assertEquals(seed, result)
+    }
+
+    @Test
+    fun `get keypair is called`() = runTest {
+        val address = "address"
+        val soraAccount = SoraAccount("address", "name")
+        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+        val keypair = mock(Sr25519Keypair::class.java)
+        given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(keypair)
+
+        val result = multiaccountInteractor.getKeypair(address)
+
+        assertEquals(keypair, result)
+    }
+
+    @Test
+    fun `get json file uri is called with one address`() = runTest {
+        val address = "address"
+        val password = "address"
+        val soraAccount = SoraAccount("address", "name")
+        val expectedFileName = "address.json"
+        val expectedJson = "{JSON}"
+        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+        given(credentialsRepository.generateJson(listOf(soraAccount), password)).willReturn(expectedJson)
+
+
+        multiaccountInteractor.getJsonFileUri(listOf(address), password)
+
+        verify(fileManager).writeExternalCacheText(expectedFileName, expectedJson)
     }
 }

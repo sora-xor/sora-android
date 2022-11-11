@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <com.makeramen.roundedimageview.RoundedImageView
+        <ImageView
             android:id="@+id/referendumImage"
             android:layout_width="match_parent"
             android:layout_height="170dp"
@@ -27,9 +27,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:riv_corner_radius_top_left="@dimen/x1"
-            app:riv_corner_radius_top_right="@dimen/x1"
-            tools:src="@tools:sample/backgrounds/scenic" />
+            tools:ignore="ContentDescription" />
 
         <LinearLayout
             android:id="@+id/referendumDeadlineWrapper"
@@ -46,8 +44,8 @@
                 style="@style/TextAppearance.Soramitsu.Paragraph_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/referendum_ends_in_title"
                 android:layout_marginEnd="@dimen/x1_2"
+                android:text="@string/referendum_ends_in_title"
                 android:textColor="@color/grey" />
 
             <TextView

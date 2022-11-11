@@ -7,7 +7,6 @@ package jp.co.soramitsu.common.util.ext
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Parcelable
 import android.util.TypedValue
 import android.view.View
@@ -23,12 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-
-fun Fragment.showBrowser(link: String) {
-    val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(link) }
-    safeStartActivity(intent, ResponseCode.NOW_BROWSER_FOUND)
-}
 
 fun Fragment.safeStartActivity(intent: Intent, responseCode: ResponseCode) {
     try {
@@ -36,7 +31,7 @@ fun Fragment.safeStartActivity(intent: Intent, responseCode: ResponseCode) {
     } catch (exception: ActivityNotFoundException) {
         Toast.makeText(
             requireContext(),
-            getString(responseCode.stringResource),
+            getString(responseCode.messageResource),
             Toast.LENGTH_LONG
         ).show()
     }
@@ -66,7 +61,9 @@ fun Fragment.runDelayed(
     block: () -> Unit,
 ): Job = viewLifecycleOwner.lifecycle.coroutineScope.launch(dispatcher) {
     delay(durationInMillis)
-    block.invoke()
+    if (isActive) {
+        block.invoke()
+    }
 }
 
 fun Fragment.onBackPressed(block: () -> Unit) {

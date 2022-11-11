@@ -15,8 +15,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.common.util.ext.showBrowser
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentParliamentBinding
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
@@ -39,7 +39,7 @@ class ParliamentFragment : BaseFragment<ParliamentViewModel>(R.layout.fragment_p
         binding.tvParliamentMore.text =
             SpannableStringBuilder().underline { append(getString(R.string.common_learn_more)) }
         binding.tvParliamentMore.setDebouncedClickListener(debounceClickHandler) {
-            showBrowser(Const.PARLIAMENT_LEARN_MORE_LINK)
+            ShareUtil.shareInBrowser(this, Const.PARLIAMENT_LEARN_MORE_LINK)
         }
     }
 }

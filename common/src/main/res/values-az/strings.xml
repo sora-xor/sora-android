@@ -201,6 +201,7 @@
   <string name="common_spanish_colombia">İspan (Kolumbiya) dili</string>
   <string name="common_supply">Təchizat</string>
   <string name="common_swedish">İsveç dili</string>
+  <string name="common_submit">təqdim</string>
   <string name="common_terms_title">Şərtlər və Qaydalar</string>
   <string name="common_thai">Tay dili</string>
   <string name="common_to">Kimə</string>
@@ -292,6 +293,7 @@
   <string name="liquidity_pair_creation_title">Siz ilk likvidlik təminatçısısınız</string>
   <string name="liquidity_removed">%s likvidlik silindi</string>
   <string name="logout_dialog_body">Bu əməliyyat hesabın bu cihazdan silinməsi ilə nəticələnəcəkdir. Davam etmədən əvvəl parol keçidinizi yedəklədiyinizə əmin olun.</string>
+  <string name="logout_remove_nodes_body">\n\nBütün fərdi qovşaqlarınız da silinəcək</string>
   <string name="mnemonic_alert_text">Mnemonic hesaba girişi bərpa etmək üçün istifadə olunur. Qeyd edin, bu məlumatsız hesabınızı bərpa edə bilməyəcəyik!</string>
   <string name="mnemonic_confirm_text">Sözləri düzgün qaydada seçərək təsdiq edin</string>
   <string name="mnemonic_confirm_text_v2">Sözləri düzgün ardıcıllıqla seçərək şifrəni təsdiq edin</string>
@@ -590,4 +592,26 @@
   <string name="wallet_transfer_to_ethereum">Ethereum ünvanına</string>
   <string name="wallet_unbonding">Bağlanmayan</string>
   <string name="wallet_val_to_my_eth">Ethereum hesabıma VAL</string>
+  <string name="common_select_node">Node seçin</string>
+  <string name="select_node_default_nodes">Defolt qovşaqlar</string>
+  <string name="select_node_custom_nodes">Fərdi qovşaqlar</string>
+  <string name="select_node_add_custom_node">Fərdi node əlavə edin</string>
+  <string name="select_node_unable_join_node_title">Unable to join the node</string>
+  <string name="select_node_unable_join_node_message">Please try again later</string>
+  <string name="select_node_custom_node_edit_node">Düyünü redaktə edin</string>
+  <string name="select_node_node_name">Node Adı</string>
+  <string name="select_node_node_address">Node ünvanı</string>
+  <string name="select_node_add_node">Düyün əlavə edin</string>
+  <string name="select_node_how_to_run_node">Bir nodu necə idarə etmək olar</string>
+  <string name="select_node_node_details">Node Detalları</string>
+  <string name="node_details_protocol_validation_failed">URL-i doğrulamaq alınmadı (Yanlış URL protokolu)</string>
+  <string name="node_details_address_validation_failed">URL-i doğrulamaq alınmadı (Yanlış ünvan)</string>
+  <string name="node_details_genesis_validation_failed">Düyününüzün genezis hashı şəbəkənin genezis hashından fərqlidir</string>
+  <string name="node_details_node_already_added">Bu qovşaq artıq əlavə olunub: %s\n %s node ilə əlaqə quruldu</string>
+  <string name="remove_node_error_title">Qoşulmuş nodu silmək mümkün deyil</string>
+  <string name="remove_node_error_message">Bu nodu silmək üçün başqasına qoşulun</string>
+  <string name="remove_node_title">Bu nodu həqiqətən silmək istəyirsiniz?</string>
+  <string name="select_node_switch_alert_title">qovşağı dəyişmək istəyirsiniz?</string>
+  <string name="select_node_switch_succeed">Düyünü uğurla dəyişin</string>
+  <string name="add_node_name_already_existing">Bu adda qovşaq artıq əlavə edilib</string>
 </resources>

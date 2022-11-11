@@ -93,13 +93,13 @@ class SwapViewModel @Inject constructor(
     private val _showSlippageToleranceBottomSheet = SingleLiveEvent<Float>()
     val showSlippageToleranceBottomSheet: LiveData<Float> = _showSlippageToleranceBottomSheet
 
-    private val _fromAssetLiveData = MutableLiveData<Asset>()
-    val fromAssetLiveData: LiveData<Asset> = _fromAssetLiveData
+    private val _fromTokenLiveData = MutableLiveData<Token>()
+    val fromTokenLiveData: LiveData<Token> = _fromTokenLiveData
 
-    private val _toAssetLiveData = MutableLiveData<Asset>()
-    val toAssetLiveData: LiveData<Asset> = _toAssetLiveData
+    private val _toTokenLiveData = MutableLiveData<Token>()
+    val toTokenLiveData: LiveData<Token> = _toTokenLiveData
 
-    val fromAndToAssetLiveData = _fromAssetLiveData.zipWith(_toAssetLiveData)
+    val fromAndToAssetLiveData = _fromTokenLiveData.zipWith(_toTokenLiveData)
 
     private val _slippageToleranceLiveData = MutableLiveData<Float>()
     val slippageToleranceLiveData: LiveData<Float> = _slippageToleranceLiveData
@@ -211,13 +211,13 @@ class SwapViewModel @Inject constructor(
 
                 assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let {
                     feeAsset = it
-                    if (_fromAssetLiveData.value == null) {
-                        _fromAssetLiveData.value = it
+                    if (_fromTokenLiveData.value == null) {
+                        _fromTokenLiveData.value = it.token
                     }
                 }
 
-                _fromAssetLiveData.value?.let { asset ->
-                    assets.find { it.token.id == asset.token.id }?.let {
+                _fromTokenLiveData.value?.let { asset ->
+                    assets.find { it.token.id == asset.id }?.let {
                         _fromBalanceLiveData.value = numbersFormatter.formatBigDecimal(
                             it.balance.transferable,
                             AssetHolder.ROUNDING
@@ -225,8 +225,8 @@ class SwapViewModel @Inject constructor(
                     }
                 }
 
-                _toAssetLiveData.value?.let { asset ->
-                    assets.find { it.token.id == asset.token.id }?.let {
+                _toTokenLiveData.value?.let { asset ->
+                    assets.find { it.token.id == asset.id }?.let {
                         _toBalanceLiveData.value = numbersFormatter.formatBigDecimal(
                             it.balance.transferable,
                             AssetHolder.ROUNDING
@@ -273,7 +273,7 @@ class SwapViewModel @Inject constructor(
     fun fromCardClicked() {
         if (assetsList.isNotEmpty()) {
             _showFromAssetSelectBottomSheet.value =
-                assetsList.filter { it.token.id != _toAssetLiveData.value?.token?.id }
+                assetsList.filter { it.token.id != _toTokenLiveData.value?.id }
                     .map { it.mapAssetToAssetModel(numbersFormatter, balanceStyle) }
         }
     }
@@ -281,29 +281,29 @@ class SwapViewModel @Inject constructor(
     fun toCardClicked() {
         if (assetsList.isNotEmpty()) {
             _showToAssetSelectBottomSheet.value =
-                assetsList.filter { it.token.id != _fromAssetLiveData.value?.token?.id }
+                assetsList.filter { it.token.id != _fromTokenLiveData.value?.id }
                     .map { it.mapAssetToAssetModel(numbersFormatter, balanceStyle) }
         }
     }
 
     fun fromAssetSelected(assetModel: AssetListItemModel) {
         assetsList.find { it.token.id == assetModel.assetId }?.let {
-            toAndFromAssetsSelected(null, it)
+            toAndFromAssetsSelected(null, it.token)
         }
     }
 
     fun toAssetSelected(assetModel: AssetListItemModel) {
         assetsList.find { it.token.id == assetModel.assetId }?.let {
-            toAndFromAssetsSelected(it, null)
+            toAndFromAssetsSelected(it.token, null)
         }
     }
 
     fun setSwapData(fromToken: Token, toToken: Token, inputAmount: BigDecimal) {
         viewModelScope.launch {
-            if (_toAssetLiveData.value == null) {
+            if (_toTokenLiveData.value == null) {
                 assetsList.find { it.token.id == fromToken.id }?.let { fromAsset ->
                     assetsList.find { it.token.id == toToken.id }?.let { toAsset ->
-                        toAndFromAssetsSelected(toAsset, fromAsset)
+                        toAndFromAssetsSelected(toAsset.token, fromAsset.token)
                         _fromAmountLiveData.value =
                             numbersFormatter.formatBigDecimal(
                                 inputAmount,
@@ -319,22 +319,26 @@ class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun toAndFromAssetsSelected(to: Asset?, from: Asset?) {
+    private fun getTransferable(tokenId: String): BigDecimal {
+        return assetsList.find { it.token.id == tokenId }?.balance?.transferable ?: BigDecimal.ZERO
+    }
+
+    private fun toAndFromAssetsSelected(to: Token?, from: Token?) {
         to?.let {
-            _toAssetLiveData.value = it
+            _toTokenLiveData.value = it
             _toBalanceLiveData.value =
                 numbersFormatter.formatBigDecimal(
-                it.balance.transferable,
+                getTransferable(it.id),
                 AssetHolder.ROUNDING
-            ) to it.token.symbol
+            ) to it.symbol
         }
         from?.let {
-            _fromAssetLiveData.value = it
+            _fromTokenLiveData.value = it
             _fromBalanceLiveData.value =
                 numbersFormatter.formatBigDecimal(
-                it.balance.transferable,
+                getTransferable(it.id),
                 AssetHolder.ROUNDING
-            ) to it.token.symbol
+            ) to it.symbol
         }
         onChangedProperty.set(property.newReloadMarkets(true))
     }
@@ -342,16 +346,16 @@ class SwapViewModel @Inject constructor(
     private fun toggleSwapButtonStatus() {
         val ok = isBalanceOk()
         val (text, enabled) = when {
-            _fromAssetLiveData.value == null || _toAssetLiveData.value == null -> {
+            _fromTokenLiveData.value == null || _toTokenLiveData.value == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
             availableMarkets.isEmpty() -> {
                 resourceManager.getString(R.string.polkaswap_pool_not_created) to false
             }
-            _fromAssetLiveData.value != null && amountFrom.isZero() && desired == WithDesired.INPUT -> {
+            _fromTokenLiveData.value != null && amountFrom.isZero() && desired == WithDesired.INPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
-            _toAssetLiveData.value != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
+            _toTokenLiveData.value != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
             ok?.isEmpty() == true -> {
@@ -377,14 +381,14 @@ class SwapViewModel @Inject constructor(
 
     private fun toggleDetailsStatus() {
         _detailsEnabledLiveData.value =
-            _fromAssetLiveData.value != null && _toAssetLiveData.value != null
+            _fromTokenLiveData.value != null && _toTokenLiveData.value != null
     }
 
     private suspend fun getMarkets() {
-        _fromAssetLiveData.value?.let { from ->
-            _toAssetLiveData.value?.let { to ->
+        _fromTokenLiveData.value?.let { from ->
+            _toTokenLiveData.value?.let { to ->
                 tryCatch {
-                    val m = polkaswapInteractor.fetchAvailableSources(from.token.id, to.token.id)
+                    val m = polkaswapInteractor.fetchAvailableSources(from.id, to.id)
                     availableMarkets.clear()
                     if (!m.isNullOrEmpty()) {
                         availableMarkets.addAll(m)
@@ -398,20 +402,20 @@ class SwapViewModel @Inject constructor(
      * @return null - can't calculate, empty - ok, not empty - token symbol
      */
     private fun isBalanceOk(): String? {
-        return _fromAssetLiveData.value?.let { fromAsset ->
-            _toAssetLiveData.value?.let { toAsset ->
+        return _fromTokenLiveData.value?.let { fromAsset ->
+            _toTokenLiveData.value?.let { toAsset ->
                 swapDetails?.let { details ->
                     feeAsset?.let { feeAsset ->
                         if (amountFrom > BigDecimal.ZERO) {
                             val result = polkaswapInteractor.checkSwapBalances(
-                                fromToken = fromAsset.token,
-                                fromTokenBalance = fromAsset.balance.transferable,
+                                fromToken = fromAsset,
+                                fromTokenBalance = getTransferable(fromAsset.id),
                                 fromAmount = amountFrom,
                                 swapFee = details.networkFee,
                                 feeBalance = feeAsset.balance.transferable,
                                 feeToken = feeAsset.token,
-                                toToken = toAsset.token,
-                                toTokenBalance = toAsset.balance.transferable,
+                                toToken = toAsset,
+                                toTokenBalance = getTransferable(toAsset.id),
                                 toAmount = amountTo,
                                 desired = desired,
                                 swapDetails = details
@@ -420,8 +424,8 @@ class SwapViewModel @Inject constructor(
                                 null -> {
                                     ""
                                 }
-                                fromAsset.token -> {
-                                    fromAsset.token.symbol
+                                fromAsset -> {
+                                    fromAsset.symbol
                                 }
                                 else -> {
                                     feeAsset.token.symbol
@@ -446,16 +450,16 @@ class SwapViewModel @Inject constructor(
 
     private suspend fun recalcDetails() {
         feeAsset?.let { feeAsset ->
-            _fromAssetLiveData.value?.let { fromAsset ->
-                _toAssetLiveData.value?.let { toAsset ->
+            _fromTokenLiveData.value?.let { fromAsset ->
+                _toTokenLiveData.value?.let { toAsset ->
                     val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
                     if (amountToCalc > BigDecimal.ZERO) {
                         tryCatchFinally(
                             finally = {},
                             block = {
                                 val details = polkaswapInteractor.calcDetails(
-                                    fromAsset.token,
-                                    toAsset.token,
+                                    fromAsset,
+                                    toAsset,
                                     feeAsset.token,
                                     amountToCalc,
                                     desired,
@@ -467,14 +471,14 @@ class SwapViewModel @Inject constructor(
                                     if (desired == WithDesired.INPUT) {
                                         _toAmountLiveData.value = numbersFormatter.formatBigDecimal(
                                             it,
-                                            toAsset.token.precision
+                                            toAsset.precision
                                         )
                                         amountTo = it
                                     } else {
                                         _fromAmountLiveData.value =
                                             numbersFormatter.formatBigDecimal(
                                                 it,
-                                                fromAsset.token.precision
+                                                fromAsset.precision
                                             )
                                         amountFrom = it
                                     }
@@ -506,12 +510,12 @@ class SwapViewModel @Inject constructor(
                     p1 = per1
                     p2 = per2
                     minmaxTitle = resourceManager.getString(R.string.polkaswap_minimum_received)
-                    minmaxSymbol = _toAssetLiveData.value?.token?.symbol.orEmpty()
+                    minmaxSymbol = _toTokenLiveData.value?.symbol.orEmpty()
                 } else {
                     p1 = per2
                     p2 = per1
                     minmaxTitle = resourceManager.getString(R.string.polkaswap_maximum_sold)
-                    minmaxSymbol = _fromAssetLiveData.value?.token?.symbol.orEmpty()
+                    minmaxSymbol = _fromTokenLiveData.value?.symbol.orEmpty()
                 }
                 _detailsPriceValue.value = p1 to p2
                 _minmaxLiveData.value = (
@@ -578,13 +582,13 @@ class SwapViewModel @Inject constructor(
 
     fun swapClicked() {
         swapDetails?.let { details ->
-            _fromAssetLiveData.value?.let { fromAsset ->
-                _toAssetLiveData.value?.let { toAsset ->
+            _fromTokenLiveData.value?.let { fromAsset ->
+                _toTokenLiveData.value?.let { toAsset ->
                     feeAsset?.let { fee ->
                         router.showSwapConfirmation(
-                            fromAsset.token,
+                            fromAsset,
                             amountFrom,
-                            toAsset.token,
+                            toAsset,
                             amountTo,
                             desired,
                             details,
@@ -598,20 +602,20 @@ class SwapViewModel @Inject constructor(
     }
 
     fun reverseButtonClicked() {
-        _fromAssetLiveData.value?.let { fromAssetModel ->
-            _toAssetLiveData.value?.let { toAssetModel ->
+        _fromTokenLiveData.value?.let { fromAssetModel ->
+            _toTokenLiveData.value?.let { toAssetModel ->
                 if (desired == WithDesired.INPUT) {
                     amountTo = amountFrom
                     _toAmountLiveData.value = numbersFormatter.formatBigDecimal(
                         amountFrom,
-                        fromAssetModel.token.precision
+                        fromAssetModel.precision
                     )
                     desired = WithDesired.OUTPUT
                 } else {
                     amountFrom = amountTo
                     _fromAmountLiveData.value = numbersFormatter.formatBigDecimal(
                         amountTo,
-                        toAssetModel.token.precision
+                        toAssetModel.precision
                     )
                     desired = WithDesired.INPUT
                 }
@@ -647,13 +651,14 @@ class SwapViewModel @Inject constructor(
     }
 
     fun fromInputPercentClicked(percent: Int) {
-        _fromAssetLiveData.value?.let { assetModel ->
-            var amount = assetModel.balance.transferable.divide(
+        _fromTokenLiveData.value?.let { fromAsset ->
+            val transferable = getTransferable(fromAsset.id)
+            var amount = transferable.divide(
                 BigDecimal(100)
             ) * BigDecimal(percent)
 
-            if (assetModel.token.id == SubstrateOptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
-                amount = subtractFee(amount, assetModel.balance.transferable)
+            if (fromAsset.id == SubstrateOptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
+                amount = subtractFee(amount, transferable)
             }
             val amountFormatted = numbersFormatter.formatBigDecimal(amount, AssetHolder.ROUNDING)
             _fromAmountLiveData.value = amountFormatted

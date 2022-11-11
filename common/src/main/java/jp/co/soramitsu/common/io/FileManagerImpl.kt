@@ -54,7 +54,23 @@ class FileManagerImpl(private val context: Context) : FileManager {
         File(externalCacheDir, fileName).let {
             FileOutputStream(it).use { fos ->
                 bitmap.compress(format, quality, fos)
+                fos.flush()
             }
             FileProvider.getUriForFile(context, OptionsProvider.fileProviderAuthority, it)
         }
+
+    override fun writeExternalCacheText(
+        fileName: String,
+        body: String
+    ): Uri {
+        return File(externalCacheDir, fileName).let {
+            if (it.exists()) {
+                it.delete()
+            }
+
+            it.createNewFile()
+            it.appendText(body)
+            FileProvider.getUriForFile(context, OptionsProvider.fileProviderAuthority, it)
+        }
+    }
 }

@@ -15,14 +15,13 @@ import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.io.MainThreadExecutor
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.ext.onBackPressed
 import jp.co.soramitsu.common.util.ext.restartApplication
 import jp.co.soramitsu.common.util.ext.runDelayed
@@ -32,9 +31,9 @@ import jp.co.soramitsu.feature_main_impl.databinding.FragmentPincodeBinding
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintCallback
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintWrapper
+import jp.co.soramitsu.feature_main_impl.presentation.util.action
+import jp.co.soramitsu.feature_main_impl.presentation.util.addresses
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode) {
@@ -57,9 +56,6 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
             promptInfo
         )
     }
-
-    @Inject
-    lateinit var cma: ConnectionManager
 
     override val viewModel: PinCodeViewModel by viewModels()
 
@@ -98,7 +94,11 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         val action = if (viewModel.isReturningFromInfo) {
             PinCodeAction.CREATE_PIN_CODE
         } else {
-            requireArguments().getSerializable(Const.PIN_CODE_ACTION) as PinCodeAction
+            requireArguments().action
+        }
+
+        if (action == PinCodeAction.LOGOUT || action == PinCodeAction.OPEN_SEED || action == PinCodeAction.OPEN_JSON || action == PinCodeAction.OPEN_PASSPHRASE) {
+            viewModel.addresses = requireArguments().addresses
         }
 
         viewModel.startAuth(action)
@@ -112,10 +112,10 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
             Toast.makeText(requireContext(), R.string.pincode_change_success, Toast.LENGTH_LONG)
                 .show()
         }
-        viewModel.logoutEvent.observe {
+        viewModel.logoutEvent.observe { message ->
             AlertDialog.Builder(requireActivity())
                 .setTitle(R.string.profile_logout_title)
-                .setMessage(R.string.logout_dialog_body)
+                .setMessage(message)
                 .setCancelable(false)
                 .setPositiveButton(R.string.profile_logout_title) { _, _ -> viewModel.logoutOkPressed() }
                 .setNegativeButton(R.string.common_cancel) { _, _ -> viewModel.backPressed() }
@@ -138,7 +138,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
 
         viewModel.switchAccountEvent.observe {
             runDelayed(DATA_CLEAR_DELAY) {
-                findNavController().popBackStack()
+                viewModel.popBackToAccountList()
             }
         }
 
@@ -159,7 +159,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
             binding.pinCodeView.changeFingerPrintButtonVisibility(fingerprintWrapper.isAuthReady() && it)
         }
         viewModel.toolbarTitleResLiveData.observe {
-            binding.pinCodeTitleTv.setText(it)
+            binding.pinCodeTitleTv.text = it
         }
         viewModel.wrongPinCodeEventLiveData.observe {
             playMatchingMnemonicErrorAnimation()
@@ -187,6 +187,9 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         }
         viewModel.currentPincodeLength.observe {
             binding.dotsProgressView.maxProgress = it
+        }
+        viewModel.showTriesLeftSnackbar.observe {
+            Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
         }
     }
 

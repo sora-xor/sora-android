@@ -13,10 +13,11 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.common.util.ext.setValueIfNew
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
+import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.sora.substrate.substrate.HealthChecker
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    healthChecker: HealthChecker,
+    nodeManager: NodeManager,
     private val walletInteractor: WalletInteractor,
     private val pinCodeInteractor: PinCodeInteractor,
 ) : BaseViewModel() {
@@ -48,16 +49,20 @@ class MainViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             tryCatch {
-                healthChecker.observeHealthState()
+                nodeManager.connectionState()
                     .collectLatest {
                         _badConnectionVisibilityLiveData.setValueIfNew(!it)
                     }
             }
         }
-        walletInteractor.flowCurSoraAccount()
-            .catch { onError(it) }
-            .onEach { walletInteractor.updateWhitelistBalances() }
-            .launchIn(viewModelScope)
+        viewModelScope.launch {
+            walletInteractor.flowCurSoraAccount()
+                .catch { onError(it) }
+                .distinctUntilChangedBy { it.substrateAddress }
+                .collectLatest {
+                    walletInteractor.updateWhitelistBalances()
+                }
+        }
 
         walletInteractor.observeCurAccountStorage()
             .catch {

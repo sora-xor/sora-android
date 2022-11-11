@@ -5,16 +5,15 @@
 
 package jp.co.soramitsu.sora.di.app.modules
 
-import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_impl.data.repository.CredentialsRepositoryImpl
@@ -28,8 +27,8 @@ class AppModule {
 
     @Singleton
     @Provides
-    fun provideResourceManager(@ApplicationContext context: Context): ResourceManager {
-        return ResourceManager(context)
+    fun provideResourceManager(): ResourceManager {
+        return ResourceManager()
     }
 
     @Provides
@@ -38,8 +37,9 @@ class AppModule {
         credentialsDatasource: CredentialsDatasource,
         ca: CryptoAssistant,
         runtimeManager: RuntimeManager,
+        jsonAccountsEncoder: JsonAccountsEncoder
     ): CredentialsRepository =
-        CredentialsRepositoryImpl(credentialsDatasource, ca, runtimeManager)
+        CredentialsRepositoryImpl(credentialsDatasource, ca, runtimeManager, jsonAccountsEncoder)
 
     @Provides
     @Singleton

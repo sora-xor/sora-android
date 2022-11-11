@@ -12,6 +12,8 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -43,6 +45,7 @@ import jp.co.soramitsu.sora.substrate.substrate.transfer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -57,6 +60,7 @@ class WalletRepositoryImpl @Inject constructor(
     private val extrinsicManager: ExtrinsicManager,
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
+    private val coroutineManager: CoroutineManager,
 ) : WalletRepository {
 
     private val tokensDeferred = CompletableDeferred<List<Token>>()
@@ -228,41 +232,42 @@ class WalletRepositoryImpl @Inject constructor(
         db.assetDao().insertAssets(updated)
     }
 
-    override suspend fun updateWhitelistBalances(address: String) {
-        if (db.assetDao().getAssetsWhitelist(address).all { it.assetLocal == null }) {
-            checkDefaultAssetData(address)
-        }
-        updateTokens()
-        val assetsLocal =
-            db.assetDao().getAssetsWhitelist(address)
-        var amount = assetsLocal.count { it.assetLocal != null }
-        val assetsLocalSorted = assetsLocal.sortedBy { it.tokenLocal.symbol }
-        val balances = fetchBalances(address, assetsLocalSorted.map { it.tokenLocal.id })
-        val updated = assetsLocalSorted.mapIndexed { index, assetTokenLocal ->
-            assetTokenLocal.assetLocal?.copy(
-                free = mapBalance(
-                    balances[index],
-                    assetTokenLocal.tokenLocal.precision
+    override suspend fun updateWhitelistBalances(address: String) =
+        withContext(coroutineManager.io) {
+            if (db.assetDao().getAssetsWhitelist(address).all { it.assetLocal == null }) {
+                checkDefaultAssetData(address)
+            }
+            updateTokens()
+            val assetsLocal =
+                db.assetDao().getAssetsWhitelist(address)
+            var amount = assetsLocal.count { it.assetLocal != null }
+            val assetsLocalSorted = assetsLocal.sortedBy { it.tokenLocal.symbol }
+            val balances = fetchBalances(address, assetsLocalSorted.map { it.tokenLocal.id })
+            val updated = assetsLocalSorted.mapIndexed { index, assetTokenLocal ->
+                assetTokenLocal.assetLocal?.copy(
+                    free = mapBalance(
+                        balances[index],
+                        assetTokenLocal.tokenLocal.precision
+                    )
+                ) ?: AssetLocal(
+                    tokenId = assetTokenLocal.tokenLocal.id,
+                    accountAddress = address,
+                    displayAsset = false,
+                    position = ++amount,
+                    free = mapBalance(
+                        balances[index],
+                        assetTokenLocal.tokenLocal.precision
+                    ),
+                    reserved = BigDecimal.ZERO,
+                    miscFrozen = BigDecimal.ZERO,
+                    feeFrozen = BigDecimal.ZERO,
+                    bonded = BigDecimal.ZERO,
+                    redeemable = BigDecimal.ZERO,
+                    unbonding = BigDecimal.ZERO,
                 )
-            ) ?: AssetLocal(
-                tokenId = assetTokenLocal.tokenLocal.id,
-                accountAddress = address,
-                displayAsset = false,
-                position = ++amount,
-                free = mapBalance(
-                    balances[index],
-                    assetTokenLocal.tokenLocal.precision
-                ),
-                reserved = BigDecimal.ZERO,
-                miscFrozen = BigDecimal.ZERO,
-                feeFrozen = BigDecimal.ZERO,
-                bonded = BigDecimal.ZERO,
-                redeemable = BigDecimal.ZERO,
-                unbonding = BigDecimal.ZERO,
-            )
+            }
+            db.assetDao().insertAssets(updated)
         }
-        db.assetDao().insertAssets(updated)
-    }
 
     override suspend fun getAssetsWhitelist(address: String): List<Asset> {
         val assetsLocal =
@@ -414,17 +419,16 @@ class WalletRepositoryImpl @Inject constructor(
         if (!BuildUtils.isFlavors(Flavor.SORALUTION)) {
             return
         }
-        extrinsicManager.submitExtrinsic(
-            from = soraAccount.substrateAddress,
-            keypair = keypair,
-            useBatchAll = true
-        ) {
-            assetIds.forEach { id ->
+        assetIds.forEach { id ->
+            extrinsicManager.submitExtrinsic(
+                from = soraAccount.substrateAddress,
+                keypair = keypair
+            ) {
                 faucetTransfer(
                     runtime = runtimeManager,
                     assetId = id,
                     target = soraAccount.substrateAddress,
-                    amount = mapBalance(BigDecimal.valueOf(0.1), 18)
+                    amount = mapBalance(BigDecimal.valueOf(5), 18)
                 )
             }
         }
@@ -437,7 +441,7 @@ class WalletRepositoryImpl @Inject constructor(
                 it,
                 AssetHolder.getName(it),
                 AssetHolder.getSymbol(it),
-                18,
+                OptionsProvider.defaultScale,
                 false,
                 AssetHolder.DEFAULT_WHITE_LIST_NAME,
                 AssetHolder.isHiding(it)

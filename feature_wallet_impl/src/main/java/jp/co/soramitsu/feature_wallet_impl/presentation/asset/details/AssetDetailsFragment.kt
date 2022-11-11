@@ -254,7 +254,7 @@ class AssetDetailsFragment : BaseFragment<AssetDetailsViewModel>(R.layout.fragme
         }
 
         viewModel.qrErrorLiveData.observe {
-            showErrorFromResponse(it)
+            showErrorFromResponse(title = R.string.common_error_general_title, messageResId = it)
         }
 
         viewModel.initiateScannerLiveData.observe {

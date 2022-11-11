@@ -20,11 +20,9 @@ import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.subquery.ReferrerReward
-import jp.co.soramitsu.xnetworking.subquery.ReferrerRewardsInfo
-import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
-import jp.co.soramitsu.xnetworking.subquery.history.sora.SoraSubqueryResponse
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerRewardsInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -58,7 +56,7 @@ class ReferralRepositoryTest {
     private lateinit var referralsDao: ReferralsDao
 
     @Mock
-    private lateinit var subQueryClient: SubQueryClient<SoraSubqueryResponse, SubQueryHistoryItem>
+    private lateinit var soraWalletBlockExplorerInfo: SoraWalletBlockExplorerInfo
 
     @Mock
     private lateinit var substrateApi: SubstrateApi
@@ -97,14 +95,14 @@ class ReferralRepositoryTest {
             extrinsicManager,
             runtimeManager,
             substrateCalls,
-            subQueryClient,
+            soraWalletBlockExplorerInfo,
         )
     }
 
     @Test
     fun `update referral rewards called`() = runTest {
         val address = "address"
-        given(subQueryClient.getReferrerRewards(address)).willReturn(
+        given(soraWalletBlockExplorerInfo.getReferrerRewards(address, "1")).willReturn(
             ReferrerRewardsInfo(
                 REFERRER_REWARDS
             )

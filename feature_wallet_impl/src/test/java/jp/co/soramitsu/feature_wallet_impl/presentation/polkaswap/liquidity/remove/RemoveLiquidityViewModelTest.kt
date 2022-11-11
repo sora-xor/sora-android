@@ -89,7 +89,6 @@ class RemoveLiquidityViewModelTest {
         given(resourceManager.getString(R.string.pool_share_title)).willReturn(poolShareAfterTxText)
         given(resourceManager.getString(R.string.polkaswap_sbapy)).willReturn(sbApyText)
         given(resourceManager.getString(R.string.polkaswap_network_fee)).willReturn(networkFeeText)
-        given(walletInteractor.getFeeToken()).willReturn(XOR_ASSET.token)
         given(walletInteractor.subscribeActiveAssetsOfCurAccount()).willReturn(
             flowOf(
                 listOf(
@@ -105,7 +104,12 @@ class RemoveLiquidityViewModelTest {
                 TEST_ASSET.token
             )
         ).willReturn(NETWORK_FEE)
-        given(polkaswapInteractor.subscribePoolsCache()).willReturn(flowOf(listOf(POOL_DATA)))
+        given(
+            polkaswapInteractor.subscribePoolCache(
+                XOR_ASSET.token.id,
+                TEST_ASSET.token.id
+            )
+        ).willReturn(flowOf(POOL_DATA))
 
 
     }
@@ -121,7 +125,7 @@ class RemoveLiquidityViewModelTest {
     fun `init viewModel EXPECT xor token setted`() = runTest {
         setUpViewModel()
         advanceUntilIdle()
-        assertEquals(viewModel.fromToken.value, XOR_ASSET.token)
+        assertEquals(viewModel.fromToken.value, null)
     }
 
     @Test
@@ -271,6 +275,6 @@ class RemoveLiquidityViewModelTest {
         viewModel.setTokensFromArgs(XOR_ASSET.token, TEST_ASSET.token)
         advanceUntilIdle()
 
-        verify(polkaswapInteractor).subscribePoolsCache()
+        verify(polkaswapInteractor).subscribePoolCache(XOR_ASSET.token.id, TEST_ASSET.token.id)
     }
 }

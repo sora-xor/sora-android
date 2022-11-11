@@ -9,11 +9,13 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
+import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -56,7 +58,13 @@ class PinCodeViewModelTest {
     lateinit var mainRouter: MainRouter
 
     @Mock
+    lateinit var selectNodeRouter: SelectNodeRouter
+
+    @Mock
     lateinit var progress: WithProgress
+
+    @Mock
+    lateinit var resourceManager: ResourceManager
 
     @Mock
     lateinit var vibrator: DeviceVibrator
@@ -67,24 +75,29 @@ class PinCodeViewModelTest {
     fun setUp() = runTest {
         given(interactor.isBiometryEnabled()).willReturn(true)
         given(interactor.needsMigration()).willReturn(false)
+        given(interactor.retrieveTriesUsed()).willReturn(0)
+        given(interactor.retrieveTimerStartedTimestamp()).willReturn(0)
 
         pinCodeViewModel =
-            PinCodeViewModel(interactor, mainInteractor, mainRouter, progress, vibrator)
+            PinCodeViewModel(interactor, mainInteractor, mainRouter, resourceManager, selectNodeRouter, progress, vibrator)
     }
 
     @Test
     fun `start auth with CREATE_PIN_CODE action`() = runTest {
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_set_your_pin_code)).willReturn(titleString)
+
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
 
         pinCodeViewModel.toolbarTitleResLiveData.observeForever {
-            assertEquals(R.string.pincode_set_your_pin_code, it)
+            assertEquals(titleString, it)
         }
         pinCodeViewModel.backButtonVisibilityLiveData.observeForever {
             assertFalse(it)
         }
         advanceUntilIdle()
         assertEquals(
-            R.string.pincode_set_your_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
         assertFalse(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
@@ -92,10 +105,13 @@ class PinCodeViewModelTest {
 
     @Test
     fun `start auth with OPEN_PASSPHRASE action`() = runTest {
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_enter_pin_code)).willReturn(titleString)
+
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
 
         pinCodeViewModel.toolbarTitleResLiveData.observeForever {
-            assertEquals(R.string.pincode_enter_pin_code, it)
+            assertEquals(titleString, it)
         }
         pinCodeViewModel.backButtonVisibilityLiveData.observeForever {
             assertTrue(it)
@@ -104,7 +120,7 @@ class PinCodeViewModelTest {
         assertNotNull(pinCodeViewModel.showFingerPrintEventLiveData.value)
         assertTrue(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
         assertEquals(
-            R.string.pincode_enter_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
     }
@@ -112,11 +128,13 @@ class PinCodeViewModelTest {
     @Test
     fun `start auth with TIMEOUT_CHECK action and saved pin code in prefs`() = runTest {
         given(interactor.isCodeSet()).willReturn(true)
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_enter_pin_code)).willReturn(titleString)
 
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
 
         pinCodeViewModel.toolbarTitleResLiveData.observeForever {
-            assertEquals(R.string.pincode_enter_pin_code, it)
+            assertEquals(titleString, it)
         }
         pinCodeViewModel.backButtonVisibilityLiveData.observeForever {
             assertFalse(it)
@@ -124,10 +142,11 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
         assertNotNull(pinCodeViewModel.showFingerPrintEventLiveData.value)
         assertEquals(
-            R.string.pincode_enter_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
         assertFalse(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
+        advanceUntilIdle()
 
         verify(interactor).isCodeSet()
         verifyNoInteractions(progress)
@@ -136,18 +155,20 @@ class PinCodeViewModelTest {
     @Test
     fun `start auth with TIMEOUT_CHECK action and no saved pin code`() = runTest {
         given(interactor.isCodeSet()).willReturn(false)
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_set_your_pin_code)).willReturn(titleString)
 
         pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
 
         pinCodeViewModel.toolbarTitleResLiveData.observeForever {
-            assertEquals(R.string.pincode_set_your_pin_code, it)
+            assertEquals(titleString, it)
         }
         pinCodeViewModel.backButtonVisibilityLiveData.observeForever {
             assertFalse(it)
         }
         advanceUntilIdle()
         assertEquals(
-            R.string.pincode_set_your_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
         assertFalse(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
@@ -188,6 +209,7 @@ class PinCodeViewModelTest {
 
     @Test
     fun `pin code overclicks`() = runTest {
+        pinCodeViewModel.addresses = listOf("address")
         given(interactor.checkPin(anyString())).willReturn(true)
 
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
@@ -207,12 +229,15 @@ class PinCodeViewModelTest {
 
         verify(interactor).checkPin("123456")
         verify(mainRouter).popBackStack()
-        verify(mainRouter).showPassphrase()
+        verify(mainRouter).showBackupPassphrase("address")
         verifyNoInteractions(progress)
     }
 
     @Test
     fun `pin code entered once while creating`() = runTest {
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(titleString)
+
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
         pinCodeViewModel.pinCodeNumberClicked("1")
         pinCodeViewModel.pinCodeNumberClicked("2")
@@ -229,7 +254,7 @@ class PinCodeViewModelTest {
 
         assertEquals(0, pinCodeViewModel.pinCodeProgressLiveData.value!!)
         assertEquals(
-            R.string.pincode_confirm_your_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
         assertTrue(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
@@ -270,6 +295,9 @@ class PinCodeViewModelTest {
 
     @Test
     fun `pin code entered wrong second time while creating`() = runTest {
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_set_your_pin_code)).willReturn(titleString)
+
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
         advanceUntilIdle()
         pinCodeViewModel.pinCodeNumberClicked("1")
@@ -298,7 +326,7 @@ class PinCodeViewModelTest {
         advanceUntilIdle()
 
         pinCodeViewModel.toolbarTitleResLiveData.observeForever {
-            assertEquals(R.string.pincode_set_your_pin_code, it)
+            assertEquals(titleString, it)
         }
 
         pinCodeViewModel.backButtonVisibilityLiveData.observeForever {
@@ -310,7 +338,7 @@ class PinCodeViewModelTest {
         }
         advanceUntilIdle()
         assertEquals(
-            R.string.pincode_set_your_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
         assertFalse(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
@@ -341,6 +369,7 @@ class PinCodeViewModelTest {
 
     @Test
     fun `pin code entered correct with OPEN_PASSPHRASE action`() = runTest {
+        pinCodeViewModel.addresses = listOf("address")
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
 
         given(interactor.checkPin(anyString())).willReturn(true)
@@ -354,7 +383,7 @@ class PinCodeViewModelTest {
 
         delay(20L)
         verify(interactor).checkPin(anyString())
-        verify(mainRouter).showPassphrase()
+        verify(mainRouter).showBackupPassphrase("address")
     }
 
     @Test
@@ -382,6 +411,45 @@ class PinCodeViewModelTest {
         verify(interactor).checkPin(anyString())
         verify(mainRouter).popBackStack()
     }
+
+    @Test
+    fun `pin code entered correct with CUSTOM_NODE action`() = runTest {
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.CUSTOM_NODE)
+
+        given(interactor.checkPin(anyString())).willReturn(true)
+
+        pinCodeViewModel.pinCodeNumberClicked("1")
+        pinCodeViewModel.pinCodeNumberClicked("2")
+        pinCodeViewModel.pinCodeNumberClicked("3")
+        pinCodeViewModel.pinCodeNumberClicked("4")
+        pinCodeViewModel.pinCodeNumberClicked("5")
+        pinCodeViewModel.pinCodeNumberClicked("6")
+
+        advanceUntilIdle()
+        verify(interactor).checkPin(anyString())
+        verify(selectNodeRouter).returnFromPinCodeCheck()
+    }
+
+    @Test
+    fun `pin code entered correct with SELECT_NODE action`() = runTest {
+        pinCodeViewModel.addresses = listOf("address")
+        pinCodeViewModel.startAuth(PinCodeAction.SELECT_NODE)
+
+        given(interactor.checkPin(anyString())).willReturn(true)
+
+        pinCodeViewModel.pinCodeNumberClicked("1")
+        pinCodeViewModel.pinCodeNumberClicked("2")
+        pinCodeViewModel.pinCodeNumberClicked("3")
+        pinCodeViewModel.pinCodeNumberClicked("4")
+        pinCodeViewModel.pinCodeNumberClicked("5")
+        pinCodeViewModel.pinCodeNumberClicked("6")
+
+        advanceUntilIdle()
+        verify(interactor).checkPin(anyString())
+        verify(selectNodeRouter).returnFromPinCodeCheck()
+    }
+
 
     @Test
     fun `back pressed closing the app on CREATE_PIN_CODE action`() = runTest {
@@ -418,6 +486,9 @@ class PinCodeViewModelTest {
 
     @Test
     fun `back pressed leads to reset pin view on CREATE_PIN_CODE action`() = runTest {
+        val titleString = "Set pincode"
+        given(resourceManager.getString(R.string.pincode_set_your_pin_code)).willReturn(titleString)
+
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
 
         pinCodeViewModel.pinCodeNumberClicked("1")
@@ -432,12 +503,12 @@ class PinCodeViewModelTest {
         }
 
         pinCodeViewModel.toolbarTitleResLiveData.observeForever {
-            assertEquals(R.string.pincode_set_your_pin_code, it)
+            assertEquals(titleString, it)
         }
 
         assertFalse(pinCodeViewModel.backButtonVisibilityLiveData.value!!)
         assertEquals(
-            R.string.pincode_set_your_pin_code,
+            titleString,
             pinCodeViewModel.toolbarTitleResLiveData.value
         )
     }
@@ -468,11 +539,13 @@ class PinCodeViewModelTest {
 
     @Test
     fun `fingerprint scanner success leads to passphrase screen on OPEN_PASSPHRASE action`() = runTest {
+        pinCodeViewModel.addresses = listOf("address")
+
         pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
         advanceUntilIdle()
         pinCodeViewModel.onAuthenticationSucceeded()
-
-        verify(mainRouter).showPassphrase()
+        advanceUntilIdle()
+        verify(mainRouter).showBackupPassphrase("address")
     }
 
     @Test
@@ -482,13 +555,34 @@ class PinCodeViewModelTest {
             pinCodeViewModel.startAuth(PinCodeAction.TIMEOUT_CHECK)
             advanceUntilIdle()
             pinCodeViewModel.onAuthenticationSucceeded()
+            advanceUntilIdle()
             verify(mainRouter).popBackStack()
         }
 
     @Test
-    fun `onAuthFailed() set fingerPrintAutFailedLiveData value`() {
-        pinCodeViewModel.onAuthenticationFailed()
+    fun `fingerprint scanner success with CUSTOM_NODE action EXPECT return to node details`() =
+        runTest {
+            pinCodeViewModel.startAuth(PinCodeAction.CUSTOM_NODE)
+            advanceUntilIdle()
+            pinCodeViewModel.onAuthenticationSucceeded()
+            advanceUntilIdle()
+            verify(selectNodeRouter).returnFromPinCodeCheck()
+        }
 
+    @Test
+    fun `fingerprint scanner success with SELECT_NODE action EXPECT return to node details`() =
+        runTest {
+            pinCodeViewModel.startAuth(PinCodeAction.SELECT_NODE)
+            advanceUntilIdle()
+            pinCodeViewModel.onAuthenticationSucceeded()
+            advanceUntilIdle()
+            verify(selectNodeRouter).returnFromPinCodeCheck()
+        }
+
+    @Test
+    fun `onAuthFailed() set fingerPrintAutFailedLiveData value`() = runTest {
+        pinCodeViewModel.onAuthenticationFailed()
+        advanceUntilIdle()
         pinCodeViewModel.fingerPrintAutFailedLiveData.observeForever {
             assertNotNull(it)
         }
@@ -518,7 +612,7 @@ class PinCodeViewModelTest {
     fun `logout ok pressed with multiple accounts EXPECT clear account data`() = runTest {
         given(mainInteractor.getSoraAccountsCount()).willReturn(2)
         given(mainInteractor.getCurUserAddress()).willReturn("address")
-        given(mainInteractor.soraAccountsList()).willReturn(
+        given(mainInteractor.getSoraAccountsList()).willReturn(
             listOf(
                 SoraAccount(
                     substrateAddress = "address2",
@@ -526,6 +620,7 @@ class PinCodeViewModelTest {
                 )
             )
         )
+        pinCodeViewModel.addresses = listOf("address")
 
         pinCodeViewModel.logoutOkPressed()
         advanceUntilIdle()
@@ -537,7 +632,7 @@ class PinCodeViewModelTest {
     fun `logout ok pressed with multiple accounts EXPECT switch account`() = runTest {
         given(mainInteractor.getSoraAccountsCount()).willReturn(2)
         given(mainInteractor.getCurUserAddress()).willReturn("address")
-        given(mainInteractor.soraAccountsList()).willReturn(
+        given(mainInteractor.getSoraAccountsList()).willReturn(
             listOf(
                 SoraAccount(
                     substrateAddress = "address2",
@@ -545,10 +640,50 @@ class PinCodeViewModelTest {
                 )
             )
         )
+        pinCodeViewModel.addresses = listOf("address")
 
         pinCodeViewModel.logoutOkPressed()
         advanceUntilIdle()
         verify(mainInteractor).setCurSoraAccount("address2")
         assertNotNull(pinCodeViewModel.switchAccountEvent)
+    }
+
+    @Test
+    fun `logout EXPECT check accounts amount`() = runTest {
+        given(mainInteractor.getSoraAccountsCount()).willReturn(2)
+
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        verify(mainInteractor).getSoraAccountsCount()
+    }
+
+    @Test
+    fun `logout with multiple accounts EXPECT logout message`() = runTest {
+        given(mainInteractor.getSoraAccountsCount()).willReturn(2)
+        given(resourceManager.getString(R.string.logout_dialog_body)).willReturn("Logout")
+
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        assertEquals("Logout", pinCodeViewModel.logoutEvent.value)
+    }
+
+    @Test
+    fun `logout with single account EXPECT logout message`() = runTest {
+        given(mainInteractor.getSoraAccountsCount()).willReturn(1)
+        given(resourceManager.getString(R.string.logout_dialog_body)).willReturn("Logout")
+        given(resourceManager.getString(R.string.logout_remove_nodes_body)).willReturn(" Remove nodes")
+
+        pinCodeViewModel.startAuth(PinCodeAction.LOGOUT)
+        advanceUntilIdle()
+        pinCodeViewModel.onAuthenticationSucceeded()
+        advanceUntilIdle()
+
+        assertEquals("Logout Remove nodes", pinCodeViewModel.logoutEvent.value)
     }
 }

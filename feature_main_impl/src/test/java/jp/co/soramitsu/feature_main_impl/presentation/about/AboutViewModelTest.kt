@@ -85,6 +85,97 @@ class AboutViewModelTest {
         assertEquals(opensourceLink, res)
     }
 
+
+    @Test
+    fun `website clicked`() {
+        val websiteLink = "https://sora.org"
+
+        aboutViewModel.websiteClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(websiteLink, res)
+    }
+
+    @Test
+    fun `telegram clicked`() {
+        val telegramLink = "https://t.me/sora_xor"
+
+        aboutViewModel.telegramClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(telegramLink, res)
+    }
+
+    @Test
+    fun `telegram announcements clicked`() {
+        val telegramAnnouncementLink = "https://t.me/sora_announcements"
+
+        aboutViewModel.telegramAnnouncementsClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(telegramAnnouncementLink, res)
+    }
+
+    @Test
+    fun `telegram happines clicked`() {
+        val telegramHappinesLink = "https://t.me/sorahappiness"
+
+        aboutViewModel.telegramAskSupportClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(telegramHappinesLink, res)
+    }
+
+    @Test
+    fun `twitter clicked`() {
+        val twitterLink = "https://twitter.com/sora_xor"
+
+        aboutViewModel.twitterClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(twitterLink, res)
+    }
+
+    @Test
+    fun `youtube clicked`() {
+        val youtubeLink = "https://youtube.com/sora_xor"
+
+        aboutViewModel.youtubeClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(youtubeLink, res)
+    }
+
+    @Test
+    fun `instagram clicked`() {
+        val instagramLink = "https://instagram.com/sora_xor"
+
+        aboutViewModel.instagramClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(instagramLink, res)
+    }
+
+    @Test
+    fun `medium clicked`() {
+        val mediumLink = "https://medium.com/sora_xor"
+
+        aboutViewModel.mediumClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(mediumLink, res)
+    }
+
+    @Test
+    fun `wiki clicked`() {
+        val wikiLink = "https://wiki.sora.org"
+
+        aboutViewModel.wikiClicked()
+
+        val res = aboutViewModel.showBrowserLiveData.getOrAwaitValue()
+        assertEquals(wikiLink, res)
+    }
+
     @Test
     fun `terms item clicked`() {
         aboutViewModel.termsClicked()

@@ -17,6 +17,7 @@ import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
@@ -28,6 +29,7 @@ import java.util.Locale
 
 class AssetListViewModel @AssistedInject constructor(
     private val interactor: WalletInteractor,
+    private val polkaswapInteractor: PolkaswapInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val router: WalletRouter,
     @Assisted private val assetListMode: AssetListMode,
@@ -69,7 +71,14 @@ class AssetListViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val list = interactor.getActiveAssets()
                 .map { it.mapAssetToAssetModel(numbersFormatter, balanceStyle) }
-                .filter { it.assetId != hiddenAssetId }
+                .filter {
+                    if (assetListMode == AssetListMode.SELECT_FOR_LIQUIDITY_BASE) {
+                        val baseTokenIds = polkaswapInteractor.getPoolBaseTokens()
+                        (it.assetId in baseTokenIds) && (it.assetId != hiddenAssetId)
+                    } else {
+                        it.assetId != hiddenAssetId
+                    }
+                }
                 .sortedBy { it.sortOrder }
             assetsList.clear()
             assetsList.addAll(list)
@@ -108,9 +117,14 @@ class AssetListViewModel @AssistedInject constructor(
             }
             AssetListMode.SELECT_FOR_LIQUIDITY -> {
                 viewModelScope.launch {
-                    val xorToken = interactor.getFeeToken()
                     val selectedToken = interactor.getAssetOrThrow(asset.assetId).token
-                    router.returnToAddLiquidity(xorToken, selectedToken)
+                    router.returnToAddLiquidity(null, selectedToken)
+                }
+            }
+            AssetListMode.SELECT_FOR_LIQUIDITY_BASE -> {
+                viewModelScope.launch {
+                    val selectedToken = interactor.getAssetOrThrow(asset.assetId).token
+                    router.returnToAddLiquidity(selectedToken, null)
                 }
             }
         }

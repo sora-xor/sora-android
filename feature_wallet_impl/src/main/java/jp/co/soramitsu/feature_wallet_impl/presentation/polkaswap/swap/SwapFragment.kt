@@ -328,33 +328,33 @@ class SwapFragment : BaseFragment<SwapViewModel>(R.layout.fragment_swap) {
             binding.toInput.isEnabled = true
         }
 
-        viewModel.fromAssetLiveData.observe {
-            binding.fromCard.setAsset(it.token)
-            binding.fromInput.decimalPartLength = it.token.precision
+        viewModel.fromTokenLiveData.observe {
+            binding.fromCard.setAsset(it)
+            binding.fromInput.decimalPartLength = it.precision
 
             binding.detailPriceTitle1.text = "%s/%s".format(
-                viewModel.fromAssetLiveData.value?.token?.symbol,
-                viewModel.toAssetLiveData.value?.token?.symbol
+                viewModel.fromTokenLiveData.value?.symbol,
+                viewModel.toTokenLiveData.value?.symbol
             )
 
             binding.detailPriceTitle2.text = "%s/%s".format(
-                viewModel.toAssetLiveData.value?.token?.symbol,
-                viewModel.fromAssetLiveData.value?.token?.symbol
+                viewModel.toTokenLiveData.value?.symbol,
+                viewModel.fromTokenLiveData.value?.symbol
             )
         }
 
-        viewModel.toAssetLiveData.observe {
-            binding.toCard.setAsset(it.token)
-            binding.toInput.decimalPartLength = it.token.precision
+        viewModel.toTokenLiveData.observe {
+            binding.toCard.setAsset(it)
+            binding.toInput.decimalPartLength = it.precision
 
             binding.detailPriceTitle1.text = "%s/%s".format(
-                viewModel.fromAssetLiveData.value?.token?.symbol,
-                viewModel.toAssetLiveData.value?.token?.symbol
+                viewModel.fromTokenLiveData.value?.symbol,
+                viewModel.toTokenLiveData.value?.symbol
             )
 
             binding.detailPriceTitle2.text = "%s/%s".format(
-                viewModel.toAssetLiveData.value?.token?.symbol,
-                viewModel.fromAssetLiveData.value?.token?.symbol
+                viewModel.toTokenLiveData.value?.symbol,
+                viewModel.fromTokenLiveData.value?.symbol
             )
         }
 

@@ -9,15 +9,19 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jp.co.soramitsu.common.base.model.ToolbarState
+import jp.co.soramitsu.common.base.model.ToolbarType
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.printBalance
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_referral_impl.R
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -44,6 +48,7 @@ class ReferralViewModel @Inject constructor(
     private val numbersFormatter: NumbersFormatter,
     private val router: MainRouter,
     private val progress: WithProgress,
+    resourceManager: ResourceManager
 ) : BaseViewModel(), WithProgress by progress {
 
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
@@ -82,6 +87,11 @@ class ReferralViewModel @Inject constructor(
     private var referrer: String? = null
 
     init {
+        _toolbarState.value = ToolbarState(
+            type = ToolbarType.SMALL,
+            title = resourceManager.getString(R.string.referral_toolbar_title),
+        )
+
         interactor.observeReferrerBalance()
             .onStart {
                 progress.showProgress()
@@ -356,10 +366,6 @@ class ReferralViewModel @Inject constructor(
         }
     }
 
-    fun backButtonPressed() {
-        router.popBackStack()
-    }
-
     private suspend fun reCalcOnChange(state: DetailedBottomSheet) {
         _referralScreenState.value?.let {
             val feeToken = feeToken()
@@ -431,7 +437,6 @@ class ReferralViewModel @Inject constructor(
         else value
 
     fun toggleReferralsCard() {
-        referralsState =
-            referralsState?.copy(isExpanded = referralsState?.isExpanded?.not() ?: true)
+        referralsState = referralsState.copy(isExpanded = referralsState.isExpanded.not())
     }
 }

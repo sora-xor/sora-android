@@ -56,7 +56,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion versions.compose
+        kotlinCompilerExtensionVersion versions.composeCompiler
         kotlinCompilerVersion versions.kotlin
     }
 }
@@ -74,6 +74,7 @@ dependencies {
     implementation project(":feature_onboarding_api")
     implementation project(":feature_multiaccount_api")
     implementation project(":feature_referral_api")
+    implementation project(":feature_select_node_api")
     implementation project(":sorasubstrate")
 
     implementation kotlinDep
@@ -94,8 +95,6 @@ dependencies {
     implementation navigationUiDep
     implementation insetterDep
     implementation viewBindingDep
-
-    implementation roundedImageViewDep
 
     implementation composeUiDep
     implementation composeCompilerDep

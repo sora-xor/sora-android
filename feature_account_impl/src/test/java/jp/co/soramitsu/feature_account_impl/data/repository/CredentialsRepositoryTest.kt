@@ -17,6 +17,7 @@ import io.mockk.mockkStatic
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
+import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.SubstrateKeypairFactory
 import jp.co.soramitsu.fearless_utils.encrypt.mnemonic.Mnemonic
@@ -65,13 +66,17 @@ class CredentialsRepositoryTest {
     @MockK
     lateinit var runtimeManager: RuntimeManager
 
+    @MockK
+    lateinit var jsonAccountsEncoder: JsonAccountsEncoder
+
     @Before
     fun setup() {
         credentialsRepository =
             CredentialsRepositoryImpl(
                 datasource,
                 cryptoAssistant,
-                runtimeManager
+                runtimeManager,
+                jsonAccountsEncoder
             )
     }
 
@@ -128,6 +133,7 @@ class CredentialsRepositoryTest {
         every { SubstrateSeedFactory.deriveSeed32(any(), any()) } returns derivationResult
         every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
         coEvery { datasource.saveKeys(any(), any()) } returns Unit
+        coEvery { datasource.retrieveKeys(any()) } returns null
         coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
 
         credentialsRepository.generateUserCredentials("")
@@ -165,6 +171,7 @@ class CredentialsRepositoryTest {
         every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
         coEvery { datasource.saveKeys(any(), any()) } returns Unit
         coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
+        coEvery { datasource.retrieveKeys(any()) } returns null
 
         credentialsRepository.restoreUserCredentialsFromMnemonic(mnemonic, "")
 
@@ -193,6 +200,8 @@ class CredentialsRepositoryTest {
         every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
         coEvery { datasource.saveKeys(any(), any()) } returns Unit
         coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
+        coEvery { datasource.saveSeed(any(), any()) } returns Unit
+        coEvery { datasource.retrieveKeys(any()) } returns null
 
         credentialsRepository.restoreUserCredentialsFromRawSeed(rawSeed, "")
 

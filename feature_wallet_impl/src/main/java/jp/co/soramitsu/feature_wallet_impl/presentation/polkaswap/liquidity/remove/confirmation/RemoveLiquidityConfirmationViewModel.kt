@@ -25,7 +25,6 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.liquidity.mode
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateMinAmount
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.calculateTokenPerTokenRate
 import jp.co.soramitsu.feature_wallet_impl.util.PolkaswapFormulas.estimateRemovingShareOfPool
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -111,7 +110,9 @@ class RemoveLiquidityConfirmationViewModel @Inject constructor(
                     poolData?.let { poolData ->
                         val firstAmountMin = calculateMinAmount(fromAmount, slippage.toDouble())
                         val secondAmountMin = calculateMinAmount(toAmount, slippage.toDouble())
-                        val desired = poolData.poolProvidersBalance.multiply(BigDecimal.valueOf(selectedPercent / 100))
+                        val desired = poolData.poolProvidersBalance.multiply(
+                            BigDecimal.valueOf(selectedPercent / 100)
+                        )
 
                         var result = false
                         try {
@@ -143,9 +144,8 @@ class RemoveLiquidityConfirmationViewModel @Inject constructor(
                 secondToken
             )
 
-            polkaswapInteractor.subscribePoolsCache()
-                .collectLatest {
-                    val poolData = it.first { it.token.id == _toToken.value?.id }
+            polkaswapInteractor.subscribePoolCache(_fromToken.value?.id!!, _toToken.value?.id!!)
+                .collectLatest { poolData ->
                     val newPoolShare = estimateRemovingShareOfPool(
                         toAmount,
                         poolData.secondPooled,
@@ -175,9 +175,11 @@ class RemoveLiquidityConfirmationViewModel @Inject constructor(
 
                     _poolDetailsLiveDetails.value = LiquidityTableDetails(
                         firstToken.symbol,
-                        numbersFormatter.formatBigDecimal(poolData.xorPooled, ASSET_PRECISION).decimalPartSized(),
+                        numbersFormatter.formatBigDecimal(poolData.basePooled, ASSET_PRECISION)
+                            .decimalPartSized(),
                         secondToken.symbol,
-                        numbersFormatter.formatBigDecimal(poolData.secondPooled, ASSET_PRECISION).decimalPartSized(),
+                        numbersFormatter.formatBigDecimal(poolData.secondPooled, ASSET_PRECISION)
+                            .decimalPartSized(),
                         firstPerSecondTitle,
                         firstPerSecond.decimalPartSized(),
                         secondPerFirstTitle,
@@ -185,12 +187,15 @@ class RemoveLiquidityConfirmationViewModel @Inject constructor(
                         resourceManager.getString(R.string.pool_share_title),
                         newPoolShareText,
                         resourceManager.getString(R.string.polkaswap_sbapy),
-                        if (poolData.strategicBonusApy != null) "${numbersFormatter.formatBigDecimal(
+                        if (poolData.strategicBonusApy != null) "${
+                        numbersFormatter.formatBigDecimal(
                             poolData.strategicBonusApy!!,
                             ASSET_PRECISION
-                        )}%" else "",
+                        )
+                        }%" else "",
                         resourceManager.getString(R.string.polkaswap_network_fee),
-                        numbersFormatter.formatBigDecimal(networkFee, ASSET_PRECISION).decimalPartSized()
+                        numbersFormatter.formatBigDecimal(networkFee, ASSET_PRECISION)
+                            .decimalPartSized()
                     )
                 }
         }
@@ -200,9 +205,11 @@ class RemoveLiquidityConfirmationViewModel @Inject constructor(
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest {
-                    balanceFrom =
-                        it.first { it.token.id == SubstrateOptionsProvider.feeAssetId }.balance.transferable
-                    checkErrors()
+                    _fromToken.value?.let { from ->
+                        balanceFrom =
+                            it.first { it.token.id == from.id }.balance.transferable
+                        checkErrors()
+                    }
                 }
         }
     }
@@ -215,7 +222,7 @@ class RemoveLiquidityConfirmationViewModel @Inject constructor(
                         resourceManager.getString(R.string.polkaswap_insufficient_balance)
                             .format(it.symbol) to false
                     }
-                    fromAmount > poolData.xorPooled -> {
+                    fromAmount > poolData.basePooled -> {
                         resourceManager.getString(R.string.polkaswap_not_enough_tokens_in_pool) to false
                     }
                     else -> {

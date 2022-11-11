@@ -82,7 +82,7 @@ interface WalletRouter {
 
     fun showAddLiquidity(tokenFrom: Token, tokenTo: Token? = null)
 
-    fun showRemoveLiquidity(tokenFromId: Token, tokenToId: Token)
+    fun showRemoveLiquidity(tokenFrom: Token, tokenTo: Token)
 
     fun showRemoveLiquidityConfirmation(
         firstToken: Token,
@@ -93,7 +93,7 @@ interface WalletRouter {
         percent: Double,
     )
 
-    fun returnToAddLiquidity(tokenFrom: Token, tokenTo: Token? = null)
+    fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
 
     fun confirmAddLiquidity(
         tokenFrom: Token,

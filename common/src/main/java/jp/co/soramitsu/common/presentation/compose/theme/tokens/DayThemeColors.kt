@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown10
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown5
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown50
@@ -27,7 +28,7 @@ object DayThemeColors {
 
     val BgSurface = BgPage
 
-    val BgSurfaceVariant = BgPage
+    val BgSurfaceVariant = Brown10
 
     val BgSurfaceInverted = Brown90
 

@@ -65,6 +65,10 @@ class PolkaswapInteractorImpl(
     private var addLiquidityForEnabledPairNetworkFee: BigDecimal? = null
     private var addLiquidityForDisabledPairNetworkFee: BigDecimal? = null
 
+    override suspend fun getPoolBaseTokens(): List<String> {
+        return polkaswapRepository.getPoolBaseTokens()
+    }
+
     override suspend fun fetchSwapNetworkFee(feeToken: Token): BigDecimal {
         return swapNetworkFee ?: (
             polkaswapRepository.calcSwapNetworkFee(
@@ -323,6 +327,7 @@ class PolkaswapInteractorImpl(
 
     override fun setSwapMarket(market: Market) {
         selectedSwapMarket.value = market
+        print(market.toString())
     }
 
     override fun checkSwapBalances(
@@ -369,21 +374,16 @@ class PolkaswapInteractorImpl(
             }.flatMapLatest {
                 val flows = mutableListOf<Flow<String>>()
                 if (it.second == Market.XYK || it.second == Market.SMART) {
-                    if (it.first.first != SubstrateOptionsProvider.feeAssetId) {
-                        flows.add(polkaswapRepository.observePoolXYKReserves(it.first.first))
-                    }
-                    if (it.first.second != SubstrateOptionsProvider.feeAssetId) {
-                        flows.add(polkaswapRepository.observePoolXYKReserves(it.first.second))
-                    }
+                    flows.add(
+                        polkaswapRepository.observePoolXYKReserves(
+                            it.first.first,
+                            it.first.second
+                        )
+                    )
                 }
                 if (it.second == Market.TBC || it.second == Market.SMART) {
-                    if (it.first.first != SubstrateOptionsProvider.feeAssetId) {
-                        flows.add(polkaswapRepository.observePoolTBCReserves(it.first.first))
-                    }
-                    if (it.first.second != SubstrateOptionsProvider.feeAssetId) {
-                        flows.add(polkaswapRepository.observePoolTBCReserves(it.first.second))
-                    }
-                    flows.add(polkaswapRepository.observePoolTBCReserves(SubstrateOptionsProvider.feeAssetId))
+                    flows.add(polkaswapRepository.observePoolTBCReserves(it.first.first))
+                    flows.add(polkaswapRepository.observePoolTBCReserves(it.first.second))
                 }
                 flows.merge()
             }.debounce(500)
@@ -394,14 +394,13 @@ class PolkaswapInteractorImpl(
         return polkaswapRepository.updateAccountPools(address)
     }
 
-    override fun getPoolData(assetId: String): Flow<PoolData?> = flow {
-        val address = userRepository.getCurSoraAccount().substrateAddress
-        emitAll(polkaswapRepository.getPoolData(address, assetId))
-    }
-
-    override suspend fun updatePool(tokenId: String) {
+    override suspend fun updatePool(
+        baseTokenId: String,
+        tokenId: String
+    ) {
         polkaswapRepository.updateAccountPool(
             userRepository.getCurSoraAccount().substrateAddress,
+            baseTokenId,
             tokenId
         )
     }
@@ -411,9 +410,23 @@ class PolkaswapInteractorImpl(
             polkaswapRepository.subscribePoolFlow(it.substrateAddress)
         }
 
-    override fun subscribeReservesCache(assetId: String): Flow<LiquidityData?> =
+    override fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<PoolData> {
+        return userRepository.flowCurSoraAccount().flatMapLatest {
+            polkaswapRepository.getPoolData(it.substrateAddress, tokenFromId, tokenToId)
+                .filterNotNull()
+        }
+    }
+
+    override fun subscribeReservesCache(
+        baseTokenId: String,
+        assetId: String
+    ): Flow<LiquidityData?> =
         userRepository.flowCurSoraAccount().flatMapLatest {
-            polkaswapRepository.subscribeLocalPoolReserves(it.substrateAddress, assetId)
+            polkaswapRepository.subscribeLocalPoolReserves(
+                it.substrateAddress,
+                baseTokenId,
+                assetId
+            )
         }
 
     override suspend fun getPoolStrategicBonusAPY(tokenId: String): Double? =
@@ -514,9 +527,12 @@ class PolkaswapInteractorImpl(
         )
     }
 
-    override fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean> = flow {
+    override fun isPairPresentedInNetwork(
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<Boolean> = flow {
         val address = userRepository.getCurSoraAccount().substrateAddress
-        emitAll(polkaswapRepository.isPairPresentedInNetwork(tokenId, address))
+        emitAll(polkaswapRepository.isPairPresentedInNetwork(baseTokenId, tokenId, address))
     }
 
     override suspend fun getLiquidityData(

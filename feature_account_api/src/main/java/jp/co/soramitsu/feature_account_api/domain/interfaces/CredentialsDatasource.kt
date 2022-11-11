@@ -18,4 +18,10 @@ interface CredentialsDatasource {
     suspend fun saveMnemonic(mnemonic: String, suffixAddress: String)
 
     suspend fun retrieveMnemonic(suffixAddress: String): String
+
+    suspend fun saveSeed(seed: String, suffixAddress: String)
+
+    suspend fun retrieveSeed(suffixAddress: String): String
+
+    suspend fun clearAllDataForAddress(suffixAddress: String)
 }

@@ -34,7 +34,7 @@ import javax.inject.Inject
 class PoolViewModel @Inject constructor(
     private val router: WalletRouter,
     private val walletInteractor: WalletInteractor,
-    private val polkaswapInteractor: PolkaswapInteractor,
+    polkaswapInteractor: PolkaswapInteractor,
     private val poolsManager: PoolsManager,
     private val resourceManager: ResourceManager,
 ) : BaseViewModel() {
@@ -63,14 +63,14 @@ class PoolViewModel @Inject constructor(
                 val xorToken = walletInteractor.getFeeToken()
                 xorAssetToken = xorToken
 
-                it.first to it.second.map { toAsset ->
+                it.first to it.second.map { poolData ->
                     PoolModel(
-                        xorToken,
-                        toAsset.token,
-                        toAsset.xorPooled,
-                        toAsset.secondPooled,
-                        toAsset.strategicBonusApy,
-                        toAsset.poolShare
+                        poolData.baseToken,
+                        poolData.token,
+                        poolData.basePooled,
+                        poolData.secondPooled,
+                        poolData.strategicBonusApy,
+                        poolData.poolShare
                     )
                 }
             }

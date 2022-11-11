@@ -46,6 +46,20 @@ class SoraPreferences(
         }
     }
 
+    suspend fun clear(field: String) {
+        dataStore.edit {
+            it.remove(stringPreferencesKey(field))
+        }
+    }
+
+    suspend fun clear(fields: List<String>) {
+        dataStore.edit {
+            fields.forEach { field ->
+                it.remove(stringPreferencesKey(field))
+            }
+        }
+    }
+
     suspend fun getOrPutInt(field: String, value: Int): Int =
         dataStore.data.map {
             val key = intPreferencesKey(field)

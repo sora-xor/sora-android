@@ -108,7 +108,10 @@ class WalletFeatureModule {
 
     @Singleton
     @Provides
-    fun providePoolsManager(polkaswapInteractor: PolkaswapInteractor): PoolsManager {
-        return PoolsManagerImpl(polkaswapInteractor)
+    fun providePoolsManager(
+        polkaswapInteractor: PolkaswapInteractor,
+        coroutineManager: CoroutineManager,
+    ): PoolsManager {
+        return PoolsManagerImpl(polkaswapInteractor, coroutineManager)
     }
 }

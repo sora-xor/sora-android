@@ -12,18 +12,24 @@ import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class UserRepositoryImpl(
     private val userDatasource: UserDatasource,
+    private val credentialsDatasource: CredentialsDatasource,
     private val db: AppDatabase,
     private val deviceParamsProvider: DeviceParamsProvider,
     private val coroutineManager: CoroutineManager
@@ -31,43 +37,53 @@ class UserRepositoryImpl(
 
     private val currentSoraAccount = MutableStateFlow<SoraAccount?>(null)
 
+    private val mutex = Mutex()
+
     init {
         coroutineManager.applicationScope.launch {
             initCurSoraAccount()
         }
     }
 
-    override suspend fun initCurSoraAccount() {
-        val curAddress = userDatasource.getCurAccountAddress()
-        db.accountDao().getAccount(curAddress)?.let { soraAccountLocal ->
-            currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+    private suspend fun initCurSoraAccount() {
+        mutex.withLock {
+            val curAddress = userDatasource.getCurAccountAddress()
+            db.accountDao().getAccount(curAddress)?.let { soraAccountLocal ->
+                currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+            }
         }
     }
 
-    override suspend fun getCurSoraAccount(): SoraAccount {
+    override suspend fun getCurSoraAccount(): SoraAccount = mutex.withLock {
         if (currentSoraAccount.value == null) {
             initCurSoraAccount()
         }
-
-        return requireNotNull(currentSoraAccount.value)
+        requireNotNull(currentSoraAccount.value)
     }
 
     override suspend fun setCurSoraAccount(soraAccount: SoraAccount) {
-        userDatasource.setCurAccountAddress(soraAccount.substrateAddress)
-        currentSoraAccount.value = soraAccount
-        db.referralsDao().clearTable()
+        mutex.withLock {
+            userDatasource.setCurAccountAddress(soraAccount.substrateAddress)
+            currentSoraAccount.value = soraAccount
+        }
     }
 
     override suspend fun setCurSoraAccount(accountAddress: String) {
-        userDatasource.setCurAccountAddress(accountAddress)
-        db.accountDao().getAccount(accountAddress)?.let { soraAccountLocal ->
-            currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+        mutex.withLock {
+            userDatasource.setCurAccountAddress(accountAddress)
+            db.accountDao().getAccount(accountAddress)?.let { soraAccountLocal ->
+                currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
+            }
         }
-        db.referralsDao().clearTable()
     }
 
     override fun flowCurSoraAccount(): Flow<SoraAccount> =
-        currentSoraAccount.asStateFlow().filterNotNull()
+        currentSoraAccount.asStateFlow()
+            .filterNotNull()
+            .distinctUntilChangedBy { it.substrateAddress }
+            .onEach {
+                db.referralsDao().clearTable()
+            }
 
     override fun flowSoraAccountsList(): Flow<List<SoraAccount>> =
         db.accountDao().flowAccounts().map { list ->
@@ -119,6 +135,7 @@ class UserRepositoryImpl(
 
     override suspend fun clearAccountData(address: String) {
         userDatasource.clearAccountData()
+        credentialsDatasource.clearAllDataForAddress(address)
         db.withTransaction {
             db.accountDao().clearAccount(address)
             db.referralsDao().clearTable()
@@ -183,5 +200,30 @@ class UserRepositoryImpl(
     override suspend fun isMigrationFetched(soraAccount: SoraAccount): Boolean {
         return userDatasource.isMigrationStatusFetched(soraAccount.substrateAddress) &&
             !userDatasource.needsMigration(soraAccount.substrateAddress)
+    }
+
+    override suspend fun getSoraAccount(address: String): SoraAccount {
+        val soraAccountLocal = requireNotNull(db.accountDao().getAccount(address))
+        return SoraAccountMapper.map(soraAccountLocal)
+    }
+
+    override suspend fun savePinTriesUsed(triesUsed: Int) {
+        userDatasource.savePinTriesUsed(triesUsed)
+    }
+
+    override suspend fun saveTimerStartedTimestamp(timestamp: Long) {
+        userDatasource.saveTimerStartedTimestamp(timestamp)
+    }
+
+    override suspend fun retrievePinTriesUsed(): Int = userDatasource.retrievePinTriesUsed()
+
+    override suspend fun retrieveTimerStartedTimestamp(): Long = userDatasource.retrieveTimerStartedTimestamp()
+
+    override suspend fun resetTimerStartedTimestamp() {
+        userDatasource.resetTimerStartedTimestamp()
+    }
+
+    override suspend fun resetTriesUsed() {
+        userDatasource.resetPinTriesUsed()
     }
 }

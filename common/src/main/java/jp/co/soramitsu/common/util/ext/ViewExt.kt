@@ -81,6 +81,10 @@ fun View.showOrHide(v: Boolean) {
     this.visibility = if (v) View.VISIBLE else View.INVISIBLE
 }
 
+fun View.hideOrGone(v: Boolean) {
+    this.visibility = if (v) View.INVISIBLE else View.GONE
+}
+
 inline fun View.setDebouncedClickListener(
     debounceClickHandler: DebounceClickHandler,
     crossinline listener: (View) -> Unit
@@ -114,7 +118,6 @@ fun ImageView.animateLoader(animate: Boolean) {
 
 @ExperimentalCoroutinesApi
 fun EditText.asFlow() = callbackFlow {
-
     val onChanged: (CharSequence?, Int, Int, Int) -> Unit = { c, _, _, _ ->
         trySend(c.toString())
     }

@@ -8,6 +8,7 @@ package jp.co.soramitsu.common.data.network.dto
 import java.math.BigInteger
 
 data class PoolDataDto(
+    val baseAssetId: String,
     val assetId: String,
     val reservesFirst: BigInteger,
     val reservesSecond: BigInteger,

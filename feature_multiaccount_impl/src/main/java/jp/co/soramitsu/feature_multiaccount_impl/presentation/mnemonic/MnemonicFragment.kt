@@ -8,7 +8,6 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -30,6 +29,7 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_my_mn
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
     @Inject
     lateinit var viewModelFactory: MnemonicViewModel.Factory
 
@@ -68,9 +68,7 @@ class MnemonicFragment : BaseFragment<MnemonicViewModel>(R.layout.fragment_my_mn
         screenshotBlockHelper = ScreenshotBlockHelper(requireActivity())
 
         viewModel.mnemonicShare.observe { mnemonic ->
-            (requireActivity() as? AppCompatActivity)?.let {
-                ShareUtil.openShareDialog(it, getString(R.string.common_share), mnemonic)
-            }
+            ShareUtil.shareText(requireContext(), getString(R.string.common_share), mnemonic)
         }
         viewModel.mnemonicWords.observe { words: List<String> ->
             val rowCount = ceil(words.size.toFloat() / 2.0).toInt()

@@ -11,7 +11,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
-import jp.co.soramitsu.feature_wallet_impl.R
+import jp.co.soramitsu.common.R
 import java.math.BigDecimal
 
 object AssetListTestData {

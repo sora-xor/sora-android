@@ -21,6 +21,7 @@ import jp.co.soramitsu.common.presentation.args.tokenFrom
 import jp.co.soramitsu.common.presentation.args.tokenTo
 import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.presentation.view.slippagebottomsheet.SlippageBottomSheet
+import jp.co.soramitsu.common.presentation.view.table.RowsView
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
@@ -32,7 +33,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class RemoveLiquidityFragment : BaseFragment<RemoveLiquidityViewModel>(R.layout.fragment_remove_liquidity) {
+class RemoveLiquidityFragment :
+    BaseFragment<RemoveLiquidityViewModel>(R.layout.fragment_remove_liquidity) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
@@ -97,22 +99,6 @@ class RemoveLiquidityFragment : BaseFragment<RemoveLiquidityViewModel>(R.layout.
             setDetailsVisible(!binding.detailsFirstTitle.isVisible)
         }
 
-        binding.rvSecondDetails.setOnClickListener(2) {
-//            AlertDialog.Builder(requireActivity())
-//                .setTitle(R.string.polkaswap_network_fee)
-//                .setMessage(R.string.polkaswap_network_fee_info)
-//                .setPositiveButton(android.R.string.ok) { _, _ -> }
-//                .show()
-        }
-
-        binding.rvSecondDetails.setOnClickListener(3) {
-            AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.polkaswap_network_fee)
-                .setMessage(R.string.polkaswap_network_fee_info)
-                .setPositiveButton(android.R.string.ok) { _, _ -> }
-                .show()
-        }
-
         setUpTokensFromArgs(requireArguments())
         observeViewModel()
     }
@@ -129,7 +115,6 @@ class RemoveLiquidityFragment : BaseFragment<RemoveLiquidityViewModel>(R.layout.
     }
 
     private fun observeViewModel() {
-
         viewModel.toToken.observeNonNull { token ->
             binding.toAssetInput.setAsset(token)
             binding.toAssetInput.setPrecision(token.precision)
@@ -173,10 +158,48 @@ class RemoveLiquidityFragment : BaseFragment<RemoveLiquidityViewModel>(R.layout.
             binding.rvFirstDetails.updateValuesInRow(1, it.secondTokenSymbol, it.secondTokenPooled)
             binding.rvFirstDetails.updateValuesInRow(2, it.shareAfterTxTitle, it.shareAfterTx)
 
-            binding.rvSecondDetails.updateValuesInRow(0, it.xorPerSecondTitle, it.xorPerSecond)
-            binding.rvSecondDetails.updateValuesInRow(1, it.secondPerXorTitle, it.secondPerXor)
-            binding.rvSecondDetails.updateValuesInRow(rowIndex = 2, titleText = it.sbApyTitle, text1 = it.sbApy, image = R.drawable.ic_neu_exclamation)
-            binding.rvSecondDetails.updateValuesInRow(rowIndex = 3, titleText = it.networkFeeTitle, text1 = it.networkFeeValue, image = R.drawable.ic_neu_exclamation)
+            if (it.sbApy.isEmpty()) {
+                binding.rvSecondDetails.inflateRows(RowsView.RowType.LINE, 3)
+                binding.rvSecondDetails.updateValuesInRow(0, it.xorPerSecondTitle, it.xorPerSecond)
+                binding.rvSecondDetails.updateValuesInRow(1, it.secondPerXorTitle, it.secondPerXor)
+                binding.rvSecondDetails.updateValuesInRow(
+                    rowIndex = 2,
+                    titleText = it.networkFeeTitle,
+                    text1 = it.networkFeeValue,
+                    image = R.drawable.ic_neu_exclamation
+                )
+            } else {
+                binding.rvSecondDetails.inflateRows(RowsView.RowType.LINE, 4)
+                binding.rvSecondDetails.updateValuesInRow(0, it.xorPerSecondTitle, it.xorPerSecond)
+                binding.rvSecondDetails.updateValuesInRow(1, it.secondPerXorTitle, it.secondPerXor)
+                binding.rvSecondDetails.updateValuesInRow(
+                    rowIndex = 2,
+                    titleText = it.sbApyTitle,
+                    text1 = it.sbApy,
+                    image = R.drawable.ic_neu_exclamation
+                )
+                binding.rvSecondDetails.updateValuesInRow(
+                    rowIndex = 3,
+                    titleText = it.networkFeeTitle,
+                    text1 = it.networkFeeValue,
+                    image = R.drawable.ic_neu_exclamation
+                )
+            }
+            binding.rvSecondDetails.setOnClickListener(2) {
+                AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.polkaswap_sbapy)
+                    .setMessage(R.string.polkaswap_sb_apy_info)
+                    .setPositiveButton(android.R.string.ok) { _, _ -> }
+                    .show()
+            }
+
+            binding.rvSecondDetails.setOnClickListener(if (it.sbApy.isEmpty()) 2 else 3) {
+                AlertDialog.Builder(requireActivity())
+                    .setTitle(R.string.polkaswap_network_fee)
+                    .setMessage(R.string.polkaswap_network_fee_info)
+                    .setPositiveButton(android.R.string.ok) { _, _ -> }
+                    .show()
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

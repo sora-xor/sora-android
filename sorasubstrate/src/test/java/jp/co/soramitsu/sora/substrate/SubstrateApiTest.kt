@@ -10,7 +10,6 @@ import io.mockk.MockKException
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
@@ -37,15 +36,12 @@ class SubstrateApiTest {
     lateinit var socket: SocketService
 
     @MockK
-    lateinit var crypto: CryptoAssistant
-
-    @MockK
     lateinit var runtimeManager: RuntimeManager
 
     private lateinit var api: SubstrateApiImpl
 
     private fun setUpApi() {
-        api = SubstrateApiImpl(socket, crypto, runtimeManager)
+        api = SubstrateApiImpl(socket, runtimeManager)
     }
 
     @Test(expected = MockKException::class)
@@ -55,8 +51,9 @@ class SubstrateApiTest {
         every { runtimeManager.getMetadataVersion() } returns 14
         setUpApi()
 
+        val baseTokenId = "0x0200000000000000000000000000000000000000000000000000000000000000"
         val tokenId = "0x0200050000000000000000000000000000000000000000000000000000000000"
-        api.getPoolReserveAccount(tokenId.fromHex())
+        api.getPoolReserveAccount(baseTokenId, tokenId.fromHex())
 
         assertEquals(14, runtimeManager.getMetadataVersion())
     }
@@ -68,8 +65,9 @@ class SubstrateApiTest {
         every { runtimeManager.getMetadataVersion() } returns 12
         setUpApi()
 
+        val baseTokenId = "0x0200000000000000000000000000000000000000000000000000000000000000"
         val tokenId = "0x0200050000000000000000000000000000000000000000000000000000000000"
-        api.getPoolReserveAccount(tokenId.fromHex())
+        api.getPoolReserveAccount(baseTokenId, tokenId.fromHex())
 
         assertEquals(14, runtimeManager.getMetadataVersion())
     }

@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode
 
+import android.os.CountDownTimer
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
@@ -15,6 +16,7 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.view.pincode.DotsProgressView
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.setValueIfNew
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
@@ -22,8 +24,10 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
+import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,6 +35,8 @@ class PinCodeViewModel @Inject constructor(
     private val interactor: PinCodeInteractor,
     private val mainInteractor: MainInteractor,
     private val mainRouter: MainRouter,
+    private val resourceManager: ResourceManager,
+    private val selectNodeRouter: SelectNodeRouter,
     private val progress: WithProgress,
     private val deviceVibrator: DeviceVibrator,
 ) : BaseViewModel(), WithProgress by progress {
@@ -46,11 +52,14 @@ class PinCodeViewModel @Inject constructor(
     private var needsMigration: Boolean? = null
     private var isPincodeUpdateNeeded: Boolean = false
     private var isChanging = false
+    private var triesUsed = 0
+    private var buttonsDisabled = false
+    private var timerStartedTimeStamp = 0L
 
     private val inputCodeLiveData = MutableLiveData<String>()
 
     val backButtonVisibilityLiveData = MutableLiveData<Boolean>()
-    val toolbarTitleResLiveData = MutableLiveData<Int>()
+    val toolbarTitleResLiveData = MutableLiveData<String>()
     val wrongPinCodeEventLiveData = SingleLiveEvent<Unit>()
     val showFingerPrintEventLiveData = SingleLiveEvent<Boolean>()
     val startFingerprintScannerEventLiveData = SingleLiveEvent<Boolean>()
@@ -59,6 +68,7 @@ class PinCodeViewModel @Inject constructor(
     val fingerPrintErrorLiveData = SingleLiveEvent<String>()
     val pinCodeProgressLiveData = MediatorLiveData<Int>()
     val deleteButtonVisibilityLiveData = MediatorLiveData<Boolean>()
+    val showTriesLeftSnackbar = SingleLiveEvent<String>()
 
     private val _closeAppLiveData = SingleLiveEvent<Unit>()
     val closeAppLiveData: LiveData<Unit> = _closeAppLiveData
@@ -75,8 +85,8 @@ class PinCodeViewModel @Inject constructor(
     private val _logoVisibilityLiveData = MutableLiveData<Boolean>()
     val logoVisibilityLiveData: LiveData<Boolean> = _logoVisibilityLiveData
 
-    private val _logoutEvent = SingleLiveEvent<Unit>()
-    val logoutEvent: LiveData<Unit> = _logoutEvent
+    private val _logoutEvent = SingleLiveEvent<String>()
+    val logoutEvent: LiveData<String> = _logoutEvent
 
     private val _biometryInitialDialogEvent = SingleLiveEvent<Unit>()
     val biometryInitialDialogEvent: LiveData<Unit> = _biometryInitialDialogEvent
@@ -91,8 +101,23 @@ class PinCodeViewModel @Inject constructor(
     val switchAccountEvent: LiveData<Unit> = _switchAccountEvent
 
     var isReturningFromInfo = false
+    lateinit var addresses: List<String>
 
     init {
+        viewModelScope.launch {
+            triesUsed = interactor.retrieveTriesUsed()
+            timerStartedTimeStamp = interactor.retrieveTimerStartedTimestamp()
+
+            if (timerStartedTimeStamp > 0L) {
+                startTimer()
+
+                if (!buttonsDisabled) {
+                    interactor.resetTimerStartedTimestamp()
+                    timerStartedTimeStamp = 0
+                }
+            }
+        }
+
         viewModelScope.launch {
             tryCatch {
                 isBiometryEnabled = interactor.isBiometryEnabled()
@@ -110,6 +135,12 @@ class PinCodeViewModel @Inject constructor(
         inputCodeLiveData.value = ""
     }
 
+    private fun startTimer() {
+        buttonsDisabled = true
+        showFingerPrintEventLiveData.value = false
+        createIdleTimer().start()
+    }
+
     fun startAuth(pinCodeAction: PinCodeAction) {
         viewModelScope.launch {
             needsMigration = interactor.needsMigration()
@@ -119,12 +150,19 @@ class PinCodeViewModel @Inject constructor(
             when (action) {
                 PinCodeAction.CREATE_PIN_CODE -> {
                     _logoVisibilityLiveData.value = false
-                    toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
+                    toolbarTitleResLiveData.value =
+                        resourceManager.getString(R.string.pincode_set_your_pin_code)
                     backButtonVisibilityLiveData.value = false
                 }
-                PinCodeAction.OPEN_PASSPHRASE, PinCodeAction.LOGOUT -> {
+                PinCodeAction.OPEN_PASSPHRASE,
+                PinCodeAction.OPEN_SEED,
+                PinCodeAction.OPEN_JSON,
+                PinCodeAction.LOGOUT,
+                PinCodeAction.CUSTOM_NODE,
+                PinCodeAction.SELECT_NODE -> {
                     _logoVisibilityLiveData.value = false
-                    toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
+                    toolbarTitleResLiveData.value =
+                        resourceManager.getString(R.string.pincode_enter_pin_code)
                     showFingerPrintEventLiveData.value = isBiometryEnabled
                     backButtonVisibilityLiveData.value = true
                 }
@@ -134,7 +172,8 @@ class PinCodeViewModel @Inject constructor(
                         _currentPincodeLength.value = DotsProgressView.OLD_PINCODE_LENGTH
                     }
                     _logoVisibilityLiveData.value = false
-                    toolbarTitleResLiveData.value = R.string.pincode_enter_current_pin_code
+                    toolbarTitleResLiveData.value =
+                        resourceManager.getString(R.string.pincode_enter_current_pin_code)
                     showFingerPrintEventLiveData.value = isBiometryEnabled
                     backButtonVisibilityLiveData.value = true
                 }
@@ -142,13 +181,14 @@ class PinCodeViewModel @Inject constructor(
                     try {
                         if (interactor.isCodeSet()) {
                             _logoVisibilityLiveData.value = true
-                            toolbarTitleResLiveData.value = R.string.pincode_enter_pin_code
+                            toolbarTitleResLiveData.value =
+                                resourceManager.getString(R.string.pincode_enter_pin_code)
                             showFingerPrintEventLiveData.value = isBiometryEnabled
                             backButtonVisibilityLiveData.value = false
                         } else {
                             _logoVisibilityLiveData.value = false
                             toolbarTitleResLiveData.value =
-                                R.string.pincode_set_your_pin_code
+                                resourceManager.getString(R.string.pincode_set_your_pin_code)
                             backButtonVisibilityLiveData.value = false
                             action = PinCodeAction.CREATE_PIN_CODE
                         }
@@ -166,14 +206,16 @@ class PinCodeViewModel @Inject constructor(
         pinCodeNumber: String,
         maxProgress: Int = DotsProgressView.PINCODE_LENGTH
     ) {
-        inputCodeLiveData.value?.let { inputCode ->
-            if (inputCode.length >= maxProgress) {
-                return
-            }
-            val newCode = inputCode + pinCodeNumber
-            inputCodeLiveData.value = newCode
-            if (newCode.length == maxProgress) {
-                pinCodeEntered(newCode)
+        if (!buttonsDisabled) {
+            inputCodeLiveData.value?.let { inputCode ->
+                if (inputCode.length >= maxProgress) {
+                    return
+                }
+                val newCode = inputCode + pinCodeNumber
+                inputCodeLiveData.value = newCode
+                if (newCode.length == maxProgress) {
+                    pinCodeEntered(newCode)
+                }
             }
         }
     }
@@ -196,7 +238,7 @@ class PinCodeViewModel @Inject constructor(
                         tempCode = pin
                         inputCodeLiveData.value = ""
                         toolbarTitleResLiveData.value =
-                            if (isChanging) R.string.pincode_confirm_new_pin_code else R.string.pincode_confirm_your_pin_code
+                            resourceManager.getString(if (isChanging) R.string.pincode_confirm_new_pin_code else R.string.pincode_confirm_your_pin_code)
                         backButtonVisibilityLiveData.value = true
                     } else {
                         pinCodeEnterComplete(pin)
@@ -215,7 +257,7 @@ class PinCodeViewModel @Inject constructor(
             tempCode = ""
             inputCodeLiveData.value = ""
             toolbarTitleResLiveData.value =
-                if (isChanging) R.string.pincode_enter_new_pin_code else R.string.pincode_set_your_pin_code
+                resourceManager.getString(if (isChanging) R.string.pincode_enter_new_pin_code else R.string.pincode_set_your_pin_code)
             backButtonVisibilityLiveData.value = false
             wrongPinCodeEventLiveData.trigger()
             deviceVibrator.makeShortVibration()
@@ -245,25 +287,13 @@ class PinCodeViewModel @Inject constructor(
         val result = interactor.checkPin(code)
 
         if (result) {
-            when (action) {
-                PinCodeAction.OPEN_PASSPHRASE -> {
-                    mainRouter.popBackStack()
-                    mainRouter.showPassphrase()
-                }
-                PinCodeAction.LOGOUT -> {
-                    _logoutEvent.trigger()
-                }
-                PinCodeAction.TIMEOUT_CHECK, PinCodeAction.CREATE_PIN_CODE -> {
-                    proceed()
-                }
-                PinCodeAction.CHANGE_PIN_CODE -> {
-                    changePinProcessing()
-                }
-            }
+            processSuccessfullAuth()
         } else {
             inputCodeLiveData.value = ""
             wrongPinCodeEventLiveData.trigger()
             deviceVibrator.makeShortVibration()
+
+            proccessFailedAuthIdleTimer()
         }
     }
 
@@ -279,7 +309,8 @@ class PinCodeViewModel @Inject constructor(
                 tempCode = ""
                 inputCodeLiveData.value = ""
                 backButtonVisibilityLiveData.value = false
-                toolbarTitleResLiveData.value = R.string.pincode_set_your_pin_code
+                toolbarTitleResLiveData.value =
+                    resourceManager.getString(R.string.pincode_set_your_pin_code)
             }
         } else {
             if (PinCodeAction.TIMEOUT_CHECK == action || isPincodeUpdateNeeded) {
@@ -291,7 +322,7 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun onResume() {
-        if (action != PinCodeAction.CREATE_PIN_CODE) {
+        if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
             startFingerprintScannerEventLiveData.value = isBiometryEnabled
         }
     }
@@ -301,19 +332,75 @@ class PinCodeViewModel @Inject constructor(
     }
 
     fun onAuthenticationSucceeded() {
-        when (action) {
-            PinCodeAction.OPEN_PASSPHRASE -> {
-                mainRouter.popBackStack()
-                mainRouter.showPassphrase()
+        processSuccessfullAuth()
+    }
+
+    private fun proccessFailedAuthIdleTimer() {
+        viewModelScope.launch {
+            triesUsed++
+            interactor.saveTriesUsed(triesUsed)
+
+            if (triesUsed >= 3) {
+                startTimer()
+            } else {
+                if (triesUsed == 2) {
+                    showTriesLeftSnackbar.value =
+                        resourceManager.getString(R.string.pincode_one_try_left)
+                }
             }
-            PinCodeAction.LOGOUT -> {
-                _logoutEvent.trigger()
+        }
+    }
+
+    private fun processSuccessfullAuth() {
+        triesUsed = 0
+        viewModelScope.launch {
+            interactor.resetTriesUsed()
+            interactor.resetTimerStartedTimestamp()
+
+            when (action) {
+                PinCodeAction.OPEN_PASSPHRASE -> {
+                    mainRouter.popBackStack()
+                    if (this@PinCodeViewModel::addresses.isInitialized) {
+                        mainRouter.showBackupPassphrase(addresses.first())
+                    }
+                }
+                PinCodeAction.OPEN_JSON -> {
+                    mainRouter.popBackStack()
+                    if (this@PinCodeViewModel::addresses.isInitialized) {
+                        mainRouter.showBackupJson(addresses)
+                    }
+                }
+                PinCodeAction.OPEN_SEED -> {
+                    mainRouter.popBackStack()
+                    if (this@PinCodeViewModel::addresses.isInitialized) {
+                        mainRouter.showBackupSeed(addresses.first())
+                    }
+                }
+                PinCodeAction.LOGOUT -> {
+                    logout()
+                }
+                PinCodeAction.CHANGE_PIN_CODE -> {
+                    changePinProcessing()
+                }
+                PinCodeAction.CUSTOM_NODE,
+                PinCodeAction.SELECT_NODE -> {
+                    selectNodeRouter.returnFromPinCodeCheck()
+                }
+                else -> {
+                    proceed()
+                }
             }
-            PinCodeAction.CHANGE_PIN_CODE -> {
-                changePinProcessing()
-            }
-            else -> {
-                proceed()
+        }
+    }
+
+    private fun logout() {
+        viewModelScope.launch {
+            val multiAccount = mainInteractor.getSoraAccountsCount() > 1
+
+            if (multiAccount) {
+                _logoutEvent.value = resourceManager.getString(R.string.logout_dialog_body)
+            } else {
+                _logoutEvent.value = resourceManager.getString(R.string.logout_dialog_body) + resourceManager.getString(R.string.logout_remove_nodes_body)
             }
         }
     }
@@ -321,6 +408,7 @@ class PinCodeViewModel @Inject constructor(
     fun onAuthenticationFailed() {
         fingerPrintAutFailedLiveData.trigger()
         deviceVibrator.makeShortVibration()
+        proccessFailedAuthIdleTimer()
     }
 
     fun setBiometryAvailable(isAuthReady: Boolean) {
@@ -349,15 +437,18 @@ class PinCodeViewModel @Inject constructor(
     }
 
     private suspend fun logoutWithSwitchAccount() {
-        val currentAddress = mainInteractor.getCurUserAddress()
-        interactor.clearAccountData(currentAddress)
+        if (this::addresses.isInitialized) {
+            val currentAddress = mainInteractor.getCurUserAddress()
+            interactor.clearAccountData(addresses.first())
+            if (currentAddress == addresses.first()) {
+                mainInteractor.getSoraAccountsList().firstOrNull()?.let { account ->
+                    mainInteractor.setCurSoraAccount(account.substrateAddress)
+                }
+            }
 
-        mainInteractor.soraAccountsList().firstOrNull()?.let { account ->
-            mainInteractor.setCurSoraAccount(account.substrateAddress)
+            progress.hideProgress()
+            _switchAccountEvent.trigger()
         }
-
-        progress.hideProgress()
-        _switchAccountEvent.trigger()
     }
 
     fun biometryDialogYesClicked() {
@@ -407,12 +498,61 @@ class PinCodeViewModel @Inject constructor(
             isChanging = true
             isBiometryEnabled = false
             showFingerPrintEventLiveData.value = isBiometryEnabled
-            toolbarTitleResLiveData.value = R.string.pincode_enter_new_pin_code
+            toolbarTitleResLiveData.value =
+                resourceManager.getString(R.string.pincode_enter_new_pin_code)
             inputCodeLiveData.value = ""
         }
     }
 
     fun canceledFromPrompt() {
         _fingerPrintCanceledFromPromptEvent.trigger()
+    }
+
+    fun popBackToAccountList() {
+        mainRouter.popBackStackToAccountList()
+    }
+
+    private fun getMillisFromCounter(counter: Int): Long {
+        return when (counter) {
+            3 -> 1
+            4 -> 5
+            5 -> 15
+            in 6..Int.MAX_VALUE -> 30
+            else -> 0
+        } * 60 * 1000L
+    }
+
+    private fun createIdleTimer(): CountDownTimer {
+        val currentTime = Date().time
+        val time = if (timerStartedTimeStamp == 0L) {
+            viewModelScope.launch { interactor.saveTimerStartedTimestamp(currentTime) }
+            getMillisFromCounter(triesUsed)
+        } else {
+            getMillisFromCounter(triesUsed) - (currentTime - timerStartedTimeStamp)
+        }
+
+        return object : CountDownTimer(time, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val allSecondsLeft = millisUntilFinished / 1000
+                val minutesLeft = allSecondsLeft / 60
+                val secondsLeftWithoutMinutes = allSecondsLeft - minutesLeft * 60
+
+                val minutesString = "$minutesLeft ${resourceManager.getString(R.string.common_min)}"
+                val secondsString =
+                    "$secondsLeftWithoutMinutes ${resourceManager.getString(R.string.common_sec)}"
+                toolbarTitleResLiveData.value = resourceManager.getString(
+                    R.string.pin_locked_for_title,
+                    "$minutesString $secondsString"
+                )
+            }
+
+            override fun onFinish() {
+                buttonsDisabled = false
+                showFingerPrintEventLiveData.value = true
+                viewModelScope.launch { interactor.resetTimerStartedTimestamp() }
+                toolbarTitleResLiveData.value =
+                    resourceManager.getString(R.string.pincode_enter_pin_code)
+            }
+        }
     }
 }

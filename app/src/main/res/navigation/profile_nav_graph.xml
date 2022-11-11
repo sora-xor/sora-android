@@ -27,13 +27,8 @@
 
     <fragment
         android:id="@+id/switchAccountFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.switchaccount.SwitchAccountFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.switchaccount.SwitchAccountFragment"
         tools:layout="@layout/fragment_switch_account" />
-
-    <fragment
-        android:id="@+id/passphraseFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.passphrase.PassphraseFragment"
-        tools:layout="@layout/fragment_my_mnemonic" />
 
     <fragment
         android:id="@+id/selectLanguageFragment"

@@ -18,7 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
-import jp.co.soramitsu.common.presentation.args.tokenFrom
+import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenToNullable
 import jp.co.soramitsu.common.presentation.view.button.bindLoadingButton
 import jp.co.soramitsu.common.presentation.view.slippagebottomsheet.SlippageBottomSheet
@@ -49,9 +49,7 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
 
     private val binding by viewBinding(FragmentAddLiquidityBinding::bind)
 
-    private val vm: AddLiquidityViewModel by viewModels()
-    override val viewModel: AddLiquidityViewModel
-        get() = vm
+    override val viewModel: AddLiquidityViewModel by viewModels()
 
     private lateinit var keyboardHelper: KeyboardHelper
 
@@ -73,14 +71,13 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
         viewLifecycleOwner.bindLoadingButton(binding.nextButton)
 
         setUpListeners()
-        setUpTokensFromArgs(requireArguments())
+        setUpTokensFromArgs(arguments)
+        this.arguments?.clear()
         observeViewModel()
 
         findNavController().currentBackStackEntry?.savedStateHandle
             ?.getLiveData<Bundle?>(BUNDLE_KEY)?.observe(viewLifecycleOwner) { args ->
-                if (args != null) {
-                    setUpTokensFromArgs(args)
-                }
+                setUpTokensFromArgs(args)
             }
     }
 
@@ -121,9 +118,14 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
             }
         }
 
+        binding.fromAssetInput.setOnChooseTokenListener {
+            setDetailsVisible(false)
+            viewModel.onChooseFromToken()
+        }
+
         binding.toAssetInput.setOnChooseTokenListener {
             setDetailsVisible(false)
-            viewModel.onChooseToken()
+            viewModel.onChooseToToken()
         }
 
         binding.amountPercentage.setOnOptionClickListener(viewModel::optionSelected)
@@ -140,8 +142,14 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
         binding.details.showOrGone(isVisible)
     }
 
-    private fun setUpTokensFromArgs(args: Bundle) {
-        viewModel.setTokensFromArgs(args.tokenFrom, args.tokenToNullable)
+    private fun setUpTokensFromArgs(args: Bundle?) {
+        if (args != null) {
+            val from = args.tokenFromNullable
+            val to = args.tokenToNullable
+            if (from != null || to != null) {
+                viewModel.setTokensFromArgs(from, to)
+            }
+        }
     }
 
     private fun observeViewModel() {
@@ -180,7 +188,7 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
         }
 
         viewModel.liquidityDetailsItems.observe {
-            setDetailsVisible(viewModel.pairNotExists.value == false && it.isNotEmpty())
+            setDetailsVisible(it.isNotEmpty())
             binding.details.setData(it)
         }
 
@@ -197,7 +205,6 @@ class AddLiquidityFragment : BaseFragment<AddLiquidityViewModel>(R.layout.fragme
 
         viewModel.pairNotExists.observeNonNull { pairNotExists ->
             setPairCreationDisclaimerVisibility(pairNotExists)
-            setDetailsVisible(!pairNotExists && viewModel.liquidityDetailsItems.value != null)
         }
     }
 

@@ -10,6 +10,9 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Vibrator
 import com.google.gson.Gson
+import com.goterl.lazysodium.LazySodiumAndroid
+import com.goterl.lazysodium.SodiumAndroid
+import com.goterl.lazysodium.utils.Base64MessageEncoder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,13 +46,15 @@ import jp.co.soramitsu.common.util.EncryptionUtil
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.TextFormatter
+import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
+import jp.co.soramitsu.fearless_utils.encrypt.json.JsonSeedEncoder
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
-import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
-import jp.co.soramitsu.xnetworking.subquery.factory.SubQueryClientForSora
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
-import jp.co.soramitsu.xnetworking.subquery.history.sora.SoraSubqueryResponse
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
+import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWallet
+import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
+import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
@@ -102,20 +107,36 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideSoramitsuCommonNetworking(): SoramitsuNetworkClient =
+    fun provideSoramitsuNetworkClient(): SoramitsuNetworkClient =
         SoramitsuNetworkClient(logging = BuildConfig.DEBUG)
+
+    @Singleton
+    @Provides
+    fun provideSubQueryClientForSoraWalletFactory(
+        @ApplicationContext context: Context
+    ): SubQueryClientForSoraWalletFactory = SubQueryClientForSoraWalletFactory(context)
 
     @Singleton
     @Provides
     fun provideSubQueryClient(
         client: SoramitsuNetworkClient,
-        @ApplicationContext context: Context
-    ): SubQueryClient<SoraSubqueryResponse, SubQueryHistoryItem> = SubQueryClientForSora.build(
-        context = context,
+        factory: SubQueryClientForSoraWalletFactory
+    ): SubQueryClientForSoraWallet = factory.create(
         soramitsuNetworkClient = client,
         baseUrl = FlavorOptionsProvider.soraScanHostUrl,
         pageSize = Const.HISTORY_PAGE_SIZE,
     )
+
+    @Singleton
+    @Provides
+    fun provideSoraWalletBlockExplorerInfo(
+        client: SoramitsuNetworkClient,
+    ): SoraWalletBlockExplorerInfo {
+        return SoraWalletBlockExplorerInfo(
+            networkClient = client,
+            baseUrl = FlavorOptionsProvider.soraScanHostUrl,
+        )
+    }
 
     @Singleton
     @Provides
@@ -143,7 +164,14 @@ class CommonModule {
     @Singleton
     @Provides
     fun provideCryptoAssistant(secureRandom: SecureRandom): CryptoAssistant {
-        return CryptoAssistant(secureRandom, Ed25519Sha3())
+        return CryptoAssistant(
+            secureRandom, Ed25519Sha3(),
+            LazySodiumAndroid(
+                SodiumAndroid(),
+                StandardCharsets.UTF_8,
+                Base64MessageEncoder()
+            )
+        )
     }
 
     @Provides
@@ -157,6 +185,18 @@ class CommonModule {
     @Provides
     @Singleton
     fun provideJsonMapper(): Gson = Gson()
+
+    @Provides
+    @Singleton
+    fun provideJsonAccountsEncoder(
+        gson: Gson,
+        cryptoAssistant: CryptoAssistant,
+        jsonSeedEncoder: JsonSeedEncoder
+    ): JsonAccountsEncoder = JsonAccountsEncoder(gson, cryptoAssistant, jsonSeedEncoder)
+
+    @Provides
+    @Singleton
+    fun provideJsonSeedEncoder(gson: Gson): JsonSeedEncoder = JsonSeedEncoder(gson)
 
     @Provides
     @Singleton

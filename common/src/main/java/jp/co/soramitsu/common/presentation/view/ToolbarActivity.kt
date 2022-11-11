@@ -63,8 +63,8 @@ abstract class ToolbarActivity<T : BaseViewModel, VB : ViewBinding> : AppCompatA
             this,
             EventObserver {
                 AlertDialog.Builder(this)
-                    .setTitle(R.string.common_error_general_title)
-                    .setMessage(it)
+                    .setTitle(it.first)
+                    .setMessage(it.second)
                     .setPositiveButton(R.string.common_ok) { _, _ -> }
                     .show()
             }

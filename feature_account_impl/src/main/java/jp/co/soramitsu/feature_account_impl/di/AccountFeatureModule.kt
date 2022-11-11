@@ -14,6 +14,7 @@ import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_impl.data.repository.UserRepositoryImpl
@@ -29,10 +30,11 @@ class AccountFeatureModule {
     fun provideUserRepository(
         ud: UserDatasource,
         db: AppDatabase,
+        cd: CredentialsDatasource,
         dp: DeviceParamsProvider,
         cm: CoroutineManager,
     ): UserRepository =
-        UserRepositoryImpl(ud, db, dp, cm)
+        UserRepositoryImpl(ud, cd, db, dp, cm)
 
     @Provides
     @Singleton

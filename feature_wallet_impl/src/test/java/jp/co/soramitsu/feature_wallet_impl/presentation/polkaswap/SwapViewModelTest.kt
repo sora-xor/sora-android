@@ -172,8 +172,8 @@ class SwapViewModelTest {
         viewModel.setSwapData(xorToken, valToken, BigDecimal.ONE)
 
         advanceUntilIdle()
-        assertEquals(viewModel.fromAssetLiveData.getOrAwaitValue(), assets[0])
-        assertEquals(viewModel.toAssetLiveData.getOrAwaitValue(), assets[1])
+        assertEquals(viewModel.fromTokenLiveData.getOrAwaitValue(), assets[0].token)
+        assertEquals(viewModel.toTokenLiveData.getOrAwaitValue(), assets[1].token)
         assertFalse(viewModel.swapButtonState.value.enabled)
         assertTrue(viewModel.detailsEnabledLiveData.getOrAwaitValue())
     }
@@ -237,8 +237,8 @@ class SwapViewModelTest {
 
         viewModel.reverseButtonClicked()
 
-        assertEquals(viewModel.fromAssetLiveData.getOrAwaitValue(), assets[1])
-        assertEquals(viewModel.toAssetLiveData.getOrAwaitValue(), assets[0])
+        assertEquals(viewModel.fromTokenLiveData.getOrAwaitValue(), assets[1].token)
+        assertEquals(viewModel.toTokenLiveData.getOrAwaitValue(), assets[0].token)
     }
 
     @Test
@@ -249,13 +249,13 @@ class SwapViewModelTest {
 
         viewModel.fromAssetSelected(fromAsset)
         advanceUntilIdle()
-        assertEquals(viewModel.fromAssetLiveData.getOrAwaitValue(), assets[0])
+        assertEquals(viewModel.fromTokenLiveData.getOrAwaitValue(), assets[0].token)
         assertFalse(viewModel.swapButtonState.value.enabled)
         assertFalse(viewModel.detailsEnabledLiveData.getOrAwaitValue())
 
         viewModel.toAssetSelected(toAsset)
         advanceUntilIdle()
-        assertEquals(viewModel.toAssetLiveData.getOrAwaitValue(), assets[1])
+        assertEquals(viewModel.toTokenLiveData.getOrAwaitValue(), assets[1].token)
         assertFalse(viewModel.swapButtonState.value.enabled)
         assertTrue(viewModel.detailsEnabledLiveData.getOrAwaitValue())
     }
@@ -272,7 +272,7 @@ class SwapViewModelTest {
         viewModel.toCardClicked()
         assertEquals(
             viewModel.showToAssetSelectBottomSheet.getOrAwaitValue(),
-            assetsListItems.filter { it.assetId != viewModel.fromAssetLiveData.getOrAwaitValue().token.id })
+            assetsListItems.filter { it.assetId != viewModel.fromTokenLiveData.getOrAwaitValue().id })
     }
 
     @Test

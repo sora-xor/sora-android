@@ -13,14 +13,15 @@
   <string name="about_website">الموقع الإلكتروني الرسمي</string>
   <string name="about_wiki">للمزيد على Wiki</string>
   <string name="about_youtube">اشترك معنا على اليوتيوب</string>
-  <string name="account_already_imported">Already imported</string>
-  <string name="account_already_imported_description">This wallet is already imported</string>
+  <string name="account_already_imported">مستوردة مسبقا</string>
+  <string name="account_already_imported_description">هذه المحفظة مستوردة مسبقا</string>
   <string name="account_confirmation_title">تأكيد الاستذكار</string>
   <string name="account_confirmation_title_v2">تأكيد عبارة المرور</string>
+  <string name="account_import_default_error">خطأ</string>
   <string name="activity_project">المشروع</string>
   <string name="add_liquidity_alert_text">ستكسب ارباح من الرسوم حسب نسبة حصتك من اجمالي اسهم حوض توفير السيولة.</string>
   <string name="add_liquidity_confirmation_title">تأكيد العرض</string>
-  <string name="add_liquidity_pool_share_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="add_liquidity_pool_share_description">الناتج يقدر. إذا تغير السعر أكثر من %s %% ، فستعود معاملتك.</string>
   <string name="add_liquidity_pool_share_title">اسهمك من الحوض ستكون</string>
   <string name="add_liquidity_pool_title" formatted="false">حوض %s - %s</string>
   <string name="add_liquidity_title">إضافة سيولة</string>
@@ -38,7 +39,7 @@
   <string name="asset_state_error">خطأ</string>
   <string name="asset_val_fullname">عملة مدققي شبكة سورا (VAL)</string>
   <string name="asset_val_name">عملة مدققي شبكة سورا VAL</string>
-  <string name="backup_account_title">Backup Account</string>
+  <string name="backup_account_title">نسخ احتياطي للحساب</string>
   <string name="biometric_dialog_title">توثيق المصادقة</string>
   <string name="block_id">كتلة التجزئة</string>
   <string name="choose_token">اختر عملة</string>
@@ -61,13 +62,15 @@
   <string name="coming_soon">قريبا...</string>
   <string name="common_account">حساب</string>
   <string name="common_add">اضافة</string>
+  <string name="common_add_liquidity">اضف</string>
   <string name="common_advanced_settings">إعدادات متقدمة</string>
   <string name="common_and">و</string>
   <string name="common_app_version">إصدار التطبيق</string>
   <string name="common_apply">تقديم</string>
   <string name="common_arab">العربية</string>
   <string name="common_asset">عملة</string>
-  <string name="common_back">Back</string>
+  <string name="common_back">رجوع</string>
+  <string name="common_backup">نسخ احتياطي</string>
   <string name="common_balance">الرصيد</string>
   <string name="common_bashkir">بشكير</string>
   <string name="common_camera">الكاميرا</string>
@@ -105,7 +108,7 @@
   <string name="common_error_mnemonic_is_not_valid">كلمات الإستذكار الأولية غير صحيحة. الرجاء المحاولة مرة أخرى</string>
   <string name="common_error_mnemonic_length_error">يجب أن تتكون كلمات الإستذكار الأولية من ١٥ كلمة</string>
   <string name="common_error_network">الرجاء التحقق من اتصال الإنترنت وإعادة المحاولة لاحقًا.</string>
-  <string name="common_error_no_browser_error">Please install a browser to open the link</string>
+  <string name="common_error_no_browser_error">الرجاء تثبيت متصفح لفتح الرابط</string>
   <string name="common_error_not_enough_invitations">نأسف، ليس لديك أي دعوات للمشاركة</string>
   <string name="common_error_not_found_title">مصدر غير متاح</string>
   <string name="common_error_phone_already_exists">عذرًا ، رقم الهاتف هذا قيد الاستخدام بالفعل. من فضلك ، جرب واحدا أخر.</string>
@@ -115,7 +118,8 @@
   <string name="common_error_project_not_found">عذراً، لم يتم العثور على المشروع.</string>
   <string name="common_error_retry">حاول مرة اخرى</string>
   <string name="common_error_search_string_error">يجب أن يكون حجم البحث بين 3 و 64 حرفًا</string>
-  <string name="common_error_seed_is_not_valid">Please make sure that your input contains 64 hex symbols.</string>
+  <string name="common_error_seed_is_not_valid">فضلاً، تأكد من ان مدخلاتك تتضمن 64 رمز عرفي (Hex)</string>
+  <string name="common_error_seed_is_not_valid_title">الرمز الأولي غير صالح</string>
   <string name="common_error_self_invitation">لا يمكنك استخدام رمز الدعوة الخاص بك لنفسك</string>
   <string name="common_error_unauthorized_body">الرجاء التحقق من اتصال الإنترنت وإعادة المحاولة لاحقًا.</string>
   <string name="common_error_unauthorized_title">محاولة فاشلة للولوج</string>
@@ -154,7 +158,7 @@
   <string name="common_malay">لغة الملايو</string>
   <string name="common_manage">إدارة</string>
   <string name="common_min">دقيقة</string>
-  <string name="common_name">Name</string>
+  <string name="common_name">الاسم</string>
   <string name="common_network_unavailable">شبكة الاتصال غير متوفرة</string>
   <string name="common_next">التالي</string>
   <string name="common_norwegian">النرويجية</string>
@@ -179,7 +183,7 @@
   <string name="common_personal_info_last_name_is_empty">خانة اسم العائلة فارغة</string>
   <string name="common_personal_info_title">المعلومات الشخصية</string>
   <string name="common_please_wait">الرجاء الانتظار</string>
-  <string name="common_raw_seed">Raw seed</string>
+  <string name="common_raw_seed">الرمز السري(Raw Seed)</string>
   <string name="common_receive">استلام</string>
   <string name="common_received">تم الاستلام</string>
   <string name="common_recipient">المستلم</string>
@@ -192,6 +196,7 @@
   <string name="common_sec">ثانية</string>
   <string name="common_select_asset">اختر عملة</string>
   <string name="common_select_email_app_title">اختيار تطبيق البريد الإلكتروني</string>
+  <string name="common_select_node">حدد العقدة</string>
   <string name="common_send">إرسال</string>
   <string name="common_sender">المرسل</string>
   <string name="common_sent">تم الإرسال</string>
@@ -203,6 +208,7 @@
   <string name="common_sms_code_not_correct">رمز التحقق غير صحيح</string>
   <string name="common_spanish">الإسبانية</string>
   <string name="common_spanish_colombia">الإسبانية (كولومبيا)</string>
+  <string name="common_submit">إرسال</string>
   <string name="common_supply">المعروض</string>
   <string name="common_swedish">السويدية</string>
   <string name="common_terms_title">الشروط والأحكام</string>
@@ -244,26 +250,46 @@
   <string name="error_miner_fee_title">رصيدك لا يكفي لتغطية رسوم التدقيق</string>
   <string name="error_transaction_fee_title">ارصدة غير كافية لرسوم المعاملة</string>
   <string name="ethereum_config_unavailable">عقدة إيثريوم غير متوفرة</string>
-  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
-  <string name="export_account_details_backup_options">Backup options</string>
-  <string name="export_account_details_show_passphrase">Show Passphrase</string>
-  <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
+  <string name="export_account_details_backup_description">إذا فقدت الوصول إلى هذا الجهاز ، فستفقد أموالك ، ما لم تقم بعمل نسخة احتياطية!</string>
+  <string name="export_account_details_backup_options">خيارات النسخ الاحتياطي</string>
+  <string name="export_account_details_show_passphrase">عرض الرمز السري الأولي(Passphrase)</string>
+  <string name="export_account_details_show_raw_seed">عرض الكلمات السرية (Raw Seed)</string>
+  <string name="export_account_options">افتح خيارات الحساب</string>
+  <string name="export_json_description">كلمة المرور مطلوبة لتشفير حسابك وحفظه كـJSON   معاد تخزينه. الرجاء انشاء كلمة مرور لمتابعة العملية.</string>
+  <string name="export_json_download_json">تحميل JSON</string>
+  <string name="export_json_input_confirmation_label">تأكيد كلمة المرور</string>
+  <string name="export_json_input_label">قم بتعيين كلمة مرور لملف JSON</string>
+  <string name="export_protection_json_1">إذا فقدت رمزي السري الأوليJSON  ، فستضيع أموالي إلى الأبد.</string>
+  <string name="export_protection_json_2">إذا قمت بكشف الرمز الأولي JSON الخاص بي أو مشاركته مع أي شخص ، فقد تتم سرقة أموالي.</string>
+  <string name="export_protection_json_3">من مسؤوليتي الكاملة الحفاظ على أمان JSON الخاص بي.</string>
+  <string name="export_protection_json_description">في الخطوة التالية ، ستتمكن من تنزيل ملف JSON يسمح لك باستعادة حساباتك.</string>
+  <string name="export_protection_json_title">تصدير JSON</string>
+  <string name="export_protection_passphrase_1">إذا فقدت رمزي السري الأولي (Passphrase) ، فستضيع أموالي إلى الأبد.</string>
+  <string name="export_protection_passphrase_2">إذا قمت بكشف الرمز السري الأولي  (Passphrase) الخاص بي أو مشاركته مع أي شخص ، فقد تتم سرقة أموالي.</string>
+  <string name="export_protection_passphrase_3">إنها مسؤوليتي الكاملة أن أبقي الرمز الأولي (Passphrase) آمنًا.</string>
+  <string name="export_protection_passphrase_description">في الخطوة التالية ، سترى عبارة المرور Passphrase (12 كلمة) التي تتيح لك استرداد حساب.</string>
+  <string name="export_protection_passphrase_title">الكلمات الأولية(Passphrase)</string>
+  <string name="export_protection_seed_1">إذا فقدت رمزي السري الأولي(Raw Seed) ، فستضيع أموالي إلى الأبد.</string>
+  <string name="export_protection_seed_2">إذا قمت بكشف الرمز الأولي (Raw Seed)  الخاص بي أو مشاركته مع أي شخص ، فقد تتم سرقة أموالي.</string>
+  <string name="export_protection_seed_3">إنها مسؤوليتي الكاملة أن أبقي الرمز الأولي آمنًا.</string>
+  <string name="export_protection_seed_description">في الخطوة التالية ، سترى Raw Seed (تجزئة طويلة) تسمح لك باسترداد حساب.</string>
+  <string name="export_select_account">حدد حسابا للتصدير الدفعي</string>
   <string name="faq_title">الأسئلة الشائعة</string>
   <string name="friends_spread_word">انشر الخبر وشارك التطبيق مع أصدقائك.</string>
   <string name="from_account">من حساب</string>
-  <string name="history_bonded_tokens">Bonded XOR tokens</string>
+  <string name="history_bonded_tokens">الرموز المميزة XOR  المقيدة</string>
   <string name="history_receive">مستلم</string>
-  <string name="history_referral">Referral</string>
-  <string name="history_referral_bond_tokens">Bond tokens</string>
-  <string name="history_referral_set_referral">Set referral</string>
-  <string name="history_referral_set_referrer">Set referrer</string>
-  <string name="history_referral_unbond_tokens">Unbond tokens</string>
-  <string name="history_referrer">Referrer</string>
+  <string name="history_referral">الإحالة</string>
+  <string name="history_referral_bond_tokens">ربط العملات</string>
+  <string name="history_referral_set_referral">تعيين الإحالة</string>
+  <string name="history_referral_set_referrer">تعيين المحيل</string>
+  <string name="history_referral_unbond_tokens">فك ربط العملات</string>
+  <string name="history_referrer">المحيل</string>
   <string name="history_send">إرسال</string>
   <string name="history_swap">مبادلة</string>
   <string name="history_title">الأحداث الأخيرة</string>
-  <string name="history_unbonded_tokens">Unbonded XOR tokens</string>
-  <string name="import_account_raw_seed">You have imported this account via Raw Seed</string>
+  <string name="history_unbonded_tokens">رموز XOR غير المقيدة</string>
+  <string name="import_account_raw_seed">لقد قمت باستيراد هذا الحساب عبر Raw Seed</string>
   <string name="invite_accepted_empty_state_title">لا دعوات مقبولة حتى الان.</string>
   <string name="invite_accepted_invitations_title">الدعوات المقبولة</string>
   <string name="invite_accepted_someone">شخص ما قبل الدعوة</string>
@@ -296,6 +322,7 @@
   <string name="liquidity_pair_creation_title">انت اول موفر سيولة</string>
   <string name="liquidity_removed">السيولة %s المزالة</string>
   <string name="logout_dialog_body">سيؤدي هذا الإجراء إلى حذف الحساب من هذا الجهاز. تأكد من حفظ نسخة احتياطية من كدمات الإستذكار الأولية قبل المتابعة.</string>
+  <string name="logout_remove_nodes_body">\n \n ستتم إزالة جميع العقد المخصصة أيضًا</string>
   <string name="mnemonic_alert_text">كلمات الإستذكار الأولية تستخدم لاستعادة الدخول إلى الحساب. اكتبها لديك، فلن نتمكن من استعادة حسابك بدونها!</string>
   <string name="mnemonic_confirm_text">قم بالتأكيد باختيار الكلمات بالترتيب الصحيح</string>
   <string name="mnemonic_confirm_text_v2">قم بتأكيد عبارة المرور عن طريق اختيار الكلمات بالترتيب الصحيح</string>
@@ -303,6 +330,10 @@
   <string name="mnemonic_invalid_title">الكلمات الاولية للمرور غير صالحة</string>
   <string name="mnemonic_text">استخدم وسائل غير رقمية لحفظ بيانات الاسترجاع، كأن تكتبها على ورقة خارجية وتحفظ في مكان آمن.</string>
   <string name="mnemonic_title">استعادة كلمات الاستذكار الأولية</string>
+  <string name="node_details_address_validation_failed">فشل التحقق من صحة URL (عنوان خاطئ)</string>
+  <string name="node_details_genesis_validation_failed">يختلف تجزئة نشأة العقدة عن تجزئة تكوين الشبكة</string>
+  <string name="node_details_node_already_added" formatted="false">تمت إضافة هذه العقدة مسبقا: %s \n تم الاتصال بالعقدة %s</string>
+  <string name="node_details_protocol_validation_failed">فشل التحقق من صحة URL (بروتوكول URL خاطئ)</string>
   <string name="parliament_coming_soon">الحوكمة على شبكة سورا</string>
   <string name="personal_details_info">اسم هذا الحساب وكيف سيظهر تحت عنوانك. مع هوية على البلوكتشن، يمكن أن تتم اتاحته للآخرين.</string>
   <string name="personal_info_inv_code_hint">رمز الدعوة (اختياري)</string>
@@ -314,10 +345,11 @@
   <string name="phone_number_sms_code_will_be_sent">سيتم ارسال الرمز الى هاتفك عبر رسالة قصيرة</string>
   <string name="phone_number_title">التسجيل</string>
   <string name="phone_verification_too_frequent_message">تكررت محاولات ادخال رمز التحقق كثيراً. من فضلك، حاول مرة أخرى لاحقاً.</string>
-  <string name="pin_update_button_text">SET NEW PIN</string>
-  <string name="pin_update_info_description">Security policy has been improved for your protection.</string>
-  <string name="pin_update_info_subtitle">Please set a new 6 digit PIN.</string>
-  <string name="pin_update_info_title">4 digit PIN is no longer supported</string>
+  <string name="pin_locked_for_title">Locked  for %s</string>
+  <string name="pin_update_button_text">تعيين رقم تعريف شخصي جديد</string>
+  <string name="pin_update_info_description">تم تحسين سياسة الأمان لحمايتك.</string>
+  <string name="pin_update_info_subtitle">يرجى تعيين رقم تعريف شخصي جديد مكون من 6 أرقام.</string>
+  <string name="pin_update_info_title">لم يعد رقم التعريف الشخصي المكون من 4 أرقام مدعومًا</string>
   <string name="pincode_change_success">تم تغيير رمز الواجهة بنجاح</string>
   <string name="pincode_change_success_v1">تم تغيير رمز PIN</string>
   <string name="pincode_confirm_new_pin_code">قم بتأكيد رمز الواجهة الجديد</string>
@@ -326,13 +358,14 @@
   <string name="pincode_enter_new_pin_code">أدخل  رمز الواجهة الجديد</string>
   <string name="pincode_enter_pin_code">أدخل الرمز السري</string>
   <string name="pincode_fingerprint_error">لم يتم التعرف عليك. حاول مرة اخرى</string>
+  <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_repeat_error">خطأ في تكرار رمز الراجهة</string>
   <string name="pincode_set_your_pin_code">إعداد رمز الواجهة</string>
   <string name="pincode_touch_fingerprint_scanner">إلمس الماسح الضوئي للبصمة</string>
   <string name="pincode_updated">تم تحديث شفرة رمز الواجهة</string>
   <string name="polkaswap_button_swap_again">التبديل مرة اخرى</string>
   <string name="polkaswap_coming_soon">مستقبل منصة التداول اللامركزية للتشغيل البيني. بولكاسواب (PolkaSwap) هو بروتوكول AMM-DEX لا يخضع لأي وصاية مركزية لمبادلة الرموز بناءً على شبكة Polkadot و Parachains والشبكات الاخرى المتصلة عبر جسر. يزيل بروتوكول بولكاسواب بشكل فعال الوسطاء الموثوق بهم ويوفر فرصة لتداول أسرع.</string>
-  <string name="polkaswap_common_info">You will earn fees proportional to your share of the pool from liquidity provision.</string>
+  <string name="polkaswap_common_info">ستكسب ارباح من الرسوم حسب نسبة حصتك من اجمالي اسهم حوض توفير السيولة.</string>
   <string name="polkaswap_confirm_swap">تأكيد المبادلة</string>
   <string name="polkaswap_details">تفاصيل</string>
   <string name="polkaswap_error_noswap">لا مبادلة</string>
@@ -356,10 +389,10 @@
   <string name="polkaswap_liqudity_fee_info">يذهب جزء من كل صفقة (0.3٪) إلى موفري السيولة كحوافز للبروتوكول.</string>
   <string name="polkaswap_market">سوق</string>
   <string name="polkaswap_market_info">خوارزمية السوق - هي خيار بين السوق الأولية (TBC) أو السوق الثانوية (XYK) أو خوارزمية ذكية تجمع بينهما لضمان أفضل سعر لأي معاملة يتم تعيينا.</string>
-  <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
-  <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
+  <string name="polkaswap_market_smart_description">يضمن توجيه السيولة SMART أفضل سعر لأي معاملة من خلال الجمع بين أفضل خيارات الأسعار فقط من جميع الأسواق المتاحة. عند توفرها ، سيتم استخدام Token Bonding Curve (TBC) للسيولة طالما أن سعر الأصل في المتناول أكثر من أي مصادر أخرى ، حيث يتم استخدام مجمع XYK.</string>
+  <string name="polkaswap_market_tbc_description">TBC - الشراء فقط من منحنى الترابط المميز (السوق الأولية). هناك احتمال أن يصبح السعر غير مغري مقارنة بتجمع XYK (السوق الثانوية) ، ولكن القيمة المستلمة من المكافآت المكتسبة قد تكون أكثر ملاءمة بمرور الوقت.</string>
   <string name="polkaswap_market_title">خوارزمية السوق</string>
-  <string name="polkaswap_market_xyk_description">XYK — buying only from the XYK pool (Secondary Market). Traditional XYK pool swap where anyone can buy or sell assets by shifting the market maker’s position on the x*y=k curve.</string>
+  <string name="polkaswap_market_xyk_description">XYK - الشراء فقط من تجمع XYK (السوق الثانوية). مقايضة تجمع XYK التقليدية حيث يمكن لأي شخص شراء أو بيع الأصول عن طريق تغيير مركز صانع السوق على منحنى x * y = k.</string>
   <string name="polkaswap_maximum_sold">الحد الاعلى المباع</string>
   <string name="polkaswap_maximum_sold_info">ستتعثر وتسترجع معاملتك حال طرأت حركة سعرية بفارق كبير قبل اتمامها.</string>
   <string name="polkaswap_minimum_received">الحد الأدنى المحصّل</string>
@@ -370,21 +403,21 @@
   <string name="polkaswap_output_estimated">يتم تقدير النتائج. سوف تتلقى على الأقل %s أو ستتعثر المعاملة وتسترجع.</string>
   <string name="polkaswap_pool_not_created">لم يتم إنشاء الحوض</string>
   <string name="polkaswap_pool_title">حوض</string>
-  <string name="polkaswap_price_for_one">PRICE 1</string>
-  <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
+  <string name="polkaswap_price_for_one">السعر 1</string>
+  <string name="polkaswap_sb_apy_info">مكافأة الزراعة لتوفير السيولة</string>
   <string name="polkaswap_sbapy">SB APY</string>
   <string name="polkaswap_slippage_frontrun">قد تكون معاملتك قيد التشغيل الأمامي</string>
   <string name="polkaswap_slippage_info">ستتعثر وتسترجع معاملتك حال تغير السعر بشكل غير مقبول يفوق هذه النسبة المئوية.</string>
   <string name="polkaswap_slippage_mayfail">معاملتك قد تفشل</string>
   <string name="polkaswap_slippage_tolerance">نطاق التذبذب السعري المسموح</string>
   <string name="polkaswap_smart">ذكي</string>
-  <string name="polkaswap_swap_empty_list">You don’t have any active pools yet.\nAdd liquidity to earn rewards</string>
+  <string name="polkaswap_swap_empty_list">ليس لديك أي حوض نشط حتى الآن. \n أضف السيولة لكسب المكافآت</string>
   <string name="polkaswap_swap_title">تبديل</string>
   <string name="polkaswap_swapped">تمت المبادلة</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
   <string name="polkaswap_your_position">حالة عقدك (تقديرياً)</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
+  <string name="pool_apy_title">APY المكافأة الاستراتيجية</string>
   <string name="pool_button_add">اضافة</string>
   <string name="pool_button_remove">إزالة</string>
   <string name="pool_liqudity_title">سيولتك</string>
@@ -441,15 +474,15 @@
   <string name="project_you_can_vote_at_least_1_point">يمكنك التصويت بنقطة واحدة على الأقل 😜</string>
   <string name="qr_code">رمز الاستجابة السريعة QR</string>
   <string name="qr_upload">التحميل من معرض الصور</string>
-  <string name="recovery_alert_raw_seed_description">You will not be able to use passphrase when recovering using Raw Seed</string>
-  <string name="recovery_alert_raw_seed_title">Recovering from Raw Seed</string>
+  <string name="recovery_alert_raw_seed_description">لن تتمكن من استخدام (Passphrase) عند استرجاع الحساب باستخدام Raw Seed</string>
+  <string name="recovery_alert_raw_seed_title">استرجاع الحساب باستخدام (Raw Seed)</string>
   <string name="recovery_body_subtitle">للأسف لا توجد طريقة للوصول إلى حسابك عندما تفقد كلمات الاستذكار الأولية</string>
   <string name="recovery_body_title">أدخل عبارة المرور</string>
-  <string name="recovery_input_raw_seed_hint">Raw Seed (64 hex symbols)</string>
+  <string name="recovery_input_raw_seed_hint">64 رمز عرفي (Hex)(Raw Seed)</string>
   <string name="recovery_mnemonic_passphrase">كلمات الإستذكار الأولية</string>
   <string name="recovery_passphrase">استعادة الوصول</string>
   <string name="recovery_source_type">نوع المصدر</string>
-  <string name="recovery_source_type_1">Choose source type</string>
+  <string name="recovery_source_type_1">اختر نوع المصدر</string>
   <string name="recovery_title">استيراد حساب</string>
   <string name="referenda_title">الاستفتاءات</string>
   <string name="referenda_title_vote">التصويت على الاستفتاءات</string>
@@ -473,29 +506,32 @@
   <string name="referendum_total_votes">مجموع الأصوات</string>
   <string name="referendum_unsupport_title">لا</string>
   <string name="referendum_voting_result">نتيجة التصويت</string>
-  <string name="referral_activate_button_title">Activate</string>
-  <string name="referral_bond_button_title">Bond XOR</string>
-  <string name="referral_enter_link_title">Enter referrer\'s link</string>
-  <string name="referral_get_more_invitation_button_title">Get more invitations</string>
-  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\n\nYou can unbond your XOR at any time for unused invitations.</string>
-  <string name="referral_input_reward_title">Enter desired amount of invitations</string>
-  <string name="referral_invitaion_link_title">Available invitations</string>
-  <string name="referral_referral_link">Referrer’s link or address</string>
-  <string name="referral_referrer_address">Referrer\'s address</string>
-  <string name="referral_referrer_description">Whenever you make a transaction, 10% of the network fee paid goes to your referrer as a reward.</string>
-  <string name="referral_start_inviting">Start inviting</string>
-  <string name="referral_subtitle">Whenever your referral makes a transaction, 10% of the network fee paid goes to you as a reward.</string>
-  <string name="referral_title">Get 10% of your referrals’ network fees</string>
-  <string name="referral_toolbar_title">Referral program</string>
-  <string name="referral_total_rewards">Total rewards</string>
-  <string name="referral_unbond_button_title">Unbond XOR</string>
-  <string name="referral_unbond_xor_description">You can unbond %s per 1 invitations. How many invitations do you want to withdraw?</string>
-  <string name="referral_your_invitation_link_title">Your invitation link</string>
-  <string name="referral_your_referrals">Your referrals</string>
-  <string name="referral_your_referrer">Your referrer</string>
+  <string name="referral_activate_button_title">تفعيل</string>
+  <string name="referral_bond_button_title">ربط XOR</string>
+  <string name="referral_enter_link_title">أدخل رابط المحيل</string>
+  <string name="referral_get_more_invitation_button_title">الحصول على المزيد من الدعوات</string>
+  <string name="referral_input_reward_description">%s مُلزمة لكل دعوة لتغطية رسوم الشبكة التي يمكن لأصدقائك الانضمام إليها. \n \n يمكنك إلغاء ربط XOR في أي وقت للدعوات غير المستخدمة.</string>
+  <string name="referral_input_reward_title">أدخل المبلغ المطلوب من الدعوات</string>
+  <string name="referral_invitaion_link_title">الدعوات المتاحة</string>
+  <string name="referral_referral_link">رابط المحيل أو عنوانه</string>
+  <string name="referral_referrer_address">عنوان المحيل</string>
+  <string name="referral_referrer_description">عندما تقوم بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إلى المحيل الخاص بك كمكافأة.</string>
+  <string name="referral_start_inviting">ابدأ بالدعوة</string>
+  <string name="referral_subtitle">كلما قامت إحالتك بإجراء معاملة ، فإن 10٪ من رسوم الشبكة المدفوعة تذهب إليك كمكافأة.</string>
+  <string name="referral_title">احصل على 10٪ من رسوم شبكة الإحالات الخاصة بك</string>
+  <string name="referral_toolbar_title">برنامج الإحالة</string>
+  <string name="referral_total_rewards">إجمالي المكافآت</string>
+  <string name="referral_unbond_button_title">فك ربط XOR</string>
+  <string name="referral_unbond_xor_description">يمكنك إلغاء ربط %s لكل دعوة واحدة. كم عدد الدعوات التي تريد سحبها؟</string>
+  <string name="referral_your_invitation_link_title">رابط الإحالة الخاص بك</string>
+  <string name="referral_your_referrals">الإحالات الخاصة بك</string>
+  <string name="referral_your_referrer">المُحيل الخاص بك</string>
   <string name="remove_liquidity_info_text">إزالة السيولة سيؤدي إلى تحويل حالة العقد الى العملات الاصلية بمعدل الصرف الحالي، وذلك بما يتناسب مع حصتك من اسهم الحوض. ارباحك من الرسوم ستكون مضمنة مع المبلغ الناتج عن سحب السيولة</string>
   <string name="remove_liquidity_title">إزالة السيولة</string>
-  <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
+  <string name="remove_node_error_message">لحذف هذه العقدة ، يرجى الاتصال بواحدة أخرى</string>
+  <string name="remove_node_error_title">تعذر حذف العقدة المتصلة</string>
+  <string name="remove_node_title">هل تريد حقًا إزالة هذه العقدة؟</string>
+  <string name="remove_pool_confirmation_description">الناتج يقدر. إذا تغير السعر أكثر من %s %% ، فستعود معاملتك.</string>
   <string name="remove_pool_confirmation_title">تأكيد الإزالة</string>
   <string name="restart_required">إعادة التشغيل مطلوبة</string>
   <string name="screenshot_alert_text">لا تلتقط صورة للشاشة فقد ترصدها برمجيات ضارة من لطرف ثالث عابث.</string>
@@ -505,6 +541,19 @@
   <string name="select_account_address_1">بحث أو إضافة عنوان جديد</string>
   <string name="select_asset_receive">تحديد الأصل المطلوب استلامه</string>
   <string name="select_asset_send">تحديد الأصل لإرساله</string>
+  <string name="select_node_add_custom_node">أضف عقدة مخصصة</string>
+  <string name="select_node_add_node">إضافة عُقدة (Node)</string>
+  <string name="select_node_custom_node_edit_node">تحرير العقدة</string>
+  <string name="select_node_custom_nodes">العقد المخصصة</string>
+  <string name="select_node_default_nodes">العقد الافتراضية</string>
+  <string name="select_node_how_to_run_node">كيفية تشغيل العقدة</string>
+  <string name="select_node_node_address">عنوان العُقدة</string>
+  <string name="select_node_node_details">تفاصيل العقدة</string>
+  <string name="select_node_node_name">اسم العقدة</string>
+  <string name="select_node_switch_alert_title">هل تريد تبديل العقدة؟</string>
+  <string name="select_node_switch_succeed">تم تبديل العقدة بنجاح</string>
+  <string name="select_node_unable_join_node_message">الرجاء معاودة المحاولة في وقت لاحق</string>
+  <string name="select_node_unable_join_node_title">تعذر الانضمام إلى العقدة</string>
   <string name="select_recipient">حدد المستلم</string>
   <string name="set_amount">حدد الكمية</string>
   <string name="settings_accounts">الحسابات</string>
@@ -608,8 +657,8 @@
   <string name="wallet_transaction_rejected">المعاملة مرفوضة</string>
   <string name="wallet_transaction_submitted">تم تسجيل المعاملة</string>
   <string name="wallet_transaction_submitted_1">المعاملة \n تم تسجيلها</string>
-  <string name="wallet_transactions_unavailable_description">The issue is getting dealt with,\n please try again later.</string>
-  <string name="wallet_transactions_unavailable_title">Couldn’t load transactions</string>
+  <string name="wallet_transactions_unavailable_description">فشلت عمليت التحويل. من فضلك، حاول مرة أخرى لاحقاً.</string>
+  <string name="wallet_transactions_unavailable_title">تعذر تحميل المعاملات</string>
   <string name="wallet_transfer_description_hint">الحد الأقصى للرموز %s</string>
   <string name="wallet_transfer_to_ethereum">الى حساب محفظة الايثيريوم</string>
   <string name="wallet_unbonding">إلغاء السند</string>

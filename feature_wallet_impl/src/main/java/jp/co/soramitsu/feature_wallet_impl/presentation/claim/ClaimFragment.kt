@@ -18,7 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.util.ext.createSendEmailIntent
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.highlightWords
 import jp.co.soramitsu.common.util.ext.onBackPressed
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
@@ -26,7 +26,6 @@ import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentClaimBinding
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -34,9 +33,6 @@ class ClaimFragment : BaseFragment<ClaimViewModel>(R.layout.fragment_claim) {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
-
-    @Inject
-    lateinit var cma: ConnectionManager
 
     private lateinit var progressDialog: SoraProgressDialog
     private val viewBinding by viewBinding(FragmentClaimBinding::bind)
@@ -60,14 +56,15 @@ class ClaimFragment : BaseFragment<ClaimViewModel>(R.layout.fragment_claim) {
             viewModel.nextButtonClicked(requireContext())
         }
         viewModel.openSendEmailEvent.observe {
-            requireActivity().createSendEmailIntent(
-                it,
-                getString(R.string.common_select_email_app_title)
-            )
+            context?.let { c ->
+                ShareUtil.sendEmail(c, it, getString(R.string.common_select_email_app_title))
+            }
         }
         viewModel.buttonPendingStatusLiveData.observe {
-            viewBinding.claimSubtitle.text = if (it) getString(R.string.claim_subtitle_confirmed_2) else getString(R.string.claim_subtitle)
-            viewBinding.claimSubtitle.gravity = if (it) Gravity.CENTER_HORIZONTAL else Gravity.NO_GRAVITY
+            viewBinding.claimSubtitle.text =
+                if (it) getString(R.string.claim_subtitle_confirmed_2) else getString(R.string.claim_subtitle)
+            viewBinding.claimSubtitle.gravity =
+                if (it) Gravity.CENTER_HORIZONTAL else Gravity.NO_GRAVITY
             viewBinding.claimSubtitle1.showOrHide(it)
             viewBinding.nextBtn.showOrHide(!it)
             viewBinding.loadingLayout.showOrHide(it)

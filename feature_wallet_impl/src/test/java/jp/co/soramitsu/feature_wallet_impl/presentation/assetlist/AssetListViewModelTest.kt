@@ -11,6 +11,7 @@ import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.view.assetselectbottomsheet.adapter.AssetListItemModel
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.PolkaswapInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.AssetListMode
 import jp.co.soramitsu.feature_wallet_api.domain.model.ReceiveAssetModel
@@ -25,8 +26,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers
-import org.mockito.BDDMockito.anyBoolean
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -47,6 +46,9 @@ class AssetListViewModelTest {
     private lateinit var walletInteractor: WalletInteractor
 
     @Mock
+    private lateinit var polkaswapInteractor: PolkaswapInteractor
+
+    @Mock
     private lateinit var router: WalletRouter
 
     private lateinit var viewModel: AssetListViewModel
@@ -60,6 +62,7 @@ class AssetListViewModelTest {
     fun `test back click`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.RECEIVE
@@ -72,6 +75,7 @@ class AssetListViewModelTest {
     fun `test router receive mode`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.RECEIVE
@@ -94,6 +98,7 @@ class AssetListViewModelTest {
     fun `test router send mode`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.SEND
@@ -114,12 +119,12 @@ class AssetListViewModelTest {
 
     @Test
     fun `test router select for liquidity mode`() = runTest {
-        given(walletInteractor.getFeeToken()).willReturn(AssetListTestData.FIRST_TOKEN)
         given(walletInteractor.getAssetOrThrow(AssetListTestData.SECOND_TOKEN.id)).willReturn(
             AssetListTestData.SECOND_ASSET
         )
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.SELECT_FOR_LIQUIDITY
@@ -128,7 +133,7 @@ class AssetListViewModelTest {
         viewModel.itemClicked(AssetListTestData.SECOND_ASSET_LIST_ITEM_MODEL)
         advanceUntilIdle()
         verify(router).returnToAddLiquidity(
-            AssetListTestData.FIRST_TOKEN,
+            null,
             AssetListTestData.SECOND_TOKEN
         )
     }
@@ -137,6 +142,7 @@ class AssetListViewModelTest {
     fun `set filter value`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.SEND
@@ -153,6 +159,7 @@ class AssetListViewModelTest {
     fun `set filter value empty`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.SEND
@@ -169,6 +176,7 @@ class AssetListViewModelTest {
     fun `test init receive asset`() = runTest {
         viewModel = AssetListViewModel(
             walletInteractor,
+            polkaswapInteractor,
             NumbersFormatter(),
             router,
             AssetListMode.RECEIVE

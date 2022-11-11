@@ -43,6 +43,7 @@ class AppStateProviderImpl : AppStateProvider, LifecycleEventObserver {
             Lifecycle.Event.ON_DESTROY -> {
                 subject.value = AppStateProvider.AppEvent.ON_DESTROY
             }
+            else -> {}
         }
     }
 }

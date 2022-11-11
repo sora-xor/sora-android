@@ -26,10 +26,13 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -69,7 +72,7 @@ class UserRepositoryTest {
     lateinit var coroutineManager: CoroutineManager
 
     @MockK
-    lateinit var languagesHolder: LanguagesHolder
+    lateinit var credentialsDatasource: CredentialsDatasource
 
     private lateinit var userRepository: UserRepositoryImpl
 
@@ -89,6 +92,7 @@ class UserRepositoryTest {
         every { coroutineManager.applicationScope } returns this
         userRepository = UserRepositoryImpl(
             userDatasource,
+            credentialsDatasource,
             db,
             deviceParamsProvider,
             coroutineManager
@@ -109,10 +113,71 @@ class UserRepositoryTest {
     }
 
     @Test
-    fun `get account name`() = runTest {
+    fun `get cur account called`() = runTest {
         val accountName = "accountName"
-        userRepository.initCurSoraAccount()
         assertEquals(accountName, userRepository.getCurSoraAccount().accountName)
+    }
+
+    @Test
+    fun `set cur account called`() = runTest {
+        coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
+
+        userRepository.setCurSoraAccount(soraAccount)
+
+        coVerify { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) }
+    }
+
+    @Test
+    fun `set cur account called with address`() = runTest {
+        coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
+        coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(soraAccount.substrateAddress, soraAccount.accountName)
+
+        userRepository.setCurSoraAccount(soraAccount.substrateAddress)
+
+        coVerify { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) }
+        coVerify { accountDao.getAccount(soraAccount.substrateAddress) }
+    }
+
+    @Test
+    fun `flow cur account list called`() = runTest {
+        coEvery { accountDao.flowAccounts() } returns flow { emit(listOf(SoraAccountLocal("accountAddress", "accountName"))) }
+        val accounts = listOf(SoraAccount("accountAddress", "accountName"))
+
+        assertEquals(accounts, userRepository.flowSoraAccountsList().first())
+    }
+
+    @Test
+    fun `flow sora accounts called`() = runTest {
+        coEvery { referralsDao.clearTable() } returns Unit
+        val curAccount = SoraAccount("accountAddress", "accountName")
+
+        assertEquals(curAccount, userRepository.flowCurSoraAccount().first())
+
+        coVerify { referralsDao.clearTable() }
+    }
+
+    @Test
+    fun `get sora accounts list called`() = runTest {
+        coEvery { accountDao.getAccounts() } returns listOf(SoraAccountLocal("accountAddress", "accountName"))
+        val accounts = listOf(SoraAccount("accountAddress", "accountName"))
+
+        assertEquals(accounts, userRepository.soraAccountsList())
+    }
+
+    @Test
+    fun `get sora accounts count called`() = runTest {
+        coEvery { accountDao.getAccountsCount() } returns 3
+
+        assertEquals(3, userRepository.getSoraAccountsCount())
+    }
+
+    @Test
+    fun `insert sora account count called`() = runTest {
+        coEvery { accountDao.insertSoraAccount(SoraAccountLocal("accountAddress", "accountName")) } returns Unit
+
+        val soraAccount = SoraAccount("accountAddress", "accountName")
+
+        userRepository.insertSoraAccount(soraAccount)
     }
 
     @Test
@@ -122,8 +187,7 @@ class UserRepositoryTest {
         coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
         coEvery { accountDao.updateAccountName(accountName, soraAccount.substrateAddress) } returns Unit
         coEvery { referralsDao.clearTable() } returns Unit
-        userRepository.initCurSoraAccount()
-        coVerify(exactly = 2) { accountDao.getAccount(accountAddress) }
+        coVerify(exactly = 1) { accountDao.getAccount(accountAddress) }
         userRepository.updateAccountName(soraAccount, accountName)
         coVerify { accountDao.updateAccountName(accountName, soraAccount.substrateAddress) }
     }
@@ -236,5 +300,76 @@ class UserRepositoryTest {
         every { userDatasource.changeLanguage(language) } returns Unit
         assertEquals(language, userRepository.changeLanguage(language))
         verify { userDatasource.changeLanguage(language) }
+    }
+
+    @Test
+    fun `clear account data called`() = runTest {
+        val address = "address"
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val lambda = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+            lambda.captured.invoke()
+        }
+        every { db.accountDao() } returns accountDao
+        every { db.referralsDao() } returns referralsDao
+        coEvery { accountDao.clearAccount(address) } returns Unit
+        coEvery { referralsDao.clearTable() } returns Unit
+        coEvery { userDatasource.clearAccountData() } returns Unit
+        coEvery { credentialsDatasource.clearAllDataForAddress(address) } returns Unit
+
+        userRepository.clearAccountData(address)
+
+        coVerify { accountDao.clearAccount(address) }
+        coVerify { referralsDao.clearTable() }
+        coVerify { credentialsDatasource.clearAllDataForAddress(address) }
+        coVerify { userDatasource.clearAccountData() }
+    }
+
+    @Test
+    fun `reset tries used called`() = runTest {
+        coEvery { userDatasource.resetPinTriesUsed() } returns Unit
+
+        userRepository.resetTriesUsed()
+
+        coVerify { userDatasource.resetPinTriesUsed() }
+    }
+
+    @Test
+    fun `resetTimerStartedTimestamp called`() = runTest {
+        coEvery { userDatasource.resetTimerStartedTimestamp() } returns Unit
+
+        userRepository.resetTimerStartedTimestamp()
+
+        coVerify { userDatasource.resetTimerStartedTimestamp() }
+    }
+
+    @Test
+    fun `retrieveTimerStartedTimestamp called`() = runTest {
+        coEvery { userDatasource.retrieveTimerStartedTimestamp() } returns 1
+        assertEquals(1, userRepository.retrieveTimerStartedTimestamp())
+    }
+
+    @Test
+    fun `retrievePinTriesUsed called`() = runTest {
+        coEvery { userDatasource.retrievePinTriesUsed() } returns 2
+        assertEquals(2, userRepository.retrievePinTriesUsed())
+    }
+
+    @Test
+    fun `savePinTriesUsed called`() = runTest {
+        coEvery { userDatasource.savePinTriesUsed(1) } returns Unit
+
+        userRepository.savePinTriesUsed(1)
+
+        coVerify { userDatasource.savePinTriesUsed(1) }
+    }
+
+    @Test
+    fun `saveTimerStartedTimestamp called`() = runTest {
+        coEvery { userDatasource.saveTimerStartedTimestamp(1) } returns Unit
+
+        userRepository.saveTimerStartedTimestamp(1)
+
+        coVerify { userDatasource.saveTimerStartedTimestamp(1) }
     }
 }

@@ -14,8 +14,6 @@ interface UserRepository {
 
     suspend fun getSoraAccountsCount(): Int
 
-    suspend fun initCurSoraAccount()
-
     suspend fun getCurSoraAccount(): SoraAccount
 
     suspend fun setCurSoraAccount(soraAccount: SoraAccount)
@@ -71,4 +69,18 @@ interface UserRepository {
     suspend fun saveIsMigrationFetched(it: Boolean, soraAccount: SoraAccount)
 
     suspend fun isMigrationFetched(soraAccount: SoraAccount): Boolean
+
+    suspend fun getSoraAccount(address: String): SoraAccount
+
+    suspend fun savePinTriesUsed(triesUsed: Int)
+
+    suspend fun saveTimerStartedTimestamp(timestamp: Long)
+
+    suspend fun retrievePinTriesUsed(): Int
+
+    suspend fun retrieveTimerStartedTimestamp(): Long
+
+    suspend fun resetTriesUsed()
+
+    suspend fun resetTimerStartedTimestamp()
 }

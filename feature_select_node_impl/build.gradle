@@ -1,0 +1,112 @@
+apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion versions.composeCompiler
+    }
+
+    buildFeatures {
+        viewBinding true
+        compose true
+    }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(":common")
+    implementation project(":feature_select_node_api")
+    implementation project(":feature_main_api")
+    implementation project(":feature_wallet_api")
+    implementation project(":core_db")
+    implementation project(":core_di")
+    implementation project(":sorasubstrate")
+    implementation project(":soracrypro")
+
+    implementation kotlinDep
+
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
+    implementation viewBindingDep
+
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation viewmodelKtxDep
+
+    implementation neumorphismDep
+
+    implementation lifecycleProcessDep
+    kapt lifecycleKaptDep
+
+    implementation navigationFragmentDep
+    implementation navigationUiDep
+
+    implementation xNetworkingDep
+
+    implementation roomDep
+    implementation roomKtxDep
+
+    implementation uiCoreDep
+
+    implementation composeUiDep
+    implementation composeCompilerDep
+    implementation composeFoundationDep
+    implementation composeMaterialDep
+    implementation composeActivityDep
+    implementation composeViewModelDep
+    implementation composeToolingPreviewDep
+    implementation composeLiveDataDep
+    debugImplementation composeToolingDep
+
+    // TODO remove ? after fix https://stackoverflow.com/a/71830120
+    debugImplementation("androidx.customview:customview:1.2.0-alpha01")
+    debugImplementation("androidx.customview:customview-poolingcontainer:1.0.0-rc01")
+
+    implementation daggerDep
+    kapt daggerKaptDep
+
+    testImplementation project(":test_shared")
+}

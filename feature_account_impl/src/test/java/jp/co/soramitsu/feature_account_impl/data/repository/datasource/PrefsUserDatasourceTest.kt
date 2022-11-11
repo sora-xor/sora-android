@@ -171,4 +171,60 @@ class PrefsUserDatasourceTest {
 
         assertEquals(isAvailable, isAvailableResult)
     }
+
+    @Test
+    fun `savePinTriesUsed called`() = runTest {
+        val triesUsed = 1
+        val key = "key_pin_tries"
+
+        prefsUserDatasource.savePinTriesUsed(triesUsed)
+
+        verify(soraPreferences).putInt(key, triesUsed)
+    }
+
+    @Test
+    fun `saveTimerStartedTimestamp called`() = runTest {
+        val timestamp = 1L
+        val key = "key_pin_start_timestamp"
+
+        prefsUserDatasource.saveTimerStartedTimestamp(timestamp)
+
+        verify(soraPreferences).putLong(key, timestamp)
+    }
+
+    @Test
+    fun `resetPinTriesUsed called`() = runTest {
+        val key = "key_pin_tries"
+
+        prefsUserDatasource.resetPinTriesUsed()
+
+        verify(soraPreferences).clear(key)
+    }
+
+    @Test
+    fun `resetTimerStartedTimestamp called`() = runTest {
+        val key = "key_pin_start_timestamp"
+
+        prefsUserDatasource.resetTimerStartedTimestamp()
+
+        verify(soraPreferences).clear(key)
+    }
+
+    @Test
+    fun `retrievePinTriesUsed called`() = runTest {
+        val triesUsed = 1
+        val key = "key_pin_tries"
+        given(soraPreferences.getInt(key, 0)).willReturn(triesUsed)
+
+        assertEquals(triesUsed, prefsUserDatasource.retrievePinTriesUsed())
+    }
+
+    @Test
+    fun `retrieveTimerStartedTimestamp called`() = runTest {
+        val timestamp = 1L
+        val key = "key_pin_start_timestamp"
+        given(soraPreferences.getLong(key, 0)).willReturn(timestamp)
+
+        assertEquals(timestamp, prefsUserDatasource.retrieveTimerStartedTimestamp())
+    }
 }

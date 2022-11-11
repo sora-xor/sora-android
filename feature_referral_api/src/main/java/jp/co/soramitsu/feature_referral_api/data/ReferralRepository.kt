@@ -7,7 +7,7 @@ package jp.co.soramitsu.feature_referral_api.data
 
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.xnetworking.subquery.ReferrerReward
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
 import kotlinx.coroutines.flow.Flow
 import java.math.BigDecimal
 

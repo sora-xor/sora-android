@@ -153,6 +153,8 @@ dependencies {
     implementation project(":feature_wallet_impl")
     implementation project(":feature_notification_api")
     implementation project(":feature_notification_impl")
+    implementation project(":feature_select_node_api")
+    implementation project(":feature_select_node_impl")
     implementation project(":sorasubstrate")
     implementation project(":soracrypro")
 
@@ -186,8 +188,6 @@ dependencies {
 
     implementation platform(firebaseBomDep)
     implementation crashlyticsDep
-
-    implementation multidexDep
 
     implementation xNetworkingDep
     implementation webSocketLibDep

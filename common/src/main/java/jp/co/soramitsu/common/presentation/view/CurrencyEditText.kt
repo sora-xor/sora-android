@@ -17,6 +17,7 @@ import jp.co.soramitsu.common.util.ext.decimalPartSized
 import jp.co.soramitsu.common.view.ViewHelper
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import java.math.BigDecimal
 import java.text.DecimalFormat
@@ -99,11 +100,11 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        addTextChangedListener(textWatcherListener)
+        attachListener()
     }
 
     override fun onDetachedFromWindow() {
-        removeTextChangedListener(textWatcherListener)
+        detachListener()
         super.onDetachedFromWindow()
     }
 
@@ -149,19 +150,32 @@ class CurrencyEditText(context: Context, attrs: AttributeSet) : AppCompatEditTex
         return getBigDecimal(text.toString())
     }
 
+    @Volatile
+    private var listenerAttached: Boolean = true
+
+    private fun attachListener() {
+        addTextChangedListener(textWatcherListener)
+        listenerAttached = true
+    }
+
+    private fun detachListener() {
+        listenerAttached = false
+        removeTextChangedListener(textWatcherListener)
+    }
+
     fun asFlowCurrency() = state.observe().filterNotNull().debounce(ViewHelper.debounce).distinctUntilChanged()
-    fun asFlowCurrency2() = state.observe().filterNotNull()
+    fun asFlowCurrency2() = state.observe().filterNotNull().filter { listenerAttached }
 
     fun setValue(s: String) {
         if (s == text.toString()) return
         if (getBigDecimal() == getBigDecimal(s)) return
-        removeTextChangedListener(textWatcherListener)
+        detachListener()
         val text = s.decimalPartSized(DECIMAL_SEPARATOR.toString())
         setText(text)
 
         if (Locale.getDefault().toString() == "ar")
             setSelection(text.length)
 
-        addTextChangedListener(textWatcherListener)
+        attachListener()
     }
 }

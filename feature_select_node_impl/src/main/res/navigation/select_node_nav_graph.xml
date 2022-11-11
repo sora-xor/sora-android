@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/select_node_nav_graph"
+    app:startDestination="@id/selectNodeFragment">
+
+    <fragment
+        android:id="@+id/selectNodeFragment"
+        android:name="jp.co.soramitsu.feature_select_node_impl.presentation.select.SelectNodeFragment"/>
+
+    <fragment
+        android:id="@+id/nodeDetailsFragment"
+        android:name="jp.co.soramitsu.feature_select_node_impl.presentation.details.NodeDetailsFragment" />
+
+</navigation>

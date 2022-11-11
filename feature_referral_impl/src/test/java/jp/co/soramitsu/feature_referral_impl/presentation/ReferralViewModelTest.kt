@@ -8,6 +8,7 @@ package jp.co.soramitsu.feature_referral_impl.presentation
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
@@ -21,7 +22,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -32,6 +32,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
@@ -60,6 +61,9 @@ class ReferralViewModelTest {
 
     @Mock
     private lateinit var progress: WithProgress
+
+    @Mock
+    private lateinit var resourceManager: ResourceManager
 
     private lateinit var referralViewModel: ReferralViewModel
 
@@ -91,13 +95,15 @@ class ReferralViewModelTest {
         given(interactor.observeReferrerBalance()).willReturn(referrerBalanceFlow)
         given(interactor.observeReferrals()).willReturn(flow { emit("") })
         given(interactor.getSetReferrerFee()).willReturn(BigDecimal("0.0035"))
+        given(resourceManager.getString(anyInt())).willReturn("Some resource")
         assetFlowEmit(xorAsset)
         referralViewModel = ReferralViewModel(
             interactor,
             walletInteractor,
             NumbersFormatter(),
             router,
-            progress
+            progress,
+            resourceManager
         )
         advanceUntilIdle()
     }
@@ -206,11 +212,5 @@ class ReferralViewModelTest {
         liveData = referralViewModel.referralScreenState.getOrAwaitValue()
         assertEquals(link, liveData.common.referrer)
         assertEquals(false, liveData.common.activate)
-    }
-
-    @Test
-    fun `btn back clicked`() = runTest {
-        referralViewModel.backButtonPressed()
-        verify(router).popBackStack()
     }
 }

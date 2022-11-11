@@ -34,6 +34,7 @@ import jp.co.soramitsu.common.presentation.compose.neumorphism.NeumorphButton
 import jp.co.soramitsu.common.presentation.compose.resources.Dimens
 import jp.co.soramitsu.common.presentation.compose.theme.ThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.neuBold34
+import jp.co.soramitsu.common.presentation.compose.theme.neuButton
 import jp.co.soramitsu.common.presentation.compose.theme.neuLight15
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.presentation.OnboardingViewModel
@@ -132,6 +133,7 @@ private fun TutorialButtons(
         NeumorphButton(
             modifier = Modifier.fillMaxWidth(),
             label = stringResource(id = R.string.recovery_title),
+            textStyle = MaterialTheme.typography.neuButton,
             onClick = onRecoveryAccount
         )
     }

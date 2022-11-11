@@ -115,7 +115,8 @@ class ExtrinsicDetailsViewModel @AssistedInject constructor(
                             if (it.myReferrer) resourceManager.getString(R.string.history_referrer) else resourceManager.getString(
                                 R.string.history_referral
                             ),
-                            it.who.truncateUserAddress(),
+                            it.who,
+                            it.myReferrer,
                         )
                     }
                     is Transaction.ReferralUnbond -> {
@@ -306,6 +307,7 @@ class ExtrinsicDetailsViewModel @AssistedInject constructor(
         statusText: String,
         ref: String? = null,
         refValue: String? = null,
+        myRef: Boolean? = null,
     ): ReferralDetailsModel {
         val icon = getIcon(tx)
         val (date, time) = Date(tx.base.timestamp).let {
@@ -328,16 +330,21 @@ class ExtrinsicDetailsViewModel @AssistedInject constructor(
         } else {
             tx.base.blockHash?.truncateHash().orEmpty() to R.drawable.ic_copy_16
         }
+        clipboardData.clear()
+        clipboardData.add(tx.base.txHash)
+        clipboardData.add(tx.base.blockHash.orEmpty())
+        if (refValue != null) clipboardData.add(refValue)
+        clipboardData.add(myAddress)
         return ReferralDetailsModel(
             status = getStatus(tx),
-            amount = "%s %s %s".format(
+            amount = if (myRef == null) "%s %s %s".format(
                 "-",
                 numbersFormatter.formatBigDecimal(
                     amount,
                     AssetHolder.ROUNDING
                 ),
                 feeToken.symbol
-            ),
+            ) else if (myRef) statusText else "+1 ${resourceManager.getString(R.string.history_referral)}",
             statusIcon = icon.first,
             statusIconTintAttr = icon.second,
             statusText = statusText,
@@ -351,7 +358,8 @@ class ExtrinsicDetailsViewModel @AssistedInject constructor(
             from = myAddress.truncateUserAddress(),
             tokenIcon = token.icon,
             ref = ref,
-            refValue = refValue,
+            refValue = refValue?.truncateUserAddress(),
+            myRef = myRef,
         )
     }
 

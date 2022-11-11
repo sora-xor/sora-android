@@ -259,7 +259,7 @@
                     app:rowTitleTextAppearance="@style/TextAppearance.Soramitsu.Neu.Light.15"
                     app:rowType="line"
                     app:rowsBottomPadding="@dimen/x1"
-                    app:rowsCount="4"
+                    app:rowsCount="3"
                     app:rowsTopPadding="@dimen/x2" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,15 +5,20 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.domain
 
+import android.net.Uri
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.io.FileManager
+import jp.co.soramitsu.fearless_utils.encrypt.keypair.Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class MultiaccountInteractor @Inject constructor(
     private val userRepository: UserRepository,
-    private val credentialsRepository: CredentialsRepository
+    private val credentialsRepository: CredentialsRepository,
+    private val fileManager: FileManager
 ) {
 
     private companion object {
@@ -47,6 +52,18 @@ class MultiaccountInteractor @Inject constructor(
         return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())
     }
 
+    suspend fun getMnemonic(address: String): String {
+        return credentialsRepository.retrieveMnemonic(userRepository.getSoraAccount(address))
+    }
+
+    suspend fun getSeed(address: String): String {
+        return credentialsRepository.retrieveSeed(userRepository.getSoraAccount(address))
+    }
+
+    suspend fun getKeypair(address: String): Keypair {
+        return credentialsRepository.retrieveKeyPair(userRepository.getSoraAccount(address))
+    }
+
     suspend fun createUser(soraAccount: SoraAccount) {
         userRepository.insertSoraAccount(soraAccount)
         userRepository.setCurSoraAccount(soraAccount)
@@ -61,4 +78,29 @@ class MultiaccountInteractor @Inject constructor(
 
     suspend fun isMultiAccount(): Boolean =
         userRepository.getSoraAccountsCount() >= MULTIPLE_ACCOUNT_COUNT
+
+    suspend fun getJsonFileUri(addresses: List<String>, password: String): Uri {
+        val accounts = addresses.map { userRepository.getSoraAccount(it) }
+
+        val filename = if (addresses.size == 1) addresses.first() else "batch_exported_sora_accounts"
+
+        return fileManager.writeExternalCacheText("$filename.json", credentialsRepository.generateJson(accounts, password))
+    }
+
+    suspend fun getSoraAccount(address: String): SoraAccount = userRepository.getSoraAccount(address)
+
+    suspend fun getCurrentSoraAccount(): SoraAccount = userRepository.getCurSoraAccount()
+
+    fun flowCurSoraAccount(): Flow<SoraAccount> = userRepository.flowCurSoraAccount()
+
+    fun flowSoraAccountsList(): Flow<List<SoraAccount>> = userRepository.flowSoraAccountsList()
+
+    suspend fun setCurSoraAccount(accountAddress: String) {
+        userRepository.setCurSoraAccount(accountAddress)
+    }
+
+    suspend fun updateName(accountAddress: String, newName: String) {
+        val account = getSoraAccount(address = accountAddress)
+        userRepository.updateAccountName(account, newName)
+    }
 }

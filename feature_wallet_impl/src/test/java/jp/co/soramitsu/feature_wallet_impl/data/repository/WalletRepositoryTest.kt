@@ -11,6 +11,7 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.io.FileManager
@@ -32,7 +33,6 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.TestRuntimeProvider
-import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -83,9 +83,6 @@ class WalletRepositoryTest {
     private lateinit var substrateCalls: SubstrateCalls
 
     @Mock
-    private lateinit var historyReader: SubQueryClient<*, *>
-
-    @Mock
     private lateinit var fileManager: FileManager
 
     @Mock
@@ -93,6 +90,9 @@ class WalletRepositoryTest {
 
     @Mock
     private lateinit var runtimeManager: RuntimeManager
+
+    @Mock
+    private lateinit var coroutineManager: CoroutineManager
 
     @Mock
     private lateinit var gson: Gson
@@ -117,7 +117,8 @@ class WalletRepositoryTest {
             AssetLocalToAssetMapper(),
             extrinsicManager,
             substrateCalls,
-            runtimeManager
+            runtimeManager,
+            coroutineManager,
         )
     }
 

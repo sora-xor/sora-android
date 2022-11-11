@@ -62,7 +62,7 @@ class PinLengthInfoFragment : BaseComposeFragment<BaseViewModel>() {
                     Image(
                         modifier = Modifier.padding(top = Dimens.x7),
                         painter = painterResource(id = R.drawable.ic_egyptians_closed),
-                        contentDescription = ""
+                        contentDescription = null
                     )
                 }
                 Text(

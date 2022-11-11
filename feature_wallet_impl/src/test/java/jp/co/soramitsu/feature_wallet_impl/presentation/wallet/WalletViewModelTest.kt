@@ -21,7 +21,6 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.AssetModel
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
 import jp.co.soramitsu.test_shared.MainCoroutineRule
@@ -61,9 +60,6 @@ class WalletViewModelTest {
     private lateinit var numbersFormatter: NumbersFormatter
 
     @Mock
-    private lateinit var transactionMappers: TransactionMappers
-
-    @Mock
     private lateinit var clipboardManager: ClipboardManager
 
     @Mock
@@ -89,7 +85,7 @@ class WalletViewModelTest {
         given(transactionHistoryHandler.flowLocalTransactions()).willReturn(emptyFlow())
         walletViewModel = WalletViewModel(
             interactor, router,
-            numbersFormatter, clipboardManager, transactionMappers,
+            numbersFormatter, clipboardManager,
             qrCodeDecoder,
             transactionHistoryHandler,
         )
