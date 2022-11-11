@@ -268,7 +268,7 @@ class WalletFragment : BaseFragment<WalletViewModel>(R.layout.fragment_wallet) {
         }
 
         viewModel.qrErrorLiveData.observe {
-            showErrorFromResponse(it)
+            showErrorFromResponse(title = R.string.common_error_general_title, messageResId = it)
         }
 
         val scrollListener = object : RecyclerView.OnScrollListener() {

@@ -6,14 +6,18 @@
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
+import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -22,6 +26,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -43,11 +48,35 @@ class ProfileViewModelTest {
     @Mock
     private lateinit var referralRouter: ReferralRouter
 
+    @Mock
+    private lateinit var selectNodeRouter: SelectNodeRouter
+
+    @Mock
+    private lateinit var nodeManager: NodeManager
+
     private lateinit var profileViewModel: ProfileViewModel
 
     @Before
     fun setUp() = runTest {
-        profileViewModel = ProfileViewModel(interactor, router, referralRouter)
+        whenever(interactor.flowSelectedNode()).thenReturn(
+            flowOf(
+                Node(
+                    chain = "SORA",
+                    name = "node",
+                    address = "address",
+                    isSelected = true,
+                    isDefault = true
+                )
+            )
+        )
+
+        profileViewModel = ProfileViewModel(
+            interactor,
+            router,
+            referralRouter,
+            selectNodeRouter,
+            nodeManager
+        )
     }
 
     @Test
@@ -63,20 +92,36 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `passphrase item clicked`() {
-        profileViewModel.onPassphraseClick()
-        verify(router).showPin(PinCodeAction.OPEN_PASSPHRASE)
-    }
-
-    @Test
     fun `about item clicked`() {
         profileViewModel.profileAboutClicked()
         verify(router).showAbout()
     }
 
     @Test
-    fun `votes item clicked`() {
-        profileViewModel.onVotesClick()
-        verify(router).showVotesHistory()
+    fun `select node clicked`() {
+        profileViewModel.selectNodeClicked()
+        verify(selectNodeRouter).showSelectNode()
+    }
+
+
+    @Test
+    fun `get selected node`() = runTest {
+        advanceUntilIdle()
+
+        verify(interactor).flowSelectedNode()
+    }
+
+    @Test
+    fun `get selected node update state`() = runTest {
+        advanceUntilIdle()
+
+        assertEquals(profileViewModel.selectedNode.value?.address, "address")
+    }
+
+    @Test
+    fun `initialize expect subscribe to connection state`() = runTest {
+        advanceUntilIdle()
+
+        verify(nodeManager).connectionState()
     }
 }

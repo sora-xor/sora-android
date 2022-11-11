@@ -127,7 +127,6 @@ fun ReferralStartScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Text(
                 modifier = Modifier
                     .padding(

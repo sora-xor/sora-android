@@ -2,6 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 
 android {
     compileSdkVersion compileVersion
@@ -23,7 +24,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion versions.compose
+        kotlinCompilerExtensionVersion versions.composeCompiler
     }
 
     buildFeatures {
@@ -61,6 +62,7 @@ dependencies {
     implementation project(":feature_wallet_api")
     implementation project(":feature_multiaccount_api")
     implementation project(":feature_main_api")
+    implementation project(":core_di")
 
     implementation kotlinDep
 
@@ -75,9 +77,12 @@ dependencies {
     implementation viewmodelKtxDep
 
     implementation emojiDep
+    implementation neumorphismDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
+
+    implementation fearlessLibDep
 
     implementation navigationFragmentDep
     implementation navigationUiDep

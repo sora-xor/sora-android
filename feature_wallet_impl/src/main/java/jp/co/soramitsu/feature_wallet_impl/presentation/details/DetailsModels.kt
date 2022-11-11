@@ -31,6 +31,7 @@ data class ReferralDetailsModel(
     @DrawableRes val tokenIcon: Int,
     val ref: String? = null,
     val refValue: String? = null,
+    val myRef: Boolean? = null,
 ) : Parcelable
 
 @Parcelize

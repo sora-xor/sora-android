@@ -24,6 +24,7 @@ class SplashActivity : AppCompatActivity() {
 
     @Inject
     lateinit var onbnbst: OnboardingStarter
+
     @Inject
     lateinit var mainStarter: MainStarter
 
@@ -64,7 +65,7 @@ class SplashActivity : AppCompatActivity() {
             mainStarter.start(this)
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
-            onbnbst.start(this, it)
+            onbnbst.start(this)
         }
         splashViewModel.showOnBoardingScreenViaInviteLink.observe(this) {
             onbnbst.startWithInviteLink(this)

@@ -61,7 +61,7 @@ class PolkaSwapFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment_pol
                 super.onPageSelected(position)
                 binding.grPolkaswapMarkets.isVisible =
                     binding.viewpager.adapter?.safeCast<ViewPagerAdapter>()
-                    ?.isVisibleMarketsTitle(position) ?: false
+                        ?.isVisibleMarketsTitle(position) ?: false
             }
         })
 

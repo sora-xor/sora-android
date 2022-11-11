@@ -139,7 +139,7 @@ class ContactsFragment :
             viewBinding.preloaderView.showOrGone(it)
         }
         viewModel.qrErrorLiveData.observe {
-            showErrorFromResponse(it)
+            showErrorFromResponse(title = R.string.common_error_general_title, messageResId = it)
         }
     }
 

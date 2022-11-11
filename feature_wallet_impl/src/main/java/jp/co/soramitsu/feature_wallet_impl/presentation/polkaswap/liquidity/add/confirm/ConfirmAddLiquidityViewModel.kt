@@ -81,6 +81,7 @@ class ConfirmAddLiquidityViewModel @AssistedInject constructor(
                 return factory.create(tokenFrom, tokenTo, slippageTolerance, liquidityDetails) as T
             }
         }
+
         private const val SHARE_OF_POOL_FORMAT = "%s%%"
         private const val DEFAULT_PRECISION = 8
     }
@@ -157,7 +158,7 @@ class ConfirmAddLiquidityViewModel @AssistedInject constructor(
 
     init {
         poolsManager.bind()
-        polkaswapInteractor.subscribeReservesCache(tokenTo.id)
+        polkaswapInteractor.subscribeReservesCache(tokenFrom.id, tokenTo.id)
             .distinctUntilChanged()
             .debounce(500)
             .catch {
@@ -203,10 +204,11 @@ class ConfirmAddLiquidityViewModel @AssistedInject constructor(
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .collectLatest { assets ->
-                    assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }?.let { asset ->
-                        balanceFrom = asset.balance.transferable
-                        onChangedProperty.set(false)
-                    }
+                    assets.find { it.token.id == SubstrateOptionsProvider.feeAssetId }
+                        ?.let { asset ->
+                            balanceFrom = asset.balance.transferable
+                            onChangedProperty.set(false)
+                        }
                     assets.find { it.token.id == tokenTo.id }?.let { asset ->
                         balanceTo = asset.balance.transferable
                         onChangedProperty.set(false)
@@ -226,7 +228,7 @@ class ConfirmAddLiquidityViewModel @AssistedInject constructor(
         }
 
         viewModelScope.launch {
-            polkaswapInteractor.isPairPresentedInNetwork(tokenToId)
+            polkaswapInteractor.isPairPresentedInNetwork(tokenFromId, tokenToId)
                 .distinctUntilChanged()
                 .collectLatest {
                     pairPresented = it

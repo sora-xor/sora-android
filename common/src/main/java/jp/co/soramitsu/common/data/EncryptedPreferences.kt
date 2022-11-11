@@ -21,4 +21,12 @@ class EncryptedPreferences(
 
         return if (encryptedString.isEmpty()) "" else encryptionUtil.decrypt(encryptedString)
     }
+
+    suspend fun clear(field: String) {
+        soraPreferences.clear(field)
+    }
+
+    suspend fun clear(fields: List<String>) {
+        soraPreferences.clear(fields)
+    }
 }

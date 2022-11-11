@@ -17,6 +17,7 @@
   <string name="account_already_imported_description">This wallet is already imported</string>
   <string name="account_confirmation_title">ยืนยัน mnemonic</string>
   <string name="account_confirmation_title_v2">Confirm Passphrase</string>
+  <string name="account_import_default_error">Wrong</string>
   <string name="activity_project">โครงการ</string>
   <string name="add_liquidity_alert_text">You will earn fees proportional to your share of the pool from liquidity provision.</string>
   <string name="add_liquidity_confirmation_title">Confirm supply</string>
@@ -61,6 +62,7 @@
   <string name="coming_soon">เร็ว ๆ นี้...</string>
   <string name="common_account">บัญชี</string>
   <string name="common_add">เพิ่ม</string>
+  <string name="common_add_liquidity">ADD</string>
   <string name="common_advanced_settings">การตั้งค่าขั้นสูง</string>
   <string name="common_and">และ</string>
   <string name="common_app_version">App version</string>
@@ -68,6 +70,7 @@
   <string name="common_arab">อาหรับ</string>
   <string name="common_asset">Asset</string>
   <string name="common_back">Back</string>
+  <string name="common_backup">Backup</string>
   <string name="common_balance">ยอดคงเหลือ</string>
   <string name="common_bashkir">บัชคีร์</string>
   <string name="common_camera">กล้อง</string>
@@ -116,6 +119,7 @@
   <string name="common_error_retry">กรุณาลองอีกครั้ง</string>
   <string name="common_error_search_string_error">ขนาดการค้นหาจะต้องอยู่ระหว่าง 3 ถึง 64</string>
   <string name="common_error_seed_is_not_valid">Please make sure that your input contains 64 hex symbols.</string>
+  <string name="common_error_seed_is_not_valid_title">Seed is invalid</string>
   <string name="common_error_self_invitation">คุณไม่สามารถใช้รหัสเชิญของคุณเองได้</string>
   <string name="common_error_unauthorized_body">กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตและลองใหม่อีกครั้งในภายหลัง</string>
   <string name="common_error_unauthorized_title">การอนุมัติล้มเหลว</string>
@@ -187,6 +191,7 @@
   <string name="common_sec">วินาที</string>
   <string name="common_select_asset">โปรดเลือก asset</string>
   <string name="common_select_email_app_title">เลือกแอป email</string>
+  <string name="common_select_node">Select Node</string>
   <string name="common_send">ส่ง</string>
   <string name="common_sender">Sender</string>
   <string name="common_sent">ส่งแล้ว</string>
@@ -198,6 +203,7 @@
   <string name="common_sms_code_not_correct">รหัสยืนยันไม่ถูกต้อง</string>
   <string name="common_spanish">สเปน</string>
   <string name="common_spanish_colombia">สเปน (โคลอมเบีย)</string>
+  <string name="common_submit">Submit</string>
   <string name="common_supply">Supply</string>
   <string name="common_swedish">สวีเดน</string>
   <string name="common_terms_title">ข้อตกลงและเงื่อนไข</string>
@@ -243,6 +249,26 @@
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
   <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
+  <string name="export_account_options">Open account options</string>
+  <string name="export_json_description">Password is required to encrypt your account and store as Restore JSON. Please, create password to continue operation.</string>
+  <string name="export_json_download_json">DOWNLOAD JSON</string>
+  <string name="export_json_input_confirmation_label">Confirm password</string>
+  <string name="export_json_input_label">Set password for JSON file</string>
+  <string name="export_protection_json_1">If I lose my JSON, my funds will be lost forever.</string>
+  <string name="export_protection_json_2">If I expose or share my JSON to anybody, my funds can get stolen.</string>
+  <string name="export_protection_json_3">It is my full reponsibility to keep my JSON secure.</string>
+  <string name="export_protection_json_description">In the next step you will be able to download a JSON file that allow you to recover your accounts.</string>
+  <string name="export_protection_json_title">Export JSON</string>
+  <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
+  <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
+  <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
+  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_title">Passphrase</string>
+  <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
+  <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
+  <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>
+  <string name="export_protection_seed_description">In the next step you will see Raw Seed (a long hash) that allow you to recover an account.</string>
+  <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">คำถามที่พบบ่อย</string>
   <string name="friends_spread_word">แชร์ให้โลกรู้ แชร์กับเพื่อนที่รู้ใจ!</string>
   <string name="from_account">จากบัญชี</string>
@@ -291,6 +317,7 @@
   <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
   <string name="liquidity_removed">Removed %s liquidity</string>
   <string name="logout_dialog_body">การดำเนินการนี้จะส่งผลให้บัญชีนี้ถูกลบจากอุปกรณ์ โปรดตรวจสอบให้แน่ใจว่าคุณได้สำรอง mnemonic passphrase ของคุณก่อนดำเนินการต่อ</string>
+  <string name="logout_remove_nodes_body">\n\nAll your custom nodes will be removed as well</string>
   <string name="mnemonic_alert_text">ข้อความ Mnemonic ใช้ในการเรียกคืนบัญชี จดไว้ หากสูญหาย เราไม่สามารถเรียกคืนบัญชีคุณได้</string>
   <string name="mnemonic_confirm_text">ยืนยันโดยเลือกคำตามลำดับที่ถูกต้อง</string>
   <string name="mnemonic_confirm_text_v2">ยืนยันข้อความรหัสผ่านโดยเลือกคำในลำดับที่ถูกต้อง</string>
@@ -298,6 +325,10 @@
   <string name="mnemonic_invalid_title">mnemonic ไม่ถูกต้อง</string>
   <string name="mnemonic_text">เราแนะนำให้จดลงบนกระดาษ ไม่แนะนำให้ทำการเก็บไว้บนเครื่องมือดิจิตอลใดๆ</string>
   <string name="mnemonic_title">โปรดจด mnemonic passphrase</string>
+  <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
+  <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
+  <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
+  <string name="node_details_protocol_validation_failed">Failed to validate URL (Wrong URL protocol)</string>
   <string name="parliament_coming_soon">การกำกับดูแลเครือข่าย SORA</string>
   <string name="personal_details_info">ชื่อบัญชีนี้และลักษณะที่ปรากฏใต้ address ของคุณ เป็นข้อมูลประจำตัวแบบ on-chain ทำให้ผู้อื่นสามารถเห็นได้</string>
   <string name="personal_info_inv_code_hint">รหัสเชิญ (ตัวเลือกเสริม)</string>
@@ -309,6 +340,7 @@
   <string name="phone_number_sms_code_will_be_sent">รหัส SMS จะถูกส่งไปยังโทรศัพท์ของคุณ</string>
   <string name="phone_number_title">ลงชื่อ</string>
   <string name="phone_verification_too_frequent_message">คุณส่งคำขอรหัสยืนยันมากเกินไป โปรดลองใหม่อีกครั้งในภายหลัง</string>
+  <string name="pin_locked_for_title">Locked  for %s</string>
   <string name="pin_update_button_text">SET NEW PIN</string>
   <string name="pin_update_info_description">Security policy has been improved for your protection.</string>
   <string name="pin_update_info_subtitle">Please set a new 6 digit PIN.</string>
@@ -321,6 +353,7 @@
   <string name="pincode_enter_new_pin_code">ป้อนรหัสพินใหม่</string>
   <string name="pincode_enter_pin_code">กรอกรหัส PIN</string>
   <string name="pincode_fingerprint_error">ไม่ได้รับอนุญาต กรุณาลองใช้นิ้วอื่น</string>
+  <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_repeat_error">เกิดข้อผิดพลาด รหัส PIN ซ้ำ</string>
   <string name="pincode_set_your_pin_code">ตั้งรหัสพิน</string>
   <string name="pincode_touch_fingerprint_scanner">แตะที่จุดสแกนลายนิ้วมือ</string>
@@ -465,6 +498,9 @@
   <string name="referral_your_referrer">Your referrer</string>
   <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
   <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_node_error_message">To delete this node please connect to another one</string>
+  <string name="remove_node_error_title">Unable to delete connected node</string>
+  <string name="remove_node_title">Do you really want to remove this node?</string>
   <string name="remove_pool_confirmation_description">Output is estimated. If the price changes more than %s%% your transaction will revert.</string>
   <string name="remove_pool_confirmation_title">Confirm Remove</string>
   <string name="restart_required">Restart required</string>
@@ -475,6 +511,19 @@
   <string name="select_account_address_1">Search or add a new address</string>
   <string name="select_asset_receive">Select Asset to Receive</string>
   <string name="select_asset_send">Select Asset to Send</string>
+  <string name="select_node_add_custom_node">Add Custom Node</string>
+  <string name="select_node_add_node">Add node</string>
+  <string name="select_node_custom_node_edit_node">Edit node</string>
+  <string name="select_node_custom_nodes">Custom Nodes</string>
+  <string name="select_node_default_nodes">Default Nodes</string>
+  <string name="select_node_how_to_run_node">How to Run a Node</string>
+  <string name="select_node_node_address">Node Address</string>
+  <string name="select_node_node_details">Node Details</string>
+  <string name="select_node_node_name">Node Name</string>
+  <string name="select_node_switch_alert_title">Do you want to switch node?</string>
+  <string name="select_node_switch_succeed">Successfully switch the node</string>
+  <string name="select_node_unable_join_node_message">Please try again later</string>
+  <string name="select_node_unable_join_node_title">Unable to join the node</string>
   <string name="select_recipient">เลือกผู้รับ</string>
   <string name="set_amount">กำหนดจำนวน</string>
   <string name="settings_accounts">Accounts</string>

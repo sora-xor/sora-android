@@ -13,9 +13,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
-import jp.co.soramitsu.common.util.ext.createSendEmailIntent
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
-import jp.co.soramitsu.common.util.ext.showBrowser
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentAboutBinding
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
@@ -108,13 +107,12 @@ class AboutFragment : BaseFragment<AboutViewModel>(R.layout.fragment_about) {
             binding.acGithubSource.setDescription(it)
         }
         viewModel.openSendEmailEvent.observe {
-            requireActivity().createSendEmailIntent(
-                it,
-                getString(R.string.common_select_email_app_title)
-            )
+            context?.let { c ->
+                ShareUtil.sendEmail(c, it, getString(R.string.common_select_email_app_title))
+            }
         }
         viewModel.showBrowserLiveData.observe {
-            showBrowser(it)
+            ShareUtil.shareInBrowser(this, it)
         }
     }
 }

@@ -5,7 +5,6 @@
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.receive
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -14,6 +13,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
@@ -36,6 +36,7 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
     @Inject
     lateinit var vmf: ReceiveViewModel.ReceiveViewModelFactory
 
@@ -43,7 +44,11 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
     private val viewBinding by viewBinding(FragmentReceiveBinding::bind)
 
     private val vm: ReceiveViewModel by viewModels {
-        ReceiveViewModel.provideFactory(vmf, requireArguments().getSerializable(ARG_ASSET) as ReceiveAssetModel, context.attrColor(R.attr.flatAboveBackground))
+        ReceiveViewModel.provideFactory(
+            vmf,
+            requireArguments().getSerializable(ARG_ASSET) as ReceiveAssetModel,
+            context.attrColor(R.attr.flatAboveBackground)
+        )
     }
     override val viewModel: ReceiveViewModel
         get() = vm
@@ -75,13 +80,9 @@ class ReceiveFragment : BaseFragment<ReceiveViewModel>(R.layout.fragment_receive
         }
 
         viewModel.shareQrCodeLiveData.observe {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/*"
-                putExtra(Intent.EXTRA_STREAM, it.first)
-                putExtra(Intent.EXTRA_SUBJECT, getString(R.string.common_share))
-                putExtra(Intent.EXTRA_TEXT, it.second)
+            context?.let { c ->
+                ShareUtil.shareImageFile(c, getString(R.string.common_share), it.first, it.second)
             }
-            startActivity(Intent.createChooser(intent, getString(R.string.common_share)))
         }
 
         viewModel.userNameAddress.observe {

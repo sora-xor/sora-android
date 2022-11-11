@@ -25,7 +25,6 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
-import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.mappers.TransactionMappers
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.AssetModel
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -45,7 +44,6 @@ class WalletViewModel @Inject constructor(
     private val router: WalletRouter,
     private val numbersFormatter: NumbersFormatter,
     private val clipboardManager: ClipboardManager,
-    private val transactionMappers: TransactionMappers,
     private val qrCodeDecoder: QrCodeDecoder,
     private val transactionHistoryHandler: TransactionHistoryHandler,
 ) : BaseViewModel() {

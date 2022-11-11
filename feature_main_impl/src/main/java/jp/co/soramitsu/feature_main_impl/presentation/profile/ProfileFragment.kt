@@ -7,12 +7,14 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import by.kirich1409.viewbindingdelegate.viewBinding
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
+import jp.co.soramitsu.common.util.ext.setImageTint
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.FragmentProfileBinding
@@ -71,6 +73,10 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
             viewModel.profileLanguageClicked()
         }
 
+        binding.profileSelectNodeContainer.setDebouncedClickListener(debounceClickHandler) {
+            viewModel.selectNodeClicked()
+        }
+
         initListeners()
     }
 
@@ -78,6 +84,23 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
         viewModel.accountAddress.observe {
             binding.tvSwitchAccountName.text = it.truncateUserAddress()
         }
+
+        viewModel.selectedNode.observe { node ->
+            binding.profileNodeAddressTextView.text = node?.address
+            binding.profileNodeAddressTextView.isVisible = node != null
+            binding.profileNodeConnectionIndicator.isVisible = node != null
+        }
+
+        viewModel.nodeConnected.observe { nodeConnected ->
+            val color = if (nodeConnected) {
+                R.color.neu_positive
+            } else {
+                R.color.neu_negative
+            }
+
+            binding.profileNodeConnectionIndicator.setImageTint(color)
+        }
+
         viewModel.biometryEnabledLiveData.observe {
             binding.profileBiometryAuthSwitch.isChecked = it
 
@@ -86,6 +109,7 @@ class ProfileFragment : BaseFragment<ProfileViewModel>(R.layout.fragment_profile
                 binding.profileBiometryAuthSwitch.tag = it
             }
         }
+
         viewModel.biometryAvailableLiveData.observe {
             binding.profileBiometryAuthTextView.isEnabled = it
             binding.profileBiometryAuthSwitch.isEnabled = it

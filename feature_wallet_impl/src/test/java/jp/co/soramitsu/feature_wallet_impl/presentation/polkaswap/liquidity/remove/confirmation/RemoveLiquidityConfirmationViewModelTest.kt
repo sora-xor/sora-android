@@ -23,7 +23,6 @@ import jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaswapTestD
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -89,7 +88,12 @@ class RemoveLiquidityConfirmationViewModelTest {
                 )
             )
         )
-        given(polkaswapInteractor.subscribePoolsCache()).willReturn(flowOf(listOf(POOL_DATA)))
+        given(
+            polkaswapInteractor.subscribePoolCache(
+                XOR_ASSET.token.id,
+                TEST_ASSET.token.id
+            )
+        ).willReturn(flowOf(POOL_DATA))
         given(resourceManager.getString(R.string.remove_pool_confirmation_description)).willReturn("string %s string")
         given(resourceManager.getString(R.string.pool_share_title)).willReturn(poolShareAfterTxText)
         given(resourceManager.getString(R.string.polkaswap_sbapy)).willReturn(sbApyText)
@@ -141,7 +145,6 @@ class RemoveLiquidityConfirmationViewModelTest {
         advanceUntilIdle()
         viewModel.nextBtnClicked()
         advanceUntilIdle()
-        delay(1000)
         verify(polkaswapInteractor).removeLiquidity(
             XOR_ASSET.token,
             TEST_ASSET.token,

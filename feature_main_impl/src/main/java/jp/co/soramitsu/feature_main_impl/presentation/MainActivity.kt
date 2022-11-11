@@ -33,11 +33,11 @@ import jp.co.soramitsu.common.util.EventObserver
 import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
-import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.ActivityMainBinding
+import jp.co.soramitsu.feature_multiaccount_api.OnboardingNavigator
 import jp.co.soramitsu.feature_onboarding_api.OnboardingStarter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import kotlinx.coroutines.launch
@@ -48,6 +48,7 @@ import javax.inject.Inject
 class MainActivity :
     ToolbarActivity<MainViewModel, ActivityMainBinding>(),
     BottomBarController,
+    OnboardingNavigator,
     InAppUpdateManager.UpdateManagerListener {
 
     companion object {
@@ -321,7 +322,7 @@ class MainActivity :
     lateinit var onbs: OnboardingStarter
 
     fun restartApp() {
-        onbs.start(this, OnboardingState.INITIAL)
+        onbs.start(this)
     }
 
     override fun onTrimMemory(i: Int) {
@@ -331,9 +332,10 @@ class MainActivity :
     }
 
     public override fun onResume() {
-        if (timeInBackground != null && idleTimePassedFrom(timeInBackground!!)) {
+        if (timeInBackground != null && (idleTimePassedFrom(timeInBackground!!) || mainRouter.currentDestinationIsPinCheckNeeded())) {
             viewModel.showPinFragment()
         }
+
         timeInBackground = null
         super.onResume()
     }
@@ -352,5 +354,9 @@ class MainActivity :
 
     private fun chooseBottomNavigationItem(itemId: Int) {
         (binding.bottomNavigationView.findViewById(itemId) as View).performClick()
+    }
+
+    override fun showOnboardingFlow() {
+        onbs.start(this, false)
     }
 }

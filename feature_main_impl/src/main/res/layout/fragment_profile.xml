@@ -9,7 +9,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/glLeft"
@@ -151,6 +151,85 @@
             app:layout_constraintTop_toBottomOf="@id/ivProfileFriends" />
 
         <ImageView
+            android:id="@+id/ivSelectNode"
+            android:layout_width="@dimen/profile_icon"
+            android:layout_height="@dimen/profile_icon"
+            android:layout_marginTop="@dimen/x1"
+            android:padding="@dimen/x1"
+            android:src="@drawable/ic_node"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/tvProfileAppSettingsGroup"
+            app:tint="?attr/tintColorLight"
+            tools:ignore="ContentDescription" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/profileSelectNodeContainer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground"
+            android:paddingBottom="@dimen/x1_2"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toEndOf="@id/ivSelectNode"
+            app:layout_constraintTop_toBottomOf="@id/tvProfileAppSettingsGroup"
+            app:layout_constraintBottom_toTopOf="@+id/vProfileDiv3">
+
+            <TextView
+                android:id="@+id/profileSelectNodeTextView"
+                style="@style/TextAppearance.Soramitsu.Neu.18.Regular"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/x1"
+                android:text="@string/common_select_node"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <ImageView
+                android:id="@+id/profileNodeConnectionIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_connection_indicator"
+                android:layout_marginStart="@dimen/x1"
+                app:layout_constraintTop_toTopOf="@+id/profileNodeAddressTextView"
+                app:layout_constraintBottom_toBottomOf="@+id/profileNodeAddressTextView"
+                app:layout_constraintStart_toStartOf="@id/profileSelectNodeTextView"
+                app:layout_constraintEnd_toStartOf="@id/profileNodeAddressTextView" />
+
+            <TextView
+                android:id="@+id/profileNodeAddressTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                style="@style/TextAppearance.Soramitsu.Neu.Regular.11"
+                android:textColor="?attr/tintColorLight"
+                android:layout_marginStart="@dimen/x1_2"
+                app:layout_constraintEnd_toEndOf="@id/profileSelectNodeTextView"
+                app:layout_constraintStart_toEndOf="@id/profileNodeConnectionIndicator"
+                app:layout_constraintTop_toBottomOf="@id/profileSelectNodeTextView"
+                tools:text="Text"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/profileSelectNodeArrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_neu_chevron_right"
+            app:layout_constraintBottom_toBottomOf="@id/profileSelectNodeContainer"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintTop_toTopOf="@+id/profileSelectNodeContainer"
+            tools:ignore="ContentDescription" />
+
+        <View
+            android:id="@+id/vProfileDiv3"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="?attr/dividerColor"
+            android:layout_marginTop="@dimen/x1_2"
+            app:layout_constraintEnd_toEndOf="@id/glRight"
+            app:layout_constraintStart_toStartOf="@id/glLeft"
+            app:layout_constraintTop_toBottomOf="@id/profileSelectNodeContainer" />
+
+        <ImageView
             android:id="@+id/ivProfilePin"
             android:layout_width="@dimen/profile_icon"
             android:layout_height="@dimen/profile_icon"
@@ -158,7 +237,7 @@
             android:padding="@dimen/x1"
             android:src="@drawable/ic_neu_pin_key"
             app:layout_constraintStart_toStartOf="@id/glLeft"
-            app:layout_constraintTop_toBottomOf="@id/tvProfileAppSettingsGroup"
+            app:layout_constraintTop_toBottomOf="@id/vProfileDiv3"
             app:tint="?attr/tintColorLight"
             tools:ignore="ContentDescription" />
 
@@ -421,7 +500,7 @@
             android:text="@string/settings_header_app"
             android:textAllCaps="true"
             android:textColor="?attr/titleColor"
-            android:layout_marginTop="@dimen/x3"
+            android:layout_marginTop="@dimen/x2"
             app:layout_constraintEnd_toEndOf="@id/glRight"
             app:layout_constraintStart_toStartOf="@id/glLeft"
             app:layout_constraintTop_toBottomOf="@+id/vProfileDiv0" />

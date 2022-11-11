@@ -16,6 +16,10 @@ interface MainRouter {
 
     fun showPin(action: PinCodeAction)
 
+    fun showPinForLogout(address: String)
+
+    fun showPinForBackup(action: PinCodeAction, addresses: List<String>)
+
     fun showPinLengthInfo()
 
     fun showFlexibleUpdateScreen()
@@ -26,9 +30,11 @@ interface MainRouter {
 
     fun popBackStack()
 
-    fun showTerms()
+    fun popBackStackToAccountList()
 
-    fun showPassphrase()
+    fun popBackStackToAccountDetails()
+
+    fun showTerms()
 
     fun showSelectLanguage()
 
@@ -52,7 +58,27 @@ interface MainRouter {
 
     fun currentDestinationIsClaimFragment(): Boolean
 
+    fun currentDestinationIsPinCheckNeeded(): Boolean
+
     fun showProfile()
 
     fun showClaim()
+
+    fun showAccountList()
+
+    fun showExportPassphraseProtection(address: String)
+
+    fun showExportSeedProtection(address: String)
+
+    fun showExportJSONProtection(addresses: List<String>)
+
+    fun showBackupPassphrase(address: String)
+
+    fun showBackupSeed(address: String)
+
+    fun showBackupJson(addresses: List<String>)
+
+    fun showAccountDetails(address: String)
+
+    fun showWebView(title: String, url: String)
 }

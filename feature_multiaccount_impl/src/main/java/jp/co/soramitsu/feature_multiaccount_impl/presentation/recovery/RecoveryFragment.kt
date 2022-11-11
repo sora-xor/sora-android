@@ -81,7 +81,14 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
 
         viewBinding.mnemonicInput.doOnTextChanged { text, _, _, _ ->
             viewModel.onInputChanged(text.toString())
+
+            if (text.toString() != text.toString().lowercase()) {
+                val selection = viewBinding.mnemonicInput.selectionStart
+                viewBinding.mnemonicInput.setText(text.toString().lowercase())
+                viewBinding.mnemonicInput.setSelection(selection)
+            }
         }
+
         viewBinding.accountNameEt.doOnTextChanged { _, _, _, _ ->
             viewModel.onInputChanged(
                 viewBinding.mnemonicInput.text.toString()
@@ -113,8 +120,7 @@ class RecoveryFragment : BaseFragment<RecoveryViewModel>(R.layout.fragment_recov
         }
         viewModel.mnemonicInputLengthLiveData.observe {
             viewBinding.mnemonicInput.filters = arrayOf(
-                InputFilter.LengthFilter(it),
-                InputFilter { source, _, _, _, _, _ -> source.toString().lowercase() }
+                InputFilter.LengthFilter(it)
             )
         }
         viewModel.nextButtonEnabledLiveData.observe {

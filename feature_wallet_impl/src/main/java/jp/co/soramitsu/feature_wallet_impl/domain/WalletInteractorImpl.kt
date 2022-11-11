@@ -290,6 +290,10 @@ class WalletInteractorImpl(
             .firstOrNull { it.token.id == tokenId } != null
     }
 
+    override suspend fun getSoraAccounts(): List<SoraAccount> {
+        return userRepository.soraAccountsList()
+    }
+
     override suspend fun getFeeToken(): Token {
         return requireNotNull(walletRepository.getToken(SubstrateOptionsProvider.feeAssetId))
     }

@@ -5,8 +5,6 @@
 
 package jp.co.soramitsu.feature_onboarding_impl.presentation.version
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
@@ -15,6 +13,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.databinding.FragmentUnsupportedVersionBinding
@@ -54,9 +53,6 @@ class UnsupportedVersionFragment :
     }
 
     private fun openGooglePlay(appUrl: String) {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.parse(appUrl)
-        }
-        startActivity(intent)
+        ShareUtil.shareInBrowser(this, appUrl)
     }
 }

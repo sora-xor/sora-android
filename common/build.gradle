@@ -32,7 +32,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion versions.compose
+        kotlinCompilerExtensionVersion versions.composeCompiler
     }
 
     buildFeatures {
@@ -107,6 +107,9 @@ dependencies {
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
+
+    implementation lazySodiumDep
+    implementation jnaDep
 
     implementation composeUiDep
     implementation composeLiveDataDep

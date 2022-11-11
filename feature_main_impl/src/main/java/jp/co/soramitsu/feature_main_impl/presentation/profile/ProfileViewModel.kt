@@ -14,6 +14,9 @@ import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
+import jp.co.soramitsu.feature_select_node_api.NodeManager
+import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -24,7 +27,9 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val interactor: MainInteractor,
     private val router: MainRouter,
-    private val referralRouter: ReferralRouter
+    private val referralRouter: ReferralRouter,
+    private val selectNodeRouter: SelectNodeRouter,
+    nodeManager: NodeManager
 ) : BaseViewModel() {
 
     private val _biometryEnabledLiveData = MutableLiveData<Boolean>()
@@ -35,6 +40,12 @@ class ProfileViewModel @Inject constructor(
 
     private val _ldAccountAddress = MutableLiveData<String>()
     val accountAddress: LiveData<String> = _ldAccountAddress
+
+    private val _selectedNode = MutableLiveData<Node?>()
+    val selectedNode: LiveData<Node?> = _selectedNode
+
+    private val _nodeConnected = MutableLiveData<Boolean>()
+    val nodeConnected: LiveData<Boolean> = _nodeConnected
 
     init {
         viewModelScope.launch {
@@ -49,18 +60,24 @@ class ProfileViewModel @Inject constructor(
                 _ldAccountAddress.value = it.substrateAddress
             }
             .launchIn(viewModelScope)
-    }
 
-    fun onVotesClick() {
-        router.showVotesHistory()
+        interactor.flowSelectedNode()
+            .catch { onError(it) }
+            .onEach {
+                _selectedNode.value = it
+            }
+            .launchIn(viewModelScope)
+
+        nodeManager.connectionState()
+            .catch { onError(it) }
+            .onEach { connected ->
+                _nodeConnected.value = connected
+            }
+            .launchIn(viewModelScope)
     }
 
     fun btnHelpClicked() {
         router.showFaq()
-    }
-
-    fun onPassphraseClick() {
-        router.showPin(PinCodeAction.OPEN_PASSPHRASE)
     }
 
     fun profileAboutClicked() {
@@ -93,6 +110,10 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun onSwitchAccountClicked() {
-        router.showSwitchAccount()
+        router.showAccountList()
+    }
+
+    fun selectNodeClicked() {
+        selectNodeRouter.showSelectNode()
     }
 }

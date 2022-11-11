@@ -7,6 +7,8 @@ package jp.co.soramitsu.feature_referral_impl.data
 
 import androidx.room.withTransaction
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
@@ -26,10 +28,8 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.sora.substrate.substrate.referralBond
 import jp.co.soramitsu.sora.substrate.substrate.referralUnbond
 import jp.co.soramitsu.sora.substrate.substrate.setReferrer
-import jp.co.soramitsu.xnetworking.subquery.ReferrerReward
-import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
-import jp.co.soramitsu.xnetworking.subquery.history.sora.SoraSubqueryResponse
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
@@ -41,14 +41,20 @@ class ReferralRepositoryImpl @Inject constructor(
     private val extrinsicManager: ExtrinsicManager,
     private val runtimeManager: RuntimeManager,
     private val substrateCalls: SubstrateCalls,
-    private val subQueryClient: SubQueryClient<SoraSubqueryResponse, SubQueryHistoryItem>,
+    private val soraWalletBlockExplorerInfo: SoraWalletBlockExplorerInfo,
 ) : ReferralRepository {
+
+    private val referralRewardCaseName =
+        if (BuildUtils.isFlavors(Flavor.PROD)) "0" else "1"
 
     override suspend fun updateReferralRewards(address: String) {
         db.withTransaction {
             db.referralsDao().clearTable()
             runCatching {
-                subQueryClient.getReferrerRewards(address).rewards.map {
+                soraWalletBlockExplorerInfo.getReferrerRewards(
+                    address,
+                    referralRewardCaseName
+                ).rewards.map {
                     ReferralLocal(it.referral, it.amount)
                 }
             }

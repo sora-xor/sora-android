@@ -15,10 +15,10 @@ import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.logging.Logger
+import jp.co.soramitsu.fearless_utils.wsrpc.recovery.ConstantReconnectStrategy
 import jp.co.soramitsu.fearless_utils.wsrpc.recovery.Reconnector
 import jp.co.soramitsu.fearless_utils.wsrpc.request.RequestExecutor
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
-import jp.co.soramitsu.sora.substrate.substrate.HealthChecker
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
 import jp.co.soramitsu.sora.substrate.substrate.WsConnectionManager
@@ -39,7 +39,7 @@ class SubstrateModule {
 
     @Provides
     @Singleton
-    fun provideReconnector(): Reconnector = Reconnector()
+    fun provideReconnector(): Reconnector = Reconnector(strategy = ConstantReconnectStrategy(step = 10000L))
 
     @Provides
     @Singleton
@@ -54,11 +54,6 @@ class SubstrateModule {
         reconnector: Reconnector,
         requestExecutor: RequestExecutor,
     ): SocketService = SocketService(mapper, logger, socketFactory, reconnector, requestExecutor)
-
-    @Singleton
-    @Provides
-    fun provideHealthChecker(cm: ConnectionManager): HealthChecker =
-        HealthChecker(cm)
 
     @Provides
     @Singleton

@@ -34,6 +34,10 @@
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment"
         tools:layout="@layout/fragment_claim" />
 
+    <fragment
+        android:id="@+id/webViewFragment"
+        android:name="jp.co.soramitsu.common.presentation.compose.webview.WebViewFragment" />
+
     <include app:graph="@navigation/parliament_nav_graph" />
     <include app:graph="@navigation/polkaswap_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />
@@ -42,5 +46,7 @@
     <include app:graph="@navigation/create_account_nav_graph" />
     <include app:graph="@navigation/recovery_account_nav_graph" />
     <include app:graph="@navigation/referral_nav_graph" />
+    <include app:graph="@navigation/export_account_nav_graph" />
+    <include app:graph="@navigation/select_node_nav_graph" />
 
 </navigation>

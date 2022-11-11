@@ -46,15 +46,15 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
         viewModel.errorFromResourceLiveData.observe(
             viewLifecycleOwner,
             EventObserver {
-                showErrorFromResponse(it)
+                showErrorFromResponse(it.first, it.second)
             }
         )
     }
 
-    protected fun showErrorFromResponse(resId: Int) {
+    protected fun showErrorFromResponse(title: Int, messageResId: Int) {
         AlertDialog.Builder(requireActivity())
-            .setTitle(R.string.common_error_general_title)
-            .setMessage(resId)
+            .setTitle(title)
+            .setMessage(messageResId)
             .setPositiveButton(android.R.string.ok) { _, _ -> }
             .show()
     }

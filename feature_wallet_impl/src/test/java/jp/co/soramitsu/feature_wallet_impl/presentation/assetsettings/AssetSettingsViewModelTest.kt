@@ -68,7 +68,8 @@ class AssetSettingsViewModelTest {
             true,
             true,
             true,
-            true
+            true,
+            true,
         )
     ): List<Asset> {
         val assets = startList(vis)
@@ -88,15 +89,16 @@ class AssetSettingsViewModelTest {
 
     @Test
     fun `check visibility on after change position`() = runTest {
-        val list = setUpStartList(listOf(true, true, true, true, false, false, false, false))
+        val list = setUpStartList(listOf(true, true, true, true, true, false, false, false, false))
+        advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[5], true)
+        viewModel.checkChanged(mappedModels[6], true)
         advanceUntilIdle()
         verify(walletInteractor).displayAssets(listOf("token2_id"))
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
-            Collections.swap(it, 4, 5)
+            Collections.swap(it, 5, 6)
             it
         }.mapIndexed { index, s -> s to index }.toMap()
         verify(walletInteractor).updateAssetPositions(map)
@@ -104,9 +106,10 @@ class AssetSettingsViewModelTest {
 
     @Test
     fun `check visibility on after change position 2`() = runTest {
-        val list = setUpStartList(listOf(true, true, false, true, false, false, false, false))
+        val list = setUpStartList(listOf(true, true, true, false, true, false, false, false, false))
+        advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[6], true)
+        viewModel.checkChanged(mappedModels[7], true)
         advanceUntilIdle()
         verify(walletInteractor).displayAssets(listOf("token3_id"))
         viewModel.checkChanged(mappedModels[2], true)
@@ -115,8 +118,8 @@ class AssetSettingsViewModelTest {
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
+            Collections.swap(it, 6, 7)
             Collections.swap(it, 5, 6)
-            Collections.swap(it, 4, 5)
             it
         }.mapIndexed { index, s -> s to index }.toMap()
         verify(walletInteractor).updateAssetPositions(map)
@@ -124,67 +127,21 @@ class AssetSettingsViewModelTest {
 
     @Test
     fun `check visibility on after change position 3`() = runTest {
-        val list = setUpStartList(listOf(true, true, true, true, true, false, false, false))
-        val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[6], true)
-        advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token3_id"))
-        viewModel.checkChanged(mappedModels[5], true)
-        advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token2_id"))
-        viewModel.checkChanged(mappedModels[4], false)
-        advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token_id"))
-        viewModel.backClicked()
-        advanceUntilIdle()
-        val map = list.map { it.token.id }.let {
-            Collections.swap(it, 4, 5)
-            Collections.swap(it, 5, 6)
-            it
-        }.mapIndexed { index, s -> s to index }.toMap()
-        verify(walletInteractor).updateAssetPositions(map)
-    }
-
-    @Test
-    fun `check visibility on after change position 4`() = runTest {
-        val list = setUpStartList(listOf(true, true, true, true, false, true, false, true))
-        val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[6], true)
-        advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token3_id"))
-        viewModel.checkChanged(mappedModels[5], false)
-        advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token2_id"))
-        viewModel.checkChanged(mappedModels[4], true)
-        advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token_id"))
-        viewModel.checkChanged(mappedModels[7], false)
-        advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token4_id"))
-        viewModel.backClicked()
-        advanceUntilIdle()
-        val map = list.map { it.token.id }.let {
-            Collections.swap(it, 5, 6)
-            it
-        }.mapIndexed { index, s -> s to index }.toMap()
-        verify(walletInteractor).updateAssetPositions(map)
-    }
-
-    @Test
-    fun `check visibility on after change position 5`() = runTest {
-        val list = setUpStartList(listOf(true, true, true, true, true, true, true, false))
+        val list = setUpStartList(listOf(true, true, true, true, true, true, false, false, false))
         advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[4], false)
-        advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.checkChanged(mappedModels[7], true)
         advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token4_id"))
+        verify(walletInteractor).displayAssets(listOf("token3_id"))
+        viewModel.checkChanged(mappedModels[6], true)
+        advanceUntilIdle()
+        verify(walletInteractor).displayAssets(listOf("token2_id"))
+        viewModel.checkChanged(mappedModels[5], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
-            Collections.swap(it, 4, 5)
             Collections.swap(it, 5, 6)
             Collections.swap(it, 6, 7)
             it
@@ -193,20 +150,68 @@ class AssetSettingsViewModelTest {
     }
 
     @Test
-    fun `check visibility on after change position 6`() = runTest {
-        val list = setUpStartList(listOf(true, true, true, true, false, false, false, false))
+    fun `check visibility on after change position 4`() = runTest {
+        val list = setUpStartList(listOf(true, true, true, true, true, false, true, false, true))
         advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[4], true)
-        advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token_id"))
-        viewModel.checkChanged(mappedModels[5], true)
-        advanceUntilIdle()
-        verify(walletInteractor).displayAssets(listOf("token2_id"))
-        viewModel.checkChanged(mappedModels[6], true)
+        viewModel.checkChanged(mappedModels[7], true)
         advanceUntilIdle()
         verify(walletInteractor).displayAssets(listOf("token3_id"))
+        viewModel.checkChanged(mappedModels[6], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token2_id"))
+        viewModel.checkChanged(mappedModels[5], true)
+        advanceUntilIdle()
+        verify(walletInteractor).displayAssets(listOf("token_id"))
+        viewModel.checkChanged(mappedModels[8], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token4_id"))
+        viewModel.backClicked()
+        advanceUntilIdle()
+        val map = list.map { it.token.id }.let {
+            Collections.swap(it, 6, 7)
+            it
+        }.mapIndexed { index, s -> s to index }.toMap()
+        verify(walletInteractor).updateAssetPositions(map)
+    }
+
+    @Test
+    fun `check visibility on after change position 5`() = runTest {
+        val list = setUpStartList(listOf(true, true, true, true, true, true, true, true, false))
+        advanceUntilIdle()
+        val mappedModels = mapModels(list)
+        viewModel.checkChanged(mappedModels[5], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token_id"))
+        viewModel.checkChanged(mappedModels[8], true)
+        advanceUntilIdle()
+        verify(walletInteractor).displayAssets(listOf("token4_id"))
+        viewModel.backClicked()
+        advanceUntilIdle()
+        val map = list.map { it.token.id }.let {
+            Collections.swap(it, 5, 6)
+            Collections.swap(it, 6, 7)
+            Collections.swap(it, 7, 8)
+            it
+        }.mapIndexed { index, s -> s to index }.toMap()
+        verify(walletInteractor).updateAssetPositions(map)
+    }
+
+    @Test
+    fun `check visibility on after change position 6`() = runTest {
+        val list = setUpStartList(listOf(true, true, true, true, true, false, false, false, false))
+        advanceUntilIdle()
+        val mappedModels = mapModels(list)
+        viewModel.checkChanged(mappedModels[5], true)
+        advanceUntilIdle()
+        verify(walletInteractor).displayAssets(listOf("token_id"))
+        viewModel.checkChanged(mappedModels[6], true)
+        advanceUntilIdle()
+        verify(walletInteractor).displayAssets(listOf("token2_id"))
         viewModel.checkChanged(mappedModels[7], true)
+        advanceUntilIdle()
+        verify(walletInteractor).displayAssets(listOf("token3_id"))
+        viewModel.checkChanged(mappedModels[8], true)
         advanceUntilIdle()
         verify(walletInteractor).displayAssets(listOf("token4_id"))
         viewModel.backClicked()
@@ -220,14 +225,14 @@ class AssetSettingsViewModelTest {
         val list = setUpStartList()
         advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[5], false)
+        viewModel.checkChanged(mappedModels[6], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token2_id"))
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
-            Collections.swap(it, 5, 6)
             Collections.swap(it, 6, 7)
+            Collections.swap(it, 7, 8)
             it
         }.mapIndexed { index, s -> s to index }.toMap()
         verify(walletInteractor).updateAssetPositions(map)
@@ -238,17 +243,17 @@ class AssetSettingsViewModelTest {
         val list = setUpStartList()
         advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[5], false)
+        viewModel.checkChanged(mappedModels[6], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token2_id"))
-        viewModel.checkChanged(mappedModels[6], false)
+        viewModel.checkChanged(mappedModels[7], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token3_id"))
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
+            Collections.swap(it, 7, 8)
             Collections.swap(it, 6, 7)
-            Collections.swap(it, 5, 6)
             it
         }.mapIndexed { index, s -> s to index }.toMap()
         verify(walletInteractor).updateAssetPositions(map)
@@ -259,21 +264,21 @@ class AssetSettingsViewModelTest {
         val list = setUpStartList()
         advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[4], false)
-        advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.checkChanged(mappedModels[5], false)
         advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token2_id"))
+        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.checkChanged(mappedModels[6], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token2_id"))
+        viewModel.checkChanged(mappedModels[7], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token3_id"))
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
+            Collections.swap(it, 7, 8)
             Collections.swap(it, 6, 7)
             Collections.swap(it, 5, 6)
-            Collections.swap(it, 4, 5)
             it
         }.mapIndexed { index, s -> s to index }.toMap()
         verify(walletInteractor).updateAssetPositions(map)
@@ -283,16 +288,16 @@ class AssetSettingsViewModelTest {
     fun `check visibility after change position 3 all`() = runTest {
         val list = setUpStartList()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[4], false)
-        advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.checkChanged(mappedModels[5], false)
         advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token2_id"))
+        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.checkChanged(mappedModels[6], false)
         advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token3_id"))
+        verify(walletInteractor).hideAssets(listOf("token2_id"))
         viewModel.checkChanged(mappedModels[7], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token3_id"))
+        viewModel.checkChanged(mappedModels[8], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token4_id"))
         viewModel.backClicked()
@@ -319,14 +324,17 @@ class AssetSettingsViewModelTest {
         verify(walletInteractor).hideAssets(listOf("0x0200080000000000000000000000000000000000000000000000000000000000"))
         viewModel.checkChanged(mappedModels[4], false)
         advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token_id"))
+        verify(walletInteractor).hideAssets(listOf("0x0200090000000000000000000000000000000000000000000000000000000000"))
         viewModel.checkChanged(mappedModels[5], false)
         advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token2_id"))
+        verify(walletInteractor).hideAssets(listOf("token_id"))
         viewModel.checkChanged(mappedModels[6], false)
         advanceUntilIdle()
-        verify(walletInteractor).hideAssets(listOf("token3_id"))
+        verify(walletInteractor).hideAssets(listOf("token2_id"))
         viewModel.checkChanged(mappedModels[7], false)
+        advanceUntilIdle()
+        verify(walletInteractor).hideAssets(listOf("token3_id"))
+        viewModel.checkChanged(mappedModels[8], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token4_id"))
         viewModel.backClicked()
@@ -340,21 +348,21 @@ class AssetSettingsViewModelTest {
         val list = setUpStartList()
         advanceUntilIdle()
         val mappedModels = mapModels(list)
-        viewModel.checkChanged(mappedModels[6], false)
+        viewModel.checkChanged(mappedModels[7], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token3_id"))
-        viewModel.checkChanged(mappedModels[4], false)
+        viewModel.checkChanged(mappedModels[5], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token_id"))
-        viewModel.checkChanged(mappedModels[5], false)
+        viewModel.checkChanged(mappedModels[6], false)
         advanceUntilIdle()
         verify(walletInteractor).hideAssets(listOf("token2_id"))
         viewModel.backClicked()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
+            Collections.swap(it, 7, 8)
             Collections.swap(it, 6, 7)
             Collections.swap(it, 5, 6)
-            Collections.swap(it, 4, 5)
             it
         }.mapIndexed { index, s -> s to index }.toMap()
         verify(walletInteractor).updateAssetPositions(map)
@@ -507,7 +515,14 @@ class AssetSettingsViewModelTest {
             ),
         ),
         Asset(
-            Token("token_id", "token name", "token symbol", 18, true, 0),
+            Token(
+                "0x0200090000000000000000000000000000000000000000000000000000000000",
+                "sora syntytics",
+                "xst",
+                18,
+                true,
+                0
+            ),
             visibility[4],
             5,
             AssetBalance(
@@ -521,7 +536,7 @@ class AssetSettingsViewModelTest {
             ),
         ),
         Asset(
-            Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
+            Token("token_id", "token name", "token symbol", 18, true, 0),
             visibility[5],
             6,
             AssetBalance(
@@ -532,10 +547,10 @@ class AssetSettingsViewModelTest {
                 BigDecimal.ONE,
                 BigDecimal.ONE,
                 BigDecimal.ONE
-            )
+            ),
         ),
         Asset(
-            Token("token3_id", "token3 name", "token3 symbol", 18, true, 0),
+            Token("token2_id", "token2 name", "token2 symbol", 18, true, 0),
             visibility[6],
             7,
             AssetBalance(
@@ -549,9 +564,23 @@ class AssetSettingsViewModelTest {
             )
         ),
         Asset(
-            Token("token4_id", "token4 name", "token4 symbol", 18, true, 0),
+            Token("token3_id", "token3 name", "token3 symbol", 18, true, 0),
             visibility[7],
             8,
+            AssetBalance(
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE,
+                BigDecimal.ONE
+            )
+        ),
+        Asset(
+            Token("token4_id", "token4 name", "token4 symbol", 18, true, 0),
+            visibility[8],
+            9,
             AssetBalance(
                 BigDecimal.ONE,
                 BigDecimal.ONE,

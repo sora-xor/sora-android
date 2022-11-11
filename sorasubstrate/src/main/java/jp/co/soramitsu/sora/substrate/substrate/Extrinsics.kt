@@ -14,7 +14,6 @@ import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import java.math.BigInteger
 
 fun ExtrinsicBuilder.setReferrer(referrer: String) =
@@ -28,6 +27,7 @@ fun ExtrinsicBuilder.setReferrer(referrer: String) =
 
 fun ExtrinsicBuilder.swap(
     runtime: RuntimeManager,
+    dexId: Int,
     inputAssetId: String,
     outputAssetId: String,
     amount: BigInteger,
@@ -40,7 +40,7 @@ fun ExtrinsicBuilder.swap(
         Pallete.LIQUIDITY_PROXY.palletName,
         Method.SWAP.methodName,
         mapOf(
-            "dex_id" to SubstrateOptionsProvider.dexId.toBigInteger(),
+            "dex_id" to dexId.toBigInteger(),
             "input_asset_id" to if (runtime.getMetadataVersion() < 14) inputAssetId.fromHex() else Struct.Instance(
                 mapOf("code" to inputAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
             ),
@@ -119,6 +119,7 @@ fun ExtrinsicBuilder.migrate(
 
 fun ExtrinsicBuilder.removeLiquidity(
     runtime: RuntimeManager,
+    dexId: Int,
     outputAssetIdA: String,
     outputAssetIdB: String,
     markerAssetDesired: BigInteger,
@@ -129,7 +130,7 @@ fun ExtrinsicBuilder.removeLiquidity(
         Pallete.POOL_XYK.palletName,
         Method.WITHDRAW_LIQUIDITY.methodName,
         mapOf(
-            "dex_id" to SubstrateOptionsProvider.dexId.toBigInteger(),
+            "dex_id" to dexId.toBigInteger(),
             "output_asset_a" to if (runtime.getMetadataVersion() < 14) outputAssetIdA.fromHex() else Struct.Instance(
                 mapOf("code" to outputAssetIdA.fromHex().toList().map { it.toInt().toBigInteger() })
             ),
@@ -144,13 +145,14 @@ fun ExtrinsicBuilder.removeLiquidity(
 
 fun ExtrinsicBuilder.register(
     runtime: RuntimeManager,
+    dexId: Int,
     baseAssetId: String,
     targetAssetId: String
 ) = this.call(
     Pallete.TRADING_PAIR.palletName,
     Method.REGISTER.methodName,
     mapOf(
-        "dex_id" to SubstrateOptionsProvider.dexId.toBigInteger(),
+        "dex_id" to dexId.toBigInteger(),
         "base_asset_id" to if (runtime.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
             mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
         ),
@@ -162,13 +164,14 @@ fun ExtrinsicBuilder.register(
 
 fun ExtrinsicBuilder.initializePool(
     runtime: RuntimeManager,
+    dexId: Int,
     baseAssetId: String,
     targetAssetId: String
 ) = this.call(
     Pallete.POOL_XYK.palletName,
     Method.INITIALIZE_POOL.methodName,
     mapOf(
-        "dex_id" to SubstrateOptionsProvider.dexId.toBigInteger(),
+        "dex_id" to dexId.toBigInteger(),
         "asset_a" to if (runtime.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
             mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
         ),
@@ -180,6 +183,7 @@ fun ExtrinsicBuilder.initializePool(
 
 fun ExtrinsicBuilder.depositLiquidity(
     runtime: RuntimeManager,
+    dexId: Int,
     baseAssetId: String,
     targetAssetId: String,
     baseAssetAmount: BigInteger,
@@ -190,7 +194,7 @@ fun ExtrinsicBuilder.depositLiquidity(
     Pallete.POOL_XYK.palletName,
     Method.DEPOSIT_LIQUIDITY.methodName,
     mapOf(
-        "dex_id" to SubstrateOptionsProvider.dexId.toBigInteger(),
+        "dex_id" to dexId.toBigInteger(),
         "input_asset_a" to if (runtime.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
             mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
         ),

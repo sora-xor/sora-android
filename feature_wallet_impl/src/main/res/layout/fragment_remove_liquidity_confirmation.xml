@@ -34,12 +34,12 @@
                 style="@style/TextAppearance.Soramitsu.Neu.Light.18"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
                 android:layout_marginTop="@dimen/x3"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:gravity="center"
+                android:text="@string/common_you_will_receive"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:text="@string/common_you_will_receive" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/tvAmountInput"
@@ -149,7 +149,8 @@
                 app:rowType="line"
                 app:rowsBottomPadding="@dimen/x3"
                 app:rowsCount="3"
-                app:rowsTopPadding="@dimen/x2" />
+                app:rowsTopPadding="@dimen/x2"
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

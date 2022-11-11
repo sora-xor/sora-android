@@ -6,14 +6,18 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.wallet.events
 
 import android.graphics.drawable.Animatable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import jp.co.soramitsu.common.presentation.AssetBalanceData
 import jp.co.soramitsu.common.presentation.AssetBalanceStyle
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
+import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.hide
 import jp.co.soramitsu.common.util.ext.safeCast
@@ -138,6 +142,7 @@ class HistoryAdapter(
                     clickListener
                 )
             }
+            else -> {}
         }
     }
 }
@@ -325,7 +330,8 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
         }
     }
 
-    class EventTransactionReferralViewHolder(containerView: View) : EventItemViewHolder(containerView) {
+    class EventTransactionReferralViewHolder(containerView: View) :
+        EventItemViewHolder(containerView) {
 
         private val viewBinding = EventSectionItemReferralBinding.bind(containerView)
 
@@ -347,13 +353,34 @@ sealed class EventItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemV
             } else {
                 viewBinding.eventItemFailedTextView.gone()
                 viewBinding.eventItemAmountTextView.show()
-                viewBinding.eventItemAmountTextView.setBalance(
-                    AssetBalanceData(
-                        amount = soraTransaction.amountFormatted.first,
-                        ticker = soraTransaction.amountFormatted.second,
-                        style = if (soraTransaction.plusAmount) positiveBalanceStyle else neutralBalanceStyle
+                if (soraTransaction.amountFormatted != null) {
+                    viewBinding.tvReferralAddress.gone()
+                    viewBinding.eventItemAmountTextView.setBalance(
+                        AssetBalanceData(
+                            amount = soraTransaction.amountFormatted.first,
+                            ticker = soraTransaction.amountFormatted.second,
+                            style = if (soraTransaction.plusAmount) positiveBalanceStyle else neutralBalanceStyle
+                        )
                     )
-                )
+                } else if (soraTransaction.referral != null) {
+                    viewBinding.tvReferralAddress.show()
+                    viewBinding.tvReferralAddress.text = soraTransaction.referral.second
+                    val text = SpannableString(soraTransaction.referral.first)
+                    text.setSpan(
+                        ForegroundColorSpan(
+                            viewBinding.eventItemAmountTextView.getColorAttr(
+                                if (soraTransaction.plusAmount)
+                                    neutralBalanceStyle.color
+                                else
+                                    positiveBalanceStyle.color
+                            )
+                        ),
+                        0,
+                        text.length,
+                        SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                    viewBinding.eventItemAmountTextView.setText(text, TextView.BufferType.SPANNABLE)
+                }
             }
             if (soraTransaction.status == TransactionStatus.PENDING) {
                 viewBinding.eventStatusIconImageView.hide()

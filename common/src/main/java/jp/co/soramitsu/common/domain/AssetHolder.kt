@@ -13,7 +13,7 @@ object AssetHolder {
         id = "",
         name = "",
         symbol = "???",
-        precision = 18,
+        precision = OptionsProvider.defaultScale,
         isHidable = true,
         icon = OptionsProvider.DEFAULT_ICON
     )
@@ -39,13 +39,20 @@ object AssetHolder {
                 true, true,
                 3,
             ),
+        // xst
+        "0x0200090000000000000000000000000000000000000000000000000000000000" to
+            AssetDefault(
+                "SORA Synthetics", "XST",
+                true, true,
+                4,
+            ),
         // xstusd
         "0x0200080000000000000000000000000000000000000000000000000000000000" to
             AssetDefault(
                 "SORA Synthetic USD", "XSTUSD",
                 true, true,
-                4,
-            )
+                5,
+            ),
     )
     private val defaultAsset: AssetDefault = AssetDefault(
         name = "",

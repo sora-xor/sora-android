@@ -17,9 +17,15 @@ import java.math.BigDecimal
 
 interface PolkaswapInteractor {
 
-    fun subscribePoolsCache(): Flow<List<PoolData>>
+    suspend fun getPoolBaseTokens(): List<String>
 
-    fun subscribeReservesCache(assetId: String): Flow<LiquidityData?>
+    fun subscribePoolsCache(): Flow<List<PoolData>>
+    fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<PoolData>
+
+    fun subscribeReservesCache(
+        baseTokenId: String,
+        assetId: String
+    ): Flow<LiquidityData?>
 
     fun subscribePoolsChanges(): Flow<String>
 
@@ -27,9 +33,10 @@ interface PolkaswapInteractor {
 
     suspend fun getPoolStrategicBonusAPY(tokenId: String): Double?
 
-    fun getPoolData(assetId: String): Flow<PoolData?>
-
-    suspend fun updatePool(tokenId: String)
+    suspend fun updatePool(
+        baseTokenId: String,
+        tokenId: String
+    )
 
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean
 
@@ -136,7 +143,10 @@ interface PolkaswapInteractor {
         outputAssetId: String
     ): Flow<Boolean>
 
-    fun isPairPresentedInNetwork(tokenId: String): Flow<Boolean>
+    fun isPairPresentedInNetwork(
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<Boolean>
 
     suspend fun removeLiquidity(
         token1: Token,

@@ -28,6 +28,7 @@ object PolkaswapTestData {
 
     val POOL_DATA = PoolData(
         TEST_ASSET.token,
+        XOR_ASSET.token,
         BigDecimal.ONE,
         BigDecimal.TEN,
         BigDecimal.ONE,

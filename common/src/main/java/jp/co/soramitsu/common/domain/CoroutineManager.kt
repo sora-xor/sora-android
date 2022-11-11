@@ -12,4 +12,6 @@ import kotlinx.coroutines.SupervisorJob
 class CoroutineManager {
     val applicationScope = CoroutineScope(SupervisorJob())
     val io = Dispatchers.IO
+
+    fun createSupervisorScope() = CoroutineScope(Dispatchers.IO + SupervisorJob())
 }

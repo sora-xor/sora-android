@@ -10,10 +10,9 @@ import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.networkStateFlow
+import jp.co.soramitsu.fearless_utils.wsrpc.socket.StateObserver
 import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -22,19 +21,25 @@ import kotlinx.coroutines.flow.onEach
 @SuppressLint("CheckResult")
 class WsConnectionManager(
     private val socket: SocketService,
-    appStateProvider: AppStateProvider,
-    coroutineManager: CoroutineManager,
+    private val appStateProvider: AppStateProvider,
+    private val coroutineManager: CoroutineManager,
 ) : ConnectionManager {
 
-    init {
+    private lateinit var address: String
+
+    override fun setAddress(address: String) {
+        this.address = address
+    }
+
+    override fun observeAppState() {
         appStateProvider.observeState()
             .distinctUntilChanged()
-            .catch {
-            }
             .onEach {
                 when (it) {
                     AppStateProvider.AppEvent.ON_CREATE -> {
-                        start(SubstrateOptionsProvider.url)
+                        if (this::address.isInitialized) {
+                            start(address)
+                        }
                     }
                     AppStateProvider.AppEvent.ON_RESUME -> {
                         resume()
@@ -52,19 +57,39 @@ class WsConnectionManager(
 
     override fun connectionState(): Flow<Boolean> {
         return socket.networkStateFlow()
-            .map {
-                it is SocketStateMachine.State.Connected
+            .map { state ->
+                state is SocketStateMachine.State.Connected
             }
             .distinctUntilChanged()
     }
 
-    override fun start(url: String) = socket.start(url, true)
+    override fun networkState(): Flow<SocketStateMachine.State> {
+        return socket.networkStateFlow()
+    }
+
+    override fun start(url: String) {
+        address = url
+        socket.start(url, true)
+    }
 
     override fun isStarted(): Boolean = socket.started()
+
+    override fun switchUrl(url: String) {
+        address = url
+        socket.switchUrl(url)
+    }
 
     override fun stop() = socket.stop()
 
     override fun pause() = socket.pause()
 
     override fun resume() = socket.resume()
+
+    override fun addStateObserver(stateObserver: StateObserver) {
+        socket.addStateObserver(stateObserver)
+    }
+
+    override fun removeStateObserver(stateObserver: StateObserver) {
+        socket.removeStateObserver(stateObserver)
+    }
 }

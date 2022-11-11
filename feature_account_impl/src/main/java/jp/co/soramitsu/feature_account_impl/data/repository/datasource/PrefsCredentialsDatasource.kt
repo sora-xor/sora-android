@@ -22,6 +22,7 @@ class PrefsCredentialsDatasource constructor(
         private const val PREFS_PUBLIC_KEY = "prefs_pub_key"
         private const val PREFS_KEY_NONCE = "prefs_key_nonce"
         private const val PREFS_MNEMONIC = "prefs_mnemonic"
+        private const val PREFS_SEED = "prefs_seed"
         private const val PREFS_ADDRESS = "prefs_address_pure"
     }
 
@@ -49,5 +50,19 @@ class PrefsCredentialsDatasource constructor(
 
     override suspend fun retrieveMnemonic(suffixAddress: String): String {
         return encryptedPreferences.getDecryptedString(PREFS_MNEMONIC + suffixAddress)
+    }
+
+    override suspend fun saveSeed(seed: String, suffixAddress: String) {
+        encryptedPreferences.putEncryptedString(PREFS_SEED + suffixAddress, seed)
+    }
+
+    override suspend fun retrieveSeed(suffixAddress: String): String {
+        return encryptedPreferences.getDecryptedString(PREFS_SEED + suffixAddress)
+    }
+
+    override suspend fun clearAllDataForAddress(suffixAddress: String) {
+        val fields = listOf(PREFS_ADDRESS, PREFS_PRIVATE_KEY, PREFS_PUBLIC_KEY, PREFS_KEY_NONCE, PREFS_MNEMONIC, PREFS_SEED)
+            .map { it + suffixAddress }
+        encryptedPreferences.clear(fields)
     }
 }

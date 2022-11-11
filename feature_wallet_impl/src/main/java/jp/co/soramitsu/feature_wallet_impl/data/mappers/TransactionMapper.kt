@@ -17,12 +17,12 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItemParam
+import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItem
+import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItemParam
 import java.math.BigDecimal
 
 fun mapHistoryItemsToTransactions(
-    txs: List<SubQueryHistoryItem>,
+    txs: List<TxHistoryItem>,
     myAddress: String,
     tokens: List<Token>,
 ): List<Transaction> {
@@ -32,7 +32,7 @@ fun mapHistoryItemsToTransactions(
 }
 
 private fun mapHistoryItemToTransaction(
-    tx: SubQueryHistoryItem,
+    tx: TxHistoryItem,
     myAddress: String,
     tokens: List<Token>,
 ): Transaction? {
@@ -146,30 +146,33 @@ private fun mapHistoryItemToTransaction(
     return transaction
 }
 
-private fun SubQueryHistoryItem.getSuccess(): TransactionStatus =
+private fun TxHistoryItem.getSuccess(): TransactionStatus =
     if (this.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED
 
-private fun SubQueryHistoryItem.getTimestamp(): Long =
+private fun TxHistoryItem.getTimestamp(): Long =
     (this.timestamp.substringBefore(".").toLongOrNull() ?: 0) * 1000
 
 private fun String.toBigDecimalOrDefault(v: BigDecimal = BigDecimal.ZERO): BigDecimal =
     runCatching { BigDecimal(this) }.getOrDefault(v)
 
-private fun List<SubQueryHistoryItemParam>.toReferralBond(block: (amount: String) -> Transaction.ReferralBond): Transaction.ReferralBond? {
+private fun List<TxHistoryItemParam>.toReferralBond(block: (amount: String) -> Transaction.ReferralBond): Transaction.ReferralBond? {
     val amount = this.firstOrNull { it.paramName == "amount" }
     return if (amount != null) {
         block.invoke(amount.paramValue)
     } else null
 }
 
-private fun List<SubQueryHistoryItemParam>.toReferralUnbond(block: (amount: String) -> Transaction.ReferralUnbond): Transaction.ReferralUnbond? {
+private fun List<TxHistoryItemParam>.toReferralUnbond(block: (amount: String) -> Transaction.ReferralUnbond): Transaction.ReferralUnbond? {
     val amount = this.firstOrNull { it.paramName == "amount" }
     return if (amount != null) {
         block.invoke(amount.paramValue)
     } else null
 }
 
-private fun List<SubQueryHistoryItemParam>.toReferralSetReferrer(myAddress: String, block: (String, Boolean) -> Transaction.ReferralSetReferrer): Transaction.ReferralSetReferrer? {
+private fun List<TxHistoryItemParam>.toReferralSetReferrer(
+    myAddress: String,
+    block: (String, Boolean) -> Transaction.ReferralSetReferrer
+): Transaction.ReferralSetReferrer? {
     val to = this.firstOrNull { it.paramName == "to" }
     val from = this.firstOrNull { it.paramName == "from" }
     return if (to != null && from != null && (to.paramValue == myAddress || from.paramValue == myAddress)) {
@@ -178,7 +181,7 @@ private fun List<SubQueryHistoryItemParam>.toReferralSetReferrer(myAddress: Stri
     } else null
 }
 
-private fun List<SubQueryHistoryItemParam>.toTransfer(block: (to: String, from: String, amount: String, tokenId: String) -> Transaction.Transfer): Transaction.Transfer? {
+private fun List<TxHistoryItemParam>.toTransfer(block: (to: String, from: String, amount: String, tokenId: String) -> Transaction.Transfer): Transaction.Transfer? {
     val to = this.firstOrNull { it.paramName == "to" }
     val from = this.firstOrNull { it.paramName == "from" }
     val amount = this.firstOrNull { it.paramName == "amount" }
@@ -188,7 +191,7 @@ private fun List<SubQueryHistoryItemParam>.toTransfer(block: (to: String, from: 
     else null
 }
 
-private fun List<SubQueryHistoryItemParam>.toSwap(block: (selectedMarket: String, liquidityProviderFee: String, baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Swap): Transaction.Swap? {
+private fun List<TxHistoryItemParam>.toSwap(block: (selectedMarket: String, liquidityProviderFee: String, baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Swap): Transaction.Swap? {
     val selectedMarket = this.firstOrNull { it.paramName == "selectedMarket" }
     val liquidityProviderFee = this.firstOrNull { it.paramName == "liquidityProviderFee" }
     val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
@@ -208,7 +211,7 @@ private fun List<SubQueryHistoryItemParam>.toSwap(block: (selectedMarket: String
     ) else null
 }
 
-private fun List<SubQueryHistoryItemParam>.toLiquidity(block: (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity): Transaction.Liquidity? {
+private fun List<TxHistoryItemParam>.toLiquidity(block: (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity): Transaction.Liquidity? {
     val baseTokenId = this.firstOrNull { it.paramName == "baseAssetId" }
     val targetTokenId = this.firstOrNull { it.paramName == "targetAssetId" }
     val baseTokenAmount = this.firstOrNull { it.paramName == "baseAssetAmount" }
@@ -224,7 +227,7 @@ private fun List<SubQueryHistoryItemParam>.toLiquidity(block: (baseTokenId: Stri
     ) else null
 }
 
-private fun List<SubQueryHistoryItemParam>.toLiquidityBatch(block: (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity): Transaction.Liquidity? {
+private fun List<TxHistoryItemParam>.toLiquidityBatch(block: (baseTokenId: String, targetTokenId: String, baseTokenAmount: String, targetTokenAmount: String) -> Transaction.Liquidity): Transaction.Liquidity? {
     val baseTokenId = this.firstOrNull { it.paramName == "input_asset_a" }
     val targetTokenId = this.firstOrNull { it.paramName == "input_asset_b" }
     val baseTokenAmount = this.firstOrNull { it.paramName == "input_a_desired" }
@@ -240,7 +243,7 @@ private fun List<SubQueryHistoryItemParam>.toLiquidityBatch(block: (baseTokenId:
     ) else null
 }
 
-private fun SubQueryHistoryItem.isMatch(pallet: Pallete, method: Method): Boolean =
+private fun TxHistoryItem.isMatch(pallet: Pallete, method: Method): Boolean =
     this.module.lowercase() == pallet.palletName.lowercase() && this.method.isMatch(method)
 
 private fun String.isMatch(method: Method): Boolean {

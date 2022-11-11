@@ -13,10 +13,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -28,9 +31,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -39,29 +45,59 @@ import androidx.core.graphics.applyCanvas
 import androidx.core.graphics.createBitmap
 import jp.co.soramitsu.common.presentation.compose.resources.Dimens
 import jp.co.soramitsu.common.presentation.compose.theme.NeuColorsCompat
-import jp.co.soramitsu.common.presentation.compose.theme.ThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.neuButton
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @ExperimentalComposeUiApi
 @Preview
 @Composable
+@Deprecated("use neumorph component buttons")
 private fun PreviewNeumorphButton() {
     NeumorphButton(
         label = "Label",
+        textStyle = MaterialTheme.typography.neuButton,
         onClick = {}
     )
 }
 
 @ExperimentalComposeUiApi
 @Composable
+@Deprecated("use neumorph component buttons")
 fun NeumorphButton(
     modifier: Modifier = Modifier,
     label: String,
+    textStyle: TextStyle,
+    icon: Int,
+    backgroundColor: Color,
+    textColor: Color,
     onClick: () -> Unit
 ) {
     NeumorphButtonShape(
         modifier = modifier,
         label = label,
+        icon = icon,
+        textColor = textColor,
+        textStyle = textStyle,
+        backgroundColor = backgroundColor,
+        onClick = onClick
+    )
+}
+
+@ExperimentalComposeUiApi
+@Composable
+@Deprecated("use neumorph component buttons")
+fun NeumorphButton(
+    modifier: Modifier = Modifier,
+    label: String,
+    textStyle: TextStyle,
+    textColor: Color = MaterialTheme.customColors.fgPrimary,
+    onClick: () -> Unit
+) {
+    NeumorphButtonShape(
+        modifier = modifier,
+        label = label,
+        textStyle = textStyle,
+        textColor = textColor,
         onClick = onClick
     )
 }
@@ -71,6 +107,10 @@ fun NeumorphButton(
 private fun NeumorphButtonShape(
     modifier: Modifier = Modifier,
     label: String,
+    textStyle: TextStyle,
+    icon: Int = -1,
+    backgroundColor: Color = MaterialTheme.customColors.bgSurface,
+    textColor: Color = MaterialTheme.customColors.fgPrimary,
     onClick: () -> Unit
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -121,20 +161,31 @@ private fun NeumorphButtonShape(
                 .height(Dimens.x7)
                 .align(Alignment.Center)
                 .clip(RoundedCornerShape(Dimens.x4))
-                .background(ThemeColors.Background),
+                .background(backgroundColor),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = label.uppercase(),
-                color = ThemeColors.OnBackground,
-                style = MaterialTheme.typography.neuButton
-            )
+            Row {
+                if (icon != -1) {
+                    Icon(
+                        modifier = Modifier.padding(top = Dimens.x05, end = Dimens.x1),
+                        painter = painterResource(id = icon),
+                        tint = textColor,
+                        contentDescription = null
+                    )
+                }
+
+                Text(
+                    text = label.uppercase(),
+                    color = textColor,
+                    style = textStyle
+                )
+            }
         }
     }
 }
 
 @Composable
-fun Shadow(
+private fun Shadow(
     modifier: Modifier = Modifier,
     backgroundColor: Int,
     buttonState: ButtonState,

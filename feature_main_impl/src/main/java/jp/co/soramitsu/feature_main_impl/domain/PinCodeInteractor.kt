@@ -69,4 +69,24 @@ class PinCodeInteractor @Inject constructor(
         val pinLength = userRepository.retrievePin().length
         return pinLength > 0 && pinLength != DotsProgressView.PINCODE_LENGTH
     }
+
+    suspend fun saveTriesUsed(triesUsed: Int) {
+        userRepository.savePinTriesUsed(triesUsed)
+    }
+
+    suspend fun retrieveTriesUsed() = userRepository.retrievePinTriesUsed()
+
+    suspend fun retrieveTimerStartedTimestamp() = userRepository.retrieveTimerStartedTimestamp()
+
+    suspend fun resetTriesUsed() {
+        userRepository.resetTriesUsed()
+    }
+
+    suspend fun resetTimerStartedTimestamp() {
+        userRepository.resetTimerStartedTimestamp()
+    }
+
+    suspend fun saveTimerStartedTimestamp(timestamp: Long) {
+        userRepository.saveTimerStartedTimestamp(timestamp)
+    }
 }

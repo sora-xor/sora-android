@@ -15,7 +15,6 @@ import jp.co.soramitsu.feature_wallet_api.domain.model.Transaction
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionLiquidityType
 import jp.co.soramitsu.feature_wallet_api.domain.model.TransactionTransferType
 import jp.co.soramitsu.feature_wallet_impl.presentation.wallet.model.EventUiModel
-import java.math.BigDecimal
 import java.util.Date
 import javax.inject.Inject
 
@@ -117,18 +116,17 @@ class TransactionMappers @Inject constructor(
                     timestamp = tx.base.timestamp,
                     status = tx.base.status,
                     description = if (tx.myReferrer) R.string.history_referral_set_referrer else R.string.history_referral_set_referral,
-                    plusAmount = false,
+                    plusAmount = tx.myReferrer,
                     tokenIcon = tx.token.icon,
                     dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
-                    amountFormatted = Pair(
-                        "-%s".format(
-                            numbersFormatter.formatBigDecimal(
-                                if (tx.myReferrer) BigDecimal.ZERO else tx.base.fee,
-                                AssetHolder.ROUNDING
-                            )
-                        ),
-                        tx.token.symbol,
-                    ),
+                    amountFormatted = null,
+                    referral = (
+                        if (tx.myReferrer) resourceManager.getString(R.string.status_success) else "+1 ${
+                        resourceManager.getString(
+                            R.string.history_referral
+                        )
+                        }"
+                        ) to (tx.who.truncateUserAddress()),
                 )
             }
             is Transaction.ReferralUnbond -> {
@@ -146,6 +144,7 @@ class TransactionMappers @Inject constructor(
                         ),
                         tx.token.symbol,
                     ),
+                    referral = null,
                 )
             }
             is Transaction.ReferralBond -> {
@@ -163,6 +162,7 @@ class TransactionMappers @Inject constructor(
                         ),
                         tx.token.symbol,
                     ),
+                    referral = null,
                 )
             }
         }

@@ -27,7 +27,8 @@ sealed class EventUiModel {
             @StringRes val description: Int,
             val plusAmount: Boolean,
             val dateTime: String,
-            val amountFormatted: Pair<String, String>,
+            val amountFormatted: Pair<String, String>?,
+            val referral: Pair<String, String>?,
         ) : EventTxUiModel(hash, timestamp, status)
 
         class EventTransferInUiModel(

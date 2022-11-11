@@ -6,7 +6,6 @@
 package jp.co.soramitsu.common.resourses
 
 import android.content.Context
-import java.lang.ref.WeakReference
 import java.util.Locale
 
 object ContextManager {
@@ -15,18 +14,24 @@ object ContextManager {
     private val COUNTRY_PART_INDEX = 1
     private val prefsLanguage = "sora_prefs"
     private val prefCurrentLanguage = "current_language"
-    private lateinit var lc: WeakReference<Context>
+
+    lateinit var context: Context
 
     fun setLocale(context: Context): Context {
-        lc = WeakReference(context)
-        return updateResources(context)
+        this.context = context
+        updateResources()
+        return this.context
     }
 
     fun getLocale(): Locale {
         return if (Locale.getDefault().displayLanguage != "ba") Locale.getDefault() else Locale("ru")
     }
 
-    private fun updateResources(context: Context): Context {
+    private fun updateResources() {
+        if (!::context.isInitialized) {
+            return
+        }
+
         val currentLanguageNullable = getCurrentLanguage()
         val currentLanguage = if (currentLanguageNullable.isNullOrEmpty()) {
             val currentLocale = Locale.getDefault()
@@ -47,20 +52,27 @@ object ContextManager {
         configuration.setLocale(locale)
         configuration.setLayoutDirection(locale)
 
-        val c = context.createConfigurationContext(configuration)
-        lc = WeakReference(c)
-
-        return c
+        val newContext = context.createConfigurationContext(configuration)
+        this.context = newContext
     }
 
     fun getCurrentLanguage(): String? {
-        val prefs = lc.get()?.getSharedPreferences(prefsLanguage, Context.MODE_PRIVATE)
+        val prefs = if (::context.isInitialized) {
+            context.getSharedPreferences(prefsLanguage, Context.MODE_PRIVATE)
+        } else {
+            null
+        }
         return prefs?.getString(prefCurrentLanguage, null)
     }
 
     fun setCurrentLanguage(l: String): String {
-        val prefs = lc.get()?.getSharedPreferences(prefsLanguage, Context.MODE_PRIVATE)
+        val prefs = if (::context.isInitialized) {
+            context.getSharedPreferences(prefsLanguage, Context.MODE_PRIVATE)
+        } else {
+            null
+        }
         prefs?.edit()?.putString(prefCurrentLanguage, l)?.apply()
+        updateResources()
         return l
     }
 

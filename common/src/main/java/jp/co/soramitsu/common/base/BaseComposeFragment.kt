@@ -74,9 +74,11 @@ abstract class BaseComposeFragment<T : BaseViewModel> : Fragment() {
                                 )
                             }
                             viewModel.errorFromResourceLiveData.observeAsState().value?.let {
+                                val (title, message) = it.peekContent()
+
                                 openAlertDialog.value = AlertDialogData(
-                                    title = stringResource(id = R.string.common_error_general_title),
-                                    message = stringResource(id = it.peekContent())
+                                    title = stringResource(id = title),
+                                    message = stringResource(id = message)
                                 )
                             }
                         }

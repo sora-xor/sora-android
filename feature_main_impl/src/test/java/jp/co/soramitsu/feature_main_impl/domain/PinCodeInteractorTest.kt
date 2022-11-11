@@ -58,6 +58,15 @@ class PinCodeInteractorTest {
     }
 
     @Test
+    fun `clear account data called`() = runTest {
+        val address = "address"
+
+        interactor.clearAccountData(address)
+
+        verify(userRepository).clearAccountData(address)
+    }
+
+    @Test
     fun `check pin called`() = runTest {
         given(userRepository.retrievePin()).willReturn(pin)
         val result = interactor.checkPin(pin)
@@ -167,5 +176,49 @@ class PinCodeInteractorTest {
         verify(userRepository).saveNeedsMigration(needsMigration, account)
         verify(userRepository).saveIsMigrationFetched(true, account)
         verify(userRepository).needsMigration(account)
+    }
+
+    @Test
+    fun `saveTriesUsed called`() = runTest {
+        interactor.saveTriesUsed(1)
+
+        verify(userRepository).savePinTriesUsed(1)
+    }
+
+    @Test
+    fun `saveTimerStartedTimestamp called`() = runTest {
+        interactor.saveTimerStartedTimestamp(1)
+
+        verify(userRepository).saveTimerStartedTimestamp(1)
+    }
+
+    @Test
+    fun `resetTimerStartedTimestamp called`() = runTest {
+        interactor.resetTimerStartedTimestamp()
+
+        verify(userRepository).resetTimerStartedTimestamp()
+    }
+
+    @Test
+    fun `resetTriesUsed called`() = runTest {
+        interactor.resetTriesUsed()
+
+        verify(userRepository).resetTriesUsed()
+    }
+
+    @Test
+    fun `retrieveTriesUsed called`() = runTest {
+        val triesUsed = 1
+        given(userRepository.retrievePinTriesUsed()).willReturn(triesUsed)
+
+        assertEquals(triesUsed, interactor.retrieveTriesUsed())
+    }
+
+    @Test
+    fun `retrieveTimerStartedTimestamp called`() = runTest {
+        val timestamp = 1L
+        given(userRepository.retrieveTimerStartedTimestamp()).willReturn(timestamp)
+
+        assertEquals(timestamp, interactor.retrieveTimerStartedTimestamp())
     }
 }

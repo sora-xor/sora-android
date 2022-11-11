@@ -7,9 +7,12 @@ package jp.co.soramitsu.sora.splash.domain
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,6 +21,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.given
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -44,10 +48,22 @@ class SplashInteractorTest {
     }
 
     @Test
-    fun `getRegistrationState calls userRepository getRegistrationState`() = runTest {
-        splashInteractor.getRegistrationState()
+    fun `check migration called and migration done listened`() = runTest {
+        given(migrationManager.start()).willReturn(true)
 
-        verify(userRepository).getRegistrationState()
+        splashInteractor.checkMigration()
+
+        assertTrue(splashInteractor.getMigrationDoneAsync().await())
+    }
+
+    @Test
+    fun `getRegistrationState calls userRepository getRegistrationState`() = runTest {
+        val expectedState = OnboardingState.REGISTRATION_FINISHED
+        given(userRepository.getRegistrationState()).willReturn(expectedState)
+
+        val state = splashInteractor.getRegistrationState()
+
+        assertEquals(expectedState, state)
     }
 
     @Test

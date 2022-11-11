@@ -17,6 +17,7 @@
   <string name="account_already_imported_description">Denna plånbok är redan importerad</string>
   <string name="account_confirmation_title">Bekräfta mnemonic</string>
   <string name="account_confirmation_title_v2">Bekräfta Passphrase</string>
+  <string name="account_import_default_error">Wrong</string>
   <string name="activity_project">Projekt</string>
   <string name="add_liquidity_alert_text">Du kommer att tjäna avgifter i proportion till din andel av poolen från likviditetsbidragande.</string>
   <string name="add_liquidity_confirmation_title">Bekräfta tillhandahållande</string>
@@ -61,6 +62,7 @@
   <string name="coming_soon">Kommer snart...</string>
   <string name="common_account">Konto</string>
   <string name="common_add">Lägg till</string>
+  <string name="common_add_liquidity">ADD</string>
   <string name="common_advanced_settings">Avancerade inställningar</string>
   <string name="common_and">och</string>
   <string name="common_app_version">App-version</string>
@@ -68,6 +70,7 @@
   <string name="common_arab">Arabiska</string>
   <string name="common_asset">Tillgång</string>
   <string name="common_back">Tillbaka</string>
+  <string name="common_backup">Backup</string>
   <string name="common_balance">Saldo</string>
   <string name="common_bashkir">Bashkir</string>
   <string name="common_camera">Kamera</string>
@@ -116,6 +119,7 @@
   <string name="common_error_retry">Var god försök igen</string>
   <string name="common_error_search_string_error">Sökstorleken måste vara mellan 3 och 64 tecken</string>
   <string name="common_error_seed_is_not_valid">Vänligen se till att din inmatning innehåller 64 hex-symboler.</string>
+  <string name="common_error_seed_is_not_valid_title">Seed is invalid</string>
   <string name="common_error_self_invitation">Du kan ej använda din inbjudningskod åt dig själv</string>
   <string name="common_error_unauthorized_body">Var god undersök internetanslutning och försök igen senare.</string>
   <string name="common_error_unauthorized_title">Auktorisering Misslyckades</string>
@@ -188,6 +192,7 @@
   <string name="common_sec">sek.</string>
   <string name="common_select_asset">Välj en tillgång</string>
   <string name="common_select_email_app_title">Välj e-post app</string>
+  <string name="common_select_node">Select Node</string>
   <string name="common_send">Skicka</string>
   <string name="common_sender">Avsändare</string>
   <string name="common_sent">Skickat</string>
@@ -199,6 +204,7 @@
   <string name="common_sms_code_not_correct">Verifieringskod är inkorrekt</string>
   <string name="common_spanish">Spanska</string>
   <string name="common_spanish_colombia">Spanska (Colombia)</string>
+  <string name="common_submit">Submit</string>
   <string name="common_supply">Tillgång</string>
   <string name="common_swedish">Svenska</string>
   <string name="common_terms_title">Allmänna Villkor</string>
@@ -244,6 +250,26 @@
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
   <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
+  <string name="export_account_options">Open account options</string>
+  <string name="export_json_description">Password is required to encrypt your account and store as Restore JSON. Please, create password to continue operation.</string>
+  <string name="export_json_download_json">DOWNLOAD JSON</string>
+  <string name="export_json_input_confirmation_label">Confirm password</string>
+  <string name="export_json_input_label">Set password for JSON file</string>
+  <string name="export_protection_json_1">If I lose my JSON, my funds will be lost forever.</string>
+  <string name="export_protection_json_2">If I expose or share my JSON to anybody, my funds can get stolen.</string>
+  <string name="export_protection_json_3">It is my full reponsibility to keep my JSON secure.</string>
+  <string name="export_protection_json_description">In the next step you will be able to download a JSON file that allow you to recover your accounts.</string>
+  <string name="export_protection_json_title">Export JSON</string>
+  <string name="export_protection_passphrase_1">If I lose my passphrase, my funds will be lost forever.</string>
+  <string name="export_protection_passphrase_2">If I expose or share my passphrase to anybody, my funds can get stolen.</string>
+  <string name="export_protection_passphrase_3">It is my full reponsibility to keep my passphrase secure.</string>
+  <string name="export_protection_passphrase_description">In the next step you will see Passphrase (12 words) that allow you to recover an account.</string>
+  <string name="export_protection_passphrase_title">Passphrase</string>
+  <string name="export_protection_seed_1">If I lose my raw seed, my funds will be lost forever.</string>
+  <string name="export_protection_seed_2">If I expose or share my raw seed to anybody, my funds can get stolen.</string>
+  <string name="export_protection_seed_3">It is my full reponsibility to keep my raw seed secure.</string>
+  <string name="export_protection_seed_description">In the next step you will see Raw Seed (a long hash) that allow you to recover an account.</string>
+  <string name="export_select_account">Select account for batch export</string>
   <string name="faq_title">FAQ</string>
   <string name="friends_spread_word">Dela SORA med vänner.</string>
   <string name="from_account">Från konto</string>
@@ -292,6 +318,7 @@
   <string name="liquidity_pair_creation_title">Du är den första likviditetsleverantören</string>
   <string name="liquidity_removed">Tog bort %s likviditet</string>
   <string name="logout_dialog_body">Den här åtgärden kommer att leda till att kontot tas bort från den här enheten. Se till att du har gjort en backup av din passphrase innan du fortsätter.</string>
+  <string name="logout_remove_nodes_body">\n\nAll your custom nodes will be removed as well</string>
   <string name="mnemonic_alert_text">Mnemonic passphrase används för att återställa tillgång till konto. Skriv ner den eftersom vi inte kan återställa ditt konto utan den!</string>
   <string name="mnemonic_confirm_text">Bekräfta genom att välja ord i den rätta ordningen</string>
   <string name="mnemonic_confirm_text_v2">Bekräfta passphrase genom att välja ord i den rätta ordningen</string>
@@ -299,6 +326,10 @@
   <string name="mnemonic_invalid_title">Ogiltig mnemonic passphrase</string>
   <string name="mnemonic_text">Vi rekommenderar att du använder ett icke-digitalt sätt för att göra backup, t.ex. genom att skriva ned på papper och förvara den säkert.</string>
   <string name="mnemonic_title">Backup passphrase</string>
+  <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
+  <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
+  <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
+  <string name="node_details_protocol_validation_failed">Failed to validate URL (Wrong URL protocol)</string>
   <string name="parliament_coming_soon">En förvaltning för SORA-nätverket</string>
   <string name="personal_details_info">Namnet på det här kontot och hur det kommer att visas under din adress. Med en on-chain identitet så kan den göras tillgänglig för andra.</string>
   <string name="personal_info_inv_code_hint">Inbjudningskod (valfritt)</string>
@@ -310,6 +341,7 @@
   <string name="phone_number_sms_code_will_be_sent">SMS-kod kommer att skickas\ntill din telefon</string>
   <string name="phone_number_title">Registrera</string>
   <string name="phone_verification_too_frequent_message">För frekvent återkommande förfrågningar om verifieringskod. Var god försök igen senare.</string>
+  <string name="pin_locked_for_title">Locked  for %s</string>
   <string name="pin_update_button_text">STÄLL IN NY PIN</string>
   <string name="pin_update_info_description">Säkerhetspolicy har förbättrats för att skydda dig.</string>
   <string name="pin_update_info_subtitle">Vänligen ställ in en ny 6-siffrig PIN</string>
@@ -322,6 +354,7 @@
   <string name="pincode_enter_new_pin_code">Ange ny pinkod</string>
   <string name="pincode_enter_pin_code">Ange pinkod</string>
   <string name="pincode_fingerprint_error">Du är ej auktoriserad. Prova ett annat finger.</string>
+  <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_repeat_error">Pinkod upprepningsfel</string>
   <string name="pincode_set_your_pin_code">Ställ in pin-kod</string>
   <string name="pincode_touch_fingerprint_scanner">Rör vid fingeravtrycksläsaren</string>
@@ -471,6 +504,9 @@
   <string name="referral_your_referrer">Din hänvisare</string>
   <string name="remove_liquidity_info_text">Att ta bort likviditet konverterar din position tillbaka med den aktuella växelkursen, proportionell med din andel av poolen.</string>
   <string name="remove_liquidity_title">Ta bort likviditet</string>
+  <string name="remove_node_error_message">To delete this node please connect to another one</string>
+  <string name="remove_node_error_title">Unable to delete connected node</string>
+  <string name="remove_node_title">Do you really want to remove this node?</string>
   <string name="remove_pool_confirmation_description">Output är uppskattad. Om priset ändras mer än %s %% kommer din transaktion att återgå.</string>
   <string name="remove_pool_confirmation_title">Bekräfta Ta bort</string>
   <string name="restart_required">Omstart krävs</string>
@@ -481,6 +517,19 @@
   <string name="select_account_address_1">Sök eller lägg till en ny adress</string>
   <string name="select_asset_receive">Välj Tillgång att Mottaga</string>
   <string name="select_asset_send">Välj Tillgång att Skicka</string>
+  <string name="select_node_add_custom_node">Add Custom Node</string>
+  <string name="select_node_add_node">Add node</string>
+  <string name="select_node_custom_node_edit_node">Edit node</string>
+  <string name="select_node_custom_nodes">Custom Nodes</string>
+  <string name="select_node_default_nodes">Default Nodes</string>
+  <string name="select_node_how_to_run_node">How to Run a Node</string>
+  <string name="select_node_node_address">Node Address</string>
+  <string name="select_node_node_details">Node Details</string>
+  <string name="select_node_node_name">Node Name</string>
+  <string name="select_node_switch_alert_title">Do you want to switch node?</string>
+  <string name="select_node_switch_succeed">Successfully switch the node</string>
+  <string name="select_node_unable_join_node_message">Please try again later</string>
+  <string name="select_node_unable_join_node_title">Unable to join the node</string>
   <string name="select_recipient">Välj mottagare</string>
   <string name="set_amount">Ange belopp</string>
   <string name="settings_accounts">Konton</string>

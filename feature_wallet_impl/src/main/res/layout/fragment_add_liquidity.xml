@@ -37,8 +37,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginVertical="@dimen/x1"
-                    app:title="@string/common_deposit"
-                    app:tokenSelectorEnabled="false" />
+                    app:title="@string/common_deposit" />
 
                 <ImageView
                     android:layout_width="wrap_content"
@@ -107,11 +106,6 @@
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.view.DetailsView
-                    android:id="@+id/details"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
                 <TextView
                     android:id="@+id/pairCreationTitle"
                     style="@style/TextAppearance.Soramitsu.Neu.Semibold.15"
@@ -130,6 +124,11 @@
                     android:layout_marginTop="@dimen/x1"
                     android:text="@string/liquidity_pair_creation_description"
                     android:textColor="?attr/titleColor" />
+
+                <jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.view.DetailsView
+                    android:id="@+id/details"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
 
             </LinearLayout>
 

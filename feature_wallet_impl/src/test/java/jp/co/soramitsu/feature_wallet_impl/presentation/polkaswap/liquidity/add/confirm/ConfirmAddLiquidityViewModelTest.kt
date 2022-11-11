@@ -92,7 +92,12 @@ class ConfirmAddLiquidityViewModelTest {
         given(resourceManager.getString(R.string.common_insufficient_balance)).willReturn("Insufficient balance")
 
         runTest {
-            given(polkaswapInteractor.subscribeReservesCache(TEST_ASSET.token.id)).willReturn(
+            given(
+                polkaswapInteractor.subscribeReservesCache(
+                    XOR_ASSET.token.id,
+                    TEST_ASSET.token.id
+                )
+            ).willReturn(
                 flowOf(
                     LIQUIDITY_DATA
                 )
@@ -123,6 +128,7 @@ class ConfirmAddLiquidityViewModelTest {
 
             given(
                 polkaswapInteractor.isPairPresentedInNetwork(
+                    XOR_ASSET.token.id,
                     TEST_ASSET.token.id,
                 )
             ).willReturn(

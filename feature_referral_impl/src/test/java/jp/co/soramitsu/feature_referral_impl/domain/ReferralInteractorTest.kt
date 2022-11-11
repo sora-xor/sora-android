@@ -13,7 +13,7 @@ import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.subquery.ReferrerReward
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList

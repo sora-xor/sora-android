@@ -31,7 +31,7 @@ fun String.getInitials(): String {
     return if (names.size < 2) {
         ""
     } else {
-        "${names.first().first().toUpperCase()}${names.last().first().toUpperCase()}"
+        "${names.first().first().uppercaseChar()}${names.last().first().uppercaseChar()}"
     }
 }
 

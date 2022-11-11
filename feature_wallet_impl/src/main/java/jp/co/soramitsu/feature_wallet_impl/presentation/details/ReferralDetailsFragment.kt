@@ -14,10 +14,12 @@ import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.gone
+import jp.co.soramitsu.common.util.ext.hideOrGone
 import jp.co.soramitsu.common.util.ext.requireParcelable
 import jp.co.soramitsu.common.util.ext.setDebouncedClickListener
 import jp.co.soramitsu.common.util.ext.setImageTint2
 import jp.co.soramitsu.common.util.ext.show
+import jp.co.soramitsu.common.util.ext.showOrGone
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentReferralDetailsBinding
 import javax.inject.Inject
@@ -51,10 +53,10 @@ class ReferralDetailsFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewBinding.fromInfoTv.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.onCopyClicked(2)
+            viewModel.onCopyClicked(if (details.myRef != null) 3 else 2)
         }
         viewBinding.toInfoTv.setDebouncedClickListener(debounceClickHandler) {
-            viewModel.onCopyClicked(3)
+            viewModel.onCopyClicked(2)
         }
         viewBinding.tvTransactionHash.setDebouncedClickListener(debounceClickHandler) {
             viewModel.onCopyClicked(0)
@@ -95,5 +97,9 @@ class ReferralDetailsFragment :
             viewBinding.toInfoTv.gone()
             viewBinding.vDivider32.gone()
         }
+        viewBinding.transactionFeeAmountText.showOrGone(details.myRef != true)
+        viewBinding.transactionFeeAmountTitle.showOrGone(details.myRef != true)
+        viewBinding.vDivider11.showOrGone(details.myRef != true)
+        viewBinding.tvTxDetailsFeeFiatValue.hideOrGone(details.myRef != true)
     }
 }

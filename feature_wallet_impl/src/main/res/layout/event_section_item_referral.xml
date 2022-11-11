@@ -35,12 +35,16 @@
     <TextView
         android:id="@+id/eventItemTitleTextView"
         style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/x1_2"
+        android:ellipsize="end"
+        android:gravity="start"
+        android:singleLine="true"
         android:text="@string/referral_toolbar_title"
         android:textAllCaps="true"
         app:layout_constraintBaseline_toBaselineOf="@id/tvHistoryTransferDate"
+        app:layout_constraintEnd_toStartOf="@id/eventItemAmountTextView"
         app:layout_constraintStart_toEndOf="@id/tvHistoryTransferDate" />
 
     <TextView
@@ -84,6 +88,17 @@
         android:textColor="?attr/statusError"
         app:layout_constraintBaseline_toBaselineOf="@id/tvHistoryTransferDate"
         app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/tvReferralAddress"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.11"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBaseline_toBaselineOf="@id/eventItemDateTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="cnVyG...7Jorj"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

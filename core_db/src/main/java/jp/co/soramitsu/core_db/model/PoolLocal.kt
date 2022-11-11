@@ -12,6 +12,7 @@ import java.math.BigDecimal
 
 @Entity(
     tableName = "pools",
+    primaryKeys = ["assetId", "assetIdBase", "accountAddress"],
     foreignKeys = [
         ForeignKey(
             entity = SoraAccountLocal::class,
@@ -23,11 +24,20 @@ import java.math.BigDecimal
     ]
 )
 data class PoolLocal(
-    @PrimaryKey val assetId: String,
+    val assetId: String,
+    val assetIdBase: String,
     val accountAddress: String,
     val reservesFirst: BigDecimal,
     val reservesSecond: BigDecimal,
     val totalIssuance: BigDecimal,
     val strategicBonusApy: BigDecimal?,
     val poolProvidersBalance: BigDecimal
+)
+
+@Entity(
+    tableName = "poolBaseTokens"
+)
+data class PoolBaseTokenLocal(
+    @PrimaryKey val tokenId: String,
+    val dexId: Int,
 )

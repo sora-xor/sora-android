@@ -50,4 +50,16 @@ interface UserDatasource {
     suspend fun getCurAccountAddress(): String
 
     suspend fun setCurAccountAddress(accountAddress: String)
+
+    suspend fun savePinTriesUsed(triesUsed: Int)
+
+    suspend fun saveTimerStartedTimestamp(timer: Long)
+
+    suspend fun retrievePinTriesUsed(): Int
+
+    suspend fun retrieveTimerStartedTimestamp(): Long
+
+    suspend fun resetPinTriesUsed()
+
+    suspend fun resetTimerStartedTimestamp()
 }

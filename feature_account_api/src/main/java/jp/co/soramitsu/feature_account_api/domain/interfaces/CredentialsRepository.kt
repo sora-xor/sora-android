@@ -25,6 +25,8 @@ interface CredentialsRepository {
 
     suspend fun retrieveMnemonic(soraAccount: SoraAccount): String
 
+    suspend fun retrieveSeed(soraAccount: SoraAccount): String
+
     suspend fun retrieveKeyPair(soraAccount: SoraAccount): Sr25519Keypair
 
     suspend fun saveKeyPair(key: Sr25519Keypair, soraAccount: SoraAccount)
@@ -34,4 +36,6 @@ interface CredentialsRepository {
     suspend fun getAddressForMigration(): String
 
     suspend fun isAddressOk(address: String): Boolean
+
+    suspend fun generateJson(accounts: List<SoraAccount>, password: String): String
 }

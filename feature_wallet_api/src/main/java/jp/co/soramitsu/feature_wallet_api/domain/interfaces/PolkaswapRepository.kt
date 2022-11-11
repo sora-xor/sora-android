@@ -18,21 +18,35 @@ import java.math.BigDecimal
 
 interface PolkaswapRepository {
 
+    suspend fun getPoolBaseTokens(): List<String>
+
     suspend fun updateAccountPools(address: String)
 
-    suspend fun updateAccountPool(address: String, tokenId: String)
+    suspend fun updateAccountPool(
+        address: String,
+        baseTokenId: String,
+        tokenId: String
+    )
 
-    suspend fun subscribeToPoolsData(address: String): Flow<String>
+    fun subscribeToPoolsData(address: String): Flow<String>
 
     suspend fun getPoolStrategicBonusAPY(tokenId: String): Double?
 
-    fun getPoolData(address: String, tokenId: String): Flow<PoolData?>
+    fun getPoolData(
+        address: String,
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<PoolData?>
 
     fun subscribeToPoolsAssets(address: String): Flow<String>
 
     fun subscribePoolFlow(address: String): Flow<List<PoolData>>
 
-    fun subscribeLocalPoolReserves(address: String, assetId: String): Flow<LiquidityData?>
+    fun subscribeLocalPoolReserves(
+        address: String,
+        baseTokenId: String,
+        assetId: String
+    ): Flow<LiquidityData?>
 
     suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean
 
@@ -42,7 +56,10 @@ interface PolkaswapRepository {
 
     suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
 
-    fun observePoolXYKReserves(tokenId: String): Flow<String>
+    fun observePoolXYKReserves(
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<String>
 
     fun observePoolTBCReserves(tokenId: String): Flow<String>
 
@@ -105,7 +122,10 @@ interface PolkaswapRepository {
         accountAddress: String,
     ): Flow<Boolean>
 
-    fun isPairPresentedInNetwork(tokenId: String, accountAddress: String): Flow<Boolean>
+    fun isPairPresentedInNetwork(
+        baseTokenId: String,
+        tokenId: String, accountAddress: String
+    ): Flow<Boolean>
 
     suspend fun getRemotePoolReserves(
         address: String,

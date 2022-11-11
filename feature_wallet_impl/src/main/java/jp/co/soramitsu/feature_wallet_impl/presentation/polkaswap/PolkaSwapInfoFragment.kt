@@ -17,9 +17,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.BaseFragment
 import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.util.Const
+import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.highlightWords
-import jp.co.soramitsu.common.util.ext.showBrowser
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 import jp.co.soramitsu.feature_wallet_impl.R
 import jp.co.soramitsu.feature_wallet_impl.databinding.FragmentPolkaSwapInfoBinding
@@ -48,9 +48,9 @@ class PolkaSwapInfoFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment
                 color,
             ),
             listOf(
-                { showBrowser(Const.POLKASWAP_FAQ) },
-                { showBrowser(Const.POLKASWAP_MEMORANDUM) },
-                { showBrowser(Const.POLKASWAP_PRIVACY_POLICY) }
+                { ShareUtil.shareInBrowser(this, Const.POLKASWAP_FAQ) },
+                { ShareUtil.shareInBrowser(this, Const.POLKASWAP_MEMORANDUM) },
+                { ShareUtil.shareInBrowser(this, Const.POLKASWAP_PRIVACY_POLICY) }
             ),
             true,
         )
@@ -68,9 +68,9 @@ class PolkaSwapInfoFragment : BaseFragment<PolkaSwapViewModel>(R.layout.fragment
                 color,
             ),
             listOf(
-                { showBrowser(Const.POLKASWAP_FAQ) },
-                { showBrowser(Const.POLKASWAP_MEMORANDUM) },
-                { showBrowser(Const.POLKASWAP_PRIVACY_POLICY) }
+                { ShareUtil.shareInBrowser(this, Const.POLKASWAP_FAQ) },
+                { ShareUtil.shareInBrowser(this, Const.POLKASWAP_MEMORANDUM) },
+                { ShareUtil.shareInBrowser(this, Const.POLKASWAP_PRIVACY_POLICY) }
             ),
             true,
         ).also {

@@ -15,12 +15,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.insetter.Insetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
-import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.feature_onboarding_impl.R
 import jp.co.soramitsu.feature_onboarding_impl.databinding.ActivityOnboardingBinding
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -29,13 +27,13 @@ class OnboardingActivity :
 
     companion object {
 
-        private const val KEY_ONBOARDING_STATE = "onboarding_state"
         const val ACTION_INVITE = "jp.co.soramitsu.feature_onboarding_impl.ACTION_INVITE"
 
-        fun start(context: Context, state: OnboardingState) {
+        fun start(context: Context, isClearTask: Boolean) {
             val intent = Intent(context, OnboardingActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                putExtra(KEY_ONBOARDING_STATE, state)
+                if (isClearTask) {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
             }
             val options = ActivityOptions.makeCustomAnimation(context, android.R.anim.fade_in, android.R.anim.fade_out)
             context.startActivity(intent, options.toBundle())
@@ -52,9 +50,6 @@ class OnboardingActivity :
 
     @Inject
     lateinit var mainStarter: MainStarter
-
-    @Inject
-    lateinit var cm: ConnectionManager
 
     @Inject
     lateinit var mas: MultiaccountStarter

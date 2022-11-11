@@ -36,4 +36,18 @@ class LiveDataExtTest {
 
         assertEquals(expected, results)
     }
+
+    @Test
+    fun `set value if empty called`() {
+        val liveData = MutableLiveData<String>()
+        val value1 = "value1"
+        val value2 = "value2"
+
+        liveData.observeForever {
+            assertEquals(value1, it)
+        }
+
+        liveData.setValueIfEmpty(value1)
+        liveData.setValueIfEmpty(value2)
+    }
 }

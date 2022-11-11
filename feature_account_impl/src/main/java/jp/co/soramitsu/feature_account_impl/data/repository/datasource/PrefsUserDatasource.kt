@@ -20,6 +20,9 @@ class PrefsUserDatasource(
         private const val PREFS_PIN_CODE = "user_pin_code"
         private const val PREFS_REGISTRATION_STATE = "registration_state"
 
+        private const val KEY_PIN_TRIES = "key_pin_tries"
+        private const val KEY_PIN_START_TIMESTAMP = "key_pin_start_timestamp"
+
         private const val KEY_ACCOUNT_NAME = "key_account_name"
         private const val KEY_PARENT_INVITE_CODE = "invite_code"
         private const val KEY_BIOMETRY_AVAILABLE = "biometry_available"
@@ -60,9 +63,8 @@ class PrefsUserDatasource(
         soraPreferences.clearAll()
     }
 
-    // todo is it ok?
     override suspend fun clearAccountData() {
-        soraPreferences.putString(KEY_CUR_ACCOUNT_ADDRESS, "")
+        soraPreferences.clear(KEY_CUR_ACCOUNT_ADDRESS)
     }
 
     override suspend fun saveParentInviteCode(inviteCode: String) {
@@ -115,5 +117,29 @@ class PrefsUserDatasource(
 
     override suspend fun isMigrationStatusFetched(suffixAddress: String): Boolean {
         return soraPreferences.getBoolean(KEY_IS_MIGRATION_FETCHED + suffixAddress, false)
+    }
+
+    override suspend fun savePinTriesUsed(triesUsed: Int) {
+        soraPreferences.putInt(KEY_PIN_TRIES, triesUsed)
+    }
+
+    override suspend fun saveTimerStartedTimestamp(timer: Long) {
+        soraPreferences.putLong(KEY_PIN_START_TIMESTAMP, timer)
+    }
+
+    override suspend fun retrievePinTriesUsed(): Int {
+        return soraPreferences.getInt(KEY_PIN_TRIES, 0)
+    }
+
+    override suspend fun retrieveTimerStartedTimestamp(): Long {
+        return soraPreferences.getLong(KEY_PIN_START_TIMESTAMP, 0)
+    }
+
+    override suspend fun resetPinTriesUsed() {
+        soraPreferences.clear(KEY_PIN_TRIES)
+    }
+
+    override suspend fun resetTimerStartedTimestamp() {
+        soraPreferences.clear(KEY_PIN_START_TIMESTAMP)
     }
 }

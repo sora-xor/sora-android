@@ -15,6 +15,8 @@ object OptionsProvider {
     val DEFAULT_ICON: Int = R.drawable.ic_token_default
     const val substrate = "substrate"
     const val hexPrefix = "0x"
+    const val defaultScale = 18
+    const val nameByteLimit = 32
 
     const val website = "https://sora.org"
     const val sourceLink = "https://github.com/sora-xor/Sora-Android"

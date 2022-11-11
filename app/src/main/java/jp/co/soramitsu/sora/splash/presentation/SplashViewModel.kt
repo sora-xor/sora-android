@@ -50,7 +50,6 @@ class SplashViewModel @Inject constructor(
             FirebaseWrapper.log("Splash next screen $migrationDone")
             when (val state = interactor.getRegistrationState()) {
                 OnboardingState.REGISTRATION_FINISHED -> {
-                    interactor.initCurSoraAccount()
                     showMainScreen.trigger()
                 }
                 OnboardingState.INITIAL -> {

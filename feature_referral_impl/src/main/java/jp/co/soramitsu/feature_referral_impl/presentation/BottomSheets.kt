@@ -110,23 +110,21 @@ internal fun ReferralMainBottomSheet(
                     )
                 }
                 DetailedBottomSheet.UNBOND -> {
-                    if (referralProgramState.screen is ReferralProgramStateScreen.ReferralProgramData) {
-                        SheetContentReferralCommon(
-                            text = stringResource(id = R.string.referral_unbond_button_title),
-                            content = {
-                                SheetContentUnbondXor(
-                                    commonState = referralProgramState.common,
-                                    state = referralProgramState.bondState,
-                                    onUnbondInvitationsCountChange = {
-                                        viewModel.onUnbondValueChange(it)
-                                    },
-                                    onUnbondMinus = { viewModel.onUnbondMinus() },
-                                    onUnbondPlus = { viewModel.onUnbondPlus() },
-                                    onUnbondClick = { viewModel.onUnbondButtonClick() }
-                                )
-                            }
-                        )
-                    }
+                    SheetContentReferralCommon(
+                        text = stringResource(id = R.string.referral_unbond_button_title),
+                        content = {
+                            SheetContentUnbondXor(
+                                commonState = referralProgramState.common,
+                                state = referralProgramState.bondState,
+                                onUnbondInvitationsCountChange = {
+                                    viewModel.onUnbondValueChange(it)
+                                },
+                                onUnbondMinus = { viewModel.onUnbondMinus() },
+                                onUnbondPlus = { viewModel.onUnbondPlus() },
+                                onUnbondClick = { viewModel.onUnbondButtonClick() }
+                            )
+                        }
+                    )
                 }
             }
         }

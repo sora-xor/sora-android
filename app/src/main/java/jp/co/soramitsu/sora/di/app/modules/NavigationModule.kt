@@ -11,6 +11,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
+import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.navigation.Navigator
 import javax.inject.Singleton
@@ -34,4 +35,8 @@ class NavigationModule {
     @Singleton
     @Provides
     fun provideReferralRouter(navigator: Navigator): ReferralRouter = navigator
+
+    @Singleton
+    @Provides
+    fun provideSelectNodeRouter(navigator: Navigator): SelectNodeRouter = navigator
 }

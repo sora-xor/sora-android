@@ -19,7 +19,7 @@ interface TransactionHistoryRepository {
         page: Long,
         tokens: List<Token>,
         soraAccount: SoraAccount,
-        filterTokenId: String?,
+        filterTokenId: String? = null,
     ): TransactionsInfo
 
     suspend fun getTransaction(

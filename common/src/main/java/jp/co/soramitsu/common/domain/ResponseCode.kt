@@ -7,7 +7,7 @@ package jp.co.soramitsu.common.domain
 
 import jp.co.soramitsu.common.R
 
-enum class ResponseCode(val stringResource: Int) {
+enum class ResponseCode(val messageResource: Int, val titleResource: Int = R.string.common_error_general_title) {
 
     OK(0),
 
@@ -17,9 +17,9 @@ enum class ResponseCode(val stringResource: Int) {
 
     MNEMONIC_LENGTH_ERROR(R.string.common_error_mnemonic_length_error),
 
-    MNEMONIC_IS_NOT_VALID(R.string.common_error_mnemonic_is_not_valid),
+    MNEMONIC_IS_NOT_VALID(R.string.common_error_mnemonic_is_not_valid, R.string.mnemonic_invalid_title),
 
-    RAW_SEED_IS_NOT_VALID(R.string.common_error_seed_is_not_valid),
+    RAW_SEED_IS_NOT_VALID(R.string.common_error_seed_is_not_valid, R.string.common_error_seed_is_not_valid_title),
 
     USER_VALUES_NOT_FOUND(R.string.common_error_user_values_not_found),
 
@@ -86,6 +86,8 @@ enum class ResponseCode(val stringResource: Int) {
     SELF_INVITATION(R.string.common_error_self_invitation),
 
     BOUND_ETH_ADDRESS_NOT_FOUND(0),
+
+    ACCOUNT_ALREADY_IMPORTED(R.string.account_already_imported_description, R.string.account_already_imported),
 
     NOW_BROWSER_FOUND(R.string.common_error_no_browser_error);
 

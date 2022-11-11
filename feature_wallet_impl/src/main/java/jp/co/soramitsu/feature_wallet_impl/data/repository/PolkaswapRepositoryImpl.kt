@@ -8,8 +8,11 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 import androidx.room.withTransaction
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
 import jp.co.soramitsu.core_db.model.PoolLocal
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
@@ -35,6 +38,7 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.runtime.accountPoolsKey
+import jp.co.soramitsu.sora.substrate.runtime.poolTBCReserves
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
@@ -44,14 +48,14 @@ import jp.co.soramitsu.sora.substrate.substrate.initializePool
 import jp.co.soramitsu.sora.substrate.substrate.register
 import jp.co.soramitsu.sora.substrate.substrate.removeLiquidity
 import jp.co.soramitsu.sora.substrate.substrate.swap
-import jp.co.soramitsu.xnetworking.subquery.SubQueryClient
-import jp.co.soramitsu.xnetworking.subquery.history.SubQueryHistoryItem
-import jp.co.soramitsu.xnetworking.subquery.history.sora.SoraSubqueryResponse
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.zip
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -64,12 +68,30 @@ class PolkaswapRepositoryImpl @Inject constructor(
     private val wsConnection: SubstrateApi,
     private val marketMapper: SwapMarketMapper,
     private val resourceManager: ResourceManager,
-    private val subQueryClient: SubQueryClient<SoraSubqueryResponse, SubQueryHistoryItem>,
+    private val soraWalletBlockExplorerInfo: SoraWalletBlockExplorerInfo,
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     private val extrinsicManager: ExtrinsicManager,
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
 ) : PolkaswapRepository {
+
+    private val sbApyCaseName =
+        if (BuildUtils.isFlavors(Flavor.PROD)) "0" else "1"
+    private val baseTokenPoolMigrated: Boolean
+        get() {
+            return when {
+                BuildUtils.isFlavors(Flavor.DEVELOP) -> true
+                BuildUtils.isFlavors(Flavor.SORALUTION) -> true
+                BuildUtils.isFlavors(Flavor.PROD) && runtimeManager.specVersion >= 42 -> true
+                else -> false
+            }
+        }
+
+    override suspend fun getPoolBaseTokens(): List<String> {
+        return db.poolDao().getPoolBaseTokens().map {
+            it.tokenId
+        }
+    }
 
     override fun getPolkaswapDisclaimerVisibility(): Flow<Boolean> {
         return datasource.getDisclaimerVisibility()
@@ -80,29 +102,56 @@ class PolkaswapRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateAccountPools(address: String) {
-        val xorPrecision =
-            requireNotNull(db.assetDao().getPrecisionOfToken(SubstrateOptionsProvider.feeAssetId))
-        val pools = mutableListOf<PoolLocal>()
-        val tokensIds = wsConnection.getUserPoolsTokenIds(address)
-
-        wsConnection.getUserPoolsData(address, tokensIds)
-            .forEach { poolDataDto ->
-                if (db.assetDao().getWhitelistOfToken(poolDataDto.assetId).isNullOrEmpty().not()) {
-                    db.assetDao().getPrecisionOfToken(poolDataDto.assetId)?.let { tokenPrecision ->
-                        pools.add(
-                            PoolLocal(
-                                poolDataDto.assetId,
-                                address,
-                                mapBalance(poolDataDto.reservesFirst, xorPrecision),
-                                mapBalance(poolDataDto.reservesSecond, tokenPrecision),
-                                mapBalance(poolDataDto.totalIssuance, xorPrecision),
-                                getSbApy()?.firstOrNull { it.tokenId == poolDataDto.assetId }?.sbApy?.toBigDecimal(),
-                                mapBalance(poolDataDto.poolProvidersBalance, xorPrecision)
-                            )
+        // pool base tokens
+        if (baseTokenPoolMigrated) {
+            val baseTokens = wsConnection.getPoolBaseTokens()
+            db.withTransaction {
+                db.poolDao().clearPoolBaseTokens()
+                db.poolDao().insertPoolBaseTokens(
+                    baseTokens.map {
+                        PoolBaseTokenLocal(
+                            tokenId = it.second,
+                            dexId = it.first,
                         )
                     }
-                }
+                )
             }
+        }
+        // pools
+        val pools = mutableListOf<PoolLocal>()
+        val tokensIds = if (baseTokenPoolMigrated) {
+            wsConnection.getUserPoolsTokenIds22(address)
+        } else {
+            val list = wsConnection.getUserPoolsTokenIds(address)
+            listOf(SubstrateOptionsProvider.feeAssetId to list)
+        }
+
+        tokensIds.forEach { pair ->
+            val xorPrecision =
+                requireNotNull(db.assetDao().getPrecisionOfToken(pair.first))
+            wsConnection.getUserPoolsData(address, pair.first, pair.second)
+                .forEach { poolDataDto ->
+                    if (db.assetDao().getWhitelistOfToken(poolDataDto.assetId).isNullOrEmpty()
+                        .not()
+                    ) {
+                        db.assetDao().getPrecisionOfToken(poolDataDto.assetId)
+                            ?.let { tokenPrecision ->
+                                pools.add(
+                                    PoolLocal(
+                                        poolDataDto.assetId,
+                                        pair.first,
+                                        address,
+                                        mapBalance(poolDataDto.reservesFirst, xorPrecision),
+                                        mapBalance(poolDataDto.reservesSecond, tokenPrecision),
+                                        mapBalance(poolDataDto.totalIssuance, xorPrecision),
+                                        getSbApy()?.firstOrNull { it.tokenId == poolDataDto.assetId }?.sbApy?.toBigDecimal(),
+                                        mapBalance(poolDataDto.poolProvidersBalance, xorPrecision)
+                                    )
+                                )
+                            }
+                    }
+                }
+        }
 
         db.withTransaction {
             db.poolDao().clearTable()
@@ -112,6 +161,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
 
     override suspend fun updateAccountPool(
         address: String,
+        baseTokenId: String,
         tokenId: String
     ) {
         wsConnection.getUserPoolsTokenIds(address).firstOrNull {
@@ -119,9 +169,9 @@ class PolkaswapRepositoryImpl @Inject constructor(
         } ?: return
 
         val xorPrecision =
-            requireNotNull(db.assetDao().getPrecisionOfToken(SubstrateOptionsProvider.feeAssetId))
+            requireNotNull(db.assetDao().getPrecisionOfToken(baseTokenId))
         val poolDataDto =
-            wsConnection.getUserPoolData(address, tokenId.fromHex())
+            wsConnection.getUserPoolData(address, baseTokenId, tokenId.fromHex())
 
         if (db.assetDao().getWhitelistOfToken(tokenId).isNullOrEmpty()
             .not() && poolDataDto != null
@@ -129,6 +179,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
             db.assetDao().getPrecisionOfToken(tokenId)?.let { tokenPrecision ->
                 db.poolDao().updatePool(
                     poolDataDto.assetId,
+                    baseTokenId,
                     address,
                     mapBalance(poolDataDto.reservesFirst, xorPrecision),
                     mapBalance(poolDataDto.reservesSecond, tokenPrecision),
@@ -143,29 +194,60 @@ class PolkaswapRepositoryImpl @Inject constructor(
     override suspend fun getPoolStrategicBonusAPY(tokenId: String): Double? =
         getSbApy()?.firstOrNull { it.tokenId == tokenId }?.sbApy
 
-    private suspend fun getSbApy() = runCatching { subQueryClient.getSpApy() }.getOrNull()
+    private suspend fun getSbApy() =
+        runCatching { soraWalletBlockExplorerInfo.getSpApy(caseName = sbApyCaseName) }.getOrNull()
 
     override fun subscribeToPoolsAssets(address: String): Flow<String> {
-        val poolsStorageKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
-        return substrateCalls.observeStorage(poolsStorageKey)
-    }
-
-    override suspend fun subscribeToPoolsData(address: String): Flow<String> {
-        val tokens = wsConnection.getUserPoolsTokenIds(address)
-        return if (tokens.isEmpty()) {
-            flowOf("")
+        return if (baseTokenPoolMigrated) {
+            flow {
+                val keys = wsConnection.getUserPoolsTokenIds22StateKeys(address)
+                val flows = keys.map {
+                    substrateCalls.observeStorage(it)
+                }
+                val combined = combine(flows) {
+                    it.getOrElse(0) { "" }
+                }
+                emitAll(combined)
+            }
         } else {
-            tokens.map { tokenId ->
-                subscribeToPoolData(address, tokenId)
-            }.merge()
+            val poolsStorageKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
+            substrateCalls.observeStorage(poolsStorageKey)
         }
     }
 
-    private suspend fun subscribeToPoolData(address: String, tokenId: ByteArray): Flow<String> {
+    override fun subscribeToPoolsData(address: String): Flow<String> = flow {
+        val tokensPair = if (baseTokenPoolMigrated) {
+            wsConnection.getUserPoolsTokenIds22(address)
+        } else {
+            val list = wsConnection.getUserPoolsTokenIds(address)
+            listOf(SubstrateOptionsProvider.feeAssetId to list)
+        }
+        val r = if (tokensPair.isEmpty()) {
+            flowOf("")
+        } else {
+            val flows = tokensPair.map { tokenPair ->
+                tokenPair.second.map {
+                    subscribeToPoolData(address, tokenPair.first, it)
+                }
+            }.flatten()
+            combine(flows) {
+                it.getOrElse(0) { "" }
+            }
+        }
+        emitAll(r)
+    }
+
+    private suspend fun subscribeToPoolData(
+        address: String,
+        baseTokenId: String,
+        tokenId: ByteArray
+    ): Flow<String> {
         val reservesAccount = wsConnection.getPoolReserveAccount(
+            baseTokenId,
             tokenId
         )
-        val reservesKey = runtimeManager.getRuntimeSnapshot().reservesKey(runtimeManager, tokenId)
+        val reservesKey =
+            runtimeManager.getRuntimeSnapshot().reservesKey(runtimeManager, baseTokenId, tokenId)
         val reservesFlow = substrateCalls.observeStorage(reservesKey)
 
         val totalIssuanceKey =
@@ -195,10 +277,14 @@ class PolkaswapRepositoryImpl @Inject constructor(
         return resultFlow
     }
 
-    override fun getPoolData(address: String, tokenId: String): Flow<PoolData?> {
-        return db.poolDao().getPool(tokenId, address).map {
+    override fun getPoolData(
+        address: String,
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<PoolData?> {
+        return db.poolDao().getPool(tokenId, baseTokenId, address).map {
             it?.let {
-                val xorPooled = it.reservesFirst * it.poolProvidersBalance / it.totalIssuance
+                val basePooled = it.reservesFirst * it.poolProvidersBalance / it.totalIssuance
                 val secondPooled = it.reservesSecond * it.poolProvidersBalance / it.totalIssuance
                 val share = it.poolProvidersBalance / it.totalIssuance * BigDecimal(100)
                 val strategicBonusApy = it.strategicBonusApy?.multiply(BigDecimal(100))
@@ -207,10 +293,15 @@ class PolkaswapRepositoryImpl @Inject constructor(
                     db.assetDao().getToken(it.assetId),
                     resourceManager
                 )
+                val baseToken = assetLocalToAssetMapper.map(
+                    db.assetDao().getToken(it.assetIdBase),
+                    resourceManager
+                )
 
                 PoolData(
                     token,
-                    xorPooled,
+                    baseToken,
+                    basePooled,
                     it.reservesFirst,
                     secondPooled,
                     it.reservesSecond,
@@ -226,7 +317,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     override fun subscribePoolFlow(address: String): Flow<List<PoolData>> {
         return db.poolDao().getPools(address).map { pools ->
             pools.map { poolData ->
-                val xorPooled = calculatePooledValue(
+                val basePooled = calculatePooledValue(
                     poolData.reservesFirst,
                     poolData.poolProvidersBalance,
                     poolData.totalIssuance
@@ -248,10 +339,15 @@ class PolkaswapRepositoryImpl @Inject constructor(
                     db.assetDao().getToken(poolData.assetId),
                     resourceManager
                 )
+                val baseToken = assetLocalToAssetMapper.map(
+                    db.assetDao().getToken(poolData.assetIdBase),
+                    resourceManager
+                )
 
                 PoolData(
                     token,
-                    xorPooled,
+                    baseToken,
+                    basePooled,
                     poolData.reservesFirst,
                     secondPooled,
                     poolData.reservesSecond,
@@ -266,9 +362,10 @@ class PolkaswapRepositoryImpl @Inject constructor(
 
     override fun subscribeLocalPoolReserves(
         address: String,
+        baseTokenId: String,
         assetId: String
     ): Flow<LiquidityData?> {
-        return db.poolDao().getPool(assetId, address).map { pool ->
+        return db.poolDao().getPool(assetId, baseTokenId, address).map { pool ->
             if (pool == null) {
                 null
             } else {
@@ -295,27 +392,33 @@ class PolkaswapRepositoryImpl @Inject constructor(
     }
 
     override suspend fun isSwapAvailable(tokenId1: String, tokenId2: String): Boolean {
-        return wsConnection.isSwapAvailable(tokenId1, tokenId2)
+        val dexId = getPoolBaseTokenDexId(tokenId1)
+        return wsConnection.isSwapAvailable(tokenId1, tokenId2, dexId)
     }
 
     override suspend fun getAvailableSources(tokenId1: String, tokenId2: String): List<Market> =
-        wsConnection.fetchAvailableSources(tokenId1, tokenId2).let {
-            marketMapper.mapMarket(it)
+        getPoolBaseTokenDexId(tokenId1).let { dexId ->
+            wsConnection.fetchAvailableSources(tokenId1, tokenId2, dexId).let {
+                marketMapper.mapMarket(it)
+            }
         }
 
-    override fun observePoolXYKReserves(tokenId: String): Flow<String> {
-        val key = runtimeManager.getRuntimeSnapshot().reservesKey(runtime = runtimeManager, tokenId = tokenId.fromHex())
+    override fun observePoolXYKReserves(
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<String> {
+        val key = runtimeManager.getRuntimeSnapshot()
+            .reservesKey(
+                runtime = runtimeManager,
+                baseTokenId = baseTokenId,
+                tokenId = tokenId.fromHex()
+            )
         return substrateCalls.observeStorage(key)
     }
 
     override fun observePoolTBCReserves(tokenId: String): Flow<String> {
-        val key = runtimeManager.getRuntimeSnapshot().metadata
-            .module(Pallete.POOL_TBC.palletName)
-            .storage(Storage.RESERVES_COLLATERAL.storageName)
-            .storageKey(
-                runtimeManager.getRuntimeSnapshot(),
-                tokenId.fromHex()
-            )
+        val key =
+            runtimeManager.getRuntimeSnapshot().poolTBCReserves(runtimeManager, tokenId.fromHex())
         return substrateCalls.observeStorage(key)
     }
 
@@ -333,6 +436,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
         ) {
             swap(
                 runtime = runtimeManager,
+                dexId = 0,
                 inputAssetId = tokenId1.id,
                 outputAssetId = tokenId1.id,
                 amount = amount2,
@@ -355,6 +459,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
         ) {
             removeLiquidity(
                 runtime = runtimeManager,
+                dexId = getPoolBaseTokenDexId(tokenId1.id),
                 outputAssetIdA = tokenId1.id,
                 outputAssetIdB = tokenId2.id,
                 markerAssetDesired = mapBalance(BigDecimal.ONE, tokenId1.precision),
@@ -377,6 +482,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     ): BigDecimal {
         val amountFromMin = calculateMinAmount(tokenFromAmount, slippageTolerance)
         val amountToMin = calculateMinAmount(tokenToAmount, slippageTolerance)
+        val dexId = getPoolBaseTokenDexId(tokenFrom.id)
         val fee = extrinsicManager.calcFee(
             from = address,
         ) {
@@ -384,17 +490,20 @@ class PolkaswapRepositoryImpl @Inject constructor(
                 if (!pairEnabled) {
                     register(
                         runtime = runtimeManager,
+                        dexId = dexId,
                         tokenFrom.id, tokenTo.id
                     )
                 }
                 initializePool(
                     runtime = runtimeManager,
+                    dexId = dexId,
                     tokenFrom.id, tokenTo.id
                 )
             }
 
             depositLiquidity(
                 runtime = runtimeManager,
+                dexId = dexId,
                 tokenFrom.id,
                 tokenTo.id,
                 mapBalance(tokenFromAmount, tokenFrom.precision),
@@ -419,6 +528,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     ): ExtrinsicSubmitStatus {
         val amountFromMin = calculateMinAmount(tokenFromAmount, slippageTolerance)
         val amountToMin = calculateMinAmount(tokenToAmount, slippageTolerance)
+        val dexId = getPoolBaseTokenDexId(tokenFrom.id)
         return extrinsicManager.submitAndWatchExtrinsic(
             from = address,
             keypair = keypair,
@@ -428,17 +538,20 @@ class PolkaswapRepositoryImpl @Inject constructor(
                 if (!pairEnabled) {
                     register(
                         runtime = runtimeManager,
+                        dexId = dexId,
                         tokenFrom.id, tokenTo.id
                     )
                 }
                 initializePool(
                     runtime = runtimeManager,
+                    dexId = dexId,
                     tokenFrom.id, tokenTo.id
                 )
             }
 
             depositLiquidity(
                 runtime = runtimeManager,
+                dexId = dexId,
                 tokenFrom.id,
                 tokenTo.id,
                 mapBalance(tokenFromAmount, tokenFrom.precision),
@@ -472,6 +585,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
         ) {
             swap(
                 runtime = runtimeManager,
+                dexId = getPoolBaseTokenDexId(tokenId1.id),
                 inputAssetId = tokenId1.id,
                 outputAssetId = tokenId2.id,
                 amount = amount2,
@@ -493,17 +607,17 @@ class PolkaswapRepositoryImpl @Inject constructor(
         val tokenId = if (swapVariant == WithDesired.INPUT) tokenId1 else tokenId2
         val precision = db.assetDao().getPrecisionOfToken(tokenId)
             ?: throw IllegalArgumentException("Token ($tokenId) not found in db")
-        val precisionFee = db.assetDao().getPrecisionOfToken(SubstrateOptionsProvider.feeAssetId)
-            ?: throw IllegalArgumentException("Token ($tokenId) not found in db")
+        val dexId = getPoolBaseTokenDexId(tokenId)
         return wsConnection.getSwapFees(
             tokenId1,
             tokenId2,
             mapBalance(amount, precision),
             swapVariant.backString,
             marketMapper.mapMarketsToStrings(markets),
-            marketMapper.mapMarketsToFilter(markets)
+            marketMapper.mapMarketsToFilter(markets),
+            dexId,
         )?.let {
-            SwapQuote(mapBalance(it.amount, 18), mapBalance(it.fee, precisionFee))
+            SwapQuote(mapBalance(it.amount, precision), mapBalance(it.fee, precision))
         }
     }
 
@@ -512,25 +626,28 @@ class PolkaswapRepositoryImpl @Inject constructor(
         outputAssetId: String,
         accountAddress: String
     ): Flow<Boolean> {
-        return db.poolDao().getPool(outputAssetId, accountAddress).map { pool ->
+        return db.poolDao().getPool(outputAssetId, inputAssetId, accountAddress).map { pool ->
+            val dexId = getPoolBaseTokenDexId(inputAssetId)
             if (pool != null) {
                 true
             } else {
-                wsConnection.isPairEnabled(inputAssetId, outputAssetId)
+                wsConnection.isPairEnabled(inputAssetId, outputAssetId, dexId)
             }
         }
     }
 
     override fun isPairPresentedInNetwork(
+        baseTokenId: String,
         tokenId: String,
         accountAddress: String
     ): Flow<Boolean> {
-        return db.poolDao().getPool(tokenId, accountAddress).map { pool ->
+        return db.poolDao().getPool(tokenId, baseTokenId, accountAddress).map { pool ->
             if (pool != null) {
                 true
             } else {
                 runCatching {
                     val reserveAccount = wsConnection.getPoolReserveAccount(
+                        baseTokenId,
                         tokenId.fromHex()
                     )
                     reserveAccount != null
@@ -551,6 +668,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     ): LiquidityData {
         return if (presented || enabled) {
             val (reservesFirst, reservesSecond) = wsConnection.getPoolReserves(
+                tokenFrom.id,
                 tokenTo.id
             ) ?: (BigInteger.ZERO to BigInteger.ZERO)
 
@@ -559,7 +677,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
                 firstReserves = mapBalance(reservesFirst, tokenFrom.precision),
                 secondReserves = mapBalance(reservesSecond, tokenTo.precision),
                 firstPooled = mapBalance(BigInteger.ZERO, tokenFrom.precision),
-                secondPooled = mapBalance(BigInteger.ZERO, tokenFrom.precision),
+                secondPooled = mapBalance(BigInteger.ZERO, tokenTo.precision),
                 sbApy = sbApy
             )
         } else {
@@ -581,11 +699,16 @@ class PolkaswapRepositoryImpl @Inject constructor(
     ) {
         removeLiquidity(
             runtime = runtimeManager,
+            dexId = getPoolBaseTokenDexId(token1.id),
             outputAssetIdA = token1.id,
             outputAssetIdB = token2.id,
             markerAssetDesired = mapBalance(markerAssetDesired, token1.precision),
             outputAMin = mapBalance(firstAmountMin, token1.precision),
             outputBMin = mapBalance(secondAmountMin, token2.precision)
         )
+    }
+
+    private suspend fun getPoolBaseTokenDexId(tokenId: String): Int {
+        return db.poolDao().getPoolBaseToken(tokenId)?.dexId ?: 0
     }
 }
