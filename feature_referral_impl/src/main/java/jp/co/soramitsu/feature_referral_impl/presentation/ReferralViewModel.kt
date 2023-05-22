@@ -5,30 +5,43 @@
 
 package jp.co.soramitsu.feature_referral_impl.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavOptionsBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jp.co.soramitsu.common.base.model.ToolbarState
-import jp.co.soramitsu.common.base.model.ToolbarType
+import java.math.BigDecimal
+import javax.inject.Inject
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.printBalance
-import jp.co.soramitsu.common.interfaces.WithProgress
+import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
-import jp.co.soramitsu.common.util.ext.safeCast
+import jp.co.soramitsu.common.util.ext.orZero
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_referral_impl.R
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
+import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.BOND_XOR
+import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.REFERRAL_PROGRAM
+import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.REFERRER_FILLED
+import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.REFERRER_INPUT
+import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.UNBOND_XOR
+import jp.co.soramitsu.feature_referral_impl.presentation.ReferralFeatureRoutes.WELCOME_PAGE
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.ui_core.component.wrappedtext.WrappedTextState
+import kotlin.math.truncate
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -36,20 +49,18 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
-import javax.inject.Inject
-import kotlin.math.truncate
 
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class ReferralViewModel @Inject constructor(
+    private val assetsInteractor: AssetsInteractor,
+    private val assetsRouter: AssetsRouter,
     private val interactor: ReferralInteractor,
     private val walletInteractor: WalletInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val router: MainRouter,
-    private val progress: WithProgress,
-    resourceManager: ResourceManager
-) : BaseViewModel(), WithProgress by progress {
+    private val resourceManager: ResourceManager
+) : BaseViewModel() {
 
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
@@ -57,70 +68,105 @@ class ReferralViewModel @Inject constructor(
     private var currentEnteredReferrerLink: String? = null
     private var xorBalance: BigDecimal = BigDecimal.ZERO
     private var referrerBalance: BigDecimal = BigDecimal.ZERO
+    private var extrinsicFee: BigDecimal = BigDecimal.ZERO
     private var setReferrerFee: BigDecimal = BigDecimal.ZERO
     private var bondInvitationsCount: Int = 1
-    private var lastOpenedSheet: DetailedBottomSheet? = null
 
-    private var referralsState: ReferralsCardModel = ReferralsCardModel()
+    private var referralsState: ReferralsCardState = ReferralsCardState()
         set(value) {
-            _referralScreenState.value?.let {
-                if (it.screen is ReferralProgramStateScreen.ReferralProgramData) {
-                    _referralScreenState.value = it.copy(screen = it.screen.copy(referrals = value))
-                }
-            }
+            referralScreenState = referralScreenState.copy(
+                referralInvitationsCardState = referralScreenState.referralInvitationsCardState.copy(
+                    referrals = value
+                )
+            )
             field = value
         }
-
-    private val _extrinsicEvent = SingleLiveEvent<Boolean>()
-    val extrinsicEvent: LiveData<Boolean> = _extrinsicEvent
 
     private val _shareLinkEvent = SingleLiveEvent<String>()
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
 
-    private val _hideSheet =
-        MutableSharedFlow<Boolean>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val hideSheet = _hideSheet.asSharedFlow()
-
-    private val _referralScreenState = MutableLiveData<ReferralProgramState>()
-    val referralScreenState: LiveData<ReferralProgramState> = _referralScreenState
+    internal var referralScreenState by mutableStateOf(emptyState)
+        private set
 
     private var referrer: String? = null
 
+    private val singleTopTrue: NavOptionsBuilder.() -> Unit = {
+        launchSingleTop = true
+    }
+
+    override fun startScreen(): String = ReferralFeatureRoutes.WELCOME_PROGRESS
+
     init {
-        _toolbarState.value = ToolbarState(
-            type = ToolbarType.SMALL,
-            title = resourceManager.getString(R.string.referral_toolbar_title),
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.referral_toolbar_title,
         )
 
         interactor.observeReferrerBalance()
             .onStart {
-                progress.showProgress()
+                extrinsicFee = interactor.calcBondFee()
                 setReferrerFee = interactor.getSetReferrerFee()
             }
             .catch { onError(it) }
             .debounce(500)
             .distinctUntilChanged()
             .onEach {
-                referrerBalance = it ?: BigDecimal.ZERO
+                referrerBalance = it.orZero()
                 val feeToken = feeToken()
-                _referralScreenState.value = ReferralProgramState(
-                    common = ReferrerState(
-                        referrer = referrer,
-                        activate = false,
-                        referrerFee = feeToken.formatBalance(setReferrerFee),
-                        extrinsicFee = feeToken.formatBalance(interactor.calcBondFee())
-                    ),
-                    bondState = calcBondState(feeToken),
-                    screen = if (referrerBalance < setReferrerFee)
-                        ReferralProgramStateScreen.Initial else
-                        ReferralProgramStateScreen.ReferralProgramData(
-                            invitations = calcInvitationsCount(),
-                            bonded = feeToken.formatBalance(referrerBalance),
-                            link = interactor.getInvitationLink(),
-                            referrals = referralsState,
+                val invitationsCount = calcInvitationsCount()
+                referralScreenState =
+                    if (currentDestination == ReferralFeatureRoutes.WELCOME_PROGRESS) {
+                        ReferralProgramState(
+                            common = ReferralCommonState(
+                                activate = true,
+                                progress = false,
+                                referrer = referrer,
+                                referrerFee = feeToken.printAmountWithFee(
+                                    setReferrerFee,
+                                    numbersFormatter
+                                ),
+                                extrinsicFee = feeToken.formatBalance(extrinsicFee),
+                                extrinsicFeeFiat = feeToken.printFiat(
+                                    extrinsicFee,
+                                    numbersFormatter
+                                )
+                            ),
+                            bondState = calcBondState(feeToken),
+                            referrerInputState = InputTextState(
+                                label = resourceManager.getString(R.string.referral_referral_link)
+                            ),
+                            referralInvitationsCardState = ReferralInvitationsCardState(
+                                if (invitationsCount > 0) {
+                                    resourceManager.getString(R.string.referral_invitaion_link_title)
+                                } else {
+                                    resourceManager.getString(R.string.referral_no_available_invitations)
+                                },
+                                invitationsCount,
+                                WrappedTextState(
+                                    title = resourceManager.getString(R.string.referral_invitation_link),
+                                    text = interactor.getInvitationLink(),
+                                    trailingIcon = R.drawable.ic_share_24
+                                ),
+                                feeToken.formatBalance(referrerBalance),
+                                referrals = referralsState,
+                            )
                         )
-                )
-                progress.hideProgress()
+                    } else {
+                        referralScreenState.copy(
+                            referralInvitationsCardState = referralScreenState.referralInvitationsCardState.copy(
+                                title = if (invitationsCount > 0) {
+                                    resourceManager.getString(R.string.referral_invitaion_link_title)
+                                } else {
+                                    resourceManager.getString(R.string.referral_no_available_invitations)
+                                },
+                                invitationsCount = invitationsCount,
+                                bondedXorString = feeToken.formatBalance(referrerBalance)
+                            )
+                        )
+                    }
+                if (currentDestination == ReferralFeatureRoutes.WELCOME_PROGRESS) {
+                    _navEvent.value =
+                        if (referralScreenState.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
+                }
             }
             .launchIn(viewModelScope)
 
@@ -129,10 +175,8 @@ class ReferralViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { newValue ->
                 referrer = newValue.ifEmpty { null }
-                _referralScreenState.value?.let {
-                    _referralScreenState.value =
-                        it.copy(common = it.common.copy(referrer = referrer))
-                }
+                referralScreenState =
+                    referralScreenState.copy(common = referralScreenState.common.copy(referrer = referrer))
             }
             .launchIn(viewModelScope)
 
@@ -145,14 +189,12 @@ class ReferralViewModel @Inject constructor(
             }
             .launchIn(viewModelScope)
 
-        walletInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
+        assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
             .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { asset ->
                 xorBalance = asset.balance.transferable
-                lastOpenedSheet?.let {
-                    reCalcOnChange(it)
-                }
+                reCalcOnChange(currentDestination)
             }
             .launchIn(viewModelScope)
 
@@ -161,7 +203,7 @@ class ReferralViewModel @Inject constructor(
             .onEach { referrals ->
                 var totalAmount = BigDecimal.ZERO
                 val feeToken = feeToken()
-                referralsState = ReferralsCardModel(
+                referralsState = ReferralsCardState(
                     rewards = referrals.map {
                         totalAmount += it.xorAmount
                         ReferralModel(
@@ -177,42 +219,15 @@ class ReferralViewModel @Inject constructor(
     }
 
     fun onShareLink() {
-        _referralScreenState.value?.let { data ->
-            data.screen.safeCast<ReferralProgramStateScreen.ReferralProgramData>()?.let {
-                _shareLinkEvent.value = it.link
-            }
-        }
-    }
-
-    fun onSheetOpen(state: DetailedBottomSheet) {
-        lastOpenedSheet = state
-        when (state) {
-            DetailedBottomSheet.REQUEST_REFERRER -> {
-                viewModelScope.launch {
-                    reCalcOnChange(DetailedBottomSheet.REQUEST_REFERRER)
-                }
-            }
-            DetailedBottomSheet.SHOW_REFERRER -> {}
-            DetailedBottomSheet.BOND -> {
-                viewModelScope.launch {
-                    bondInvitationsCount = 1
-                    reCalcOnChange(DetailedBottomSheet.BOND)
-                }
-            }
-            DetailedBottomSheet.UNBOND -> {
-                viewModelScope.launch {
-                    bondInvitationsCount = 1
-                    reCalcOnChange(DetailedBottomSheet.UNBOND)
-                }
-            }
-        }
+        _shareLinkEvent.value =
+            referralScreenState.referralInvitationsCardState.wrappedTextState.text
     }
 
     fun onBondMinus() {
         if (bondInvitationsCount > 1) {
             viewModelScope.launch {
                 bondInvitationsCount--
-                reCalcOnChange(DetailedBottomSheet.BOND)
+                reCalcOnChange(BOND_XOR)
             }
         }
     }
@@ -220,7 +235,7 @@ class ReferralViewModel @Inject constructor(
     fun onBondPlus() {
         viewModelScope.launch {
             bondInvitationsCount++
-            reCalcOnChange(DetailedBottomSheet.BOND)
+            reCalcOnChange(BOND_XOR)
         }
     }
 
@@ -229,7 +244,7 @@ class ReferralViewModel @Inject constructor(
         if (realValue >= 0) {
             viewModelScope.launch {
                 bondInvitationsCount = realValue
-                reCalcOnChange(DetailedBottomSheet.BOND)
+                reCalcOnChange(BOND_XOR)
             }
         }
     }
@@ -238,7 +253,7 @@ class ReferralViewModel @Inject constructor(
         if (bondInvitationsCount > 1) {
             viewModelScope.launch {
                 bondInvitationsCount--
-                reCalcOnChange(DetailedBottomSheet.UNBOND)
+                reCalcOnChange(UNBOND_XOR)
             }
         }
     }
@@ -247,7 +262,7 @@ class ReferralViewModel @Inject constructor(
         if (bondInvitationsCount < calcInvitationsCount()) {
             viewModelScope.launch {
                 bondInvitationsCount++
-                reCalcOnChange(DetailedBottomSheet.UNBOND)
+                reCalcOnChange(UNBOND_XOR)
             }
         }
     }
@@ -257,53 +272,19 @@ class ReferralViewModel @Inject constructor(
         if (realValue >= 0 && realValue <= calcInvitationsCount()) {
             viewModelScope.launch {
                 bondInvitationsCount = realValue
-                reCalcOnChange(DetailedBottomSheet.UNBOND)
+                reCalcOnChange(UNBOND_XOR)
             }
         }
-    }
-
-    fun onLinkChange(link: String) {
-        currentEnteredReferrerLink = link
-        onSheetOpen(DetailedBottomSheet.REQUEST_REFERRER)
     }
 
     fun onBondButtonClick() {
         viewModelScope.launch {
             tryCatch {
-                _referralScreenState.value?.let {
-                    _referralScreenState.value = it.copy(common = it.common.copy(progress = true))
-                }
-                val feeToken = feeToken()
-                val result = interactor.observeBond(
-                    calcInvitationsAmount(bondInvitationsCount),
-                )
-                _extrinsicEvent.value = result
-                _hideSheet.tryEmit(true)
-                _referralScreenState.value?.let {
-                    when (it.screen) {
-                        is ReferralProgramStateScreen.Initial -> {
-                            _referralScreenState.value = it.copy(
-                                common = it.common.copy(activate = false, progress = false),
-                                bondState = calcBondState(feeToken),
-                                screen = ReferralProgramStateScreen.ReferralProgramData(
-                                    invitations = calcInvitationsCount(),
-                                    bonded = feeToken.formatBalance(referrerBalance),
-                                    link = interactor.getInvitationLink(),
-                                    referrals = referralsState,
-                                )
-                            )
-                        }
-                        is ReferralProgramStateScreen.ReferralProgramData -> {
-                            _referralScreenState.value = it.copy(
-                                common = it.common.copy(activate = false, progress = false),
-                                screen = it.screen.copy(
-                                    invitations = calcInvitationsCount(),
-                                    bonded = feeToken.formatBalance(referrerBalance)
-                                )
-                            )
-                        }
-                    }
-                }
+                referralScreenState =
+                    referralScreenState.copy(common = referralScreenState.common.copy(progress = true))
+                val result = interactor.observeBond(calcInvitationsAmount(bondInvitationsCount))
+                assetsRouter.showTxDetails(result)
+                _navEvent.value = REFERRAL_PROGRAM to singleTopTrue
             }
         }
     }
@@ -311,93 +292,65 @@ class ReferralViewModel @Inject constructor(
     fun onUnbondButtonClick() {
         viewModelScope.launch {
             tryCatch {
-                _referralScreenState.value?.let {
-                    _referralScreenState.value = it.copy(common = it.common.copy(progress = true))
-                }
-                val feeToken = feeToken()
+                referralScreenState =
+                    referralScreenState.copy(common = referralScreenState.common.copy(progress = true))
                 val result = interactor.observeUnbond(
                     calcInvitationsAmount(bondInvitationsCount),
                 )
-                _extrinsicEvent.value = result
-                _hideSheet.tryEmit(true)
-                _referralScreenState.value?.let {
-                    if (it.screen is ReferralProgramStateScreen.ReferralProgramData) {
-                        _referralScreenState.value = it.copy(
-                            common = it.common.copy(activate = false, progress = false),
-                            screen = it.screen.copy(
-                                invitations = calcInvitationsCount(),
-                                bonded = feeToken.formatBalance(referrerBalance)
-                            )
-                        )
-                    }
-                }
+
+                assetsRouter.showTxDetails(result)
+                _navEvent.value = REFERRAL_PROGRAM to singleTopTrue
             }
         }
     }
 
-    fun onActivateLinkClick(link: String) {
+    fun onActivateLinkClick() {
         viewModelScope.launch {
             tryCatch {
-                _referralScreenState.value?.let {
-                    _referralScreenState.value = it.copy(common = it.common.copy(progress = true))
-                }
-                val referrerOk = interactor.isLinkOk(link)
-                if (referrerOk.first) {
-                    val result = interactor.observeSetReferrer(referrerOk.second)
-                    _extrinsicEvent.value = result
-                    if (result) {
-                        referrer = referrerOk.second
-                    }
-                } else {
-                    _extrinsicEvent.value = false
-                }
-                _hideSheet.tryEmit(true)
-                _referralScreenState.value?.let {
-                    _referralScreenState.value =
-                        it.copy(
-                            common = it.common.copy(
-                                referrer = referrer,
-                                activate = false,
-                                progress = false,
-                            )
-                        )
-                }
+                val input =
+                    referralScreenState.referrerInputState.value.text
+                referralScreenState =
+                    referralScreenState.copy(common = referralScreenState.common.copy(progress = true))
+                val referrerOk = interactor.isLinkOrAddressOk(input)
+                val result = interactor.observeSetReferrer(referrerOk.second)
+
+                assetsRouter.showTxDetails(result)
+                _navEvent.value =
+                    if (referralScreenState.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
             }
         }
     }
 
-    private suspend fun reCalcOnChange(state: DetailedBottomSheet) {
-        _referralScreenState.value?.let {
-            val feeToken = feeToken()
-            val bondFee = interactor.calcBondFee()
-            val buttonActiveValidation = when (state) {
-                DetailedBottomSheet.REQUEST_REFERRER -> {
-                    interactor.isLinkOk(currentEnteredReferrerLink.orEmpty()).first
-                }
-                DetailedBottomSheet.SHOW_REFERRER -> {
-                    true
-                }
-                DetailedBottomSheet.BOND -> {
-                    validateFeePayment(bondFee + calcInvitationsAmount(bondInvitationsCount))
-                }
-                DetailedBottomSheet.UNBOND -> {
-                    validateFeePayment(bondFee)
-                }
+    private suspend fun reCalcOnChange(route: String?) {
+        if (route == null) return
+        val feeToken = feeToken()
+        val bondFee = interactor.calcBondFee()
+        val buttonActiveValidation = when (route) {
+            REFERRER_INPUT -> {
+                interactor.isLinkOrAddressOk(currentEnteredReferrerLink.orEmpty()).first
             }
-            val amount = calcInvitationsAmount(feeToken, bondInvitationsCount)
-            _referralScreenState.value =
-                it.copy(
-                    common = it.common.copy(
-                        progress = false,
-                        activate = buttonActiveValidation
-                    ),
-                    bondState = it.bondState.copy(
-                        invitationsCount = bondInvitationsCount,
-                        invitationsAmount = amount,
-                        balance = feeToken.formatBalance(xorBalance)
-                    )
-                )
+            BOND_XOR -> {
+                validateFeePayment(bondFee + calcInvitationsAmount(bondInvitationsCount))
+            }
+            UNBOND_XOR -> {
+                validateFeePayment(bondFee)
+            }
+            else -> true
         }
+
+        val amount = calcInvitationsAmount(feeToken, bondInvitationsCount)
+        referralScreenState =
+            referralScreenState.copy(
+                common = referralScreenState.common.copy(
+                    progress = false,
+                    activate = buttonActiveValidation
+                ),
+                bondState = referralScreenState.bondState.copy(
+                    invitationsCount = bondInvitationsCount,
+                    invitationsAmount = amount,
+                    balance = feeToken.formatBalance(xorBalance)
+                )
+            )
     }
 
     private fun calcInvitationsCount(): Int {
@@ -409,15 +362,27 @@ class ReferralViewModel @Inject constructor(
 
     private fun calcInvitationsAmount(feeToken: Token, count: Int): String {
         val amount = calcInvitationsAmount(count)
-        return feeToken.formatBalance(amount)
+        return feeToken.printAmountWithFee(amount, numbersFormatter)
     }
 
     private fun Token.formatBalance(balance: BigDecimal): String =
         this.printBalance(
             balance = balance,
             nf = numbersFormatter,
-            precision = 5,
+            precision = AssetHolder.ROUNDING
         )
+
+    private fun Token.printAmountWithFee(
+        amount: BigDecimal,
+        numbersFormatter: NumbersFormatter
+    ): String {
+        return "${this.printBalance(amount, numbersFormatter, AssetHolder.ROUNDING)} (${
+            this.printFiat(
+                amount,
+                numbersFormatter
+            )
+        })"
+    }
 
     private fun validateFeePayment(fee: BigDecimal): Boolean {
         return xorBalance > fee
@@ -438,5 +403,81 @@ class ReferralViewModel @Inject constructor(
 
     fun toggleReferralsCard() {
         referralsState = referralsState.copy(isExpanded = referralsState.isExpanded.not())
+    }
+
+    private fun toggleToolbarTitle(route: String) {
+        _toolbarState.value?.let {
+            _toolbarState.value = it.copy(
+                basic = it.basic.copy(
+                    title = when (route) {
+                        BOND_XOR -> R.string.referral_add_invitations_title
+                        UNBOND_XOR -> R.string.wallet_unbonded
+                        REFERRER_INPUT -> R.string.referral_enter_link_title
+                        REFERRER_FILLED -> R.string.referral_your_referrer
+                        else -> R.string.referral_toolbar_title
+                    },
+                ),
+            )
+        }
+    }
+
+    fun onReferrerInputChange(textValue: TextFieldValue) {
+        currentEnteredReferrerLink = textValue.text
+        viewModelScope.launch {
+            referralScreenState = referralScreenState.copy(
+                common = referralScreenState.common.copy(
+                    activate = interactor.isLinkOrAddressOk(
+                        textValue.text
+                    ).first
+                ),
+                referrerInputState = referralScreenState.referrerInputState.copy(
+                    value = textValue
+                ),
+            )
+        }
+    }
+
+    fun openReferrerInput() {
+        referralScreenState = referralScreenState.copy(
+            referrerInputState = referralScreenState.referrerInputState.copy(
+                value = TextFieldValue()
+            ),
+        )
+        viewModelScope.launch {
+            reCalcOnChange(REFERRER_INPUT)
+        }
+    }
+
+    fun openBond() {
+        viewModelScope.launch {
+            bondInvitationsCount = 1
+            reCalcOnChange(BOND_XOR)
+        }
+    }
+
+    override fun onNavIcon() {
+        when (currentDestination) {
+            "", REFERRAL_PROGRAM, WELCOME_PAGE -> {
+                router.popBackStack()
+            }
+            else -> {
+                super.onBackPressed()
+            }
+        }
+    }
+
+    override fun onBackPressed() {
+        onNavIcon()
+    }
+
+    fun openUnbond() {
+        viewModelScope.launch {
+            bondInvitationsCount = 1
+            reCalcOnChange(UNBOND_XOR)
+        }
+    }
+
+    override fun onCurrentDestinationChanged(curDest: String) {
+        toggleToolbarTitle(curDest)
     }
 }

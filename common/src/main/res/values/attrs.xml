@@ -21,6 +21,7 @@
 
     <attr name="buttonPrimary" format="color" />$
     <attr name="buttonPrimaryDark" format="color" />
+    <attr name="polkaswapBackground" format="color" />
     <attr name="polkaswapPrimary" format="color" />
     <attr name="polkaswapPrimaryDark" format="color" />
     <attr name="disabledButtonColor" format="color" />
@@ -28,6 +29,7 @@
     <attr name="disabledButtonTextColor2" format="color" />
 
     <attr name="baseBackground" format="color" />
+    <attr name="baseBackgroundSecond" format="color" />
     <attr name="baseBackgroundDark" format="color" />
     <attr name="baseBorderPrimary" format="color" />
     <attr name="baseBorderSecondary" format="color" />
@@ -72,77 +74,14 @@
     <attr name="iconTintColorPositive" format="color" />
     <attr name="iconTintColorNegative" format="color" />
     <attr name="iconTintAboveBackground" format="color" />
-
-    <declare-styleable name="VsLineView">
-        <attr name="leftColor" format="color" />
-        <attr name="rightColor" format="color" />
-
-        <attr name="lineHeight" format="dimension" />
-
-        <attr name="delimiterColor" format="color" />
-
-        <attr name="primaryPercentage" format="float" />
-    </declare-styleable>
+    <attr name="redesignTokenName" format="color" />
+    <attr name="redesignTokenBalance" format="color" />
 
     <attr name="titleText" format="string" />
     <attr name="iconRight" format="reference|color" />
     <attr name="textRight" format="string" />
     <attr name="homeButtonIcon" format="reference|color" />
     <attr name="homeButtonVisible" format="boolean" />
-
-    <declare-styleable name="SoraNeuToolbar">
-        <attr name="titleText" />
-        <attr name="iconRight" />
-        <attr name="textRight" />
-        <attr name="homeButtonIcon" />
-        <attr name="homeButtonVisible" />
-    </declare-styleable>
-
-    <declare-styleable name="AssetCardView">
-        <attr name="hintText" format="string" />
-        <!--        <attr name="" format="reference|color" />-->
-        <!--        <attr name="textRight" format="string" />-->
-        <!--        <attr name="homeButtonIcon" format="reference|color" />-->
-        <!--        <attr name="homeButtonVisible" format="boolean" />-->
-    </declare-styleable>
-
-    <attr name="aboutCellViewStyle" format="reference" />
-    <declare-styleable name="AboutCellView">
-        <attr name="cellTitleTextAppearance" format="reference" />
-        <attr name="cellDescriptionTextAppearance" format="reference" />
-        <attr name="cellLeftIcon" format="reference" />
-        <attr name="cellTitleText" format="string|reference" />
-        <attr name="cellDescriptionText" format="string|reference" />
-        <attr name="cellLeftIconTint" format="color" />
-    </declare-styleable>
-
-    <attr name="rowsViewStyle" format="reference" />
-    <declare-styleable name="RowsView">
-        <attr name="rowsCount" format="integer" />
-        <attr name="rowTitleTextAppearance" format="reference"/>
-        <attr name="rowText1TextAppearance" format="reference"/>
-        <attr name="rowText2TextAppearance" format="reference"/>
-        <attr name="rowType" format="enum">
-            <enum name="line" value="0" />
-            <enum name="triangle" value="1" />
-        </attr>
-        <attr name="rowsTopPadding" format="dimension|reference" />
-        <attr name="rowsBottomPadding" format="dimension|reference" />
-    </declare-styleable>
-
-    <attr name="selectTokenCardViewStyle" format="reference" />
-    <declare-styleable name="SelectTokenCardView">
-        <attr name="cardBackground" format="reference" />
-        <attr name="cardBackgroundColorTintSelected" format="reference" />
-        <attr name="cardBackgroundColorTintNotSelected" format="reference" />
-        <attr name="cardOpenIcon" format="reference" />
-        <attr name="cardCloseIcon" format="reference" />
-        <attr name="cardIconTintSelected" format="reference" />
-        <attr name="cardIconTintNotSelected" format="reference" />
-        <attr name="cardTokenIconPadding" format="dimension|reference" />
-        <attr name="cardTextAppearance" format="reference" />
-        <attr name="cardTextAppearanceNotSelected" format="reference" />
-    </declare-styleable>
 
     <dimen name="defaultLineHeight">6dp</dimen>
     <color name="defaultLeftColor">@color/grey</color>
@@ -157,10 +96,5 @@
     <attr name="uikit_pinCodeButtonTextColor" format="reference" />
     <attr name="uikit_pinCodeButtonBackground" format="reference" />
     <!--Pincode-->
-
-    <declare-styleable name="LoadingButton">
-        <attr name="android:enabled" />
-        <attr name="android:text" />
-    </declare-styleable>
 
 </resources>

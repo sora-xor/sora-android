@@ -5,75 +5,78 @@
 
 package jp.co.soramitsu.feature_select_node_impl
 
+import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.fearless_utils.wsrpc.socket.StateObserver
 import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal class NodeManagerImpl(
     private val connectionManager: ConnectionManager,
     private val selectNodeRepository: SelectNodeRepository,
     private val coroutineManager: CoroutineManager,
-    private val autoSwitch: Boolean = true,
+    private val autoSwitch: Boolean,
     appDatabase: AppDatabase,
+    private val soraConfigManager: SoraConfigManager,
 ) : NodeManager {
 
     private companion object {
         const val NODE_SWITCHING_FREQUENCY = 4 // switch node every n attempt
     }
 
-    private var availableNodes: List<Node> = emptyList()
+    private var availableNodes: List<ChainNode> = emptyList()
 
-    private var previousNode: Node? = null
-    private var selectedNode: Node? = null
-    private var newNode: Node? = null
+    private var previousNode: ChainNode? = null
+    private var selectedNode: ChainNode? = null
+    private var newNode: ChainNode? = null
 
     private val _events: MutableSharedFlow<NodeManagerEvent> = MutableSharedFlow()
     override val events: Flow<NodeManagerEvent> = _events
 
-    private val stateObserver: StateObserver = this::handleState
+    private var stateObserverEnabled: Boolean = false
+    private var blockHashCheckObserverEnabled: Boolean = false
 
     private var customNodeUrl: String = ""
 
     private var autoSwitchingStarted: Boolean = false
-    private val attemptedNodes = mutableListOf<Node>()
-
-    private val state = connectionManager.networkState()
-        .stateIn(
-            scope = coroutineManager.applicationScope,
-            started = SharingStarted.Eagerly,
-            initialValue = SocketStateMachine.State.Disconnected
-        )
-
-    private var isConnected: Boolean = false
+    private val attemptedNodes = mutableListOf<ChainNode>()
 
     init {
         coroutineManager.applicationScope.launch {
             val address =
-                appDatabase.nodeDao().getSelectedNode()?.address ?: SubstrateOptionsProvider.url
+                appDatabase.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
             connectionManager.setAddress(address)
             connectionManager.observeAppState()
 
             selectNodeRepository.fetchDefaultNodes()
         }
+
+        connectionManager.networkState
+            .onEach {
+                if (stateObserverEnabled) {
+                    handleState(it)
+                }
+                if (blockHashCheckObserverEnabled) {
+                    handleConnectionStateForBlockHashCheck(it)
+                }
+                autoSwitch(it)
+            }
+            .launchIn(coroutineManager.applicationScope)
 
         selectNodeRepository.getNodes()
             .distinctUntilChanged()
@@ -89,56 +92,48 @@ internal class NodeManagerImpl(
                 selectedNode = it
             }
             .launchIn(coroutineManager.applicationScope)
-
-        state.onEach(::autoSwitch)
-            .launchIn(coroutineManager.applicationScope)
-
-        state.onEach { isConnected = it is SocketStateMachine.State.Connected }
-            .launchIn(coroutineManager.applicationScope)
     }
 
-    override fun tryToConnect(node: Node) {
-        if (!isConnected) {
+    override fun tryToConnect(node: ChainNode) {
+        if (!connectionManager.isNetworkAvailable) {
             coroutineManager.applicationScope.launch {
                 _events.emit(NodeManagerEvent.NoConnection)
             }
         } else {
             previousNode = selectedNode
             newNode = node
-            connectionManager.addStateObserver(stateObserver)
+            stateObserverEnabled = true
             connectionManager.switchUrl(node.address)
         }
     }
 
-    override fun connectionState(): Flow<Boolean> = connectionManager.connectionState()
+    override val connectionState: Flow<Boolean> = connectionManager.connectionState
 
-    private fun handleState(state: SocketStateMachine.State) {
-        coroutineManager.applicationScope.launch {
-            when (state) {
-                is SocketStateMachine.State.Connected -> {
-                    if (state.url == newNode?.address) {
-                        newNode?.let { _events.emit(NodeManagerEvent.Connected(it.address)) }
-                        newNode?.let { selectNodeRepository.selectNode(it) }
-                        connectionManager.removeStateObserver(stateObserver)
-                    }
+    private suspend fun handleState(state: SocketStateMachine.State) {
+        when (state) {
+            is SocketStateMachine.State.Connected -> {
+                if (state.url == newNode?.address) {
+                    newNode?.let { _events.emit(NodeManagerEvent.Connected(it.address)) }
+                    newNode?.let { selectNodeRepository.selectNode(it) }
+                    stateObserverEnabled = false
                 }
-
-                is SocketStateMachine.State.WaitingForReconnect -> {
-                    newNode?.let { _events.emit(NodeManagerEvent.ConnectionFailed(it.address)) }
-                    newNode = null
-                    previousNode?.address?.let {
-                        connectionManager.removeStateObserver(stateObserver)
-                        connectionManager.switchUrl(it)
-                    }
-                }
-
-                else -> {}
             }
+
+            is SocketStateMachine.State.WaitingForReconnect -> {
+                newNode?.let { _events.emit(NodeManagerEvent.ConnectionFailed(it.address)) }
+                newNode = null
+                previousNode?.address?.let {
+                    stateObserverEnabled = false
+                    connectionManager.switchUrl(it)
+                }
+            }
+
+            else -> {}
         }
     }
 
     override fun checkGenesisHash(url: String) {
-        if (!isConnected) {
+        if (!connectionManager.isNetworkAvailable) {
             coroutineManager.applicationScope.launch {
                 _events.emit(NodeManagerEvent.NoConnection)
             }
@@ -152,7 +147,7 @@ internal class NodeManagerImpl(
         previousNode = selectedNode
         customNodeUrl = url
 
-        connectionManager.addStateObserver(blockHashCheckObserver)
+        blockHashCheckObserverEnabled = true
         connectionManager.switchUrl(url)
     }
 
@@ -175,38 +170,37 @@ internal class NodeManagerImpl(
         return false
     }
 
-    private val blockHashCheckObserver = this::handleConnectionStateForBlockHashCheck
-
-    private fun handleConnectionStateForBlockHashCheck(state: SocketStateMachine.State) {
+    private suspend fun handleConnectionStateForBlockHashCheck(state: SocketStateMachine.State) {
         when (state) {
             is SocketStateMachine.State.Connected -> {
                 if (state.url == customNodeUrl) {
-                    coroutineManager.applicationScope.launch {
-                        connectionManager.removeStateObserver(blockHashCheckObserver)
-                        try {
-                            val newHash = selectNodeRepository.getBlockHash().removeHexPrefix()
-                            if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.TESTING, Flavor.SORALUTION)) {
-                                _events.emit(NodeManagerEvent.GenesisValidated(result = true))
-                            } else {
-                                _events.emit(NodeManagerEvent.GenesisValidated(result = SubstrateOptionsProvider.hash == newHash))
-                            }
-                        } catch (e: Throwable) {
-                            _events.emit(NodeManagerEvent.GenesisValidated(result = false))
+                    blockHashCheckObserverEnabled = false
+                    try {
+                        val newHash = selectNodeRepository.getBlockHash().removeHexPrefix()
+                        if (BuildUtils.isFlavors(
+                                Flavor.DEVELOP,
+                                Flavor.TESTING,
+                                Flavor.SORALUTION
+                            )
+                        ) {
+                            _events.emit(NodeManagerEvent.GenesisValidated(result = true))
+                        } else {
+                            _events.emit(NodeManagerEvent.GenesisValidated(result = soraConfigManager.getGenesis() == newHash))
                         }
-                        previousNode?.address?.let { connectionManager.switchUrl(it) }
-                        customNodeUrl = ""
+                    } catch (e: Throwable) {
+                        _events.emit(NodeManagerEvent.GenesisValidated(result = false))
                     }
+                    previousNode?.address?.let { connectionManager.switchUrl(it) }
+                    customNodeUrl = ""
                 }
             }
 
             is SocketStateMachine.State.WaitingForReconnect -> {
                 if (state.url == customNodeUrl) {
-                    coroutineManager.applicationScope.launch {
-                        customNodeUrl = ""
-                        connectionManager.removeStateObserver(blockHashCheckObserver)
-                        _events.emit(NodeManagerEvent.GenesisValidated(result = false))
-                        previousNode?.address?.let { connectionManager.switchUrl(it) }
-                    }
+                    customNodeUrl = ""
+                    blockHashCheckObserverEnabled = false
+                    _events.emit(NodeManagerEvent.ConnectionFailed(customNodeUrl))
+                    previousNode?.address?.let { connectionManager.switchUrl(it) }
                 }
             }
 
@@ -240,13 +234,16 @@ internal class NodeManagerImpl(
             val nextNodeIndex = (currentNodeIndex + 1) % availableNodes.size
             val nextNode = availableNodes[nextNodeIndex]
 
-            if (attemptedNodes.firstOrNull { it.address == availableNodes[currentNodeIndex].address } != null) {
-                autoSwitchingStarted = false
-                return
+            if (currentNodeIndex > 0) {
+                if (attemptedNodes.firstOrNull { it.address == availableNodes[currentNodeIndex].address } != null) {
+                    autoSwitchingStarted = false
+                    return
+                }
+
+                attemptedNodes.add(availableNodes[currentNodeIndex])
             }
 
             connectionManager.switchUrl(nextNode.address)
-            attemptedNodes.add(availableNodes[currentNodeIndex])
             selectNodeRepository.selectNode(nextNode)
         }
     }

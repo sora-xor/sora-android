@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.core_db.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -31,7 +32,10 @@ data class PoolLocal(
     val reservesSecond: BigDecimal,
     val totalIssuance: BigDecimal,
     val strategicBonusApy: BigDecimal?,
-    val poolProvidersBalance: BigDecimal
+    val poolProvidersBalance: BigDecimal,
+    @ColumnInfo(defaultValue = "1") val favorite: Boolean = true,
+    @ColumnInfo(defaultValue = "0") val sortOrder: Int,
+    @ColumnInfo(defaultValue = "") val reservesAccount: String,
 )
 
 @Entity(

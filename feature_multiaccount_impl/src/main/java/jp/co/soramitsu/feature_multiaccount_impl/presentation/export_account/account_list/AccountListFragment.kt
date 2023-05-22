@@ -10,17 +10,32 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
-import jp.co.soramitsu.common.util.ext.onBackPressed
+import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_api.OnboardingNavigator
-import jp.co.soramitsu.feature_multiaccount_impl.R
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
+import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
 class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
@@ -32,10 +47,6 @@ class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        onBackPressed {
-            viewModel.onToolbarNavigation()
-        }
-
         viewModel.copiedAddressEvent.observe {
             Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
@@ -48,14 +59,40 @@ class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-    @Composable
-    override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        viewModel.accountListScreenState.observeAsState().value?.let {
-            AccountListScreen(state = it, viewModel = viewModel)
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.content(
+        scrollState: ScrollState,
+        navController: NavHostController
+    ) {
+        composable(
+            route = theOnlyRoute,
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                val state = viewModel.accountListScreenState.observeAsState().value
+                state?.let {
+                    AccountListScreen(state = it, viewModel = viewModel, scrollState)
+                }
+                if (state?.isActionMode == false) {
+                    Box(
+                        modifier = Modifier
+                            .padding(bottom = Dimens.x5, end = Dimens.x3)
+                            .align(Alignment.BottomEnd)
+                            .size(Size.Large)
+                    ) {
+                        FilledButton(
+                            modifier = Modifier.testTagAsId("FloatingButton"),
+                            shape = CircleShape,
+                            size = Size.Large,
+                            order = Order.PRIMARY,
+                            leftIcon = painterResource(R.drawable.ic_plus),
+                            onClick = viewModel::onAddAccountClicked,
+                        )
+                    }
+                }
+            }
         }
-    }
-
-    override fun onToolbarNavigation() {
-        viewModel.onToolbarNavigation()
     }
 }

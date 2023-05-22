@@ -3,6 +3,7 @@ apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
+apply from: '../tests.gradle'
 
 android {
     compileSdkVersion compileVersion
@@ -32,6 +33,13 @@ android {
         compose true
     }
 
+    buildTypes {
+        release {
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
     flavorDimensions "default"
 
     productFlavors {
@@ -57,6 +65,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(":common")
+    implementation project(":feature_assets_api")
     implementation project(":feature_account_api")
     implementation project(":feature_ethereum_api")
     implementation project(":feature_wallet_api")
@@ -64,20 +73,23 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":core_di")
 
-    implementation kotlinDep
+    implementation timberDep
 
     implementation androidDep
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
-    implementation viewBindingDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation viewmodelKtxDep
 
-    implementation emojiDep
-    implementation neumorphismDep
+    implementation uiCoreDep
+
+    implementation composeMaterialDialogDep
+
+    implementation coilDep
+    implementation coilComposeDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
@@ -90,16 +102,19 @@ dependencies {
     implementation uiCoreDep
 
     implementation composeUiDep
-    implementation composeCompilerDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeActivityDep
     implementation composeViewModelDep
     implementation composeToolingPreviewDep
+    implementation composeConstraintLayoutDep
     implementation composeLiveDataDep
+    implementation navigationComposeDep
+    implementation accompanistNavAnimationDep
     debugImplementation composeToolingDep
 
     implementation daggerDep
+    implementation hiltNavComposeDep
     kapt daggerKaptDep
 
     testImplementation project(":test_shared")

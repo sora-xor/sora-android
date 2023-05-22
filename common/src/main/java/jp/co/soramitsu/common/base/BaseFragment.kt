@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.EventObserver
 
 abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Fragment(layoutRes) {
 
@@ -21,34 +20,24 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.errorLiveData.observe(
-            viewLifecycleOwner,
-            EventObserver {
-                AlertDialog.Builder(requireActivity())
-                    .setTitle(R.string.common_error_general_title)
-                    .setMessage(it)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .show()
-            }
-        )
+        viewModel.errorLiveData.observe {
+            AlertDialog.Builder(requireActivity())
+                .setTitle(R.string.common_error_general_title)
+                .setMessage(it)
+                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .show()
+        }
+        viewModel.alertDialogLiveData.observe {
+            AlertDialog.Builder(requireActivity())
+                .setTitle(it.first)
+                .setMessage(it.second)
+                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .show()
+        }
 
-        viewModel.alertDialogLiveData.observe(
-            viewLifecycleOwner,
-            EventObserver {
-                AlertDialog.Builder(requireActivity())
-                    .setTitle(it.first)
-                    .setMessage(it.second)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .show()
-            }
-        )
-
-        viewModel.errorFromResourceLiveData.observe(
-            viewLifecycleOwner,
-            EventObserver {
-                showErrorFromResponse(it.first, it.second)
-            }
-        )
+        viewModel.errorFromResourceLiveData.observe {
+            showErrorFromResponse(it.first, it.second)
+        }
     }
 
     protected fun showErrorFromResponse(title: Int, messageResId: Int) {
@@ -61,11 +50,5 @@ abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Frag
 
     fun <V> LiveData<V>.observe(observer: (V) -> Unit) {
         observe(viewLifecycleOwner, observer)
-    }
-
-    fun <V> LiveData<V>.observeNonNull(observer: (V) -> Unit) {
-        observe(viewLifecycleOwner) {
-            it?.let(observer)
-        }
     }
 }

@@ -15,9 +15,11 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
 import androidx.activity.viewModels
+import androidx.annotation.AttrRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.ViewCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
@@ -27,9 +29,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.chrisbanes.insetter.Insetter
 import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
+import java.util.Date
+import javax.inject.Inject
+import jp.co.soramitsu.common.domain.BarsColorhandler
+import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
-import jp.co.soramitsu.common.util.EventObserver
+import jp.co.soramitsu.common.util.DebounceClickHandler
+import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.common.util.ext.getColorAttr
 import jp.co.soramitsu.common.util.ext.gone
 import jp.co.soramitsu.common.util.ext.show
@@ -37,17 +44,18 @@ import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.databinding.ActivityMainBinding
+import jp.co.soramitsu.feature_main_impl.presentation.inappupdate.FlexibleUpdateDialog
+import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.feature_multiaccount_api.OnboardingNavigator
-import jp.co.soramitsu.feature_onboarding_api.OnboardingStarter
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
+import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.launch
-import java.util.Date
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity :
     ToolbarActivity<MainViewModel, ActivityMainBinding>(),
     BottomBarController,
+    BarsColorhandler,
     OnboardingNavigator,
     InAppUpdateManager.UpdateManagerListener {
 
@@ -112,14 +120,20 @@ class MainActivity :
     @Inject
     lateinit var inAppUpdateManager: InAppUpdateManager
 
+    @Inject
+    lateinit var polkaswapRouter: PolkaswapRouter
+
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
+
     private var timeInBackground: Date? = null
 
     private var navController: NavController? = null
 
-    private val vm: MainViewModel by viewModels()
+    override val viewModel: MainViewModel by viewModels()
 
-    override val viewModel: MainViewModel
-        get() = vm
+    @AttrRes
+    private var curBarsColor: Int = R.attr.baseBackground
 
     override fun layoutResource() = ActivityMainBinding.inflate(layoutInflater)
 
@@ -161,7 +175,13 @@ class MainActivity :
             .paddingBottom(windowInsetTypesOf(navigationBars = true) or windowInsetTypesOf(ime = true))
             .applyToView(binding.clMainContainer)
 
-        binding.bottomNavigationView.inflateMenu(R.menu.bottom_navigations)
+        binding.bottomNavigationView.menu.getItem(2).isEnabled = false
+
+        binding.fabMain.setOnClickListener {
+            debounceClickHandler.debounceClick {
+                polkaswapRouter.showSwap(SubstrateOptionsProvider.feeAssetId)
+            }
+        }
 
         binding.fragmentNavHostMain.post {
             navController = supportFragmentManager.findFragmentById(R.id.fragmentNavHostMain)
@@ -195,24 +215,22 @@ class MainActivity :
 
     override fun subscribe(viewModel: MainViewModel) {
         viewModel.showInviteErrorTimeIsUpLiveData.observe(
-            this,
-            EventObserver {
-                AlertDialog.Builder(this)
-                    .setMessage(R.string.invite_enter_error_time_is_up)
-                    .setPositiveButton(R.string.common_ok) { _, _ -> }
-                    .show()
-            }
-        )
+            this
+        ) {
+            AlertDialog.Builder(this)
+                .setMessage(R.string.invite_enter_error_time_is_up)
+                .setPositiveButton(R.string.common_ok) { _, _ -> }
+                .show()
+        }
 
         viewModel.showInviteErrorAlreadyAppliedLiveData.observe(
-            this,
-            EventObserver {
-                AlertDialog.Builder(this)
-                    .setMessage(R.string.invite_enter_error_already_applied)
-                    .setPositiveButton(R.string.common_ok) { _, _ -> }
-                    .show()
-            }
-        )
+            this
+        ) {
+            AlertDialog.Builder(this)
+                .setMessage(R.string.invite_enter_error_already_applied)
+                .setPositiveButton(R.string.common_ok) { _, _ -> }
+                .show()
+        }
 
         viewModel.badConnectionVisibilityLiveData.observe(
             this
@@ -225,15 +243,14 @@ class MainActivity :
         }
 
         viewModel.invitationCodeAppliedSuccessful.observe(
-            this,
-            EventObserver {
-                AlertDialog.Builder(this)
-                    .setTitle(R.string.invite_code_applied_title)
-                    .setMessage(R.string.invite_code_applied_body)
-                    .setPositiveButton(R.string.common_ok) { _, _ -> }
-                    .show()
-            }
-        )
+            this
+        ) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.invite_code_applied_title)
+                .setMessage(R.string.invite_code_applied_body)
+                .setPositiveButton(R.string.common_ok) { _, _ -> }
+                .show()
+        }
 
         viewModel.isPincodeUpdateNeeded.observe(this) { isUpdateNeeded ->
             if (isUpdateNeeded) {
@@ -251,6 +268,12 @@ class MainActivity :
 //                viewModel.startedWithInviteAction()
 //            }
         }
+    }
+
+    override fun setColor(@AttrRes color: Int) {
+        curBarsColor = color
+        window.statusBarColor = attrColor(color)
+        window.navigationBarColor = attrColor(color)
     }
 
     private fun showBadConnectionView(@StringRes content: Int = R.string.common_connecting) {
@@ -281,8 +304,7 @@ class MainActivity :
 
                 override fun onAnimationEnd(p0: Animation?) {
                     binding.badConnectionView.gone()
-                    window.statusBarColor =
-                        binding.badConnectionView.getColorAttr(R.attr.baseBackground)
+                    window.statusBarColor = binding.badConnectionView.getColorAttr(curBarsColor)
                 }
 
                 override fun onAnimationStart(p0: Animation?) {
@@ -299,15 +321,17 @@ class MainActivity :
     }
 
     override fun showBottomBar() {
+        requireBinding()?.fabMain?.show()
         requireBinding()?.bottomNavigationView?.show()
     }
 
     override fun hideBottomBar() {
+        requireBinding()?.fabMain?.gone()
         requireBinding()?.bottomNavigationView?.gone()
     }
 
-    override fun navigateTabToSwap() {
-        chooseBottomNavigationItem(R.id.polkaswap_nav_graph)
+    override fun isBottomBarVisible(): Boolean {
+        return requireBinding()?.bottomNavigationView?.isVisible ?: false
     }
 
     fun restartAfterLanguageChange() {
@@ -319,10 +343,10 @@ class MainActivity :
     }
 
     @Inject
-    lateinit var onbs: OnboardingStarter
+    lateinit var multiaccountStarter: MultiaccountStarter
 
     fun restartApp() {
-        onbs.start(this)
+//        onbs.start(this)
     }
 
     override fun onTrimMemory(i: Int) {
@@ -357,6 +381,6 @@ class MainActivity :
     }
 
     override fun showOnboardingFlow() {
-        onbs.start(this, false)
+        multiaccountStarter.startOnboardingFlow(this, false)
     }
 }

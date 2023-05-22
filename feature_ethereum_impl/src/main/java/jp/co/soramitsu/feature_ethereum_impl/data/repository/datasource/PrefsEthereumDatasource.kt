@@ -5,13 +5,13 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository.datasource
 
+import java.math.BigInteger
+import javax.inject.Inject
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
-import java.math.BigInteger
-import javax.inject.Inject
 
 class PrefsEthereumDatasource @Inject constructor(
     private val encryptedPreferences: EncryptedPreferences,

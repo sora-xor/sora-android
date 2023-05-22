@@ -8,15 +8,15 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 import android.graphics.drawable.PictureDrawable
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.compose.ui.text.input.TextFieldValue
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.Account
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactListItem
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
+import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
 import jp.co.soramitsu.feature_wallet_impl.presentation.util.EthereumAddressValidator
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
@@ -52,13 +52,7 @@ class ContactsViewModelTest {
     private lateinit var walletInteractor: WalletInteractor
 
     @Mock
-    private lateinit var ethereumInteractor: EthereumInteractor
-
-    @Mock
     private lateinit var router: WalletRouter
-
-    @Mock
-    private lateinit var withProgress: WithProgress
 
     @Mock
     private lateinit var avatar: AccountAvatarGenerator
@@ -70,9 +64,6 @@ class ContactsViewModelTest {
     private lateinit var resourceManager: ResourceManager
 
     @Mock
-    private lateinit var ethereumAddressValidator: EthereumAddressValidator
-
-    @Mock
     private lateinit var qrCodeDecoder: QrCodeDecoder
 
     @Mock
@@ -81,98 +72,52 @@ class ContactsViewModelTest {
     private lateinit var contactsViewModel: ContactsViewModel
 
     private val accountId = "accountId"
-    private val address = "address"
-    private val firstName = "firstName"
-    private val lastName = "lastName"
-    private var account = Account(firstName, lastName, accountId)
-    private val amount = "1000"
-    private val accounts = mutableListOf(account)
+    private val accounts = mutableListOf("cnVko", "cnQwe")
 
     @Before
     fun setUp() = runTest {
+        given(resourceManager.getString(R.string.select_account_address_1)).willReturn("Search address")
         given(avatar.createAvatar(anyString(), anyInt())).willReturn(drawable)
         given(walletInteractor.getContacts("")).willReturn(accounts)
 
         contactsViewModel = ContactsViewModel(
             walletInteractor, router, qrCodeDecoder,
-            resourceManager, avatar, withProgress
+            resourceManager, avatar,
         )
-    }
-
-    @Test
-    fun `back button clicked`() {
-        contactsViewModel.backButtonPressed()
-
-        verify(router).popBackStackFragment()
-    }
-
-    @Test
-    fun `open camera event`() {
-        contactsViewModel.openCamera()
-
-        val r = contactsViewModel.initiateScanner.getOrAwaitValue()
-        assertEquals(Unit, r)
-    }
-
-    @Test
-    fun `open gallery event`() {
-        contactsViewModel.openGallery()
-
-        val r = contactsViewModel.chooseGallery.getOrAwaitValue()
-        assertEquals(Unit, r)
     }
 
     @Test
     fun `decode text from qr method and proccess result`() = runTest {
+        advanceUntilIdle()
         val qrResponse = "response"
-
         given(qrCodeDecoder.decodeQrFromUri(uri)).willReturn(qrResponse)
         given(walletInteractor.processQr(qrResponse)).willReturn(
             Triple(
                 "accountId",
-                "firstName lastName",
+                "0x020005",
                 BigDecimal.ZERO
             )
         )
-
         contactsViewModel.decodeTextFromBitmapQr(uri)
         advanceUntilIdle()
-
-        verify(router).showValTransferAmount(accountId, "$firstName $lastName", BigDecimal.ZERO)
+        verify(router).showValTransferAmount(accountId, "0x020005")
     }
 
     @Test
     fun `fetch contacts`() = runTest {
-        val expected = mutableListOf(
-            ContactListItem(account, drawable, true)
-        )
-        contactsViewModel.getContacts(true)
-
-        contactsViewModel.contactsLiveData.observeForever {
-            assertEquals(expected, it)
-        }
+        advanceUntilIdle()
+        val state = contactsViewModel.state
+        assertEquals(2, state.accounts.size)
     }
 
     @Test
     fun `search event`() = runTest {
+        advanceUntilIdle()
         val query = "query"
-        val expected = mutableListOf(
-            ContactListItem(account, drawable, true)
-        )
         given(walletInteractor.getContacts(query)).willReturn(accounts)
-
-        contactsViewModel.search(query)
-
-        contactsViewModel.contactsLiveData.observeForever {
-            assertEquals(expected, it)
-        }
-    }
-
-    @Test
-    fun `qr toolbar menu clicked`() {
-        contactsViewModel.qrMenuItemClicked()
-
-        val r = contactsViewModel.showChooser.getOrAwaitValue()
-        assertEquals(Unit, r)
+        contactsViewModel.search(TextFieldValue(query))
+        advanceUntilIdle()
+        val state = contactsViewModel.state
+        assertEquals(2, state.accounts.size)
     }
 }

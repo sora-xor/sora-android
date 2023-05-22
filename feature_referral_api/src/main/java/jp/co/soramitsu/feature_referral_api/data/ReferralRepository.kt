@@ -5,11 +5,12 @@
 
 package jp.co.soramitsu.feature_referral_api.data
 
+import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
 import kotlinx.coroutines.flow.Flow
-import java.math.BigDecimal
 
 interface ReferralRepository {
 
@@ -17,7 +18,7 @@ interface ReferralRepository {
 
     fun getReferralRewards(): Flow<List<ReferrerReward>>
 
-    suspend fun getSetReferrerFee(from: String, feeToken: Token): BigDecimal
+    suspend fun getSetReferrerFee(from: String, feeToken: Token): BigDecimal?
 
     fun observeMyReferrer(from: String): Flow<String>
 
@@ -28,25 +29,26 @@ interface ReferralRepository {
     suspend fun observeSetReferrer(
         keypair: Sr25519Keypair,
         from: String,
-        referrer: String
-    ): Boolean
+        referrer: String,
+        feeToken: Token
+    ): Transaction.ReferralSetReferrer
 
     suspend fun observeUnbond(
         keypair: Sr25519Keypair,
         from: String,
         amount: BigDecimal,
         token: Token,
-    ): Boolean
+    ): Transaction.ReferralUnbond
 
     suspend fun observeBond(
         keypair: Sr25519Keypair,
         from: String,
         amount: BigDecimal,
         token: Token,
-    ): Boolean
+    ): Transaction.ReferralBond
 
     suspend fun calcBondFee(
         from: String,
         token: Token,
-    ): BigDecimal
+    ): BigDecimal?
 }

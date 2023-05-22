@@ -10,17 +10,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jp.co.soramitsu.common.base.model.ToolbarState
+import javax.inject.Inject
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
-import jp.co.soramitsu.feature_select_node_impl.R
 import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.RemoveNodeAlertState
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.SelectNodeState
@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 internal class SelectNodeViewModel @Inject constructor(
@@ -44,15 +43,15 @@ internal class SelectNodeViewModel @Inject constructor(
         private set
 
     init {
-        _toolbarState.value = ToolbarState(
-            title = resourceManager.getString(R.string.common_select_node)
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.common_select_node,
         )
 
         subscribeNodes()
         subscribeNodeManagerEvents()
     }
 
-    fun onNodeSelected(node: Node) {
+    fun onNodeSelected(node: ChainNode) {
         state = state.copy(switchNodeAlertState = SwitchNodeAlertState(node))
     }
 
@@ -130,24 +129,20 @@ internal class SelectNodeViewModel @Inject constructor(
 
     private fun showUnableJoinNodeDialog() {
         alertDialogLiveData.value =
-            Event(
-                resourceManager.getString(R.string.select_node_unable_join_node_title) to
-                    resourceManager.getString(R.string.select_node_unable_join_node_message)
-            )
+            resourceManager.getString(R.string.select_node_unable_join_node_title) to
+            resourceManager.getString(R.string.select_node_unable_join_node_message)
     }
 
     private fun showSwitchedNodeDialog() {
         alertDialogLiveData.value =
-            Event(
-                resourceManager.getString(R.string.select_node_switch_succeed) to ""
-            )
+            resourceManager.getString(R.string.select_node_switch_succeed) to ""
     }
 
     fun onAddCustomNode() {
         router.showAddCustomNode()
     }
 
-    fun onRemoveNode(node: Node) {
+    fun onRemoveNode(node: ChainNode) {
         state.customNodes.firstOrNull {
             it.isSelected && it.address == node.address
         }
@@ -173,21 +168,18 @@ internal class SelectNodeViewModel @Inject constructor(
     }
 
     private fun showUnableToRemoveConnectedNode() {
-        alertDialogLiveData.value = Event(
+        alertDialogLiveData.value =
             resourceManager.getString(R.string.remove_node_error_title) to
-                resourceManager.getString(R.string.remove_node_error_message)
-        )
+            resourceManager.getString(R.string.remove_node_error_message)
     }
 
-    fun onEditNode(node: Node) {
+    fun onEditNode(node: ChainNode) {
         router.showEditNode(node.name, node.address)
     }
 
     private fun showNoConnectionDialog() {
         alertDialogLiveData.value =
-            Event(
-                resourceManager.getString(R.string.select_node_unable_join_node_title) to
-                    resourceManager.getString(R.string.common_error_invalid_parameters_body)
-            )
+            resourceManager.getString(R.string.select_node_unable_join_node_title) to
+            resourceManager.getString(R.string.common_error_invalid_parameters_body)
     }
 }

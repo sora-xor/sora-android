@@ -7,10 +7,9 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.account_list
 
 import android.graphics.drawable.PictureDrawable
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.base.model.ToolbarState
-import jp.co.soramitsu.common.base.model.ToolbarType
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -18,8 +17,9 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list.AccountListViewModel
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -84,15 +84,13 @@ class AccountListViewModelTest {
                     true,
                     false,
                     drawable,
-                    soraAccounts.first().substrateAddress,
-                    soraAccounts.first().accountName
+                    soraAccounts.first(),
                 ),
                 ExportAccountData(
                     false,
                     false,
                     drawable,
-                    soraAccounts.last().substrateAddress,
-                    soraAccounts.last().accountName
+                    soraAccounts.last(),
                 ),
             )
         )
@@ -100,7 +98,6 @@ class AccountListViewModelTest {
         given(multiAccInteractor.flowSoraAccountsList()).willReturn(flow { emit(soraAccounts) })
         given(multiAccInteractor.getCurrentSoraAccount()).willReturn(soraAccounts.first())
         given(avatarGenerator.createAvatar(anyString(), anyInt())).willReturn(drawable)
-        given(resourceManager.getString(R.string.settings_accounts)).willReturn("Accounts")
 
         accountListViewModel = AccountListViewModel(
             multiAccInteractor,
@@ -113,21 +110,15 @@ class AccountListViewModelTest {
 
     @Test
     fun init() = runTest {
-        accountListViewModel.toolbarState.value?.let {
-            assertEquals(
-                it, ToolbarState(
-                    type = ToolbarType.SMALL,
-                    title = "Accounts"
-                )
-            )
-        }
-
+        val s = accountListViewModel.toolbarState.getOrAwaitValue()
+        assertTrue(s.type is SoramitsuToolbarType.Small)
+        assertEquals(R.string.settings_accounts, s.basic.title)
         assertEquals(expectedState, accountListViewModel.accountListScreenState.value)
     }
 
     @Test
     fun backPressed() {
-        accountListViewModel.onToolbarNavigation()
+        accountListViewModel.onBackPressed()
         verify(mainRouter).popBackStack()
     }
 
@@ -146,7 +137,7 @@ class AccountListViewModelTest {
         accountListViewModel.onAccountClicked(address)
         advanceUntilIdle()
 
-        verify(multiAccInteractor).setCurSoraAccount(address)
+        verify(multiAccInteractor).setCurSoraAccount(soraAccounts.first())
         verify(mainRouter).popBackStack()
     }
 
@@ -162,40 +153,31 @@ class AccountListViewModelTest {
 
     @Test
     fun onAccountSelectedClicked() {
-        given(resourceManager.getString(R.string.common_backup)).willReturn("backup")
-
         val address = soraAccounts.first().substrateAddress
         accountListViewModel.onAccountSelected(address)
 
         accountListViewModel.accountListScreenState.value?.let {
-            assertTrue(it.chooserActivated)
-            assertTrue(it.accountList.first { it.address == "address" }.isSelected)
+            assertTrue(it.isActionMode)
+            assertTrue(it.accountList.first { it.account.substrateAddress == "address" }.isSelectedAction)
         }
 
-        accountListViewModel.toolbarState.value?.let {
-            assertEquals(
-                it, ToolbarState(
-                    type = ToolbarType.SMALL,
-                    navIcon = R.drawable.ic_cross_red_16,
-                    title = "1",
-                    action = "backup",
-                )
-            )
-        }
+        val s = accountListViewModel.toolbarState.getOrAwaitValue()
+        assertEquals("1", s.basic.title)
+        assertEquals(R.string.common_backup, s.basic.actionLabel)
     }
 
     @Test
     fun onToolbarAction() {
         accountListViewModel.onAccountSelected(soraAccounts.first().substrateAddress)
         accountListViewModel.onAccountSelected(soraAccounts.last().substrateAddress)
-        accountListViewModel.onToolbarAction()
+        accountListViewModel.onAction()
 
         verify(mainRouter).showExportJSONProtection(soraAccounts.map { it.substrateAddress })
     }
 
     @Test
     fun onToolbarNavigationWithChooserDisabled() {
-        accountListViewModel.onToolbarNavigation()
+        accountListViewModel.onBackPressed()
 
         verify(mainRouter).popBackStack()
     }
@@ -203,21 +185,14 @@ class AccountListViewModelTest {
     @Test
     fun onToolbarNavigationWithChooserEnabled() {
         accountListViewModel.onAccountSelected("address")
-        accountListViewModel.onToolbarNavigation()
+        accountListViewModel.onBackPressed()
 
         accountListViewModel.accountListScreenState.value?.let {
-            assertFalse(it.chooserActivated)
-            assertEquals(it.accountList.count { it.isSelected }, 0)
+            assertFalse(it.isActionMode)
+            assertEquals(it.accountList.count { it.isSelectedAction }, 0)
         }
 
-        accountListViewModel.toolbarState.value?.let {
-            assertEquals(
-                it,
-                ToolbarState(
-                    type = ToolbarType.SMALL,
-                    title = "Accounts"
-                )
-            )
-        }
+        val s = accountListViewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.string.settings_accounts, s.basic.title)
     }
 }

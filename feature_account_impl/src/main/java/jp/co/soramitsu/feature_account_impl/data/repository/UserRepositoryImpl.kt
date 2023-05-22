@@ -7,11 +7,13 @@ package jp.co.soramitsu.feature_account_impl.data.repository
 
 import androidx.room.withTransaction
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.model.CardHubLocal
+import jp.co.soramitsu.core_db.model.GlobalCardHubLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -31,8 +33,8 @@ class UserRepositoryImpl(
     private val userDatasource: UserDatasource,
     private val credentialsDatasource: CredentialsDatasource,
     private val db: AppDatabase,
-    private val deviceParamsProvider: DeviceParamsProvider,
-    private val coroutineManager: CoroutineManager
+    private val coroutineManager: CoroutineManager,
+    private val languagesHolder: LanguagesHolder,
 ) : UserRepository {
 
     private val currentSoraAccount = MutableStateFlow<SoraAccount?>(null)
@@ -41,13 +43,22 @@ class UserRepositoryImpl(
 
     init {
         coroutineManager.applicationScope.launch {
-            initCurSoraAccount()
+            mutex.withLock {
+                initCurSoraAccount()
+            }
         }
     }
 
     private suspend fun initCurSoraAccount() {
-        mutex.withLock {
-            val curAddress = userDatasource.getCurAccountAddress()
+        val curAddress = userDatasource.getCurAccountAddress()
+        if (curAddress.isEmpty()) {
+            val accounts = db.accountDao().getAccounts()
+            if (accounts.isNotEmpty()) {
+                val newCurAccount = accounts.first()
+                userDatasource.setCurAccountAddress(newCurAccount.substrateAddress)
+                currentSoraAccount.value = SoraAccountMapper.map(newCurAccount)
+            }
+        } else {
             db.accountDao().getAccount(curAddress)?.let { soraAccountLocal ->
                 currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
             }
@@ -65,15 +76,6 @@ class UserRepositoryImpl(
         mutex.withLock {
             userDatasource.setCurAccountAddress(soraAccount.substrateAddress)
             currentSoraAccount.value = soraAccount
-        }
-    }
-
-    override suspend fun setCurSoraAccount(accountAddress: String) {
-        mutex.withLock {
-            userDatasource.setCurAccountAddress(accountAddress)
-            db.accountDao().getAccount(accountAddress)?.let { soraAccountLocal ->
-                currentSoraAccount.value = SoraAccountMapper.map(soraAccountLocal)
-            }
         }
     }
 
@@ -102,9 +104,25 @@ class UserRepositoryImpl(
     }
 
     override suspend fun insertSoraAccount(soraAccount: SoraAccount) {
-        db.accountDao().insertSoraAccount(
-            SoraAccountMapper.map(soraAccount)
-        )
+        db.withTransaction {
+            db.accountDao().insertSoraAccount(
+                SoraAccountMapper.map(soraAccount)
+            )
+            db.cardsHubDao().insert(
+                CardHubType.values()
+                    .filter { it.boundToAccount }
+                    .mapIndexed { _, type ->
+                        CardHubLocal(
+                            cardId = type.hubName,
+                            accountAddress = soraAccount.substrateAddress,
+                            visibility = true,
+                            sortOrder = type.order,
+                            collapsed = false,
+                        )
+                    }
+            )
+        }
+        defaultGlobalCards()
     }
 
     override suspend fun updateAccountName(soraAccount: SoraAccount, newName: String) {
@@ -128,13 +146,37 @@ class UserRepositoryImpl(
         return userDatasource.retrieveRegistratrionState()
     }
 
-    override suspend fun clearUserData() {
-        userDatasource.clearUserData()
-        db.withTransaction { db.clearAllTables() }
+    override suspend fun fullLogout() {
+        userDatasource.clearAllData()
+        db.withTransaction {
+            db.accountDao().clearAll()
+            db.referralsDao().clearTable()
+            db.nodeDao().clearTable()
+            db.soraCardDao().clearTable()
+            db.globalCardsHubDao().clearTable()
+            defaultGlobalCards()
+        }
+    }
+
+    override suspend fun defaultGlobalCards() {
+        val count = db.globalCardsHubDao().count()
+        if (count == 0) {
+            db.globalCardsHubDao().insert(
+                CardHubType.values()
+                    .filter { !it.boundToAccount }
+                    .map { cardType ->
+                        GlobalCardHubLocal(
+                            cardId = cardType.hubName,
+                            visibility = true,
+                            sortOrder = cardType.order,
+                            collapsed = false
+                        )
+                    }
+            )
+        }
     }
 
     override suspend fun clearAccountData(address: String) {
-        userDatasource.clearAccountData()
         credentialsDatasource.clearAllDataForAddress(address)
         db.withTransaction {
             db.accountDao().clearAccount(address)
@@ -150,19 +192,13 @@ class UserRepositoryImpl(
         return userDatasource.getParentInviteCode()
     }
 
-    override suspend fun getAvailableLanguages(): Pair<List<Language>, String> {
-        return LanguagesHolder.getLanguages() to userDatasource.getCurrentLanguage()
+    override suspend fun getAvailableLanguages(): Pair<List<Language>, Int> {
+        return languagesHolder.getLanguages()
     }
 
     override suspend fun changeLanguage(language: String): String {
-        userDatasource.changeLanguage(language)
+        languagesHolder.setCurrentLanguage(language)
         return language
-    }
-
-    override suspend fun getSelectedLanguage(): Language {
-        return LanguagesHolder.getLanguages().first {
-            it.iso == userDatasource.getCurrentLanguage()
-        }
     }
 
     override suspend fun setBiometryEnabled(isEnabled: Boolean) {
@@ -217,7 +253,8 @@ class UserRepositoryImpl(
 
     override suspend fun retrievePinTriesUsed(): Int = userDatasource.retrievePinTriesUsed()
 
-    override suspend fun retrieveTimerStartedTimestamp(): Long = userDatasource.retrieveTimerStartedTimestamp()
+    override suspend fun retrieveTimerStartedTimestamp(): Long =
+        userDatasource.retrieveTimerStartedTimestamp()
 
     override suspend fun resetTimerStartedTimestamp() {
         userDatasource.resetTimerStartedTimestamp()

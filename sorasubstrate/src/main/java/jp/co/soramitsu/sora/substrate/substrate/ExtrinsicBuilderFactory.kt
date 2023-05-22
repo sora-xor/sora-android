@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.removeHexPrefix
@@ -17,15 +19,15 @@ import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.generics.Era
 import jp.co.soramitsu.fearless_utils.runtime.extrinsic.ExtrinsicBuilder
 import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class ExtrinsicBuilderFactory @Inject constructor(
     private val calls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
+    private val soraConfigManager: SoraConfigManager,
 ) {
 
     suspend fun create(
@@ -80,7 +82,7 @@ class ExtrinsicBuilderFactory @Inject constructor(
             val result = calls.getBlockHash()
             result.removeHexPrefix().fromHex()
         } else {
-            SubstrateOptionsProvider.hash.fromHex()
+            soraConfigManager.getGenesis().fromHex()
         }
 
     private fun generateFakeKeyPair() = SubstrateKeypairFactory.generate(

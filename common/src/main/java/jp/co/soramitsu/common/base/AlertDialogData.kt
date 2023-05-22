@@ -5,4 +5,4 @@
 
 package jp.co.soramitsu.common.base
 
-data class AlertDialogData(val title: String = "", val message: String = "")
+data class AlertDialogData(val title: Any? = null, val message: Any = -1)

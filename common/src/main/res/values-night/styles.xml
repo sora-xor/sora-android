@@ -7,7 +7,7 @@
         <item name="android:statusBarColor">?attr/baseBackground</item>
         <item name="android:navigationBarColor">?attr/baseBackground</item>
         <item name="android:windowBackground">?attr/baseBackground</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">true</item>
         <item name="android:textColorHint">?attr/disabledButtonTextColor</item>
@@ -25,7 +25,8 @@
         <item name="contentSecondary">@color/grey_700</item>
         <item name="contentTertiary">@color/grey_500</item>
         <item name="contentQuaternary">@color/grey_400</item>
-        <item name="baseBackground">@color/neu_color_100</item>
+        <item name="baseBackground">@color/neu_color_300</item>
+        <item name="baseBackgroundSecond">@color/neu_color_white</item>
         <item name="baseBackgroundDark">@color/backgroundDarkColor</item>
         <item name="baseBorderPrimary">@color/grey_300</item>
         <item name="baseBorderSecondary">@color/grey_200</item>
@@ -47,6 +48,7 @@
         <item name="secondaryPressed">@color/pressedSecondaryColor</item>
         <item name="secondaryFocused">@color/focusedSecondaryColor</item>
 
+        <item name="polkaswapBackground">@color/polkaswap_background_alfa</item>
         <item name="polkaswapMainColor">@color/neu_brand_polkaswap</item>
         <item name="dividerColor">@color/neu_divider_color</item>
         <item name="balanceColorDefault">@color/neu_black_default</item>
@@ -78,10 +80,12 @@
         <item name="iconTintColorPositive">@color/neu_positive</item>
         <item name="iconTintColorNegative">@color/neu_selected_primary</item>
         <item name="iconTintAboveBackground">@color/tint_above_background</item>
+        <item name="redesignTokenName">#281818</item>
+        <item name="redesignTokenBalance">#9d8181</item>
 
         <item name="uikit_pinCodeButtonTitleColor">@color/neu_disabled_on_night</item>
         <item name="uikit_pinCodeButtonTextColor">@color/neu_brown_color</item>
-        <item name="uikit_pinCodeButtonBackground">@color/neu_color_200</item>
+        <item name="uikit_pinCodeButtonBackground">@drawable/rounded_button_background</item>
     </style>
 
 </resources>

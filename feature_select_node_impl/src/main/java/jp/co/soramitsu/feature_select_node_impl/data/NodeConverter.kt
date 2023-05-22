@@ -5,13 +5,13 @@
 
 package jp.co.soramitsu.feature_select_node_impl.data
 
-import jp.co.soramitsu.core_db.model.NodeLocal
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import javax.inject.Inject
+import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.core_db.model.NodeLocal
 
 class NodeConverter @Inject constructor() {
 
-    fun convert(nodeLocal: NodeLocal): Node = Node(
+    fun convert(nodeLocal: NodeLocal): ChainNode = ChainNode(
         chain = nodeLocal.chain,
         address = nodeLocal.address,
         name = nodeLocal.name,
@@ -19,7 +19,7 @@ class NodeConverter @Inject constructor() {
         isDefault = nodeLocal.isDefault
     )
 
-    fun convert(node: Node): NodeLocal = NodeLocal(
+    fun convert(node: ChainNode): NodeLocal = NodeLocal(
         chain = node.chain,
         address = node.address,
         name = node.name,

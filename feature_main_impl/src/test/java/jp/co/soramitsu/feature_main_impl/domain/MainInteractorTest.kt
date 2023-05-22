@@ -48,7 +48,6 @@ class MainInteractorTest {
         given(userRepository.getCurSoraAccount()).willReturn(soraAccount)
         interactor = MainInteractor(
             userRepository,
-            credentialsRepository,
             selectNodeRepository
         )
     }
@@ -64,7 +63,7 @@ class MainInteractorTest {
 
     @Test
     fun `getAvailableLanguagesWithSelected is called`() = runTest {
-        val actual = Pair(listOf(Language("ru_Ru", 0, 0)), "ru_Ru")
+        val actual = Pair(listOf(Language("ru_Ru", 0, 0)), 0)
         given(userRepository.getAvailableLanguages()).willReturn(actual)
 
 
@@ -164,7 +163,7 @@ class MainInteractorTest {
 
     @Test
     fun `set cur sora account is called`() = runTest {
-        val accountAddress = "address"
+        val accountAddress = SoraAccount("acc", "nam")
 
         interactor.setCurSoraAccount(accountAddress)
 

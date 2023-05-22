@@ -5,8 +5,8 @@
 
 package jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint
 
-import androidx.biometric.BiometricConstants
 import androidx.biometric.BiometricPrompt
+import androidx.biometric.BiometricPrompt.ERROR_CANCELED
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.PinCodeViewModel
 import org.junit.Before
 import org.junit.Test
@@ -14,7 +14,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
@@ -42,7 +41,7 @@ class FingerprintCallbackTest {
     }
 
     @Test fun `onAuthenticationError called with error from list`() {
-        fingerprintCallback.onAuthenticationError(BiometricConstants.ERROR_CANCELED,"")
+        fingerprintCallback.onAuthenticationError(ERROR_CANCELED,"")
 
         verify(pinCodeViewModel).canceledFromPrompt()
     }

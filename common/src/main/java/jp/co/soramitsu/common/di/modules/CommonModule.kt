@@ -9,6 +9,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Vibrator
+import coil.decode.SvgDecoder
 import com.google.gson.Gson
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.SodiumAndroid
@@ -18,6 +19,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.nio.charset.StandardCharsets
+import java.security.SecureRandom
+import java.util.Locale
+import java.util.TimeZone
+import javax.inject.Singleton
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl
@@ -28,18 +34,15 @@ import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
-import jp.co.soramitsu.common.presentation.DebounceClickHandler
 import jp.co.soramitsu.common.resourses.ClipboardManager
-import jp.co.soramitsu.common.resourses.ContextManager
+import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.common.util.EncryptionUtil
@@ -50,15 +53,38 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.fearless_utils.encrypt.json.JsonSeedEncoder
+import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
+import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
-import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWallet
+import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
 import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
-import java.nio.charset.StandardCharsets
-import java.security.SecureRandom
-import java.util.Locale
-import java.util.TimeZone
-import javax.inject.Singleton
+
+@InstallIn(SingletonComponent::class)
+@Module
+class CommonActivityModule {
+
+    @Singleton
+    @Provides
+    fun provideDateTimeFormatter(
+        @ApplicationContext context: Context,
+        languagesHolder: LanguagesHolder,
+        resourceManager: ResourceManager,
+    ): DateTimeFormatter {
+        return DateTimeFormatter(languagesHolder, resourceManager, context)
+    }
+
+    @Singleton
+    @Provides
+    fun provideResourceManager(): ResourceManager {
+        return ResourceManager()
+    }
+
+    @Singleton
+    @Provides
+    fun provideLanguageHolder(): LanguagesHolder {
+        return LanguagesHolder()
+    }
+}
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -71,6 +97,12 @@ class CommonModule {
     @Singleton
     @Provides
     fun provideEncryptionUtil(@ApplicationContext c: Context): EncryptionUtil = EncryptionUtil(c)
+
+    @Singleton
+    @Provides
+    fun provideSvgDecoder(): SvgDecoder.Factory {
+        return SvgDecoder.Factory()
+    }
 
     @Singleton
     @Provides
@@ -112,31 +144,21 @@ class CommonModule {
 
     @Singleton
     @Provides
+    fun provideSoramitsuHttpClientProvider(): SoramitsuHttpClientProvider =
+        SoramitsuHttpClientProviderImpl()
+
+    @Singleton
+    @Provides
     fun provideSubQueryClientForSoraWalletFactory(
         @ApplicationContext context: Context
     ): SubQueryClientForSoraWalletFactory = SubQueryClientForSoraWalletFactory(context)
 
     @Singleton
     @Provides
-    fun provideSubQueryClient(
+    fun provideSoraTokensWhitelistFetcher(
         client: SoramitsuNetworkClient,
-        factory: SubQueryClientForSoraWalletFactory
-    ): SubQueryClientForSoraWallet = factory.create(
-        soramitsuNetworkClient = client,
-        baseUrl = FlavorOptionsProvider.soraScanHostUrl,
-        pageSize = Const.HISTORY_PAGE_SIZE,
-    )
-
-    @Singleton
-    @Provides
-    fun provideSoraWalletBlockExplorerInfo(
-        client: SoramitsuNetworkClient,
-    ): SoraWalletBlockExplorerInfo {
-        return SoraWalletBlockExplorerInfo(
-            networkClient = client,
-            baseUrl = FlavorOptionsProvider.soraScanHostUrl,
-        )
-    }
+    ): SoraTokensWhitelistManager =
+        SoraTokensWhitelistManager(networkClient = client)
 
     @Singleton
     @Provides
@@ -180,10 +202,6 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideDebounceClickHandler(): DebounceClickHandler = DebounceClickHandler()
-
-    @Provides
-    @Singleton
     fun provideJsonMapper(): Gson = Gson()
 
     @Provides
@@ -214,14 +232,6 @@ class CommonModule {
     @Provides
     @Singleton
     fun provideTextFormatter(): TextFormatter = TextFormatter()
-
-    @Provides
-    fun provideDateTimeFormatter(
-        resourceManager: ResourceManager,
-        @ApplicationContext context: Context,
-    ): DateTimeFormatter {
-        return DateTimeFormatter(ContextManager.getLocale(), resourceManager, context)
-    }
 
     @Provides
     @Singleton

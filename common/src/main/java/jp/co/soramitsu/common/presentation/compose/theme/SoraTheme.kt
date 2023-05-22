@@ -27,7 +27,9 @@ import jp.co.soramitsu.common.presentation.compose.theme.tokens.textM
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.textS
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.textXS
 import jp.co.soramitsu.ui_core.theme.AppTheme
+import jp.co.soramitsu.ui_core.theme.BorderRadius
 import jp.co.soramitsu.ui_core.theme.CustomTypography
+import jp.co.soramitsu.ui_core.theme.borderRadiuses
 import jp.co.soramitsu.ui_core.theme.darkColors
 import jp.co.soramitsu.ui_core.theme.defaultCustomTypography
 import jp.co.soramitsu.ui_core.theme.lightColors
@@ -69,9 +71,11 @@ fun SoraAppTheme(
 ) {
     AppTheme(
         darkTheme = darkTheme,
+        // todo fix
         lightColors = soraLightColors,
-        darkColors = soraDarkColors,
+        darkColors = soraLightColors,
         typography = soraTypography,
+        borderRadius = soraBorderRadius,
         content = content
     )
 }
@@ -79,13 +83,17 @@ fun SoraAppTheme(
 private val soraLightColors = lightColors(
     accentPrimary = DayThemeColors.AccentPrimary,
     accentPrimaryContainer = DayThemeColors.AccentPrimaryContainer,
+    accentSecondary = DayThemeColors.AccentSecondary,
+    accentSecondaryContainer = DayThemeColors.AccentSecondaryContainer,
+    accentTertiary = DayThemeColors.AccentTertiary,
+    accentTertiaryContainer = DayThemeColors.AccentTertiaryContainer,
     bgPage = DayThemeColors.BgPage,
     bgSurface = DayThemeColors.BgSurface,
     bgSurfaceVariant = DayThemeColors.BgSurfaceVariant,
     bgSurfaceInverted = DayThemeColors.BgSurfaceInverted,
     fgPrimary = DayThemeColors.FgPrimary,
     fgSecondary = DayThemeColors.FgSecondary,
-    fgTetriary = DayThemeColors.FgTetriary,
+    fgTertiary = DayThemeColors.FgTertiary,
     fgInverted = DayThemeColors.FgInverted,
     fgOutline = DayThemeColors.FgOutline,
     statusSuccess = DayThemeColors.StatusSuccess,
@@ -99,13 +107,17 @@ private val soraLightColors = lightColors(
 private val soraDarkColors = darkColors(
     accentPrimary = NightThemeColors.AccentPrimary,
     accentPrimaryContainer = NightThemeColors.AccentPrimaryContainer,
+    accentSecondary = NightThemeColors.AccentSecondary,
+    accentSecondaryContainer = NightThemeColors.AccentSecondaryContainer,
+    accentTertiary = NightThemeColors.AccentTertiary,
+    accentTertiaryContainer = NightThemeColors.AccentTertiaryContainer,
     bgPage = NightThemeColors.BgPage,
     bgSurface = NightThemeColors.BgSurface,
     bgSurfaceVariant = NightThemeColors.BgSurfaceVariant,
     bgSurfaceInverted = NightThemeColors.BgSurfaceInverted,
     fgPrimary = NightThemeColors.FgPrimary,
     fgSecondary = NightThemeColors.FgSecondary,
-    fgTetriary = NightThemeColors.FgTetriary,
+    fgTertiary = NightThemeColors.FgTertiary,
     fgInverted = NightThemeColors.FgInverted,
     fgOutline = NightThemeColors.FgOutline,
     statusSuccess = NightThemeColors.StatusSuccess,
@@ -133,4 +145,11 @@ private val soraTypography: CustomTypography = defaultCustomTypography(
     paragraphS = paragraphS,
     paragraphXS = paragraphXS,
     buttonM = buttonM
+)
+
+private val soraBorderRadius: BorderRadius = borderRadiuses(
+    s = jp.co.soramitsu.common.presentation.compose.theme.tokens.BorderRadius.S,
+    m = jp.co.soramitsu.common.presentation.compose.theme.tokens.BorderRadius.M,
+    ml = jp.co.soramitsu.common.presentation.compose.theme.tokens.BorderRadius.ML,
+    xl = jp.co.soramitsu.common.presentation.compose.theme.tokens.BorderRadius.L
 )

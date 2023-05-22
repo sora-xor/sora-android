@@ -6,9 +6,8 @@
 package jp.co.soramitsu.common.domain
 
 object FlavorOptionsProvider {
-    const val defaultMarketUrl = "https://sora-xor.github.io/sora-join-page/dev/"
-    const val wsHostUrl = "wss://ws.framenode-3.s3.dev.sora2.soramitsu.co.jp/"
-    const val soraScanHostUrl = "https://api.subquery.network/sq/sora-xor/sora-dev/"
-    const val genesisHash = "bf7f611213e15c54023853eed206508be11ce69d8d94937157e44c7b7564714a"
+    const val wsHostUrl = "wss://ws.framenode-1.r0.dev.sora2.soramitsu.co.jp/"
     const val typesFilePath = "dev"
+    const val wssX1StatusUrl = "wss://backend.dev.sora-card.tachi.soramitsu.co.jp/ws/x1-payment-status"
+    const val xorEuroUrl = "https://backend.dev.sora-card.tachi.soramitsu.co.jp/prices/xor_euro"
 }

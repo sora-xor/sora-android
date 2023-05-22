@@ -6,53 +6,27 @@
     app:startDestination="@id/profileFragment">
 
     <fragment
-        android:id="@+id/votesFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.voteshistory.VotesHistoryFragment"
-        tools:layout="@layout/fragment_votes_history" />
-
-    <fragment
-        android:id="@+id/termsFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.terms.TermsFragment"
-        tools:layout="@layout/fragment_terms" />
-
-    <fragment
-        android:id="@+id/privacyFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.privacy.PrivacyFragment"
-        tools:layout="@layout/fragment_terms" />
-
-    <fragment
-        android:id="@+id/personalDataEditFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.personaldataedit.PersonalDataEditFragment"
-        tools:layout="@layout/fragment_personal_data_edit" />
-
-    <fragment
-        android:id="@+id/switchAccountFragment"
-        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.switchaccount.SwitchAccountFragment"
-        tools:layout="@layout/fragment_switch_account" />
-
-    <fragment
         android:id="@+id/selectLanguageFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.language.SelectLanguageFragment"
-        tools:layout="@layout/fragment_select_language" />
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.language.SelectLanguageFragment" />
 
     <fragment
         android:id="@+id/profileFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.ProfileFragment"
-        tools:layout="@layout/fragment_profile" />
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.ProfileFragment" />
 
     <fragment
-        android:id="@+id/polkaDiscFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.polkaswap.PolkaSwapInfoFragment"
-        tools:layout="@layout/fragment_polka_swap_info" />
+        android:id="@+id/informationFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.information.InformationFragment" />
 
     <fragment
-        android:id="@+id/faqFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.faq.FaqFragment"
-        tools:layout="@layout/fragment_terms" />
+        android:id="@+id/loginSecurityFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.login.LoginSecurityFragment" />
 
     <fragment
-        android:id="@+id/aboutFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.about.AboutFragment"
-        tools:layout="@layout/fragment_about" />
+        android:id="@+id/appSettingsFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.appsettings.AppSettingsFragment" />
+
+    <fragment
+        android:id="@+id/debugMenuFragment"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu.DebugMenuFragment" />
 
 </navigation>

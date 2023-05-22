@@ -11,8 +11,8 @@ import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import jp.co.soramitsu.common.presentation.compose.resources.Dimens
 import jp.co.soramitsu.common.presentation.compose.theme.ThemeColors
+import jp.co.soramitsu.ui_core.resources.Dimens
 
 @Composable
 fun SoraProgressDialog(modifier: Modifier = Modifier) {

@@ -14,10 +14,10 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.fearless_utils.wsrpc.mappers.ResponseMapper
 import jp.co.soramitsu.fearless_utils.wsrpc.request.base.RpcRequest
 import jp.co.soramitsu.fearless_utils.wsrpc.response.RpcResponse
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.resumeWithException
 
 class SocketSingleRequestExecutor(
     private val jsonMapper: Gson,

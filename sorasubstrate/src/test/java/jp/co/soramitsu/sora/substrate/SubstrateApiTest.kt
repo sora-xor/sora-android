@@ -7,7 +7,7 @@ package jp.co.soramitsu.sora.substrate
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.MockKException
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
@@ -47,28 +47,24 @@ class SubstrateApiTest {
     @Test(expected = MockKException::class)
     fun `dev env subscribe getPoolReserveAccount`() = runTest {
         val n = RealRuntimeProvider.buildRuntime(networkName = "sora2", suffix = "_dev")
-        every { runtimeManager.getRuntimeSnapshot() } returns n
-        every { runtimeManager.getMetadataVersion() } returns 14
+        coEvery { runtimeManager.getRuntimeSnapshot() } returns n
         setUpApi()
 
         val baseTokenId = "0x0200000000000000000000000000000000000000000000000000000000000000"
         val tokenId = "0x0200050000000000000000000000000000000000000000000000000000000000"
-        api.getPoolReserveAccount(baseTokenId, tokenId.fromHex())
-
-        assertEquals(14, runtimeManager.getMetadataVersion())
+        val t = api.getPoolReserveAccount(baseTokenId, tokenId.fromHex())
+        assertEquals(byteArrayOf(12, 12, 14), t)
     }
 
     @Test(expected = MockKException::class)
     fun `soralution env subscribe getPoolReserveAccount`() = runTest {
         val n = RealRuntimeProvider.buildRuntime(networkName = "sora2", suffix = "_soralution")
-        every { runtimeManager.getRuntimeSnapshot() } returns n
-        every { runtimeManager.getMetadataVersion() } returns 12
+        coEvery { runtimeManager.getRuntimeSnapshot() } returns n
         setUpApi()
 
         val baseTokenId = "0x0200000000000000000000000000000000000000000000000000000000000000"
         val tokenId = "0x0200050000000000000000000000000000000000000000000000000000000000"
-        api.getPoolReserveAccount(baseTokenId, tokenId.fromHex())
-
-        assertEquals(14, runtimeManager.getMetadataVersion())
+        val t = api.getPoolReserveAccount(baseTokenId, tokenId.fromHex())
+        assertEquals(byteArrayOf(12, 12, 14), t)
     }
 }

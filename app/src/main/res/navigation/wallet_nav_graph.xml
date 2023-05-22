@@ -3,56 +3,62 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/wallet_nav_graph"
-    app:startDestination="@id/walletFragment">
+    app:startDestination="@id/cardsHubFragment">
+
+    <action
+        android:id="@+id/navAction_to_FullAssetListFragment"
+        app:destination="@id/fullAssetListFragment"
+        app:enterAnim="?android:attr/fragmentOpenEnterAnimation"
+        app:exitAnim="?android:attr/fragmentOpenExitAnimation"
+        app:popEnterAnim="?android:attr/fragmentCloseEnterAnimation"
+        app:popExitAnim="?android:attr/fragmentCloseExitAnimation" />
 
     <fragment
-        android:id="@+id/walletFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.wallet.WalletFragment"
-        tools:layout="@layout/fragment_wallet" />
+        android:id="@+id/cardsHubFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubFragment" />
+
+    <fragment
+        android:id="@+id/fullPoolListFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoollist.FullPoolListFragment" />
+
+    <fragment
+        android:id="@+id/poolDetailsFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.pooldetails.PoolDetailsFragment" />
+
+    <fragment
+        android:id="@+id/liquidityRemoveFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveFragment" />
+
+    <fragment
+        android:id="@+id/fullPoolListSettingsFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoolsettings.FullPoolSettingsFragment" />
+
+    <fragment
+        android:id="@+id/fullAssetListFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetlist.FullAssetListFragment" />
+
+    <fragment
+        android:id="@+id/fullAssetsSettingsFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsFragment" />
 
     <fragment
         android:id="@+id/contactsFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment"
-        tools:layout="@layout/fragment_contacts" />
-
-    <fragment
-        android:id="@+id/assetListFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.assetlist.AssetListFragment"
-        tools:layout="@layout/fragment_asset_list" />
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment" />
 
     <fragment
         android:id="@+id/transferAmountFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.send.TransferAmountFragment"
-        tools:layout="@layout/fragment_transfer_amount" />
-
-    <fragment
-        android:id="@+id/extrinsicDetails"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.details.ExtrinsicDetailsFragment"
-        tools:layout="@layout/fragment_extrinsic_details" />
-
-    <fragment
-        android:id="@+id/transactionConfirmation"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.confirmation.TransactionConfirmationFragment"
-        tools:layout="@layout/fragment_transaction_confirmation" />
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment" />
 
     <fragment
         android:id="@+id/receiveFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.receive.ReceiveFragment"
-        tools:layout="@layout/fragment_receive" />
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.receive.ReceiveFragment" />
 
     <fragment
         android:id="@+id/assetDetailsFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.asset.details.AssetDetailsFragment"
-        tools:layout="@layout/fragment_asset_details" />
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment" />
 
     <fragment
-        android:id="@+id/assetSettingsFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.asset.settings.AssetSettingsFragment"
-        tools:layout="@layout/fragment_about" />
-
-    <fragment
-        android:id="@+id/claimFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment"
-        tools:layout="@layout/fragment_claim" />
+        android:id="@+id/txListFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.txlist.TxListFragment" />
 
 </navigation>

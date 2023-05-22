@@ -14,7 +14,8 @@ import kotlinx.coroutines.flow.first
 
 @ExperimentalCoroutinesApi
 class SuspendableProperty<T>(r: Int) {
-    private val value = MutableSharedFlow<T>(replay = r, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val value =
+        MutableSharedFlow<T>(replay = r, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     fun invalidate() {
         value.resetReplayCache()
@@ -28,6 +29,3 @@ class SuspendableProperty<T>(r: Int) {
 
     fun observe(): Flow<T> = value.asSharedFlow()
 }
-
-@ExperimentalCoroutinesApi
-suspend inline fun <T, R> SuspendableProperty<T>.useValue(action: (T) -> R): R = action(get())

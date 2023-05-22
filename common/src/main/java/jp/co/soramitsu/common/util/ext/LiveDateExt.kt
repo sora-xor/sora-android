@@ -8,7 +8,6 @@ package jp.co.soramitsu.common.util.ext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
-import jp.co.soramitsu.common.util.Event
 
 fun <T> MutableLiveData<T>.setValueIfNew(newValue: T) {
     if (this.value != newValue) value = newValue
@@ -39,8 +38,4 @@ fun <A, B> LiveData<A>.zipWith(stream: LiveData<B>): LiveData<Pair<A, B>> {
         }
     }
     return result
-}
-
-fun MutableLiveData<Event<Unit>>.sendEvent() {
-    this.value = Event(Unit)
 }

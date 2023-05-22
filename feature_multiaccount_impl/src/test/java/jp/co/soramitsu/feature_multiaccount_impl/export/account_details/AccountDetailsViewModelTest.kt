@@ -10,8 +10,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.base.model.ToolbarState
-import jp.co.soramitsu.common.base.model.ToolbarType
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
@@ -20,11 +19,13 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -50,10 +51,10 @@ class AccountDetailsViewModelTest {
     private lateinit var multiAccInteractor: MultiaccountInteractor
 
     @Mock
-    private lateinit var avatarGenerator: AccountAvatarGenerator
+    private lateinit var mainRouter: MainRouter
 
     @Mock
-    private lateinit var mainRouter: MainRouter
+    private lateinit var copy: ClipboardManager
 
     @Mock
     private lateinit var resourceManager: ResourceManager
@@ -64,7 +65,6 @@ class AccountDetailsViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        given(resourceManager.getString(R.string.common_account)).willReturn("accounts")
         given(multiAccInteractor.getSoraAccount(account.substrateAddress)).willReturn(account)
         given(multiAccInteractor.getMnemonic(account)).willReturn("mne mo nic")
 
@@ -72,30 +72,29 @@ class AccountDetailsViewModelTest {
             multiAccInteractor,
             mainRouter,
             resourceManager,
-            account.substrateAddress
+            copy,
+            account.substrateAddress,
         )
     }
 
     @Test
     fun init() = runTest {
-        accountDetailsViewModel.toolbarState.value?.let {
-            assertEquals(
-                it, ToolbarState(
-                    type = ToolbarType.SMALL,
-                    title = "accounts"
-                )
-            )
-        }
+        val toolbar = accountDetailsViewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.string.account_options, toolbar.basic.title)
+        assertTrue(toolbar.type is SoramitsuToolbarType.Small)
 
-        accountDetailsViewModel.accountDetailsScreenState.value?.let {
-            assertEquals(
-                it,
-                AccountDetailsScreenState(
-                    InputTextState(value = TextFieldValue(account.accountName)),
-                    true
-                )
-            )
-        }
+        val state = accountDetailsViewModel.accountDetailsScreenState.getOrAwaitValue()
+        assertEquals(
+            AccountDetailsScreenState(
+                InputTextState(
+                    value = TextFieldValue(account.accountName),
+                    leadingIcon = R.drawable.ic_input_pencil_24,
+                ),
+                true,
+                "address",
+            ),
+            state,
+        )
     }
 
     @Test
@@ -134,8 +133,12 @@ class AccountDetailsViewModelTest {
     fun onNameChangeCalled() = runTest {
         val textFieldValue = TextFieldValue(text = "accountName")
         val expectedState = AccountDetailsScreenState(
-            InputTextState(value = textFieldValue),
-            true
+            InputTextState(
+                value = textFieldValue,
+                leadingIcon = R.drawable.ic_input_pencil_24,
+            ),
+            true,
+            "address",
         )
 
         advanceUntilIdle()

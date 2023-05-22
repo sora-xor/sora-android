@@ -5,9 +5,12 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository
 
+import java.math.BigDecimal
+import java.math.BigInteger
+import java.security.KeyPair
+import javax.inject.Inject
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
@@ -16,7 +19,6 @@ import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import jp.co.soramitsu.feature_ethereum_api.domain.model.GasEstimation
-import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthRegisterStateMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.network.model.EthPublicKeyWithProof
 import jp.co.soramitsu.feature_ethereum_impl.data.network.model.KeccakProof
@@ -27,10 +29,6 @@ import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.utils.Numeric
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.security.KeyPair
-import javax.inject.Inject
 
 class EthereumRepositoryImpl @Inject constructor(
     private val ethDataSource: EthereumDatasource,
@@ -39,8 +37,6 @@ class EthereumRepositoryImpl @Inject constructor(
     private val web3jBip32Crypto: Web3jBip32Crypto,
     private val contractApiProvider: ContractsApiProvider,
     private val etherWeiConverter: EtherWeiConverter,
-    private val db: AppDatabase,
-    private val ethRegisterStateMapper: EthRegisterStateMapper,
 ) : EthereumRepository {
 
     companion object {
@@ -365,18 +361,5 @@ class EthereumRepositoryImpl @Inject constructor(
     override fun isBridgeEnabled(ethCredentials: EthereumCredentials): Boolean {
         val hash = contractApiProvider.getSmartContractApi(ethCredentials).proof().send()
         return !EMPTY_PROOF_HASH.contentEquals(hash)
-    }
-
-    private fun finishCombinedWithdrawTransaction(
-        ethAddress: String,
-        amount: BigDecimal,
-        ethCredentials: EthereumCredentials,
-        tokenAddress: String
-    ): String {
-        return etherWeiConverter.fromEtherToWei(amount)
-            .let {
-                contractApiProvider.getErc20ContractApi(ethCredentials, tokenAddress)
-                    .transferVal(ethAddress, it).send()
-            }.transactionHash
     }
 }

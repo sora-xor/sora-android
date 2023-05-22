@@ -1,0 +1,150 @@
+apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
+apply from: '../tests.gradle'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion versions.composeCompiler
+    }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(":common")
+    implementation project(':common_wallet')
+    implementation project(":core_db")
+    implementation project(":core_di")
+    implementation project(":network")
+    implementation project(":feature_assets_api")
+    implementation project(":feature_polkaswap_api")
+    implementation project(":feature_wallet_api")
+    implementation project(":feature_ethereum_api")
+    implementation project(":feature_account_api")
+    implementation project(":sorasubstrate")
+    implementation project(":feature_main_api")
+    implementation project(":feature_blockexplorer_api")
+
+    implementation fearlessLibDep
+
+    implementation androidDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
+
+    implementation navigationFragmentDep
+
+    implementation insetterDep
+
+    implementation timberDep
+
+    implementation lottieDep
+
+    implementation coilDep
+    implementation coilComposeDep
+
+    implementation workManagerDep
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+    implementation viewmodelKtxDep
+    implementation runtimeKtxDep
+    implementation fragmentKtxDep
+
+    implementation runtimePermissionsDep
+
+    implementation daggerDep
+    kapt daggerKaptDep
+    implementation hiltWorkManagerDep
+    kapt hiltWorkManagerKaptDep
+    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+    implementation gsonDep
+
+    implementation lifecycleProcessDep
+    kapt lifecycleKaptDep
+
+    implementation roomDep
+    implementation roomKtxDep
+
+    implementation uiCoreDep
+
+    implementation(soraCardDep) {
+        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
+    }
+
+    implementation composeUiDep
+    implementation composeThemeAdapterDep
+    implementation composeFoundationDep
+    implementation composeMaterialDep
+    implementation composeAnimationDep
+    implementation composeActivityDep
+    implementation composeViewModelDep
+    implementation composeToolingPreviewDep
+    implementation composeLiveDataDep
+    implementation composeConstraintLayoutDep
+    implementation composeLifecycleDep
+    debugImplementation composeToolingDep
+    implementation navigationComposeDep
+    implementation accompanistNavAnimationDep
+
+    implementation xNetworkingDep
+
+    implementation zXingCoreDep
+    implementation zXingEmbeddedDep
+
+    testImplementation project(":test_shared")
+    testImplementation project(":test_data")
+}

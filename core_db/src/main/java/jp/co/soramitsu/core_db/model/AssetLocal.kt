@@ -43,4 +43,5 @@ data class AssetLocal(
     val bonded: BigDecimal,
     val redeemable: BigDecimal,
     val unbonding: BigDecimal,
+    @ColumnInfo(defaultValue = "0") val visibility: Boolean = false,
 )

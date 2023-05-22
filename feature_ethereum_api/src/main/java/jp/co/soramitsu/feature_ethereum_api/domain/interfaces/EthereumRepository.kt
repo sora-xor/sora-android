@@ -5,12 +5,12 @@
 
 package jp.co.soramitsu.feature_ethereum_api.domain.interfaces
 
-import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
-import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
-import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.security.KeyPair
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
+import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 
 interface EthereumRepository {
 

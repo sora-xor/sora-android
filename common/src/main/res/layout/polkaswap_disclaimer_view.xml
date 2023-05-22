@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glPolkaswapLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/x2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/glPolkaswapRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/x2" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapText1"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:letterSpacing="-0.02"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="@string/polkaswap_info_text_1"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapText2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:letterSpacing="-0.02"
+        android:text="@string/polkaswap_info_text_2"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toBottomOf="@id/tvPolkaswapText1"
+        tools:textSize="12sp" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/brPolkaswapInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="end"
+        app:constraint_referenced_ids="tvPolkaswapTextItem1,tvPolkaswapTextItem2,tvPolkaswapTextItem3" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapTextItem1"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:letterSpacing="-0.02"
+        android:text="1."
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toBottomOf="@id/tvPolkaswapText2"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapText3"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:text="@string/polkaswap_info_text_3"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintStart_toStartOf="@id/brPolkaswapInfo"
+        app:layout_constraintTop_toTopOf="@id/tvPolkaswapTextItem1"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapTextItem2"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:letterSpacing="-0.02"
+        android:text="2."
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toBottomOf="@id/tvPolkaswapText3"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapText4"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:text="@string/polkaswap_info_text_4"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintStart_toStartOf="@id/brPolkaswapInfo"
+        app:layout_constraintTop_toTopOf="@id/tvPolkaswapTextItem2"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapTextItem3"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/x2"
+        android:letterSpacing="-0.02"
+        android:text="3."
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toBottomOf="@id/tvPolkaswapText4"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapText5"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:letterSpacing="-0.02"
+        android:text="@string/polkaswap_info_text_5"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintStart_toStartOf="@id/brPolkaswapInfo"
+        app:layout_constraintTop_toTopOf="@id/tvPolkaswapTextItem3"
+        tools:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvPolkaswapText6"
+        style="@style/TextAppearance.Soramitsu.Neu.Light.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/x1"
+        android:layout_marginTop="@dimen/x2"
+        android:letterSpacing="-0.02"
+        android:text="@string/polkaswap_info_text_6"
+        app:layout_constraintEnd_toEndOf="@id/glPolkaswapRight"
+        app:layout_constraintStart_toStartOf="@id/brPolkaswapInfo"
+        app:layout_constraintTop_toBottomOf="@id/tvPolkaswapText5"
+        tools:textSize="12sp" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:background="?attr/pureBlackOnDay"
+        app:layout_constraintBottom_toBottomOf="@id/tvPolkaswapText6"
+        app:layout_constraintEnd_toEndOf="@id/brPolkaswapInfo"
+        app:layout_constraintStart_toStartOf="@id/glPolkaswapLeft"
+        app:layout_constraintTop_toTopOf="@id/tvPolkaswapText6" />
+
+</merge>

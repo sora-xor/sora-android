@@ -9,10 +9,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_referral_impl.data.ReferralRepositoryImpl
 import kotlinx.coroutines.FlowPreview
-import javax.inject.Singleton
 
 @FlowPreview
 @Module

@@ -23,6 +23,9 @@ fun SwitchNodeAlert(
         title = {
             Text(text = stringResource(R.string.select_node_switch_alert_title))
         },
+        text = {
+            Text(text = stringResource(R.string.select_node_switch_alert_description))
+        },
         confirmButton = {
             TextButton(
                 onClick = onSwitchConfirmed

@@ -5,19 +5,19 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.Language
-import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
+@Singleton
 class MainInteractor @Inject constructor(
     private val userRepository: UserRepository,
-    private val credentialsRepository: CredentialsRepository,
     private val selectNodeRepository: SelectNodeRepository
 ) {
     suspend fun getCurUserAddress(): String {
@@ -26,7 +26,7 @@ class MainInteractor @Inject constructor(
 
     fun getAppVersion(): String = OptionsProvider.CURRENT_VERSION_NAME
 
-    suspend fun getAvailableLanguagesWithSelected(): Pair<List<Language>, String> {
+    suspend fun getAvailableLanguagesWithSelected(): Pair<List<Language>, Int> {
         return userRepository.getAvailableLanguages()
     }
 
@@ -63,10 +63,10 @@ class MainInteractor @Inject constructor(
     fun flowCurSoraAccount(): Flow<SoraAccount> =
         userRepository.flowCurSoraAccount()
 
-    suspend fun setCurSoraAccount(accountAddress: String) {
-        userRepository.setCurSoraAccount(accountAddress)
+    suspend fun setCurSoraAccount(account: SoraAccount) {
+        userRepository.setCurSoraAccount(account)
     }
 
-    fun flowSelectedNode(): Flow<Node?> =
+    fun flowSelectedNode(): Flow<ChainNode?> =
         selectNodeRepository.getSelectedNode()
 }

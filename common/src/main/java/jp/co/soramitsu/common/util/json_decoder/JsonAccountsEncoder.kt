@@ -8,7 +8,6 @@ package jp.co.soramitsu.common.util.json_decoder
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.fearless_utils.encrypt.EncryptionType
 import jp.co.soramitsu.fearless_utils.encrypt.MultiChainEncryption
@@ -22,14 +21,14 @@ class JsonAccountsEncoder(
     private val jsonSeedEncoder: JsonSeedEncoder
 ) {
 
-    fun generate(account: ExportAccount, password: String): String {
+    fun generate(account: ExportAccount, password: String, genesisHash: String): String {
         return jsonSeedEncoder.generate(
             account.keypair,
             account.seed,
             password,
             account.name,
             MultiChainEncryption.Substrate(EncryptionType.SR25519),
-            FlavorOptionsProvider.genesisHash,
+            genesisHash,
             account.address
         )
     }
@@ -37,9 +36,13 @@ class JsonAccountsEncoder(
     fun generate(
         accounts: List<ExportAccount>,
         password: String,
+        genesisHash: String,
     ): String {
-        val accountsData = accounts.map { JsonAccountData.Account(it.address, JsonAccountData.Meta(it.name)) }
-        val encoded = formEncodedField(accounts, password)
+        val accountsData =
+            accounts.map {
+                JsonAccountData.Account(it.address, JsonAccountData.Meta(name = it.name, genesisHash = genesisHash))
+            }
+        val encoded = formEncodedField(accounts, password, genesisHash)
 
         val importData = JsonAccountData(
             encoded = encoded,
@@ -51,16 +54,35 @@ class JsonAccountsEncoder(
 
     private fun formEncodedField(
         accounts: List<ExportAccount>,
-        password: String
+        password: String,
+        genesisHash: String,
     ): String {
         val jsonArray = JsonArray()
 
         accounts.forEach {
-            jsonArray.add(gson.fromJson(jsonSeedEncoder.generate(it.keypair, it.seed, password, it.name, MultiChainEncryption.Substrate(EncryptionType.SR25519), FlavorOptionsProvider.genesisHash, it.address), JsonElement::class.java))
+            jsonArray.add(
+                gson.fromJson(
+                    jsonSeedEncoder.generate(
+                        it.keypair,
+                        it.seed,
+                        password,
+                        it.name,
+                        MultiChainEncryption.Substrate(EncryptionType.SR25519),
+                        genesisHash,
+                        it.address
+                    ),
+                    JsonElement::class.java
+                )
+            )
         }
 
         val key = cryptoAssistant.generateKeyForJson(password.toByteArray())
-        return Base64.toBase64String(key.salt + key.N + key.p + key.r + cryptoAssistant.encryptNaCl(gson.toJson(jsonArray), key.result.copyOfRange(0, 32)))
+        return Base64.toBase64String(
+            key.salt + key.N + key.p + key.r + cryptoAssistant.encryptNaCl(
+                gson.toJson(jsonArray),
+                key.result.copyOfRange(0, 32)
+            )
+        )
     }
 
     data class ExportAccount(

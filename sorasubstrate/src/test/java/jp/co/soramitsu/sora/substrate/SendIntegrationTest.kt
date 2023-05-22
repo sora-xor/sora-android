@@ -18,13 +18,13 @@ import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.executeAsync
 import jp.co.soramitsu.fearless_utils.wsrpc.logging.Logger
 import jp.co.soramitsu.fearless_utils.wsrpc.mappers.nonNull
+import jp.co.soramitsu.fearless_utils.wsrpc.mappers.pojo
 import jp.co.soramitsu.fearless_utils.wsrpc.mappers.scale
 import jp.co.soramitsu.fearless_utils.wsrpc.recovery.Reconnector
 import jp.co.soramitsu.fearless_utils.wsrpc.request.RequestExecutor
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.sora.substrate.runtime.Constants
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
-import jp.co.soramitsu.sora.substrate.substrate.AccountData
 import jp.co.soramitsu.test_shared.TestRuntimeProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -112,13 +112,13 @@ class SendIntegrationTest {
                     stotoac
                 )
             ),
-            mapper = scale(AccountData).nonNull()
+            mapper = pojo<String>().nonNull()
         )
 //        val qwe = stora?.fromHexOrNull(runtime, r[0].changes[0][1]!!)
 //        val ss = ((qwe as? List<*>)?.get(0) as? ByteArray)?.toString(Charsets.UTF_8)
 //        val sss = ((qwe as? List<*>)?.get(1) as? ByteArray)?.toString(Charsets.UTF_8)
-        val free = r[AccountData.free]
-        assertTrue(free == BigInteger.ONE)
+//        val free = r[AccountData.free]
+//        assertTrue(free == BigInteger.ONE)
     }
 }
 

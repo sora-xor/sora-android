@@ -7,7 +7,7 @@
         <item name="android:statusBarColor">?attr/baseBackground</item>
         <item name="android:navigationBarColor">?attr/baseBackground</item>
         <item name="android:windowBackground">?attr/baseBackground</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">true</item>
         <item name="android:textColorHint">?attr/disabledButtonTextColor</item>
@@ -26,6 +26,7 @@
         <item name="contentTertiary">@color/grey_500</item>
         <item name="contentQuaternary">@color/grey_400</item>
         <item name="baseBackground">@color/neu_color_300</item>
+        <item name="baseBackgroundSecond">@color/neu_color_white</item>
         <item name="baseBackgroundDark">@color/backgroundDarkColor</item>
         <item name="baseBorderPrimary">@color/grey_300</item>
         <item name="baseBorderSecondary">@color/grey_200</item>
@@ -47,6 +48,7 @@
         <item name="secondaryPressed">@color/pressedSecondaryColor</item>
         <item name="secondaryFocused">@color/focusedSecondaryColor</item>
 
+        <item name="polkaswapBackground">@color/polkaswap_background_alfa</item>
         <item name="polkaswapMainColor">@color/neu_brand_polkaswap</item>
         <item name="dividerColor">@color/neu_divider_color</item>
         <item name="balanceColorDefault">@color/neu_black_default</item>
@@ -78,10 +80,19 @@
         <item name="iconTintColorPositive">@color/neu_positive</item>
         <item name="iconTintColorNegative">@color/neu_selected_primary</item>
         <item name="iconTintAboveBackground">@color/tint_above_background</item>
+        <item name="redesignTokenName">#281818</item>
+        <item name="redesignTokenBalance">#9d8181</item>
 
         <item name="uikit_pinCodeButtonTitleColor">@color/neu_disabled_on_night</item>
         <item name="uikit_pinCodeButtonTextColor">@color/neu_brown_color</item>
-        <item name="uikit_pinCodeButtonBackground">@color/neu_color_200</item>
+        <item name="uikit_pinCodeButtonBackground">@drawable/rounded_button_background</item>
+    </style>
+
+    <style name="AppTheme.Onboarding">
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <style name="BottomSheetDialog" parent="Theme.MaterialComponents.BottomSheetDialog">
@@ -105,243 +116,24 @@
         <item name="cornerSizeBottomLeft">0dp</item>
     </style>
 
-    <style name="CustomCardViewStyle" parent="Widget.MaterialComponents.CardView">
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay_card_custom_corners</item>
-    </style>
-
-    <style name="ShapeAppearanceOverlay_card_custom_corners" parent="">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSizeTopRight">@dimen/x2</item>
-        <item name="cornerSizeTopLeft">@dimen/x2</item>
-        <item name="cornerSizeBottomRight">0dp</item>
-        <item name="cornerSizeBottomLeft">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.AutoCompleteTextView" parent="Widget.AppCompat.AutoCompleteTextView">
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Neu.Light.13</item>
-    </style>
-
-    <style name="AppTheme.SearchView" parent="AppTheme">
-        <item name="colorAccent">?attr/tintColorLight</item>
-        <item name="colorControlNormal">?attr/tintColorLight</item>
-        <item name="android:editTextColor">?attr/balanceColorDefault</item>
-        <item name="android:textColorHint">?attr/balanceColorDefault</item>
-        <item name="autoCompleteTextViewStyle">@style/Widget.Soramitsu.AutoCompleteTextView</item>
-    </style>
-
-    <style name="SearchViewStyle2" parent="Widget.AppCompat.SearchView">
-        <item name="android:theme">@style/AppTheme.SearchView</item>
-        <item name="android:layout_height">48dp</item>
-        <item name="iconifiedByDefault">false</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Neu.Semibold.18</item>
-        <item name="queryBackground">@android:color/transparent</item>
-        <item name="android:background">@drawable/background_search_view_48</item>
-    </style>
-
-    <style name="ThickSeekBar" parent="@android:style/Widget.SeekBar">
-        <item name="android:indeterminateOnly">false</item>
-        <item name="android:progressDrawable">@android:drawable/progress_horizontal</item>
-        <item name="android:indeterminateDrawable">@android:drawable/progress_horizontal</item>
-        <item name="android:minHeight">@dimen/x1</item>
-        <item name="android:maxHeight">@dimen/x1</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Switch" parent="Widget.MaterialComponents.CompoundButton.Switch">
-        <item name="materialThemeOverlay">@style/ThemeOverlay.Soramitsu.Switch</item>
-        <item name="android:thumb">@drawable/ic_switch_thumb</item>
-        <item name="useMaterialThemeColors">false</item>
-        <item name="track">@drawable/green_switch_track_selector</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Switch.Red" parent="Widget.Soramitsu.Switch">
-        <item name="track">@drawable/red_switch_track_selector</item>
-    </style>
-
-    <style name="ThemeOverlay.Soramitsu.Switch" parent="">
-        <item name="colorOnSurface">?attr/contentQuaternary</item>
-        <item name="colorControlActivated">?attr/contentQuaternary</item>
-        <item name="colorSurface">?attr/contentQuaternary</item>
-        <item name="colorSecondary">?attr/statusSuccess</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Primary.48" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:layout_height">48dp</item>
-        <item name="cornerRadius">12dp</item>
-        <item name="backgroundTint">@drawable/sora_button_primary_bg_selector</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">@drawable/sora_button_primary_text_selector</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Primary.Neu.56.Shadow" parent="Widget.Neumorph.Button">
-        <item name="cornerRadius">32dp</item>
-        <item name="android:layout_height">80dp</item>
-        <item name="android:paddingLeft">@dimen/design_btn_padding_left</item>
-        <item name="android:paddingRight">@dimen/design_btn_padding_right</item>
-        <item name="android:paddingTop">0dp</item>
-        <item name="android:paddingBottom">0dp</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:textSize">21sp</item>
-        <item name="textAllCaps">true</item>
-        <item name="neumorph_shapeAppearance">@style/ShapeAppearance.Soramitsu.Button</item>
-        <item name="neumorph_shadowColorDark">?attr/shadowDark</item>
-        <item name="neumorph_shadowColorLight">?attr/shadowLight</item>
-        <item name="android:includeFontPadding">false</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Primary.Neu.40.Shadow" parent="Widget.Neumorph.Button">
-        <item name="cornerRadius">32dp</item>
-        <item name="android:layout_height">64dp</item>
-        <item name="android:minHeight">64dp</item>
-        <item name="android:paddingLeft">@dimen/design_btn_padding_left</item>
-        <item name="android:paddingRight">@dimen/design_btn_padding_right</item>
-        <item name="android:paddingTop">0dp</item>
-        <item name="android:paddingBottom">0dp</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:textSize">15sp</item>
-        <item name="textAllCaps">true</item>
-        <item name="neumorph_shapeAppearance">@style/ShapeAppearance.Soramitsu.Button</item>
-        <item name="neumorph_shadowColorDark">?attr/shadowDark</item>
-        <item name="neumorph_shadowColorLight">?attr/shadowLight</item>
-        <item name="android:includeFontPadding">false</item>
-    </style>
-
-    <style name="ShapeAppearance.Soramitsu.Button" parent="ShapeAppearance.Neumorph.Button">
-        <item name="neumorph_cornerFamily">rounded</item>
-        <item name="neumorph_cornerSize">32dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Primary.Neu.56" parent="Widget.MaterialComponents.Button">
-        <item name="android:layout_height">56dp</item>
-        <item name="cornerRadius">32dp</item>
-        <item name="backgroundTint">@drawable/sora_button_primary_neu_bg_selector</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:textSize">21sp</item>
-        <item name="textAllCaps">true</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textColor">@drawable/sora_button_primary_neu_text_selector</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Polkaswap.Neu.40" parent="Widget.MaterialComponents.Button">
-        <item name="android:layout_height">@dimen/x5</item>
-        <item name="cornerRadius">@dimen/x4</item>
-        <item name="backgroundTint">@drawable/sora_button_polkaswap_neu_bg_selector</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Polkaswap.Button</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:textSize">18dp</item>
-        <item name="textAllCaps">true</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:textColor">@drawable/sora_button_primary_neu_text_selector</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Primary.Neu.56.Polkaswap">
-        <item name="backgroundTint">@drawable/background_button_primary_polkaswap</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Secondary.Neu.56" parent="Widget.Soramitsu.Button.Primary.Neu.56">
-        <item name="backgroundTint">@drawable/sora_button_secondary_neu_bg_selector</item>
-    </style>
-
-    <style name="Widget.Soramitsu.ImageButton" parent="Widget.AppCompat.ImageButton">
-        <item name="android:scaleType">centerInside</item>
-        <item name="android:elevation">0dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.ImageButton.56">
-        <item name="android:layout_height">56dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.ImageButton.56.Primary">
-        <item name="android:background">@drawable/sora_button_primary_neu_bg_selector</item>
-    </style>
-
-    <style name="Widget.Soramitsu.ImageButton.56.Secondary">
-        <item name="android:background">@drawable/background_neu_button_secondary</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Secondary.48" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:layout_height">48dp</item>
-        <item name="cornerRadius">12dp</item>
-        <item name="backgroundTint">?attr/secondaryBackground</item>
-        <item name="rippleColor">?attr/baseBackgroundHover</item>
-        <item name="android:textColor">@color/brand_pmsblack</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Tertiary.48" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:layout_height">48dp</item>
-        <item name="cornerRadius">12dp</item>
-        <item name="backgroundTint">@color/white</item>
-        <item name="android:textColor">@color/themePrimary_400</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.Primary.40" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:layout_height">40dp</item>
-        <item name="cornerRadius">12dp</item>
-        <item name="backgroundTint">@color/themePrimary_400</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Button</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.ImageButton.Primary.48" parent="Widget.AppCompat.ImageButton">
-        <item name="android:layout_height">48dp</item>
-        <item name="android:background">@drawable/background_image_button_primary</item>
-        <item name="android:scaleType">centerInside</item>
-        <item name="android:elevation">0dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.ImageButton.Secondary.40" parent="Widget.AppCompat.ImageButton">
-        <item name="android:layout_height">40dp</item>
-        <item name="android:background">@drawable/background_image_button_secondary</item>
-        <item name="android:scaleType">centerInside</item>
-        <item name="android:elevation">0dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Neu.ImageButton.Secondary.56" parent="Widget.AppCompat.ImageButton">
-        <item name="android:layout_height">56dp</item>
-        <item name="android:background">@drawable/background_neu_button_secondary</item>
-        <item name="android:scaleType">centerInside</item>
-        <item name="android:elevation">0dp</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.PinCodeNumberButton" parent="@style/Widget.Neumorph.Button">
+    <style name="Widget.Soramitsu.Button.PinCodeNumberButton" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:layout_width">@dimen/pin_code_button_size</item>
         <item name="android:layout_height">@dimen/pin_code_button_size</item>
-        <item name="android:layout_margin">@dimen/pin_code_view_spacing</item>
+        <item name="android:layout_marginStart">@dimen/x1_2</item>
+        <item name="android:layout_marginEnd">@dimen/x1_2</item>
+        <item name="android:layout_marginBottom">@dimen/x1</item>
+        <item name="elevation">4dp</item>
+        <item name="android:elevation">4dp</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="android:includeFontPadding">false</item>
         <item name="android:textColor">?attr/uikit_pinCodeButtonTextColor</item>
         <item name="android:background">?attr/uikit_pinCodeButtonBackground</item>
+        <item name="android:backgroundTint">@color/white</item>
+        <item name="backgroundTint">@color/white</item>
+        <item name="background">?attr/uikit_pinCodeButtonBackground</item>
         <item name="android:textAppearance">@style/TextAppearance.Soramitsu.Neu.Semibold.34</item>
         <item name="android:textSize">@dimen/uikit_pin_code_button_text_size</item>
-        <item name="neumorph_shapeAppearance">@style/ShapeAppearance.Neumorph.FloatingActionButton </item>
-        <item name="neumorph_shadowColorDark">?attr/shadowDark</item>
-        <item name="neumorph_shadowColorLight">?attr/shadowLight</item>
-    </style>
-
-    <style name="Widget.Soramitsu.Button.PinCodeControlButton" parent="Widget.AppCompat.ImageButton">
-        <item name="android:background">@drawable/uikit_bg_pin_code_button</item>
-        <item name="android:scaleType">centerInside</item>
-        <item name="android:elevation">0dp</item>
     </style>
 
     <style name="Widget.Soramitsu.ProgressBar" parent="Widget.AppCompat.ProgressBar">

@@ -21,6 +21,7 @@ import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.RemoveNodeAlertState
 import jp.co.soramitsu.feature_select_node_impl.presentation.select.model.SwitchNodeAlertState
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -37,7 +38,6 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -67,17 +67,19 @@ class SelectNodeViewModelTest {
 
     private lateinit var selectNodeViewModel: SelectNodeViewModel
 
-    private val nodeManagerEvents = MutableStateFlow<NodeManagerEvent>(NodeManagerEvent.ConnectionFailed(SELECTED_NODE.address))
+    private val nodeManagerEvents =
+        MutableStateFlow<NodeManagerEvent>(NodeManagerEvent.ConnectionFailed(SELECTED_NODE.address))
 
     @Before
     fun setUp() = runTest {
-        whenever(resourceManager.getString(R.string.common_select_node)).thenReturn("Title")
         whenever(resourceManager.getString(R.string.select_node_unable_join_node_title))
             .thenReturn("Title")
         whenever(resourceManager.getString(R.string.select_node_unable_join_node_message))
             .thenReturn("Message")
         whenever(resourceManager.getString(R.string.select_node_switch_succeed)).thenReturn("Success")
-        whenever(resourceManager.getString(R.string.common_error_invalid_parameters_body)).thenReturn("Error")
+        whenever(resourceManager.getString(R.string.common_error_invalid_parameters_body)).thenReturn(
+            "Error"
+        )
         whenever(interactor.subscribeNodes()).thenReturn(flowOf(NODE_LIST))
         whenever(nodeManager.events).thenReturn(nodeManagerEvents)
 
@@ -93,8 +95,8 @@ class SelectNodeViewModelTest {
     @Test
     fun `initialize EXPECT init toolbar state`() = runTest {
         advanceUntilIdle()
-
-        assertEquals(selectNodeViewModel.toolbarState.value?.title, "Title")
+        val s = selectNodeViewModel.toolbarState.getOrAwaitValue()
+        assertEquals(R.string.common_select_node, s.basic.title)
     }
 
     @Test
@@ -156,12 +158,12 @@ class SelectNodeViewModelTest {
 
         assertEquals(
             "Title",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.first
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "Message",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.second
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 
@@ -172,12 +174,12 @@ class SelectNodeViewModelTest {
 
         assertEquals(
             "Success",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.first
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.second
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 
@@ -188,12 +190,12 @@ class SelectNodeViewModelTest {
 
         assertEquals(
             "Title",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.first
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "Error",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.second
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 
@@ -210,12 +212,12 @@ class SelectNodeViewModelTest {
 
         assertEquals(
             "Title",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.first
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "Message",
-            selectNodeViewModel.alertDialogLiveData.value?.peekContent()?.second
+            selectNodeViewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 

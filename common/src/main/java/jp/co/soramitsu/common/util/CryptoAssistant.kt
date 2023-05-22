@@ -8,12 +8,12 @@ package jp.co.soramitsu.common.util
 import com.goterl.lazysodium.LazySodiumAndroid
 import com.goterl.lazysodium.interfaces.SecretBox
 import com.goterl.lazysodium.utils.Key
+import java.security.KeyPair
+import java.security.SecureRandom
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import org.spongycastle.crypto.generators.SCrypt
 import org.spongycastle.jcajce.provider.digest.SHA3
 import org.spongycastle.util.encoders.Base64
-import java.security.KeyPair
-import java.security.SecureRandom
 
 class CryptoAssistant(
     private val secureRandom: SecureRandom,
@@ -23,9 +23,6 @@ class CryptoAssistant(
 
     companion object {
         private const val CHARSET = "UTF-8"
-
-        fun test() {
-        }
     }
 
     data class ScryptNaclKeyResult(

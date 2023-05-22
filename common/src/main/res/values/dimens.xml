@@ -8,6 +8,7 @@
     <dimen name="x2_5">20dp</dimen>
     <dimen name="x3">24dp</dimen>
     <dimen name="x4">32dp</dimen>
+    <dimen name="x4_5">36dp</dimen>
     <dimen name="x5">40dp</dimen>
     <dimen name="x6">48dp</dimen>
     <dimen name="x7">56dp</dimen>
@@ -47,11 +48,11 @@
     <dimen name="text_size_h1">30sp</dimen>
 
     <!--Pincode-->
-    <dimen name="pin_code_view_spacing">0dp</dimen>
+    <dimen name="pin_code_view_spacing">2dp</dimen>
     <dimen name="pin_code_button_size">70dp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_width_default">58dp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_height_default">17dp</dimen>
-    <dimen name="uikit_dot_progress_view_dot_margin_default">4dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_width_default">19dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_height_default">19dp</dimen>
+    <dimen name="uikit_dot_progress_view_dot_margin_default">3dp</dimen>
     <dimen name="uikit_dot_stroke_width">1dp</dimen>
     <dimen name="uikit_pin_code_button_text_size">18sp</dimen>
     <dimen name="design_btn_padding_left">24dp</dimen>

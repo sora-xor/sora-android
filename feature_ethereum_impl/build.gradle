@@ -15,7 +15,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -59,8 +59,6 @@ dependencies {
     implementation project(":feature_wallet_api")
     implementation project(":sorasubstrate")
     implementation project(":soracrypro")
-
-    implementation kotlinDep
 
     implementation daggerDep
     kapt daggerKaptDep

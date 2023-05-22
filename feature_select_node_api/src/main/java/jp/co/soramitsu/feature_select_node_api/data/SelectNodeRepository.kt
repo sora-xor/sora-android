@@ -5,22 +5,22 @@
 
 package jp.co.soramitsu.feature_select_node_api.data
 
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
+import jp.co.soramitsu.common.domain.ChainNode
 import kotlinx.coroutines.flow.Flow
 
 interface SelectNodeRepository {
 
-    suspend fun fetchDefaultNodes(): List<Node>
+    suspend fun fetchDefaultNodes(): List<ChainNode>
 
-    fun getNodes(): Flow<List<Node>>
+    fun getNodes(): Flow<List<ChainNode>>
 
-    fun getSelectedNode(): Flow<Node?>
+    fun getSelectedNode(): Flow<ChainNode?>
 
-    suspend fun selectNode(selectedNode: Node)
+    suspend fun selectNode(selectedNode: ChainNode)
 
-    suspend fun addCustomNode(node: Node)
+    suspend fun addCustomNode(node: ChainNode)
 
-    suspend fun updateCustomNode(previousAddress: String, node: Node)
+    suspend fun updateCustomNode(previousAddress: String, node: ChainNode)
 
     suspend fun getBlockHash(): String
 

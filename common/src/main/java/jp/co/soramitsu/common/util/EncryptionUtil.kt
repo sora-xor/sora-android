@@ -10,8 +10,6 @@ import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import org.spongycastle.util.Arrays
-import org.spongycastle.util.encoders.Base64
 import java.math.BigInteger
 import java.security.InvalidAlgorithmParameterException
 import java.security.InvalidKeyException
@@ -33,6 +31,8 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import javax.security.auth.x500.X500Principal
+import org.spongycastle.util.Arrays
+import org.spongycastle.util.encoders.Base64
 
 class EncryptionUtil(
     private val context: Context

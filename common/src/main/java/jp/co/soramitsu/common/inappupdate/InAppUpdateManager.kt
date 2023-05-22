@@ -17,10 +17,10 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
-import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.util.ext.safeCast
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import jp.co.soramitsu.common.data.SoraPreferences
+import jp.co.soramitsu.common.util.ext.safeCast
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 

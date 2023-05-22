@@ -14,17 +14,16 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import jp.co.soramitsu.common.base.model.ToolbarState
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.common.util.Event
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
-import jp.co.soramitsu.feature_select_node_impl.R
 import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
 import jp.co.soramitsu.ui_core.component.input.InputTextState
@@ -76,15 +75,14 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     private var nameIsValid: Boolean = false
     private var genesisHashIsValid = false
     private var pinCodeChecked: Boolean = false
-    private var node: Node? = null
-    private var selectedNode: Node? = null
-    private var nodes: List<Node> = emptyList()
+    private var node: ChainNode? = null
+    private var selectedNode: ChainNode? = null
+    private var nodes: List<ChainNode> = emptyList()
 
     init {
-        _toolbarState.value = ToolbarState(
-            title = resourceManager.getString(R.string.select_node_node_details)
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.select_node_node_details,
         )
-
         subscribeAddressChanges()
         subscribeNodeManagerEvents()
 
@@ -217,8 +215,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     }
 
     private fun validateAddress(url: String) {
-        val event = interactor.validateNodeAddress(url)
-        when (event) {
+        when (interactor.validateNodeAddress(url)) {
             ValidationEvent.Succeed -> {
                 addressIsValid = true
                 state = state.copy(
@@ -318,7 +315,7 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
     fun onPinCodeChecked(checked: Boolean) {
         pinCodeChecked = checked
         val nodeConnected = isCurrentNodeConnected()
-        node = Node(
+        node = ChainNode(
             chain = Const.SORA,
             name = state.nameState.value.text.trim(),
             address = state.addressState.value.text.trim(),
@@ -364,10 +361,8 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
 
     private fun showUnableJoinNodeDialog() {
         alertDialogLiveData.value =
-            Event(
-                resourceManager.getString(R.string.select_node_unable_join_node_title) to
-                    resourceManager.getString(R.string.select_node_unable_join_node_message)
-            )
+            resourceManager.getString(R.string.select_node_unable_join_node_title) to
+            resourceManager.getString(R.string.select_node_unable_join_node_message)
     }
 
     private fun showNodeAlreadyAddedDialog(
@@ -375,21 +370,17 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
         currentNodeUrl: String
     ) {
         alertDialogLiveData.value =
-            Event(
-                resourceManager.getString(R.string.common_error_general_title) to
-                    resourceManager.getString(
-                        R.string.node_details_node_already_added,
-                        existedNodeName,
-                        currentNodeUrl
-                    )
+            resourceManager.getString(R.string.common_error_general_title) to
+            resourceManager.getString(
+                R.string.node_details_node_already_added,
+                existedNodeName,
+                currentNodeUrl
             )
     }
 
     private fun showNoConnectionDialog() {
         alertDialogLiveData.value =
-            Event(
-                resourceManager.getString(R.string.common_error_general_title) to
-                    resourceManager.getString(R.string.common_error_invalid_parameters_body)
-            )
+            resourceManager.getString(R.string.common_error_general_title) to
+            resourceManager.getString(R.string.common_error_invalid_parameters_body)
     }
 }

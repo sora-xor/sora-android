@@ -1,0 +1,372 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
+package jp.co.soramitsu.feature_assets_impl.presentation.screens.send
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import java.math.BigDecimal
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.domain.subtractFee
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
+import jp.co.soramitsu.common.presentation.trigger
+import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ClipboardManager
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.isZero
+import jp.co.soramitsu.common.util.ext.nullZero
+import jp.co.soramitsu.common.util.ext.orZero
+import jp.co.soramitsu.common.view.ViewHelper
+import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_impl.presentation.states.SendState
+import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
+
+class TransferAmountViewModel @AssistedInject constructor(
+    private val interactor: AssetsInteractor,
+    private val walletRouter: WalletRouter,
+    private val assetsRouter: AssetsRouter,
+    private val numbersFormatter: NumbersFormatter,
+    private val clipboardManager: ClipboardManager,
+    private val resourceManager: ResourceManager,
+    avatarGenerator: AccountAvatarGenerator,
+    @Assisted("recipientId") private val recipientId: String,
+    @Assisted("assetId") private val assetId: String,
+) : BaseViewModel() {
+
+    @AssistedFactory
+    interface TransferAmountViewModelFactory {
+        fun create(
+            @Assisted("recipientId") recipientId: String,
+            @Assisted("assetId") assetId: String,
+        ): TransferAmountViewModel
+    }
+
+    private val _copiedAddressEvent = SingleLiveEvent<Unit>()
+    val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
+    private val _transactionSuccessEvent = SingleLiveEvent<Unit>()
+    val transactionSuccessEvent: LiveData<Unit> = _transactionSuccessEvent
+
+    private val enteredFlow = MutableStateFlow(BigDecimal.ZERO)
+
+    private var curAsset: Asset? = null
+    private var feeAsset: Asset? = null
+    private var fee: BigDecimal? = null
+    private val assetsList = mutableListOf<Asset>()
+    private var curTokenId: String = assetId
+
+    internal var sendState by mutableStateOf(
+        SendState(
+            address = recipientId,
+            icon = avatarGenerator.createAvatar(recipientId, 40),
+        )
+    )
+
+    override fun startScreen(): String = SendRoutes.start
+
+    init {
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.common_enter_amount,
+        )
+        viewModelScope.launch {
+            interactor.subscribeAssetsActiveOfCurAccount()
+                .catch { onError(it) }
+                .collectLatest { list ->
+                    assetsList.clear()
+                    assetsList.addAll(list)
+                    sendState = sendState.copy(
+                        selectSearchAssetState = sendState.selectSearchAssetState.copy(
+                            fullList = mapAssetsToCardState(list, numbersFormatter)
+                        )
+                    )
+                    updateCurAsset()
+                    feeAsset = list.find { it.token.id == SubstrateOptionsProvider.feeAssetId }
+                        ?.also { asset ->
+                            if (fee == null) {
+                                calcTransactionFee(asset)
+                            }
+                        }
+                    sendState.input?.amount?.let {
+                        checkEnteredAmount(it)
+                    }
+                }
+        }
+        viewModelScope.launch {
+            enteredFlow
+                .drop(1)
+                .debounce(ViewHelper.debounce)
+                .collectLatest { amount ->
+                    checkEnteredAmount(amount)
+                }
+        }
+    }
+
+    private fun updateCurAsset() {
+        curAsset = assetsList.find { it.token.id == curTokenId }?.also { asset ->
+            if (sendState.input == null) {
+                sendState = sendState.copy(
+                    input = AssetAmountInputState(
+                        token = asset.token,
+                        balance = getAssetBalanceText(asset),
+                        amount = BigDecimal.ZERO,
+                        initialAmount = null,
+                        amountFiat = "",
+                        enabled = false,
+                        error = false,
+                        errorHint = "",
+                    )
+                )
+            } else {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        token = asset.token,
+                        balance = getAssetBalanceText(asset),
+                        amountFiat = asset.token.printFiat(
+                            sendState.input?.amount.orZero(),
+                            numbersFormatter
+                        ),
+                    )
+                )
+            }
+        }
+    }
+
+    fun onTokenChange(tokenId: String) {
+        curTokenId = tokenId
+        updateCurAsset()
+        sendState.input?.amount?.let {
+            checkEnteredAmount(it)
+        }
+    }
+
+    override fun onCurrentDestinationChanged(curDest: String) {
+        _toolbarState.value?.let { state ->
+            when (currentDestination) {
+                SendRoutes.start -> {
+                    _toolbarState.value = state.copy(
+                        basic = state.basic.copy(
+                            title = R.string.common_enter_amount,
+                        )
+                    )
+                    sendState = sendState.copy(
+                        input = sendState.input?.copy(
+                            readOnly = false,
+                            initialAmount = sendState.input?.amount?.nullZero()
+                        ),
+                    )
+                }
+                SendRoutes.selectToken -> {
+                    _toolbarState.value = state.copy(
+                        basic = state.basic.copy(
+                            title = R.string.choose_token,
+                        )
+                    )
+                }
+                else -> {
+                    _toolbarState.value = state.copy(
+                        basic = state.basic.copy(
+                            title = R.string.confirm_sending,
+                        )
+                    )
+                    sendState = sendState.copy(
+                        input = sendState.input?.copy(
+                            readOnly = true,
+                        ),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun getAssetBalanceText(asset: Asset) = "%s (%s)".format(
+        asset.printBalance(
+            numbersFormatter,
+            withSymbol = false,
+            precision = AssetHolder.ROUNDING
+        ),
+        asset.printFiat(numbersFormatter)
+    )
+
+    private suspend fun calcTransactionFee(feeAsset: Asset) {
+        fee = interactor.calcTransactionFee(
+            recipientId, feeAsset.token, BigDecimal.ONE,
+        ).also {
+            if (it != null) {
+                sendState = sendState.copy(
+                    feeLoading = false,
+                    fee = feeAsset.token.printBalance(it, numbersFormatter, AssetHolder.ROUNDING),
+                    feeFiat = feeAsset.token.printFiat(it, numbersFormatter),
+                    input = sendState.input?.copy(
+                        enabled = true,
+                    ),
+                )
+            }
+        }
+    }
+
+    fun copyAddress() {
+        clipboardManager.addToClipboard("Address", recipientId)
+        _copiedAddressEvent.trigger()
+    }
+
+    fun onConfirmClick() {
+        val curAsset = curAsset ?: return
+        val amount = sendState.input?.amount ?: return
+        val fee = fee ?: return
+        viewModelScope.launch {
+            sendState = sendState.copy(
+                inProgress = true
+            )
+            var success = ""
+            try {
+                success = interactor.observeTransfer(
+                    recipientId,
+                    curAsset.token,
+                    amount,
+                    fee,
+                )
+                if (success.isNotEmpty()) _transactionSuccessEvent.trigger()
+            } catch (t: Throwable) {
+                onError(t)
+            } finally {
+                sendState = sendState.copy(
+                    inProgress = false
+                )
+                if (success.isNotEmpty())
+                    assetsRouter.showTxDetails(success, true)
+                else walletRouter.returnToHubFragment()
+            }
+        }
+    }
+
+    private fun checkEnteredAmount(amount: BigDecimal) {
+        val fee = fee ?: return
+        val feeAsset = feeAsset ?: return
+        val curAsset = curAsset ?: return
+        when {
+            amount.isZero() -> {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        error = false,
+                        errorHint = "",
+                    ),
+                    reviewEnabled = false,
+                )
+            }
+            feeAsset.balance.transferable < fee -> {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        error = true,
+                        errorHint = resourceManager.getString(R.string.error_transaction_fee_title),
+                    ),
+                    reviewEnabled = false,
+                )
+            }
+            curAsset.balance.transferable < amount -> {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        error = true,
+                        errorHint = resourceManager.getString(R.string.amount_error_no_funds),
+                    ),
+                    reviewEnabled = false,
+                )
+            }
+            (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable < amount + fee) -> {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        error = true,
+                        errorHint = resourceManager.getString(R.string.amount_error_no_funds),
+                    ),
+                    reviewEnabled = false,
+                )
+            }
+            (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable - amount - fee < SubstrateOptionsProvider.existentialDeposit.toBigDecimal()) -> {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        error = true,
+                        errorHint = resourceManager.getString(R.string.wallet_send_existential_warning_message),
+                    ),
+                    reviewEnabled = false,
+                )
+            }
+            else -> {
+                sendState = sendState.copy(
+                    input = sendState.input?.copy(
+                        error = false,
+                        errorHint = "",
+                    ),
+                    reviewEnabled = true,
+                )
+            }
+        }
+    }
+
+    fun onReviewClick() {
+        sendState = sendState.copy(
+            input = sendState.input?.copy(
+                initialAmount = sendState.input?.amount.orZero()
+            )
+        )
+    }
+
+    fun amountChanged(value: BigDecimal) {
+        sendState = sendState.copy(
+            input = sendState.input?.copy(
+                amount = value,
+                amountFiat = sendState.input?.token?.printFiat(
+                    value,
+                    numbersFormatter
+                ).orEmpty()
+            )
+        )
+        enteredFlow.value = value
+    }
+
+    fun optionSelected(percent: Int) {
+        val fee = fee ?: return
+        val curAsset = curAsset ?: return
+        var amount = PolkaswapFormulas.calculateAmountByPercentage(
+            curAsset.balance.transferable,
+            percent.toDouble(),
+            curAsset.token.precision
+        )
+        if (curAsset.token.id == SubstrateOptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
+            amount = subtractFee(amount, curAsset.balance.transferable, fee)
+        }
+        sendState = sendState.copy(
+            input = sendState.input?.copy(
+                amount = amount,
+                initialAmount = amount,
+                amountFiat = sendState.input?.token?.printFiat(
+                    amount,
+                    numbersFormatter
+                ).orEmpty()
+            )
+        )
+        enteredFlow.value = amount
+    }
+}

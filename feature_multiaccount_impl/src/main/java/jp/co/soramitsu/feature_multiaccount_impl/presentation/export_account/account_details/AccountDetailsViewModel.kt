@@ -12,13 +12,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import jp.co.soramitsu.common.base.model.ToolbarState
-import jp.co.soramitsu.common.base.model.ToolbarType
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
@@ -32,6 +34,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
     resourceManager: ResourceManager,
+    private val clipboardManager: ClipboardManager,
     @Assisted("address") private val address: String,
 ) : BaseViewModel() {
 
@@ -42,26 +45,31 @@ class AccountDetailsViewModel @AssistedInject constructor(
         ): AccountDetailsViewModel
     }
 
-    private val _accountDetailsScreenState = MutableLiveData<AccountDetailsScreenState>()
+    private val _copyEvent = SingleLiveEvent<Unit>()
+    val copyEvent: LiveData<Unit> = _copyEvent
+
+    private val _accountDetailsScreenState = MutableLiveData(
+        AccountDetailsScreenState(InputTextState(value = TextFieldValue("")), false, "")
+    )
     val accountDetailsScreenState: LiveData<AccountDetailsScreenState> = _accountDetailsScreenState
 
     private val changeNameFlow = MutableStateFlow("")
 
     init {
-        _toolbarState.value = ToolbarState(
-            type = ToolbarType.SMALL,
-            title = resourceManager.getString(R.string.common_account)
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.account_options,
         )
-
         viewModelScope.launch {
             val account = interactor.getSoraAccount(address)
             val isMnemonicAvailable = interactor.getMnemonic(account).isNotEmpty()
             _accountDetailsScreenState.value = AccountDetailsScreenState(
                 InputTextState(
                     value = TextFieldValue(account.accountName),
-                    label = resourceManager.getString(R.string.common_name)
+                    label = resourceManager.getString(R.string.personal_info_username_v1),
+                    leadingIcon = R.drawable.ic_input_pencil_24,
                 ),
-                isMnemonicAvailable
+                isMnemonicAvailable,
+                address,
             )
         }
 
@@ -108,5 +116,10 @@ class AccountDetailsViewModel @AssistedInject constructor(
         _accountDetailsScreenState.value?.let {
             router.showPinForLogout(address)
         }
+    }
+
+    fun onAddressCopy() {
+        clipboardManager.addToClipboard("address", address)
+        _copyEvent.trigger()
     }
 }

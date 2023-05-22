@@ -93,7 +93,7 @@ class PrefsUserDatasourceTest {
 
     @Test
     fun `clear user data called`() = runTest {
-        prefsUserDatasource.clearUserData()
+        prefsUserDatasource.clearAllData()
 
         verify(soraPreferences).clearAll()
     }

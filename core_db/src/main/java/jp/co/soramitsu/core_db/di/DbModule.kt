@@ -11,8 +11,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import jp.co.soramitsu.core_db.AppDatabase
 import javax.inject.Singleton
+import jp.co.soramitsu.core_db.AppDatabase
 
 @Module
 @InstallIn(SingletonComponent::class)

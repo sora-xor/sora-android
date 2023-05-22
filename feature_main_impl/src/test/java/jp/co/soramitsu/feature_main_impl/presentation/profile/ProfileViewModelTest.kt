@@ -6,26 +6,34 @@
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.impl.annotations.MockK
+import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.common.domain.SoraCardInformation
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.oauth.common.model.KycStatus
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
@@ -43,7 +51,16 @@ class ProfileViewModelTest {
     private lateinit var interactor: MainInteractor
 
     @Mock
+    private lateinit var assetsRouter: AssetsRouter
+
+    @Mock
+    private lateinit var walletInteractor: WalletInteractor
+
+    @Mock
     private lateinit var router: MainRouter
+
+    @Mock
+    private lateinit var walletRouter: WalletRouter
 
     @Mock
     private lateinit var referralRouter: ReferralRouter
@@ -54,13 +71,42 @@ class ProfileViewModelTest {
     @Mock
     private lateinit var nodeManager: NodeManager
 
+    @Mock
+    private lateinit var resourceManager: ResourceManager
+
     private lateinit var profileViewModel: ProfileViewModel
+
+    private val title = "More"
+    private val accounts = "Account"
+    private val accountsSubtitle = "Account Sub"
+    private val nodes = "Nodes"
+    private val app = "App settings"
+    private val appSubtitle = "App Sub"
+    private val login = "Login"
+    private val loginSubtitle = "Login Sub"
+    private val invite = "Invite"
+    private val inviteSubtitle = "Invite Sub"
+    private val info = "Info"
+    private val infoSubtitle = "Info Sub"
+
+    fun initViewModel() {
+        profileViewModel = ProfileViewModel(
+            assetsRouter,
+            interactor,
+            walletInteractor,
+            router,
+            walletRouter,
+            referralRouter,
+            selectNodeRouter,
+            nodeManager,
+        )
+    }
 
     @Before
     fun setUp() = runTest {
         whenever(interactor.flowSelectedNode()).thenReturn(
             flowOf(
-                Node(
+                ChainNode(
                     chain = "SORA",
                     name = "node",
                     address = "address",
@@ -70,58 +116,53 @@ class ProfileViewModelTest {
             )
         )
 
-        profileViewModel = ProfileViewModel(
-            interactor,
-            router,
-            referralRouter,
-            selectNodeRouter,
-            nodeManager
+        whenever(nodeManager.connectionState).thenReturn(
+            flowOf(
+                true
+            )
         )
     }
 
     @Test
-    fun `help card clicked`() {
-        profileViewModel.btnHelpClicked()
-        verify(router).showFaq()
-    }
+    fun `init succesfull`() = runTest {
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, "")))
+        initViewModel()
 
-    @Test
-    fun `invite card clicked`() {
-        profileViewModel.profileFriendsClicked()
-        verify(referralRouter).showReferrals()
-    }
-
-    @Test
-    fun `about item clicked`() {
-        profileViewModel.profileAboutClicked()
-        verify(router).showAbout()
-    }
-
-    @Test
-    fun `select node clicked`() {
-        profileViewModel.selectNodeClicked()
-        verify(selectNodeRouter).showSelectNode()
-    }
-
-
-    @Test
-    fun `get selected node`() = runTest {
         advanceUntilIdle()
 
-        verify(interactor).flowSelectedNode()
+        profileViewModel.state.let {
+            assertEquals("node", it.nodeName)
+            assertEquals(true, it.nodeConnected)
+        }
     }
 
     @Test
-    fun `get selected node update state`() = runTest {
+    fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, "")))
+        initViewModel()
         advanceUntilIdle()
+        profileViewModel.showSoraCard()
 
-        assertEquals(profileViewModel.selectedNode.value?.address, "address")
+        verify(router).showGetSoraCard()
     }
 
     @Test
-    fun `initialize expect subscribe to connection state`() = runTest {
+    fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, KycStatus.Failed.toString())))
+        initViewModel()
         advanceUntilIdle()
+        profileViewModel.showSoraCard()
+        advanceUntilIdle()
+        assertEquals(jp.co.soramitsu.oauth.base.sdk.SoraCardInfo(accessToken="accesstoken", accessTokenExpirationTime=0, refreshToken="refreshToken"), profileViewModel.launchSoraCardSignIn.value?.soraCardInfo)
 
-        verify(nodeManager).connectionState()
+    }
+
+    @Test
+    fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
+        initViewModel()
+
+        profileViewModel.showBuyCrypto()
+
+        verify(assetsRouter).showBuyCrypto()
     }
 }

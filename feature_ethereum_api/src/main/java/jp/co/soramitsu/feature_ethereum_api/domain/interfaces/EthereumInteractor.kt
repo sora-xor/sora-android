@@ -5,10 +5,10 @@
 
 package jp.co.soramitsu.feature_ethereum_api.domain.interfaces
 
-import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
-import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import java.math.BigDecimal
 import java.math.BigInteger
+import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
+import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 
 interface EthereumInteractor {
 

@@ -1,0 +1,367 @@
+/**
+* Copyright Soramitsu Co., Ltd. All Rights Reserved.
+* SPDX-License-Identifier: GPL-3.0
+*/
+
+package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import java.math.BigDecimal
+import java.util.Date
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.trigger
+import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ClipboardManager
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsItem
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsState
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxDetailsScreenState
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.TxType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.emptyTxDetailsState
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+
+class TxDetailsViewModel @AssistedInject constructor(
+    private val assetsInteractor: AssetsInteractor,
+    private val walletInteractor: WalletInteractor,
+    private val transactionHistoryHandler: TransactionHistoryHandler,
+    private val clipboardManager: ClipboardManager,
+    private val resourceManager: ResourceManager,
+    private val dateTimeFormatter: DateTimeFormatter,
+    private val numbersFormatter: NumbersFormatter,
+    @Assisted private val txHash: String,
+) : BaseViewModel() {
+
+    @AssistedFactory
+    interface TxDetailsViewModelFactory {
+        fun create(txHash: String): TxDetailsViewModel
+    }
+
+    private val _copyEvent = SingleLiveEvent<Unit>()
+    val copyEvent: LiveData<Unit> = _copyEvent
+
+    internal var txDetailsScreenState by mutableStateOf(emptyTxDetailsState)
+        private set
+
+    init {
+        _toolbarState.value = SoramitsuToolbarState(
+            type = SoramitsuToolbarType.Small(),
+            basic = BasicToolbarState(
+                title = "",
+                visibility = false,
+                navIcon = null,
+            ),
+        )
+        viewModelScope.launch {
+            calcState()
+        }
+        transactionHistoryHandler.flowLocalTransactions()
+            .drop(1)
+            .catch { onError(it) }
+            .onEach {
+                calcState()
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private suspend fun calcState() {
+        val currentAddress = assetsInteractor.getCurSoraAccount().substrateAddress
+        val feeToken = walletInteractor.getFeeToken()
+        val transaction = transactionHistoryHandler.getTransaction(txHash)
+        txDetailsScreenState = when (transaction) {
+            is Transaction.Transfer -> {
+                var sender = transaction.peer
+                var recipient = currentAddress
+                var typeIcon = R.drawable.ic_new_arrow_down_24
+                var typeTitle = R.string.common_received
+                var amountPrefix = "+"
+
+                if (transaction.transferType == TransactionTransferType.OUTGOING) {
+                    sender = currentAddress
+                    recipient = transaction.peer
+                    typeIcon = R.drawable.ic_new_arrow_up_24
+                    typeTitle = R.string.common_sent
+                    amountPrefix = ""
+                }
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        transaction.base.txHash,
+                        transaction.base.blockHash,
+                        sender,
+                        listOf(
+                            BasicTxDetailsItem(
+                                resourceManager.getString(R.string.common_recipient),
+                                recipient,
+                            )
+                        ),
+                        transaction.base.status,
+                        dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        typeIcon,
+                        resourceManager.getString(typeTitle),
+                    ),
+                    amount1 = "$amountPrefix${
+                        transaction.token.printBalance(
+                            transaction.amount,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        )
+                    }",
+                    amountFiat = "$amountPrefix${
+                        transaction.token.printFiat(
+                            transaction.amount,
+                            numbersFormatter
+                        )
+                    }",
+                    icon1 = transaction.token.iconUri(),
+                    icon2 = null,
+                    isAmountGreen = transaction.transferType == TransactionTransferType.INCOMING,
+                    txType = TxType.REFERRAL_TRANSFER
+                )
+            }
+            is Transaction.Swap -> {
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        transaction.base.txHash,
+                        transaction.base.blockHash,
+                        currentAddress,
+                        emptyList(),
+                        transaction.base.status,
+                        dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        R.drawable.ic_refresh_24,
+                        resourceManager.getString(R.string.polkaswap_swapped),
+                    ),
+                    amount1 = transaction.tokenFrom.printBalance(
+                        transaction.amountFrom,
+                        numbersFormatter,
+                        AssetHolder.ROUNDING
+                    ),
+                    amount2 = transaction.tokenTo.printBalance(
+                        transaction.amountTo,
+                        numbersFormatter,
+                        AssetHolder.ROUNDING
+                    ),
+                    amountFiat = "=${
+                        transaction.tokenFrom.printFiat(
+                            transaction.amountFrom,
+                            numbersFormatter
+                        )
+                    }",
+                    icon1 = transaction.tokenFrom.iconUri(),
+                    icon2 = transaction.tokenTo.iconUri(),
+                    isAmountGreen = false,
+                    txType = TxType.SWAP
+                )
+            }
+            is Transaction.Liquidity -> {
+                var amountSign = ""
+                var typeIcon = R.drawable.ic_new_arrow_up_24
+                var typeTitle = resourceManager.getString(R.string.details_sent_to_pool)
+
+                if (transaction.type == TransactionLiquidityType.WITHDRAW) {
+                    typeIcon = R.drawable.ic_new_arrow_down_24
+                    typeTitle = resourceManager.getString(R.string.details_receive_from_pool)
+                    amountSign = "+"
+                }
+
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        transaction.base.txHash,
+                        transaction.base.blockHash,
+                        currentAddress,
+                        emptyList(),
+                        transaction.base.status,
+                        dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        typeIcon,
+                        typeTitle,
+                    ),
+                    amount1 = "$amountSign${
+                        transaction.token1.printBalance(
+                            transaction.amount1,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        )
+                    }",
+                    amount2 = "$amountSign${
+                        transaction.token2.printBalance(
+                            transaction.amount2,
+                            numbersFormatter,
+                            AssetHolder.ROUNDING
+                        )
+                    }",
+                    amountFiat = "$amountSign${
+                        transaction.token1.printFiat(
+                            transaction.amount1,
+                            numbersFormatter
+                        )
+                    }",
+                    icon1 = transaction.token1.iconUri(),
+                    icon2 = transaction.token2.iconUri(),
+                    isAmountGreen = transaction.type == TransactionLiquidityType.WITHDRAW,
+                    txType = TxType.LIQUIDITY
+                )
+            }
+            is Transaction.ReferralBond -> {
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        transaction.base.txHash,
+                        transaction.base.blockHash,
+                        currentAddress,
+                        emptyList(),
+                        transaction.base.status,
+                        dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        R.drawable.ic_new_arrow_up_24,
+                        resourceManager.getString(R.string.wallet_bonded),
+                    ),
+                    amount1 = transaction.token.printBalance(
+                        transaction.amount,
+                        numbersFormatter,
+                        AssetHolder.ROUNDING
+                    ),
+                    amountFiat = transaction.token.printFiat(
+                        transaction.amount,
+                        numbersFormatter
+                    ),
+                    icon1 = transaction.token.iconUri(),
+                    icon2 = null,
+                    txType = TxType.REFERRAL_TRANSFER
+                )
+            }
+            is Transaction.ReferralUnbond -> {
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        transaction.base.txHash,
+                        transaction.base.blockHash,
+                        currentAddress,
+                        emptyList(),
+                        transaction.base.status,
+                        dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING),
+                        feeToken.printFiat(transaction.base.fee, numbersFormatter),
+                        R.drawable.ic_new_arrow_down_24,
+                        resourceManager.getString(R.string.wallet_unbonded),
+                    ),
+                    amount1 = transaction.token.printBalance(
+                        transaction.amount,
+                        numbersFormatter,
+                        AssetHolder.ROUNDING
+                    ),
+                    amountFiat = "+${
+                        transaction.token.printFiat(
+                            transaction.amount,
+                            numbersFormatter
+                        )
+                    }",
+                    isAmountGreen = true,
+                    icon1 = transaction.token.iconUri(),
+                    icon2 = null,
+                    txType = TxType.REFERRAL_TRANSFER
+                )
+            }
+            is Transaction.ReferralSetReferrer -> {
+                var title = R.string.referrer_set
+                var detailsItemTitle = R.string.history_referrer
+                var networkFee: String? = null
+                var networkFeeFiat: String? = null
+
+                if (!transaction.myReferrer) {
+                    title = R.string.activity_referral_title
+                    detailsItemTitle = R.string.history_referral
+                    networkFee = feeToken.printBalance(transaction.base.fee, numbersFormatter, AssetHolder.ROUNDING)
+                    networkFeeFiat = feeToken.printFiat(transaction.base.fee, numbersFormatter)
+                }
+
+                TxDetailsScreenState(
+                    basicTxDetailsState = BasicTxDetailsState(
+                        transaction.base.txHash,
+                        transaction.base.blockHash,
+                        currentAddress,
+                        listOf(
+                            BasicTxDetailsItem(
+                                resourceManager.getString(detailsItemTitle),
+                                transaction.who,
+                            )
+                        ),
+                        transaction.base.status,
+                        dateTimeFormatter.formatDate(
+                            Date(transaction.base.timestamp),
+                            DateTimeFormatter.DD_MMM_YYYY_HH_MM
+                        ),
+                        networkFee,
+                        networkFeeFiat,
+                        R.drawable.ic_new_arrow_up_24,
+                        resourceManager.getString(title),
+                    ),
+                    amount1 = if (transaction.myReferrer) "--" else "-1 ${
+                        resourceManager.getQuantityString(
+                            R.plurals.referral_invitations,
+                            1
+                        )
+                    }",
+                    amountFiat = transaction.token.printFiat(
+                        BigDecimal.ZERO,
+                        numbersFormatter
+                    ),
+                    icon1 = transaction.token.iconUri(),
+                    icon2 = null,
+                    txType = TxType.REFERRAL_TRANSFER
+                )
+            }
+            else -> {
+                emptyTxDetailsState
+            }
+        }
+    }
+
+    fun onCopyClicked(text: String) {
+        clipboardManager.addToClipboard("copy item", text)
+        _copyEvent.trigger()
+    }
+}

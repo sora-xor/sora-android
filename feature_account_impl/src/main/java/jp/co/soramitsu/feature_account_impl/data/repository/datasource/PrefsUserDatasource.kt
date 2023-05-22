@@ -7,7 +7,6 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.common.resourses.ContextManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 
@@ -55,16 +54,14 @@ class PrefsUserDatasource(
         return if (registrationStateString.isEmpty()) {
             OnboardingState.INITIAL
         } else {
-            runCatching { OnboardingState.valueOf(registrationStateString) }.getOrDefault(OnboardingState.INITIAL)
+            runCatching { OnboardingState.valueOf(registrationStateString) }.getOrDefault(
+                OnboardingState.INITIAL
+            )
         }
     }
 
-    override suspend fun clearUserData() {
+    override suspend fun clearAllData() {
         soraPreferences.clearAll()
-    }
-
-    override suspend fun clearAccountData() {
-        soraPreferences.clear(KEY_CUR_ACCOUNT_ADDRESS)
     }
 
     override suspend fun saveParentInviteCode(inviteCode: String) {
@@ -73,14 +70,6 @@ class PrefsUserDatasource(
 
     override suspend fun getParentInviteCode(): String {
         return soraPreferences.getString(KEY_PARENT_INVITE_CODE)
-    }
-
-    override fun getCurrentLanguage(): String {
-        return ContextManager.getCurrentLanguage().orEmpty()
-    }
-
-    override fun changeLanguage(language: String) {
-        ContextManager.setCurrentLanguage(language)
     }
 
     override suspend fun setBiometryEnabled(isEnabled: Boolean) {

@@ -12,19 +12,22 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
-import io.mockk.verify
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
+import jp.co.soramitsu.core_db.dao.CardsHubDao
+import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
+import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
+import jp.co.soramitsu.core_db.dao.SoraCardDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
@@ -63,7 +66,19 @@ class UserRepositoryTest {
     lateinit var accountDao: AccountDao
 
     @MockK
+    lateinit var hubDao: CardsHubDao
+
+    @MockK
     lateinit var referralsDao: ReferralsDao
+
+    @MockK
+    lateinit var nodeDao: NodeDao
+
+    @MockK
+    lateinit var globalCardsHubDao: GlobalCardsHubDao
+
+    @MockK
+    lateinit var soraCardDao: SoraCardDao
 
     @MockK
     lateinit var deviceParamsProvider: DeviceParamsProvider
@@ -73,6 +88,9 @@ class UserRepositoryTest {
 
     @MockK
     lateinit var credentialsDatasource: CredentialsDatasource
+
+    @MockK
+    lateinit var languagesHolder: LanguagesHolder
 
     private lateinit var userRepository: UserRepositoryImpl
 
@@ -84,7 +102,11 @@ class UserRepositoryTest {
         val accountAddress = "accountAddress"
         coEvery { userDatasource.getCurAccountAddress() } returns accountAddress
         every { db.accountDao() } returns accountDao
+        every { db.cardsHubDao() } returns hubDao
         every { db.referralsDao() } returns referralsDao
+        every { db.nodeDao() } returns nodeDao
+        every { db.globalCardsHubDao() } returns globalCardsHubDao
+        every { db.soraCardDao() } returns soraCardDao
         coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
             accountAddress,
             accountName
@@ -94,10 +116,9 @@ class UserRepositoryTest {
             userDatasource,
             credentialsDatasource,
             db,
-            deviceParamsProvider,
-            coroutineManager
+            coroutineManager,
+            languagesHolder,
         )
-        mockkObject(LanguagesHolder)
     }
 
     @Test
@@ -106,10 +127,10 @@ class UserRepositoryTest {
             Language("ru", R.string.common_russian, R.string.common_russian_native),
             Language("en", R.string.common_english, R.string.common_english_native)
         )
-        every { LanguagesHolder.getLanguages() } returns languages
-        every { userDatasource.getCurrentLanguage() } returns languages.first().iso
+        every { languagesHolder.getLanguages() } returns (languages to 0)
 
-        assertEquals(languages.first(), userRepository.getSelectedLanguage())
+        val l = userRepository.getAvailableLanguages()
+        assertEquals(languages[1], l.first[1])
     }
 
     @Test
@@ -130,17 +151,28 @@ class UserRepositoryTest {
     @Test
     fun `set cur account called with address`() = runTest {
         coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
-        coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(soraAccount.substrateAddress, soraAccount.accountName)
+        coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(
+            soraAccount.substrateAddress,
+            soraAccount.accountName
+        )
 
-        userRepository.setCurSoraAccount(soraAccount.substrateAddress)
+        userRepository.setCurSoraAccount(soraAccount)
 
         coVerify { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) }
-        coVerify { accountDao.getAccount(soraAccount.substrateAddress) }
     }
 
     @Test
     fun `flow cur account list called`() = runTest {
-        coEvery { accountDao.flowAccounts() } returns flow { emit(listOf(SoraAccountLocal("accountAddress", "accountName"))) }
+        coEvery { accountDao.flowAccounts() } returns flow {
+            emit(
+                listOf(
+                    SoraAccountLocal(
+                        "accountAddress",
+                        "accountName"
+                    )
+                )
+            )
+        }
         val accounts = listOf(SoraAccount("accountAddress", "accountName"))
 
         assertEquals(accounts, userRepository.flowSoraAccountsList().first())
@@ -158,7 +190,12 @@ class UserRepositoryTest {
 
     @Test
     fun `get sora accounts list called`() = runTest {
-        coEvery { accountDao.getAccounts() } returns listOf(SoraAccountLocal("accountAddress", "accountName"))
+        coEvery { accountDao.getAccounts() } returns listOf(
+            SoraAccountLocal(
+                "accountAddress",
+                "accountName"
+            )
+        )
         val accounts = listOf(SoraAccount("accountAddress", "accountName"))
 
         assertEquals(accounts, userRepository.soraAccountsList())
@@ -173,19 +210,71 @@ class UserRepositoryTest {
 
     @Test
     fun `insert sora account count called`() = runTest {
-        coEvery { accountDao.insertSoraAccount(SoraAccountLocal("accountAddress", "accountName")) } returns Unit
+        coEvery {
+            accountDao.insertSoraAccount(
+                SoraAccountLocal(
+                    "accountAddress",
+                    "accountName"
+                )
+            )
+        } returns Unit
+        coEvery { db.globalCardsHubDao().count() } returns 2
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        val lambda = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+            lambda.captured.invoke()
+        }
+        coEvery { hubDao.insert(any()) } returns Unit
 
         val soraAccount = SoraAccount("accountAddress", "accountName")
-
         userRepository.insertSoraAccount(soraAccount)
+
+        coVerify {
+            accountDao.insertSoraAccount(
+                SoraAccountLocal(
+                    soraAccount.substrateAddress,
+                    soraAccount.accountName
+                )
+            )
+        }
     }
 
+    @Test
+    fun `insert sora account EXPECT insert local cards hub`()= runTest {
+        coEvery {
+            accountDao.insertSoraAccount(
+                SoraAccountLocal(
+                    "accountAddress",
+                    "accountName"
+                )
+            )
+        } returns Unit
+        coEvery { db.globalCardsHubDao().count() } returns 2
+        coEvery { hubDao.insert(TestData.CARD_HUB_LOCAL) } returns Unit
+        mockkStatic("androidx.room.RoomDatabaseKt")
+        mockkStatic(CardHubType::class)
+        every { CardHubType.values() } returns arrayOf(CardHubType.GET_SORA_CARD, CardHubType.ASSETS, CardHubType.POOLS)
+        val lambda = slot<suspend () -> R>()
+        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+            lambda.captured.invoke()
+        }
+
+        val soraAccount = SoraAccount("accountAddress", "accountName")
+        userRepository.insertSoraAccount(soraAccount)
+
+        coVerify { hubDao.insert(TestData.CARD_HUB_LOCAL) }
+    }
     @Test
     fun `save Account name called`() = runTest {
         val accountName = "accountName"
         val accountAddress = "accountAddress"
         coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
-        coEvery { accountDao.updateAccountName(accountName, soraAccount.substrateAddress) } returns Unit
+        coEvery {
+            accountDao.updateAccountName(
+                accountName,
+                soraAccount.substrateAddress
+            )
+        } returns Unit
         coEvery { referralsDao.clearTable() } returns Unit
         coVerify(exactly = 1) { accountDao.getAccount(accountAddress) }
         userRepository.updateAccountName(soraAccount, accountName)
@@ -254,16 +343,28 @@ class UserRepositoryTest {
 
     @Test
     fun `clear user data called`() = runTest {
-        coEvery { userDatasource.clearUserData() } returns Unit
+        coEvery { userDatasource.clearAllData() } returns Unit
+        coEvery { accountDao.clearAll() } returns Unit
+        coEvery { referralsDao.clearTable() } returns Unit
+        coEvery { nodeDao.clearTable() } returns Unit
+        coEvery { globalCardsHubDao.clearTable() } returns Unit
+        coEvery { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) } returns Unit
+        coEvery { soraCardDao.clearTable() } returns Unit
+        coEvery { globalCardsHubDao.count() } returns 0
         every { db.clearAllTables() } returns Unit
         mockkStatic("androidx.room.RoomDatabaseKt")
         val lambda = slot<suspend () -> R>()
         coEvery { db.withTransaction(capture(lambda)) } coAnswers {
             lambda.captured.invoke()
         }
-        userRepository.clearUserData()
-        verify { db.clearAllTables() }
-        coVerify { userDatasource.clearUserData() }
+        userRepository.fullLogout()
+        coVerify { nodeDao.clearTable() }
+        coVerify { globalCardsHubDao.clearTable() }
+        coVerify { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) }
+        coVerify { soraCardDao.clearTable() }
+        coVerify { referralsDao.clearTable() }
+        coVerify { accountDao.clearAll() }
+        coVerify { userDatasource.clearAllData() }
     }
 
     @Test
@@ -289,17 +390,8 @@ class UserRepositoryTest {
             Language("es", R.string.common_spanish, R.string.common_spanish_native),
             Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
         )
-        every { LanguagesHolder.getLanguages() } returns languages
-        every { userDatasource.getCurrentLanguage() } returns languages[0].iso
-        assertEquals(languages to languages[0].iso, userRepository.getAvailableLanguages())
-    }
-
-    @Test
-    fun `change language called`() = runTest {
-        val language = "ru"
-        every { userDatasource.changeLanguage(language) } returns Unit
-        assertEquals(language, userRepository.changeLanguage(language))
-        verify { userDatasource.changeLanguage(language) }
+        every { languagesHolder.getLanguages() } returns (languages to 1)
+        assertEquals(languages to 1, userRepository.getAvailableLanguages())
     }
 
     @Test
@@ -314,7 +406,6 @@ class UserRepositoryTest {
         every { db.referralsDao() } returns referralsDao
         coEvery { accountDao.clearAccount(address) } returns Unit
         coEvery { referralsDao.clearTable() } returns Unit
-        coEvery { userDatasource.clearAccountData() } returns Unit
         coEvery { credentialsDatasource.clearAllDataForAddress(address) } returns Unit
 
         userRepository.clearAccountData(address)
@@ -322,7 +413,6 @@ class UserRepositoryTest {
         coVerify { accountDao.clearAccount(address) }
         coVerify { referralsDao.clearTable() }
         coVerify { credentialsDatasource.clearAllDataForAddress(address) }
-        coVerify { userDatasource.clearAccountData() }
     }
 
     @Test

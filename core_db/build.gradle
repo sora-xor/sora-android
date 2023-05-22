@@ -24,8 +24,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -64,8 +64,6 @@ dependencies {
 
     implementation project(":common")
 
-    implementation kotlinDep
-
     implementation daggerDep
     kapt daggerKaptDep
 
@@ -75,4 +73,10 @@ dependencies {
     implementation roomDep
     implementation roomKtxDep
     kapt roomKaptDep
+
+    androidTestImplementation project(":test_shared")
+    androidTestImplementation project(":test_data")
+    androidTestImplementation androidxTestExtJunitDep
+    androidTestImplementation androidxTestEspressoCoreDep
+    androidTestImplementation archCoreTestDep
 }

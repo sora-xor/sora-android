@@ -17,9 +17,9 @@ import jp.co.soramitsu.common.base.ProgressDialog
 
 @Composable
 fun WebView(
-    viewModel: WebViewViewModel
+    state: WebViewState,
+    onPageFinished: () -> Unit
 ) {
-    val state = viewModel.state
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -31,7 +31,7 @@ fun WebView(
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
-                            viewModel.onPageFinished()
+                            onPageFinished()
                         }
                     }
 

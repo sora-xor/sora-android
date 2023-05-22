@@ -9,9 +9,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
-import jp.co.soramitsu.feature_main_impl.presentation.language.model.LanguageItem
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,7 +24,6 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 
 @ExperimentalCoroutinesApi
@@ -39,9 +36,6 @@ class SelectLanguageViewModelTest {
 
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
-
-    @Mock
-    private lateinit var router: MainRouter
 
     @Mock
     private lateinit var interactor: MainInteractor
@@ -62,17 +56,18 @@ class SelectLanguageViewModelTest {
         given(interactor.getAvailableLanguagesWithSelected()).willReturn(
             Pair(
                 languages,
-                languages.first().iso
+                0,
             )
         )
         given(resourceManager.getString(anyInt())).willReturn("Русский")
 
-        selectLanguageViewModel = SelectLanguageViewModel(interactor, router, resourceManager)
+        selectLanguageViewModel = SelectLanguageViewModel(interactor, resourceManager)
     }
 
     @Test
-    fun `init successful`() {
-        assertEquals(languageItems, selectLanguageViewModel.languagesLiveData.value)
+    fun `init successful`() = runTest {
+        advanceUntilIdle()
+        assertEquals(languageItems, selectLanguageViewModel.state.items)
     }
 
     @Test
@@ -83,12 +78,5 @@ class SelectLanguageViewModelTest {
         advanceUntilIdle()
         val res = selectLanguageViewModel.languageChangedLiveData.getOrAwaitValue()
         assertEquals("ru", res)
-    }
-
-    @Test
-    fun `back pressed`() {
-        selectLanguageViewModel.onBackPressed()
-
-        verify(router).popBackStack()
     }
 }

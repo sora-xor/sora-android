@@ -9,9 +9,12 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,10 +51,19 @@ class ReferralInteractorTest {
     private lateinit var referralRepository: ReferralRepository
 
     @Mock
+    private lateinit var assetsRepository: AssetsRepository
+
+    @Mock
     private lateinit var walletRepository: WalletRepository
 
     @Mock
     private lateinit var credentialsRepository: CredentialsRepository
+
+    @Mock
+    private lateinit var runtimeManager: RuntimeManager
+
+    @Mock
+    private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
     private lateinit var interactor: ReferralInteractor
 
@@ -72,10 +84,13 @@ class ReferralInteractorTest {
     @Before
     fun setUp() = runTest {
         interactor = ReferralInteractor(
+            assetsRepository,
             userRepository,
             referralRepository,
             walletRepository,
-            credentialsRepository
+            credentialsRepository,
+            runtimeManager,
+            transactionHistoryRepository
         )
     }
 

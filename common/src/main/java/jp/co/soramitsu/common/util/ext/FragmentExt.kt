@@ -6,13 +6,15 @@
 package jp.co.soramitsu.common.util.ext
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.os.Parcelable
 import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
-import androidx.activity.OnBackPressedCallback
 import androidx.annotation.DimenRes
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.coroutineScope
 import jp.co.soramitsu.common.domain.ResponseCode
@@ -24,6 +26,18 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+
+fun Context.safeStartActivity(intent: Intent, responseCode: ResponseCode) {
+    try {
+        startActivity(intent)
+    } catch (exception: ActivityNotFoundException) {
+        Toast.makeText(
+            this,
+            getString(responseCode.messageResource),
+            Toast.LENGTH_LONG
+        ).show()
+    }
+}
 
 fun Fragment.safeStartActivity(intent: Intent, responseCode: ResponseCode) {
     try {
@@ -66,21 +80,18 @@ fun Fragment.runDelayed(
     }
 }
 
-fun Fragment.onBackPressed(block: () -> Unit) {
-    requireActivity().onBackPressedDispatcher.addCallback(
-        viewLifecycleOwner,
-        object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                block()
-            }
-        }
-    )
-}
-
 fun Fragment.hideSoftKeyboard() {
     requireActivity().hideSoftKeyboard()
 }
 
 fun Fragment.openSoftKeyboard(view: View) {
     requireActivity().openSoftKeyboard(view)
+}
+
+fun Fragment.setStatusBarColor(color: Color) {
+    this.requireActivity().window.statusBarColor = color.toArgb()
+}
+
+fun Fragment.setNavbarColor(color: Color) {
+    this.requireActivity().window.navigationBarColor = color.toArgb()
 }

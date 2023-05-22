@@ -3,7 +3,9 @@ apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
+apply plugin: 'kotlinx-serialization'
 apply from: '../tests.gradle'
+apply from: '../secrets.gradle'
 
 android {
     compileSdkVersion compileVersion
@@ -13,12 +15,18 @@ android {
         targetSdkVersion targetVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY")
+        buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN")
+        buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL")
+        buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME")
+        buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD")
     }
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -46,18 +54,30 @@ android {
     productFlavors {
         develop {
             dimension 'default'
+
+            buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
+            buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
         }
 
         soralution {
             dimension 'default'
+
+            buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
+            buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
         }
 
         tsting {
             dimension 'default'
+
+            buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
+            buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
         }
 
         production {
             dimension 'default'
+
+            buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_RELEASE")
+            buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_RELEASE")
         }
     }
 }
@@ -66,11 +86,10 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":soracrypro")
 
-    implementation kotlinDep
-
     implementation activityKtxDep
     implementation coreKtxDep
     implementation androidDep
+    implementation appCompatResourcesDep
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
@@ -78,7 +97,12 @@ dependencies {
     implementation coroutineAndroidDep
     implementation coroutineDep
 
+    implementation uiCoreDep
+
+    implementation kotlinxSerializationJsonDep
+
     implementation googlePlayCoreDep
+    implementation coilSvgDep
 
     implementation xNetworkingDep
     implementation webSocketLibDep
@@ -98,8 +122,6 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation neumorphismDep
-
     implementation gsonDep
 
     implementation platform(firebaseBomDep)
@@ -111,13 +133,22 @@ dependencies {
     implementation lazySodiumDep
     implementation jnaDep
 
+    implementation coilDep
+    implementation coilComposeDep
+
+    implementation(soraCardDep) {
+        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
+    }
+
+    implementation composeActivityDep
     implementation composeUiDep
     implementation composeLiveDataDep
     implementation composeFoundationDep
     implementation composeMaterialDep
+    implementation composeConstraintLayoutDep
     implementation composeAnimationGraphicsDep
     implementation composeToolingPreviewDep
-    implementation composeNeumorphDep
+    implementation accompanistNavAnimationDep
     debugImplementation composeToolingDep
 
     testImplementation project(":test_shared")

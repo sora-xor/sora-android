@@ -5,13 +5,16 @@
 
 package jp.co.soramitsu.common.presentation.compose.webview
 
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.base.SoraBaseFragment
 import javax.inject.Inject
+import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.base.theOnlyRoute
 
 @AndroidEntryPoint
 class WebViewFragment : SoraBaseFragment<WebViewViewModel>() {
@@ -27,8 +30,18 @@ class WebViewFragment : SoraBaseFragment<WebViewViewModel>() {
         )
     }
 
-    @Composable
-    override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        WebView(viewModel)
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.content(
+        scrollState: ScrollState,
+        navController: NavHostController
+    ) {
+        composable(
+            route = theOnlyRoute,
+        ) {
+            WebView(
+                viewModel.state,
+                viewModel::onPageFinished,
+            )
+        }
     }
 }

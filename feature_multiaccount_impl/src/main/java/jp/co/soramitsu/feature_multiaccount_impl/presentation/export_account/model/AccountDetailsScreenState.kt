@@ -9,5 +9,6 @@ import jp.co.soramitsu.ui_core.component.input.InputTextState
 
 data class AccountDetailsScreenState(
     val accountNameState: InputTextState,
-    val isMnemonicAvailable: Boolean
+    val isMnemonicAvailable: Boolean,
+    val address: String,
 )

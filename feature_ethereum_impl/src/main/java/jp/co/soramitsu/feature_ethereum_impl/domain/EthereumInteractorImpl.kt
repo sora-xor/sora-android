@@ -5,14 +5,14 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.domain
 
+import java.math.BigDecimal
+import java.math.BigInteger
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
 import jp.co.soramitsu.feature_ethereum_api.domain.model.Gas
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
-import java.math.BigDecimal
-import java.math.BigInteger
 
 class EthereumInteractorImpl(
     private val ethereumRepository: EthereumRepository,

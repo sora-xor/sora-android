@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -20,8 +21,6 @@ import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMap
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.EthereumRepositoryImpl
 import jp.co.soramitsu.feature_ethereum_impl.data.repository.datasource.PrefsEthereumDatasource
 import jp.co.soramitsu.feature_ethereum_impl.domain.EthereumInteractorImpl
-import jp.co.soramitsu.feature_ethereum_impl.domain.EthereumStatusObserver
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,15 +51,6 @@ class EthereumFeatureModule {
         credentialsRepository: CredentialsRepository,
     ): EthereumInteractor {
         return EthereumInteractorImpl(ethereumRepository, credentialsRepository)
-    }
-
-    @Singleton
-    @Provides
-    fun provideEthereumStatusObserver(
-        ethereumRepository: EthereumRepository,
-        credentialsRepository: CredentialsRepository
-    ): EthereumStatusObserver {
-        return EthereumStatusObserver(ethereumRepository, credentialsRepository)
     }
 
     @Singleton

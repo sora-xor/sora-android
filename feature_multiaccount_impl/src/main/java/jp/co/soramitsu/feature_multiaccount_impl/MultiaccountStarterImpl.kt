@@ -5,16 +5,17 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl
 
-import androidx.navigation.NavController
+import android.content.Context
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.OnboardingActivity
 
 class MultiaccountStarterImpl : MultiaccountStarter {
 
-    override fun startCreateAccount(navController: NavController) {
-        navController.navigate(R.id.create_account_nav_graph)
+    override fun startOnboardingFlow(context: Context, isClearTask: Boolean) {
+        OnboardingActivity.start(context, isClearTask)
     }
 
-    override fun startRecoveryAccount(navController: NavController) {
-        navController.navigate(R.id.recovery_account_nav_graph)
+    override fun startOnboardingFlowWithInviteLink(context: Context) {
+        OnboardingActivity.startWithInviteLink(context)
     }
 }

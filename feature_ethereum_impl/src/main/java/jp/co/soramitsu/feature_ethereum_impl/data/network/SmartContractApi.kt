@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.network
 
+import java.math.BigDecimal
+import java.math.BigInteger
 import jp.co.soramitsu.feature_ethereum_impl.util.GasProvider
 import org.web3j.abi.TypeReference
 import org.web3j.abi.Utils
@@ -21,8 +23,6 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.tx.Contract
 import org.web3j.tx.FastRawTransactionManager
 import org.web3j.utils.Convert
-import java.math.BigDecimal
-import java.math.BigInteger
 
 class SmartContractApi(
     web3j: Web3j,
@@ -104,7 +104,7 @@ class SmartContractApi(
         s: List<ByteArray>,
         from: String,
         tokenAddress: String
-    ): org.web3j.abi.datatypes.Function {
+    ): Function {
         return Function(
             FUNC_MINTTOKENSBYPEERS,
             listOf(

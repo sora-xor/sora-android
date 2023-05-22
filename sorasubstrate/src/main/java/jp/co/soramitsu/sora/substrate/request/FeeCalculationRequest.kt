@@ -11,3 +11,8 @@ class FeeCalculationRequest(submittableExtrinsic: String) : RuntimeRequest(
     method = "payment_queryInfo",
     params = listOf(submittableExtrinsic)
 )
+
+class FeeCalculationRequest2(extrinsicInHex: String) : RuntimeRequest(
+    method = "payment_queryFeeDetails",
+    params = listOf(extrinsicInHex)
+)
