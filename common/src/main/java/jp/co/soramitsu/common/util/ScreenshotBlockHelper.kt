@@ -22,6 +22,8 @@ class ScreenshotBlockHelper(
     }
 
     private fun setSecureEnabled(enabled: Boolean) {
+        if (!BuildUtils.isPlayMarket()) return
+
         val changed = isSecureEnabled() != enabled
         if (changed) {
             updateSecureFlags(enabled)
@@ -46,5 +48,6 @@ class ScreenshotBlockHelper(
         }
     }
 
-    private fun isSecureEnabled() = (activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE) != 0
+    private fun isSecureEnabled() =
+        (activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_SECURE) != 0
 }

@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 class PushHandler {
 
-    private val pushEvents = MutableSharedFlow<String>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val pushEvents =
+        MutableSharedFlow<String>(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
     fun observeNewPushes(): Flow<String> {
         return pushEvents.asSharedFlow()

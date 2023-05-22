@@ -5,9 +5,7 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import io.mockk.mockkObject
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
-import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue
@@ -16,25 +14,27 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.given
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
 class InvitationInteractorTest {
 
     @Mock
-    private lateinit var userRepository: UserRepository
+    private lateinit var manager: SoraConfigManager
 
     private lateinit var interactor: InvitationInteractor
 
+    private val invitationLink = "github.io"
+
     @Before
-    fun setUp() {
-        interactor = InvitationInteractor(userRepository)
+    fun setUp() = runTest {
+        given(manager.getInviteLink()).willReturn(invitationLink)
+        interactor = InvitationInteractor(manager)
     }
 
     @Test
     fun `getInviteLink() calls getInvitationLink from userRepository`() = runTest {
-        val invitationLink = "github.io"
-        mockkObject(FlavorOptionsProvider)
         val link = interactor.getInviteLink()
         assertTrue(link.contains(invitationLink))
     }

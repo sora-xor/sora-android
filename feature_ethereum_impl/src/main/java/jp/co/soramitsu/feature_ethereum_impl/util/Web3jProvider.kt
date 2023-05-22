@@ -5,14 +5,14 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.util
 
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Singleton
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.JsonRpc2_0Web3j
 import org.web3j.protocol.http.HttpService
-import javax.inject.Inject
-import javax.inject.Named
-import javax.inject.Singleton
 
 @Singleton
 class Web3jProvider @Inject constructor(

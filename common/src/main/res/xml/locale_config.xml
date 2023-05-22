@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The locale tags must follow the BCP47 syntax, which is usually {language subtag}–{script subtag}–{country subtag}. Anything other than that will be filtered out by the system and won't be visible in the system settings. -->
+<!-- https://android-developers.googleblog.com/2022/11/per-app-language-preferences-part-1.html -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ru" />
+    <locale android:name="es" />
+    <locale android:name="fr" />
+    <locale android:name="de" />
+    <locale android:name="nb" />
+    <locale android:name="zh-CN" />
+    <locale android:name="in" />
+    <locale android:name="tr" />
+</locale-config>

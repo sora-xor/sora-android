@@ -9,20 +9,22 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.base.SoraBaseFragment
-import jp.co.soramitsu.common.util.ShareUtil
-import jp.co.soramitsu.common.util.ext.onBackPressed
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
-import jp.co.soramitsu.feature_multiaccount_impl.R
-import jp.co.soramitsu.feature_multiaccount_impl.util.address
-import jp.co.soramitsu.feature_multiaccount_impl.util.type
 import javax.inject.Inject
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.presentation.args.address
+import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_multiaccount_impl.util.type
 
 @AndroidEntryPoint
 class BackupFragment : SoraBaseFragment<BackupViewModel>() {
@@ -39,30 +41,31 @@ class BackupFragment : SoraBaseFragment<BackupViewModel>() {
         }
     }
 
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.content(
+        scrollState: ScrollState,
+        navController: NavHostController
+    ) {
+        composable(
+            route = theOnlyRoute,
+        ) {
+            viewModel.backupScreenState.observeAsState().value?.let {
+                BackupScreen(
+                    state = it,
+                    onButtonPressed = viewModel::backupPressed,
+                )
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewModel.toggleShareDialog.observe { message ->
-            ShareUtil.shareText(requireContext(), getString(R.string.common_share), message)
+        viewModel.copyEvent.observe {
+            Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
         }
-
-        onBackPressed {
-            viewModel.onToolbarNavigation()
-        }
-
         return super.onCreateView(inflater, container, savedInstanceState)
-    }
-
-    @Composable
-    override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        viewModel.backupScreenState.observeAsState().value?.let {
-            BackupScreen(state = it, viewModel = viewModel)
-        }
-    }
-
-    override fun onToolbarNavigation() {
-        viewModel.onToolbarNavigation()
     }
 }

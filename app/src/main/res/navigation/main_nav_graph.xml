@@ -7,46 +7,46 @@
 
     <fragment
         android:id="@+id/updateFlexibleFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.FlexibleUpdateDialog"
-        tools:layout="@layout/dialog_flexible_update" />
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.inappupdate.FlexibleUpdateDialog" />
 
     <fragment
         android:id="@+id/pincodeFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment"
-        tools:layout="@layout/fragment_pincode" />
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PincodeFragment"/>
 
     <fragment
-        android:id="@+id/pincodeLengthInfoFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.pincode.PinLengthInfoFragment" />
-
-    <fragment
-        android:id="@+id/userVerificationFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.userverification.UserVerificationFragment"
-        tools:layout="@layout/fragment_user_verification" />
-
-    <fragment
-        android:id="@+id/unsupportedVersionFragment"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.version.UnsupportedVersionFragment"
-        tools:layout="@layout/fragment_unsupported_version" />
+        android:id="@+id/swapFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapFragment" />
 
     <fragment
         android:id="@+id/claimFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment"
-        tools:layout="@layout/fragment_claim" />
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.claim.ClaimFragment" />
 
     <fragment
         android:id="@+id/webViewFragment"
         android:name="jp.co.soramitsu.common.presentation.compose.webview.WebViewFragment" />
 
-    <include app:graph="@navigation/parliament_nav_graph" />
-    <include app:graph="@navigation/polkaswap_nav_graph" />
+    <fragment
+        android:id="@+id/invest_nav_graph"
+        android:name="jp.co.soramitsu.feature_main_impl.presentation.discover.DiscoverFragment" />
+
+    <fragment
+        android:id="@+id/addLiquidityFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddFragment" />
+
+    <fragment
+        android:id="@+id/txDetailsFragment"
+        android:name="jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails.TxDetailsFragment" />
+
+    <fragment
+        android:id="@+id/buyCryptoFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.buycrypto.BuyCryptoFragment" />
+
+    <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />
-    <include app:graph="@navigation/staking_nav_graph" />
     <include app:graph="@navigation/wallet_nav_graph" />
-    <include app:graph="@navigation/create_account_nav_graph" />
-    <include app:graph="@navigation/recovery_account_nav_graph" />
     <include app:graph="@navigation/referral_nav_graph" />
     <include app:graph="@navigation/export_account_nav_graph" />
     <include app:graph="@navigation/select_node_nav_graph" />
+    <include app:graph="@navigation/sora_card_nav_graph" />
 
 </navigation>

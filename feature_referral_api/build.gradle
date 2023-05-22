@@ -22,6 +22,13 @@ android {
         jvmTarget = JavaVersion.VERSION_1_8
     }
 
+    buildTypes {
+        release {
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
     flavorDimensions "default"
 
     productFlavors {
@@ -47,6 +54,9 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":common")
     implementation project(":sorasubstrate")
+    implementation project(":feature_wallet_api")
+    implementation project(":feature_blockexplorer_api")
+
     implementation navigationFragmentDep
     implementation navigationUiDep
 

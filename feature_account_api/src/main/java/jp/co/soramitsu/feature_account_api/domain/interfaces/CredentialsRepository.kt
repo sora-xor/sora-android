@@ -35,7 +35,5 @@ interface CredentialsRepository {
 
     suspend fun getAddressForMigration(): String
 
-    suspend fun isAddressOk(address: String): Boolean
-
     suspend fun generateJson(accounts: List<SoraAccount>, password: String): String
 }

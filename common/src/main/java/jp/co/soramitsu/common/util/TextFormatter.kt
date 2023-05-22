@@ -13,12 +13,12 @@ class TextFormatter {
 
         val firstWord = strings.first()
         if (firstWord.isNotEmpty()) {
-            stringBuilder.append(firstWord[0].toUpperCase())
+            stringBuilder.append(firstWord[0].uppercaseChar())
         }
 
         val lastWord = strings.last()
         if (lastWord.isNotEmpty()) {
-            stringBuilder.append(lastWord[0].toUpperCase())
+            stringBuilder.append(lastWord[0].uppercaseChar())
         }
 
         return stringBuilder.toString()

@@ -21,14 +21,18 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import javax.inject.Inject
 
 @HiltWorker
-class ClaimWorker @AssistedInject constructor(@Assisted val appContext: Context, @Assisted workerParams: WorkerParameters) :
+class ClaimWorker @AssistedInject constructor(
+    @Assisted val appContext: Context,
+    @Assisted workerParams: WorkerParameters
+) :
     CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -81,13 +85,13 @@ class ClaimWorker @AssistedInject constructor(@Assisted val appContext: Context,
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            var notificationChannel = notificationManager?.getNotificationChannel(CHANNEL_ID)
+        if (BuildUtils.sdkAtLeast(Build.VERSION_CODES.O)) {
+            var notificationChannel = notificationManager.getNotificationChannel(CHANNEL_ID)
             if (notificationChannel == null) {
                 notificationChannel = NotificationChannel(
                     CHANNEL_ID, TAG, NotificationManager.IMPORTANCE_LOW
                 )
-                notificationManager?.createNotificationChannel(notificationChannel)
+                notificationManager.createNotificationChannel(notificationChannel)
             }
         }
     }

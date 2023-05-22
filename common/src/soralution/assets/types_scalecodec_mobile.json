@@ -13,8 +13,8 @@
         "Phase": "frame_system::Phase",
         "Address": "GenericAccountId",
         "ExtrinsicSignature": "sp_runtime::MultiSignature",
-        "framenode_runtime::Event": "GenericEvent",
-        "framenode_runtime::Call": "GenericCall",
+        "framenode_runtime::RuntimeEvent": "GenericEvent",
+        "framenode_runtime::RuntimeCall": "GenericCall",
         "sp_core::crypto::AccountId32": "GenericAccountId"
       }
     }

@@ -5,27 +5,44 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import android.annotation.SuppressLint
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.networkStateFlow
-import jp.co.soramitsu.fearless_utils.wsrpc.socket.StateObserver
 import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 
-@SuppressLint("CheckResult")
 class WsConnectionManager(
     private val socket: SocketService,
     private val appStateProvider: AppStateProvider,
     private val coroutineManager: CoroutineManager,
+    private val networkStateListener: NetworkStateListener,
+    @ApplicationContext private val context: Context
 ) : ConnectionManager {
 
     private lateinit var address: String
+
+    private val socketState =
+        MutableStateFlow<SocketStateMachine.State>(SocketStateMachine.State.Disconnected)
+
+    private val connectivityManagerState =
+        networkStateListener.subscribe(context).stateIn(
+            coroutineManager.applicationScope,
+            SharingStarted.Eagerly,
+            NetworkStateListener.State.DISCONNECTED
+        )
 
     override fun setAddress(address: String) {
         this.address = address
@@ -38,58 +55,46 @@ class WsConnectionManager(
                 when (it) {
                     AppStateProvider.AppEvent.ON_CREATE -> {
                         if (this::address.isInitialized) {
-                            start(address)
+                            socket.start(address, true)
                         }
                     }
                     AppStateProvider.AppEvent.ON_RESUME -> {
-                        resume()
+                        socket.resume()
                     }
                     AppStateProvider.AppEvent.ON_PAUSE -> {
-                        pause()
+                        socket.pause()
                     }
                     AppStateProvider.AppEvent.ON_DESTROY -> {
-                        stop()
+                        socket.stop()
                     }
                 }
             }
             .launchIn(coroutineManager.applicationScope)
-    }
 
-    override fun connectionState(): Flow<Boolean> {
-        return socket.networkStateFlow()
-            .map { state ->
-                state is SocketStateMachine.State.Connected
+        socket.networkStateFlow()
+            .onEach {
+                socketState.value = it
             }
-            .distinctUntilChanged()
+            .launchIn(coroutineManager.applicationScope)
     }
 
-    override fun networkState(): Flow<SocketStateMachine.State> {
-        return socket.networkStateFlow()
-    }
+    override val isConnected: Boolean
+        get() = socketState.value is SocketStateMachine.State.Connected
 
-    override fun start(url: String) {
-        address = url
-        socket.start(url, true)
-    }
+    override val isNetworkAvailable: Boolean
+        get() = connectivityManagerState.value === NetworkStateListener.State.CONNECTED
 
-    override fun isStarted(): Boolean = socket.started()
+    override val connectionState: Flow<Boolean> =
+        socketState.asStateFlow().map { it is SocketStateMachine.State.Connected }
+
+    override val networkState: StateFlow<SocketStateMachine.State> =
+        socketState.asStateFlow()
+
+    override val isStarted: Boolean
+        get() = socket.started()
 
     override fun switchUrl(url: String) {
         address = url
         socket.switchUrl(url)
-    }
-
-    override fun stop() = socket.stop()
-
-    override fun pause() = socket.pause()
-
-    override fun resume() = socket.resume()
-
-    override fun addStateObserver(stateObserver: StateObserver) {
-        socket.addStateObserver(stateObserver)
-    }
-
-    override fun removeStateObserver(stateObserver: StateObserver) {
-        socket.removeStateObserver(stateObserver)
     }
 }

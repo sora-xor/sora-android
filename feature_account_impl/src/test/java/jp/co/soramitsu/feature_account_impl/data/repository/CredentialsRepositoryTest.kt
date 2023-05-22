@@ -27,6 +27,7 @@ import jp.co.soramitsu.fearless_utils.encrypt.seed.substrate.SubstrateSeedFactor
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
@@ -67,6 +68,9 @@ class CredentialsRepositoryTest {
     lateinit var runtimeManager: RuntimeManager
 
     @MockK
+    lateinit var soraConfigManager: SoraConfigManager
+
+    @MockK
     lateinit var jsonAccountsEncoder: JsonAccountsEncoder
 
     @Before
@@ -76,7 +80,8 @@ class CredentialsRepositoryTest {
                 datasource,
                 cryptoAssistant,
                 runtimeManager,
-                jsonAccountsEncoder
+                jsonAccountsEncoder,
+                soraConfigManager,
             )
     }
 

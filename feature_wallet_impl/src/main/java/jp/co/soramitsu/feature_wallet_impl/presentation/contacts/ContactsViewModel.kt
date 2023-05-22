@@ -6,27 +6,25 @@
 package jp.co.soramitsu.feature_wallet_impl.presentation.contacts
 
 import android.net.Uri
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.interfaces.WithProgress
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
-import jp.co.soramitsu.common.presentation.trigger
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.R
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactListItem
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.ContactMenuItem
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.adapter.EthListItem
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.qr.QrCodeDecoder
+import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
-import javax.inject.Inject
 
 @HiltViewModel
 class ContactsViewModel @Inject constructor(
@@ -35,170 +33,127 @@ class ContactsViewModel @Inject constructor(
     private val qrCodeDecoder: QrCodeDecoder,
     private val resourceManager: ResourceManager,
     private val avatarGenerator: AccountAvatarGenerator,
-    private val withProgress: WithProgress,
-) : BaseViewModel(), WithProgress by withProgress {
+) : BaseViewModel() {
 
-    val contactsLiveData = MutableLiveData<List<Any>>()
-    val emptySearchResultVisibilityLiveData = MutableLiveData<Boolean>()
-    val emptyContactsVisibilityLiveData = MutableLiveData<Boolean>()
-
-    private val _initiateScannerLiveData = SingleLiveEvent<Unit>()
-    val initiateScanner: LiveData<Unit> = _initiateScannerLiveData
-
-    private val _initiateGalleryChooserLiveData = SingleLiveEvent<Unit>()
-    val chooseGallery: LiveData<Unit> = _initiateGalleryChooserLiveData
-
-    private val _showChooserEvent = SingleLiveEvent<Unit>()
-    val showChooser: LiveData<Unit> = _showChooserEvent
-
-    private val ethereumAddressLiveData = MutableLiveData<String>()
-
-    private val _qrErrorLiveData = SingleLiveEvent<Int>()
-    val qrErrorLiveData: LiveData<Int> = _qrErrorLiveData
+    internal var state by mutableStateOf(
+        ContactsState(
+            accounts = emptyList(),
+            input = InputTextState(
+                value = TextFieldValue(""),
+                label = resourceManager.getString(R.string.select_account_address_1),
+                trailingIcon = R.drawable.ic_scan_wrapped,
+            ),
+            hint = R.string.recent_recipients,
+            myAddress = false,
+        )
+    )
 
     init {
-        getContacts(true)
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.select_recipient,
+        )
+        searchUser("")
     }
 
-    fun backButtonPressed() {
-        router.popBackStackFragment()
+    fun search(contents: TextFieldValue) {
+        state = state.copy(
+            input = state.input.copy(
+                trailingIcon = if (contents.text.isEmpty()) R.drawable.ic_scan_wrapped else R.drawable.ic_close,
+                value = contents,
+            ),
+            isSearchEntered = contents.text.isNotEmpty(),
+            myAddress = false,
+        )
+        searchUser(contents.text)
     }
 
-    fun getContacts(showLoading: Boolean) {
+    fun onCloseSearchClicked() {
+        state = state.copy(
+            input = state.input.copy(
+                trailingIcon = R.drawable.ic_scan_wrapped,
+                value = TextFieldValue(),
+            ),
+            isSearchEntered = false,
+            myAddress = false,
+        )
+        searchUser("")
+    }
+
+    private fun searchUser(userRequest: String) {
         viewModelScope.launch {
-            if (showLoading) showProgress()
-            try {
-                searchUser("")
-            } catch (t: Throwable) {
-                onError(t)
-            } finally {
-                if (showLoading) hideProgress()
-            }
+            val accounts = interactor.getContacts(userRequest)
+                ?.map {
+                    ContactsListItem(it, avatarGenerator.createAvatar(it, 40))
+                }
+            state = state.copy(
+                accounts = accounts.orEmpty(),
+                hint = when {
+                    (accounts == null) || (state.input.value.text.isNotEmpty() && accounts.isEmpty()) -> {
+                        R.string.address_not_found_1
+                    }
+                    state.input.value.text.isEmpty() && accounts.isEmpty() -> {
+                        R.string.empty_recent_recipients_2
+                    }
+                    state.input.value.text.isEmpty() && accounts.isNotEmpty() -> {
+                        R.string.recent_recipients
+                    }
+                    else -> {
+                        R.string.contacts_search_results
+                    }
+                },
+                myAddress = accounts == null,
+            )
         }
     }
-
-    fun search(contents: String) {
-        viewModelScope.launch {
-            showProgress()
-            emptySearchResultVisibilityLiveData.value = false
-            emptyContactsVisibilityLiveData.value = false
-            try {
-                searchUser(contents)
-            } catch (t: Throwable) {
-                onError(t)
-            } finally {
-                hideProgress()
-            }
-        }
-    }
-
-    private suspend fun searchUser(userRequest: String) {
-        val accounts = interactor.getContacts(userRequest)
-            .map {
-                ContactListItem(it, avatarGenerator.createAvatar(it.address, 35))
-            }
-        accounts.lastOrNull()?.isLast = true
-        contactsLiveData.value = accounts
-        emptySearchResultVisibilityLiveData.value = accounts.isEmpty()
-    }
-
-//    private fun proccessEthAddress(contents: String) {
-//        val list = mutableListOf<Any>().apply {
-//            add(
-//                ContactMenuItem(
-//                    R.drawable.ic_val_black_24,
-//                    R.string.wallet_val_to_my_eth,
-//                    ContactMenuItem.Type.VAL_TO_MY_ETH
-//                )
-//            )
-//            add(EthListItem(contents))
-//        }
-//        emptySearchResultVisibilityLiveData.value = false
-//        emptyContactsVisibilityLiveData.value = false
-//        emptySearchResultVisibilityLiveData.value = false
-//        contactsLiveData.value = list
-//    }
 
     fun qrResultProcess(contents: String) {
         viewModelScope.launch {
-            showProgress()
-            emptySearchResultVisibilityLiveData.value = false
-            emptyContactsVisibilityLiveData.value = false
             try {
                 val qr = interactor.processQr(contents)
-                router.showValTransferAmount(qr.first, qr.second, BigDecimal.ZERO)
-            } catch (t: Throwable) {
-                handleQrErrors(t)
-            } finally {
-                hideProgress()
+                router.showValTransferAmount(qr.first, qr.second)
+            } catch (throwable: Throwable) {
+                handleError(throwable)
             }
         }
     }
 
-    fun contactClicked(accountId: String, assetId: String) {
-        router.showValTransferAmount(accountId, assetId, BigDecimal.ZERO)
-    }
-
-    fun openCamera() {
-        _initiateScannerLiveData.trigger()
-    }
-
-    fun openGallery() {
-        _initiateGalleryChooserLiveData.trigger()
+    fun onContactClick(accountId: String, tokenId: String?) {
+        router.showValTransferAmount(
+            accountId,
+            tokenId ?: SubstrateOptionsProvider.feeAssetId,
+        )
     }
 
     fun decodeTextFromBitmapQr(data: Uri) {
-        viewModelScope.launch {
-            try {
-                val decoded = qrCodeDecoder.decodeQrFromUri(data)
-                qrResultProcess(decoded)
-            } catch (t: Throwable) {
-                handleQrErrors(t)
-            }
+        try {
+            val decoded = qrCodeDecoder.decodeQrFromUri(data)
+            qrResultProcess(decoded)
+        } catch (throwable: Throwable) {
+            handleError(throwable)
         }
     }
 
-    private fun handleQrErrors(throwable: Throwable) {
+    private fun handleError(throwable: Throwable) {
         if (throwable is QrException) {
             when (throwable.kind) {
                 QrException.Kind.USER_NOT_FOUND ->
-                    _qrErrorLiveData.value =
-                        R.string.invoice_scan_error_user_not_found
+                    alertDialogLiveData.value =
+                        resourceManager.getString(R.string.status_error) to resourceManager.getString(
+                            R.string.invoice_scan_error_user_not_found
+                        )
                 QrException.Kind.SENDING_TO_MYSELF ->
-                    _qrErrorLiveData.value =
-                        R.string.invoice_scan_error_match
+                    alertDialogLiveData.value =
+                        resourceManager.getString(R.string.status_error) to resourceManager.getString(
+                            R.string.invoice_scan_error_match
+                        )
                 QrException.Kind.DECODE_ERROR ->
-                    _qrErrorLiveData.value =
-                        R.string.invoice_scan_error_no_info
+                    alertDialogLiveData.value =
+                        resourceManager.getString(R.string.status_error) to resourceManager.getString(
+                            R.string.invoice_scan_error_no_info
+                        )
             }
         } else {
             onError(throwable)
-        }
-    }
-
-    fun menuItemClicked(it: ContactMenuItem) {
-        when (it.type) {
-            ContactMenuItem.Type.VAL_TO_MY_ETH -> showValtoErcTransfer()
-        }
-    }
-
-    private fun showValtoErcTransfer() {
-        ethereumAddressLiveData.value?.let {
-            router.showValWithdrawToErc(it, BigDecimal.ZERO)
-        }
-    }
-
-    fun qrMenuItemClicked() {
-        _showChooserEvent.trigger()
-    }
-
-    fun ethItemClicked(item: EthListItem) {
-        ethereumAddressLiveData.value?.let {
-            if (it == item.ethereumAddress) {
-                router.showValWithdrawToErc(it, BigDecimal.ZERO)
-            } else {
-                router.showValERCTransferAmount(item.ethereumAddress, BigDecimal.ZERO)
-            }
         }
     }
 }

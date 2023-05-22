@@ -7,16 +7,16 @@ package jp.co.soramitsu.common.date
 
 import android.content.Context
 import android.text.format.DateUtils
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.resourses.ResourceManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 import java.util.concurrent.TimeUnit
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.resourses.LanguagesHolder
+import jp.co.soramitsu.common.resourses.ResourceManager
 
 class DateTimeFormatter(
-    private val locale: Locale,
+    private val languagesHolder: LanguagesHolder,
     private val resourceManager: ResourceManager,
     private val context: Context,
 ) {
@@ -24,6 +24,7 @@ class DateTimeFormatter(
     companion object {
         const val DD_MMM_YYYY = "dd MMM yyyy"
         const val DD_MMMM_YYYY = "dd MMMM yyyy"
+        const val DD_MMM_YYYY_HH_MM = "dd MMM. yyyy, HH:mm"
         const val DD_MMM_YYYY_HH_MM_SS = "dd/MM/yy HH:mm:ss"
         const val DD_MMM_YYYY_HH_MM_SS_2 = "dd.MM.yy, HH:mm:ss"
         const val MMMM_YYYY = "MMMM YYYY"
@@ -38,7 +39,7 @@ class DateTimeFormatter(
             .toString()
 
     fun formatDate(date: Date, dateFormat: String): String {
-        return SimpleDateFormat(dateFormat, locale).format(date)
+        return SimpleDateFormat(dateFormat, languagesHolder.getCurrentLocale()).format(date)
     }
 
     fun formatTimeWithoutSeconds(date: Date): String {
@@ -50,7 +51,7 @@ class DateTimeFormatter(
     }
 
     private fun formatTime(date: Date, pattern: String): String {
-        return SimpleDateFormat(pattern, locale).format(date)
+        return SimpleDateFormat(pattern, languagesHolder.getCurrentLocale()).format(date)
     }
 
     fun dateToDayWithoutCurrentYear(date: Date, todayStr: String, yesterdayStr: String): String {

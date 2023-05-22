@@ -13,5 +13,6 @@ data class PoolDataDto(
     val reservesFirst: BigInteger,
     val reservesSecond: BigInteger,
     val totalIssuance: BigInteger,
-    val poolProvidersBalance: BigInteger
+    val poolProvidersBalance: BigInteger,
+    val reservesAccount: String,
 )

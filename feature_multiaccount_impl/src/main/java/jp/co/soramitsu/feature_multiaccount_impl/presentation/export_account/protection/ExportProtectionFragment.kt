@@ -5,21 +5,22 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection
 
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.base.SoraBaseFragment
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
-import jp.co.soramitsu.feature_multiaccount_impl.util.address
-import jp.co.soramitsu.feature_multiaccount_impl.util.addresses
-import jp.co.soramitsu.feature_multiaccount_impl.util.type
 import javax.inject.Inject
+import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.presentation.args.address
+import jp.co.soramitsu.common.presentation.args.addresses
+import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_multiaccount_impl.util.type
 
-@OptIn(ExperimentalUnitApi::class)
 @AndroidEntryPoint
 class ExportProtectionFragment : SoraBaseFragment<ExportProtectionViewModel>() {
 
@@ -36,10 +37,21 @@ class ExportProtectionFragment : SoraBaseFragment<ExportProtectionViewModel>() {
         }
     }
 
-    @Composable
-    override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        viewModel.exportProtectionScreenState.observeAsState().value?.let {
-            ExportProtectionScreen(state = it, viewModel = viewModel)
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.content(
+        scrollState: ScrollState,
+        navController: NavHostController
+    ) {
+        composable(
+            route = theOnlyRoute,
+        ) {
+            viewModel.exportProtectionScreenState.observeAsState().value?.let {
+                ExportProtection(
+                    state = it,
+                    onItemClicked = viewModel::onItemClicked,
+                    continueClicked = viewModel::continueClicked,
+                )
+            }
         }
     }
 }

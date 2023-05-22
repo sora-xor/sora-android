@@ -6,31 +6,32 @@
 package jp.co.soramitsu.feature_select_node_impl.data
 
 import androidx.room.withTransaction
+import javax.inject.Inject
+import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.NodeLocal
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import jp.co.soramitsu.feature_select_node_impl.compareWithUrl
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
-import jp.co.soramitsu.xnetworking.sorawallet.envbuilder.SoraEnvBuilder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 internal class SelectNodeRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
-    private val soraEnvBuilder: SoraEnvBuilder,
     private val converter: NodeConverter,
-    private val calls: SubstrateCalls
+    private val calls: SubstrateCalls,
+    private val soraConfigManager: SoraConfigManager,
 ) : SelectNodeRepository {
 
-    override suspend fun fetchDefaultNodes(): List<Node> =
+    override suspend fun fetchDefaultNodes(): List<ChainNode> =
         db.withTransaction {
-            val selectedNodeAddress = db.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
+            val selectedNodeAddress =
+                db.nodeDao().getSelectedNode()?.address ?: FlavorOptionsProvider.wsHostUrl
             val customNodes = db.nodeDao().getNodes().filter { !it.isDefault }
             val result = runCatching {
-                soraEnvBuilder.getSoraEnv().nodes
+                soraConfigManager.getNodes()
                     .map { nodeInfo ->
                         NodeLocal(
                             address = "${nodeInfo.address}/",
@@ -41,9 +42,14 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
                         )
                     }
             }
-                .onSuccess {
+                .onSuccess { list ->
+                    val nodes = list + customNodes
+                    val noneSelected = nodes.none { it.isSelected }
                     db.nodeDao().clearTable()
-                    db.nodeDao().insertNodes(it + customNodes)
+                    db.nodeDao().insertNodes(nodes)
+                    if (noneSelected) {
+                        nodes.getOrNull(0)?.address?.let { db.nodeDao().selectNode(it) }
+                    }
                 }
 
             return@withTransaction result.getOrNull()
@@ -53,36 +59,32 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
                 ?: emptyList()
         }
 
-    override fun getNodes(): Flow<List<Node>> =
+    override fun getNodes(): Flow<List<ChainNode>> =
         db.nodeDao().flowNodes()
             .map {
                 it.map { nodeLocal -> converter.convert(nodeLocal) }
             }
 
-    override fun getSelectedNode(): Flow<Node?> {
+    override fun getSelectedNode(): Flow<ChainNode?> {
         return db.nodeDao().flowSelectedNode()
             .map { nodeLocal -> nodeLocal?.let { converter.convert(nodeLocal) } }
     }
 
-    override suspend fun selectNode(selectedNode: Node) {
+    override suspend fun selectNode(selectedNode: ChainNode) {
         db.withTransaction {
             if (db.nodeDao().getSelectedNode()?.address == selectedNode.address) {
                 return@withTransaction
             }
-
-            val nodes = db.nodeDao().getNodes().map {
-                it.copy(isSelected = selectedNode.address == it.address)
-            }
-            db.nodeDao().clearTable()
-            db.nodeDao().insertNodes(nodes)
+            db.nodeDao().resetSelected()
+            db.nodeDao().selectNode(selectedNode.address)
         }
     }
 
-    override suspend fun addCustomNode(node: Node) {
+    override suspend fun addCustomNode(node: ChainNode) {
         db.nodeDao().insertNode(converter.convert(node))
     }
 
-    override suspend fun updateCustomNode(previousAddress: String, node: Node) {
+    override suspend fun updateCustomNode(previousAddress: String, node: ChainNode) {
         db.nodeDao().updateNode(
             oldAddress = previousAddress,
             newName = node.name,

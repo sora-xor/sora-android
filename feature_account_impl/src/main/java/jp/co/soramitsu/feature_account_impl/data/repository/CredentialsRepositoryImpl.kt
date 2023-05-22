@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_account_impl.data.repository
 
+import java.text.Normalizer
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.ResponseCode
@@ -22,20 +23,19 @@ import jp.co.soramitsu.fearless_utils.encrypt.mnemonic.MnemonicCreator
 import jp.co.soramitsu.fearless_utils.encrypt.seed.substrate.SubstrateSeedFactory
 import jp.co.soramitsu.fearless_utils.extensions.fromHex
 import jp.co.soramitsu.fearless_utils.extensions.toHexString
-import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder
-import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
-import java.text.Normalizer
 
 class CredentialsRepositoryImpl constructor(
     private val credentialsPrefs: CredentialsDatasource,
     private val cryptoAssistant: CryptoAssistant,
     private val runtimeManager: RuntimeManager,
     private val jsonSeedEncoder: JsonAccountsEncoder,
+    private val soraConfigManager: SoraConfigManager,
 ) : CredentialsRepository {
 
     private val irohaCash = mutableMapOf<String, IrohaData>()
@@ -179,10 +179,6 @@ class CredentialsRepositoryImpl constructor(
         return address
     }
 
-    override suspend fun isAddressOk(address: String): Boolean =
-        runCatching { address.toAccountId() }.getOrNull() != null &&
-            SS58Encoder.extractAddressByte(address) == runtimeManager.prefix
-
     override suspend fun generateJson(accounts: List<SoraAccount>, password: String): String {
         if (accounts.size == 1) {
             accounts.first().let {
@@ -196,7 +192,7 @@ class CredentialsRepositoryImpl constructor(
                     it.substrateAddress
                 )
 
-                return jsonSeedEncoder.generate(account = exportAccountData, password = password)
+                return jsonSeedEncoder.generate(account = exportAccountData, password = password, genesisHash = soraConfigManager.getGenesis())
             }
         } else {
             val accountsList = accounts.map {
@@ -211,7 +207,7 @@ class CredentialsRepositoryImpl constructor(
                 )
             }
 
-            return jsonSeedEncoder.generate(accountsList, password)
+            return jsonSeedEncoder.generate(accountsList, password, soraConfigManager.getGenesis())
         }
     }
 

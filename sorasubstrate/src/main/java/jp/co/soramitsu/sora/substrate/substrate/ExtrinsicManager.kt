@@ -5,16 +5,17 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
+import java.math.BigInteger
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.runtime.extrinsic.ExtrinsicBuilder
 import jp.co.soramitsu.fearless_utils.runtime.metadata.event
 import jp.co.soramitsu.fearless_utils.runtime.metadata.module
-import jp.co.soramitsu.sora.substrate.models.BlockEvent
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
-import jp.co.soramitsu.sora.substrate.models.PhaseRecord
 import jp.co.soramitsu.sora.substrate.runtime.Events
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
@@ -23,9 +24,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformWhile
-import java.math.BigInteger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class ExtrinsicManager @Inject constructor(
@@ -36,7 +34,7 @@ class ExtrinsicManager @Inject constructor(
 ) {
 
     fun interface WatchingListener {
-        fun onChange(txHash: String, success: Boolean)
+        fun onChange(txHash: String, success: Boolean, block: String?)
     }
 
     private var watchingListener: WatchingListener? = null
@@ -45,7 +43,7 @@ class ExtrinsicManager @Inject constructor(
         from: String,
         useBatchAll: Boolean = false,
         formExtrinsic: suspend ExtrinsicBuilder.() -> Unit,
-    ): BigInteger {
+    ): BigInteger? {
         val builder = factory.create(from)
         builder.formExtrinsic()
         val extrinsic = builder.build(useBatchAll)
@@ -85,6 +83,9 @@ class ExtrinsicManager @Inject constructor(
             .transformWhile { value ->
                 val txHash = value.first
                 val finish = getFinish(value.second, txHash)
+                finish.first?.let {
+                    watchingListener?.onChange(txHash, it, finish.second)
+                }
                 emit(
                     if (txHash.isEmpty()) ExtrinsicSubmitStatus(
                         success = false,
@@ -124,7 +125,7 @@ class ExtrinsicManager @Inject constructor(
                 val txHash = value.first
                 val finish = getFinish(value.second, txHash)
                 finish.first?.let {
-                    watchingListener?.onChange(txHash, it)
+                    watchingListener?.onChange(txHash, it, finish.second)
                 }
                 emit(
                     ExtrinsicSubmitStatus(
@@ -165,13 +166,7 @@ class ExtrinsicManager @Inject constructor(
         blockHash: String,
         txHash: String
     ): Boolean {
-        val blockEvents = calls.checkEvents(blockHash).map {
-            BlockEvent(
-                it.event.moduleIndex,
-                it.event.eventIndex,
-                (it.phase as? PhaseRecord.ApplyExtrinsic)?.extrinsicId?.toLong()
-            )
-        }
+        val blockEvents = calls.checkEvents(blockHash)
         if (blockEvents.isEmpty()) {
             FirebaseWrapper.recordException(Throwable("Events list is empty in blockhash $blockHash via extrinsicId $extrinsicId and txHash $txHash"))
             return false
@@ -183,10 +178,12 @@ class ExtrinsicManager @Inject constructor(
             Pallete.SYSTEM.palletName
         ).event(Events.EXTRINSIC_FAILED.eventName).index
         val successEvent = blockEvents.find { event ->
-            event.module == moduleIndexSuccess && event.event == eventIndexSuccess && event.number == extrinsicId
+            (event.module == moduleIndexSuccess && event.event == eventIndexSuccess && event.number == extrinsicId) ||
+                (event.module == Pallete.SYSTEM.palletName && event.event == Events.EXTRINSIC_SUCCESS.eventName && event.number == extrinsicId)
         }
         val failedEvent = blockEvents.find { event ->
-            event.module == moduleIndexFailed && event.event == eventIndexFailed && event.number == extrinsicId
+            (event.module == moduleIndexFailed && event.event == eventIndexFailed && event.number == extrinsicId) ||
+                (event.module == Pallete.SYSTEM.palletName && event.event == Events.EXTRINSIC_FAILED.eventName && event.number == extrinsicId)
         }
         return when {
             successEvent != null -> {

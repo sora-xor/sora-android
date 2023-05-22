@@ -6,6 +6,11 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<!--    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />-->
 
     <application
         tools:replace="android:allowBackup"
@@ -15,6 +20,7 @@
         android:label="@string/app_name"
         android:name=".SoraApp"
         android:supportsRtl="true"
+        android:localeConfig="@xml/locale_config"
         android:theme="@style/AppTheme">
 
         <activity
@@ -32,15 +38,14 @@
             </intent-filter>
 
             <intent-filter
-                android:autoVerify="true"
-                tools:targetApi="m">
+                android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
 
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
 
                 <data
-                    android:host="ref.sora.org"
+                    android:host="polkaswap.io"
                     android:pathPrefix="${pathPrefix}"
                     android:scheme="https"/>
 
@@ -60,10 +65,12 @@
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.soraFileProvider"
             android:grantUriPermissions="true"
-            android:exported="false">
+            android:exported="false"
+            tools:replace="android:authorities">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
+                android:resource="@xml/provider_paths"
+                tools:replace="android:resource" />
         </provider>
 
         <provider
@@ -78,6 +85,14 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+        
+        <service android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
 
     </application>
 

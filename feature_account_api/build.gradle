@@ -24,8 +24,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -57,7 +57,6 @@ dependencies {
     implementation project(":sorasubstrate")
     implementation fearlessLibDep
 
-    implementation kotlinDep
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation coroutineTestDep

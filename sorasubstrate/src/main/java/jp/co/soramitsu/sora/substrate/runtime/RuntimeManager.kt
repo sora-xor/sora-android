@@ -6,6 +6,9 @@
 package jp.co.soramitsu.sora.substrate.runtime
 
 import com.google.gson.Gson
+import java.math.BigInteger
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
@@ -26,6 +29,8 @@ import jp.co.soramitsu.fearless_utils.runtime.metadata.RuntimeMetadataReader
 import jp.co.soramitsu.fearless_utils.runtime.metadata.builder.VersionedRuntimeBuilder
 import jp.co.soramitsu.fearless_utils.runtime.metadata.module
 import jp.co.soramitsu.fearless_utils.runtime.metadata.v14.RuntimeMetadataSchemaV14
+import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder
+import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAddress
 import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
 import jp.co.soramitsu.fearless_utils.wsrpc.executeAsync
@@ -33,13 +38,12 @@ import jp.co.soramitsu.fearless_utils.wsrpc.mappers.nonNull
 import jp.co.soramitsu.fearless_utils.wsrpc.mappers.pojo
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.chain.RuntimeVersion
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.chain.RuntimeVersionRequest
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.math.BigInteger
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.withContext
 
 private const val DEFAULT_TYPES_FILE = "default_types.json"
 private const val SORA2_TYPES_FILE = "types_scalecodec_mobile.json"
@@ -55,40 +59,44 @@ class RuntimeManager @Inject constructor(
     private val socketService: SocketService,
     private val networkClient: SoramitsuNetworkClient,
     private val coroutineManager: CoroutineManager,
+    private val soraConfigManager: SoraConfigManager,
 ) {
 
     private val mutex = Mutex()
     private var runtimeSnapshot: RuntimeSnapshot? = null
-    private var netRuntimeVersionChecked: Boolean = false
-    private var metadataVersion: Int? = null
-    var prefix: Short = 69
-        private set
-    var specVersion: Int = 0
-        private set
+    private var prefix: Short = 69
 
     init {
         coroutineManager.applicationScope.launch {
-            mutex.withLock {
-                if (runtimeSnapshot == null || !netRuntimeVersionChecked) {
-                    initFromCache()
-                    checkRuntimeVersion()
-                }
-            }
+            getRuntimeSnapshot()
         }
     }
+
+    fun isAddressOk(address: String): Boolean =
+        runCatching { address.toAccountId() }.getOrNull() != null &&
+            SS58Encoder.extractAddressByte(address) == prefix
 
     fun toSoraAddress(byteArray: ByteArray): String = byteArray.toAddress(prefix)
     fun toSoraAddressOrNull(byteArray: ByteArray?): String? =
         runCatching { byteArray?.toAddress(prefix) }.getOrNull()
 
-    @Throws(IllegalArgumentException::class)
-    fun getRuntimeSnapshot(): RuntimeSnapshot =
-        requireNotNull(runtimeSnapshot) { "Runtime is null" }
+    suspend fun getRuntimeSnapshot(): RuntimeSnapshot {
+        return runtimeSnapshot ?: mutex.withLock {
+            runtimeSnapshot ?: createRuntimeSnapshot()
+        }
+    }
 
-    @Throws(IllegalArgumentException::class)
-    fun getMetadataVersion(): Int = requireNotNull(metadataVersion) { "Metadata version is null" }
+    suspend fun resetRuntimeVersion() {
+        soraPreferences.putInt(RUNTIME_VERSION_PREF, 0)
+    }
 
-    private suspend fun initFromCache() {
+    private suspend fun createRuntimeSnapshot(): RuntimeSnapshot = withContext(coroutineManager.io) {
+        var snapshot = initFromCache()
+        snapshot = checkRuntimeVersion(snapshot)
+        snapshot
+    }
+
+    private suspend fun initFromCache() =
         buildRuntimeSnapshot(
             getContentFromCache(RUNTIME_METADATA_FILE),
             MetadataSource.Cache(true),
@@ -97,7 +105,6 @@ class RuntimeManager @Inject constructor(
                 RUNTIME_VERSION_START
             )
         )
-    }
 
     private fun getContentFromCache(fileName: String): String {
         val cache = fileManager.readInternalCacheFile(fileName)
@@ -109,7 +116,8 @@ class RuntimeManager @Inject constructor(
 
     private fun rawTypesToTree(raw: String) = gson.fromJson(raw, TypeDefinitionsTree::class.java)
 
-    private suspend fun checkRuntimeVersion() {
+    private suspend fun checkRuntimeVersion(snapshot: RuntimeSnapshot): RuntimeSnapshot {
+        var result = snapshot
         val runtimeVersion = socketService.executeAsync(
             request = RuntimeVersionRequest(),
             mapper = pojo<RuntimeVersion>().nonNull()
@@ -125,15 +133,14 @@ class RuntimeManager @Inject constructor(
                     request = GetMetadataRequest,
                     mapper = pojo<String>().nonNull()
                 )
-                buildRuntimeSnapshot(metadata, MetadataSource.SoraNet, runtimeVersion.specVersion)
+                result = buildRuntimeSnapshot(metadata, MetadataSource.SoraNet, runtimeVersion.specVersion)
                 saveToCache(RUNTIME_METADATA_FILE, metadata)
                 soraPreferences.putInt(RUNTIME_VERSION_PREF, runtimeVersion.specVersion)
             } catch (t: Throwable) {
                 FirebaseWrapper.recordException(t)
             }
-        } else {
-            netRuntimeVersionChecked = true
         }
+        return result
     }
 
     private fun saveToCache(file: String, content: String) =
@@ -143,7 +150,7 @@ class RuntimeManager @Inject constructor(
         metadata: String,
         metadataSource: MetadataSource,
         runtimeVersion: Int,
-    ) {
+    ): RuntimeSnapshot {
         val runtimeMetadataReader = RuntimeMetadataReader.read(metadata)
         val typeRegistry = when (metadataSource) {
             is MetadataSource.Cache -> {
@@ -160,21 +167,9 @@ class RuntimeManager @Inject constructor(
                 }
             }
             is MetadataSource.SoraNet -> {
-                if (runtimeMetadataReader.metadataVersion < 14) {
-                    val defaultTypes =
-                        networkClient.get("https://raw.githubusercontent.com/polkascan/py-scale-codec/master/scalecodec/type_registry/default.json")
-                    val sora2Types =
-                        networkClient.get("https://raw.githubusercontent.com/sora-xor/sora2-substrate-js-library/master/packages/types/src/metadata/${SubstrateOptionsProvider.typesFilePath}/types_scalecodec_mobile.json")
-                    buildTypeRegistry12(defaultTypes, sora2Types, runtimeVersion).also {
-                        saveToCache(DEFAULT_TYPES_FILE, defaultTypes)
-                        saveToCache(SORA2_TYPES_FILE, sora2Types)
-                    }
-                } else {
-                    val sora2Types =
-                        networkClient.get("https://raw.githubusercontent.com/sora-xor/sora2-substrate-js-library/metadata14/packages/types/src/metadata/${SubstrateOptionsProvider.typesFilePath}/types_scalecodec_mobile.json")
-                    buildTypeRegistry14(sora2Types, runtimeMetadataReader, runtimeVersion).also {
-                        saveToCache(SORA2_TYPES_FILE, sora2Types)
-                    }
+                val sora2Types = networkClient.get(soraConfigManager.getSubstrateTypesUrl())
+                buildTypeRegistry14(sora2Types, runtimeMetadataReader, runtimeVersion).also {
+                    saveToCache(SORA2_TYPES_FILE, sora2Types)
                 }
             }
         }
@@ -182,8 +177,6 @@ class RuntimeManager @Inject constructor(
             VersionedRuntimeBuilder.buildMetadata(runtimeMetadataReader, typeRegistry)
         val snapshot = RuntimeSnapshot(typeRegistry, runtimeMetadata)
         runtimeSnapshot = snapshot
-        metadataVersion = runtimeMetadataReader.metadataVersion
-        netRuntimeVersionChecked = metadataSource is MetadataSource.SoraNet
         val valueConstant =
             snapshot.metadata.module(Pallete.SYSTEM.palletName).constants[Constants.SS58Prefix.constantName]
         prefix = (
@@ -192,8 +185,8 @@ class RuntimeManager @Inject constructor(
                 valueConstant.value
             ) as? BigInteger
             )?.toShort() ?: 69
-        specVersion = runtimeVersion
-        FirebaseWrapper.log("Set Runtime $netRuntimeVersionChecked")
+        FirebaseWrapper.log("Set Runtime Net ${metadataSource is MetadataSource.SoraNet}")
+        return snapshot
     }
 
     private fun buildTypeRegistry12(

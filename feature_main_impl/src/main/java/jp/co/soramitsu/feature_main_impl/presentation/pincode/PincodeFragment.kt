@@ -8,35 +8,35 @@ package jp.co.soramitsu.feature_main_impl.presentation.pincode
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
 import android.widget.TextView
 import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
-import by.kirich1409.viewbindingdelegate.viewBinding
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.composable
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.base.BaseFragment
+import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.io.MainThreadExecutor
+import jp.co.soramitsu.common.presentation.args.addresses
 import jp.co.soramitsu.common.presentation.view.SoraProgressDialog
-import jp.co.soramitsu.common.util.ext.onBackPressed
 import jp.co.soramitsu.common.util.ext.restartApplication
 import jp.co.soramitsu.common.util.ext.runDelayed
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_impl.R
-import jp.co.soramitsu.feature_main_impl.databinding.FragmentPincodeBinding
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintCallback
 import jp.co.soramitsu.feature_main_impl.presentation.pincode.fingerprint.FingerprintWrapper
 import jp.co.soramitsu.feature_main_impl.presentation.util.action
-import jp.co.soramitsu.feature_main_impl.presentation.util.addresses
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
 
 @AndroidEntryPoint
-class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode) {
+class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
 
     companion object {
         private const val DATA_CLEAR_DELAY = 500L
@@ -61,15 +61,10 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
 
     private lateinit var fingerprintDialog: BottomSheetDialog
     private lateinit var progressDialog: SoraProgressDialog
-    private val binding by viewBinding(FragmentPincodeBinding::bind)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-
-        onBackPressed {
-            viewModel.backPressed()
-        }
 
         progressDialog = SoraProgressDialog(requireContext())
 
@@ -80,22 +75,11 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
             findViewById<TextView>(R.id.btnCancel)?.setOnClickListener { fingerprintWrapper.cancel() }
         }
 
-        with(binding.pinCodeView) {
-            pinCodeListener =
-                { viewModel.pinCodeNumberClicked(it, binding.dotsProgressView.maxProgress) }
-            deleteClickListener = { viewModel.pinCodeDeleteClicked() }
-            fingerprintClickListener = { fingerprintWrapper.toggleScanner() }
-        }
-
         viewModel.setBiometryAvailable(fingerprintWrapper.isAuthReady())
 
         initListeners()
 
-        val action = if (viewModel.isReturningFromInfo) {
-            PinCodeAction.CREATE_PIN_CODE
-        } else {
-            requireArguments().action
-        }
+        val action = requireArguments().action
 
         if (action == PinCodeAction.LOGOUT || action == PinCodeAction.OPEN_SEED || action == PinCodeAction.OPEN_JSON || action == PinCodeAction.OPEN_PASSPHRASE) {
             viewModel.addresses = requireArguments().addresses
@@ -118,7 +102,7 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
                 .setMessage(message)
                 .setCancelable(false)
                 .setPositiveButton(R.string.profile_logout_title) { _, _ -> viewModel.logoutOkPressed() }
-                .setNegativeButton(R.string.common_cancel) { _, _ -> viewModel.backPressed() }
+                .setNegativeButton(R.string.common_cancel) { _, _ -> viewModel.onBackPressed() }
                 .show()
         }
         viewModel.biometryInitialDialogEvent.observe {
@@ -126,8 +110,8 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
                 .setTitle(R.string.biometric_dialog_title)
                 .setMessage(R.string.ask_biometry_message)
                 .setCancelable(false)
-                .setPositiveButton(android.R.string.yes) { _, _ -> viewModel.biometryDialogYesClicked() }
-                .setNegativeButton(android.R.string.no) { _, _ -> viewModel.biometryDialogNoClicked() }
+                .setPositiveButton(android.R.string.ok) { _, _ -> viewModel.biometryDialogYesClicked() }
+                .setNegativeButton(android.R.string.cancel) { _, _ -> viewModel.biometryDialogNoClicked() }
                 .show()
         }
         viewModel.resetApplicationEvent.observe {
@@ -156,28 +140,13 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
             if (!it) {
                 fingerprintWrapper.cancel()
             }
-            binding.pinCodeView.changeFingerPrintButtonVisibility(fingerprintWrapper.isAuthReady() && it)
-        }
-        viewModel.toolbarTitleResLiveData.observe {
-            binding.pinCodeTitleTv.text = it
-        }
-        viewModel.wrongPinCodeEventLiveData.observe {
-            playMatchingMnemonicErrorAnimation()
+            viewModel.changeFingerPrintButtonVisibility(fingerprintWrapper.isAuthReady() && it)
         }
         viewModel.fingerPrintDialogVisibilityLiveData.observe {
             if (it) fingerprintDialog.show() else fingerprintDialog.dismiss()
         }
-        viewModel.fingerPrintAutFailedLiveData.observe {
-            playMatchingMnemonicErrorAnimation()
-        }
         viewModel.fingerPrintErrorLiveData.observe {
             Toast.makeText(activity, it, Toast.LENGTH_LONG).show()
-        }
-        viewModel.pinCodeProgressLiveData.observe {
-            binding.dotsProgressView.setProgress(it)
-        }
-        viewModel.deleteButtonVisibilityLiveData.observe {
-            binding.pinCodeView.changeDeleteButtonVisibility(it)
         }
         viewModel.closeAppLiveData.observe {
             (activity as? MainActivity)?.closeApp()
@@ -185,11 +154,16 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         viewModel.checkInviteLiveData.observe {
             (activity as? MainActivity)?.checkInviteAction()
         }
-        viewModel.currentPincodeLength.observe {
-            binding.dotsProgressView.maxProgress = it
-        }
-        viewModel.showTriesLeftSnackbar.observe {
-            Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG).show()
+
+        viewModel.pincodeLengthInfoAlertLiveData.observe {
+            AlertDialog.Builder(requireActivity())
+                .setTitle(R.string.pincode_length_info_title)
+                .setMessage(R.string.pincode_length_info_message)
+                .setPositiveButton(R.string.pincode_length_info_button_text) { _, _ ->
+                    viewModel.setNewLengthPinCodeClicked()
+                }
+                .setCancelable(false)
+                .show()
         }
     }
 
@@ -203,18 +177,24 @@ class PincodeFragment : BaseFragment<PinCodeViewModel>(R.layout.fragment_pincode
         viewModel.onResume()
     }
 
-    private fun playMatchingMnemonicErrorAnimation() {
-        val animation = AnimationUtils.loadAnimation(requireActivity(), R.anim.shake)
-        animation.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationRepeat(animation: Animation?) {
-            }
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.content(
+        scrollState: ScrollState,
+        navController: NavHostController
+    ) {
+        composable(
+            route = theOnlyRoute,
+        ) {
+            PincodeScreen(
+                pinCodeScreenState = viewModel.state,
+                onNumClick = viewModel::pinCodeNumberClicked,
+                onBiometricClick = fingerprintWrapper::toggleScanner,
+                onDeleteClick = viewModel::pinCodeDeleteClicked,
+                onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd
+            )
 
-            override fun onAnimationStart(animation: Animation?) {
+            if (viewModel.state.triesLeftSnackBarTitle.isNotEmpty()) {
             }
-
-            override fun onAnimationEnd(animation: Animation?) {
-            }
-        })
-        binding.dotsProgressView.startAnimation(animation)
+        }
     }
 }

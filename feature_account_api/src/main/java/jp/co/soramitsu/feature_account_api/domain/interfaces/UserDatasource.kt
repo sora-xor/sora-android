@@ -17,17 +17,11 @@ interface UserDatasource {
 
     suspend fun retrieveRegistratrionState(): OnboardingState
 
-    suspend fun clearUserData()
-
-    suspend fun clearAccountData()
+    suspend fun clearAllData()
 
     suspend fun saveParentInviteCode(inviteCode: String)
 
     suspend fun getParentInviteCode(): String
-
-    fun getCurrentLanguage(): String
-
-    fun changeLanguage(language: String)
 
     suspend fun setBiometryEnabled(isEnabled: Boolean)
 

@@ -5,9 +5,9 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
+import java.math.BigInteger
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
-import java.math.BigInteger
 
 interface SubstrateApi {
 
@@ -39,25 +39,15 @@ interface SubstrateApi {
         tokensId: List<ByteArray>
     ): List<PoolDataDto>
 
-    suspend fun getUserPoolData(
-        address: String,
-        baseTokenId: String,
-        tokenId: ByteArray
-    ): PoolDataDto?
-
-    suspend fun getUserPoolsTokenIds22StateKeys(
+    suspend fun getUserPoolsTokenIdsKeys(
         address: String
     ): List<String>
 
-    suspend fun getUserPoolsTokenIds22(
+    suspend fun getUserPoolsTokenIds(
         address: String
     ): List<Pair<String, List<ByteArray>>>
 
     suspend fun getPoolBaseTokens(): List<Pair<Int, String>>
-
-    suspend fun getUserPoolsTokenIds(
-        address: String
-    ): List<ByteArray>
 
     suspend fun isPairEnabled(
         inputAssetId: String,

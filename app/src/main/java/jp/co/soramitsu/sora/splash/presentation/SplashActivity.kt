@@ -10,10 +10,10 @@ import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.feature_main_api.launcher.MainStarter
-import jp.co.soramitsu.feature_onboarding_api.OnboardingStarter
-import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
 import javax.inject.Inject
+import jp.co.soramitsu.feature_main_api.launcher.MainStarter
+import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
+import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
 
 @AndroidEntryPoint
 class SplashActivity : AppCompatActivity() {
@@ -23,7 +23,7 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivitySplashBinding
 
     @Inject
-    lateinit var onbnbst: OnboardingStarter
+    lateinit var multiaccStarter: MultiaccountStarter
 
     @Inject
     lateinit var mainStarter: MainStarter
@@ -65,10 +65,10 @@ class SplashActivity : AppCompatActivity() {
             mainStarter.start(this)
         }
         splashViewModel.showOnBoardingScreen.observe(this) {
-            onbnbst.start(this)
+            multiaccStarter.startOnboardingFlow(this)
         }
         splashViewModel.showOnBoardingScreenViaInviteLink.observe(this) {
-            onbnbst.startWithInviteLink(this)
+            multiaccStarter.startOnboardingFlowWithInviteLink(this)
             finish()
         }
         splashViewModel.showMainScreenFromInviteLink.observe(this) {

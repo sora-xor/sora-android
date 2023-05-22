@@ -3,7 +3,9 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    id 'kotlinx-serialization'
 }
+apply from: '../tests.gradle'
 
 android {
     compileSdk compileVersion
@@ -18,7 +20,7 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -54,11 +56,14 @@ dependencies {
 
     implementation project(":common")
     implementation project(":soracrypro")
+    implementation project(":core_db")
+
+    implementation roomDep
+    implementation roomKtxDep
 
     implementation xNetworkingDep
     implementation gsonDep
     implementation webSocketLibDep
-    implementation kotlinDep
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation timberDep

@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.common.util
 
+import android.os.Build
 import jp.co.soramitsu.common.BuildConfig
 
 object BuildUtils {
@@ -12,6 +13,10 @@ object BuildUtils {
         BuildConfig.FLAVOR in flavors.map { it.flavorName }
     fun isBuildType(vararg types: BuildType): Boolean =
         BuildConfig.BUILD_TYPE in types.map { it.type }
+
+    fun sdkAtLeast(v: Int): Boolean = Build.VERSION.SDK_INT >= v
+
+    fun isPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD, Flavor.SORALUTION)
 }
 
 enum class BuildType(val type: String) {

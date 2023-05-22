@@ -22,7 +22,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyInt
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.times
@@ -57,7 +56,7 @@ class ClaimViewModelTest {
     @Before
     fun setUp() {
         given(walletInteractor.observeMigrationStatus()).willReturn(flow { emit(MigrationStatus.SUCCESS) })
-        viewModel = ClaimViewModel(router, walletInteractor, resourceManager)
+        viewModel = ClaimViewModel(router, walletInteractor)
     }
 
     @Test

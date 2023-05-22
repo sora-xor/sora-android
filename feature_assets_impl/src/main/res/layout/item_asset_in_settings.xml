@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/ivAssetSettingsIcon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginLeft="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ivAssetSettingsFavorite"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_0x0200000000000000000000000000000000000000000000000000000000000000" />
+
+    <ImageView
+        android:id="@+id/ivAssetSettingsFavorite"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription"
+        tools:src="@drawable/ic_favorite_enabled" />
+
+    <View
+        android:id="@+id/ivAssetSettingsFavoriteClickable"
+        android:layout_width="32dp"
+        android:layout_height="40dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvAssetSettingsTokenName"
+        style="@style/TextAppearance.Soramitsu.Neu.Regular.15"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/x1"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="?attr/redesignTokenName"
+        android:textDirection="locale"
+        app:layout_constraintBottom_toTopOf="@id/tvAssetSettingsAmount"
+        app:layout_constraintEnd_toStartOf="@id/ivAssetSettingsVisibility"
+        app:layout_constraintStart_toEndOf="@id/ivAssetSettingsIcon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="SORA" />
+
+    <TextView
+        android:id="@+id/tvAssetSettingsAmount"
+        style="@style/TextAppearance.Soramitsu.Neu.Bold.11"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/x1"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="?attr/redesignTokenBalance"
+        android:textDirection="locale"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/ivAssetSettingsVisibility"
+        app:layout_constraintStart_toEndOf="@id/ivAssetSettingsIcon"
+        app:layout_constraintTop_toBottomOf="@id/tvAssetSettingsTokenName"
+        tools:text="2 234 234 XOR" />
+
+    <ImageView
+        android:id="@+id/ivAssetSettingsVisibility"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_eye_enabled"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/ivAssetSettingsItemDrag"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+    <ImageView
+        android:id="@+id/ivAssetSettingsItemDrag"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_drag_and_drop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

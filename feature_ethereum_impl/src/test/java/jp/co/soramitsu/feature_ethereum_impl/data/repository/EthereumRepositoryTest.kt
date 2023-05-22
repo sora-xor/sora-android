@@ -122,9 +122,7 @@ class EthereumRepositoryTest {
             web3jProvider,
             web3jBip32Crypto,
             contractApiProvider,
-            etherWeiConverter,
-            db,
-            ethRegisterStateMapper,
+            etherWeiConverter
         )
     }
 

@@ -5,11 +5,11 @@
 
 package jp.co.soramitsu.feature_multiaccount_api
 
-import androidx.navigation.NavController
+import android.content.Context
 
 interface MultiaccountStarter {
 
-    fun startCreateAccount(navController: NavController)
+    fun startOnboardingFlow(context: Context, isClearTask: Boolean = true)
 
-    fun startRecoveryAccount(navController: NavController)
+    fun startOnboardingFlowWithInviteLink(context: Context)
 }

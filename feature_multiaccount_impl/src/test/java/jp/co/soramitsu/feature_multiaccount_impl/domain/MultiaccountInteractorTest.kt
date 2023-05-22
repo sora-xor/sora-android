@@ -8,11 +8,11 @@ package jp.co.soramitsu.feature_multiaccount_impl.domain
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.Keypair
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -43,10 +43,11 @@ class MultiaccountInteractorTest {
     private val userRepository = mock(UserRepository::class.java)
     private val credentialsRepository = mock(CredentialsRepository::class.java)
     private val fileManager = mock(FileManager::class.java)
+    private val assetsInteractor = mock(AssetsInteractor::class.java)
 
     @Before
     fun setup() {
-        multiaccountInteractor = MultiaccountInteractor(userRepository, credentialsRepository, fileManager)
+        multiaccountInteractor = MultiaccountInteractor(assetsInteractor, userRepository, credentialsRepository, fileManager)
     }
 
     @Test

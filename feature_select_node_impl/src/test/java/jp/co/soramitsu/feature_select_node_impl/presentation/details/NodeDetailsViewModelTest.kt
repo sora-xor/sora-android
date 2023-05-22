@@ -8,13 +8,13 @@ package jp.co.soramitsu.feature_select_node_impl.presentation.details
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import jp.co.soramitsu.feature_select_node_impl.TestData.CUSTOM_NODES
 import jp.co.soramitsu.feature_select_node_impl.TestData.FOCUS_STATE
 import jp.co.soramitsu.feature_select_node_impl.TestData.NODE_DETAILS_ADDRESS
@@ -25,6 +25,7 @@ import jp.co.soramitsu.feature_select_node_impl.TestData.SELECTED_NODE
 import jp.co.soramitsu.feature_select_node_impl.domain.SelectNodeInteractor
 import jp.co.soramitsu.feature_select_node_impl.domain.ValidationEvent
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -32,7 +33,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -42,11 +42,9 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)
@@ -74,20 +72,26 @@ class NodeDetailsViewModelTest {
 
     private lateinit var viewModel: NodeDetailsViewModel
 
-    private val nodeManagerEvents = MutableStateFlow<NodeManagerEvent>(NodeManagerEvent.GenesisValidated(false))
+    private val nodeManagerEvents =
+        MutableStateFlow<NodeManagerEvent>(NodeManagerEvent.GenesisValidated(false))
 
     @Before
     fun setUp() {
         given(resourceManager.getString(R.string.select_node_node_name)).willReturn("Node name")
         given(resourceManager.getString(R.string.select_node_node_address)).willReturn("Node address")
-        given(resourceManager.getString(R.string.select_node_node_details)).willReturn("Node details")
         whenever(resourceManager.getString(R.string.select_node_unable_join_node_title))
             .thenReturn("Title")
         whenever(resourceManager.getString(R.string.select_node_unable_join_node_message))
             .thenReturn("Message")
         whenever(resourceManager.getString(R.string.common_error_general_title))
             .thenReturn("Title")
-        whenever(resourceManager.getString(R.string.node_details_node_already_added, NODE_LIST.last().name, SELECTED_NODE.address))
+        whenever(
+            resourceManager.getString(
+                R.string.node_details_node_already_added,
+                NODE_LIST.last().name,
+                SELECTED_NODE.address
+            )
+        )
             .thenReturn("Message")
         whenever(resourceManager.getString(R.string.common_error_general_title))
             .thenReturn("Title")
@@ -110,7 +114,8 @@ class NodeDetailsViewModelTest {
             nodeName = null
         )
     }
-    private fun nodeDetailsViewModel(node: Node) {
+
+    private fun nodeDetailsViewModel(node: ChainNode) {
         viewModel = NodeDetailsViewModel(
             interactor,
             mainRouter,
@@ -125,7 +130,7 @@ class NodeDetailsViewModelTest {
     fun `init EXPECT set up toolbar state title`() {
         addNodeViewModel()
 
-        assertEquals("Node details", viewModel.toolbarState.value?.title)
+        assertEquals(R.string.select_node_node_details, viewModel.toolbarState.getOrAwaitValue().basic.title)
     }
 
     @Test
@@ -359,18 +364,23 @@ class NodeDetailsViewModelTest {
 
         assertEquals(
             "Title",
-            viewModel.alertDialogLiveData.value?.peekContent()?.first
+            viewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "Message",
-            viewModel.alertDialogLiveData.value?.peekContent()?.second
+            viewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 
     @Test
     fun `node already existed EXPECT error dialog`() = runTest {
-        nodeManagerEvents.emit(NodeManagerEvent.NodeExisting(NODE_LIST.last().name, SELECTED_NODE.address))
+        nodeManagerEvents.emit(
+            NodeManagerEvent.NodeExisting(
+                NODE_LIST.last().name,
+                SELECTED_NODE.address
+            )
+        )
 
         addNodeViewModel()
 
@@ -380,12 +390,12 @@ class NodeDetailsViewModelTest {
         assertFalse(viewModel.state.submitButtonEnabled)
         assertEquals(
             "Title",
-            viewModel.alertDialogLiveData.value?.peekContent()?.first
+            viewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "Message",
-            viewModel.alertDialogLiveData.value?.peekContent()?.second
+            viewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 
@@ -429,12 +439,12 @@ class NodeDetailsViewModelTest {
 
         assertEquals(
             "Title",
-            viewModel.alertDialogLiveData.value?.peekContent()?.first
+            viewModel.alertDialogLiveData.getOrAwaitValue().first
         )
 
         assertEquals(
             "Error",
-            viewModel.alertDialogLiveData.value?.peekContent()?.second
+            viewModel.alertDialogLiveData.getOrAwaitValue().second
         )
     }
 

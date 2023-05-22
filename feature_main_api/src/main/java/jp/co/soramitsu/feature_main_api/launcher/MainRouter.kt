@@ -16,17 +16,13 @@ interface MainRouter {
 
     fun showPin(action: PinCodeAction)
 
+    fun showLoginSecurity()
+
     fun showPinForLogout(address: String)
 
     fun showPinForBackup(action: PinCodeAction, addresses: List<String>)
 
-    fun showPinLengthInfo()
-
     fun showFlexibleUpdateScreen()
-
-    fun showPersonalDataEdition()
-
-    fun showSwitchAccount()
 
     fun popBackStack()
 
@@ -34,27 +30,15 @@ interface MainRouter {
 
     fun popBackStackToAccountDetails()
 
-    fun showTerms()
-
     fun showSelectLanguage()
 
-    fun showFaq()
+    fun showAppSettings()
 
-    fun showVotesHistory()
+    fun showInformation()
 
-    fun showUnsupportedScreen(appUrl: String)
-
-    fun showAbout()
-
-    fun showPolkaswapDisclaimerFromSettings()
-
-    fun showPrivacy()
-
-    fun showVerification()
+    fun showDebugMenu()
 
     fun currentDestinationIsPincode(): Boolean
-
-    fun currentDestinationIsUserVerification(): Boolean
 
     fun currentDestinationIsClaimFragment(): Boolean
 
@@ -81,4 +65,6 @@ interface MainRouter {
     fun showAccountDetails(address: String)
 
     fun showWebView(title: String, url: String)
+
+    fun showGetSoraCard()
 }

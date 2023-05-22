@@ -5,19 +5,14 @@
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.CardHub
+import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import jp.co.soramitsu.feature_wallet_api.domain.model.XorAssetBalance
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import kotlinx.coroutines.flow.Flow
-import java.math.BigDecimal
 
 interface WalletRepository {
-
-    suspend fun tokensList(): List<Token>
 
     suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
 
@@ -35,76 +30,26 @@ interface WalletRepository {
         from: String,
     ): ExtrinsicSubmitStatus
 
-    suspend fun getAssetsWhitelist(address: String): List<Asset>
+    fun observeStorageAccount(address: String): Flow<String>
 
-    suspend fun updateWhitelistBalances(address: String)
+    fun subscribeVisibleCardsHubList(address: String): Flow<List<CardHub>>
 
-    suspend fun getAssetsVisible(
-        address: String,
-    ): List<Asset>
+    fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>>
 
-    fun subscribeVisibleAssets(
-        address: String
-    ): Flow<List<Asset>>
+    fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
 
-    suspend fun getActiveAssets(
-        address: String,
-    ): List<Asset>
+    suspend fun getSoraCardInfo(): SoraCardInformation?
 
-    fun subscribeAsset(
-        address: String,
-        tokenId: String,
-    ): Flow<Asset>
+    suspend fun updateSoraCardKycStatus(kycStatus: String)
 
-    fun subscribeActiveAssets(
-        address: String
-    ): Flow<List<Asset>>
-
-    suspend fun updateBalancesActiveAssets(address: String)
-
-    suspend fun transfer(
-        keypair: Sr25519Keypair,
-        from: String,
-        to: String,
-        token: Token,
-        amount: BigDecimal
-    ): Result<String>
-
-    suspend fun observeTransfer(
-        keypair: Sr25519Keypair,
-        from: String,
-        to: String,
-        token: Token,
-        amount: BigDecimal,
-        fee: BigDecimal
-    ): ExtrinsicSubmitStatus
-
-    suspend fun calcTransactionFee(
-        from: String,
-        to: String,
-        token: Token,
-        amount: BigDecimal
-    ): BigDecimal
-
-    suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance
-
-    suspend fun hideAssets(assetIds: List<String>, soraAccount: SoraAccount)
-
-    suspend fun displayAssets(assetIds: List<String>, soraAccount: SoraAccount)
-
-    suspend fun updateAssetPositions(assetPositions: Map<String, Int>, soraAccount: SoraAccount)
-
-    suspend fun getAsset(assetId: String, address: String): Asset?
-
-    suspend fun getToken(tokenId: String): Token?
-
-    suspend fun isWhitelistedToken(tokenId: String): Boolean
-
-    fun observeStorageAccount(account: Any): Flow<String>
-
-    suspend fun addFakeBalance(
-        keypair: Sr25519Keypair,
-        soraAccount: SoraAccount,
-        assetIds: List<String>
+    suspend fun updateSoraCardInfo(
+        accessToken: String,
+        refreshToken: String,
+        accessTokenExpirationTime: Long,
+        kycStatus: String
     )
+
+    suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean)
+
+    suspend fun updateCardCollapsedState(cardId: String, collapsed: Boolean)
 }

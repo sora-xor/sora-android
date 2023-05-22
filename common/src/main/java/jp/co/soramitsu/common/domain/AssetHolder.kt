@@ -8,6 +8,7 @@ package jp.co.soramitsu.common.domain
 object AssetHolder {
 
     const val DEFAULT_WHITE_LIST_NAME = "tokens_white_list"
+    const val ACTIVITY_LIST_ROUNDING = 3
     const val ROUNDING = 8
     val emptyToken: Token = Token(
         id = "",
@@ -15,7 +16,10 @@ object AssetHolder {
         symbol = "???",
         precision = OptionsProvider.defaultScale,
         isHidable = true,
-        icon = OptionsProvider.DEFAULT_ICON
+        iconFile = DEFAULT_ICON_URI,
+        fiatPrice = null,
+        fiatPriceChange = null,
+        fiatSymbol = OptionsProvider.fiatSymbol,
     )
     private val knownAssets: Map<String, AssetDefault> = mapOf(
         // xor
@@ -52,6 +56,13 @@ object AssetHolder {
                 "SORA Synthetic USD", "XSTUSD",
                 true, true,
                 5,
+            ),
+        // tbcd
+        "0x02000a0000000000000000000000000000000000000000000000000000000000" to
+            AssetDefault(
+                "SORA TBC Dollar", "TBCD",
+                true, true,
+                6,
             ),
     )
     private val defaultAsset: AssetDefault = AssetDefault(

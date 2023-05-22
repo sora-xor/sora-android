@@ -5,15 +5,15 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.util
 
+import java.math.BigInteger
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthereumCredentials
 import jp.co.soramitsu.feature_ethereum_impl.data.mappers.EthereumCredentialsMapper
 import jp.co.soramitsu.feature_ethereum_impl.data.network.ERC20ContractApi
 import jp.co.soramitsu.feature_ethereum_impl.data.network.SmartContractApi
 import org.web3j.tx.FastRawTransactionManager
 import org.web3j.tx.response.NoOpProcessor
-import java.math.BigInteger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class ContractsApiProvider @Inject constructor(

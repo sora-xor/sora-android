@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.network
 
+import java.math.BigInteger
+import java.util.Collections
 import jp.co.soramitsu.feature_ethereum_impl.util.GasProvider
 import org.web3j.abi.TypeReference
 import org.web3j.abi.datatypes.Address
@@ -14,8 +16,6 @@ import org.web3j.protocol.core.RemoteCall
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.tx.Contract
 import org.web3j.tx.FastRawTransactionManager
-import java.math.BigInteger
-import java.util.Collections
 
 class ERC20ContractApi(
     web3j: Web3j,

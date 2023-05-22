@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import jp.co.soramitsu.fearless_utils.extensions.fromHex
+import java.math.BigInteger
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.fearless_utils.runtime.extrinsic.ExtrinsicBuilder
@@ -13,8 +13,7 @@ import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import java.math.BigInteger
+import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
 
 fun ExtrinsicBuilder.setReferrer(referrer: String) =
     this.call(
@@ -26,7 +25,6 @@ fun ExtrinsicBuilder.setReferrer(referrer: String) =
     )
 
 fun ExtrinsicBuilder.swap(
-    runtime: RuntimeManager,
     dexId: Int,
     inputAssetId: String,
     outputAssetId: String,
@@ -41,11 +39,11 @@ fun ExtrinsicBuilder.swap(
         Method.SWAP.methodName,
         mapOf(
             "dex_id" to dexId.toBigInteger(),
-            "input_asset_id" to if (runtime.getMetadataVersion() < 14) inputAssetId.fromHex() else Struct.Instance(
-                mapOf("code" to inputAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+            "input_asset_id" to Struct.Instance(
+                mapOf("code" to inputAssetId.mapAssetId())
             ),
-            "output_asset_id" to if (runtime.getMetadataVersion() < 14) outputAssetId.fromHex() else Struct.Instance(
-                mapOf("code" to outputAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+            "output_asset_id" to Struct.Instance(
+                mapOf("code" to outputAssetId.mapAssetId())
             ),
             "swap_amount" to DictEnum.Entry(
                 name = desired.backString,
@@ -58,8 +56,10 @@ fun ExtrinsicBuilder.swap(
                     }
                 )
             ),
-            "selected_source_types" to markets,
-            "filter_mode" to if (runtime.getMetadataVersion() < 14) filter else DictEnum.Entry(
+            "selected_source_types" to markets.map {
+                DictEnum.Entry(it, null)
+            },
+            "filter_mode" to DictEnum.Entry(
                 name = filter,
                 value = null
             ),
@@ -85,7 +85,6 @@ fun ExtrinsicBuilder.referralUnbond(amount: BigInteger) =
     )
 
 fun ExtrinsicBuilder.transfer(
-    runtime: RuntimeManager,
     assetId: String,
     to: String,
     amount: BigInteger
@@ -94,8 +93,8 @@ fun ExtrinsicBuilder.transfer(
         Pallete.ASSETS.palletName,
         Method.TRANSFER.methodName,
         mapOf(
-            "asset_id" to if (runtime.getMetadataVersion() < 14) assetId.fromHex() else Struct.Instance(
-                mapOf("code" to assetId.fromHex().toList().map { it.toInt().toBigInteger() })
+            "asset_id" to Struct.Instance(
+                mapOf("code" to assetId.mapAssetId())
             ),
             "to" to to.toAccountId(),
             "amount" to amount
@@ -118,7 +117,6 @@ fun ExtrinsicBuilder.migrate(
     )
 
 fun ExtrinsicBuilder.removeLiquidity(
-    runtime: RuntimeManager,
     dexId: Int,
     outputAssetIdA: String,
     outputAssetIdB: String,
@@ -131,11 +129,11 @@ fun ExtrinsicBuilder.removeLiquidity(
         Method.WITHDRAW_LIQUIDITY.methodName,
         mapOf(
             "dex_id" to dexId.toBigInteger(),
-            "output_asset_a" to if (runtime.getMetadataVersion() < 14) outputAssetIdA.fromHex() else Struct.Instance(
-                mapOf("code" to outputAssetIdA.fromHex().toList().map { it.toInt().toBigInteger() })
+            "output_asset_a" to Struct.Instance(
+                mapOf("code" to outputAssetIdA.mapAssetId())
             ),
-            "output_asset_b" to if (runtime.getMetadataVersion() < 14) outputAssetIdB.fromHex() else Struct.Instance(
-                mapOf("code" to outputAssetIdB.fromHex().toList().map { it.toInt().toBigInteger() })
+            "output_asset_b" to Struct.Instance(
+                mapOf("code" to outputAssetIdB.mapAssetId())
             ),
             "marker_asset_desired" to markerAssetDesired,
             "output_a_min" to outputAMin,
@@ -144,7 +142,6 @@ fun ExtrinsicBuilder.removeLiquidity(
     )
 
 fun ExtrinsicBuilder.register(
-    runtime: RuntimeManager,
     dexId: Int,
     baseAssetId: String,
     targetAssetId: String
@@ -153,17 +150,16 @@ fun ExtrinsicBuilder.register(
     Method.REGISTER.methodName,
     mapOf(
         "dex_id" to dexId.toBigInteger(),
-        "base_asset_id" to if (runtime.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
-            mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        "base_asset_id" to Struct.Instance(
+            mapOf("code" to baseAssetId.mapAssetId())
         ),
-        "target_asset_id" to if (runtime.getMetadataVersion() < 14) targetAssetId.fromHex() else Struct.Instance(
-            mapOf("code" to targetAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        "target_asset_id" to Struct.Instance(
+            mapOf("code" to targetAssetId.mapAssetId())
         )
     )
 )
 
 fun ExtrinsicBuilder.initializePool(
-    runtime: RuntimeManager,
     dexId: Int,
     baseAssetId: String,
     targetAssetId: String
@@ -172,17 +168,16 @@ fun ExtrinsicBuilder.initializePool(
     Method.INITIALIZE_POOL.methodName,
     mapOf(
         "dex_id" to dexId.toBigInteger(),
-        "asset_a" to if (runtime.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
-            mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        "asset_a" to Struct.Instance(
+            mapOf("code" to baseAssetId.mapAssetId())
         ),
-        "asset_b" to if (runtime.getMetadataVersion() < 14) targetAssetId.fromHex() else Struct.Instance(
-            mapOf("code" to targetAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        "asset_b" to Struct.Instance(
+            mapOf("code" to targetAssetId.mapAssetId())
         )
     )
 )
 
 fun ExtrinsicBuilder.depositLiquidity(
-    runtime: RuntimeManager,
     dexId: Int,
     baseAssetId: String,
     targetAssetId: String,
@@ -195,11 +190,11 @@ fun ExtrinsicBuilder.depositLiquidity(
     Method.DEPOSIT_LIQUIDITY.methodName,
     mapOf(
         "dex_id" to dexId.toBigInteger(),
-        "input_asset_a" to if (runtime.getMetadataVersion() < 14) baseAssetId.fromHex() else Struct.Instance(
-            mapOf("code" to baseAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        "input_asset_a" to Struct.Instance(
+            mapOf("code" to baseAssetId.mapAssetId())
         ),
-        "input_asset_b" to if (runtime.getMetadataVersion() < 14) targetAssetId.fromHex() else Struct.Instance(
-            mapOf("code" to targetAssetId.fromHex().toList().map { it.toInt().toBigInteger() })
+        "input_asset_b" to Struct.Instance(
+            mapOf("code" to targetAssetId.mapAssetId())
         ),
         "input_a_desired" to baseAssetAmount,
         "input_b_desired" to targetAssetAmount,
@@ -209,7 +204,6 @@ fun ExtrinsicBuilder.depositLiquidity(
 )
 
 fun ExtrinsicBuilder.faucetTransfer(
-    runtime: RuntimeManager,
     assetId: String,
     target: String,
     amount: BigInteger
@@ -218,8 +212,8 @@ fun ExtrinsicBuilder.faucetTransfer(
         Pallete.FAUCET.palletName,
         Method.TRANSFER.methodName,
         mapOf(
-            "asset_id" to if (runtime.getMetadataVersion() < 14) assetId.fromHex() else Struct.Instance(
-                mapOf("code" to assetId.fromHex().toList().map { it.toInt().toBigInteger() })
+            "asset_id" to Struct.Instance(
+                mapOf("code" to assetId.mapAssetId())
             ),
             "target" to target.toAccountId(),
             "amount" to amount

@@ -6,19 +6,21 @@
 package jp.co.soramitsu.feature_multiaccount_impl.domain
 
 import android.net.Uri
+import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
 class MultiaccountInteractor @Inject constructor(
+    private val assetsInteractor: AssetsInteractor,
     private val userRepository: UserRepository,
     private val credentialsRepository: CredentialsRepository,
-    private val fileManager: FileManager
+    private val fileManager: FileManager,
 ) {
 
     private companion object {
@@ -30,8 +32,7 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun isRawSeedValid(rawSeed: String) = credentialsRepository.isRawSeedValid(rawSeed)
 
     suspend fun continueRecoverFlow(soraAccount: SoraAccount) {
-        userRepository.insertSoraAccount(soraAccount)
-        userRepository.setCurSoraAccount(soraAccount)
+        insertAndSetCurAccount(soraAccount)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
 
@@ -52,6 +53,12 @@ class MultiaccountInteractor @Inject constructor(
         return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())
     }
 
+    private suspend fun insertAndSetCurAccount(soraAccount: SoraAccount) {
+        userRepository.insertSoraAccount(soraAccount)
+        userRepository.setCurSoraAccount(soraAccount)
+        assetsInteractor.updateWhitelistBalances(false)
+    }
+
     suspend fun getMnemonic(address: String): String {
         return credentialsRepository.retrieveMnemonic(userRepository.getSoraAccount(address))
     }
@@ -65,8 +72,7 @@ class MultiaccountInteractor @Inject constructor(
     }
 
     suspend fun createUser(soraAccount: SoraAccount) {
-        userRepository.insertSoraAccount(soraAccount)
-        userRepository.setCurSoraAccount(soraAccount)
+        insertAndSetCurAccount(soraAccount)
         userRepository.saveRegistrationState(OnboardingState.INITIAL)
         userRepository.saveNeedsMigration(false, soraAccount)
         userRepository.saveIsMigrationFetched(true, soraAccount)
@@ -95,8 +101,8 @@ class MultiaccountInteractor @Inject constructor(
 
     fun flowSoraAccountsList(): Flow<List<SoraAccount>> = userRepository.flowSoraAccountsList()
 
-    suspend fun setCurSoraAccount(accountAddress: String) {
-        userRepository.setCurSoraAccount(accountAddress)
+    suspend fun setCurSoraAccount(account: SoraAccount) {
+        userRepository.setCurSoraAccount(account)
     }
 
     suspend fun updateName(accountAddress: String, newName: String) {

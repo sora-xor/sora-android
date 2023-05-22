@@ -9,11 +9,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtectionViewModel
-import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
-import org.mockito.BDDMockito.given
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -48,8 +46,8 @@ class ExportProtectionViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        given(resourceManager.getString(R.string.common_passphrase_title)).willReturn("Title")
-        exportProtectionViewModel = ExportProtectionViewModel(router, resourceManager, type, "address", listOf("address"))
+        exportProtectionViewModel =
+            ExportProtectionViewModel(router, resourceManager, type, "address", listOf("address"))
     }
 
     @Test

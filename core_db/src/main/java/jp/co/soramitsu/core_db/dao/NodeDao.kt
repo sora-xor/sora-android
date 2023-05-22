@@ -36,6 +36,12 @@ interface NodeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNode(node: NodeLocal)
 
+    @Query("update nodes set isSelected = 0")
+    suspend fun resetSelected()
+
+    @Query("update nodes set isSelected = 1 where address = :address")
+    suspend fun selectNode(address: String)
+
     @Query("UPDATE nodes SET name = :newName, address = :newAddress WHERE address = :oldAddress")
     suspend fun updateNode(oldAddress: String, newName: String, newAddress: String)
 

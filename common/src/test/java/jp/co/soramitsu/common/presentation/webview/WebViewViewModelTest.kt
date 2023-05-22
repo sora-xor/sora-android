@@ -6,8 +6,8 @@
 package jp.co.soramitsu.common.presentation.webview
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.viewModelScope
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewViewModel
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -37,7 +37,8 @@ class WebViewViewModelTest {
 
     @Test
     fun `init viewModel EXPECT set up title to state`() {
-        assertEquals(viewModel.toolbarState.value?.title, "Title")
+        val s = viewModel.toolbarState.getOrAwaitValue()
+        assertEquals("Title", s.basic.title)
     }
 
     @Test

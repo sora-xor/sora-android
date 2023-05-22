@@ -152,4 +152,24 @@ internal object Colors {
     val Blue80 = Color(0xFF003367)
 
     val Blue90 = Color(0xFF001A34)
+
+    val Polkaswap5 = Color(0xFFFFE3F1)
+
+    val Polkaswap10 = Color(0xFFFFC6E3)
+
+    val Polkaswap20 = Color(0xFFFF8DC1)
+
+    val Polkaswap30 = Color(0xFFFF56A0)
+
+    val Polkaswap40 = Color(0xFFFF2782)
+
+    val Polkaswap50 = Color(0xFFFF0066)
+
+    val Polkaswap60 = Color(0xFFD80057)
+
+    val Polkaswap70 = Color(0xFFAA0044)
+
+    val Polkaswap80 = Color(0xFF75012F)
+
+    val Polkaswap90 = Color(0xFF3B0219)
 }

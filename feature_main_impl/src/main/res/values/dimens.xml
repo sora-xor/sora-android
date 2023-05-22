@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="x1_2">4dp</dimen>
-    <dimen name="round_corner_radius">10dp</dimen>
-</resources>

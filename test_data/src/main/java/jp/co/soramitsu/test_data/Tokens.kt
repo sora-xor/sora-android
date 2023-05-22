@@ -15,51 +15,93 @@ object TestTokens {
         "XOR",
         18,
         true,
-        0
+        null,
+        null,
+        null,
+        null,
     )
 
     val valToken = Token(
-        "0x0004",
+        "0x0200040000000000000000000000000000000000000000000000000000000000",
         "validator",
         "VAL",
         18,
         true,
-        0
+        null,
+        null,
+        null,
+        null,
     )
 
     val pswapToken = Token(
-        "0x0005",
+        "0x0200050000000000000000000000000000000000000000000000000000000000",
         "pswap",
         "PSWAP",
         18,
         true,
-        0
+        null,
+        null,
+        null,
+        null,
     )
 
     val ethToken = Token(
-        "0x0006",
+        "0x0200060000000000000000000000000000000000000000000000000000000000",
         "ethereum",
         "ETH",
         18,
         true,
-        0
+        null,
+        null,
+        null,
+        null,
     )
 
-    val xstToken = Token(
-        "0x0008",
+    val xstusdToken = Token(
+        "0x0200080000000000000000000000000000000000000000000000000000000000",
         "xst usd token",
         "XSTUSD",
         18,
         true,
-        0
+        null,
+        null,
+        null,
+        null,
+    )
+
+    val xstToken = Token(
+        "0x0200090000000000000000000000000000000000000000000000000000000000",
+        "SORA Synthetics",
+        "XST",
+        18,
+        true,
+        null,
+        null,
+        null,
+        null,
+    )
+
+    val tbcdToken = Token(
+        "0x0200090000000000000000000000000000000000000000000000000000000000",
+        "SORA TBC Dollar",
+        "TBCD",
+        18,
+        true,
+        null,
+        null,
+        null,
+        null,
     )
 
     val daiToken = Token(
-        "0x0009",
+        "0x020009",
         "dai stable",
         "DAI",
         18,
         true,
-        0
+        null,
+        null,
+        null,
+        null,
     )
 }

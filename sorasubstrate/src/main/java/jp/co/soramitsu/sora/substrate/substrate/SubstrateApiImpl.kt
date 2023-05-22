@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
+import java.math.BigInteger
+import javax.inject.Inject
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
 import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -31,9 +33,8 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.accountPoolsKey
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
+import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
-import java.math.BigInteger
-import javax.inject.Inject
 
 // todo refactor it after migrate to substrate 4
 class SubstrateApiImpl @Inject constructor(
@@ -89,7 +90,7 @@ class SubstrateApiImpl @Inject constructor(
             .getOrThrow()
     }
 
-    override suspend fun getUserPoolsTokenIds22StateKeys(address: String): List<String> {
+    override suspend fun getUserPoolsTokenIdsKeys(address: String): List<String> {
         val accountPoolsKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
         return runCatching {
             socketService.executeAsync(
@@ -101,11 +102,11 @@ class SubstrateApiImpl @Inject constructor(
         ).getOrThrow()
     }
 
-    override suspend fun getUserPoolsTokenIds22(
+    override suspend fun getUserPoolsTokenIds(
         address: String
     ): List<Pair<String, List<ByteArray>>> {
         return runCatching {
-            val storageKeys = getUserPoolsTokenIds22StateKeys(address)
+            val storageKeys = getUserPoolsTokenIdsKeys(address)
             storageKeys.map { storageKey ->
                 socketService.executeAsync(
                     request = GetStorageRequest(listOf(storageKey)),
@@ -137,25 +138,6 @@ class SubstrateApiImpl @Inject constructor(
         ).getOrThrow()
     }
 
-    override suspend fun getUserPoolsTokenIds(
-        address: String
-    ): List<ByteArray> {
-        val storageKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
-        return runCatching {
-            socketService.executeAsync(
-                request = GetStorageRequest(listOf(storageKey)),
-                mapper = scale(PooledAssetId),
-            )
-                .let { storage ->
-                    storage.result?.let {
-                        it[it.schema.assetId]
-                    } ?: emptyList()
-                }
-        }.onFailure(
-            FirebaseWrapper::recordException
-        ).getOrThrow()
-    }
-
     override suspend fun getUserPoolsData(
         address: String,
         baseTokenId: String,
@@ -166,7 +148,7 @@ class SubstrateApiImpl @Inject constructor(
         }
     }
 
-    override suspend fun getUserPoolData(
+    private suspend fun getUserPoolData(
         address: String,
         baseTokenId: String,
         tokenId: ByteArray
@@ -178,6 +160,7 @@ class SubstrateApiImpl @Inject constructor(
         if (reserves == null || totalIssuanceAndProperties == null) {
             return null
         }
+        val reservesAccount = runtimeManager.toSoraAddress(totalIssuanceAndProperties.third)
 
         return PoolDataDto(
             baseTokenId,
@@ -185,7 +168,8 @@ class SubstrateApiImpl @Inject constructor(
             reserves.first,
             reserves.second,
             totalIssuanceAndProperties.first,
-            totalIssuanceAndProperties.second
+            totalIssuanceAndProperties.second,
+            reservesAccount,
         )
     }
 
@@ -194,7 +178,7 @@ class SubstrateApiImpl @Inject constructor(
         tokenId: ByteArray
     ): Pair<BigInteger, BigInteger>? {
         val storageKey =
-            runtimeManager.getRuntimeSnapshot().reservesKey(runtimeManager, baseTokenId, tokenId)
+            runtimeManager.getRuntimeSnapshot().reservesKey(baseTokenId, tokenId)
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = scale(ReservesResponse),
@@ -213,19 +197,16 @@ class SubstrateApiImpl @Inject constructor(
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
                 .storage(Storage.PROPERTIES.storageName).storageKey(
                     runtimeManager.getRuntimeSnapshot(),
-                    if (runtimeManager.getMetadataVersion() < 14) baseTokenId.fromHex() else
-                        Struct.Instance(
-                            mapOf(
-                                "code" to baseTokenId.fromHex().toList()
-                                    .map { it.toInt().toBigInteger() }
-                            )
-                        ),
-                    if (runtimeManager.getMetadataVersion() < 14) tokenId else
-                        Struct.Instance(
-                            mapOf(
-                                "code" to tokenId.toList().map { it.toInt().toBigInteger() }
-                            )
-                        ),
+                    Struct.Instance(
+                        mapOf(
+                            "code" to baseTokenId.mapAssetId()
+                        )
+                    ),
+                    Struct.Instance(
+                        mapOf(
+                            "code" to tokenId.mapAssetId()
+                        )
+                    ),
                 )
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -248,15 +229,16 @@ class SubstrateApiImpl @Inject constructor(
         baseTokenId: String,
         tokenId: ByteArray,
         address: String
-    ): Pair<BigInteger, BigInteger>? {
+    ): Triple<BigInteger, BigInteger, ByteArray>? {
         return getPoolReserveAccount(baseTokenId, tokenId)?.let { account ->
             getPoolTotalIssuances(
                 account
             )?.let {
-                it to getPoolProviders(
+                val provider = getPoolProviders(
                     account,
                     address
                 )
+                Triple(it, provider, account)
             }
         }
     }

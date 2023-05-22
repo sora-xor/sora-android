@@ -5,4 +5,9 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model
 
-data class BackupScreenState(val mnemonicWords: List<String> = emptyList(), val seedString: String = "")
+data class BackupScreenState(
+    val mnemonicWords: List<String> = emptyList(),
+    val seedString: String = "",
+    val isCreatingFlow: Boolean = false,
+    val isSkipButtonEnabled: Boolean = false,
+)

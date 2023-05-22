@@ -5,10 +5,10 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.repository.converter
 
-import org.web3j.utils.Convert
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import org.web3j.utils.Convert
 
 class EtherWeiConverter @Inject constructor() {
 

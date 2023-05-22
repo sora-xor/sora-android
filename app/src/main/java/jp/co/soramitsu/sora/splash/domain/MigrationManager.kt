@@ -5,13 +5,13 @@
 
 package jp.co.soramitsu.sora.splash.domain
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class MigrationManager @Inject constructor(
@@ -39,6 +39,7 @@ class MigrationManager @Inject constructor(
                 FirebaseWrapper.log("Migration ma done")
             }
         }
+        userRepository.defaultGlobalCards()
         return true
     }
 }

@@ -1,0 +1,127 @@
+apply plugin: 'com.android.library'
+apply plugin: 'dagger.hilt.android.plugin'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion compileVersion
+
+    defaultConfig {
+        minSdkVersion minVersion
+        targetSdkVersion targetVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion versions.composeCompiler
+    }
+
+    buildFeatures {
+        viewBinding true
+        compose true
+    }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation project(":common")
+    implementation project(":core_db")
+    implementation project(":core_di")
+    implementation project(":network")
+    implementation project(":sorasubstrate")
+
+    implementation coreKtxDep
+    implementation materialDep
+    implementation cardViewDep
+    implementation constraintDep
+
+    implementation coroutineAndroidDep
+    implementation coroutineDep
+
+    implementation uiCoreDep
+
+    implementation googlePlayCoreDep
+    implementation coilSvgDep
+
+    implementation xNetworkingDep
+    implementation webSocketLibDep
+    implementation uiCoreDep
+
+    implementation lifecycleProcessDep
+    kapt lifecycleKaptDep
+
+    implementation timberDep
+    implementation svgDep
+    implementation jdenticonDep
+
+    implementation daggerDep
+    kapt daggerKaptDep
+
+    implementation datastoreDep
+
+    implementation gsonDep
+
+    implementation platform(firebaseBomDep)
+    implementation crashlyticsDep
+
+    implementation zXingCoreDep
+    implementation zXingEmbeddedDep
+
+    implementation lazySodiumDep
+    implementation jnaDep
+
+    implementation coilDep
+    implementation coilComposeDep
+
+    implementation composeActivityDep
+    implementation composeUiDep
+    implementation composeLiveDataDep
+    implementation composeFoundationDep
+    implementation composeMaterialDep
+    implementation composeConstraintLayoutDep
+    implementation composeAnimationGraphicsDep
+    implementation composeToolingPreviewDep
+    implementation accompanistNavAnimationDep
+    debugImplementation composeToolingDep
+
+    testImplementation project(":test_shared")
+    testImplementation project(":test_data")
+}

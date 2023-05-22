@@ -24,7 +24,7 @@
     <string name="common_ukrainian_native" translatable="false">Українська</string>
     <string name="common_italian_native" translatable="false">Italiano</string>
     <string name="common_german_native" translatable="false">Deutsch</string>
-    <string name="common_norwegian_native" translatable="false">Norsk</string>
+    <string name="common_norwegian_native" translatable="false">Norwegian Bokmål</string>
     <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
     <string name="transaction_eth_sign" translatable="false">ETH</string>
     <string name="transaction_fee_gas_hint" translatable="false">GWEI</string>

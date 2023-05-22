@@ -21,6 +21,7 @@ object Const {
     const val POLKASWAP_MEMORANDUM = "https://wiki.sora.org/polkaswap/polkaswap-tos"
     const val TELEGRAM_LINK = "https://t.me/sora_xor"
     const val SORA_TERMS_PAGE = "https://sora.org/terms"
+    const val SORA_FAQ_PAGE = "https://wiki.sora.org/guides/sora-faq"
     const val SORA_PRIVACY_PAGE = "https://sora.org/privacy"
     const val HOW_TO_RUN_A_NODE_PAGE = "https://medium.com/sora-xor/how-to-run-a-sora-testnet-node-a4d42a9de1af"
     const val XOR_ASSET_ID = "xor#sora"

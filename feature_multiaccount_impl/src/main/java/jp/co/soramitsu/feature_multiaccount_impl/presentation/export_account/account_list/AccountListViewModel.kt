@@ -9,16 +9,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.base.model.ToolbarState
-import jp.co.soramitsu.common.base.model.ToolbarType
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class AccountListViewModel @Inject constructor(
@@ -46,34 +45,29 @@ class AccountListViewModel @Inject constructor(
     private val _copiedAddressEvent = SingleLiveEvent<Unit>()
     val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
 
-    private val defaultToolbarState = ToolbarState(
-        type = ToolbarType.SMALL,
-        title = resourceManager.getString(R.string.settings_accounts)
-    )
-
-    private var toolbarChooserEnabled = false
+    private var toolbarActionModeEnabled = false
 
     init {
-        _toolbarState.value = defaultToolbarState
-
+        _toolbarState.value = initSmallTitle2(
+            title = R.string.settings_accounts,
+        )
         interactor.flowSoraAccountsList()
             .catch { onError(it) }
             .onEach {
                 val currentAddress = interactor.getCurrentSoraAccount().substrateAddress
 
-                val accountList = it.map {
+                val accountList = it.map { soraAccount ->
                     ExportAccountData(
-                        currentAddress == it.substrateAddress,
+                        currentAddress == soraAccount.substrateAddress,
                         false,
-                        avatarGenerator.createAvatar(it.substrateAddress, 40),
-                        it.substrateAddress,
-                        it.accountName
+                        avatarGenerator.createAvatar(soraAccount.substrateAddress, 40),
+                        soraAccount,
                     )
                 }
 
                 _accountListScreenState.value =
-                    AccountListScreenState(toolbarChooserEnabled, accountList)
-                setToolbarState(toolbarChooserEnabled, 0)
+                    AccountListScreenState(toolbarActionModeEnabled, accountList)
+                setToolbarState(toolbarActionModeEnabled, 0)
             }.launchIn(viewModelScope)
     }
 
@@ -84,8 +78,12 @@ class AccountListViewModel @Inject constructor(
     fun onAccountClicked(address: String) {
         viewModelScope.launch {
             tryCatch {
-                interactor.setCurSoraAccount(address)
-                router.popBackStack()
+                val account =
+                    _accountListScreenState.value?.accountList?.find { it.account.substrateAddress == address }
+                if (account != null) {
+                    interactor.setCurSoraAccount(account.account)
+                    router.popBackStack()
+                }
             }
         }
     }
@@ -96,20 +94,21 @@ class AccountListViewModel @Inject constructor(
     }
 
     fun onAccountSelected(address: String) {
-        accountListScreenState.value?.let {
-            val newList = it.accountList.map { accounts ->
-                if (accounts.address == address) {
-                    accounts.copy(isSelected = !accounts.isSelected)
+        accountListScreenState.value?.let { state ->
+            val newList = state.accountList.map { accounts ->
+                if (accounts.account.substrateAddress == address) {
+                    accounts.copy(isSelectedAction = !accounts.isSelectedAction)
                 } else {
                     accounts
                 }
             }
 
-            val selectedCount = newList.count { it.isSelected }
-            toolbarChooserEnabled = selectedCount > 0
+            val selectedCount = newList.count { it.isSelectedAction }
+            toolbarActionModeEnabled = selectedCount > 0
 
-            _accountListScreenState.value = it.copy(chooserActivated = toolbarChooserEnabled, accountList = newList)
-            setToolbarState(toolbarChooserEnabled, selectedCount)
+            _accountListScreenState.value =
+                state.copy(isActionMode = toolbarActionModeEnabled, accountList = newList)
+            setToolbarState(toolbarActionModeEnabled, selectedCount)
         }
     }
 
@@ -117,41 +116,59 @@ class AccountListViewModel @Inject constructor(
         _showOnboardingFlowEvent.value = Unit
     }
 
-    fun onToolbarNavigation() {
+    override fun onNavIcon() {
+        onToolbarNavigation()
+    }
+
+    override fun onBackPressed() {
+        onToolbarNavigation()
+    }
+
+    private fun onToolbarNavigation() {
         _accountListScreenState.value?.let {
-            if (toolbarChooserEnabled) {
-                toolbarChooserEnabled = false
+            if (toolbarActionModeEnabled) {
+                toolbarActionModeEnabled = false
             } else {
                 router.popBackStack()
             }
 
             val newList = it.accountList.map { accounts ->
-                accounts.copy(isSelected = false)
+                accounts.copy(isSelectedAction = false)
             }
 
             _accountListScreenState.value =
-                it.copy(chooserActivated = toolbarChooserEnabled, accountList = newList)
-            setToolbarState(toolbarChooserEnabled, 0)
+                it.copy(isActionMode = toolbarActionModeEnabled, accountList = newList)
+            setToolbarState(toolbarActionModeEnabled, 0)
         }
     }
 
     private fun setToolbarState(isChooserEnabled: Boolean, count: Int) {
-        if (isChooserEnabled) {
-            _toolbarState.value = defaultToolbarState.copy(
-                navIcon = R.drawable.ic_cross_red_16,
-                title = count.toString(),
-                action = resourceManager.getString(R.string.common_backup),
-            )
-        } else {
-            _toolbarState.value = defaultToolbarState
+        _toolbarState.value?.let { state ->
+            if (isChooserEnabled) {
+                _toolbarState.value = state.copy(
+                    basic = state.basic.copy(
+                        navIcon = R.drawable.ic_cross_red_16,
+                        title = count.toString(),
+                        actionLabel = R.string.common_backup,
+                    ),
+                )
+            } else {
+                _toolbarState.value = state.copy(
+                    basic = state.basic.copy(
+                        title = R.string.settings_accounts,
+                        navIcon = R.drawable.ic_arrow_left,
+                        actionLabel = null,
+                    )
+                )
+            }
         }
     }
 
-    override fun onToolbarAction() {
-        _accountListScreenState.value?.let {
-            val addresses = it.accountList
-                .filter { it.isSelected }
-                .map { it.address }
+    override fun onAction() {
+        _accountListScreenState.value?.let { state ->
+            val addresses = state.accountList
+                .filter { it.isSelectedAction }
+                .map { it.account.substrateAddress }
 
             if (addresses.isNotEmpty()) {
                 router.showExportJSONProtection(addresses)

@@ -14,6 +14,7 @@ import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
 import org.web3j.crypto.MnemonicUtils
 import java.math.BigInteger
+import java.util.*
 
 @RunWith(MockitoJUnitRunner::class)
 class Bip3244Test {
@@ -49,6 +50,6 @@ class Bip3244Test {
 
         assertEquals(publicKey, credentials.ecKeyPair.publicKey)
         assertEquals(privateKey, credentials.ecKeyPair.privateKey)
-        assertEquals(address.toLowerCase(), credentials.address)
+        assertEquals(address.lowercase(Locale.getDefault()), credentials.address)
     }
 }

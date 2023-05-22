@@ -7,20 +7,23 @@ package jp.co.soramitsu.feature_select_node_impl.presentation.details
 
 import android.os.Bundle
 import android.view.View
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.fragment.findNavController
+import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BottomBarController
-import javax.inject.Inject
 
 @AndroidEntryPoint
 internal class NodeDetailsFragment : SoraBaseFragment<NodeDetailsViewModel>() {
@@ -44,8 +47,15 @@ internal class NodeDetailsFragment : SoraBaseFragment<NodeDetailsViewModel>() {
             }
     }
 
-    @Composable
-    override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        NodeDetailsScreen(viewModel)
+    @OptIn(ExperimentalAnimationApi::class)
+    override fun NavGraphBuilder.content(
+        scrollState: ScrollState,
+        navController: NavHostController
+    ) {
+        composable(
+            route = theOnlyRoute,
+        ) {
+            NodeDetailsScreen(viewModel)
+        }
     }
 }

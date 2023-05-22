@@ -2,6 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply from: '../tests.gradle'
 
 android {
     compileSdkVersion compileVersion
@@ -29,7 +30,13 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion versions.composeCompiler
-        kotlinCompilerVersion versions.kotlin
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
     }
 
     flavorDimensions "default"
@@ -58,26 +65,28 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_db")
+    implementation project(":feature_assets_api")
     implementation project(":feature_account_api")
     implementation project(":feature_wallet_api")
     implementation project(":feature_main_api")
     implementation project(":feature_referral_api")
+    implementation project(":feature_blockexplorer_api")
     implementation project(":sorasubstrate")
-
-    implementation kotlinDep
 
     implementation androidDep
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
-    implementation viewBindingDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
     implementation viewmodelKtxDep
 
+    implementation uiCoreDep
+    implementation navigationComposeDep
+
+    implementation composeConstraintLayoutDep
     implementation composeUiDep
-    implementation composeCompilerDep
     implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
@@ -88,14 +97,11 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    // TODO remove ? after fix https://stackoverflow.com/a/71830120
-    debugImplementation("androidx.customview:customview:1.2.0-alpha01")
-    debugImplementation("androidx.customview:customview-poolingcontainer:1.0.0")
+    implementation accompanistNavAnimationDep
 
     implementation roomDep
     implementation roomKtxDep
 
-    implementation emojiDep
     implementation timberDep
     implementation fearlessLibDep
 

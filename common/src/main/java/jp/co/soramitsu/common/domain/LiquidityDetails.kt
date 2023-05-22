@@ -6,8 +6,8 @@
 package jp.co.soramitsu.common.domain
 
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
 import java.math.BigDecimal
+import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class LiquidityDetails(

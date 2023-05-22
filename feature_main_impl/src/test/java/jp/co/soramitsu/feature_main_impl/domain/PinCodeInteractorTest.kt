@@ -94,8 +94,8 @@ class PinCodeInteractorTest {
 
     @Test
     fun `reset user called`() = runTest {
-        interactor.resetUser()
-        verify(userRepository).clearUserData()
+        interactor.fullLogout()
+        verify(userRepository).fullLogout()
     }
 
     @Test

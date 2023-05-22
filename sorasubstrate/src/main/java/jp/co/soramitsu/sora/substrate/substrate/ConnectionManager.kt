@@ -5,9 +5,9 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import jp.co.soramitsu.fearless_utils.wsrpc.socket.StateObserver
 import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 interface ConnectionManager {
 
@@ -15,23 +15,15 @@ interface ConnectionManager {
 
     fun observeAppState()
 
-    fun start(url: String)
+    val isStarted: Boolean
 
-    fun isStarted(): Boolean
+    val connectionState: Flow<Boolean>
 
-    fun stop()
+    val isConnected: Boolean
 
-    fun connectionState(): Flow<Boolean>
+    val isNetworkAvailable: Boolean
 
-    fun networkState(): Flow<SocketStateMachine.State>
+    val networkState: StateFlow<SocketStateMachine.State>
 
     fun switchUrl(url: String)
-
-    fun resume()
-
-    fun pause()
-
-    fun addStateObserver(stateObserver: StateObserver)
-
-    fun removeStateObserver(stateObserver: StateObserver)
 }

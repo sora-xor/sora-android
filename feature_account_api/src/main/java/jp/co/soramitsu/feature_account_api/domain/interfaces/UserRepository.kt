@@ -18,8 +18,6 @@ interface UserRepository {
 
     suspend fun setCurSoraAccount(soraAccount: SoraAccount)
 
-    suspend fun setCurSoraAccount(accountAddress: String)
-
     fun flowCurSoraAccount(): Flow<SoraAccount>
 
     fun flowSoraAccountsList(): Flow<List<SoraAccount>>
@@ -38,7 +36,9 @@ interface UserRepository {
 
     suspend fun saveRegistrationState(onboardingState: OnboardingState)
 
-    suspend fun clearUserData()
+    suspend fun fullLogout()
+
+    suspend fun defaultGlobalCards()
 
     suspend fun clearAccountData(address: String)
 
@@ -46,11 +46,9 @@ interface UserRepository {
 
     suspend fun getParentInviteCode(): String
 
-    suspend fun getAvailableLanguages(): Pair<List<Language>, String>
+    suspend fun getAvailableLanguages(): Pair<List<Language>, Int>
 
     suspend fun changeLanguage(language: String): String
-
-    suspend fun getSelectedLanguage(): Language
 
     suspend fun setBiometryEnabled(isEnabled: Boolean)
 

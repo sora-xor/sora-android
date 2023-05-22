@@ -5,13 +5,12 @@
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
-import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import javax.inject.Inject
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 
 class InvitationInteractor @Inject constructor(
-    private val userRepository: UserRepository,
+    private val soraConfigManager: SoraConfigManager,
 ) {
 
-    fun getInviteLink(): String = FlavorOptionsProvider.defaultMarketUrl
+    suspend fun getInviteLink(): String = soraConfigManager.getInviteLink()
 }

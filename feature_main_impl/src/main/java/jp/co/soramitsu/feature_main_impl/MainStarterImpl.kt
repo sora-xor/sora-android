@@ -6,9 +6,9 @@
 package jp.co.soramitsu.feature_main_impl
 
 import android.content.Context
+import javax.inject.Inject
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_main_impl.presentation.MainActivity
-import javax.inject.Inject
 
 class MainStarterImpl @Inject constructor() : MainStarter {
 

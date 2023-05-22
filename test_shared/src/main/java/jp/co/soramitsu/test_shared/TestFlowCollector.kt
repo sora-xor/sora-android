@@ -5,6 +5,8 @@
 
 package jp.co.soramitsu.test_shared
 
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancelAndJoin
@@ -14,8 +16,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.withTimeout
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Collect the receiving [Flow] in the given [TestScope], then run assertions on the flow's emissions in the given
@@ -23,7 +23,10 @@ import kotlin.time.Duration.Companion.seconds
  * given in the [runTest] function.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-suspend fun <T> Flow<T>.test(scope: TestScope, assertionBlock: suspend TestFlowCollector<T>.() -> Unit = {}) {
+suspend fun <T> Flow<T>.test(
+    scope: TestScope,
+    assertionBlock: suspend TestFlowCollector<T>.() -> Unit = {},
+) {
     with(TestFlowCollector(this, scope)) {
         assertionBlock()
         finishAssertion()

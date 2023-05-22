@@ -11,17 +11,18 @@ import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionsTree
 import jp.co.soramitsu.fearless_utils.runtime.definitions.dynamic.DynamicTypeResolver
-import jp.co.soramitsu.fearless_utils.runtime.definitions.dynamic.extentsions.GenericsExtension
 import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.TypeRegistry
-import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.v13Preset
+import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.v14Preset
+import jp.co.soramitsu.fearless_utils.runtime.definitions.v14.TypesParserV14
 import jp.co.soramitsu.fearless_utils.runtime.metadata.RuntimeMetadataReader
 import jp.co.soramitsu.fearless_utils.runtime.metadata.builder.VersionedRuntimeBuilder
+import jp.co.soramitsu.fearless_utils.runtime.metadata.v14.RuntimeMetadataSchemaV14
 
 object TestRuntimeProvider {
 
     fun buildRuntime(networkName: String): RuntimeSnapshot {
         val runtimeMetadataReader = buildRawMetadata(networkName)
-        val typeRegistry = buildRegistry(networkName)
+        val typeRegistry = buildRegistry(networkName, runtimeMetadataReader)
 
         val metadata = VersionedRuntimeBuilder.buildMetadata(runtimeMetadataReader, typeRegistry)
 
@@ -33,27 +34,29 @@ object TestRuntimeProvider {
             RuntimeMetadataReader.read(this)
         }
 
-    private fun buildRegistry(networkName: String): TypeRegistry {
+    private fun buildRegistry(
+        networkName: String,
+        runtimeMetadataReader: RuntimeMetadataReader
+    ): TypeRegistry {
         val gson = Gson()
-        val reader = JsonReader(getResourceReader("default.json"))
         val soraReader = JsonReader(getResourceReader("$networkName.json"))
 
-        val tree = gson.fromJson<TypeDefinitionsTree>(reader, TypeDefinitionsTree::class.java)
         val soraTree =
             gson.fromJson<TypeDefinitionsTree>(soraReader, TypeDefinitionsTree::class.java)
 
-        val defaultTypeRegistry =
-            TypeDefinitionParser.parseBaseDefinitions(tree, v13Preset()).typePreset
         val networkParsed = TypeDefinitionParser.parseNetworkVersioning(
-            soraTree,
-            defaultTypeRegistry
+            tree = soraTree,
+            typePreset = TypesParserV14.parse(
+                runtimeMetadataReader.metadata[RuntimeMetadataSchemaV14.lookup],
+                v14Preset()
+            ).typePreset,
+            currentRuntimeVersion = 1,
+            upto14 = false,
         )
 
         return TypeRegistry(
             types = networkParsed.typePreset,
-            dynamicTypeResolver = DynamicTypeResolver(
-                DynamicTypeResolver.DEFAULT_COMPOUND_EXTENSIONS + GenericsExtension
-            )
+            dynamicTypeResolver = DynamicTypeResolver.defaultCompoundResolver(),
         )
     }
 }

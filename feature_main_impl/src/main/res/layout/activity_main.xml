@@ -43,8 +43,9 @@
         android:id="@+id/bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="?attr/baseBackground"
+        android:background="?attr/pureWhiteOnDay"
         android:visibility="gone"
+        app:elevation="2dp"
         app:itemIconTint="@drawable/bottom_navigation_icon_color_selector"
         app:itemTextAppearanceActive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
         app:itemTextAppearanceInactive="@style/TextAppearance.Soramitsu.Neu.BottomNavigation"
@@ -53,7 +54,25 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:menu="@menu/bottom_navigations"
         tools:background="@color/neu_color_100"
         tools:visibility="visible" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabMain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="28dp"
+        android:backgroundTint="@color/neu_brand_polkaswap"
+        app:maxImageSize="40dp"
+        android:src="@drawable/ic_polkaswap_40"
+        android:visibility="gone"
+        app:borderWidth="0dp"
+        app:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="@id/bottomNavigationView"
+        app:layout_constraintEnd_toEndOf="@id/bottomNavigationView"
+        app:layout_constraintStart_toStartOf="@id/bottomNavigationView"
+        app:tint="@android:color/white"
+        tools:ignore="ContentDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

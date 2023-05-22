@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 
 class WebViewViewModel @AssistedInject constructor(
@@ -42,8 +43,8 @@ class WebViewViewModel @AssistedInject constructor(
     }
 
     init {
-        _toolbarState.value = _toolbarState.value?.copy(
-            title = title
+        _toolbarState.value = initSmallTitle2(
+            title = title,
         )
     }
 

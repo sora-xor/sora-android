@@ -15,12 +15,12 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
+import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerRewardsInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,7 +56,7 @@ class ReferralRepositoryTest {
     private lateinit var referralsDao: ReferralsDao
 
     @Mock
-    private lateinit var soraWalletBlockExplorerInfo: SoraWalletBlockExplorerInfo
+    private lateinit var blockExplorerManager: BlockExplorerManager
 
     @Mock
     private lateinit var substrateApi: SubstrateApi
@@ -95,18 +95,14 @@ class ReferralRepositoryTest {
             extrinsicManager,
             runtimeManager,
             substrateCalls,
-            soraWalletBlockExplorerInfo,
+            blockExplorerManager,
         )
     }
 
     @Test
     fun `update referral rewards called`() = runTest {
         val address = "address"
-        given(soraWalletBlockExplorerInfo.getReferrerRewards(address, "1")).willReturn(
-            ReferrerRewardsInfo(
-                REFERRER_REWARDS
-            )
-        )
+        given(blockExplorerManager.updateReferrerRewards(address)).willReturn(Unit)
 
         mockkStatic("androidx.room.RoomDatabaseKt")
         val lambda = slot<suspend () -> R>()
@@ -115,7 +111,7 @@ class ReferralRepositoryTest {
         }
         referralRepository.updateReferralRewards(address)
 
-        verify(referralsDao).insertReferrals(REFERRER_LOCAL)
+        verify(blockExplorerManager).updateReferrerRewards(address)
     }
 
     @Test

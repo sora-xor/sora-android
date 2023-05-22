@@ -5,24 +5,24 @@
 
 package jp.co.soramitsu.feature_select_node_impl.domain
 
+import javax.inject.Inject
+import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
-import jp.co.soramitsu.feature_select_node_api.domain.model.Node
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
 
 internal class SelectNodeInteractor @Inject constructor(
     private val repository: SelectNodeRepository,
     private val nodeValidator: NodeValidator
 ) {
 
-    fun subscribeNodes(): Flow<List<Node>> {
+    fun subscribeNodes(): Flow<List<ChainNode>> {
         return repository.getNodes()
             .flowOn(Dispatchers.IO)
     }
 
-    fun subscribeSelectedNode(): Flow<Node?> {
+    fun subscribeSelectedNode(): Flow<ChainNode?> {
         return repository.getSelectedNode()
     }
 
@@ -30,15 +30,15 @@ internal class SelectNodeInteractor @Inject constructor(
         return nodeValidator.validate(url)
     }
 
-    suspend fun addCustomNode(node: Node) {
+    suspend fun addCustomNode(node: ChainNode) {
         repository.addCustomNode(node)
     }
 
-    suspend fun updateCustomNode(previousAddress: String, node: Node) {
+    suspend fun updateCustomNode(previousAddress: String, node: ChainNode) {
         repository.updateCustomNode(previousAddress, node)
     }
 
-    suspend fun removeNode(node: Node) {
+    suspend fun removeNode(node: ChainNode) {
         repository.deleteNode(node.address)
     }
 }

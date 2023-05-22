@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -43,6 +44,9 @@ class BackupJsonViewModel @AssistedInject constructor(
     val jsonTextLiveData: LiveData<Uri> = _jsonTextLiveData
 
     init {
+        _toolbarState.value = initMediumTitle2(
+            title = R.string.export_json_download_json,
+        )
         _backupJsonScreenState.value = BackupJsonScreenState(
             state = InputTextState(
                 label = resourceManager.getString(R.string.export_json_input_label)
@@ -65,7 +69,7 @@ class BackupJsonViewModel @AssistedInject constructor(
     fun confirmationInputChanged(textFieldValue: TextFieldValue) {
         backupJsonScreenState.value?.let {
             _backupJsonScreenState.value = it.copy(
-                confirmationState = it.state.copy(textFieldValue),
+                confirmationState = it.confirmationState.copy(textFieldValue),
                 buttonEnabledState = textFieldValue.text.isNotEmpty() && it.state.value.text == textFieldValue.text
             )
         }
@@ -74,12 +78,17 @@ class BackupJsonViewModel @AssistedInject constructor(
     fun downloadJsonClicked() {
         viewModelScope.launch {
             _backupJsonScreenState.value?.let {
-                _jsonTextLiveData.value = interactor.getJsonFileUri(addresses, it.confirmationState.value.text)
+                _jsonTextLiveData.value =
+                    interactor.getJsonFileUri(addresses, it.confirmationState.value.text)
             }
         }
     }
 
-    fun onToolbarNavigation() {
+    override fun onNavIcon() {
+        router.popBackStackToAccountList()
+    }
+
+    override fun onBackPressed() {
         router.popBackStackToAccountList()
     }
 }

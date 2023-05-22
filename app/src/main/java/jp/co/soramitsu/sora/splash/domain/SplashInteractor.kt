@@ -5,11 +5,11 @@
 
 package jp.co.soramitsu.sora.splash.domain
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class SplashInteractor @Inject constructor(

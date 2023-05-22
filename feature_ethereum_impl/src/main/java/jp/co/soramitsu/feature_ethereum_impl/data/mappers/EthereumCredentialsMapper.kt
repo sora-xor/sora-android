@@ -5,9 +5,9 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.data.mappers
 
+import java.math.BigInteger
 import org.web3j.crypto.Bip32ECKeyPair
 import org.web3j.crypto.Credentials
-import java.math.BigInteger
 
 class EthereumCredentialsMapper {
 

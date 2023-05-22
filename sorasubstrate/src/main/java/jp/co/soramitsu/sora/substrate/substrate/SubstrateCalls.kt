@@ -6,6 +6,9 @@
 package jp.co.soramitsu.sora.substrate.substrate
 
 import io.emeraldpay.polkaj.scale.ScaleCodecReader
+import java.math.BigInteger
+import javax.inject.Inject
+import javax.inject.Singleton
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.data.network.dto.XorBalanceDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -38,34 +41,35 @@ import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.storage.SubscribeSto
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.storage.SubscribeStorageResult
 import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.storage.storageChange
 import jp.co.soramitsu.fearless_utils.wsrpc.subscriptionFlow
+import jp.co.soramitsu.sora.substrate.models.BlockEvent
 import jp.co.soramitsu.sora.substrate.models.BlockResponse
-import jp.co.soramitsu.sora.substrate.models.EventRecord
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse
-import jp.co.soramitsu.sora.substrate.models.InnerEventRecord
-import jp.co.soramitsu.sora.substrate.models.PhaseRecord
 import jp.co.soramitsu.sora.substrate.request.BlockHashRequest
 import jp.co.soramitsu.sora.substrate.request.BlockRequest
 import jp.co.soramitsu.sora.substrate.request.ChainHeaderRequest
 import jp.co.soramitsu.sora.substrate.request.ChainLastHeaderRequest
 import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest
+import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest2
 import jp.co.soramitsu.sora.substrate.request.FinalizedHeadRequest
 import jp.co.soramitsu.sora.substrate.request.NextAccountIndexRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeysPaged
 import jp.co.soramitsu.sora.substrate.request.StateQueryStorageAt
-import jp.co.soramitsu.sora.substrate.response.BalanceResponse
 import jp.co.soramitsu.sora.substrate.response.ChainHeaderResponse
 import jp.co.soramitsu.sora.substrate.response.FeeResponse
+import jp.co.soramitsu.sora.substrate.response.FeeResponse2
+import jp.co.soramitsu.sora.substrate.response.StateQueryResponse
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.createAsset
+import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import org.spongycastle.util.encoders.Hex
-import java.math.BigInteger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Suppress("EXPERIMENTAL_API_USAGE")
 @Singleton
@@ -78,45 +82,61 @@ class SubstrateCalls @Inject constructor(
         const val FINALIZED = "finalized"
         private const val FINALITY_TIMEOUT = "finalityTimeout"
         const val IN_BLOCK = "inBlock"
+        const val DEFAULT_ASSETS_PAGE_SIZE = 100
     }
 
     suspend fun fetchXORBalances(
-        accountId: String
+        accountId: String,
     ): XorBalanceDto {
+        val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.SYSTEM.palletName)
+            .storage(Storage.ACCOUNT.storageName)
         val storageKey =
-            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.SYSTEM.palletName)
-                .storage(Storage.ACCOUNT.storageName)
-                .storageKey(runtimeManager.getRuntimeSnapshot(), accountId.toAccountId())
-        val accountInfoStruct = socketService.executeAsync(
+            storage.storageKey(runtimeManager.getRuntimeSnapshot(), accountId.toAccountId())
+        val hexString = socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
-            mapper = scale(AccountInfo).nonNull()
+            mapper = pojo<String>(),
         )
 
-        val stakingLedgerXorBalance = fetchStakingLedgerXORBalance(accountId)
-        val activeEra = fetchActiveEra()
-        var redeemable = BigInteger.ZERO
-        var unbonding = BigInteger.ZERO
-        val bonded = BigInteger.ZERO
+        hexString.result?.let {
+            val value = storage.type.value?.fromHex(runtimeManager.getRuntimeSnapshot(), it)
+            val data = value?.safeCast<Struct.Instance>()?.get<Struct.Instance>("data")
 
-        stakingLedgerXorBalance?.let { stakingXorBalance ->
-            redeemable = stakingXorBalance[StakingLedger.unlocking].filter {
-                it[UnlockChunk.era] <= activeEra
-            }.sumByBigInteger { it[UnlockChunk.value] }
-            unbonding = stakingXorBalance[StakingLedger.unlocking].filter {
-                it[UnlockChunk.era] > activeEra
-            }.sumByBigInteger { it[UnlockChunk.value] }
+            val stakingLedgerXorBalance = fetchStakingLedgerXORBalance(accountId)
+            val activeEra = fetchActiveEra()
+            var redeemable = BigInteger.ZERO
+            var unbonding = BigInteger.ZERO
+            val bonded = observeReferrerBalance(accountId).firstOrNull() ?: BigInteger.ZERO
 
-            stakingXorBalance[StakingLedger.active]
+            stakingLedgerXorBalance?.let { stakingXorBalance ->
+                redeemable = stakingXorBalance[StakingLedger.unlocking].filter {
+                    it[UnlockChunk.era] <= activeEra
+                }.sumByBigInteger { it[UnlockChunk.value] }
+                unbonding = stakingXorBalance[StakingLedger.unlocking].filter {
+                    it[UnlockChunk.era] > activeEra
+                }.sumByBigInteger { it[UnlockChunk.value] }
+
+                stakingXorBalance[StakingLedger.active]
+            }
+
+            return XorBalanceDto(
+                data?.get<BigInteger>("free") ?: BigInteger.ZERO,
+                data?.get<BigInteger>("reserved") ?: BigInteger.ZERO,
+                data?.get<BigInteger>("miscFrozen") ?: BigInteger.ZERO,
+                data?.get<BigInteger>("feeFrozen") ?: BigInteger.ZERO,
+                bonded,
+                redeemable,
+                unbonding,
+            )
         }
 
         return XorBalanceDto(
-            accountInfoStruct[AccountInfo.data][AccountData.free],
-            accountInfoStruct[AccountInfo.data][AccountData.reserved],
-            accountInfoStruct[AccountInfo.data][AccountData.miscFrozen],
-            accountInfoStruct[AccountInfo.data][AccountData.feeFrozen],
-            bonded,
-            redeemable,
-            unbonding,
+            BigInteger.ZERO,
+            BigInteger.ZERO,
+            BigInteger.ZERO,
+            BigInteger.ZERO,
+            BigInteger.ZERO,
+            BigInteger.ZERO,
+            BigInteger.ZERO
         )
     }
 
@@ -213,16 +233,59 @@ class SubstrateCalls @Inject constructor(
         }
     }
 
-    suspend fun fetchBalance(accountId: String, assetId: String): BigInteger =
-        socketService.executeAsync(
-            request = RuntimeRequest(
-                "assets_usableBalance",
-                listOf(accountId, assetId)
-            ),
-            mapper = pojo<BalanceResponse>().nonNull()
-        ).let {
-            BigInteger(it.balance)
+    fun observeReferrerBalance(from: String): Flow<BigInteger?> = flow {
+        val runtime = runtimeManager.getRuntimeSnapshot()
+        val storage = runtime.metadata.module(Pallete.Referrals.palletName)
+            .storage(Storage.REFERRER_BALANCE.storageName)
+        val storageKey = storage.storageKey(runtime, from.toAccountId())
+        val resultFlow = observeStorage(storageKey).map { hex ->
+            if (hex.isNotEmpty()) {
+                runCatching {
+                    storage.type.value?.fromHex(runtime, hex)?.safeCast<BigInteger>()
+                }.getOrNull()
+            } else {
+                null
+            }
         }
+        emitAll(resultFlow)
+    }
+
+    suspend fun fetchBalances(accountId: String, assetIds: List<String>): List<BigInteger> {
+        val chunks = assetIds.chunked(DEFAULT_ASSETS_PAGE_SIZE)
+        val storage = runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.TOKENS.palletName)
+            .storage(Storage.ACCOUNTS.storageName)
+
+        return chunks.fold(mutableListOf()) { acc, chunk ->
+            val storageKeys = chunk.map { assetId ->
+                storage.storageKey(
+                    runtimeManager.getRuntimeSnapshot(),
+                    accountId.toAccountId(),
+                    Struct.Instance(
+                        mapOf("code" to assetId.mapAssetId())
+                    )
+                )
+            }
+            val request = StateQueryStorageAt(listOf(storageKeys))
+            val chunkValues = socketService.executeAsync(
+                request,
+                mapper = pojoList<StateQueryResponse>().nonNull()
+            ).first().changesAsMap()
+
+            val results = chunkValues.mapValues {
+                it.value?.let {
+                    val value =
+                        storage.type.value?.fromHex(
+                            runtimeManager.getRuntimeSnapshot(),
+                            it
+                        )
+                    value.safeCast<Struct.Instance>()?.get<BigInteger>("free") ?: BigInteger.ZERO
+                } ?: BigInteger.ZERO
+            }
+
+            acc.addAll(results.values)
+            acc
+        }
+    }
 
     suspend fun needsMigration(irohaAddress: String): Boolean =
         socketService.executeAsync(
@@ -310,7 +373,7 @@ class SubstrateCalls @Inject constructor(
 
     suspend fun checkEvents(
         blockHash: String
-    ): List<EventRecord> {
+    ): List<BlockEvent> {
         val storageKey =
             runtimeManager.getRuntimeSnapshot().metadata.module("System").storage("Events")
                 .storageKey()
@@ -329,21 +392,32 @@ class SubstrateCalls @Inject constructor(
                             eventsRaw.filterIsInstance<Struct.Instance>().mapNotNull {
                                 val phase = it.get<DictEnum.Entry<*>>("phase")
                                 val phaseValue = when (phase?.name) {
-                                    "ApplyExtrinsic" -> PhaseRecord.ApplyExtrinsic(phase.value as BigInteger)
-                                    "Finalization" -> PhaseRecord.Finalization
-                                    "Initialization" -> PhaseRecord.Initialization
+                                    "ApplyExtrinsic" -> phase.value as BigInteger
+                                    "Finalization" -> null
+                                    "Initialization" -> null
                                     else -> null
                                 }
-                                val innerEvent = it.get<GenericEvent.Instance>("event")
-                                if (phaseValue == null || innerEvent == null) null else
-                                    EventRecord(
-                                        phaseValue,
-                                        InnerEventRecord(
-                                            innerEvent.module.index.toInt(),
-                                            innerEvent.event.index.second,
-                                            innerEvent.arguments
+                                if (phaseValue != null) {
+                                    val eventInstance = it.get<GenericEvent.Instance>("event")
+                                    if (eventInstance != null) {
+                                        BlockEvent(
+                                            eventInstance.module.index.toInt(),
+                                            eventInstance.event.index.second,
+                                            phaseValue.toLong(),
                                         )
-                                    )
+                                    } else {
+                                        val enumInstance = it.get<DictEnum.Entry<*>>("event")
+                                        if (enumInstance != null) {
+                                            BlockEvent(
+                                                enumInstance.name,
+                                                enumInstance.value?.safeCast<DictEnum.Entry<*>>()?.name.orEmpty(),
+                                                phaseValue.toLong(),
+                                            )
+                                        } else {
+                                            null
+                                        }
+                                    }
+                                } else null
                             }
                         eventRecordList
                     } else emptyList()
@@ -354,11 +428,23 @@ class SubstrateCalls @Inject constructor(
         }
     }
 
-    suspend fun getExtrinsicFee(extrinsic: String): BigInteger {
-        val request = FeeCalculationRequest(extrinsic)
-        val feeResponse =
-            socketService.executeAsync(request = request, mapper = pojo<FeeResponse>().nonNull())
-        return feeResponse.partialFee
+    suspend fun getExtrinsicFee(extrinsic: String): BigInteger? {
+        var result: BigInteger? = null
+        result = runCatching {
+            val request = FeeCalculationRequest(extrinsic)
+            val feeResponse =
+                socketService.executeAsync(request = request, mapper = pojo<FeeResponse>().nonNull())
+            feeResponse.partialFee
+        }.getOrNull()
+        if (result == null) {
+            result = runCatching {
+                val request = FeeCalculationRequest2(extrinsic)
+                val feeResponse =
+                    socketService.executeAsync(request = request, mapper = pojo<FeeResponse2>().nonNull())
+                feeResponse.inclusionFee.sum
+            }.getOrNull()
+        }
+        return result
     }
 
     suspend fun getBlock(blockHash: String): BlockResponse {

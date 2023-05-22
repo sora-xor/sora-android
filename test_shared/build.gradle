@@ -43,10 +43,5 @@ dependencies {
     api truthDep
     api mockkDep
 
-    api robolectricDep
-    api robolectricMultidexDep
-    api powerMockDep
-    api powerMockMockitoDep
-
     api roomTestHelpersDep
 }

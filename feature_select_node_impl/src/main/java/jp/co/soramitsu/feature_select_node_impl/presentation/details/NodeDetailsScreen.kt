@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,7 +17,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -31,13 +29,16 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.base.ProgressDialog
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
-import jp.co.soramitsu.common.presentation.compose.neumorphism.TextNeumorphButton
-import jp.co.soramitsu.common.presentation.compose.resources.Dimens
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_select_node_impl.R
 import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.TextButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputText
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
@@ -47,8 +48,7 @@ internal fun NodeDetailsScreen(
     val state = viewModel.state
 
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize()
     ) {
         NodeDetailsScreenContent(
             state = state,
@@ -81,65 +81,70 @@ private fun NodeDetailsScreenContent(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-            .noRippleClickable {
-                keyboardController?.hide()
-                focusManager.clearFocus()
-            }
-            .background(MaterialTheme.customColors.bgPage)
-            .padding(Dimens.x2),
-        verticalArrangement = Arrangement.SpaceBetween
+    ContentCard(
+        modifier = Modifier
+            .padding(vertical = Dimens.x1, horizontal = Dimens.x2)
     ) {
-        InputText(
-            modifier = Modifier.fillMaxWidth(),
-            state = state.nameState,
-            onValueChange = onNodeNameChanged,
-            focusRequester = focusRequester,
-            keyboardActions = KeyboardActions(
-                onDone = {
+        Column(
+            modifier = Modifier
+                .noRippleClickable {
+                    keyboardController?.hide()
                     focusManager.clearFocus()
                 }
-            ),
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            onFocusChanged = onNodeNameFocused,
-            maxLines = 1,
-            singleLine = true
-        )
-
-        InputText(
-            modifier = Modifier.fillMaxWidth()
-                .padding(top = Dimens.x2),
-            state = state.addressState,
-            onValueChange = onNodeAddressChanged,
-            focusRequester = focusRequester,
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus()
-                }
-            ),
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            onFocusChanged = onNodeAddressFocused,
-            maxLines = 1,
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        TextNeumorphButton(
-            modifier = Modifier.fillMaxWidth()
-                .padding(bottom = Dimens.x2),
-            text = stringResource(R.string.select_node_how_to_run_node),
-            onClick = onHowToRunNode
-        )
-
-        FilledButton(
-            modifier = Modifier.fillMaxWidth()
-                .padding(bottom = Dimens.x1),
-            text = stringResource(R.string.common_submit),
-            onClick = onSubmit,
-            enabled = state.submitButtonEnabled
-        )
+                .background(MaterialTheme.customColors.bgSurface)
+                .padding(Dimens.x3),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            InputText(
+                modifier = Modifier.fillMaxWidth(),
+                state = state.nameState,
+                onValueChange = onNodeNameChanged,
+                focusRequester = focusRequester,
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                onFocusChanged = onNodeNameFocused,
+                maxLines = 1,
+                singleLine = true
+            )
+            InputText(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.x2),
+                state = state.addressState,
+                onValueChange = onNodeAddressChanged,
+                focusRequester = focusRequester,
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    }
+                ),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                onFocusChanged = onNodeAddressFocused,
+                maxLines = 1,
+                singleLine = true
+            )
+            TextButton(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Dimens.x3, bottom = Dimens.x1),
+                size = Size.Large,
+                order = Order.PRIMARY,
+                text = stringResource(R.string.select_node_how_to_run_node),
+                onClick = onHowToRunNode
+            )
+            FilledButton(
+                size = Size.Large,
+                modifier = Modifier.fillMaxWidth(),
+                order = Order.PRIMARY,
+                text = stringResource(id = R.string.select_node_add_custom_node),
+                onClick = onSubmit,
+                enabled = state.submitButtonEnabled
+            )
+        }
     }
 }
 

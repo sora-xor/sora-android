@@ -1,3 +1,5 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+
 apply plugin: 'com.android.application'
 apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
@@ -5,6 +7,7 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.appdistribution'
 apply plugin: 'com.google.firebase.crashlytics'
+apply plugin: 'com.github.triplet.play'
 apply from: '../tests.gradle'
 
 android {
@@ -18,30 +21,37 @@ android {
         versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        //resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
     }
+
+    // https://github.com/idnow/de.idnow.android/issues/60
+    // The issue appeared during android-sora-card integration
+    configurations {
+        all*.exclude module: 'bcprov-jdk15on'
+    }
+
     signingConfigs {
         cidebug {
-            storeFile file(System.env.CI_KEYSTORE_PATH ?: "key.jks")
-            storePassword System.env.CI_KEYSTORE_PASS ?: "password"
-            keyAlias System.env.CI_KEYSTORE_KEY_ALIAS ?: "alias"
-            keyPassword System.env.CI_KEYSTORE_KEY_PASS ?: "password"
+            storeFile file(System.env.CI_KEYSTORE_PATH ?: "../key/testdebug.jks")
+            storePassword System.env.CI_KEYSTORE_PASS ?: "soratestpsw"
+            keyAlias System.env.CI_KEYSTORE_KEY_ALIAS ?: "key0"
+            keyPassword System.env.CI_KEYSTORE_KEY_PASS ?: "sorakeypw"
         }
     }
     buildTypes {
         release {
-            minifyEnabled false
-            //shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro', 'proguard-rules-noobfuscation.pro'
+            minifyEnabled soraMinifyRelease
+            signingConfig signingConfigs.cidebug
+            shrinkResources soraMinifyRelease
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro', 'proguard-rules-noobfuscation.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             versionNameSuffix '-debug'
         }
         firebasedebug {
-//            minifyEnabled true
-//            shrinkResources true
-//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             initWith debug
             matchingFallbacks = ['debug']
             versionNameSuffix '-firebase'
@@ -88,7 +98,7 @@ android {
             applicationIdSuffix ".develop"
             resValue "string", "app_name", "Sora Develop"
             dimension 'default'
-            manifestPlaceholders.pathPrefix = "/dev/join"
+            manifestPlaceholders.pathPrefix = "/dev/#/referral"
             manifestPlaceholders.appIcon = "@mipmap/ic_dev_launcher"
             manifestPlaceholders.roundedIcon = "@mipmap/ic_dev_launcher"
         }
@@ -97,7 +107,7 @@ android {
             applicationIdSuffix ".communitytesting"
             resValue "string", "app_name", "Soralution"
             dimension 'default'
-            manifestPlaceholders.pathPrefix = "/tst/join"
+            manifestPlaceholders.pathPrefix = "/tst/#/referral"
             manifestPlaceholders.appIcon = "@mipmap/ic_soralution_launcher"
             manifestPlaceholders.roundedIcon = "@mipmap/ic_soralution_launcher_rounded"
         }
@@ -106,7 +116,7 @@ android {
             applicationIdSuffix ".stage"
             resValue "string", "app_name", "Sora Staging"
             dimension 'default'
-            manifestPlaceholders.pathPrefix = "/stg/join"
+            manifestPlaceholders.pathPrefix = "/stg/#/referral"
             manifestPlaceholders.appIcon = "@mipmap/ic_launcher"
             manifestPlaceholders.roundedIcon = "@mipmap/ic_launcher_rounded"
         }
@@ -114,9 +124,9 @@ android {
         production {
             resValue "string", "app_name", "Sora"
             dimension 'default'
-            manifestPlaceholders.pathPrefix = "/join"
-            manifestPlaceholders.appIcon = "@mipmap/ic_launcher"
-            manifestPlaceholders.roundedIcon = "@mipmap/ic_launcher_rounded"
+            manifestPlaceholders.pathPrefix = "/#/referral"
+            manifestPlaceholders.appIcon = "@mipmap/ic_prod_launcher"
+            manifestPlaceholders.roundedIcon = "@mipmap/ic_prod_launcher_rounded"
         }
     }
 
@@ -131,12 +141,19 @@ hilt {
     enableAggregatingTask = true
 }
 
+play {
+    serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
+    track = "beta"
+    releaseStatus = ReleaseStatus.DRAFT
+    releaseName = "84 (3.0.0.6)"
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":common")
     implementation project(":core_db")
-    implementation project(":feature_onboarding_api")
-    implementation project(":feature_onboarding_impl")
+    implementation project(":feature_assets_api")
+    implementation project(":feature_assets_impl")
     implementation project(":feature_main_api")
     implementation project(":feature_main_impl")
     implementation project(":feature_multiaccount_api")
@@ -147,20 +164,22 @@ dependencies {
     implementation project(":feature_account_impl")
     implementation project(":feature_ethereum_api")
     implementation project(":feature_ethereum_impl")
-    implementation project(":feature_votable_api")
-    implementation project(":feature_votable_impl")
+    implementation project(":feature_polkaswap_api")
+    implementation project(":feature_polkaswap_impl")
     implementation project(":feature_wallet_api")
     implementation project(":feature_wallet_impl")
-    implementation project(":feature_notification_api")
-    implementation project(":feature_notification_impl")
     implementation project(":feature_select_node_api")
     implementation project(":feature_select_node_impl")
+    implementation project(":feature_blockexplorer_api")
+    implementation project(":feature_blockexplorer_impl")
+    implementation project(":feature_sora_card_api")
+    implementation project(":feature_sora_card_impl")
     implementation project(":sorasubstrate")
     implementation project(":soracrypro")
-
-    implementation kotlinDep
+    implementation project(":network")
 
     implementation androidDep
+    implementation appCompatResourcesDep
     implementation materialDep
     implementation cardViewDep
     implementation constraintDep
@@ -168,10 +187,9 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation neumorphismDep
-    implementation emojiDep
-
     implementation lottieDep
+    implementation coilDep
+    implementation coilSvgDep
 
     implementation timberDep
 

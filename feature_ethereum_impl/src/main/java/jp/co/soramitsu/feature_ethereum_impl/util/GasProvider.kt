@@ -5,8 +5,8 @@
 
 package jp.co.soramitsu.feature_ethereum_impl.util
 
-import org.web3j.tx.gas.ContractGasProvider
 import java.math.BigInteger
+import org.web3j.tx.gas.ContractGasProvider
 
 data class GasProvider(
     var estimatedGas: BigInteger,

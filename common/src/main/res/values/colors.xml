@@ -1,45 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="subtitleGrey">#616161</color>
-    <color name="circleBgGrey">#7f7f7f</color>
-    <color name="darkGreyBlue">#24494e</color>
     <color name="grey">#797979</color>
-    <color name="strokeGrey">#9B9B9B</color>
-    <color name="lighterGrey">#DBDBDB</color>
-    <color name="transparentGrey">#32797979</color>
-    <color name="greyBlue">#899f9e</color>
-    <color name="titleDarkGreyBlue">#035C5A</color>
-    <color name="indicatorDot">#c4d4d3</color>
-    <color name="lightBlack">#2c2c2c</color>
-    <color name="greyBackground">#f2f7f7</color>
-    <color name="inviteListBackground">#631c504e</color>
-    <color name="invitesDividerColor">#e1e1e1</color>
-    <color name="bluishGrey">#9d799292</color>
-    <color name="cardBackground">#408ab3b1</color>
-    <color name="seekbarColor">#f0f7f7</color>
-    <color name="oceanBlue">#73a8a6</color>
 
     <!--  should be refactored to brand_pmsblack  -->
     <color name="black">#2D2926</color>
 
     <color name="white">#ffffff</color>
-    <color name="lightGrey">#799292</color>
-    <color name="green">#1c504e</color>
     <color name="secondaryGreen">#24DAA0</color>
-    <color name="tabsUnderline">#cde1e0</color>
-    <color name="tabsTitleColor">#73a8a6</color>
-    <color name="profileDividerColor">#cee1e1</color>
-    <color name="greyDivider">#8C999999</color>
-    <color name="backgroundGrey">#f2f2f2</color>
-    <color name="blackText">#333333</color>
-    <color name="qrCodeSecondColor">#f2f2f2</color>
-    <color name="activityDividerColor">#6b73a8a6</color>
-    <color name="thinBorder">#40999999</color>
-    <color name="thickBorder">#8c999999</color>
     <color name="dividerColor">#DDDDDD</color>
-    <color name="informationTextColor">#898989</color>
-    <color name="tertiaryColor">#027ad0</color>
-    <color name="shadowBorder">#08000000</color>
     <color name="successGreen">#009900</color>
     <color name="successBackgroundStatus">#ccedcc</color>
     <color name="warningStatus">#ff9900</color>
@@ -52,9 +20,6 @@
     <color name="pressedSecondaryColor">#f1b3bb</color>
     <color name="focusedSecondaryColor">#ec9aa4</color>
 
-    <color name="coolGrey">#75787B</color>
-    <color name="soonGrey">#A3A4A8</color>
-
     <!--  theme independent colors  -->
     <color name="grey_900">#26262d</color>
     <color name="grey_800">#2e2e36</color>
@@ -65,32 +30,18 @@
     <color name="grey_300">#dde0e1</color>
     <color name="grey_200">#eceff0</color>
     <color name="grey_100">#f5f7f8</color>
-    
-    <color name="themePrimary_700">#aa0e42</color>
-    <color name="themePrimary_600">#c00f4a</color>
-    <color name="themePrimary_500">#d51252</color>
-    <color name="themePrimary_400">#d0021b</color>
-    <color name="themePrimary_300">#f25b8c</color>
-    <color name="themePrimary_200">#edabc3</color>
-    <color name="themePrimary_150">#f1c0d2</color>
-    <color name="themePrimary_100">#d3ccda</color>
-    <color name="themePrimary_50">#f4e0e8</color>
 
     <!--  brand colors. in progress....  -->
     <color name="brand_soramitsu_red">#e3232c</color>
     <color name="brand_pmsblack">#2d2926</color>
-    <color name="brand_ultrablack">#0d0248</color>
     <color name="brand_white">#ffffff</color>
-    <color name="brand_pinky">#ed145b</color>
-    <color name="brand_blue">#0d0248</color>
-    <color name="brand_onsurface">#0d0248</color>
 
     <color name="neu_color_black">#000000</color>
     <color name="neu_color_white">#ffffff</color>
     <color name="neu_color_red">#ff0000</color>
     <color name="neu_color_100">#f4f0f0</color>
     <color name="neu_color_200">#faf6f6</color>
-    <color name="neu_color_300">#F6F2F2</color>
+    <color name="neu_color_300">#F5F2F2</color>
     <color name="neu_status_warning_day">#479aef</color>
     <color name="neu_status_pink_warning_day">#ff77aa</color>
     <color name="neu_divider_color">#e5dddd</color>
@@ -101,19 +52,14 @@
     <color name="neu_tint_light">#ccbbbb</color>
     <color name="neu_on_background">#998888</color>
     <color name="neu_color_grey_100">#e0d6d6</color>
-    <color name="neu_color_grey_200">#776666</color>
-    <color name="neu_color_grey_300">#eee7e7</color>
     <color name="neu_selected_primary">#ee2233</color>
     <color name="neu_shadow_dark_on_day">#eeeae6e6</color>
     <color name="neu_shadow_light_on_day">#eefefafa</color>
-    <color name="neu_tint_titles_dark">#000055</color>
     <color name="neu_tint_titles_light">#000055</color>
+    <color name="polkaswap_background_alfa">#ffefe8ec</color>
     <color name="neu_brand_polkaswap">#ff0066</color>
     <color name="neu_disabled_on_day">#665555</color>
     <color name="neu_disabled_on_night">#665555</color>
-    <color name="neu_violet_100">#5d2f73</color>
-    <color name="neu_violet_200">#492067</color>
-    <color name="neu_violet_300">#9b6fa5</color>
     <color name="neu_background_info">#fff2df</color>
     <color name="neu_status">#f754a3</color>
     <color name="neu_disabled_grey">#ECE5E5</color>
@@ -121,7 +67,7 @@
     <color name="neu_disabled_text_grey_2">#cdc0c0</color>
     <color name="neu_pressed_red">#cc0000</color>
     <color name="neu_pressed_polkaswap">#DD0066</color>
-    <color name="neu_brown_color">#887777</color>
+    <color name="neu_brown_color">#9D8181</color>
     <color name="neu_bottom_menu_inactive">#443333</color>
     <color name="neu_background_search_view">#f0ecec</color>
     <color name="neu_hint_background">#d0c5c5</color>

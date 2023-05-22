@@ -5,4 +5,7 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model
 
-data class AccountListScreenState(val chooserActivated: Boolean = false, val accountList: List<ExportAccountData> = emptyList())
+data class AccountListScreenState(
+    val isActionMode: Boolean = false,
+    val accountList: List<ExportAccountData> = emptyList()
+)

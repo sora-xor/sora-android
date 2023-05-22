@@ -5,8 +5,6 @@
 
 package jp.co.soramitsu.common.util.json_decoder
 
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
-
 class JsonAccountData(
     val accounts: List<Account>,
     val encoded: String,
@@ -32,7 +30,7 @@ class JsonAccountData(
 
     data class Meta(
         val name: String?,
-        val genesisHash: String = FlavorOptionsProvider.genesisHash,
+        val genesisHash: String,
         val whenCreated: Long = System.currentTimeMillis()
     )
 }

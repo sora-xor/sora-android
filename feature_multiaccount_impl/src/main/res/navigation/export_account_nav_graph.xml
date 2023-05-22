@@ -5,11 +5,6 @@
     app:startDestination="@id/accountListFragment">
 
     <fragment
-        android:id="@+id/switchAccountFragment"
-        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.switchaccount.SwitchAccountFragment"
-        android:label="SwitchFragment" />
-
-    <fragment
         android:id="@+id/accountListFragment"
         android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list.AccountListFragment"
         android:label="AccountListFragment" />

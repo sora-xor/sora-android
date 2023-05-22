@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository.datasource
 
+import javax.inject.Inject
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
-import javax.inject.Inject
 
 class PrefsWalletDatasource @Inject constructor(
     private val soraPreferences: SoraPreferences,
