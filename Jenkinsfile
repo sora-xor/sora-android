@@ -1,4 +1,4 @@
-@Library('jenkins-library' ) _
+@Library('jenkins-library@feature/DOPS-2458/gpg' ) _
 
 // Job properties
 def jobParams = [
@@ -13,4 +13,5 @@ def pipeline = new org.android.AppPipeline(steps: this,
     jobParams: jobParams,
     appPushNoti: true,
     dockerImage: 'build-tools/android-build-box-jdk11:latest')
+    gpgFiles: [{'from': 'app/google-services.gpg','to': 'app/google-services.json'}]
 pipeline.runPipeline('sora')
