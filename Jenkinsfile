@@ -12,6 +12,6 @@ def pipeline = new org.android.AppPipeline(steps: this,
     testCmd: 'ktlint clean runModuleTests jacocoTestReport',
     jobParams: jobParams,
     appPushNoti: true,
-    dockerImage: 'build-tools/android-build-box-jdk11:latest')
-    gpgFiles: [['from': 'app/google-services.gpg','to': 'app/google-services.json']]
+    dockerImage: 'build-tools/android-build-box-jdk11:latest',
+    gpgFiles: [['from': 'app/google-services.gpg','to': 'app/google-services.json']])
 pipeline.runPipeline('sora')
