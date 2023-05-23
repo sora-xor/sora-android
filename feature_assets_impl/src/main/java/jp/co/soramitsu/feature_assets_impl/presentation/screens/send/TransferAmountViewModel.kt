@@ -68,9 +68,12 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class TransferAmountViewModel @AssistedInject constructor(
@@ -107,6 +110,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     private var fee: BigDecimal? = null
     private val assetsList = mutableListOf<Asset>()
     private var curTokenId: String = assetId
+    private var hasXorReminderWarningBeenChecked = false
 
     internal var sendState by mutableStateOf(
         SendState(
@@ -148,9 +152,15 @@ class TransferAmountViewModel @AssistedInject constructor(
             enteredFlow
                 .drop(1)
                 .debounce(ViewHelper.debounce)
-                .collectLatest { amount ->
+                .onEach { amount ->
                     checkEnteredAmount(amount)
-                }
+                }.filter {
+                    sendState.input?.token?.id == SubstrateOptionsProvider.feeAssetId ||
+                        !hasXorReminderWarningBeenChecked
+                }.onEach {
+                    updateTransactionReminderWarningVisibility()
+                    hasXorReminderWarningBeenChecked = true
+                }.collect()
         }
     }
 
@@ -184,12 +194,32 @@ class TransferAmountViewModel @AssistedInject constructor(
         }
     }
 
+    private suspend fun updateTransactionReminderWarningVisibility() =
+        with(sendState.input) {
+            if (this == null)
+                return@with
+
+            val result = interactor.isEnoughXorLeftAfterTransaction(
+                primaryToken = token,
+                primaryTokenAmount = amount,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = fee.orZero()
+            )
+
+            sendState = sendState.copy(
+                shouldTransactionReminderInsufficientWarningBeShown = result,
+                transactionFeeToken = feeAsset?.token?.symbol ?: ""
+            )
+        }
+
     fun onTokenChange(tokenId: String) {
         curTokenId = tokenId
         updateCurAsset()
         sendState.input?.amount?.let {
             checkEnteredAmount(it)
         }
+        hasXorReminderWarningBeenChecked = false
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {

@@ -78,9 +78,12 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class)
@@ -113,6 +116,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private var amount2 = BigDecimal.ZERO
     private var networkFee: BigDecimal? = null
     private var balanceFee = BigDecimal.ZERO
+    private val assetList = mutableListOf<Asset>()
 
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
@@ -157,6 +161,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     loading = false,
                 ),
             ),
+            shouldTransactionReminderInsufficientWarningBeShown = false,
+            transactionFeeToken = ""
         )
     )
 
@@ -177,6 +183,9 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 .distinctUntilChanged()
                 .debounce(500)
                 .collectLatest { assets ->
+                    assetList.clear()
+                    assetList.addAll(assets)
+
                     val asset1 = assets.first { it.token.id == token1Id }
                     val asset2 = assets.first { it.token.id == token2Id }
                     if (networkFee == null) {
@@ -256,7 +265,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
         viewModelScope.launch {
             amount1Flow
                 .debounce(ViewHelper.debounce)
-                .collectLatest { amount ->
+                .onEach { amount ->
                     poolData?.let {
                         amount1 = if (amount <= it.basePooled) amount else it.basePooled
                         amount2 = calculateOneAmountFromAnother(
@@ -270,7 +279,11 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         )
                         recalcDetails()
                     }
-                }
+                }.filter {
+                    removeState.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId
+                }.onEach {
+                    updateTransactionReminderWarningVisibility()
+                }.collect()
         }
         viewModelScope.launch {
             amount2Flow
@@ -609,6 +622,25 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             )
         }
     }
+
+    private suspend fun updateTransactionReminderWarningVisibility() =
+        with(removeState) {
+            if (assetState1 == null)
+                return@with
+
+            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = assetState1.token,
+                primaryTokenAmount = assetState1.amount,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = networkFee.orZero()
+            )
+
+            removeState = removeState.copy(
+                shouldTransactionReminderInsufficientWarningBeShown = result,
+                transactionFeeToken = feeToken().symbol
+            )
+        }
 
     private fun getAssetBalanceText(asset: Asset) =
         AmountFormat.getAssetBalanceText(asset, numbersFormatter, 7)

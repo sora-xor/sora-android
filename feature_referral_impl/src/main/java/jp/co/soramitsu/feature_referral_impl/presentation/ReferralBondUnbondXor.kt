@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -61,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -123,17 +125,31 @@ fun ReferralBondXor(
                 feeFiat = common.extrinsicFeeFiat,
             )
 
+            if (state.shouldTransactionReminderInsufficientWarningBeShown) {
+                Divider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = Dimens.x2,
+                    color = Color.Transparent
+                )
+                WarningTextCard(
+                    title = stringResource(id = R.string.common_title_warning),
+                    text = stringResource(
+                        id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
+                        formatArgs = arrayOf(state.transactionFeeToken, state.transactionFeeToken)
+                    )
+                )
+            }
+
             LoaderWrapper(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = Dimens.x3),
+                    .padding(top = Dimens.x2),
                 loading = common.progress,
                 loaderSize = Size.Large
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
-                        .fillMaxWidth()
-                        .padding(top = Dimens.x3),
+                        .fillMaxWidth(),
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_bond_button_title),
@@ -197,17 +213,31 @@ fun ReferralUnbondXor(
                 feeFiat = common.extrinsicFeeFiat,
             )
 
+            if (state.shouldTransactionReminderInsufficientWarningBeShown) {
+                Divider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = Dimens.x2,
+                    color = Color.Transparent
+                )
+                WarningTextCard(
+                    title = stringResource(id = R.string.common_title_warning),
+                    text = stringResource(
+                        id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
+                        formatArgs = arrayOf(state.transactionFeeToken, state.transactionFeeToken)
+                    )
+                )
+            }
+
             LoaderWrapper(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = Dimens.x3),
+                    .padding(top = Dimens.x2),
                 loading = common.progress,
                 loaderSize = Size.Large
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
-                        .fillMaxWidth()
-                        .padding(top = Dimens.x3),
+                        .fillMaxWidth(),
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.referral_unbond_button_title),

@@ -81,10 +81,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -184,6 +186,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 ),
             ),
             selectSearchAssetState = null,
+            shouldTransactionReminderInsufficientWarningBeShown = false,
+            transactionFeeToken = ""
         )
     )
 
@@ -235,11 +239,15 @@ class LiquidityAddViewModel @AssistedInject constructor(
             amount1Flow
                 .drop(1)
                 .debounce(ViewHelper.debounce)
-                .collectLatest { amount ->
+                .onEach { amount ->
                     amountFrom = amount
                     desired = WithDesired.INPUT
                     onChangedProperty.set(false)
-                }
+                }.filter {
+                    addState.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId
+                }.onEach {
+                    updateTransactionReminderWarningVisibility()
+                }.collect()
         }
         viewModelScope.launch {
             amount2Flow
@@ -465,6 +473,25 @@ class LiquidityAddViewModel @AssistedInject constructor(
             )
         )
     }
+
+    private suspend fun updateTransactionReminderWarningVisibility() =
+        with(addState) {
+            if (assetState1 == null)
+                return@with
+
+            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = assetState1.token,
+                primaryTokenAmount = assetState1.amount,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = networkFee
+            )
+
+            addState = addState.copy(
+                shouldTransactionReminderInsufficientWarningBeShown = result,
+                transactionFeeToken = feeToken().symbol
+            )
+        }
 
     fun onToken1Click() {
         if (assets.isNotEmpty()) {

@@ -37,9 +37,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -59,6 +61,7 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -134,6 +137,16 @@ internal fun SwapMainScreen(
             onMarketClick = onMarketClick,
             onSlippageClick = onSlippageClick,
         )
+        if (state.details.shouldTransactionReminderInsufficientWarningBeShown) {
+            Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
+            WarningTextCard(
+                title = stringResource(id = R.string.common_title_warning),
+                text = stringResource(
+                    id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
+                    formatArgs = arrayOf(state.details.transactionFeeToken, state.details.transactionFee)
+                )
+            )
+        }
         Spacer(modifier = Modifier.size(Dimens.x2))
         LoaderWrapper(
             modifier = Modifier.fillMaxWidth(),
