@@ -13,5 +13,5 @@ def pipeline = new org.android.AppPipeline(steps: this,
     jobParams: jobParams,
     appPushNoti: true,
     dockerImage: 'build-tools/android-build-box-jdk11:latest',
-    gpgFiles: [[source: 'app/google-services.gpg', dest: 'app/google-services.json']])
+    gpgFiles: ['app/google-services.json'])
 pipeline.runPipeline('sora')
