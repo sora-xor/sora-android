@@ -32,9 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,8 +42,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -58,9 +54,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -208,36 +201,6 @@ internal fun AssetDetailsBalanceCard(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun AmountCardIcon(
-    @DrawableRes res: Int,
-    text: String,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier.wrapContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(modifier = Modifier.size(Size.Large)) {
-            BleachedButton(
-                shape = CircleShape,
-                size = Size.Large,
-                order = Order.TERTIARY,
-                leftIcon = painterResource(res),
-                onClick = onClick,
-            )
-        }
-        Text(
-            modifier = Modifier
-                .wrapContentSize()
-                .padding(top = Dimens.x1),
-            text = text,
-            style = MaterialTheme.customTypography.textXSBold,
-            color = MaterialTheme.customColors.fgSecondary,
-        )
     }
 }
 
