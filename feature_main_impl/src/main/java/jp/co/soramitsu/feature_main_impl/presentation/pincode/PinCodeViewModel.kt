@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Date
 import javax.inject.Inject
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.SnackBarState
@@ -24,11 +25,14 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_main_impl.R
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -40,9 +44,9 @@ class PinCodeViewModel @Inject constructor(
     private val selectNodeRouter: SelectNodeRouter,
     private val progress: WithProgress,
     private val deviceVibrator: DeviceVibrator,
+    connectionManager: ConnectionManager,
 ) : BaseViewModel(), WithProgress by progress {
 
-    @Suppress("UNCHECKED_CAST")
     companion object {
         private const val COMPLETE_PIN_CODE_DELAY: Long = 12
     }
@@ -50,7 +54,7 @@ class PinCodeViewModel @Inject constructor(
     internal var state by mutableStateOf(
         PinCodeScreenState(
             maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
-            toolbarTitleString = ""
+            toolbarTitleString = "",
         )
     )
         private set
@@ -115,6 +119,15 @@ class PinCodeViewModel @Inject constructor(
             }
         }
 
+        connectionManager.connectionState
+            .catch { onError(it) }
+            .onEach {
+                state = state.copy(
+                    isConnected = it
+                )
+            }
+            .launchIn(viewModelScope)
+
         viewModelScope.launch {
             tryCatch {
                 isBiometryEnabled = interactor.isBiometryEnabled()
@@ -138,6 +151,7 @@ class PinCodeViewModel @Inject constructor(
                         isBackButtonVisible = false
                     )
                 }
+
                 PinCodeAction.OPEN_PASSPHRASE,
                 PinCodeAction.OPEN_SEED,
                 PinCodeAction.OPEN_JSON,
@@ -150,6 +164,7 @@ class PinCodeViewModel @Inject constructor(
                     )
                     showFingerPrintEventLiveData.value = isBiometryEnabled
                 }
+
                 PinCodeAction.CHANGE_PIN_CODE -> {
                     isPincodeUpdateNeeded = interactor.isPincodeUpdateNeeded()
                     val maxDotsLength = if (isPincodeUpdateNeeded) {
@@ -165,6 +180,7 @@ class PinCodeViewModel @Inject constructor(
 
                     showFingerPrintEventLiveData.value = isBiometryEnabled
                 }
+
                 PinCodeAction.TIMEOUT_CHECK -> {
                     try {
                         if (interactor.isCodeSet()) {
@@ -333,6 +349,12 @@ class PinCodeViewModel @Inject constructor(
         if (action != PinCodeAction.CREATE_PIN_CODE && !buttonsDisabled) {
             startFingerprintScannerEventLiveData.value = isBiometryEnabled
         }
+        if (state.migrating && state.isConnected) {
+            viewModelScope.launch {
+                delay(300)
+                proceed()
+            }
+        }
     }
 
     fun onAuthenticationError(errString: String) {
@@ -352,7 +374,8 @@ class PinCodeViewModel @Inject constructor(
                 startTimer()
             } else {
                 if (triesUsed == 2) {
-                    snackBarLiveData.value = SnackBarState(resourceManager.getString(R.string.pincode_one_try_left))
+                    snackBarLiveData.value =
+                        SnackBarState(resourceManager.getString(R.string.pincode_one_try_left))
                 }
             }
         }
@@ -371,28 +394,34 @@ class PinCodeViewModel @Inject constructor(
                         mainRouter.showBackupPassphrase(addresses.first())
                     }
                 }
+
                 PinCodeAction.OPEN_JSON -> {
                     mainRouter.popBackStack()
                     if (this@PinCodeViewModel::addresses.isInitialized) {
                         mainRouter.showBackupJson(addresses)
                     }
                 }
+
                 PinCodeAction.OPEN_SEED -> {
                     mainRouter.popBackStack()
                     if (this@PinCodeViewModel::addresses.isInitialized) {
                         mainRouter.showBackupSeed(addresses.first())
                     }
                 }
+
                 PinCodeAction.LOGOUT -> {
                     logout()
                 }
+
                 PinCodeAction.CHANGE_PIN_CODE -> {
                     changePinProcessing()
                 }
+
                 PinCodeAction.CUSTOM_NODE,
                 PinCodeAction.SELECT_NODE -> {
                     selectNodeRouter.returnFromPinCodeCheck()
                 }
+
                 else -> {
                     proceed()
                 }
@@ -476,9 +505,20 @@ class PinCodeViewModel @Inject constructor(
         }
     }
 
-    private fun proceed() {
-        viewModelScope.launch {
-            if (interactor.needsMigration()) {
+    fun onSwitchNode() {
+        selectNodeRouter.showSelectNode()
+    }
+
+    private suspend fun proceed() {
+        state = state.copy(
+            migrating = true
+        )
+        if (state.isConnected) {
+            val needs = interactor.needsMigration()
+            state = state.copy(
+                migrating = false
+            )
+            if (needs) {
                 mainRouter.showClaim()
             } else {
                 mainRouter.popBackStack()
@@ -491,7 +531,10 @@ class PinCodeViewModel @Inject constructor(
             action = PinCodeAction.CREATE_PIN_CODE
             if (state.maxDotsCount != PinCodeInteractor.PINCODE_LENGTH) {
                 _pincodeLengthInfoAlertLiveData.trigger()
-                state = state.copy(maxDotsCount = PinCodeInteractor.PINCODE_LENGTH, isLengthInfoAlertVisible = true)
+                state = state.copy(
+                    maxDotsCount = PinCodeInteractor.PINCODE_LENGTH,
+                    isLengthInfoAlertVisible = true
+                )
             }
             isChanging = true
             isBiometryEnabled = false

@@ -7,6 +7,7 @@ package jp.co.soramitsu.feature_select_node_impl.domain
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.ChainNode
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -14,12 +15,13 @@ import kotlinx.coroutines.flow.flowOn
 
 internal class SelectNodeInteractor @Inject constructor(
     private val repository: SelectNodeRepository,
-    private val nodeValidator: NodeValidator
+    private val nodeValidator: NodeValidator,
+    private val coroutineManager: CoroutineManager,
 ) {
 
     fun subscribeNodes(): Flow<List<ChainNode>> {
         return repository.getNodes()
-            .flowOn(Dispatchers.IO)
+            .flowOn(coroutineManager.io)
     }
 
     fun subscribeSelectedNode(): Flow<ChainNode?> {

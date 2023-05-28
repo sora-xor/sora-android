@@ -190,11 +190,9 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
                 onNumClick = viewModel::pinCodeNumberClicked,
                 onBiometricClick = fingerprintWrapper::toggleScanner,
                 onDeleteClick = viewModel::pinCodeDeleteClicked,
-                onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd
+                onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
+                onSwitchNode = viewModel::onSwitchNode,
             )
-
-            if (viewModel.state.triesLeftSnackBarTitle.isNotEmpty()) {
-            }
         }
     }
 }

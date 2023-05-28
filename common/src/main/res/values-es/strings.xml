@@ -172,6 +172,7 @@
   <string name="common_swedish">Sueco</string>
   <string name="common_terms_title">Términos y condiciones</string>
   <string name="common_thai">Tailandés</string>
+  <string name="common_title_warning">Warning!</string>
   <string name="common_today">Hoy</string>
   <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ucraniano</string>
@@ -243,10 +244,12 @@
   <string name="more_menu_sora_card_subtitle">Gestión de la cuenta fiat y de la tarjeta</string>
   <string name="more_menu_sora_card_title">Tarjeta SORA</string>
   <string name="network_fee">Comisión de red</string>
+  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">Failed to validate URL (Wrong address)</string>
   <string name="node_details_genesis_validation_failed">The genesis hash of your node is different than the genesis hash of the network</string>
   <string name="node_details_node_already_added" formatted="false">This node is already added: %s\nConnection established with node %s</string>
   <string name="node_details_protocol_validation_failed">No se pudo validar la URL (protocolo de URL incorrecto)</string>
+  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Ingrese el nombre de su nueva cuenta y cómo aparecerá debajo de su dirección. Con una identidad en cadena, puede estar disponible para otros.</string>
   <string name="onboarding_create_account_subtitle">Visible solo para ti y almacenado localmente</string>
@@ -440,6 +443,8 @@
   <string name="status_success">Exitoso</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Estado</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Parlamento</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>
