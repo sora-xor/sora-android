@@ -31,8 +31,8 @@ class MultiaccountInteractor @Inject constructor(
 
     suspend fun isRawSeedValid(rawSeed: String) = credentialsRepository.isRawSeedValid(rawSeed)
 
-    suspend fun continueRecoverFlow(soraAccount: SoraAccount) {
-        insertAndSetCurAccount(soraAccount)
+    suspend fun continueRecoverFlow(soraAccount: SoraAccount, update: Boolean) {
+        insertAndSetCurAccount(soraAccount, update)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
 
@@ -53,10 +53,10 @@ class MultiaccountInteractor @Inject constructor(
         return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())
     }
 
-    private suspend fun insertAndSetCurAccount(soraAccount: SoraAccount) {
+    private suspend fun insertAndSetCurAccount(soraAccount: SoraAccount, update: Boolean) {
         userRepository.insertSoraAccount(soraAccount)
         userRepository.setCurSoraAccount(soraAccount)
-        assetsInteractor.updateWhitelistBalances(false)
+        if (update) assetsInteractor.updateWhitelistBalances(false)
     }
 
     suspend fun getMnemonic(address: String): String {
@@ -71,8 +71,8 @@ class MultiaccountInteractor @Inject constructor(
         return credentialsRepository.retrieveKeyPair(userRepository.getSoraAccount(address))
     }
 
-    suspend fun createUser(soraAccount: SoraAccount) {
-        insertAndSetCurAccount(soraAccount)
+    suspend fun createUser(soraAccount: SoraAccount, update: Boolean) {
+        insertAndSetCurAccount(soraAccount, update)
         userRepository.saveRegistrationState(OnboardingState.INITIAL)
         userRepository.saveNeedsMigration(false, soraAccount)
         userRepository.saveIsMigrationFetched(true, soraAccount)

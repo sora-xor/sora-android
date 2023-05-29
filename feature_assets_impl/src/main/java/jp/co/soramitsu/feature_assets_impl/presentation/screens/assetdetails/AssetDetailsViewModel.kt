@@ -118,7 +118,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
                         poolsCardTitle = resourceManager.getString(R.string.asset_details_your_pools).format(asset.token.symbol),
                         price = asset.token.formatFiatOrEmpty(
                             asset.token.fiatPrice,
-                            numbersFormatter
+                            numbersFormatter,
+                            true,
                         ),
                         priceChange = asset.token.fiatPriceChange?.let { f ->
                             formatFiatChange(f, numbersFormatter)
@@ -126,11 +127,11 @@ class AssetDetailsViewModel @AssistedInject constructor(
                         transferableBalance = asset.token.printBalance(
                             asset.balance.transferable,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ),
                         transferableBalanceFiat = asset.token.printFiat(
                             asset.balance.transferable,
-                            numbersFormatter
+                            numbersFormatter,
                         ),
                         frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printBalance(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter, AssetHolder.ROUNDING) } else { null },
                         frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printFiat(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter) } else { null },

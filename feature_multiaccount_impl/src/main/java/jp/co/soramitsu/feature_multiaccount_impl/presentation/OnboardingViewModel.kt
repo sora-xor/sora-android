@@ -30,6 +30,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlin.random.Random
 import kotlinx.coroutines.launch
@@ -40,6 +41,7 @@ class OnboardingViewModel @Inject constructor(
     private val multiaccountInteractor: MultiaccountInteractor,
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
+    private val connectionManager: ConnectionManager,
 ) : BaseViewModel() {
 
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
@@ -241,7 +243,7 @@ class OnboardingViewModel @Inject constructor(
                                 recoveryCardState.recoveryInputState.value.text,
                                 recoverAccountNameState.accountNameInputState.value.text
                             )
-                            multiaccountInteractor.continueRecoverFlow(soraAccount)
+                            multiaccountInteractor.continueRecoverFlow(soraAccount, connectionManager.isConnected)
                             mainStarter.start(context)
                         } else {
                             throw SoraException.businessError(errorMessageCode)
@@ -400,7 +402,8 @@ class OnboardingViewModel @Inject constructor(
             multiaccountInteractor.createUser(
                 soraAccount = requireNotNull(
                     tempAccount
-                )
+                ),
+                update = connectionManager.isConnected,
             )
             multiaccountInteractor.saveRegistrationStateFinished()
 
