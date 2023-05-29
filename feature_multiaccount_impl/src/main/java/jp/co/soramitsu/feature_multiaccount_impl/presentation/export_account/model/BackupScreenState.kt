@@ -9,5 +9,4 @@ data class BackupScreenState(
     val mnemonicWords: List<String> = emptyList(),
     val seedString: String = "",
     val isCreatingFlow: Boolean = false,
-    val isSkipButtonEnabled: Boolean = false,
 )

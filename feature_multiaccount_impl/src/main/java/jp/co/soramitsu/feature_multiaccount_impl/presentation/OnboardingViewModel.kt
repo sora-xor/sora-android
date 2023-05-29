@@ -22,10 +22,8 @@ import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
-import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
@@ -301,7 +299,6 @@ class OnboardingViewModel @Inject constructor(
                 _passphraseCardState.value = BackupScreenState(
                     mnemonicWords = mnemonic.split(" "),
                     isCreatingFlow = true,
-                    isSkipButtonEnabled = BuildUtils.isFlavors(Flavor.PROD).not()
                 )
             }
         }

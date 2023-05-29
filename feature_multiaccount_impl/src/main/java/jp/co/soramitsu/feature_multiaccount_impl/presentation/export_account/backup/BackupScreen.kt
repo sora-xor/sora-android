@@ -87,18 +87,16 @@ internal fun BackupScreen(
                     onClick = onButtonPressed,
                 )
 
-                if (state.isSkipButtonEnabled) {
-                    TonalButton(
-                        modifier = Modifier
-                            .testTagAsId("Skip")
-                            .fillMaxWidth()
-                            .padding(top = Dimens.x1),
-                        text = stringResource(id = R.string.common_skip),
-                        order = Order.PRIMARY,
-                        size = Size.Large,
-                        onClick = { onSkipButtonPressed?.invoke() },
-                    )
-                }
+                TonalButton(
+                    modifier = Modifier
+                        .testTagAsId("Skip")
+                        .fillMaxWidth()
+                        .padding(top = Dimens.x1),
+                    text = stringResource(id = R.string.common_skip),
+                    order = Order.PRIMARY,
+                    size = Size.Large,
+                    onClick = { onSkipButtonPressed?.invoke() },
+                )
             } else {
                 TonalButton(
                     modifier = Modifier
@@ -163,7 +161,6 @@ private fun PreviewBackup() {
             state = BackupScreenState(
                 isCreatingFlow = true,
                 mnemonicWords = List(15) { p -> "zxcvb n ${p + 1}" },
-                isSkipButtonEnabled = true
             ),
             onButtonPressed = {},
             onSkipButtonPressed = {}
