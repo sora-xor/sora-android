@@ -16,9 +16,11 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -60,6 +62,9 @@ class PinCodeViewModelTest {
     lateinit var selectNodeRouter: SelectNodeRouter
 
     @Mock
+    lateinit var connectionManager: ConnectionManager
+
+    @Mock
     lateinit var progress: WithProgress
 
     @Mock
@@ -78,7 +83,10 @@ class PinCodeViewModelTest {
     fun setUp() = runTest {
         given(resourceManager.getString(R.string.pincode_enter_pin_code)).willReturn(enterPincode)
         given(resourceManager.getString(R.string.pincode_set_your_pin_code)).willReturn(setupTitle)
-        given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(confirmTitle)
+        given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(
+            confirmTitle
+        )
+        given(connectionManager.connectionState).willReturn(flowOf(true))
 
         given(interactor.isBiometryEnabled()).willReturn(true)
         given(interactor.needsMigration()).willReturn(false)
@@ -86,7 +94,16 @@ class PinCodeViewModelTest {
         given(interactor.retrieveTimerStartedTimestamp()).willReturn(0)
 
         pinCodeViewModel =
-            PinCodeViewModel(interactor, mainInteractor, mainRouter, resourceManager, selectNodeRouter, progress, vibrator)
+            PinCodeViewModel(
+                interactor,
+                mainInteractor,
+                mainRouter,
+                resourceManager,
+                selectNodeRouter,
+                progress,
+                vibrator,
+                connectionManager,
+            )
     }
 
     @Test
@@ -110,7 +127,12 @@ class PinCodeViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals(PinCodeScreenState(toolbarTitleString = titleString, isBiometricButtonVisible = true), pinCodeViewModel.state)
+        assertEquals(
+            PinCodeScreenState(
+                toolbarTitleString = titleString,
+                isBiometricButtonVisible = true
+            ), pinCodeViewModel.state
+        )
     }
 
     @Test
@@ -154,7 +176,13 @@ class PinCodeViewModelTest {
 
         pinCodeViewModel.pinCodeNumberClicked("1")
 
-        assertEquals(PinCodeScreenState(toolbarTitleString = titleString, checkedDotsCount = 1, isBackButtonVisible = true), pinCodeViewModel.state)
+        assertEquals(
+            PinCodeScreenState(
+                toolbarTitleString = titleString,
+                checkedDotsCount = 1,
+                isBackButtonVisible = true
+            ), pinCodeViewModel.state
+        )
     }
 
     @Test
@@ -195,7 +223,9 @@ class PinCodeViewModelTest {
     @Test
     fun `pin code entered once while creating`() = runTest {
         val titleString = "Set pincode"
-        given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(titleString)
+        given(resourceManager.getString(R.string.pincode_confirm_your_pin_code)).willReturn(
+            titleString
+        )
 
         pinCodeViewModel.startAuth(PinCodeAction.CREATE_PIN_CODE)
         pinCodeViewModel.pinCodeNumberClicked("1")
@@ -274,7 +304,14 @@ class PinCodeViewModelTest {
         pinCodeViewModel.pinCodeNumberClicked("5")
         advanceUntilIdle()
 
-        assertEquals(PinCodeScreenState(toolbarTitleString = titleString, enableShakeAnimation = true, isBackButtonVisible = false, checkedDotsCount = 0), pinCodeViewModel.state)
+        assertEquals(
+            PinCodeScreenState(
+                toolbarTitleString = titleString,
+                enableShakeAnimation = true,
+                isBackButtonVisible = false,
+                checkedDotsCount = 0
+            ), pinCodeViewModel.state
+        )
     }
 
     @Test
@@ -430,7 +467,10 @@ class PinCodeViewModelTest {
         pinCodeViewModel.onBackPressed()
         advanceUntilIdle()
 
-        assertEquals(PinCodeScreenState(toolbarTitleString = titleString, checkedDotsCount = 4), pinCodeViewModel.state)
+        assertEquals(
+            PinCodeScreenState(toolbarTitleString = titleString, checkedDotsCount = 4),
+            pinCodeViewModel.state
+        )
     }
 
     @Test
@@ -458,15 +498,16 @@ class PinCodeViewModelTest {
     }
 
     @Test
-    fun `fingerprint scanner success leads to passphrase screen on OPEN_PASSPHRASE action`() = runTest {
-        pinCodeViewModel.addresses = listOf("address")
+    fun `fingerprint scanner success leads to passphrase screen on OPEN_PASSPHRASE action`() =
+        runTest {
+            pinCodeViewModel.addresses = listOf("address")
 
-        pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
-        advanceUntilIdle()
-        pinCodeViewModel.onAuthenticationSucceeded()
-        advanceUntilIdle()
-        verify(mainRouter).showBackupPassphrase("address")
-    }
+            pinCodeViewModel.startAuth(PinCodeAction.OPEN_PASSPHRASE)
+            advanceUntilIdle()
+            pinCodeViewModel.onAuthenticationSucceeded()
+            advanceUntilIdle()
+            verify(mainRouter).showBackupPassphrase("address")
+        }
 
     @Test
     fun `fingerprint scanner success leads to check user fragment on TIMEOUT_CHECK action`() =

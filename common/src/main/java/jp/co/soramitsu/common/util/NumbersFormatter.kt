@@ -12,6 +12,9 @@ import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
+import jp.co.soramitsu.common.domain.OptionsProvider
+import kotlin.math.absoluteValue
+import kotlin.math.pow
 
 private const val DECIMAL_PATTERN_BASE = "###,###."
 private const val TWO_DIGITS_PATTERN = "00"
@@ -62,6 +65,29 @@ class NumbersFormatter {
     fun format(num: Double, precision: Int = DEFAULT_PRECISION): String {
         return decimalFormatterFor(patternWith(precision))
             .format(num)
+    }
+
+    fun format(
+        num: Double,
+        precision: Int = DEFAULT_PRECISION,
+        checkFraction: Boolean = false,
+    ): String {
+        val newPrecision = if (checkFraction) {
+            var nubs = num.absoluteValue
+            if (num > 0 && nubs < 10.0.pow(-precision)) {
+                var p = 1
+                val scale = OptionsProvider.defaultScale
+                while (p < scale) {
+                    nubs *= 10
+                    if (nubs > 1) {
+                        break
+                    }
+                    p++
+                }
+                p.coerceAtLeast(precision)
+            } else { precision }
+        } else { precision }
+        return decimalFormatterFor(patternWith(newPrecision)).format(num)
     }
 
     fun formatBigDecimal(

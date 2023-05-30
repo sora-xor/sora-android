@@ -136,6 +136,24 @@ class NumbersFormatterTest {
     }
 
     @Test
+    fun `format longer double currency round up string`() {
+        val actual = numbersFormatter.format(0.276, 2, false)
+        assertEquals("0.27", actual)
+    }
+
+    @Test
+    fun `format longer double currency fraction false round up string`() {
+        val actual = numbersFormatter.format(0.00003, 2, false)
+        assertEquals("0", actual)
+    }
+
+    @Test
+    fun `format longer double currency fraction true round up string`() {
+        val actual = numbersFormatter.format(0.00003456, 2, true)
+        assertEquals("0.00003", actual)
+    }
+
+    @Test
     fun `format long round floor bigdecimal`() {
         val actual = numbersFormatter.formatBigDecimal(BigDecimal(1000000.274))
         assertEquals(formatWithGroupingDelimeter, actual)

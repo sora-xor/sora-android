@@ -8,8 +8,12 @@ package jp.co.soramitsu.common.domain
 import java.math.BigDecimal
 import jp.co.soramitsu.common.util.NumbersFormatter
 
-fun formatFiatAmount(value: Double, currencySymbol: String, nf: NumbersFormatter) =
-    "$currencySymbol%s".format(nf.format(value, 2))
+fun formatFiatAmount(
+    value: Double,
+    currencySymbol: String,
+    nf: NumbersFormatter,
+    checkFraction: Boolean = false,
+) = "$currencySymbol%s".format(nf.format(value, 2, checkFraction))
 
 fun formatFiatChange(value: Double, nf: NumbersFormatter) =
     String.format("%s%s %%", if (value >= 0.0001) "+" else "", nf.format(value * 100, 2)).trim()
@@ -41,14 +45,25 @@ fun Token.calcFiat(amount: BigDecimal): Double? = fiatPrice?.let {
 fun Token.printFiat(amount: BigDecimal, nf: NumbersFormatter): String =
     formatFiat(calcFiat(amount) ?: 0.0, nf)
 
-fun Token.formatFiat(value: Double, nf: NumbersFormatter) =
-    formatFiatAmount(value, fiatSymbol.orEmpty(), nf)
+fun Token.formatFiat(
+    value: Double,
+    nf: NumbersFormatter,
+    checkFraction: Boolean = false,
+) = formatFiatAmount(value, fiatSymbol.orEmpty(), nf, checkFraction)
 
-fun Token.formatFiatOrEmpty(value: Double?, nf: NumbersFormatter): String =
-    formatFiatOr(value, nf) { "" }
+fun Token.formatFiatOrEmpty(
+    value: Double?,
+    nf: NumbersFormatter,
+    checkFraction: Boolean = false,
+): String = formatFiatOr(value, nf, checkFraction) { "" }
 
-fun Token.formatFiatOr(value: Double?, nf: NumbersFormatter, default: () -> String): String =
-    if (value == null) default() else formatFiat(value, nf)
+fun Token.formatFiatOr(
+    value: Double?,
+    nf: NumbersFormatter,
+    checkFraction: Boolean = false,
+    default: () -> String,
+): String =
+    if (value == null) default() else formatFiat(value, nf, checkFraction)
 
 fun printFiatSum(
     token1: Token,

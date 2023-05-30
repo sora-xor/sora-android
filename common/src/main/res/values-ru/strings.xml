@@ -175,6 +175,7 @@
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
+  <string name="common_title_warning">Warning!</string>
   <string name="common_today">Сегодня</string>
   <string name="common_turkish">Турецкий</string>
   <string name="common_ukrainian">Украинский</string>
@@ -246,10 +247,12 @@
   <string name="more_menu_sora_card_subtitle">Управление картами и фиатными счетами</string>
   <string name="more_menu_sora_card_title">SORA Карта</string>
   <string name="network_fee">Комиссия сети</string>
+  <string name="node_connection_issue">Ваш аккаунт успешно создан. Но приложение не может подключиться к ноде по-умолчанию. Попробуйте подключиться к другой ноде.</string>
   <string name="node_details_address_validation_failed">Не удалось проверить URL (неверный адрес)</string>
   <string name="node_details_genesis_validation_failed">Генезис хэш вашей ноды отличается от генезис хэша сети</string>
   <string name="node_details_node_already_added" formatted="false">Эта нода уже добавлена: %s\nСоединение установлено с нодой %s</string>
   <string name="node_details_protocol_validation_failed">Не удалось проверить URL (неправильный протокол URL)</string>
+  <string name="node_offline">Нода недоступна</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
@@ -458,6 +461,8 @@
   <string name="status_success">Успешно</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="switch_node">Переключить ноду</string>
   <string name="system_appearance">Внешний вид системы</string>
   <string name="tabbar_parliament_title">Парламент</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

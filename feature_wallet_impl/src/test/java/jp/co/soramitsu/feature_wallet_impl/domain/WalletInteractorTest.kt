@@ -13,7 +13,6 @@ import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
@@ -52,7 +51,6 @@ import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import java.lang.RuntimeException
 import java.math.BigDecimal
 
 @RunWith(MockitoJUnitRunner::class)
@@ -83,9 +81,6 @@ class WalletInteractorTest {
 
     @Mock
     private lateinit var builder: TransactionBuilder
-
-    @Mock
-    private lateinit var coroutineManager: CoroutineManager
 
     @Mock
     private lateinit var kycRepository: KycRepository

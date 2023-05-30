@@ -17,6 +17,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
@@ -51,9 +52,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
 import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
-import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -79,8 +78,8 @@ class CardsHubViewModel @Inject constructor(
     private val assetsRouter: AssetsRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val qrCodeDecoder: QrCodeDecoder,
-    private val kycRepository: KycRepository,
     private val connectionManager: ConnectionManager,
+    coroutineManager: CoroutineManager,
 ) : BaseViewModel(), WithProgress by progress {
 
     var state by mutableStateOf(
@@ -97,7 +96,7 @@ class CardsHubViewModel @Inject constructor(
 
     init {
         walletInteractor.pollSoraCardStatusIfPending()
-            .flowOn(Dispatchers.IO)
+            .flowOn(coroutineManager.io)
             .launchIn(viewModelScope)
 
         viewModelScope.launch {

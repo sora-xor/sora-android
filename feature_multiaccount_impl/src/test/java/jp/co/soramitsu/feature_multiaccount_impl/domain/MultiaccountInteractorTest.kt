@@ -71,7 +71,7 @@ class MultiaccountInteractorTest {
     @Test
     fun `continueRecoverFlow is called`() = runTest {
         val account = mock(SoraAccount::class.java)
-        multiaccountInteractor.continueRecoverFlow(account)
+        multiaccountInteractor.continueRecoverFlow(account, true)
 
         verify(userRepository).insertSoraAccount(account)
         verify(userRepository).setCurSoraAccount(account)
@@ -102,7 +102,7 @@ class MultiaccountInteractorTest {
     fun `createUser is called`() = runTest {
         val account = mock(SoraAccount::class.java)
 
-        multiaccountInteractor.createUser(account)
+        multiaccountInteractor.createUser(account, true)
 
         verify(userRepository).insertSoraAccount(account)
         verify(userRepository).setCurSoraAccount(account)

@@ -12,6 +12,7 @@ internal data class PinCodeScreenState(
     val isBiometricButtonVisible: Boolean = false,
     val toolbarTitleString: String,
     val enableShakeAnimation: Boolean = false,
-    val triesLeftSnackBarTitle: String = "",
-    val isLengthInfoAlertVisible: Boolean = false
+    val isLengthInfoAlertVisible: Boolean = false,
+    val migrating: Boolean = false,
+    val isConnected: Boolean = true,
 )
