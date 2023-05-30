@@ -145,12 +145,6 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                                     }
                                 )
                             }
-                            viewModel.assetPositions.observe {
-                                (view.list.adapter as AssetsManagementAdapter).notifyItemMoved(
-                                    it.first,
-                                    it.second
-                                )
-                            }
                         }
                     }
                 )
