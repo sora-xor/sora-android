@@ -34,9 +34,6 @@ class FullAssetSettingsViewModel @Inject constructor(
     private val _settingsState = MutableLiveData<List<AssetSettingsState>>()
     val settingsState: LiveData<List<AssetSettingsState>> = _settingsState
 
-    private val _assetPositions = MutableLiveData<Pair<Int, Int>>()
-    val assetPositions: LiveData<Pair<Int, Int>> = _assetPositions
-
     private val curAssetList = mutableListOf<AssetSettingsState>()
     private var positions = mutableListOf<String>()
     private var curFilter: String = ""
@@ -140,7 +137,7 @@ class FullAssetSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             updatePositions()
         }
-        _assetPositions.value = from to to
+        filterAndUpdateAssetsList()
         return true
     }
 

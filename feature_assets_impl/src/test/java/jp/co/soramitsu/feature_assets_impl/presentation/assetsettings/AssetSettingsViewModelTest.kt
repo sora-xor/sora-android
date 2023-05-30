@@ -31,6 +31,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -403,9 +405,9 @@ class AssetSettingsViewModelTest {
 
         val res = viewModel.assetPositionChanged(6, 7)
         advanceUntilIdle()
-        val ld = viewModel.assetPositions.getOrAwaitValue()
-        assertEquals(6, ld.first)
-        assertEquals(7, ld.second)
+        val ld = viewModel.settingsState.getOrAwaitValue()
+        assertEquals("token3_id", ld[6].id)
+        assertEquals("token2_id", ld[7].id)
         assertEquals(true, res)
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -452,6 +454,32 @@ class AssetSettingsViewModelTest {
         viewModel.onCloseClick()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
+    }
+
+    @Test
+    fun `favorite move back`() = runTest {
+        val list = setUpStartList()
+        val mappedModels = mapModels(list)
+        advanceUntilIdle()
+        val before = viewModel.settingsState.getOrAwaitValue()
+        assertTrue(before.all { it.favorite })
+        viewModel.onFavoriteClick(mappedModels[7])
+        advanceUntilIdle()
+        val mid = viewModel.settingsState.getOrAwaitValue()
+        assertFalse(mid[7].favorite)
+        assertTrue(mid[8].favorite)
+        val v = viewModel.assetPositionChanged(7, 8)
+        advanceUntilIdle()
+        Collections.swap(mappedModels, 7, 8)
+        val pos = viewModel.settingsState.getOrAwaitValue()
+        assertTrue(v)
+        assertEquals("token4_id", pos[7].id)
+        assertEquals("token3_id", pos[8].id)
+        viewModel.onFavoriteClick(mappedModels[7])
+        advanceUntilIdle()
+        val after = viewModel.settingsState.getOrAwaitValue()
+        assertFalse(after[7].favorite)
+        assertFalse(after[8].favorite)
     }
 
     private fun startList(visibility: List<Boolean>) = listOf(
