@@ -5,6 +5,7 @@
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository
 
+import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.SoraCardInformation
@@ -32,7 +33,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 class WalletRepositoryImpl @Inject constructor(
     private val datasource: WalletDatasource,
