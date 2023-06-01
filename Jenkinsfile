@@ -1,4 +1,4 @@
-@Library('jenkins-library' ) _
+@Library('jenkins-library@feature/SNE-245/DefectDojo' ) _
 
 // Job properties
 def jobParams = [
