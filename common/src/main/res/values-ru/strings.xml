@@ -126,6 +126,8 @@
   <string name="common_finnish">Финский</string>
   <string name="common_french">Французский</string>
   <string name="common_german">Немецкий</string>
+  <string name="common_hebrew">Иврит</string>
+  <string name="common_hindi">Хинди</string>
   <plurals name="common_hour">
     <item quantity="zero">часов</item>
     <item quantity="one">час</item>
@@ -146,6 +148,7 @@
   <string name="common_ok">Ок</string>
   <string name="common_passphrase_title">Парольная фраза</string>
   <string name="common_pay_attention">Pay attention!</string>
+  <string name="common_persian">Персидский</string>
   <string name="common_raw_seed">Сид-фраза</string>
   <string name="common_receive">Получить</string>
   <string name="common_received">Получено</string>
@@ -164,6 +167,7 @@
   <string name="common_send">Отправить</string>
   <string name="common_sender">Отправитель</string>
   <string name="common_sent">Отправлено</string>
+  <string name="common_serbian">Сербский</string>
   <string name="common_share">Поделиться</string>
   <string name="common_skip">Пропустить</string>
   <string name="common_sms_code_expired">Срок действия кода истек. Пожалуйста, попробуйте другой.</string>
@@ -175,10 +179,12 @@
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
+  <string name="common_title_warning">Warning!</string>
   <string name="common_today">Сегодня</string>
   <string name="common_turkish">Турецкий</string>
   <string name="common_ukrainian">Украинский</string>
   <string name="common_update">Обновление</string>
+  <string name="common_vietnamese">Вьетнамский</string>
   <string name="common_yesterday">Вчера</string>
   <string name="confirm_sending">Подтверждение отправки</string>
   <string name="contacts_scan">Сканировать QR-код</string>
@@ -246,10 +252,12 @@
   <string name="more_menu_sora_card_subtitle">Управление картами и фиатными счетами</string>
   <string name="more_menu_sora_card_title">SORA Карта</string>
   <string name="network_fee">Комиссия сети</string>
+  <string name="node_connection_issue">Ваш аккаунт успешно создан. Но приложение не может подключиться к ноде по-умолчанию. Попробуйте подключиться к другой ноде.</string>
   <string name="node_details_address_validation_failed">Не удалось проверить URL (неверный адрес)</string>
   <string name="node_details_genesis_validation_failed">Генезис хэш вашей ноды отличается от генезис хэша сети</string>
   <string name="node_details_node_already_added" formatted="false">Эта нода уже добавлена: %s\nСоединение установлено с нодой %s</string>
   <string name="node_details_protocol_validation_failed">Не удалось проверить URL (неправильный протокол URL)</string>
+  <string name="node_offline">Нода недоступна</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
@@ -458,6 +466,8 @@
   <string name="status_success">Успешно</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="switch_node">Переключить ноду</string>
   <string name="system_appearance">Внешний вид системы</string>
   <string name="tabbar_parliament_title">Парламент</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

@@ -126,6 +126,8 @@
   <string name="common_finnish">Finlandais</string>
   <string name="common_french">Français</string>
   <string name="common_german">Allemand</string>
+  <string name="common_hebrew">Hebrew</string>
+  <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="one">heure</item>
     <item quantity="other">heures</item>
@@ -143,6 +145,7 @@
   <string name="common_ok">Ok</string>
   <string name="common_passphrase_title">Phrase secrète</string>
   <string name="common_pay_attention">Attention!</string>
+  <string name="common_persian">Persian</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Recevoir</string>
   <string name="common_received">Reçu</string>
@@ -161,6 +164,7 @@
   <string name="common_send">Envoyer</string>
   <string name="common_sender">Expéditeur</string>
   <string name="common_sent">Envoyé</string>
+  <string name="common_serbian">Serbian</string>
   <string name="common_share">Partager</string>
   <string name="common_skip">Passer</string>
   <string name="common_sms_code_expired">Le code de vérification a expiré. Veuillez en essayer un autre.</string>
@@ -172,10 +176,12 @@
   <string name="common_swedish">Suédois</string>
   <string name="common_terms_title">termes et conditions</string>
   <string name="common_thai">Thaïlandais</string>
+  <string name="common_title_warning">Warning!</string>
   <string name="common_today">Aujourd\'hui</string>
   <string name="common_turkish">Turc</string>
   <string name="common_ukrainian">Ukrainien</string>
   <string name="common_update">Mise à jour</string>
+  <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">Hier</string>
   <string name="confirm_sending">Confirmer l\'envoi</string>
   <string name="contacts_scan">Scanner le QR code</string>
@@ -243,10 +249,12 @@
   <string name="more_menu_sora_card_subtitle">Gestion des cartes et des comptes fiduciaires SORA</string>
   <string name="more_menu_sora_card_title">SORA Card</string>
   <string name="network_fee">Frais de réseau</string>
+  <string name="node_connection_issue">Your account has been successfully created. But the app can not connect to a default node. Try to switch to an alternative.</string>
   <string name="node_details_address_validation_failed">Impossible de valider l\'URL (Mauvaise adresse)</string>
   <string name="node_details_genesis_validation_failed">Le hash de genèse de votre nœud est différent du hash de genèse du réseau</string>
   <string name="node_details_node_already_added" formatted="false">Ce nœud est déjà ajouté: %s \n Connexion établie avec le nœud %s</string>
   <string name="node_details_protocol_validation_failed">Échec de la validation de l\'URL (Protocole d\'URL incorrect)</string>
+  <string name="node_offline">Node offline</string>
   <string name="onboarding_continue_with_google">Continue with Google</string>
   <string name="onboarding_create_account_description">Entrez un nom pour votre compte et la manière dont il apparaîtra sous votre adresse. En définissant une identité on-chain, celui-ci peut être visible aux autres participants du réseau.</string>
   <string name="onboarding_create_account_subtitle">Visible seulement pour vous et stocké localement</string>
@@ -440,6 +448,8 @@
   <string name="status_success">Réussi</string>
   <string name="status_successful">Confirmée</string>
   <string name="status_title">Statut</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="switch_node">Switch node</string>
   <string name="system_appearance">Apparence du système</string>
   <string name="tabbar_parliament_title">Parlement</string>
   <string name="tabbar_polkaswap_title">Polkaswap</string>

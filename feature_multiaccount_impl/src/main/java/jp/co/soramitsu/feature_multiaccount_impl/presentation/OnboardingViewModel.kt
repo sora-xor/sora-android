@@ -1,6 +1,33 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
+/*
+This file is part of the SORA network and Polkaswap app.
+
+Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
+SPDX-License-Identifier: BSD-4-Clause
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+All advertising materials mentioning features or use of this software must display
+the following acknowledgement: This product includes software developed by Polka Biome
+Ltd., SORA, and Polkaswap.
+
+Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
+to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
@@ -22,16 +49,15 @@ import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
-import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
+import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlin.random.Random
 import kotlinx.coroutines.launch
@@ -42,6 +68,7 @@ class OnboardingViewModel @Inject constructor(
     private val multiaccountInteractor: MultiaccountInteractor,
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
+    private val connectionManager: ConnectionManager,
 ) : BaseViewModel() {
 
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
@@ -243,7 +270,7 @@ class OnboardingViewModel @Inject constructor(
                                 recoveryCardState.recoveryInputState.value.text,
                                 recoverAccountNameState.accountNameInputState.value.text
                             )
-                            multiaccountInteractor.continueRecoverFlow(soraAccount)
+                            multiaccountInteractor.continueRecoverFlow(soraAccount, connectionManager.isConnected)
                             mainStarter.start(context)
                         } else {
                             throw SoraException.businessError(errorMessageCode)
@@ -301,7 +328,6 @@ class OnboardingViewModel @Inject constructor(
                 _passphraseCardState.value = BackupScreenState(
                     mnemonicWords = mnemonic.split(" "),
                     isCreatingFlow = true,
-                    isSkipButtonEnabled = BuildUtils.isFlavors(Flavor.PROD).not()
                 )
             }
         }
@@ -403,7 +429,8 @@ class OnboardingViewModel @Inject constructor(
             multiaccountInteractor.createUser(
                 soraAccount = requireNotNull(
                     tempAccount
-                )
+                ),
+                update = connectionManager.isConnected,
             )
             multiaccountInteractor.saveRegistrationStateFinished()
 

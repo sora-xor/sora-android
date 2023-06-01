@@ -1,6 +1,33 @@
-/**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
+/*
+This file is part of the SORA network and Polkaswap app.
+
+Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
+SPDX-License-Identifier: BSD-4-Clause
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+All advertising materials mentioning features or use of this software must display
+the following acknowledgement: This product includes software developed by Polka Biome
+Ltd., SORA, and Polkaswap.
+
+Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
+to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
@@ -17,6 +44,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
@@ -51,9 +79,7 @@ import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
 import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
-import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -79,8 +105,8 @@ class CardsHubViewModel @Inject constructor(
     private val assetsRouter: AssetsRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val qrCodeDecoder: QrCodeDecoder,
-    private val kycRepository: KycRepository,
     private val connectionManager: ConnectionManager,
+    coroutineManager: CoroutineManager,
 ) : BaseViewModel(), WithProgress by progress {
 
     var state by mutableStateOf(
@@ -97,7 +123,7 @@ class CardsHubViewModel @Inject constructor(
 
     init {
         walletInteractor.pollSoraCardStatusIfPending()
-            .flowOn(Dispatchers.IO)
+            .flowOn(coroutineManager.io)
             .launchIn(viewModelScope)
 
         viewModelScope.launch {
