@@ -127,6 +127,7 @@
   <string name="common_french">Французский</string>
   <string name="common_german">Немецкий</string>
   <string name="common_hebrew">Иврит</string>
+  <string name="common_hindi">Хинди</string>
   <plurals name="common_hour">
     <item quantity="zero">часов</item>
     <item quantity="one">час</item>

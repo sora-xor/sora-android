@@ -127,6 +127,7 @@
   <string name="common_french">Tiếng Pháp</string>
   <string name="common_german">Tiếng Đức</string>
   <string name="common_hebrew">Hebrew</string>
+  <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="other">giờ</item>
   </plurals>
