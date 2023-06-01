@@ -6,11 +6,9 @@
 package jp.co.soramitsu.feature_assets_impl.presentation.states
 
 import android.net.Uri
-import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 
 internal data class AssetCardState(
     val loading: Boolean,
@@ -35,9 +33,8 @@ internal data class AssetCardStateData(
     val isTransferableBalanceAvailable: Boolean = false,
     val hasTokens: Boolean = false,
     val events: List<EventUiModel>,
-) {
-    val buyCryptoAvailable: Boolean = tokenSymbol == AssetHolder.getSymbol(SubstrateOptionsProvider.feeAssetId)
-}
+    val buyCryptoAvailable: Boolean,
+)
 
 internal val emptyAssetCardState = AssetCardStateData(
     tokenId = "",
@@ -53,4 +50,5 @@ internal val emptyAssetCardState = AssetCardStateData(
     poolsState = PoolsListState(emptyList()),
     poolsSum = "",
     events = emptyList(),
+    buyCryptoAvailable = false,
 )

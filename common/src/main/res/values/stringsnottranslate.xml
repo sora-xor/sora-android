@@ -24,6 +24,10 @@
     <string name="common_ukrainian_native" translatable="false">Українська</string>
     <string name="common_italian_native" translatable="false">Italiano</string>
     <string name="common_german_native" translatable="false">Deutsch</string>
+    <string name="common_hebrew_native" translatable="false">עִברִית</string>
+    <string name="common_persian_native" translatable="false">زبان فارسی</string>
+    <string name="common_serbian_native" translatable="false">Српски</string>
+    <string name="common_vietnamese_native" translatable="false">tiếng Việt</string>
     <string name="common_norwegian_native" translatable="false">Norwegian Bokmål</string>
     <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
     <string name="transaction_eth_sign" translatable="false">ETH</string>

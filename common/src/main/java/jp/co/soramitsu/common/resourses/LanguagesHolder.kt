@@ -36,6 +36,12 @@ class LanguagesHolder {
         Language("in", R.string.common_indonesian, R.string.common_indonesian_native)
     private val turkish = Language("tr", R.string.common_turkish, R.string.common_turkish_native)
     private val arab = Language("ar", R.string.common_arab, R.string.common_arab_native)
+    private val hebrew = Language("he", R.string.common_hebrew, R.string.common_hebrew_native)
+    private val persian = Language("fa", R.string.common_persian, R.string.common_persian_native)
+    private val serbian = Language("sr", R.string.common_serbian, R.string.common_serbian_native)
+    private val vietnamese =
+        Language("vi", R.string.common_vietnamese, R.string.common_vietnamese_native)
+    private val malay = Language("ms-MY", R.string.common_malay, R.string.common_malay_native)
 
     private val bashkir = Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
     private val spanish_columbia =
@@ -47,7 +53,6 @@ class LanguagesHolder {
     private val croatian = Language("hr", R.string.common_croatian, R.string.common_croatian_native)
     private val italian = Language("it-IT", R.string.common_italian, R.string.common_italian_native)
     private val korean = Language("ko", R.string.common_korean, R.string.common_korean_native)
-    private val malay = Language("ms-MY", R.string.common_malay, R.string.common_malay_native)
     private val swedish = Language("sv-SE", R.string.common_swedish, R.string.common_swedish_native)
     private val thai = Language("th", R.string.common_thai, R.string.common_thai_native)
     private val ukrainian =
@@ -59,6 +64,9 @@ class LanguagesHolder {
 
     private val availableLanguages =
         mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
+
+    private val nonProdLanguages =
+        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay)
 
     fun getCurrentLocale(): Locale {
         return AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
@@ -80,7 +88,7 @@ class LanguagesHolder {
     }
 
     fun getLanguages(): Pair<List<Language>, Int> {
-        val list = if (BuildUtils.isFlavors(Flavor.DEVELOP, Flavor.SORALUTION)) availableLanguages + arab else availableLanguages
+        val list = if (BuildUtils.isFlavors(Flavor.PROD)) availableLanguages else availableLanguages + nonProdLanguages
         val cur = getCurrentLanguage()
         val fullMatch = list.indexOfFirst { it.iso.equals(cur, true) }
         if (fullMatch != -1) return list to fullMatch

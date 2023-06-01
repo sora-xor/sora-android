@@ -29,6 +29,7 @@ import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -44,6 +45,7 @@ class ProfileViewModel @Inject constructor(
     private val walletRouter: WalletRouter,
     private val referralRouter: ReferralRouter,
     private val selectNodeRouter: SelectNodeRouter,
+    private val soraConfigManager: SoraConfigManager,
     nodeManager: NodeManager,
 ) : BaseViewModel() {
 
@@ -52,6 +54,7 @@ class ProfileViewModel @Inject constructor(
             nodeName = "",
             nodeConnected = false,
             isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
+            soraCardEnabled = false,
             soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
             soraCardStatusIconDrawableRes = null
         )
@@ -101,6 +104,12 @@ class ProfileViewModel @Inject constructor(
                 state = state.copy(nodeConnected = connected)
             }
             .launchIn(viewModelScope)
+
+        viewModelScope.launch {
+            state = state.copy(
+                soraCardEnabled = soraConfigManager.getSoraCard()
+            )
+        }
 
         walletInteractor.subscribeSoraCardInfo()
             .onEach { soraCardInfo = it }

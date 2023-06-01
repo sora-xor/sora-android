@@ -45,25 +45,27 @@ internal fun ProfileItems(
         icon = R.drawable.ic_settings_account,
         onClick = onAccountsClick,
     )
-    CategoryItem(
-        modifier = Modifier
-            .testTagAsId("SoraCard")
-            .padding(top = Dimens.x2),
-        title = stringResource(id = R.string.more_menu_sora_card_title),
-        subtitle = stringResource(id = state.soraCardStatusStringRes),
-        subtitleIcon = state.soraCardStatusIconDrawableRes,
-        icon = R.drawable.ic_buy_crypto,
-        onClick = onSoraCardClick,
-    )
-    CategoryItem(
-        modifier = Modifier
-            .testTagAsId("BuyXor")
-            .padding(top = Dimens.x2),
-        title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
-        subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
-        icon = R.drawable.ic_settings_buy_crypto,
-        onClick = onBuyCrypto,
-    )
+    if (state.soraCardEnabled) {
+        CategoryItem(
+            modifier = Modifier
+                .testTagAsId("SoraCard")
+                .padding(top = Dimens.x2),
+            title = stringResource(id = R.string.more_menu_sora_card_title),
+            subtitle = stringResource(id = state.soraCardStatusStringRes),
+            subtitleIcon = state.soraCardStatusIconDrawableRes,
+            icon = R.drawable.ic_buy_crypto,
+            onClick = onSoraCardClick,
+        )
+        CategoryItem(
+            modifier = Modifier
+                .testTagAsId("BuyXor")
+                .padding(top = Dimens.x2),
+            title = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_title),
+            subtitle = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
+            icon = R.drawable.ic_settings_buy_crypto,
+            onClick = onBuyCrypto,
+        )
+    }
     CategoryItem(
         modifier = Modifier
             .testTagAsId("Nodes")
@@ -143,6 +145,7 @@ private fun PreviewProfile() {
                 nodeName = "wss://abcdf.df",
                 nodeConnected = true,
                 isDebugMenuAvailable = BuildUtils.isPlayMarket(),
+                soraCardEnabled = true,
                 soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
                 soraCardStatusIconDrawableRes = R.drawable.ic_connection_indicator_green
             ),

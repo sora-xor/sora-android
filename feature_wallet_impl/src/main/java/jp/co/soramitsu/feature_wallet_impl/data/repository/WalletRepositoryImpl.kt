@@ -7,8 +7,8 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CardHub
+import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.map
 class WalletRepositoryImpl @Inject constructor(
     private val datasource: WalletDatasource,
     private val db: AppDatabase,
-    private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     private val extrinsicManager: ExtrinsicManager,
     private val substrateCalls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
@@ -101,8 +100,14 @@ class WalletRepositoryImpl @Inject constructor(
 
     override fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>> {
         return db.globalCardsHubDao().getGlobalCardsHubVisible().map {
-            it.mapNotNull { card ->
-                CardsHubMapper.map(card)
+            val soraCard = soraConfigManager.getSoraCard()
+            it.mapNotNull { cardLocal ->
+                val card = CardsHubMapper.map(cardLocal)
+                when (card?.cardType) {
+                    CardHubType.GET_SORA_CARD -> if (soraCard) card else null
+                    CardHubType.BUY_XOR_TOKEN -> if (soraCard) card else null
+                    else -> card
+                }
             }
         }
     }

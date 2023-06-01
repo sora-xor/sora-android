@@ -126,6 +126,7 @@
   <string name="common_finnish">Finnisch</string>
   <string name="common_french">Französisch</string>
   <string name="common_german">Deutsch</string>
+  <string name="common_hebrew">Hebrew</string>
   <plurals name="common_hour">
     <item quantity="one">Stunde</item>
     <item quantity="other">Stunden</item>
@@ -143,6 +144,7 @@
   <string name="common_ok">OK</string>
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
+  <string name="common_persian">Persian</string>
   <string name="common_raw_seed">Raw Seed</string>
   <string name="common_receive">Empfangen</string>
   <string name="common_received">Empfangen</string>
@@ -161,6 +163,7 @@
   <string name="common_send">Senden</string>
   <string name="common_sender">Absender</string>
   <string name="common_sent">Gesendet</string>
+  <string name="common_serbian">Serbian</string>
   <string name="common_share">Teilen</string>
   <string name="common_skip">Überspringen</string>
   <string name="common_sms_code_expired">Bestätigungscode ist abgelaufen. Bitte, versuche es mit einem anderen.</string>
@@ -177,6 +180,7 @@
   <string name="common_turkish">Türkisch</string>
   <string name="common_ukrainian">Ukrainisch</string>
   <string name="common_update">Update</string>
+  <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">Gestern</string>
   <string name="confirm_sending">Confirm sending</string>
   <string name="contacts_scan">Scannen</string>

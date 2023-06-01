@@ -41,6 +41,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardSta
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -56,6 +57,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val transactionHistoryHandler: TransactionHistoryHandler,
     private val resourceManager: ResourceManager,
+    private val soraConfigManager: SoraConfigManager,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -101,6 +103,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             tryCatch {
+                val soraCard = soraConfigManager.getSoraCard()
                 val asset = assetsInteractor.getAssetOrThrow(assetId)
                 precision = asset.token.precision
                 if (asset.token.id == SubstrateOptionsProvider.feeAssetId) {
@@ -136,6 +139,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
                         frozenBalance = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printBalance(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter, AssetHolder.ROUNDING) } else { null },
                         frozenBalanceFiat = if (assetId == SubstrateOptionsProvider.feeAssetId) { asset.token.printFiat(xorAssetBalance?.frozen ?: BigDecimal.ZERO, numbersFormatter) } else { null },
                         isTransferableBalanceAvailable = asset.balance.transferable > BigDecimal.ZERO,
+                        buyCryptoAvailable = soraCard && (asset.token.id == SubstrateOptionsProvider.feeAssetId)
                     )
                 )
             }

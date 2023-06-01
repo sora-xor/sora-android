@@ -126,6 +126,7 @@
   <string name="common_finnish">الفنلندية</string>
   <string name="common_french">الفرنسية</string>
   <string name="common_german">الألمانية</string>
+  <string name="common_hebrew">Hebrew</string>
   <plurals name="common_hour">
     <item quantity="zero">ساعة</item>
     <item quantity="one">ساعة</item>
@@ -147,6 +148,7 @@
   <string name="common_ok">موافق</string>
   <string name="common_passphrase_title">الكلمات الأولية</string>
   <string name="common_pay_attention">انتبه!</string>
+  <string name="common_persian">Persian</string>
   <string name="common_raw_seed">الرمز السري(Raw Seed)</string>
   <string name="common_receive">استلام</string>
   <string name="common_received">تم الاستلام</string>
@@ -165,6 +167,7 @@
   <string name="common_send">إرسال</string>
   <string name="common_sender">المرسل</string>
   <string name="common_sent">تم الإرسال</string>
+  <string name="common_serbian">Serbian</string>
   <string name="common_share">مشاركة</string>
   <string name="common_skip">تخطي</string>
   <string name="common_sms_code_expired">رمز التحقق منهي الصلاحية. من فضلك، اعد المحاولة برمز آخر.</string>
@@ -181,6 +184,7 @@
   <string name="common_turkish">التركية</string>
   <string name="common_ukrainian">الأوكرانية</string>
   <string name="common_update">تحديث</string>
+  <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">أمس</string>
   <string name="confirm_sending">تأكيد الإرسال</string>
   <string name="contacts_scan">المسح الضوئي لرمز QR</string>

@@ -6,11 +6,8 @@
 package jp.co.soramitsu.feature_main_impl.presentation.profile
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.impl.annotations.MockK
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -20,6 +17,7 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.common.model.KycStatus
+import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -72,24 +70,11 @@ class ProfileViewModelTest {
     private lateinit var nodeManager: NodeManager
 
     @Mock
-    private lateinit var resourceManager: ResourceManager
+    private lateinit var soraConfigManager: SoraConfigManager
 
     private lateinit var profileViewModel: ProfileViewModel
 
-    private val title = "More"
-    private val accounts = "Account"
-    private val accountsSubtitle = "Account Sub"
-    private val nodes = "Nodes"
-    private val app = "App settings"
-    private val appSubtitle = "App Sub"
-    private val login = "Login"
-    private val loginSubtitle = "Login Sub"
-    private val invite = "Invite"
-    private val inviteSubtitle = "Invite Sub"
-    private val info = "Info"
-    private val infoSubtitle = "Info Sub"
-
-    fun initViewModel() {
+    private fun initViewModel() {
         profileViewModel = ProfileViewModel(
             assetsRouter,
             interactor,
@@ -98,6 +83,7 @@ class ProfileViewModelTest {
             walletRouter,
             referralRouter,
             selectNodeRouter,
+            soraConfigManager,
             nodeManager,
         )
     }
@@ -115,6 +101,8 @@ class ProfileViewModelTest {
                 )
             )
         )
+
+        whenever(soraConfigManager.getSoraCard()).thenReturn(true)
 
         whenever(nodeManager.connectionState).thenReturn(
             flowOf(

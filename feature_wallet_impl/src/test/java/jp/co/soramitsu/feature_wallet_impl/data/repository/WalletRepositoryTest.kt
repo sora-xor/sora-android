@@ -7,23 +7,18 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.domain.WhitelistTokensManager
-import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_impl.TestData
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -69,9 +64,6 @@ class WalletRepositoryTest {
     private lateinit var db: AppDatabase
 
     @Mock
-    private lateinit var assetDao: AssetDao
-
-    @Mock
     private lateinit var globalCardsHubDao: GlobalCardsHubDao
 
     @Mock
@@ -84,12 +76,6 @@ class WalletRepositoryTest {
     private lateinit var runtimeManager: RuntimeManager
 
     @Mock
-    private lateinit var coroutineManager: CoroutineManager
-
-    @Mock
-    private lateinit var whitelistTokensManager: WhitelistTokensManager
-
-    @Mock
     private lateinit var soraConfigManager: SoraConfigManager
 
     private val mockedUri = mock(Uri::class.java)
@@ -97,7 +83,6 @@ class WalletRepositoryTest {
     private lateinit var runtime: RuntimeSnapshot
 
     private lateinit var walletRepository: WalletRepository
-    private val soraAccount = SoraAccount("a", "n")
 
     @Before
     fun setUp() = runTest {
@@ -106,7 +91,6 @@ class WalletRepositoryTest {
         walletRepository = WalletRepositoryImpl(
             datasource,
             db,
-            AssetLocalToAssetMapper(whitelistTokensManager, soraConfigManager),
             extrinsicManager,
             substrateCalls,
             runtimeManager,
