@@ -28,6 +28,7 @@
     <string name="common_persian_native" translatable="false">زبان فارسی</string>
     <string name="common_serbian_native" translatable="false">Српски</string>
     <string name="common_vietnamese_native" translatable="false">tiếng Việt</string>
+    <string name="common_hindi_native" translatable="false">हिंदी</string>
     <string name="common_norwegian_native" translatable="false">Norwegian Bokmål</string>
     <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
     <string name="transaction_eth_sign" translatable="false">ETH</string>

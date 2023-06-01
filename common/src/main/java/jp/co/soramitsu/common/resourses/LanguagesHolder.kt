@@ -69,6 +69,7 @@ class LanguagesHolder {
     private val vietnamese =
         Language("vi", R.string.common_vietnamese, R.string.common_vietnamese_native)
     private val malay = Language("ms-MY", R.string.common_malay, R.string.common_malay_native)
+    private val hindi = Language("hi-IN", R.string.common_hindi, R.string.common_hindi_native)
 
     private val bashkir = Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
     private val spanish_columbia =
@@ -93,7 +94,7 @@ class LanguagesHolder {
         mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
 
     private val nonProdLanguages =
-        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay)
+        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi)
 
     fun getCurrentLocale(): Locale {
         return AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()

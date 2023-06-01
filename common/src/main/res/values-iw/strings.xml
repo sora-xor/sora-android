@@ -69,7 +69,7 @@
   <string name="common_buy_xor">קנה XOR</string>
   <string name="common_cancel">בטל</string>
   <string name="common_chinese">סִינִית</string>
-  <string name="common_chinesetaiwan">סינית (טייוואן)</string>
+  <string name="common_chinesetaiwan">סינית (טייוואנית)</string>
   <string name="common_choose_asset">בחר נכס</string>
   <string name="common_close">סגור</string>
   <string name="common_confirm">אשר</string>
@@ -126,7 +126,8 @@
   <string name="common_finnish">פינית</string>
   <string name="common_french">צרפתית</string>
   <string name="common_german">גרמנית</string>
-  <string name="common_hebrew">Hebrew</string>
+  <string name="common_hebrew">עברית</string>
+  <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="one">שעה</item>
     <item quantity="two">שעתיים</item>
@@ -146,7 +147,7 @@
   <string name="common_ok">בסדר</string>
   <string name="common_passphrase_title">מילות מפתח</string>
   <string name="common_pay_attention">שים לב!</string>
-  <string name="common_persian">Persian</string>
+  <string name="common_persian">פרסית</string>
   <string name="common_raw_seed">סיד</string>
   <string name="common_receive">קבל</string>
   <string name="common_received">התקבל</string>
@@ -165,7 +166,7 @@
   <string name="common_send">שלח</string>
   <string name="common_sender">השולח</string>
   <string name="common_sent">נשלח</string>
-  <string name="common_serbian">Serbian</string>
+  <string name="common_serbian">סרבית</string>
   <string name="common_share">שתף</string>
   <string name="common_skip">דלג</string>
   <string name="common_sms_code_expired">פג תוקפו של קוד האימות. אנא נסה אחד אחר.</string>
@@ -182,7 +183,7 @@
   <string name="common_turkish">טורקית</string>
   <string name="common_ukrainian">אוקראינית</string>
   <string name="common_update">עדכון</string>
-  <string name="common_vietnamese">Vietnamese</string>
+  <string name="common_vietnamese">וייטנאמית</string>
   <string name="common_yesterday">אתמול</string>
   <string name="confirm_sending">אשר את השליחה</string>
   <string name="contacts_scan">סרוק</string>

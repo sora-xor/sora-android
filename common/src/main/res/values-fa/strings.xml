@@ -127,6 +127,7 @@
   <string name="common_french">فرانسوی</string>
   <string name="common_german">آلمانی</string>
   <string name="common_hebrew">Hebrew</string>
+  <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="one">ساعت</item>
     <item quantity="other">ساعت</item>

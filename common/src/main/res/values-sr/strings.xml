@@ -127,6 +127,7 @@
   <string name="common_french">Француски</string>
   <string name="common_german">Nemački</string>
   <string name="common_hebrew">Hebrew</string>
+  <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="one">сат</item>
     <item quantity="few">сати</item>

@@ -17,4 +17,5 @@
     <locale android:name="sr" />
     <locale android:name="vi" />
     <locale android:name="ms-MY" />
+    <locale android:name="hi-IN" />
 </locale-config>
