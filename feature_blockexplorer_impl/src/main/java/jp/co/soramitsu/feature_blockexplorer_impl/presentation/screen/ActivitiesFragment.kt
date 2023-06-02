@@ -37,7 +37,6 @@ import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
@@ -55,9 +54,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
-import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.TxHistoryScreen
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.screen.TxHistoryScreenContainer
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -94,18 +92,13 @@ class ActivitiesFragment : SoraBaseFragment<ActivitiesViewModel>() {
                     color = MaterialTheme.customColors.fgPrimary,
                 )
                 val historyState: HistoryState by viewModel.historyState.collectAsStateWithLifecycle()
-
-                ContentCardEndless(
+                TxHistoryScreenContainer(
                     modifier = Modifier.padding(top = Dimens.x2).fillMaxSize(),
-                    innerPadding = PaddingValues(top = Dimens.x2),
-                ) {
-                    TxHistoryScreen(
-                        historyState = historyState,
-                        onRefresh = viewModel::refresh,
-                        onHistoryItemClick = viewModel::onTxHistoryItemClick,
-                        onMoreHistoryItemRequested = viewModel::onMoreHistoryEventsRequested
-                    )
-                }
+                    historyState = historyState,
+                    onRefreshClick = viewModel::refresh,
+                    onHistoryItemClick = viewModel::onTxHistoryItemClick,
+                    onMoreHistoryItemRequested = viewModel::onMoreHistoryEventsRequested,
+                )
             }
         }
     }

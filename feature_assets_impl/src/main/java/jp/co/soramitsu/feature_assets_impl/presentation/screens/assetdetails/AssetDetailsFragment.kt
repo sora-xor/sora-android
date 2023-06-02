@@ -44,6 +44,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
@@ -87,7 +92,7 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -95,15 +100,21 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
+            val assetState = viewModel.state
+            val stateData = assetState.state
+            val pullRefresh = rememberPullRefreshState(
+                refreshing = assetState.loading,
+                onRefresh = viewModel::onPullToRefresh
+            )
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = Dimens.x2)
+                    .pullRefresh(pullRefresh, true)
             ) {
-                val state = viewModel.state.state
-                if (state.xorBalance != null) {
+                if (stateData.xorBalance != null) {
                     XorBalancesDialog(
-                        state = state.xorBalance,
+                        state = stateData.xorBalance,
                         onClick = viewModel::onBalanceClick
                     )
                 }
@@ -113,50 +124,51 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
                         .verticalScroll(scrollState)
                 ) {
                     AssetDetailsTokenPriceCard(
-                        tokenName = state.tokenName,
-                        tokenSymbol = state.tokenSymbol,
-                        tokenPrice = state.price,
-                        tokenPriceChange = state.priceChange,
-                        iconUri = state.tokenIcon,
+                        tokenName = stateData.tokenName,
+                        tokenSymbol = stateData.tokenSymbol,
+                        tokenPrice = stateData.price,
+                        tokenPriceChange = stateData.priceChange,
+                        iconUri = stateData.tokenIcon,
                     )
                     Spacer(modifier = Modifier.size(Dimens.x2))
                     AssetDetailsBalanceCard(
-                        amount = state.transferableBalance,
-                        amountFiat = state.transferableBalanceFiat,
-                        frozenAmount = state.frozenBalance,
-                        frozenAmountFiat = state.frozenBalanceFiat,
-                        buyCryptoAvailable = state.buyCryptoAvailable,
-                        isTransferableAmountAvailable = state.isTransferableBalanceAvailable,
-                        hasHistory = state.events.isNotEmpty(),
+                        amount = stateData.transferableBalance,
+                        amountFiat = stateData.transferableBalanceFiat,
+                        frozenAmount = stateData.frozenBalance,
+                        frozenAmountFiat = stateData.frozenBalanceFiat,
+                        buyCryptoAvailable = stateData.buyCryptoAvailable,
+                        isTransferableAmountAvailable = stateData.isTransferableBalanceAvailable,
+                        hasHistory = stateData.events.isNotEmpty(),
                         onSendClick = viewModel::sendClicked,
                         onReceiveClick = viewModel::receiveClicked,
                         onSwapClick = viewModel::swapClicked,
                         onBalanceClick = viewModel::onBalanceClick,
                         onBuyCryptoClick = viewModel::onBuyCrypto
                     )
-                    if (state.poolsState.pools.isNotEmpty()) {
+                    if (stateData.poolsState.pools.isNotEmpty()) {
                         Spacer(modifier = Modifier.size(Dimens.x2))
                         AssetDetailsPooledCard(
-                            title = state.poolsCardTitle,
-                            state = state.poolsState,
+                            title = stateData.poolsCardTitle,
+                            state = stateData.poolsState,
                             onPoolClick = viewModel::onPoolClick
                         )
                     }
-                    if (state.events.isNotEmpty()) {
+                    if (stateData.events.isNotEmpty()) {
                         Spacer(modifier = Modifier.size(Dimens.x2))
                         AssetDetailsRecentActivityCard(
-                            events = state.events,
+                            events = stateData.events,
                             onShowMoreActivity = viewModel::onRecentClick,
                             onHistoryItemClick = viewModel::onHistoryItemClick
                         )
                     }
                     Spacer(modifier = Modifier.size(Dimens.x2))
                     AssetIdCard(
-                        id = state.tokenId,
+                        id = stateData.tokenId,
                         onClick = viewModel::onAssetIdClick
                     )
                     Spacer(modifier = Modifier.size(Dimens.x2))
                 }
+                PullRefreshIndicator(assetState.loading, pullRefresh, Modifier.align(Alignment.TopCenter))
             }
         }
     }
