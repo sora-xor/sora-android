@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Аутентифицировать</string>
   <string name="block_id">Хеш блока</string>
   <string name="buy_crypto_buy_xor_banner_title">Купить токен XOR</string>
@@ -158,6 +159,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">Русский</string>
   <string name="common_scan">Сканировать</string>
+  <string name="common_scan_qr">Scan QR</string>
   <string name="common_search">Поиск</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">сек</string>
@@ -184,9 +186,11 @@
   <string name="common_turkish">Турецкий</string>
   <string name="common_ukrainian">Украинский</string>
   <string name="common_update">Обновление</string>
+  <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Вьетнамский</string>
   <string name="common_yesterday">Вчера</string>
   <string name="confirm_sending">Подтверждение отправки</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">Сканировать QR-код</string>
   <string name="contacts_search_results">Результаты поиска</string>
   <string name="copy_to_clipboard">Скопировать в буфер</string>
@@ -356,6 +360,7 @@
   <string name="project_ended_template">Завершился %s</string>
   <string name="qr_code">QR код</string>
   <string name="qr_upload">Из галереи</string>
+  <string name="receive_tokens">Receive tokens</string>
   <string name="recent_recipients">Недавние получатели</string>
   <string name="recipient_address">Адрес получателя</string>
   <string name="recovery_enter_passphrase_title">Enter your secret Passphrase</string>

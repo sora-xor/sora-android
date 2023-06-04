@@ -32,10 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
-import android.Manifest
 import android.os.Bundle
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
@@ -54,12 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.github.florent37.runtimepermission.RuntimePermission
 import com.google.accompanist.navigation.animation.composable
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -69,7 +63,6 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsC
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
-import jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ModalQrSelectionDialog
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -101,27 +94,8 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).showBottomBar()
-        scanOptions.apply {
-            setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-            setPrompt(getString(R.string.contacts_scan))
-            setBeepEnabled(false)
-        }
-
         viewModel.launchSoraCardSignIn.observe { contractData ->
             soraCardSignIn.launch(contractData)
-        }
-    }
-
-    private val scanOptions = ScanOptions()
-    private val processQrFromGalleryContract =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
-            if (result != null) {
-                viewModel.decodeTextFromBitmapQr(result)
-            }
-        }
-    private val processQrFromCameraContract = registerForActivityResult(ScanContract()) { result ->
-        if (result.contents != null) {
-            viewModel.qrResultProcess(result.contents)
         }
     }
 
@@ -138,22 +112,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                 qrSelection = true
             }
             if (qrSelection) {
-                ModalQrSelectionDialog(
-                    onFromGallery = {
-                        qrSelection = false
-                        processQrFromGalleryContract.launch("image/*")
-                    },
-                    onFromCamera = {
-                        qrSelection = false
-                        RuntimePermission.askPermission(
-                            this@CardsHubFragment,
-                            Manifest.permission.CAMERA
-                        ).onAccepted {
-                            processQrFromCameraContract.launch(scanOptions)
-                        }.ask()
-                    },
-                    onDismiss = { qrSelection = false },
-                )
+                viewModel.openQrCodeFlow()
             }
             Column(
                 modifier = Modifier

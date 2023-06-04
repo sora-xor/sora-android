@@ -114,7 +114,7 @@ fun TopBar(
                 shape = CircleShape,
                 size = Size.Small,
                 order = Order.TERTIARY,
-                leftIcon = painterResource(R.drawable.ic_scan_wrapped),
+                leftIcon = painterResource(R.drawable.ic_scan_qr),
                 onClick = onQrClick,
             )
         }

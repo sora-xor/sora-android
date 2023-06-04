@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Otentikasi</string>
   <string name="block_id">Blokir hash</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
@@ -154,6 +155,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">Rusia</string>
   <string name="common_scan">Pindai</string>
+  <string name="common_scan_qr">Scan QR</string>
   <string name="common_search">Cari</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">detik</string>
@@ -180,9 +182,11 @@
   <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ukraina</string>
   <string name="common_update">Update</string>
+  <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">Kemarin</string>
   <string name="confirm_sending">Confirm sending</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">Scan kode QR</string>
   <string name="contacts_search_results">Hasil Pencarian</string>
   <string name="copy_to_clipboard">Copy to clipboard</string>
@@ -336,6 +340,7 @@
   <string name="project_ended_template">Berakhir %s</string>
   <string name="qr_code">Kode QR</string>
   <string name="qr_upload">Unggah dari galeri</string>
+  <string name="receive_tokens">Receive tokens</string>
   <string name="recent_recipients">Recent recipients</string>
   <string name="recipient_address">Recipient address</string>
   <string name="recovery_enter_passphrase_title">Enter your secret Passphrase</string>

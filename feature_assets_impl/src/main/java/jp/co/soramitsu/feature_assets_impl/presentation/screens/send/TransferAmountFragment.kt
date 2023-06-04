@@ -72,7 +72,8 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
         CustomViewModelFactory {
             vmf.create(
                 requireArguments().getString(ARG_RECIPIENT_ID, ""),
-                requireArguments().getString(ARG_TOKEN_ID, "")
+                requireArguments().getString(ARG_TOKEN_ID, ""),
+                requireArguments().getString(ARG_INIT_AMOUNT, null)
             )
         }
     }
@@ -80,14 +81,17 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
     companion object {
         private const val ARG_TOKEN_ID = "arg_asset_id"
         private const val ARG_RECIPIENT_ID = "arg_recipient_id"
+        private const val ARG_INIT_AMOUNT = "arg_initial_amount"
 
         fun createBundle(
             recipientId: String,
             assetId: String,
+            initAmount: String?
         ): Bundle {
             return Bundle().apply {
                 putString(ARG_RECIPIENT_ID, recipientId)
                 putString(ARG_TOKEN_ID, assetId)
+                initAmount?.let { putString(ARG_INIT_AMOUNT, it) }
             }
         }
     }
