@@ -126,6 +126,8 @@
   <string name="common_finnish">Fince</string>
   <string name="common_french">Fransızca</string>
   <string name="common_german">Almanca</string>
+  <string name="common_hebrew">Hebrew</string>
+  <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
     <item quantity="one">saat</item>
     <item quantity="other">saat</item>
@@ -143,6 +145,7 @@
   <string name="common_ok">Tamam</string>
   <string name="common_passphrase_title">Anımsatıcı Dizi</string>
   <string name="common_pay_attention">Pay attention!</string>
+  <string name="common_persian">Persian</string>
   <string name="common_raw_seed">Kurtarma Kelimeleri</string>
   <string name="common_receive">Al</string>
   <string name="common_received">Alınan</string>
@@ -161,6 +164,7 @@
   <string name="common_send">Gönder</string>
   <string name="common_sender">Gönderen</string>
   <string name="common_sent">Gönderilen</string>
+  <string name="common_serbian">Serbian</string>
   <string name="common_share">Paylaş</string>
   <string name="common_skip">Atla</string>
   <string name="common_sms_code_expired">Doğrulama kodunun süresi doldu. Lütfen başka bir kod deneyin.</string>
@@ -177,6 +181,7 @@
   <string name="common_turkish">Türkçe</string>
   <string name="common_ukrainian">Ukraynaca</string>
   <string name="common_update">Güncelle</string>
+  <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">Dün</string>
   <string name="confirm_sending">Confirm sending</string>
   <string name="contacts_scan">Tara</string>
