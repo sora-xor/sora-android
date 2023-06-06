@@ -122,6 +122,10 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
+    implementation sharedFeaturesBackupDep
+    implementation sharedUtilsDep
+//    implementation("jp.co.soramitsu.shared-utils:shared-utils:0.0.21")
+
     implementation gsonDep
 
     implementation platform(firebaseBomDep)

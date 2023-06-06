@@ -86,17 +86,6 @@ internal fun BackupScreen(
                     size = Size.Large,
                     onClick = onButtonPressed,
                 )
-
-                TonalButton(
-                    modifier = Modifier
-                        .testTagAsId("Skip")
-                        .fillMaxWidth()
-                        .padding(top = Dimens.x1),
-                    text = stringResource(id = R.string.common_skip),
-                    order = Order.PRIMARY,
-                    size = Size.Large,
-                    onClick = { onSkipButtonPressed?.invoke() },
-                )
             } else {
                 TonalButton(
                     modifier = Modifier

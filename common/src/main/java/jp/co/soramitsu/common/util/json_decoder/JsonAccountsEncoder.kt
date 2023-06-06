@@ -9,10 +9,10 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import jp.co.soramitsu.common.util.CryptoAssistant
-import jp.co.soramitsu.fearless_utils.encrypt.EncryptionType
-import jp.co.soramitsu.fearless_utils.encrypt.MultiChainEncryption
-import jp.co.soramitsu.fearless_utils.encrypt.json.JsonSeedEncoder
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.Keypair
+import jp.co.soramitsu.shared_utils.encrypt.EncryptionType
+import jp.co.soramitsu.shared_utils.encrypt.MultiChainEncryption
+import jp.co.soramitsu.shared_utils.encrypt.json.JsonSeedEncoder
+import jp.co.soramitsu.shared_utils.encrypt.keypair.Keypair
 import org.spongycastle.util.encoders.Base64
 
 class JsonAccountsEncoder(

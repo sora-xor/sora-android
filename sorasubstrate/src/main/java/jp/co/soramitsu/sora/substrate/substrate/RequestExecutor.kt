@@ -11,9 +11,9 @@ import com.neovisionaries.ws.client.WebSocketAdapter
 import com.neovisionaries.ws.client.WebSocketException
 import com.neovisionaries.ws.client.WebSocketFactory
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.fearless_utils.wsrpc.mappers.ResponseMapper
-import jp.co.soramitsu.fearless_utils.wsrpc.request.base.RpcRequest
-import jp.co.soramitsu.fearless_utils.wsrpc.response.RpcResponse
+import jp.co.soramitsu.shared_utils.wsrpc.mappers.ResponseMapper
+import jp.co.soramitsu.shared_utils.wsrpc.request.base.RpcRequest
+import jp.co.soramitsu.shared_utils.wsrpc.response.RpcResponse
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine

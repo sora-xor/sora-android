@@ -1,17 +1,23 @@
 /**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: GPL-3.0
+ */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
+import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
@@ -25,6 +31,7 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
+import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -42,10 +49,14 @@ class OnboardingViewModel @Inject constructor(
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
     private val connectionManager: ConnectionManager,
+    private val backupService: BackupService,
 ) : BaseViewModel() {
 
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
     val createAccountCardState: LiveData<CreateAccountState> = _createAccountCardState
+
+    private val _createBackupPasswordState = MutableLiveData(CreateBackupPasswordState(password = InputTextState(label = "Set password"), passwordConfirmation = InputTextState(label = "Confirm password")))
+    val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
 
     private val _recoveryAccountNameCardState = MutableLiveData<CreateAccountState>()
     val recoveryAccountNameCardState: LiveData<CreateAccountState> = _recoveryAccountNameCardState
@@ -67,6 +78,8 @@ class OnboardingViewModel @Inject constructor(
     val recoveryState: LiveData<RecoveryState> = _recoveryState
 
     private var tempAccount: SoraAccount? = null
+
+    private var isFromGoogleDrive = false
 
     private var recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
     private var isValidMethod = multiaccountInteractor::isMnemonicValid
@@ -107,6 +120,7 @@ class OnboardingViewModel @Inject constructor(
                 label = resourceManager.getString(R.string.personal_info_username_v1)
             )
         )
+
     }
 
     fun startedWithInviteAction() {
@@ -243,7 +257,10 @@ class OnboardingViewModel @Inject constructor(
                                 recoveryCardState.recoveryInputState.value.text,
                                 recoverAccountNameState.accountNameInputState.value.text
                             )
-                            multiaccountInteractor.continueRecoverFlow(soraAccount, connectionManager.isConnected)
+                            multiaccountInteractor.continueRecoverFlow(
+                                soraAccount,
+                                connectionManager.isConnected
+                            )
                             mainStarter.start(context)
                         } else {
                             throw SoraException.businessError(errorMessageCode)
@@ -261,6 +278,15 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    fun onGoogleSignin(navController: NavController, activity: Activity, launcher: ActivityResultLauncher<Intent>) {
+        if (backupService.isAuthorized(activity)) {
+            isFromGoogleDrive = true
+            navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
+        } else {
+            backupService.authorize(activity, launcher)
+        }
+    }
+
     private fun toggleToolbarTitle(route: String) {
         _toolbarState.value?.let {
             _toolbarState.value = it.copy(
@@ -272,6 +298,7 @@ class OnboardingViewModel @Inject constructor(
                             OnboardingFeatureRoutes.DISCLAIMER -> R.string.common_pay_attention
                             OnboardingFeatureRoutes.PASSPHRASE -> R.string.common_passphrase_title
                             OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION -> R.string.account_confirmation_title_v2
+                            OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD -> R.string.account_confirmation_title_v2
                             OnboardingFeatureRoutes.RECOVERY -> when (_recoveryState.value?.recoveryType) {
                                 RecoveryType.PASSPHRASE -> R.string.onboarding_enter_passphrase
                                 RecoveryType.SEED -> R.string.onboarding_enter_seed
@@ -307,8 +334,12 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onPassphraseContinueClicked(navController: NavController) {
-        initiateConfirmationStep(1)
-        navController.navigate(OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION)
+        if (isFromGoogleDrive) {
+            navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
+        } else {
+            initiateConfirmationStep(1)
+            navController.navigate(OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION)
+        }
     }
 
     private fun initiateConfirmationStep(step: Int) {
@@ -408,6 +439,91 @@ class OnboardingViewModel @Inject constructor(
             multiaccountInteractor.saveRegistrationStateFinished()
 
             mainStarter.start(context)
+        }
+    }
+
+    fun onSuccessfulGoogleSignin(activity: Activity, navController: NavController) {
+        viewModelScope.launch {
+            try {
+                backupService.deleteAllAccounts(activity)
+                val result = backupService.getBackupAccounts(activity)
+                if (result.isEmpty()) {
+                    isFromGoogleDrive = true
+                    onCreateAccountClicked(navController)
+                } else {
+//                    _googleImportListCardState.value = GoogleImportListState(backupService.getBackupAccounts(activity))
+                    // TODO: show list
+                }
+            } catch (e: UnauthorizedException) {
+                // TODO: handle error
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun onCreateAccountClicked(navController: NavController) {
+        navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
+    }
+
+    fun onSetBackupPasswordClicked(
+        activity: Activity
+    ) {
+        viewModelScope.launch {
+            _createBackupPasswordState.value?.let { createBackupPasswordState ->
+                _passphraseCardState.value?.let { passphraseCardState ->
+                    tempAccount?.let {
+                        backupService.saveBackupAccount(
+                            activity,
+                            DecryptedBackupAccount(
+                                it.accountName,
+                                it.substrateAddress,
+                                passphraseCardState.mnemonicWords.joinToString(" ")
+                            ),
+                            createBackupPasswordState.password.value.text
+                        )
+
+                        finishCreateAccountProcess(activity)
+                    }
+                }
+            }
+        }
+    }
+
+    fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
+        _createBackupPasswordState.value?.let {
+            val isSecure = textFieldValue.text.isPasswordSecure()
+            _createBackupPasswordState.value = it.copy(
+                password = it.password.copy(
+                    value = textFieldValue,
+                    success = isSecure,
+                    descriptionText = if (isSecure) "Is secure" else ""
+                ),
+                setPasswordButtonIsEnabled = it.warningIsSelected && it.passwordConfirmation.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            )
+        }
+    }
+
+    fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
+        _createBackupPasswordState.value?.let {
+            val isConfirmationRightAndSecure = it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            _createBackupPasswordState.value = it.copy(
+                passwordConfirmation = it.password.copy(
+                    value = textFieldValue,
+                    success = isConfirmationRightAndSecure,
+                    descriptionText = if (isConfirmationRightAndSecure) "Password matched" else ""
+                ),
+                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRightAndSecure
+            )
+        }
+    }
+
+    fun onWarningToggle() {
+        _createBackupPasswordState.value?.let {
+            val newWarningState = !it.warningIsSelected
+            _createBackupPasswordState.value = it.copy(
+                warningIsSelected = newWarningState,
+                setPasswordButtonIsEnabled = newWarningState && it.password.value.text == it.passwordConfirmation.value.text && it.password.value.text.isPasswordSecure()
+            )
         }
     }
 }

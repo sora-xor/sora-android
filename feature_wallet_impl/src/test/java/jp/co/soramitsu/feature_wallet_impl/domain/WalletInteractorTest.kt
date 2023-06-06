@@ -16,7 +16,7 @@ import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository

@@ -5,9 +5,13 @@
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
 
+import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
@@ -36,6 +40,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
 import jp.co.soramitsu.common.presentation.compose.webview.WebView
 import jp.co.soramitsu.common.presentation.view.SoraBaseActivity
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password.BackupPasswordScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.create_account.CreateAccountScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.enter_passphrase.EnterPassphraseScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupScreen
@@ -78,6 +83,16 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         }
     }
 
+    private val launcher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            Log.e("TAGAA", "AAA" + result.toString())
+            if (result.resultCode != Activity.RESULT_OK) {
+                Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT).show() //todo showError
+            } else {
+                viewModel.onSuccessfulGoogleSignin(this@OnboardingActivity, navController)
+            }
+        }
+
     override val viewModel: OnboardingViewModel by viewModels()
 
     override fun onToolbarNavigation() {
@@ -113,9 +128,10 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     TutorialScreen(
-                        { navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT) },
-                        { dialogState.show() },
-                        {
+                        onCreateAccount = { viewModel.onCreateAccountClicked(navController) },
+                        onImportAccount = { dialogState.show() },
+                        onGoogleSignin = { viewModel.onGoogleSignin(navController, this@OnboardingActivity, launcher) },
+                        onTermsAndPrivacyClicked = {
                             when (it) {
                                 TermsAndPrivacyEnum.TERMS -> viewModel.onTermsClicked(
                                     navController
@@ -235,6 +251,25 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         ) {
                             viewModel.recoveryNextClicked(
                                 navController,
+                                this@OnboardingActivity
+                            )
+                        }
+                    }
+                }
+            }
+
+            animatedComposable(
+                route = OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD
+            ) {
+                viewModel.createBackupPasswordState.observeAsState().value?.let {
+                    Box {
+                        BackupPasswordScreen(
+                            it,
+                            viewModel::onBackupPasswordChanged,
+                            viewModel::onBackupPasswordConfirmationChanged,
+                            viewModel::onWarningToggle
+                        ) {
+                            viewModel.onSetBackupPasswordClicked(
                                 this@OnboardingActivity
                             )
                         }

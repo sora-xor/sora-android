@@ -17,7 +17,8 @@ buildscript {
             spongycastle           : '1.58.0.0',
             ed25519                : '2.0.1',
             web3j                  : '4.2.0-android',
-            fearlessLib            : '1.0.117',
+//            fearlessLib            : '1.0.117',
+            sharedUtils            : '0.0.26_snapshot10',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
             zXingEmbedded          : '4.3.0@aar',
@@ -51,7 +52,8 @@ buildscript {
             accompanist            : '0.30.1',
             xserializationjson     : '1.5.0',
             composeMaterialDialog  : '0.9.0',
-            ktor                   : '2.2.3'
+            ktor                   : '2.2.3',
+            guava                  : '31.0.1-android'
     ]
 
     ext {
@@ -115,11 +117,12 @@ buildscript {
 
         irohaDep = "com.github.hyperledger.iroha-java:client:$versions.iroha"
         soraDep = "com.github.soramitsu:sora-sdk:$versions.soraSdk"
-        fearlessLibDep = "jp.co.soramitsu.fearless-utils:fearless-utils:$versions.fearlessLib"
         xNetworkingDep = "jp.co.soramitsu:XNetworking-android:$versions.xNetworking"
         ktorWebSocketDep = "io.ktor:ktor-client-websockets:$versions.ktor"
         webSocketLibDep = "com.neovisionaries:nv-websocket-client:$versions.webSocketLib"
         uiCoreDep = "jp.co.soramitsu:ui-core:$versions.uiCore"
+        sharedUtilsDep = "jp.co.soramitsu.shared_features:shared-utils:$versions.sharedUtils"
+        sharedFeaturesBackupDep = "jp.co.soramitsu.shared_features:backup:$versions.sharedUtils"
 
         soraCardDep = "jp.co.soramitsu:android-sora-card:$versions.soraCard"
 
@@ -147,6 +150,8 @@ buildscript {
         web3jDep = "org.web3j:core:$versions.web3j"
 
         composeMaterialDialogDep = "io.github.vanpra.compose-material-dialogs:core:$versions.composeMaterialDialog"
+
+        guavaDep = "com.google.guava:guava:$versions.guava"
 
         runtimePermissionsDep = "com.github.florent37:runtime-permission-kotlin:$versions.runtimePermissions"
 

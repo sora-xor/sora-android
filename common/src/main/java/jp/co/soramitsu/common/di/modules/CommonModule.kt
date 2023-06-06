@@ -17,8 +17,10 @@ import com.goterl.lazysodium.utils.Base64MessageEncoder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jp.co.soramitsu.backup.BackupService
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.util.Locale
@@ -52,7 +54,7 @@ import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.fearless_utils.encrypt.json.JsonSeedEncoder
+import jp.co.soramitsu.shared_utils.encrypt.json.JsonSeedEncoder
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
@@ -250,5 +252,11 @@ class CommonModule {
     fun provideDeviceVibrator(@ApplicationContext context: Context): DeviceVibrator {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         return DeviceVibrator(vibrator)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBackupService(): BackupService {
+        return BackupService.create("246186134552-69onh58fcb93eegstups75aeqao07k52.apps.googleusercontent.com")
     }
 }

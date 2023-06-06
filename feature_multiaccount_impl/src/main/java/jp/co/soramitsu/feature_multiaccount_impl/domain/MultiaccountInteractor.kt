@@ -9,11 +9,11 @@ import android.net.Uri
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.shared_utils.encrypt.keypair.Keypair
 import kotlinx.coroutines.flow.Flow
 
 class MultiaccountInteractor @Inject constructor(

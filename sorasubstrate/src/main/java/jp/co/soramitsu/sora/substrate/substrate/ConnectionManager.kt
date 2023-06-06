@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
+import jp.co.soramitsu.shared_utils.wsrpc.state.SocketStateMachine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 

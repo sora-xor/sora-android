@@ -12,7 +12,7 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.fearless_utils.wsrpc.state.SocketStateMachine
+import jp.co.soramitsu.shared_utils.wsrpc.state.SocketStateMachine
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository

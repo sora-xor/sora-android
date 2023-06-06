@@ -7,10 +7,10 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.fearless_utils.extensions.fromHex
-import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.extensions.toHexString
 
 class PrefsCredentialsDatasource constructor(
     private val encryptedPreferences: EncryptedPreferences,

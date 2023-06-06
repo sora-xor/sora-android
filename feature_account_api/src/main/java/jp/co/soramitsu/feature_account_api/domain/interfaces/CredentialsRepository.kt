@@ -7,7 +7,7 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 
 interface CredentialsRepository {
 

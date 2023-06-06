@@ -5,12 +5,12 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import jp.co.soramitsu.fearless_utils.scale.Schema
-import jp.co.soramitsu.fearless_utils.scale.compactInt
-import jp.co.soramitsu.fearless_utils.scale.sizedByteArray
-import jp.co.soramitsu.fearless_utils.scale.uint128
-import jp.co.soramitsu.fearless_utils.scale.uint32
-import jp.co.soramitsu.fearless_utils.scale.vector
+import jp.co.soramitsu.shared_utils.scale.Schema
+import jp.co.soramitsu.shared_utils.scale.compactInt
+import jp.co.soramitsu.shared_utils.scale.sizedByteArray
+import jp.co.soramitsu.shared_utils.scale.uint128
+import jp.co.soramitsu.shared_utils.scale.uint32
+import jp.co.soramitsu.shared_utils.scale.vector
 
 object ReservesResponse : Schema<ReservesResponse>() {
     val first by uint128()
@@ -35,7 +35,7 @@ object StakingLedger : Schema<StakingLedger>() {
     val total by compactInt()
     val active by compactInt()
     val unlocking by vector(UnlockChunk)
-    val claimedRewards by vector(jp.co.soramitsu.fearless_utils.scale.dataType.uint32)
+    val claimedRewards by vector(jp.co.soramitsu.shared_utils.scale.dataType.uint32)
 }
 
 object UnlockChunk : Schema<UnlockChunk>() {

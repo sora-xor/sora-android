@@ -6,21 +6,20 @@
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -34,10 +33,12 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.OutlinedButton
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.ui_core.extensions.ripple
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -47,6 +48,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 internal fun TutorialScreen(
     onCreateAccount: () -> Unit,
     onImportAccount: () -> Unit,
+    onGoogleSignin: () -> Unit,
     onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit
 ) {
     Box(
@@ -101,7 +103,8 @@ internal fun TutorialScreen(
                 TutorialButtons(
                     modifier = Modifier.padding(top = Dimens.x3),
                     onCreateAccount = onCreateAccount,
-                    onRecoveryAccount = onImportAccount
+                    onRecoveryAccount = onImportAccount,
+                    onGoogleSignin = onGoogleSignin
                 )
 
                 val annotatedLinkString: AnnotatedString = buildAnnotatedString {
@@ -185,6 +188,7 @@ internal fun TutorialScreen(
 private fun TutorialButtons(
     modifier: Modifier = Modifier,
     onCreateAccount: () -> Unit,
+    onGoogleSignin: () -> Unit,
     onRecoveryAccount: () -> Unit
 ) {
     Column(
@@ -197,7 +201,19 @@ private fun TutorialButtons(
                 .testTagAsId("CreateNewAccount")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
-            text = stringResource(R.string.create_new_account_title).uppercase(),
+            text = "Google signin",
+            onClick = onGoogleSignin,
+            size = Size.Large,
+            order = Order.PRIMARY
+        )
+
+
+        OutlinedButton(
+            modifier = Modifier
+                .testTagAsId("CreateNewAccount")
+                .padding(top = Dimens.x1)
+                .fillMaxWidth(),
+            text = stringResource(R.string.create_account_title),
             onClick = onCreateAccount,
             size = Size.Large,
             order = Order.PRIMARY
@@ -208,10 +224,10 @@ private fun TutorialButtons(
                 .testTagAsId("ImportAccount")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
-            text = stringResource(R.string.recovery_title).uppercase(),
+            text = stringResource(R.string.recovery_title),
             onClick = onRecoveryAccount,
             size = Size.Large,
-            order = Order.SECONDARY
+            order = Order.PRIMARY
         )
     }
 }
@@ -221,6 +237,7 @@ private fun TutorialButtons(
 @Composable
 fun PreviewTutorialScreen() {
     TutorialScreen(
+        {},
         {},
         {},
         {}

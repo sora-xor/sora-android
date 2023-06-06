@@ -15,4 +15,5 @@ object OnboardingFeatureRoutes {
     const val TERMS_AND_PRIVACY = "jp.co.soramitsu.feature_multiaccount_impl.TermsAndPrivacy"
     const val RECOVERY = "jp.co.soramitsu.feature_multiaccount_impl.Recovery"
     const val RECOVERY_ACCOUNT_NAME = "jp.co.soramitsu.feature_multiaccount_impl.RecoveryAccountName"
+    const val CREATE_BACKUP_PASSWORD = "jp.co.soramitsu.feature_multiaccount_impl.CreateBackupPassword"
 }

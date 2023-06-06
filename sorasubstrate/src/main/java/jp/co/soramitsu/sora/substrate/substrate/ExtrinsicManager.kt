@@ -10,10 +10,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.fearless_utils.runtime.extrinsic.ExtrinsicBuilder
-import jp.co.soramitsu.fearless_utils.runtime.metadata.event
-import jp.co.soramitsu.fearless_utils.runtime.metadata.module
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.runtime.extrinsic.ExtrinsicBuilder
+import jp.co.soramitsu.shared_utils.runtime.metadata.event
+import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicStatusResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.Events

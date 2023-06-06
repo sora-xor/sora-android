@@ -25,7 +25,7 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager

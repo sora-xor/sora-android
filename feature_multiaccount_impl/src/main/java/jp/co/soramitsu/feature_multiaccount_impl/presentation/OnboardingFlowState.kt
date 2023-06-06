@@ -34,6 +34,13 @@ data class CreateAccountState(
     val btnEnabled: Boolean = true,
 )
 
+data class CreateBackupPasswordState(
+    val password: InputTextState = InputTextState(),
+    val passwordConfirmation: InputTextState = InputTextState(),
+    val warningIsSelected: Boolean = false,
+    val setPasswordButtonIsEnabled: Boolean = false,
+)
+
 data class MnemonicConfirmationState(
     val currentWordIndex: Int,
     val buttonsList: List<String>,

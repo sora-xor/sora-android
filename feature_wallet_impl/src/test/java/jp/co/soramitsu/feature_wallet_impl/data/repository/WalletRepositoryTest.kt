@@ -19,8 +19,8 @@ import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_impl.TestData
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository

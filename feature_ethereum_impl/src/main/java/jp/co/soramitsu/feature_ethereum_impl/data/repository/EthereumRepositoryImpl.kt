@@ -11,8 +11,6 @@ import java.security.KeyPair
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.fearless_utils.extensions.fromHex
-import jp.co.soramitsu.fearless_utils.extensions.toHexString
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumDatasource
 import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumRepository
 import jp.co.soramitsu.feature_ethereum_api.domain.model.EthRegisterState
@@ -26,6 +24,8 @@ import jp.co.soramitsu.feature_ethereum_impl.data.repository.converter.EtherWeiC
 import jp.co.soramitsu.feature_ethereum_impl.util.ContractsApiProvider
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jBip32Crypto
 import jp.co.soramitsu.feature_ethereum_impl.util.Web3jProvider
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.extensions.toHexString
 import org.web3j.crypto.Sign
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.utils.Numeric

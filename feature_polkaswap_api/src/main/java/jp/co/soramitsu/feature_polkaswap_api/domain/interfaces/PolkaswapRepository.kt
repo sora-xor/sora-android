@@ -13,7 +13,7 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.PoolData
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.models.WithDesired

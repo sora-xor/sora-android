@@ -7,16 +7,16 @@ package jp.co.soramitsu.test_shared
 
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
-import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionParser
-import jp.co.soramitsu.fearless_utils.runtime.definitions.TypeDefinitionsTree
-import jp.co.soramitsu.fearless_utils.runtime.definitions.dynamic.DynamicTypeResolver
-import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.TypeRegistry
-import jp.co.soramitsu.fearless_utils.runtime.definitions.registry.v14Preset
-import jp.co.soramitsu.fearless_utils.runtime.definitions.v14.TypesParserV14
-import jp.co.soramitsu.fearless_utils.runtime.metadata.RuntimeMetadataReader
-import jp.co.soramitsu.fearless_utils.runtime.metadata.builder.VersionedRuntimeBuilder
-import jp.co.soramitsu.fearless_utils.runtime.metadata.v14.RuntimeMetadataSchemaV14
+import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
+import jp.co.soramitsu.shared_utils.runtime.definitions.TypeDefinitionParser
+import jp.co.soramitsu.shared_utils.runtime.definitions.TypeDefinitionsTree
+import jp.co.soramitsu.shared_utils.runtime.definitions.dynamic.DynamicTypeResolver
+import jp.co.soramitsu.shared_utils.runtime.definitions.registry.TypeRegistry
+import jp.co.soramitsu.shared_utils.runtime.definitions.registry.v14Preset
+import jp.co.soramitsu.shared_utils.runtime.definitions.v14.TypesParserV14
+import jp.co.soramitsu.shared_utils.runtime.metadata.RuntimeMetadataReader
+import jp.co.soramitsu.shared_utils.runtime.metadata.builder.VersionedRuntimeBuilder
+import jp.co.soramitsu.shared_utils.runtime.metadata.v14.RuntimeMetadataSchemaV14
 
 object TestRuntimeProvider {
 

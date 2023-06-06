@@ -10,8 +10,8 @@ import io.mockk.MockKException
 import io.mockk.coEvery
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import jp.co.soramitsu.fearless_utils.extensions.fromHex
-import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.wsrpc.SocketService
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
 import jp.co.soramitsu.test_shared.RealRuntimeProvider

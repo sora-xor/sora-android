@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import jp.co.soramitsu.fearless_utils.wsrpc.logging.Logger
+import jp.co.soramitsu.shared_utils.wsrpc.logging.Logger
 import timber.log.Timber
 
 class WsLogger : Logger {

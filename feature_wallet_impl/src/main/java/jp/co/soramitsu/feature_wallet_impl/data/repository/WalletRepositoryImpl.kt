@@ -11,11 +11,11 @@ import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.fearless_utils.runtime.metadata.module
-import jp.co.soramitsu.fearless_utils.runtime.metadata.storage
-import jp.co.soramitsu.fearless_utils.runtime.metadata.storageKey
-import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.runtime.metadata.module
+import jp.co.soramitsu.shared_utils.runtime.metadata.storage
+import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
+import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus

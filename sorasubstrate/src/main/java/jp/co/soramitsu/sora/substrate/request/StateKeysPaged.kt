@@ -5,7 +5,7 @@
 
 package jp.co.soramitsu.sora.substrate.request
 
-import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.RuntimeRequest
+import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.RuntimeRequest
 
 class StateKeys(params: List<Any>) : RuntimeRequest("state_getKeys", params)
 class StateKeysPaged(params: List<Any>) : RuntimeRequest("state_getKeysPaged", params)
