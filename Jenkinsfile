@@ -1,5 +1,5 @@
-// @Library('jenkins-library@feature/SNE-245/DefectDojo' ) _
-@Library('jenkins-library@feature/DOPS-2461/fix_sonar') _
+@Library('jenkins-library@feature/SNE-245/DefectDojo' ) _
+// @Library('jenkins-library@feature/DOPS-2461/fix_sonar') _
 
 // Job properties
 def jobParams = [
