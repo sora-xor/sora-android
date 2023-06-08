@@ -22,7 +22,6 @@ import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
-
 @Composable
 fun CheckboxButton(
     modifier: Modifier = Modifier,

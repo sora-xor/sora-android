@@ -36,8 +36,8 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import kotlinx.coroutines.flow.Flow
 

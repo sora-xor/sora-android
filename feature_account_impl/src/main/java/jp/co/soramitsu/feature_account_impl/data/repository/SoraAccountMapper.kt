@@ -41,6 +41,7 @@ object SoraAccountMapper {
         return SoraAccount(
             substrateAddress = account.substrateAddress,
             accountName = account.accountName,
+            isBackedUp = account.isBackedUp
         )
     }
 
@@ -48,6 +49,7 @@ object SoraAccountMapper {
         return SoraAccountLocal(
             substrateAddress = account.substrateAddress,
             accountName = account.accountName,
+            isBackedUp = account.isBackedUp
         )
     }
 }

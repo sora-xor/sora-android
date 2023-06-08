@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">تایید</string>
   <string name="block_id">بلاک هش</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
@@ -155,6 +156,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">روسی</string>
   <string name="common_scan">اسکن</string>
+  <string name="common_scan_qr">Scan QR</string>
   <string name="common_search">جستجو</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">ثانیه</string>
@@ -181,13 +183,21 @@
   <string name="common_turkish">ترکی</string>
   <string name="common_ukrainian">اوکراینی</string>
   <string name="common_update"> به روز رسانی</string>
+  <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">دیروز</string>
   <string name="confirm_sending">Confirm sending</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">اسکن</string>
   <string name="contacts_search_results">نتایج جستجو</string>
   <string name="copy_to_clipboard">Copy to clipboard</string>
   <string name="create_account_title">ایجاد حساب کاربری</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
   <string name="create_new_account_title">Create new account</string>
   <string name="dark_mode">Dark mode</string>
   <string name="details_frozen">قفل شده</string>
@@ -341,6 +351,7 @@
   <string name="project_ended_template">پایان یافت</string>
   <string name="qr_code">کد QR</string>
   <string name="qr_upload">بارگیری از گالری</string>
+  <string name="receive_tokens">Receive tokens</string>
   <string name="recent_recipients">Recent recipients</string>
   <string name="recipient_address">Recipient address</string>
   <string name="recovery_enter_passphrase_title">Enter your secret Passphrase</string>

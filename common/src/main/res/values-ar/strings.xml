@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">سعر الرمز المميز</string>
   <string name="asset_details_your_pools">تجمعات %s الخاصة بك</string>
   <string name="asset_to_send">الأصول المراد إرسالها</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">توثيق المصادقة</string>
   <string name="block_id">كتلة التجزئة</string>
   <string name="buy_crypto_buy_xor_banner_title">شراء توكن XOR</string>
@@ -159,6 +160,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">الروسية</string>
   <string name="common_scan">مسح ضوئي</string>
+  <string name="common_scan_qr">مسح QR</string>
   <string name="common_search">بحث</string>
   <string name="common_search_pools">الأحواض الممكنة</string>
   <string name="common_sec">ثانية</string>
@@ -185,13 +187,21 @@
   <string name="common_turkish">التركية</string>
   <string name="common_ukrainian">الأوكرانية</string>
   <string name="common_update">تحديث</string>
+  <string name="common_upload_from_library">تحميل من المكتبة</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">أمس</string>
   <string name="confirm_sending">تأكيد الإرسال</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">المسح الضوئي لرمز QR</string>
   <string name="contacts_search_results">نتائج البحث</string>
   <string name="copy_to_clipboard">نسخ إلى الحافظة</string>
   <string name="create_account_title">إنشاء حساب</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
   <string name="create_new_account_title">انشاء حساب جديد</string>
   <string name="dark_mode">الوضع المظلم</string>
   <string name="details_frozen">مجمد</string>
@@ -361,6 +371,7 @@
   <string name="project_ended_template">انتهى %s</string>
   <string name="qr_code">رمز الاستجابة السريعة QR</string>
   <string name="qr_upload">التحميل من معرض الصور</string>
+  <string name="receive_tokens">تلقي العملات</string>
   <string name="recent_recipients">المستلمون الجدد</string>
   <string name="recipient_address">عنوان المستلم</string>
   <string name="recovery_enter_passphrase_title">أدخل عبارة المرور السرية الخاصة بك (Passphrase)</string>

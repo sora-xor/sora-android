@@ -192,6 +192,8 @@
   <string name="copy_to_clipboard">Copy to clipboard</string>
   <string name="create_account_title">Buat Akun</string>
   <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
   <string name="create_backup_password_title">Create backup password</string>
   <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
   <string name="create_backup_set_password">Set password</string>

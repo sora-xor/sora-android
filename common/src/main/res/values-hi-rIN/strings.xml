@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">टोकन मूल्य</string>
   <string name="asset_details_your_pools">आपके %s पूल</string>
   <string name="asset_to_send">भेजने के लिए संपत्ति</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">प्रमाणित करें</string>
   <string name="block_id">ब्लॉक हैश</string>
   <string name="buy_crypto_buy_xor_banner_title">XOR टोकन खरीदें</string>
@@ -155,6 +156,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">रूसी</string>
   <string name="common_scan">स्कैन</string>
+  <string name="common_scan_qr">QR स्कैन करें</string>
   <string name="common_search">खोजें</string>
   <string name="common_search_pools">पूल खोजें</string>
   <string name="common_sec">सेकंड</string>
@@ -181,13 +183,21 @@
   <string name="common_turkish">तुर्की</string>
   <string name="common_ukrainian">यूक्रेनी</string>
   <string name="common_update">अपडेट करें</string>
+  <string name="common_upload_from_library">लाइब्रेरी से अपलोड करें</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">बिता हुआ कल</string>
   <string name="confirm_sending">भेजने की पुष्टि करें</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">क्यूआर कोड स्कैन</string>
   <string name="contacts_search_results">परिणाम खोजें</string>
   <string name="copy_to_clipboard">क्लिपबोर्ड पर कॉपी करें</string>
   <string name="create_account_title">खाता बनाएं</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
   <string name="create_new_account_title">नया खाता बनाएँ</string>
   <string name="dark_mode">डार्क मोड</string>
   <string name="details_frozen">जमा हुआ</string>
@@ -341,6 +351,7 @@
   <string name="project_ended_template">समाप्त%s</string>
   <string name="qr_code">क्यूआर कोड</string>
   <string name="qr_upload">गैलरी से</string>
+  <string name="receive_tokens">टोकन प्राप्त करें</string>
   <string name="recent_recipients">हाल के प्राप्तकर्ता</string>
   <string name="recipient_address">प्राप्तकर्ता का पता</string>
   <string name="recovery_enter_passphrase_title">अपना गुप्त passphrase दर्ज करें</string>

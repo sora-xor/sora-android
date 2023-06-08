@@ -34,6 +34,7 @@ package jp.co.soramitsu.sora.substrate.substrate
 
 import io.emeraldpay.polkaj.scale.ScaleCodecReader
 import io.emeraldpay.polkaj.scale.ScaleCodecWriter
+import java.io.ByteArrayOutputStream
 import jp.co.soramitsu.shared_utils.encrypt.junction.BIP32JunctionDecoder
 import jp.co.soramitsu.shared_utils.encrypt.mnemonic.Mnemonic
 import jp.co.soramitsu.shared_utils.encrypt.seed.SeedFactory
@@ -58,8 +59,6 @@ import jp.co.soramitsu.shared_utils.scale.dataType.uint32
 import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
-import java.io.ByteArrayOutputStream
-
 
 val BIP32JunctionDecoder.DEFAULT_DERIVATION_PATH: String
     get() = "//44//60//0/0/0"

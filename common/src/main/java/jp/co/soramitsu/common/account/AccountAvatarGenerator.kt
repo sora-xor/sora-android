@@ -40,7 +40,6 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.shared_utils.extensions.toHexString
 import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 
-
 @Singleton
 class AccountAvatarGenerator(
     private val resourceManager: ResourceManager,

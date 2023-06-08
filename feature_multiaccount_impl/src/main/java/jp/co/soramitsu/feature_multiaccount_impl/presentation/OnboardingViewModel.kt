@@ -42,10 +42,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
-import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.InvitationHandler
@@ -82,7 +82,12 @@ class OnboardingViewModel @Inject constructor(
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
     val createAccountCardState: LiveData<CreateAccountState> = _createAccountCardState
 
-    private val _createBackupPasswordState = MutableLiveData(CreateBackupPasswordState(password = InputTextState(label = "Set password"), passwordConfirmation = InputTextState(label = "Confirm password")))
+    private val _createBackupPasswordState = MutableLiveData(
+        CreateBackupPasswordState(
+            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+            passwordConfirmation = InputTextState(label = resourceManager.getString(R.string.export_json_input_confirmation_label))
+        )
+    )
     val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
 
     private val _recoveryAccountNameCardState = MutableLiveData<CreateAccountState>()
@@ -147,7 +152,6 @@ class OnboardingViewModel @Inject constructor(
                 label = resourceManager.getString(R.string.personal_info_username_v1)
             )
         )
-
     }
 
     fun startedWithInviteAction() {
@@ -305,7 +309,11 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun onGoogleSignin(navController: NavController, activity: Activity, launcher: ActivityResultLauncher<Intent>) {
+    fun onGoogleSignin(
+        navController: NavController,
+        activity: Activity,
+        launcher: ActivityResultLauncher<Intent>
+    ) {
         if (backupService.isAuthorized(activity)) {
             isFromGoogleDrive = true
             navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
@@ -325,15 +333,17 @@ class OnboardingViewModel @Inject constructor(
                             OnboardingFeatureRoutes.DISCLAIMER -> R.string.common_pay_attention
                             OnboardingFeatureRoutes.PASSPHRASE -> R.string.common_passphrase_title
                             OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION -> R.string.account_confirmation_title_v2
-                            OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD -> R.string.account_confirmation_title_v2
+                            OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD -> R.string.create_backup_password_title
                             OnboardingFeatureRoutes.RECOVERY -> when (_recoveryState.value?.recoveryType) {
                                 RecoveryType.PASSPHRASE -> R.string.onboarding_enter_passphrase
                                 RecoveryType.SEED -> R.string.onboarding_enter_seed
                                 else -> R.string.onboarding_enter_passphrase
                             }
+
                             OnboardingFeatureRoutes.TERMS_AND_PRIVACY ->
                                 _termsAndPrivacyState.value?.title
                                     ?: R.string.common_terms_title
+
                             else -> R.string.tutorial_many_world
                         }
                     ),
@@ -426,6 +436,7 @@ class OnboardingViewModel @Inject constructor(
                     )
                 )
             }
+
             1 -> {
                 isValidMethod = multiaccountInteractor::isRawSeedValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromRawSeed
@@ -439,6 +450,7 @@ class OnboardingViewModel @Inject constructor(
                     )
                 )
             }
+
             else -> RecoveryState(
                 title = R.string.recovery_enter_passphrase_title,
                 recoveryType = RecoveryType.PASSPHRASE,
@@ -509,6 +521,7 @@ class OnboardingViewModel @Inject constructor(
                             createBackupPasswordState.password.value.text
                         )
 
+                        tempAccount = it.copy(isBackedUp = true)
                         finishCreateAccountProcess(activity)
                     }
                 }
@@ -523,7 +536,7 @@ class OnboardingViewModel @Inject constructor(
                 password = it.password.copy(
                     value = textFieldValue,
                     success = isSecure,
-                    descriptionText = if (isSecure) "Is secure" else ""
+                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else ""
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected && it.passwordConfirmation.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
             )
@@ -532,12 +545,13 @@ class OnboardingViewModel @Inject constructor(
 
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
-            val isConfirmationRightAndSecure = it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            val isConfirmationRightAndSecure =
+                it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
             _createBackupPasswordState.value = it.copy(
                 passwordConfirmation = it.password.copy(
                     value = textFieldValue,
                     success = isConfirmationRightAndSecure,
-                    descriptionText = if (isConfirmationRightAndSecure) "Password matched" else ""
+                    descriptionText = if (isConfirmationRightAndSecure) resourceManager.getString(R.string.create_backup_password_matched) else ""
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRightAndSecure
             )

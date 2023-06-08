@@ -44,15 +44,14 @@ import com.goterl.lazysodium.utils.Base64MessageEncoder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ActivityContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import jp.co.soramitsu.backup.BackupService
 import java.nio.charset.StandardCharsets
 import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
+import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl

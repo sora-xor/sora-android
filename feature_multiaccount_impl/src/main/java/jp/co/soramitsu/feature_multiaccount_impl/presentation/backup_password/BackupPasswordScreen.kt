@@ -56,7 +56,7 @@ fun BackupPasswordScreen(
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = "Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.",
+                text = stringResource(id = R.string.backup_password_title),
                 style = MaterialTheme.customTypography.paragraphM,
             )
 
@@ -98,7 +98,7 @@ fun BackupPasswordScreen(
                 modifier = Modifier.padding(top = Dimens.x2),
                 isSelected = state.warningIsSelected,
                 itemClicked = onWarningToggle,
-                text = "I understand that if I forget my password there is no way to retrieve it."
+                text = stringResource(id = R.string.create_backup_password_warning_text)
             )
 
             FilledButton(
@@ -107,7 +107,7 @@ fun BackupPasswordScreen(
                     .padding(top = Dimens.x3),
                 size = Size.Large,
                 order = Order.PRIMARY,
-                text = "Set backup password",
+                text = stringResource(id = R.string.create_backup_password_button_text),
                 onClick = onSetBackupPasswordClicked,
                 enabled = state.setPasswordButtonIsEnabled,
             )

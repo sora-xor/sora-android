@@ -114,7 +114,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             Log.e("TAGAA", "AAA" + result.toString())
             if (result.resultCode != Activity.RESULT_OK) {
-                Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT).show() //todo showError
+                Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT).show() // todo showError
             } else {
                 viewModel.onSuccessfulGoogleSignin(this@OnboardingActivity, navController)
             }

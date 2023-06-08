@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_account_api.domain.interfaces
 
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 
-
 interface CredentialsDatasource {
 
     suspend fun getAddress(): String

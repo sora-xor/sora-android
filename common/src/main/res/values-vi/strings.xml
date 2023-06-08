@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">Giá token</string>
   <string name="asset_details_your_pools">%s pool của bạn</string>
   <string name="asset_to_send">Tài sản cần gửi</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Xác thực</string>
   <string name="block_id">Block hash</string>
   <string name="buy_crypto_buy_xor_banner_title">Mua token XOR</string>
@@ -154,6 +155,7 @@
   <string name="common_request">Yêu cầu</string>
   <string name="common_russian">Tiếng Nga</string>
   <string name="common_scan">Quét</string>
+  <string name="common_scan_qr">Quét mã QR</string>
   <string name="common_search">Tìm kiếm</string>
   <string name="common_search_pools">Tìm kiếm pool</string>
   <string name="common_sec">giây</string>
@@ -180,13 +182,21 @@
   <string name="common_turkish">Tiếng Thổ Nhĩ Kỳ</string>
   <string name="common_ukrainian">Tiếng Ukraina</string>
   <string name="common_update">Cập nhật</string>
-  <string name="common_vietnamese">Vietnamese</string>
+  <string name="common_upload_from_library">Tải lên từ thư viện</string>
+  <string name="common_vietnamese">Tiếng Việt</string>
   <string name="common_yesterday">Hôm qua</string>
   <string name="confirm_sending">Xác nhận gửi</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">Quét</string>
   <string name="contacts_search_results">Kết quả tìm kiếm</string>
   <string name="copy_to_clipboard">Sao chép vào khay nhớ tạm</string>
   <string name="create_account_title">Tạo tài khoản</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
   <string name="create_new_account_title">Tạo tài khoản mới</string>
   <string name="dark_mode">Chế độ tối</string>
   <string name="details_frozen">Đóng băng</string>
@@ -336,6 +346,7 @@
   <string name="project_ended_template">Đã kết thúc %s</string>
   <string name="qr_code">Mã QR</string>
   <string name="qr_upload">Từ bộ sưu tập</string>
+  <string name="receive_tokens">Nhận token</string>
   <string name="recent_recipients">Người nhận gần đây</string>
   <string name="recipient_address">Địa chỉ người nhận</string>
   <string name="recovery_enter_passphrase_title">Nhập cụm mật khẩu ví gốc (Raw seed)</string>

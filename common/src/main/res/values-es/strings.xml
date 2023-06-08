@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">Precio del token</string>
   <string name="asset_details_your_pools">Tus %spares de liquidez</string>
   <string name="asset_to_send">Activo a enviar</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Autentificar</string>
   <string name="block_id">Hash del bloque</string>
   <string name="buy_crypto_buy_xor_banner_title">Comprar XOR token</string>
@@ -155,6 +156,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">Ruso</string>
   <string name="common_scan">Escanear</string>
+  <string name="common_scan_qr">Escanear QR</string>
   <string name="common_search">Buscar</string>
   <string name="common_search_pools">Buscar Par de liquidez</string>
   <string name="common_sec">segundo</string>
@@ -181,13 +183,21 @@
   <string name="common_turkish">Turkish</string>
   <string name="common_ukrainian">Ucraniano</string>
   <string name="common_update">Update</string>
+  <string name="common_upload_from_library">Subir desde la librería</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">Ayer</string>
   <string name="confirm_sending">Confirmar envío</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">Escanear código QR</string>
   <string name="contacts_search_results">Resultados de búsqueda</string>
   <string name="copy_to_clipboard">Copy to clipboard</string>
   <string name="create_account_title">Crear una cuenta</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
   <string name="create_new_account_title">Crear nueva cuenta</string>
   <string name="dark_mode">Dark mode</string>
   <string name="details_frozen">Congelado</string>
@@ -341,6 +351,7 @@
   <string name="project_ended_template">Terminado %s</string>
   <string name="qr_code">Código QR</string>
   <string name="qr_upload">Subir desde la galería</string>
+  <string name="receive_tokens">Recibir tokens</string>
   <string name="recent_recipients">Destinatarios recientes</string>
   <string name="recipient_address">Dirección del receptor</string>
   <string name="recovery_enter_passphrase_title">Introduzca su contraseña secreta</string>

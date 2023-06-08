@@ -34,8 +34,8 @@ package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import kotlinx.coroutines.flow.Flow
 
