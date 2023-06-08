@@ -13,7 +13,7 @@ def pipeline = new org.android.AppPipeline(steps: this,
     testCmd: 'ktlint clean runModuleTests jacocoTestReport',
     jobParams: jobParams,
     appPushNoti: true,
-    dojoGroups: ["sora"]
+    dojoGroups: ["sora"],
     dockerImage: 'build-tools/android-build-box-jdk11:latest',
     gpgFiles: ['app/google-services.json'])
 pipeline.runPipeline('sora')
