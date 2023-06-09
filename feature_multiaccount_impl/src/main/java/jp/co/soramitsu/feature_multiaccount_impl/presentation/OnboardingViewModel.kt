@@ -316,7 +316,15 @@ class OnboardingViewModel @Inject constructor(
     ) {
         if (backupService.isAuthorized(activity)) {
             isFromGoogleDrive = true
-            navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
+            navController.currentDestination?.let {
+                if (it.route == OnboardingFeatureRoutes.TUTORIAL) {
+                    navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
+                }
+
+                if (it.route == OnboardingFeatureRoutes.PASSPHRASE) {
+                    navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
+                }
+            }
         } else {
             backupService.authorize(activity, launcher)
         }

@@ -223,7 +223,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                     navController
                                 )
                             },
-                            onSkipButtonPressed = { viewModel.onSkipButtonPressed(this@OnboardingActivity) }
+                            onBackupWithGoogleButtonPressed = if (!it.isViaGoogleDrive) { { viewModel.onGoogleSignin(navController, this@OnboardingActivity, launcher) } }  else null
+//                            onSkipButtonPressed = { viewModel.onSkipButtonPressed(this@OnboardingActivity) }
                         )
                     }
                 }
