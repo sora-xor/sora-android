@@ -30,12 +30,11 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_secret
+package jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_success
 
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,21 +42,15 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.ImportAccountPasswordState
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password.AccountWithIcon
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.OutlinedButton
@@ -130,46 +123,6 @@ fun ImportAccountSuccessScreen(
                     onClick = onImportMoreClicked
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun AccountWithIcon(
-    modifier: Modifier = Modifier,
-    address: String,
-    accountName: String,
-    accountIcon: Drawable,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(accountIcon).build(),
-            modifier = Modifier
-                .size(size = 40.dp),
-            contentDescription = null,
-            imageLoader = LocalContext.current.imageLoader,
-        )
-
-        Column(
-            modifier = Modifier
-                .padding(start = Dimens.x1)
-        ) {
-            Text(
-                text = accountName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.customTypography.textS,
-            )
-
-            Text(
-                text = address,
-                color = MaterialTheme.customColors.fgSecondary,
-                style = MaterialTheme.customTypography.textXSBold,
-            )
         }
     }
 }
