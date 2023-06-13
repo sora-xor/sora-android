@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
@@ -72,6 +73,7 @@ import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -336,7 +338,9 @@ class OnboardingViewModel @Inject constructor(
     ) {
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
-            if (backupService.isAuthorized(activity)) {
+            val isAuth = backupService.isAuthorized(activity)
+            Log.e("TAGAA", isAuth.toString())
+            if (isAuth) {
                 onSuccessfulGoogleSignin(activity, navController)
             } else {
                 backupService.authorize(activity, launcher)
@@ -390,6 +394,7 @@ class OnboardingViewModel @Inject constructor(
                 _passphraseCardState.value = BackupScreenState(
                     mnemonicWords = mnemonic.split(" "),
                     isCreatingFlow = true,
+                    isViaGoogleDrive = isFromGoogleDrive
                 )
             }
         }
@@ -507,6 +512,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onSuccessfulGoogleSignin(activity: Activity, navController: NavController) {
+        Log.e("TAGAA", "SUCSUC")
         viewModelScope.launch {
             try {
                 isFromGoogleDrive = true
@@ -519,10 +525,11 @@ class OnboardingViewModel @Inject constructor(
                             !multiaccountInteractor.accountExists(it.address)
                         }
 
-                    _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+                    _tutorialScreenState.value =
+                        _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
 
                     if (result.isEmpty()) {
-                        onCreateAccountClicked(navController)
+                        navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
                     } else {
                         _importAccountListState.value = ImportAccountListScreenState(
                             accountList = result.map {
@@ -539,23 +546,24 @@ class OnboardingViewModel @Inject constructor(
                     }
                 }
             } catch (e: UnauthorizedException) {
-                _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+                _tutorialScreenState.value =
+                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
                 e.printStackTrace()
             }
         }
     }
 
     fun onCreateAccountClicked(navController: NavController) {
+        isFromGoogleDrive = false
         navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
     }
 
     fun onSetBackupPasswordClicked(
         activity: Activity
     ) {
-        viewModelScope.launch {
-            _createBackupPasswordState.value?.let { createBackupPasswordState ->
-                _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
-
+        _createBackupPasswordState.value?.let { createBackupPasswordState ->
+            _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
+            viewModelScope.launch(Dispatchers.IO) {
                 _passphraseCardState.value?.let { passphraseCardState ->
                     tempAccount?.let {
                         backupService.saveBackupAccount(
@@ -568,12 +576,13 @@ class OnboardingViewModel @Inject constructor(
                             createBackupPasswordState.password.value.text
                         )
 
-                        tempAccount = it.copy(isBackedUp = true)
+                        val fileID = backupService.getBackupAccounts(activity)
+                            .first { acc -> it.substrateAddress == acc.address }.fileId
+
+                        tempAccount = it.copy(backupFileId = fileID)
                         finishCreateAccountProcess(activity)
                     }
                 }
-
-                _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = false)
             }
         }
     }
@@ -631,7 +640,7 @@ class OnboardingViewModel @Inject constructor(
                             val soraAccount = multiaccountInteractor.recoverSoraAccountFromMnemonic(
                                 decryptedBackupAccount.passphrase,
                                 decryptedBackupAccount.name
-                            ).copy(isBackedUp = true)
+                            ).copy(backupFileId = it.backupAccountMeta.fileId)
 
                             multiaccountInteractor.continueRecoverFlow(
                                 soraAccount,
@@ -666,7 +675,8 @@ class OnboardingViewModel @Inject constructor(
 
     fun onImportMoreClicked(activity: Activity, navController: NavController) {
         viewModelScope.launch {
-            _importAccountPasswordState.value = _importAccountPasswordState.value?.copy(isLoading = true)
+            _importAccountPasswordState.value =
+                _importAccountPasswordState.value?.copy(isLoading = true)
             _importAccountListState.value = ImportAccountListScreenState(
                 accountList = backupService.getBackupAccounts(activity).map {
                     BackupAccountMetaWithIcon(
@@ -680,7 +690,8 @@ class OnboardingViewModel @Inject constructor(
                     !multiaccountInteractor.accountExists(it.backupAccountMeta.address)
                 }
             )
-            _importAccountPasswordState.value = _importAccountPasswordState.value?.copy(isLoading = true)
+            _importAccountPasswordState.value =
+                _importAccountPasswordState.value?.copy(isLoading = true)
             navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
         }
     }
@@ -690,7 +701,7 @@ class OnboardingViewModel @Inject constructor(
             val isConfirmationRightAndSecure =
                 it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
             _createBackupPasswordState.value = it.copy(
-                passwordConfirmation = it.password.copy(
+                passwordConfirmation = it.passwordConfirmation.copy(
                     value = textFieldValue,
                     success = isConfirmationRightAndSecure,
                     descriptionText = if (isConfirmationRightAndSecure) resourceManager.getString(R.string.create_backup_password_matched) else ""
@@ -708,5 +719,9 @@ class OnboardingViewModel @Inject constructor(
                 setPasswordButtonIsEnabled = newWarningState && it.password.value.text == it.passwordConfirmation.value.text && it.password.value.text.isPasswordSecure()
             )
         }
+    }
+
+    fun navPas() {
+        Log.e("TAGAA", isFromGoogleDrive.toString())
     }
 }

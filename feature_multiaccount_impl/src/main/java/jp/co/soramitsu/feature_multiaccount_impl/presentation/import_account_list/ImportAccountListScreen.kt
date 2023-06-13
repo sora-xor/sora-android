@@ -68,7 +68,7 @@ fun ImportAccountListScreen(
                 .wrapContentHeight()
                 .padding(bottom = Dimens.x2),
         ) {
-            Column(modifier = Modifier.padding(vertical = Dimens.x1)) {
+            Column(modifier = Modifier.padding(Dimens.x1)) {
                 importAccountScreenState.accountList.forEach {
                     AccountWithIcon(
                         modifier = Modifier

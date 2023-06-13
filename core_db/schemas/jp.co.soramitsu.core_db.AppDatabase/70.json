@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 70,
-    "identityHash": "8f576f0d4b08a84fe7c80f5b58f41091",
+    "identityHash": "a2b6278b0113dd39d482a5f0f3af390a",
     "entities": [
       {
         "tableName": "assets",
@@ -388,7 +388,7 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`substrateAddress` TEXT NOT NULL, `accountName` TEXT NOT NULL, `isBackedUp` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`substrateAddress`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`substrateAddress` TEXT NOT NULL, `accountName` TEXT NOT NULL, `backupFileId` TEXT, PRIMARY KEY(`substrateAddress`))",
         "fields": [
           {
             "fieldPath": "substrateAddress",
@@ -403,11 +403,10 @@
             "notNull": true
           },
           {
-            "fieldPath": "isBackedUp",
-            "columnName": "isBackedUp",
-            "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "0"
+            "fieldPath": "backupFileId",
+            "columnName": "backupFileId",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -642,7 +641,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8f576f0d4b08a84fe7c80f5b58f41091')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a2b6278b0113dd39d482a5f0f3af390a')"
     ]
   }
 }

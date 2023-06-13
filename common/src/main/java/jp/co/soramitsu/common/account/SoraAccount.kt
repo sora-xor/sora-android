@@ -40,7 +40,7 @@ import kotlinx.parcelize.Parcelize
 data class SoraAccount(
     val substrateAddress: String,
     val accountName: String,
-    val isBackedUp: Boolean = false
+    val backupFileId: String? = null
 ) : Parcelable {
     fun accountTitle() = accountName.takeIf {
         it.isNotBlank()

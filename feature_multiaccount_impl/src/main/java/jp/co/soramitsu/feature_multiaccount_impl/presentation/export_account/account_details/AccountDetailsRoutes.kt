@@ -30,26 +30,9 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_account_impl.data.repository
+package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
-import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.core_db.model.SoraAccountLocal
-
-object SoraAccountMapper {
-
-    fun map(account: SoraAccountLocal): SoraAccount {
-        return SoraAccount(
-            substrateAddress = account.substrateAddress,
-            accountName = account.accountName,
-            backupFileId = account.backupFileId
-        )
-    }
-
-    fun map(account: SoraAccount): SoraAccountLocal {
-        return SoraAccountLocal(
-            substrateAddress = account.substrateAddress,
-            accountName = account.accountName,
-            backupFileId = account.backupFileId
-        )
-    }
+object AccountDetailsRoutes {
+    const val ACCOUNT_DETAILS = "jp.co.soramitsu.feature_multiaccount_impl.AccountDetails"
+    const val BACKUP_ACCOUNT = "jp.co.soramitsu.feature_multiaccount_impl.BackupAccount"
 }

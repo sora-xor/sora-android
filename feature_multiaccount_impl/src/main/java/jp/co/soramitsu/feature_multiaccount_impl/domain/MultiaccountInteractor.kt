@@ -138,4 +138,12 @@ class MultiaccountInteractor @Inject constructor(
         val account = getSoraAccount(address = accountAddress)
         userRepository.updateAccountName(account, newName)
     }
+
+    suspend fun updateBackupFileId(accountAddress: String, fileId: String) {
+        userRepository.updateBackupFileId(accountAddress, fileId)
+    }
+
+    suspend fun removeBackupFileId(accountAddress: String) {
+        userRepository.removeBackupFileId(accountAddress)
+    }
 }

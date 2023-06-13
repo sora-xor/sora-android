@@ -110,4 +110,8 @@ interface UserRepository {
     suspend fun resetTimerStartedTimestamp()
 
     suspend fun accountExists(address: String): Boolean
+
+    suspend fun updateBackupFileId(address: String, fileId: String)
+
+    suspend fun removeBackupFileId(address: String)
 }

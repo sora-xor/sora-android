@@ -103,14 +103,15 @@ fun BackupPasswordScreen(
             )
 
             LoaderWrapper(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(top = Dimens.x3)
+                    .fillMaxWidth(),
                 loading = state.isLoading,
                 loaderSize = Size.Large,
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
-                        .fillMaxWidth()
-                        .padding(top = Dimens.x3),
+                        .fillMaxWidth(),
                     size = Size.Large,
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.create_backup_password_button_text),

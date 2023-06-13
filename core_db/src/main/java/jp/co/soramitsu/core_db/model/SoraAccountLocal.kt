@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.core_db.model
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -42,5 +41,5 @@ import androidx.room.PrimaryKey
 data class SoraAccountLocal(
     @PrimaryKey val substrateAddress: String,
     val accountName: String,
-    @ColumnInfo(defaultValue = "0") val isBackedUp: Boolean
+    val backupFileId: String?
 )

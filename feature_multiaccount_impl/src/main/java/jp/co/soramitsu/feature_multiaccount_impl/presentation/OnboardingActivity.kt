@@ -63,10 +63,12 @@ import com.vanpra.composematerialdialogs.listItems
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import com.vanpra.composematerialdialogs.title
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
 import jp.co.soramitsu.common.presentation.compose.webview.WebView
 import jp.co.soramitsu.common.presentation.view.SoraBaseActivity
+import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password.BackupPasswordScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.create_account.CreateAccountScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.enter_passphrase.EnterPassphraseScreen
@@ -115,7 +117,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            Log.e("TAGAA", "AAA" + result.toString())
+            Log.e("TAGAA", "SUCSUC0")
             if (result.resultCode != Activity.RESULT_OK) {
                 Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT)
                     .show() // todo showError
@@ -125,6 +127,9 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         }
 
     override val viewModel: OnboardingViewModel by viewModels()
+
+    @Inject
+    lateinit var debounceClickHandler: DebounceClickHandler
 
     override fun onToolbarNavigation() {
         val pop = navController.popBackStack()
@@ -164,11 +169,13 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             onCreateAccount = { viewModel.onCreateAccountClicked(navController) },
                             onImportAccount = { dialogState.show() },
                             onGoogleSignin = {
-                                viewModel.onGoogleSignin(
-                                    navController,
-                                    this@OnboardingActivity,
-                                    launcher
-                                )
+                                debounceClickHandler.debounceClick {
+                                    viewModel.onGoogleSignin(
+                                        navController,
+                                        this@OnboardingActivity,
+                                        launcher
+                                    )
+                                }
                             },
                             onTermsAndPrivacyClicked = {
                                 when (it) {
@@ -220,7 +227,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         ExportProtection(
                             it,
                             viewModel::onItemClicked
-                        ) { navController.navigate(OnboardingFeatureRoutes.PASSPHRASE) }
+                        ) { viewModel.navPas(); navController.navigate(OnboardingFeatureRoutes.PASSPHRASE) }
                     }
                 }
             }
@@ -319,9 +326,11 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             viewModel::onBackupPasswordConfirmationChanged,
                             viewModel::onWarningToggle
                         ) {
-                            viewModel.onSetBackupPasswordClicked(
-                                this@OnboardingActivity
-                            )
+                            debounceClickHandler.debounceClick {
+                                viewModel.onSetBackupPasswordClicked(
+                                    this@OnboardingActivity
+                                )
+                            }
                         }
                     }
                 }
@@ -353,10 +362,12 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             it,
                             viewModel::onImportPasswordChanged
                         ) {
-                            viewModel.onImportContinueClicked(
-                                this@OnboardingActivity,
-                                navController
-                            )
+                            debounceClickHandler.debounceClick {
+                                viewModel.onImportContinueClicked(
+                                    this@OnboardingActivity,
+                                    navController
+                                )
+                            }
                         }
                     }
                 }
@@ -371,10 +382,12 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             it,
                             { viewModel.onImportFinished(this@OnboardingActivity) }
                         ) {
-                            viewModel.onImportMoreClicked(
-                                this@OnboardingActivity,
-                                navController
-                            )
+                            debounceClickHandler.debounceClick {
+                                viewModel.onImportMoreClicked(
+                                    this@OnboardingActivity,
+                                    navController
+                                )
+                            }
                         }
                     }
                 }

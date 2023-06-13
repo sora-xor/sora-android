@@ -127,13 +127,14 @@ fun ImportAccountPasswordScreen(
             )
 
             LoaderWrapper(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3)
+                    .fillMaxWidth(),
                 loading = importAccountScreenState.isLoading,
                 loaderSize = Size.Large,
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
-                        .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3)
                         .fillMaxWidth(),
                     size = Size.Large,
                     order = Order.PRIMARY,

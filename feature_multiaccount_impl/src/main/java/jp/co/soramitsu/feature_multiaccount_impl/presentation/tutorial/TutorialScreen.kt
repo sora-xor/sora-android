@@ -234,14 +234,15 @@ private fun TutorialButtons(
         horizontalAlignment = CenterHorizontally
     ) {
         LoaderWrapper(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .padding(top = Dimens.x1)
+                .fillMaxWidth(),
             loading = isGoogleSignInLoading,
             loaderSize = Size.Large,
         ) { modifier, elevation ->
             Button(
                 modifier = modifier
                     .testTagAsId("GoogleSignin")
-                    .padding(top = Dimens.x1)
                     .height(Dimens.x7)
                     .fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
