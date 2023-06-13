@@ -41,12 +41,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.exceptions.DecodingException
+import jp.co.soramitsu.backup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
@@ -66,6 +70,7 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
 import kotlinx.coroutines.launch
 
@@ -77,10 +82,14 @@ class OnboardingViewModel @Inject constructor(
     private val resourceManager: ResourceManager,
     private val connectionManager: ConnectionManager,
     private val backupService: BackupService,
+    private val avatarGenerator: AccountAvatarGenerator,
 ) : BaseViewModel() {
 
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
     val createAccountCardState: LiveData<CreateAccountState> = _createAccountCardState
+
+    private val _tutorialScreenState = MutableLiveData(TutorialScreenState())
+    val tutorialScreenState: LiveData<TutorialScreenState> = _tutorialScreenState
 
     private val _createBackupPasswordState = MutableLiveData(
         CreateBackupPasswordState(
@@ -89,6 +98,17 @@ class OnboardingViewModel @Inject constructor(
         )
     )
     val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
+
+    private val _importAccountListState = MutableLiveData(ImportAccountListScreenState())
+    val importAccountListState: LiveData<ImportAccountListScreenState> = _importAccountListState
+
+    private val _importAccountPasswordState = MutableLiveData(
+        ImportAccountPasswordState(
+            passwordInput = InputTextState(label = "Enter password")
+        )
+    )
+    val importAccountPasswordState: LiveData<ImportAccountPasswordState> =
+        _importAccountPasswordState
 
     private val _recoveryAccountNameCardState = MutableLiveData<CreateAccountState>()
     val recoveryAccountNameCardState: LiveData<CreateAccountState> = _recoveryAccountNameCardState
@@ -314,19 +334,13 @@ class OnboardingViewModel @Inject constructor(
         activity: Activity,
         launcher: ActivityResultLauncher<Intent>
     ) {
-        if (backupService.isAuthorized(activity)) {
-            isFromGoogleDrive = true
-            navController.currentDestination?.let {
-                if (it.route == OnboardingFeatureRoutes.TUTORIAL) {
-                    navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
-                }
-
-                if (it.route == OnboardingFeatureRoutes.PASSPHRASE) {
-                    navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
-                }
+        _tutorialScreenState.value?.let {
+            _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
+            if (backupService.isAuthorized(activity)) {
+                onSuccessfulGoogleSignin(activity, navController)
+            } else {
+                backupService.authorize(activity, launcher)
             }
-        } else {
-            backupService.authorize(activity, launcher)
         }
     }
 
@@ -340,8 +354,11 @@ class OnboardingViewModel @Inject constructor(
                             OnboardingFeatureRoutes.CREATE_ACCOUNT, OnboardingFeatureRoutes.RECOVERY_ACCOUNT_NAME -> R.string.onboarding_create_account_title
                             OnboardingFeatureRoutes.DISCLAIMER -> R.string.common_pay_attention
                             OnboardingFeatureRoutes.PASSPHRASE -> R.string.common_passphrase_title
-                            OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION -> R.string.account_confirmation_title_v2
+                            OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST -> R.string.select_account_import
+                            OnboardingFeatureRoutes.IMPORT_ACCOUNT_PASSWORD -> R.string.enter_backup_password_title
                             OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD -> R.string.create_backup_password_title
+                            OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS -> R.string.imported_account_title
+                            OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION -> R.string.account_confirmation_title_v2
                             OnboardingFeatureRoutes.RECOVERY -> when (_recoveryState.value?.recoveryType) {
                                 RecoveryType.PASSPHRASE -> R.string.onboarding_enter_passphrase
                                 RecoveryType.SEED -> R.string.onboarding_enter_seed
@@ -492,17 +509,37 @@ class OnboardingViewModel @Inject constructor(
     fun onSuccessfulGoogleSignin(activity: Activity, navController: NavController) {
         viewModelScope.launch {
             try {
-                backupService.deleteAllAccounts(activity)
-                val result = backupService.getBackupAccounts(activity)
-                if (result.isEmpty()) {
-                    isFromGoogleDrive = true
-                    onCreateAccountClicked(navController)
+                isFromGoogleDrive = true
+
+                if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
+                    navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
                 } else {
-//                    _googleImportListCardState.value = GoogleImportListState(backupService.getBackupAccounts(activity))
-                    // TODO: show list
+                    val result = backupService.getBackupAccounts(activity)
+                        .filter {
+                            !multiaccountInteractor.accountExists(it.address)
+                        }
+
+                    _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+
+                    if (result.isEmpty()) {
+                        onCreateAccountClicked(navController)
+                    } else {
+                        _importAccountListState.value = ImportAccountListScreenState(
+                            accountList = result.map {
+                                BackupAccountMetaWithIcon(
+                                    it,
+                                    avatarGenerator.createAvatar(
+                                        it.address,
+                                        Dimens.x5.value.toInt()
+                                    )
+                                )
+                            }
+                        )
+                        navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+                    }
                 }
             } catch (e: UnauthorizedException) {
-                // TODO: handle error
+                _tutorialScreenState.value = _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
                 e.printStackTrace()
             }
         }
@@ -517,6 +554,8 @@ class OnboardingViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             _createBackupPasswordState.value?.let { createBackupPasswordState ->
+                _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
+
                 _passphraseCardState.value?.let { passphraseCardState ->
                     tempAccount?.let {
                         backupService.saveBackupAccount(
@@ -533,6 +572,8 @@ class OnboardingViewModel @Inject constructor(
                         finishCreateAccountProcess(activity)
                     }
                 }
+
+                _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = false)
             }
         }
     }
@@ -548,6 +589,99 @@ class OnboardingViewModel @Inject constructor(
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected && it.passwordConfirmation.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
             )
+        }
+    }
+
+    fun onImportAccountSelected(navController: NavController, account: BackupAccountMetaWithIcon) {
+        _importAccountPasswordState.value?.let {
+            _importAccountPasswordState.value = it.copy(
+                selectedAccount = account
+            )
+
+            navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_PASSWORD)
+        }
+    }
+
+    fun onImportPasswordChanged(textFieldValue: TextFieldValue) {
+        _importAccountPasswordState.value?.let {
+            _importAccountPasswordState.value = it.copy(
+                passwordInput = it.passwordInput.copy(
+                    value = textFieldValue,
+                ),
+                isContinueButtonEnabled = it.passwordInput.value.text.isNotEmpty()
+            )
+        }
+    }
+
+    fun onImportContinueClicked(activity: Activity, navController: NavController) {
+        viewModelScope.launch {
+            _importAccountPasswordState.value?.let { state ->
+                _importAccountPasswordState.value = state.copy(isLoading = true)
+                state.selectedAccount?.let {
+                    try {
+                        val decryptedBackupAccount = backupService.importBackupAccount(
+                            activity,
+                            it.backupAccountMeta.fileId,
+                            state.passwordInput.value.text
+                        )
+
+                        val valid =
+                            multiaccountInteractor.isMnemonicValid(decryptedBackupAccount.passphrase)
+                        if (valid) {
+                            val soraAccount = multiaccountInteractor.recoverSoraAccountFromMnemonic(
+                                decryptedBackupAccount.passphrase,
+                                decryptedBackupAccount.name
+                            ).copy(isBackedUp = true)
+
+                            multiaccountInteractor.continueRecoverFlow(
+                                soraAccount,
+                                connectionManager.isConnected
+                            )
+
+                            navController.navigate(
+                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                                navOptions = NavOptions.Builder()
+                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                    .build()
+                            )
+                        } else {
+                            onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
+                        }
+                    } catch (e: DecryptionException) {
+                        onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
+                    } catch (e: DecodingException) {
+                        onError(SoraException.businessError(ResponseCode.VOTES_NOT_ENOUGH))
+                    } catch (e: SoraException) {
+                        onError(e)
+                    }
+                }
+                _importAccountPasswordState.value = state.copy(isLoading = false)
+            }
+        }
+    }
+
+    fun onImportFinished(context: Context) {
+        mainStarter.start(context)
+    }
+
+    fun onImportMoreClicked(activity: Activity, navController: NavController) {
+        viewModelScope.launch {
+            _importAccountPasswordState.value = _importAccountPasswordState.value?.copy(isLoading = true)
+            _importAccountListState.value = ImportAccountListScreenState(
+                accountList = backupService.getBackupAccounts(activity).map {
+                    BackupAccountMetaWithIcon(
+                        it,
+                        avatarGenerator.createAvatar(
+                            it.address,
+                            Dimens.x5.value.toInt()
+                        )
+                    )
+                }.filter {
+                    !multiaccountInteractor.accountExists(it.backupAccountMeta.address)
+                }
+            )
+            _importAccountPasswordState.value = _importAccountPasswordState.value?.copy(isLoading = true)
+            navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
         }
     }
 

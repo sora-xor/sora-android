@@ -1,7 +1,7 @@
 /**
-* Copyright Soramitsu Co., Ltd. All Rights Reserved.
-* SPDX-License-Identifier: GPL-3.0
-*/
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: GPL-3.0
+ */
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password
 
@@ -26,6 +26,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.CheckboxButton
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -101,16 +102,22 @@ fun BackupPasswordScreen(
                 text = stringResource(id = R.string.create_backup_password_warning_text)
             )
 
-            FilledButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = Dimens.x3),
-                size = Size.Large,
-                order = Order.PRIMARY,
-                text = stringResource(id = R.string.create_backup_password_button_text),
-                onClick = onSetBackupPasswordClicked,
-                enabled = state.setPasswordButtonIsEnabled,
-            )
+            LoaderWrapper(
+                modifier = Modifier.fillMaxWidth(),
+                loading = state.isLoading,
+                loaderSize = Size.Large,
+            ) { modifier, elevation ->
+                FilledButton(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(top = Dimens.x3),
+                    size = Size.Large,
+                    order = Order.PRIMARY,
+                    text = stringResource(id = R.string.create_backup_password_button_text),
+                    onClick = onSetBackupPasswordClicked,
+                    enabled = state.setPasswordButtonIsEnabled,
+                )
+            }
         }
     }
 }

@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">אשר סיסמה מנומונית</string>
   <string name="account_confirmation_title_v2">אשר את מילות המפתח</string>
   <string name="account_options">אפשרויות חשבון</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">חלק מהנתונים אינם מעודכנים</string>
   <string name="activity_empty_content_title">אתה תראה את הפעילות שלך כאן ברגע שתתחיל לבצע טרנזקציות</string>
   <string name="activity_error_title">לא היתה אפשרות לטעון את הפעילות שלך. נסה לרענן את הרשימה</string>
@@ -80,6 +82,7 @@
   <string name="common_copied">הועתק ללוח</string>
   <string name="common_create_qr_request">צור בקשת QR</string>
   <string name="common_croatian">קרואטית</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
   <string name="common_edit">ערוך</string>
@@ -197,11 +200,15 @@
   <string name="create_backup_password_button_text">Set backup password</string>
   <string name="create_backup_password_is_secure">Password is highly secure</string>
   <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
   <string name="create_backup_password_title">Create backup password</string>
   <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
   <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">צור חשבון חדש</string>
   <string name="dark_mode">מצב כהה</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">קפוא</string>
   <string name="details_receive_from_pool">נמשך מהמאגר</string>
   <string name="details_sent_to_pool">נשלח למאגר</string>
@@ -209,6 +216,10 @@
   <string name="discovery_polkaswap_pools">מאגרי פולקסוואפ</string>
   <string name="empty_recent_recipients">אין נמענים אחרונים.\n כתובות שנשלחו יוצגו כאן.</string>
   <string name="empty_recent_recipients_2">הנמענים יופיעו כאן</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
   <string name="export_account_details_backup_description">אם תאבד את הגישה למכשיר הזה, הכספים שלך יאבדו, אלא אם תעשה גיבוי!</string>
   <string name="export_account_details_backup_options">אפשרויות גיבוי</string>
@@ -240,6 +251,11 @@
   <string name="hide_zero_balances">הסתר יתרות אפסיות</string>
   <string name="history_referral">הפניה</string>
   <string name="history_referrer">מפנה</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">קוד הזמנה</string>
   <string name="invite_code_applied_body">הקוד הוזן בהצלחה</string>
   <string name="invite_code_applied_title">מזל טוב!</string>
@@ -271,10 +287,12 @@
   <string name="onboarding_create_account_description">הזן שם עבור החשבון החדש שלך וכיצד הוא יופיע תחת הכתובת שלך. עם זהות ברשת, ניתן להפוך אותה לזמינה לאחרים.</string>
   <string name="onboarding_create_account_subtitle">גלוי רק עבורך ומאוחסן באופן מקומי</string>
   <string name="onboarding_create_account_title">קבע שם לחשבון שלך</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">הזן את מילות המפתח שלך</string>
   <string name="onboarding_enter_seed">הזן קוד סיד</string>
   <string name="passphrase_confirmation_error_message">תהליך זה נועד להבטיח שכתבת את משפט השחזור שלך</string>
   <string name="passphrase_confirmation_error_title">אל תנסו לנחש את המילה</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">שם חשבון (אופציונלי)</string>
   <string name="personal_info_username_v1">שם חשבון</string>
   <string name="phone_verification_too_frequent_message">בקשות קוד אימות תכופות מדי. אנא, נסה שוב מאוחר יותר.</string>
@@ -414,6 +432,7 @@
   <string name="search_assets">חפש נכסים</string>
   <string name="select_account_address">חפש כתובת חשבון</string>
   <string name="select_account_address_1">חפש או הוסף כתובת חדשה</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">בחר נכס לקבלה</string>
   <string name="select_asset_send">בחר נכס לשליחה</string>
   <string name="select_node_add_custom_node">הוסף צומת מותאם אישית</string>
@@ -471,6 +490,7 @@
   <string name="status_success">הצלחה</string>
   <string name="status_successful">מוצלח</string>
   <string name="status_title">סטטוס</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">היתרה שלך ב %s תהיה פחות מ- %s לאחר הטרנזקציה הזו. לא תוכל לשלם עבור עמלת הרשת עבור טרנזקציה נוספת.</string>
   <string name="switch_node">החלף צומת</string>
   <string name="system_appearance">מראה חיצוני של המערכת</string>

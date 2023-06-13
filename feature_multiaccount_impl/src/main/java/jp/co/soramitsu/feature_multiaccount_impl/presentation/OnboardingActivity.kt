@@ -72,6 +72,9 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.create_account.Cre
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.enter_passphrase.EnterPassphraseScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtection
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.ImportAccountListScreen
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_password.ImportAccountPasswordScreen
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_list.import_account_secret.ImportAccountSuccessScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic_confirmation.MnemonicConfirmationScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TermsAndPrivacyEnum
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TutorialScreen
@@ -114,7 +117,8 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             Log.e("TAGAA", "AAA" + result.toString())
             if (result.resultCode != Activity.RESULT_OK) {
-                Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT).show() // todo showError
+                Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT)
+                    .show() // todo showError
             } else {
                 viewModel.onSuccessfulGoogleSignin(this@OnboardingActivity, navController)
             }
@@ -151,36 +155,46 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             ) {
                 val dialogState = rememberMaterialDialogState()
 
-                Box(
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    TutorialScreen(
-                        onCreateAccount = { viewModel.onCreateAccountClicked(navController) },
-                        onImportAccount = { dialogState.show() },
-                        onGoogleSignin = { viewModel.onGoogleSignin(navController, this@OnboardingActivity, launcher) },
-                        onTermsAndPrivacyClicked = {
-                            when (it) {
-                                TermsAndPrivacyEnum.TERMS -> viewModel.onTermsClicked(
-                                    navController
+                viewModel.tutorialScreenState.observeAsState().value?.let {
+                    Box(
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        TutorialScreen(
+                            state = it,
+                            onCreateAccount = { viewModel.onCreateAccountClicked(navController) },
+                            onImportAccount = { dialogState.show() },
+                            onGoogleSignin = {
+                                viewModel.onGoogleSignin(
+                                    navController,
+                                    this@OnboardingActivity,
+                                    launcher
                                 )
-                                TermsAndPrivacyEnum.PRIVACY -> viewModel.onPrivacyClicked(
-                                    navController
-                                )
-                            }
-                        }
-                    )
+                            },
+                            onTermsAndPrivacyClicked = {
+                                when (it) {
+                                    TermsAndPrivacyEnum.TERMS -> viewModel.onTermsClicked(
+                                        navController
+                                    )
 
-                    MaterialDialog(dialogState = dialogState) {
-                        title(text = stringResource(id = R.string.recovery_source_type))
-                        listItems(
-                            listOf(
-                                stringResource(id = R.string.common_passphrase_title),
-                                stringResource(id = R.string.common_raw_seed)
-                            ),
-                            onClick = { index, _ ->
-                                viewModel.onRecoveryClicked(navController, index)
+                                    TermsAndPrivacyEnum.PRIVACY -> viewModel.onPrivacyClicked(
+                                        navController
+                                    )
+                                }
                             }
                         )
+
+                        MaterialDialog(dialogState = dialogState) {
+                            title(text = stringResource(id = R.string.recovery_source_type))
+                            listItems(
+                                listOf(
+                                    stringResource(id = R.string.common_passphrase_title),
+                                    stringResource(id = R.string.common_raw_seed)
+                                ),
+                                onClick = { index, _ ->
+                                    viewModel.onRecoveryClicked(navController, index)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -223,7 +237,15 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                     navController
                                 )
                             },
-                            onBackupWithGoogleButtonPressed = if (!it.isViaGoogleDrive) { { viewModel.onGoogleSignin(navController, this@OnboardingActivity, launcher) } }  else null
+                            onBackupWithGoogleButtonPressed = if (!it.isViaGoogleDrive) {
+                                {
+                                    viewModel.onGoogleSignin(
+                                        navController,
+                                        this@OnboardingActivity,
+                                        launcher
+                                    )
+                                }
+                            } else null
 //                            onSkipButtonPressed = { viewModel.onSkipButtonPressed(this@OnboardingActivity) }
                         )
                     }
@@ -299,6 +321,59 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         ) {
                             viewModel.onSetBackupPasswordClicked(
                                 this@OnboardingActivity
+                            )
+                        }
+                    }
+                }
+            }
+            animatedComposable(
+                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST
+            ) {
+                viewModel.importAccountListState.observeAsState().value?.let {
+                    Box {
+                        ImportAccountListScreen(
+                            it,
+                            {
+                                viewModel.onImportAccountSelected(navController, it)
+                            },
+                            {
+                                navController.navigate(OnboardingFeatureRoutes.CREATE_ACCOUNT)
+                            }
+                        )
+                    }
+                }
+            }
+
+            animatedComposable(
+                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_PASSWORD
+            ) {
+                viewModel.importAccountPasswordState.observeAsState().value?.let {
+                    Box {
+                        ImportAccountPasswordScreen(
+                            it,
+                            viewModel::onImportPasswordChanged
+                        ) {
+                            viewModel.onImportContinueClicked(
+                                this@OnboardingActivity,
+                                navController
+                            )
+                        }
+                    }
+                }
+            }
+
+            animatedComposable(
+                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS
+            ) {
+                viewModel.importAccountPasswordState.observeAsState().value?.let {
+                    Box {
+                        ImportAccountSuccessScreen(
+                            it,
+                            { viewModel.onImportFinished(this@OnboardingActivity) }
+                        ) {
+                            viewModel.onImportMoreClicked(
+                                this@OnboardingActivity,
+                                navController
                             )
                         }
                     }
