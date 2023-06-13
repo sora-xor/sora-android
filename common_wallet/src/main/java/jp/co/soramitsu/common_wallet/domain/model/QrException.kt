@@ -30,23 +30,30 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_api.launcher
+package jp.co.soramitsu.common_wallet.domain.model
 
-import jp.co.soramitsu.common.domain.Token
+class QrException private constructor(
+    val kind: Kind
+) : RuntimeException() {
 
-interface WalletRouter {
+    companion object {
 
-    fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String? = null)
+        fun userNotFoundError(): QrException {
+            return QrException(Kind.USER_NOT_FOUND)
+        }
 
-    fun returnToHubFragment()
+        fun sendingToMyselfError(): QrException {
+            return QrException(Kind.SENDING_TO_MYSELF)
+        }
 
-    fun popBackStackFragment()
+        fun decodeError(): QrException {
+            return QrException(Kind.DECODE_ERROR)
+        }
+    }
 
-    fun showContactsFilled(tokenId: String, address: String)
-
-    fun showAssetSettings()
-
-    fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
-
-    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
+    enum class Kind {
+        USER_NOT_FOUND,
+        SENDING_TO_MYSELF,
+        DECODE_ERROR
+    }
 }

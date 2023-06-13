@@ -30,23 +30,42 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_api.launcher
+package jp.co.soramitsu.common.presentation.compose.uikit.tokens
 
-import jp.co.soramitsu.common.domain.Token
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 
-interface WalletRouter {
+sealed interface Text {
 
-    fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String? = null)
+    data class SimpleText(val text: String) : Text
 
-    fun returnToHubFragment()
+    data class StringRes(val id: Int) : Text
 
-    fun popBackStackFragment()
+    data class StringResWithArgs(val id: Int, val payload: Array<Any>) : Text {
 
-    fun showContactsFilled(tokenId: String, address: String)
+        override fun equals(other: Any?): Boolean {
+            if (other !is StringResWithArgs)
+                return false
 
-    fun showAssetSettings()
+            return payload.contentEquals(other.payload)
+        }
 
-    fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
+        override fun hashCode(): Int {
+            return 137 * id.hashCode() + payload.contentHashCode()
+        }
+    }
+}
 
-    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
+@Composable
+fun Text.retrieveString(): String = when (this) {
+    is Text.StringRes -> stringResource(id = id)
+    is Text.StringResWithArgs -> stringResource(id = id, formatArgs = payload)
+    is Text.SimpleText -> text
+}
+
+fun Text.retrieveString(context: Context): String = when (this) {
+    is Text.StringRes -> context.getString(id)
+    is Text.StringResWithArgs -> context.getString(id, payload)
+    is Text.SimpleText -> text
 }

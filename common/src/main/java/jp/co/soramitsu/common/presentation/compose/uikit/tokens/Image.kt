@@ -30,23 +30,51 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_api.launcher
+package jp.co.soramitsu.common.presentation.compose.uikit.tokens
 
-import jp.co.soramitsu.common.domain.Token
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.core.graphics.drawable.toBitmap
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 
-interface WalletRouter {
+sealed interface Image {
 
-    fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String? = null)
+    data class RemoteImage(val url: String) : Image
 
-    fun returnToHubFragment()
+    data class ResImage(val id: Int) : Image
 
-    fun popBackStackFragment()
+    data class BitmapImage(val bitmap: Bitmap) : Image
 
-    fun showContactsFilled(tokenId: String, address: String)
+    data class DrawableImage(val drawable: Drawable) : Image
+}
 
-    fun showAssetSettings()
-
-    fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
-
-    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
+@Composable
+fun Image.retrievePainter(): Painter = when (this) {
+    is Image.RemoteImage -> key(url) {
+        rememberAsyncImagePainter(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(url)
+                .build()
+        )
+    }
+    is Image.ResImage -> key(id) {
+        painterResource(
+            id = id
+        )
+    }
+    is Image.BitmapImage -> BitmapPainter(
+        image = bitmap.asImageBitmap()
+    )
+    is Image.DrawableImage -> BitmapPainter(
+        image = drawable.toBitmap()
+            .asImageBitmap()
+    )
 }

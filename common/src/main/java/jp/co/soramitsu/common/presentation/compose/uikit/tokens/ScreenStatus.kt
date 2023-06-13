@@ -30,23 +30,8 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_api.launcher
+package jp.co.soramitsu.common.presentation.compose.uikit.tokens
 
-import jp.co.soramitsu.common.domain.Token
-
-interface WalletRouter {
-
-    fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String? = null)
-
-    fun returnToHubFragment()
-
-    fun popBackStackFragment()
-
-    fun showContactsFilled(tokenId: String, address: String)
-
-    fun showAssetSettings()
-
-    fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
-
-    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
+enum class ScreenStatus {
+    LOADING, ERROR, READY_TO_RENDER
 }

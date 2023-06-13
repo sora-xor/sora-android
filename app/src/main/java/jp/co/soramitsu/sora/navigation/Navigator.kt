@@ -53,6 +53,7 @@ import jp.co.soramitsu.common.util.ShareUtil.openAppSettings
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
+import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -194,14 +195,10 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         )
     }
 
-    override fun showReceive() {
-        navController?.navigate(R.id.receiveFragment)
-    }
-
-    override fun showValTransferAmount(recipientId: String, assetId: String) {
+    override fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String?) {
         navController?.navigate(
             R.id.transferAmountFragment,
-            TransferAmountFragment.createBundle(recipientId, assetId)
+            TransferAmountFragment.createBundle(recipientId, assetId, initSendAmount)
         )
     }
 
@@ -228,6 +225,13 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
             }
         )
         navController?.popBackStack()
+    }
+
+    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {
+        navController?.navigate(
+            R.id.qrCodeFlow,
+            QRCodeFlowFragment.createBundle(shouldNavigateToScannerDirectly)
+        )
     }
 
     override fun showBuyCrypto() {
