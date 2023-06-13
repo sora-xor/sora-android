@@ -58,7 +58,7 @@ dependencies {
     implementation project(":common")
     implementation project(':common_wallet')
     implementation project(":sorasubstrate")
-    implementation fearlessLibDep
+    implementation sharedUtilsDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep

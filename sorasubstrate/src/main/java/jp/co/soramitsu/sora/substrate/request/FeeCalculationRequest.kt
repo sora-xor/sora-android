@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.request
 
-import jp.co.soramitsu.fearless_utils.wsrpc.request.runtime.RuntimeRequest
+import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.RuntimeRequest
 
 class FeeCalculationRequest(submittableExtrinsic: String) : RuntimeRequest(
     method = "payment_queryInfo",

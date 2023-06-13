@@ -30,53 +30,43 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_api.domain.interfaces
+package jp.co.soramitsu.common.util
 
-import jp.co.soramitsu.common.domain.CardHub
-import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
-import kotlinx.coroutines.flow.Flow
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.graphics.drawable.BitmapDrawable
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import jp.co.soramitsu.common.R
 
-interface WalletRepository {
+object Notification {
 
-    suspend fun saveMigrationStatus(migrationStatus: MigrationStatus)
+    private const val CHANNEL_ID = "jp.co.soramitsu.notification.channel"
 
-    fun observeMigrationStatus(): Flow<MigrationStatus>
+    fun checkNotificationChannel(manager: NotificationManagerCompat) {
+        if (BuildUtils.sdkAtLeast(Build.VERSION_CODES.O)) {
+            var notificationChannel = manager.getNotificationChannel(CHANNEL_ID)
+            if (notificationChannel == null) {
+                notificationChannel = NotificationChannel(
+                    CHANNEL_ID, Const.SORA, NotificationManager.IMPORTANCE_LOW,
+                )
+                manager.createNotificationChannel(notificationChannel)
+            }
+        }
+    }
 
-    suspend fun retrieveClaimBlockAndTxHash(): Pair<String, String>
-
-    suspend fun needsMigration(irohaAddress: String): Boolean
-
-    suspend fun migrate(
-        irohaAddress: String,
-        irohaPublicKey: String,
-        signature: String,
-        keypair: Sr25519Keypair,
-        from: String,
-    ): ExtrinsicSubmitStatus
-
-    fun observeStorageAccount(address: String): Flow<String>
-
-    fun subscribeVisibleCardsHubList(address: String): Flow<List<CardHub>>
-
-    fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>>
-
-    fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
-
-    suspend fun getSoraCardInfo(): SoraCardInformation?
-
-    suspend fun updateSoraCardKycStatus(kycStatus: String)
-
-    suspend fun updateSoraCardInfo(
-        accessToken: String,
-        refreshToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    )
-
-    suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean)
-
-    suspend fun updateCardCollapsedState(cardId: String, collapsed: Boolean)
+    fun getBuilder(context: Context): NotificationCompat.Builder =
+        NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.icon_small_notification)
+            .setLargeIcon(
+                (
+                    ContextCompat.getDrawable(
+                        context,
+                        R.mipmap.ic_launcher
+                    ) as BitmapDrawable
+                    ).bitmap
+            )
 }

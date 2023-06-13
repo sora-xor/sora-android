@@ -66,6 +66,7 @@ dependencies {
     implementation project(":common")
     implementation project(":core_db")
     implementation project(":feature_assets_api")
+    implementation project(":feature_blockexplorer_api")
     implementation project(":feature_main_api")
     implementation project(":feature_account_api")
     implementation project(":feature_ethereum_api")
@@ -120,8 +121,12 @@ dependencies {
     implementation roomDep
     implementation roomKtxDep
 
+    implementation workManagerDep
+
     implementation daggerDep
     kapt daggerKaptDep
+    implementation hiltWorkManagerDep
+    kapt hiltWorkManagerKaptDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

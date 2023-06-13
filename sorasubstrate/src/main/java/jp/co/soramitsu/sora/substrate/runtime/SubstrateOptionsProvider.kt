@@ -36,20 +36,23 @@ import java.math.BigInteger
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.ext.addHexPrefix
-import jp.co.soramitsu.fearless_utils.encrypt.EncryptionType
-import jp.co.soramitsu.fearless_utils.extensions.fromHex
-import jp.co.soramitsu.fearless_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.fearless_utils.runtime.definitions.types.composite.Struct
-import jp.co.soramitsu.fearless_utils.runtime.metadata.module
-import jp.co.soramitsu.fearless_utils.runtime.metadata.storage
-import jp.co.soramitsu.fearless_utils.runtime.metadata.storageKey
-import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.shared_utils.encrypt.EncryptionType
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
+import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.shared_utils.runtime.metadata.module
+import jp.co.soramitsu.shared_utils.runtime.metadata.storage
+import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
+import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 
 object SubstrateOptionsProvider {
     const val mortalEraLength = 64
+    const val syntheticTokenRegex = "0[xX]03[0-9a-fA-F]+"
     val encryptionType = EncryptionType.SR25519
     val existentialDeposit: BigInteger = BigInteger.ZERO
     const val feeAssetId = "0x0200000000000000000000000000000000000000000000000000000000000000"
+    const val xstTokenId = "0x0200090000000000000000000000000000000000000000000000000000000000"
+    const val xstusdTokenId = "0x0200080000000000000000000000000000000000000000000000000000000000"
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
 }

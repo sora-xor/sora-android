@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">Потврдите мнемотехнику</string>
   <string name="account_confirmation_title_v2">Потврдите приступну фразу</string>
   <string name="account_options">Account options</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">Some data is not up to date</string>
   <string name="activity_empty_content_title">You will see your activity here once you start transacting</string>
   <string name="activity_error_title">Could not load your activity. Try to refresh the list</string>
@@ -37,6 +39,7 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Потврдите идентитет</string>
   <string name="block_id">Блокирај хеш</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
@@ -79,6 +82,7 @@
   <string name="common_copied">Копирано у међуспремник</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Хрватски</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Готово</string>
   <string name="common_edit">Edit</string>
@@ -156,6 +160,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">Руски</string>
   <string name="common_scan">Скенирај</string>
+  <string name="common_scan_qr">Scan QR</string>
   <string name="common_search">Претрага</string>
   <string name="common_search_pools">Search pools</string>
   <string name="common_sec">сек</string>
@@ -182,15 +187,27 @@
   <string name="common_turkish">Turski</string>
   <string name="common_ukrainian">Украјински</string>
   <string name="common_update">Ажурирање</string>
+  <string name="common_upload_from_library">Upload from library</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">Јуче</string>
   <string name="confirm_sending">Confirm sending</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">Skeniraj</string>
   <string name="contacts_search_results">Резултати претраге</string>
   <string name="copy_to_clipboard">Copy to clipboard</string>
   <string name="create_account_title">Региструј се</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">Create new account</string>
   <string name="dark_mode">Dark mode</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">Замрзнуто</string>
   <string name="details_receive_from_pool">Withdrawn from Pool</string>
   <string name="details_sent_to_pool">Sent to pool</string>
@@ -198,6 +215,10 @@
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
   <string name="empty_recent_recipients">Нема недавних прималаца.\nПослане адресе ће бити приказане овде.</string>
   <string name="empty_recent_recipients_2">Примаоци ће се појавити овде</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Нема довољно средстава за накнаду за трансакцију</string>
   <string name="export_account_details_backup_description">Ako izgubite pristup ovom uređaju, vaša sredstva će biti izgubljena osim ako ne napravite rezervnu kopiju!</string>
   <string name="export_account_details_backup_options">Opcije rezervne kopije</string>
@@ -229,6 +250,11 @@
   <string name="hide_zero_balances">Hide zero balances</string>
   <string name="history_referral">Referenca</string>
   <string name="history_referrer">Referent</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">Код позивнице</string>
   <string name="invite_code_applied_body">Код је успешно примењен</string>
   <string name="invite_code_applied_title">Честитам!</string>
@@ -260,10 +286,12 @@
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
   <string name="onboarding_create_account_title">Name your account</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">Enter Passphrase</string>
   <string name="onboarding_enter_seed">Enter Raw Seed</string>
   <string name="passphrase_confirmation_error_message">This process is aimed to ensure you\'ve written down your recovery phrase</string>
   <string name="passphrase_confirmation_error_title">Don\'t try to guess the word</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">Назив налога (опционално)</string>
   <string name="personal_info_username_v1">Ime naloga</string>
   <string name="phone_verification_too_frequent_message">Пречести захтеви за верификациони код. Покушајте поново касније.</string>
@@ -346,6 +374,7 @@
   <string name="project_ended_template">Завршено %s</string>
   <string name="qr_code">QR kod</string>
   <string name="qr_upload">Пренос из галерије</string>
+  <string name="receive_tokens">Receive tokens</string>
   <string name="recent_recipients">Recent recipients</string>
   <string name="recipient_address">Recipient address</string>
   <string name="recovery_enter_passphrase_title">Enter your secret Passphrase</string>
@@ -396,6 +425,7 @@
   <string name="search_assets">Search assets</string>
   <string name="select_account_address">Претражите адресу налога</string>
   <string name="select_account_address_1">Претражите или додајте нову адресу</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">Изаберите средство за пријем</string>
   <string name="select_asset_send">Изаберите средство за слање</string>
   <string name="select_node_add_custom_node">Dodaj prilagođeni nod</string>
@@ -453,6 +483,7 @@
   <string name="status_success">Успешно</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>

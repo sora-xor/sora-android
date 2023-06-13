@@ -32,16 +32,24 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_impl.domain
 
+import android.content.Context
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.mockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.safeCast
+import jp.co.soramitsu.common.util.ext.unsafeCast
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
@@ -51,6 +59,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiM
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionMappers
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionsInfo
+import jp.co.soramitsu.feature_blockexplorer_impl.presentation.txhistory.TransactionMappersImpl
 import jp.co.soramitsu.feature_blockexplorer_impl.testdata.TestTransactions
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
@@ -72,7 +81,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
-import kotlin.coroutines.CoroutineContext
+import java.util.Locale
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -92,9 +101,6 @@ class TransactionHistoryHandlerTest {
     private lateinit var assetsRepository: AssetsRepository
 
     @MockK
-    private lateinit var transactionMappers: TransactionMappers
-
-    @MockK
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
     @MockK
@@ -104,7 +110,10 @@ class TransactionHistoryHandlerTest {
     private lateinit var userRepository: UserRepository
 
     @MockK
-    private lateinit var dateTimeFormatter: DateTimeFormatter
+    private lateinit var language: LanguagesHolder
+
+    @MockK
+    private lateinit var context: Context
 
     @MockK
     private lateinit var coroutineManager: CoroutineManager
@@ -112,26 +121,40 @@ class TransactionHistoryHandlerTest {
     @MockK
     private lateinit var coroutineScope: CoroutineScope
 
-    @MockK
-    private lateinit var coroutineContext: CoroutineContext
+    private val dateTimeFormatter: DateTimeFormatter by lazy {
+        DateTimeFormatter(language, resourceManager, context)
+    }
+
+    private val txMapper: TransactionMappers by lazy {
+        TransactionMappersImpl(resourceManager, NumbersFormatter(), dateTimeFormatter)
+    }
 
     private val mockedUri = Mockito.mock(Uri::class.java)
 
     private val tokens = listOf(TestTokens.xorToken)
     private val txHash = "txHash"
-    private val date = "10 Jan. 2021 12:12"
 
     private val transactionsWithHeaders = listOf(
-        EventUiModel.EventTimeSeparatorUiModel(title = "01 Jan 1970 00:00"),
-        EventUiModel.EventTxUiModel.EventTransferInUiModel(
-            "",
+        EventUiModel.EventTimeSeparatorUiModel(title = "01 Feb 1970"),
+        EventUiModel.EventTxUiModel.EventTransferOutUiModel(
+            "txHash",
             mockedUri,
-            "peerId",
-            "01 Jan 1970 00:00",
-            1000000,
-            "10.12 VAL",
-            "$ 34.3",
-            TransactionStatus.COMMITTED
+            "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
+            "11:58",
+            1673918013,
+            "10 VAL",
+            "~0",
+            TransactionStatus.COMMITTED,
+        ),
+        EventUiModel.EventTxUiModel.EventTransferOutUiModel(
+            "txHash2",
+            mockedUri,
+            "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
+            "13:38",
+            1679918013,
+            "1 VAL",
+            "~0",
+            TransactionStatus.REJECTED,
         )
     )
 
@@ -139,8 +162,13 @@ class TransactionHistoryHandlerTest {
 
     @Before
     fun setUp() = runTest {
+        mockkStatic(Uri::parse)
+        every { Uri.parse(any()) } returns mockedUri
+        mockkStatic(Token::iconUri)
+        every { TestTokens.xorToken.iconUri() } returns mockedUri
+        every { TestTokens.valToken.iconUri() } returns mockedUri
+        every { language.getCurrentLocale() } returns Locale.ENGLISH
         every { resourceManager.getString(any()) } returns ""
-        every { dateTimeFormatter.dateToDayWithoutCurrentYear(any(), any(), any()) } returns "01 Jan 1970 00:00"
         every { transactionHistoryRepository.state } returns flowOf(true)
         every { coroutineManager.applicationScope } returns coroutineScope
         every { coroutineScope.coroutineContext } returns coroutineContext
@@ -160,22 +188,46 @@ class TransactionHistoryHandlerTest {
             listOf(TestTransactions.sendSuccessfulTx),
             true
         )
-        every {
-            transactionMappers.mapTransaction(TestTransactions.sendSuccessfulTx, TestAccounts.soraAccount.substrateAddress)
-        } returns transactionsWithHeaders[1] as EventUiModel.EventTxUiModel
         coEvery {
-            transactionHistoryRepository.getLastTransactions(TestAccounts.soraAccount, listOf(TestTokens.xorToken), 1, null)
-        } returns listOf(TestTransactions.sendSuccessfulTx)
+            transactionHistoryRepository.getLastTransactions(
+                TestAccounts.soraAccount,
+                listOf(TestTokens.xorToken),
+                1,
+                null
+            )
+        } returns listOf(TestTransactions.sendFailedTx)
 
         transactionHistoryHandler = TransactionHistoryHandlerImpl(
             assetsRepository,
-            transactionMappers,
+            txMapper,
             transactionHistoryRepository,
             resourceManager,
             userRepository,
             dateTimeFormatter,
             coroutineManager
         )
+    }
+
+    @Test
+    fun `cache plus new tx`() = runTest {
+        val curTime = transactionHistoryHandler.getCachedEvents(1).getOrNull(0)
+            ?.safeCast<EventUiModel.EventTxUiModel>()?.timestamp!!
+        assertEquals(1679918013, curTime)
+        transactionHistoryHandler.historyState.test(this) {
+            transactionHistoryHandler.refreshHistoryEvents()
+            var flowValue = this.awaitValue(0)
+            assertTrue(flowValue is HistoryState.Loading)
+            flowValue = this.awaitValue(1)
+            assertTrue(flowValue is HistoryState.History)
+            assertEquals(2, flowValue.unsafeCast<HistoryState.History>().events.size)
+            this.finishAssertion()
+        }
+    }
+
+    @Test
+    fun `has new tx`() = runTest {
+        val new = transactionHistoryHandler.hasNewTransaction()
+        assertTrue(new)
     }
 
     @Test
@@ -195,7 +247,7 @@ class TransactionHistoryHandlerTest {
         advanceUntilIdle()
         val state = HistoryState.History(
             true,
-            transactionsWithHeaders
+            transactionsWithHeaders.subList(0, 2)
         )
 
         transactionHistoryHandler.historyState.test(
@@ -203,23 +255,44 @@ class TransactionHistoryHandlerTest {
         ) {
             transactionHistoryHandler.refreshHistoryEvents()
             advanceUntilIdle()
-            assertEquals(this.awaitValue(0), HistoryState.Loading)
+            var flowValue = this.awaitValue(0)
+            assertEquals(flowValue, HistoryState.Loading)
             transactionHistoryHandler.onMoreHistoryEventsRequested()
             advanceUntilIdle()
-            assertEquals(this.awaitValue(1), state)
+            flowValue = this.awaitValue(1).unsafeCast<HistoryState.History>()
+            assertEquals(flowValue.endReached, state.endReached)
+            assertEquals(flowValue.pullToRefresh, state.pullToRefresh)
+            assertEquals(flowValue.hasErrorLoadingNew, state.hasErrorLoadingNew)
+            assertEquals(flowValue.events.size, state.events.size)
+            assertEquals(
+                flowValue.events[0].unsafeCast<EventUiModel.EventTimeSeparatorUiModel>().title,
+                state.events[0].unsafeCast<EventUiModel.EventTimeSeparatorUiModel>().title,
+            )
+            assertEquals(
+                flowValue.events[1].unsafeCast<EventUiModel.EventTxUiModel.EventTransferOutUiModel>().txHash,
+                state.events[1].unsafeCast<EventUiModel.EventTxUiModel.EventTransferOutUiModel>().txHash,
+            )
             this.finishAssertion()
         }
     }
 
     @Test
-    fun `getCatchedEvents() called`() = runTest {
+    fun `getCachedEvents() called`() = runTest {
         val result = transactionHistoryHandler.getCachedEvents(1)
+        val a =
+            transactionsWithHeaders[2].unsafeCast<EventUiModel.EventTxUiModel.EventTransferOutUiModel>()
+        val b = result[0].unsafeCast<EventUiModel.EventTxUiModel.EventTransferOutUiModel>()
 
-        assertEquals(transactionsWithHeaders.subList(1, transactionsWithHeaders.size), result)
+        assertEquals(a.txHash, b.txHash)
+        assertEquals(a.timestamp, b.timestamp)
+        assertEquals(a.status, b.status)
     }
 
     @Test
     fun `getTransaction() called`() = runTest {
-        assertEquals(TestTransactions.sendSuccessfulTx, transactionHistoryHandler.getTransaction(txHash))
+        assertEquals(
+            TestTransactions.sendSuccessfulTx,
+            transactionHistoryHandler.getTransaction(txHash)
+        )
     }
 }

@@ -42,6 +42,8 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -159,6 +161,9 @@ class TxDetailsViewModelTest {
     fun setUp() = runTest {
         mockkStatic(Uri::parse)
         every { Uri.parse(any()) } returns mockedUri
+        mockkStatic(Token::iconUri)
+        every { TestTokens.xorToken.iconUri() } returns mockedUri
+        every { TestTokens.valToken.iconUri() } returns mockedUri
         coEvery { assetsInteractor.getCurSoraAccount() } returns TestAccounts.soraAccount
         coEvery { walletInteractor.getFeeToken() } returns TestTokens.xorToken
         coEvery { router.popBackStackFragment() } returns Unit

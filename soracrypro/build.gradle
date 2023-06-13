@@ -54,6 +54,6 @@ dependencies {
     api novaCryptoDep
     api ed25519Dep
     api spongycastleDep
-    api fearlessLibDep
+    api sharedUtilsDep
 
 }

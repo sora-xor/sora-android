@@ -36,7 +36,6 @@ import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.resourses.ResourceManager
