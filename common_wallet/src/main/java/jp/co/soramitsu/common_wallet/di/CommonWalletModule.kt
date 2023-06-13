@@ -30,30 +30,24 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_api.domain.exceptions
+package jp.co.soramitsu.common_wallet.di
 
-class QrException private constructor(
-    val kind: Kind
-) : RuntimeException() {
+import android.content.Context
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
 
-    companion object {
+@Module
+@InstallIn(SingletonComponent::class)
+class CommonWalletModule {
 
-        fun userNotFoundError(): QrException {
-            return QrException(Kind.USER_NOT_FOUND)
-        }
-
-        fun sendingToMyselfError(): QrException {
-            return QrException(Kind.SENDING_TO_MYSELF)
-        }
-
-        fun decodeError(): QrException {
-            return QrException(Kind.DECODE_ERROR)
-        }
-    }
-
-    enum class Kind {
-        USER_NOT_FOUND,
-        SENDING_TO_MYSELF,
-        DECODE_ERROR
+    @Singleton
+    @Provides
+    fun provideQrCodeDecoder(@ApplicationContext context: Context): QrCodeDecoder {
+        return QrCodeDecoder(context.contentResolver)
     }
 }

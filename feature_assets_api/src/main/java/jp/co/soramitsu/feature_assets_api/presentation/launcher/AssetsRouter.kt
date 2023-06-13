@@ -40,8 +40,6 @@ interface AssetsRouter {
 
     fun showContacts(tokenId: String)
 
-    fun showReceive()
-
     fun showBuyCrypto()
 
     fun showFullAssetsSettings()

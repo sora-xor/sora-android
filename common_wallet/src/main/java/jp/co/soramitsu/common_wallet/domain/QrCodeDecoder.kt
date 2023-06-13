@@ -30,9 +30,10 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.domain
+package jp.co.soramitsu.common_wallet.domain
 
 import android.content.ContentResolver
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
 import com.google.zxing.BinaryBitmap
@@ -40,7 +41,7 @@ import com.google.zxing.DecodeHintType
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.QRCodeReader
-import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
+import jp.co.soramitsu.common_wallet.domain.model.QrException
 
 class QrCodeDecoder(
     private val contentResolver: ContentResolver
@@ -57,20 +58,25 @@ class QrCodeDecoder(
     }
 
     private fun decode(data: Uri): String {
-        val qrBitmap = MediaStore.Images.Media.getBitmap(contentResolver, data)
-        val pixels = IntArray(qrBitmap.height * qrBitmap.width)
-        qrBitmap.getPixels(pixels, 0, qrBitmap.width, 0, 0, qrBitmap.width, qrBitmap.height)
-        qrBitmap.recycle()
-        val source = RGBLuminanceSource(qrBitmap.width, qrBitmap.height, pixels)
-        val hybridBinarizer = HybridBinarizer(source)
-        val bBitmap = BinaryBitmap(hybridBinarizer)
-        val reader = QRCodeReader()
-        val textResult = reader.decode(bBitmap, DECODING_HINTS_MAP).text
+        var qrBitmap: Bitmap? = null
+        try {
+            qrBitmap = MediaStore.Images.Media.getBitmap(contentResolver, data)
+            val pixels = IntArray(qrBitmap.height * qrBitmap.width)
+            qrBitmap.getPixels(pixels, 0, qrBitmap.width, 0, 0, qrBitmap.width, qrBitmap.height)
+            val source = RGBLuminanceSource(qrBitmap.width, qrBitmap.height, pixels)
+            val hybridBinarizer = HybridBinarizer(source)
+            val bBitmap = BinaryBitmap(hybridBinarizer)
+            val reader = QRCodeReader()
+            val temp = reader.decode(bBitmap, DECODING_HINTS_MAP)
+            val textResult = temp.text
 
-        if (textResult.isNullOrEmpty()) {
-            throw QrException.decodeError()
-        } else {
-            return textResult
+            if (textResult.isNullOrEmpty()) {
+                throw QrException.decodeError()
+            } else {
+                return textResult
+            }
+        } finally {
+            qrBitmap?.recycle()
         }
     }
 }

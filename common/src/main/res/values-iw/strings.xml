@@ -37,6 +37,7 @@
   <string name="asset_details_token_price">מחיר טוקן</string>
   <string name="asset_details_your_pools">%s המאגרים שלך</string>
   <string name="asset_to_send">נכס לשליחה</string>
+  <string name="backup_password_title">הגדרת סיסמה תצפין את גיבוי ה-Google שלך. יהיה עליך להזין אותה בעת שחזור הארנק שלך.</string>
   <string name="biometric_dialog_title">לאמת</string>
   <string name="block_id">האש בלוק</string>
   <string name="buy_crypto_buy_xor_banner_title">קנה טוקן XOR</string>
@@ -127,7 +128,7 @@
   <string name="common_french">צרפתית</string>
   <string name="common_german">גרמנית</string>
   <string name="common_hebrew">עברית</string>
-  <string name="common_hindi">Hindi</string>
+  <string name="common_hindi">הינדי</string>
   <plurals name="common_hour">
     <item quantity="one">שעה</item>
     <item quantity="two">שעתיים</item>
@@ -157,6 +158,7 @@
   <string name="common_request">בקשה</string>
   <string name="common_russian">רוסית</string>
   <string name="common_scan">סרוק</string>
+  <string name="common_scan_qr">סרוק QR</string>
   <string name="common_search">חיפוש</string>
   <string name="common_search_pools">חפש מאגרים</string>
   <string name="common_sec">שנ\'</string>
@@ -183,9 +185,11 @@
   <string name="common_turkish">טורקית</string>
   <string name="common_ukrainian">אוקראינית</string>
   <string name="common_update">עדכון</string>
+  <string name="common_upload_from_library">העלה מהספרייה</string>
   <string name="common_vietnamese">וייטנאמית</string>
   <string name="common_yesterday">אתמול</string>
   <string name="confirm_sending">אשר את השליחה</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">אתה ספק הנזילות הראשון. יחס הטוקנים שתוסיף יקבע את מחיר המאגר הזה.</string>
   <string name="contacts_scan">סרוק</string>
   <string name="contacts_search_results">תוצאות חיפוש</string>
   <string name="copy_to_clipboard">העתק ללוח</string>
@@ -351,6 +355,7 @@
   <string name="project_ended_template">הסתיים %s</string>
   <string name="qr_code">קוד QR</string>
   <string name="qr_upload">מתוך גלריה</string>
+  <string name="receive_tokens">קבל טוקנים</string>
   <string name="recent_recipients">נמענים אחרונים</string>
   <string name="recipient_address">כתובת הנמען</string>
   <string name="recovery_enter_passphrase_title">הזן את מילות המפתח הסודיות שלך</string>

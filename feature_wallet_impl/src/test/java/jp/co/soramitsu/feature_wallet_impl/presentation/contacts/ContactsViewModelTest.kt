@@ -38,15 +38,11 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.feature_ethereum_api.domain.interfaces.EthereumInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
-import jp.co.soramitsu.feature_wallet_impl.presentation.util.EthereumAddressValidator
+import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -90,12 +86,6 @@ class ContactsViewModelTest {
     @Mock
     private lateinit var resourceManager: ResourceManager
 
-    @Mock
-    private lateinit var qrCodeDecoder: QrCodeDecoder
-
-    @Mock
-    private lateinit var uri: Uri
-
     private lateinit var contactsViewModel: ContactsViewModel
 
     private val accountId = "accountId"
@@ -108,26 +98,9 @@ class ContactsViewModelTest {
         given(walletInteractor.getContacts("")).willReturn(accounts)
 
         contactsViewModel = ContactsViewModel(
-            walletInteractor, router, qrCodeDecoder,
+            walletInteractor, router,
             resourceManager, avatar,
         )
-    }
-
-    @Test
-    fun `decode text from qr method and proccess result`() = runTest {
-        advanceUntilIdle()
-        val qrResponse = "response"
-        given(qrCodeDecoder.decodeQrFromUri(uri)).willReturn(qrResponse)
-        given(walletInteractor.processQr(qrResponse)).willReturn(
-            Triple(
-                "accountId",
-                "0x020005",
-                BigDecimal.ZERO
-            )
-        )
-        contactsViewModel.decodeTextFromBitmapQr(uri)
-        advanceUntilIdle()
-        verify(router).showValTransferAmount(accountId, "0x020005")
     }
 
     @Test

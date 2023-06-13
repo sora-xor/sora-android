@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -71,11 +70,9 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
-import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
 import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
@@ -104,7 +101,6 @@ class CardsHubViewModel @Inject constructor(
     private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
     private val polkaswapRouter: PolkaswapRouter,
-    private val qrCodeDecoder: QrCodeDecoder,
     private val connectionManager: ConnectionManager,
     coroutineManager: CoroutineManager,
 ) : BaseViewModel(), WithProgress by progress {
@@ -215,6 +211,10 @@ class CardsHubViewModel @Inject constructor(
         }
     }
 
+    fun openQrCodeFlow() {
+        router.openQrCodeFlow()
+    }
+
     fun onAssetClick(tokenId: String) {
         assetsRouter.showAssetDetails(tokenId)
     }
@@ -225,53 +225,6 @@ class CardsHubViewModel @Inject constructor(
 
     fun onAccountClick() {
         mainRouter.showAccountList()
-    }
-
-    fun decodeTextFromBitmapQr(data: Uri) {
-        try {
-            val decoded = qrCodeDecoder.decodeQrFromUri(data)
-            qrResultProcess(decoded)
-        } catch (throwable: Throwable) {
-            handleError(throwable)
-        }
-    }
-
-    fun qrResultProcess(contents: String) {
-        viewModelScope.launch {
-            try {
-                val qr = walletInteractor.processQr(contents)
-                router.showContactsFilled(qr.second, qr.first)
-                router.showValTransferAmount(qr.first, qr.second)
-            } catch (throwable: Throwable) {
-                handleError(throwable)
-            }
-        }
-    }
-
-    private fun handleError(throwable: Throwable) {
-        if (throwable is QrException) {
-            when (throwable.kind) {
-                QrException.Kind.USER_NOT_FOUND ->
-                    alertDialogLiveData.value =
-                        resourceManager.getString(R.string.status_error) to resourceManager.getString(
-                            R.string.invoice_scan_error_user_not_found
-                        )
-
-                QrException.Kind.SENDING_TO_MYSELF ->
-                    alertDialogLiveData.value =
-                        resourceManager.getString(R.string.status_error) to resourceManager.getString(
-                            R.string.invoice_scan_error_match
-                        )
-
-                QrException.Kind.DECODE_ERROR ->
-                    alertDialogLiveData.value =
-                        resourceManager.getString(R.string.status_error) to resourceManager.getString(
-                            R.string.invoice_scan_error_no_info
-                        )
-            }
-        } else {
-            onError(throwable)
-        }
     }
 
     @Suppress("UNCHECKED_CAST")

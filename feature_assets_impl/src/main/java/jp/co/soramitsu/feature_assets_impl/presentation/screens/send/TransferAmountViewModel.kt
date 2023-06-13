@@ -83,6 +83,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     avatarGenerator: AccountAvatarGenerator,
     @Assisted("recipientId") private val recipientId: String,
     @Assisted("assetId") private val assetId: String,
+    @Assisted("initAmount") private val initialSendAmount: String?
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -90,6 +91,7 @@ class TransferAmountViewModel @AssistedInject constructor(
         fun create(
             @Assisted("recipientId") recipientId: String,
             @Assisted("assetId") assetId: String,
+            @Assisted("initAmount") initialSendAmount: String?
         ): TransferAmountViewModel
     }
 
@@ -159,8 +161,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                     input = AssetAmountInputState(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
-                        amount = BigDecimal.ZERO,
-                        initialAmount = null,
+                        amount = initialSendAmount?.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                        initialAmount = initialSendAmount?.toBigDecimalOrNull(),
                         amountFiat = "",
                         enabled = false,
                         error = false,

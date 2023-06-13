@@ -32,11 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.di
 
-import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
@@ -57,7 +55,6 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.WalletRepositoryImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.BuyCryptoDataSourceImpl
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.feature_wallet_impl.domain.PoolsFeatureStorageManager
-import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
@@ -85,12 +82,6 @@ class WalletFeatureModule {
         clientProvider: SoramitsuHttpClientProvider
     ): BuyCryptoDataSource =
         BuyCryptoDataSourceImpl(clientProvider)
-
-    @Singleton
-    @Provides
-    fun provideQrCodeDecoder(@ApplicationContext context: Context): QrCodeDecoder {
-        return QrCodeDecoder(context.contentResolver)
-    }
 
     @Singleton
     @Provides
