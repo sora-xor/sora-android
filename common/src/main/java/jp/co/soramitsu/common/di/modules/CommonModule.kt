@@ -79,7 +79,7 @@ import jp.co.soramitsu.common.util.TextFormatter
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
-import jp.co.soramitsu.fearless_utils.encrypt.json.JsonSeedEncoder
+import jp.co.soramitsu.shared_utils.encrypt.json.JsonSeedEncoder
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
