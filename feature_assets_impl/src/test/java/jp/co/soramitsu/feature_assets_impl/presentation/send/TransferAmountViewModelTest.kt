@@ -176,7 +176,7 @@ class TransferAmountViewModelTest {
                 assetsInteractor, walletRouter, assetsRouter,
                 NumbersFormatter(), clipboardManager, resourceManager,
                 avatarGenerator,
-                recipientId, TestTokens.xorToken.id,
+                recipientId, TestTokens.xorToken.id, null
         )
     }
 }

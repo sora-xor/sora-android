@@ -37,7 +37,6 @@ import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.shared_utils.extensions.toHexString
-
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

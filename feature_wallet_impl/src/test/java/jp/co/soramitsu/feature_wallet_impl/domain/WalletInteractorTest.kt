@@ -49,7 +49,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
-import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
+import jp.co.soramitsu.common_wallet.domain.model.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
@@ -179,45 +179,6 @@ class WalletInteractorTest {
             BlockEntry("header", listOf("0x112323345", "0x35456472"))
         )
         assertEquals(true, interactor.migrate())
-    }
-
-    @Test
-    fun `process qr called`() = runTest {
-        val content = "substrate:notMyAddress:en:part4:part5"
-        given(runtimeManager.isAddressOk("notMyAddress")).willReturn(true)
-        given(assetsRepository.isWhitelistedToken("part5")).willReturn(true)
-        val result = runCatching {
-            interactor.processQr(content)
-        }
-        assertTrue(result.isSuccess)
-        assertTrue(result.getOrNull()!! == Triple("notMyAddress", "part5", BigDecimal.ZERO))
-    }
-
-    @Test
-    fun `process qr called with wrong qr data`() = runTest {
-        val content = "substrate:notMyAddress:en:tjj:qwe"
-        given(runtimeManager.isAddressOk("notMyAddress")).willReturn(false)
-        val result = runCatching {
-            interactor.processQr(content)
-        }
-        assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull()!!
-        assertTrue(
-            exception is QrException && exception.kind == QrException.Kind.USER_NOT_FOUND
-        )
-    }
-
-    @Test
-    fun `process qr called with users qr data`() = runTest {
-        val content = "substrate:address:en:tjj:qwe"
-        val result = runCatching {
-            interactor.processQr(content)
-        }
-        assertTrue(result.isFailure)
-        val exception = result.exceptionOrNull()!!
-        assertTrue(
-            exception is QrException && exception.kind == QrException.Kind.SENDING_TO_MYSELF
-        )
     }
 
     @Test

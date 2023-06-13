@@ -68,6 +68,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardSta
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
@@ -78,6 +79,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     @Assisted private val assetId: String,
     private val assetsInteractor: AssetsInteractor,
     private val assetsRouter: AssetsRouter,
+    private val walletRouter: WalletRouter,
     private val clipboardManager: ClipboardManager,
     private val numbersFormatter: NumbersFormatter,
     private val poolsInteractor: PoolsInteractor,
@@ -213,7 +215,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     }
 
     fun receiveClicked() {
-        assetsRouter.showReceive()
+        walletRouter.openQrCodeFlow()
     }
 
     fun onPoolClick(ids: StringPair) {

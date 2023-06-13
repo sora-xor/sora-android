@@ -249,10 +249,10 @@
   <string name="hide_zero_balances">Hide zero balances</string>
   <string name="history_referral">Referral</string>
   <string name="history_referrer">Referrer</string>
-  <string name="import.more.title">Import more</string>
   <string name="import_account_not_backed_up">Not backed up!</string>
   <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
   <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
   <string name="imported_account_title">Account imported</string>
   <string name="invite_code">Einladungscode</string>
   <string name="invite_code_applied_body">Code erfolgreich angewendet</string>
