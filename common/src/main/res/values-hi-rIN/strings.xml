@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">स्मृतिजनक सूत्र की पुष्टि करें</string>
   <string name="account_confirmation_title_v2">Passphrase की पुष्टि करें</string>
   <string name="account_options">खाता विकल्प</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">कुछ डेटा अप टू डेट नहीं है</string>
   <string name="activity_empty_content_title">लेन-देन शुरू करने के बाद आप यहां अपनी गतिविधि देखेंगे</string>
   <string name="activity_error_title">आपकी गतिविधि लोड नहीं की जा सकी. सूची को ताज़ा करने का प्रयास करें</string>
@@ -80,6 +82,7 @@
   <string name="common_copied">क्लिपबोर्ड पर प्रतिलिपि किया गया</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">क्रोएशियाई</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">खोजना</string>
   <string name="common_done">हो गया</string>
   <string name="common_edit">संपादित करें</string>
@@ -192,8 +195,18 @@
   <string name="contacts_search_results">परिणाम खोजें</string>
   <string name="copy_to_clipboard">क्लिपबोर्ड पर कॉपी करें</string>
   <string name="create_account_title">खाता बनाएं</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">नया खाता बनाएँ</string>
   <string name="dark_mode">डार्क मोड</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">जमा हुआ</string>
   <string name="details_receive_from_pool">पूल से निकाला गया</string>
   <string name="details_sent_to_pool">पूल में भेजा गया</string>
@@ -201,6 +214,10 @@
   <string name="discovery_polkaswap_pools">पोलकस्वैप पूल</string>
   <string name="empty_recent_recipients">हाल ही का कोई प्राप्तकर्ता नहीं।\n भेजे गए पते यहां दिखाए जाएंगे।</string>
   <string name="empty_recent_recipients_2">प्राप्तकर्ता यहां दिखाई देंगे</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">नेटवर्क शुल्क के लिए पर्याप्त धनराशि नहीं है</string>
   <string name="export_account_details_backup_description">अगर आप इस डिवाइस का एक्सेस खो देते हैं, तो आपके फंड का नुकसान हो जाएगा, जब तक कि आप बैकअप नहीं लेते!</string>
   <string name="export_account_details_backup_options">बैकअप विकल्प</string>
@@ -232,6 +249,11 @@
   <string name="hide_zero_balances">जीरो बैलेंस छुपाएं</string>
   <string name="history_referral">रेफ़रल</string>
   <string name="history_referrer">रेफरर</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">निमंत्रण कोड</string>
   <string name="invite_code_applied_body">कोड सफलतापूर्वक लागू किया गया</string>
   <string name="invite_code_applied_title">बधाई हो!</string>
@@ -263,10 +285,12 @@
   <string name="onboarding_create_account_description">अपने नए खाते के लिए नाम दर्ज करें और यह आपके पते के तहत कैसे दिखाई देगा। ऑन-चेन पहचान के साथ, इसे दूसरों के लिए उपलब्ध कराया जा सकता है।</string>
   <string name="onboarding_create_account_subtitle">केवल आपके लिए दृश्यमान और स्थानीय रूप से संग्रहीत</string>
   <string name="onboarding_create_account_title">अपने खाते को नाम दें</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">Passphrase दर्ज करें</string>
   <string name="onboarding_enter_seed">Raw Seed दर्ज करें</string>
   <string name="passphrase_confirmation_error_message">इस प्रक्रिया का उद्देश्य यह सुनिश्चित करना है कि आपने अपना Recovery Phrase लिख लिया है</string>
   <string name="passphrase_confirmation_error_title">शब्द का अनुमान लगाने की कोशिश मत करे</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">खाते का नाम (वैकल्पिक)</string>
   <string name="personal_info_username_v1">खाते का नाम</string>
   <string name="phone_verification_too_frequent_message">बहुत बार सत्यापन कोड अनुरोध। कृपया बाद में फिर से प्रयास करें।</string>
@@ -396,6 +420,7 @@
   <string name="search_assets">संपत्ति खोजें</string>
   <string name="select_account_address">खाता पता खोजें\n</string>
   <string name="select_account_address_1">नया पता खोजें या जोड़ें</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">प्राप्त करने के लिए संपत्ति का चयन करें</string>
   <string name="select_asset_send">भेजने के लिए संपत्ति का चयन करें</string>
   <string name="select_node_add_custom_node">कस्टम नोड जोड़ें</string>
@@ -453,6 +478,7 @@
   <string name="status_success">सफल</string>
   <string name="status_successful">सफल</string>
   <string name="status_title">स्थिति</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">सिस्टम स्थिति</string>

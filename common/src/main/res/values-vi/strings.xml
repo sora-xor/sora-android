@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">Xác nhận từ khóa khôi phục</string>
   <string name="account_confirmation_title_v2">Xác nhận chuỗi từ khóa khôi phục</string>
   <string name="account_options">Tùy chọn tài khoản</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">Một số dữ liệu chưa được cập nhật</string>
   <string name="activity_empty_content_title">Bạn sẽ thấy hoạt động của mình ở đây khi bạn bắt đầu giao dịch</string>
   <string name="activity_error_title">Không thể tải hoạt động của bạn. Cố gắng làm mới danh sách</string>
@@ -80,6 +82,7 @@
   <string name="common_copied">Đã sao chép vào bảng tạm</string>
   <string name="common_create_qr_request">Tạo QR yêu cầu</string>
   <string name="common_croatian">Tiếng Croatia</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">Khám phá</string>
   <string name="common_done">Hoàn tất</string>
   <string name="common_edit">Chỉnh sửa</string>
@@ -191,8 +194,18 @@
   <string name="contacts_search_results">Kết quả tìm kiếm</string>
   <string name="copy_to_clipboard">Sao chép vào khay nhớ tạm</string>
   <string name="create_account_title">Tạo tài khoản</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">Tạo tài khoản mới</string>
   <string name="dark_mode">Chế độ tối</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">Đóng băng</string>
   <string name="details_receive_from_pool">Rút tiền từ Pool</string>
   <string name="details_sent_to_pool">Gửi đến pool</string>
@@ -200,6 +213,10 @@
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
   <string name="empty_recent_recipients">Không có người nhận gần đây.\nĐịa chỉ đã gửi sẽ được hiển thị tại đây.</string>
   <string name="empty_recent_recipients_2">Người nhận sẽ xuất hiện ở đây</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Không đủ tiền cho phí giao dịch</string>
   <string name="export_account_details_backup_description">Nếu bạn mất quyền truy cập vào thiết bị này, tiền của bạn sẽ bị mất, trừ khi bạn sao lưu!</string>
   <string name="export_account_details_backup_options">Các tùy chọn sao lưu</string>
@@ -231,6 +248,11 @@
   <string name="hide_zero_balances">Ẩn số dư bằng không</string>
   <string name="history_referral">Giới thiệu</string>
   <string name="history_referrer">Giới thiệu</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">Mã mời</string>
   <string name="invite_code_applied_body">Đã áp dụng mã thành công</string>
   <string name="invite_code_applied_title">Xin chúc mừng!</string>
@@ -262,10 +284,12 @@
   <string name="onboarding_create_account_description">Nhập tên cho tài khoản mới của bạn và cách nó sẽ xuất hiện dưới địa chỉ của bạn. Với danh tính trên chuỗi, nó có thể được cung cấp cho những người khác.</string>
   <string name="onboarding_create_account_subtitle">Chỉ hiển thị cho bạn và được lưu trữ cục bộ</string>
   <string name="onboarding_create_account_title">Đặt tên cho tài khoản của bạn</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">Nhập chuỗi từ khóa khôi phục</string>
   <string name="onboarding_enter_seed">Cụm mật khẩu ví gốc (Raw seed)</string>
   <string name="passphrase_confirmation_error_message">Quá trình này nhằm đảm bảo bạn đã viết ra cụm từ khôi phục của mình</string>
   <string name="passphrase_confirmation_error_title">Đừng cố đoán từ</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">Tên tài khoản (tùy chọn)</string>
   <string name="personal_info_username_v1">Tên tài khoản</string>
   <string name="phone_verification_too_frequent_message">Yêu cầu mã xác minh quá thường xuyên. Vui lòng thử lại sau.</string>
@@ -390,6 +414,7 @@
   <string name="search_assets">Tìm kiếm tài sản</string>
   <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">Chọn Tài sản để nhận</string>
   <string name="select_asset_send">Chọn Tài sản để gửi</string>
   <string name="select_node_add_custom_node">Thêm node tùy chỉnh</string>
@@ -447,6 +472,7 @@
   <string name="status_success">Thành công</string>
   <string name="status_successful">Thành công</string>
   <string name="status_title">Trạng thái</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Số dư %s của bạn sẽ ít hơn %s sau giao dịch này. Bạn sẽ không thể thanh toán phí mạng cho một giao dịch khác.</string>
   <string name="switch_node">Chuyển node</string>
   <string name="system_appearance">Hệ thống hiển thị</string>

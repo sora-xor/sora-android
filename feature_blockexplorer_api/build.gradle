@@ -100,7 +100,7 @@ dependencies {
     implementation roomKtxDep
 
     implementation timberDep
-    implementation fearlessLibDep
+    implementation sharedUtilsDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

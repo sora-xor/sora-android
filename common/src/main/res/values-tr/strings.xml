@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">Anımsatıcıyı onayla</string>
   <string name="account_confirmation_title_v2">Kurtarma Kelimelerini Onaylayın</string>
   <string name="account_options">Account options</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">Some data is not up to date</string>
   <string name="activity_empty_content_title">You will see your activity here once you start transacting</string>
   <string name="activity_error_title">Could not load your activity. Try to refresh the list</string>
@@ -80,6 +82,7 @@
   <string name="common_copied">Panoya Kopyalandı</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Hırvatça</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Tamamlandı</string>
   <string name="common_edit">Edit</string>
@@ -192,8 +195,18 @@
   <string name="contacts_search_results">Arama sonuçları</string>
   <string name="copy_to_clipboard">Copy to clipboard</string>
   <string name="create_account_title">Hesap oluştur</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">Create new account</string>
   <string name="dark_mode">Dark mode</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">Dondurulmuş</string>
   <string name="details_receive_from_pool">Withdrawn from Pool</string>
   <string name="details_sent_to_pool">Sent to pool</string>
@@ -201,6 +214,10 @@
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
   <string name="empty_recent_recipients">Yeni alıcı yok.\nGönderilen adresler burada gösterilecektir.</string>
   <string name="empty_recent_recipients_2">Alıcılar burada görünecektir</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">İşlem ücreti için yeterli miktar yok</string>
   <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Backup options</string>
@@ -232,6 +249,11 @@
   <string name="hide_zero_balances">Hide zero balances</string>
   <string name="history_referral">Referral</string>
   <string name="history_referrer">Referrer</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">Davet kodu</string>
   <string name="invite_code_applied_body">Kod başarıyla uygulandı</string>
   <string name="invite_code_applied_title">Tebrikler!</string>
@@ -263,10 +285,12 @@
   <string name="onboarding_create_account_description">Enter name for your new account and how it will appear under your address. With an on-chain identity, it can be made available to others.</string>
   <string name="onboarding_create_account_subtitle">Visible only for you and stored locally</string>
   <string name="onboarding_create_account_title">Name your account</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">Enter Passphrase</string>
   <string name="onboarding_enter_seed">Enter Raw Seed</string>
   <string name="passphrase_confirmation_error_message">This process is aimed to ensure you\'ve written down your recovery phrase</string>
   <string name="passphrase_confirmation_error_title">Don\'t try to guess the word</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">Hesap adı (isteğe bağlı)</string>
   <string name="personal_info_username_v1">Hesap Adı</string>
   <string name="phone_verification_too_frequent_message">Çok sık doğrulama kodu isteği gönderdiniz. Lütfen daha sonra tekrar deneyin.</string>
@@ -396,6 +420,7 @@
   <string name="search_assets">Search assets</string>
   <string name="select_account_address">Hesap adresini ara</string>
   <string name="select_account_address_1">Yeni bir adres arayın veya ekleyin</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">Alınacak Varlığı Seçin</string>
   <string name="select_asset_send">Gönderilecek Varlığı Seçin</string>
   <string name="select_node_add_custom_node">Add Custom Node</string>
@@ -453,6 +478,7 @@
   <string name="status_success">Başarılı</string>
   <string name="status_successful">Successful</string>
   <string name="status_title">Durum</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>

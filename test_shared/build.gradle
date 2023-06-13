@@ -33,7 +33,7 @@ dependencies {
 
     api coroutineTestDep
     api gsonDep
-    api fearlessLibDep
+    api sharedUtilsDep
 
     api jUnitDep
     api mockitoDep

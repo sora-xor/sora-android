@@ -61,7 +61,7 @@ dependencies {
     implementation navigationUiDep
 
     implementation xNetworkingDep
-    implementation fearlessLibDep
+    implementation sharedUtilsDep
 
     implementation daggerDep
     kapt daggerKaptDep

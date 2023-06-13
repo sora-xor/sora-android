@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">确认助记种子短语</string>
   <string name="account_confirmation_title_v2">确认密码</string>
   <string name="account_options">账户选项</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">一些数据不是最新的</string>
   <string name="activity_empty_content_title">一旦您开始交易，您将在此处看到您的活动。</string>
   <string name="activity_error_title">无法加载您的活动。请尝试刷新列表。</string>
@@ -80,6 +82,7 @@
   <string name="common_copied">复制到剪贴板</string>
   <string name="common_create_qr_request">创建QR请求</string>
   <string name="common_croatian">克罗地亚语</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">发现</string>
   <string name="common_done">已完成</string>
   <string name="common_edit">编辑</string>
@@ -191,8 +194,18 @@
   <string name="contacts_search_results">搜索结果</string>
   <string name="copy_to_clipboard">复制到剪贴板</string>
   <string name="create_account_title">注册</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">创建新账户</string>
   <string name="dark_mode">深色模式</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">已被冻结</string>
   <string name="details_receive_from_pool">已从池中撤回</string>
   <string name="details_sent_to_pool">发送到池中</string>
@@ -200,6 +213,10 @@
   <string name="discovery_polkaswap_pools">Polkaswap池</string>
   <string name="empty_recent_recipients">没有最近的收件人。\n已发送的地址将在此处显示。</string>
   <string name="empty_recent_recipients_2">接收人将出现在此处</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">网络费用不足</string>
   <string name="export_account_details_backup_description">如果您无法访问此设备，您的资金将会丢失，除非您备份！</string>
   <string name="export_account_details_backup_options">备份选项</string>
@@ -231,6 +248,11 @@
   <string name="hide_zero_balances">隐藏零余额</string>
   <string name="history_referral">被推荐人</string>
   <string name="history_referrer">推荐人</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">邀请代码</string>
   <string name="invite_code_applied_body">邀请码使用成功</string>
   <string name="invite_code_applied_title">恭喜！</string>
@@ -262,10 +284,12 @@
   <string name="onboarding_create_account_description">输入您的新账户名称以及它在地址下的显示方式。有了链上身份，它可以被分享给其他人。</string>
   <string name="onboarding_create_account_subtitle">仅对您可见并本地存储</string>
   <string name="onboarding_create_account_title">为您的账户命名</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">输入密码短语</string>
   <string name="onboarding_enter_seed">输入原始种子词</string>
   <string name="passphrase_confirmation_error_message">这个过程旨在确保您已经记录下了恢复短语</string>
   <string name="passphrase_confirmation_error_title">不要试图猜测这个词</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">账户名（可选）</string>
   <string name="personal_info_username_v1">账户名称</string>
   <string name="phone_verification_too_frequent_message">验证码请求过于频繁。请稍后再试。</string>
@@ -390,6 +414,7 @@
   <string name="search_assets">搜索资产</string>
   <string name="select_account_address">搜索账户地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">选择要接收的资产</string>
   <string name="select_asset_send">选择要发送的资产</string>
   <string name="select_node_add_custom_node">添加自定义节点</string>
@@ -447,6 +472,7 @@
   <string name="status_success">成功</string>
   <string name="status_successful">成功的</string>
   <string name="status_title">状态</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">此次交易后，您的%s余额将少于%s。您将无法支付另一笔交易的网络费用。</string>
   <string name="switch_node">切换节点</string>
   <string name="system_appearance">系统外观</string>

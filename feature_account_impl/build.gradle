@@ -58,7 +58,7 @@ dependencies {
     implementation project(":feature_account_api")
     implementation project(":core_db")
     implementation project(":sorasubstrate")
-    implementation fearlessLibDep
+    implementation sharedUtilsDep
 
     implementation gsonDep
 

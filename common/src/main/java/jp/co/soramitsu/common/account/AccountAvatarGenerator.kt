@@ -37,8 +37,8 @@ import com.caverock.androidsvg.SVG
 import javax.inject.Singleton
 import jdenticon.Jdenticon
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.fearless_utils.extensions.toHexString
-import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.shared_utils.extensions.toHexString
+import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 
 @Singleton
 class AccountAvatarGenerator(

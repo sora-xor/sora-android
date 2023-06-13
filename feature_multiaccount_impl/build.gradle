@@ -95,7 +95,7 @@ dependencies {
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
 
-    implementation fearlessLibDep
+    implementation sharedUtilsDep
 
     implementation navigationFragmentDep
     implementation navigationUiDep

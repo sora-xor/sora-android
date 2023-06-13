@@ -45,11 +45,11 @@ import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.fearless_utils.wsrpc.SocketService
-import jp.co.soramitsu.fearless_utils.wsrpc.logging.Logger
-import jp.co.soramitsu.fearless_utils.wsrpc.recovery.ConstantReconnectStrategy
-import jp.co.soramitsu.fearless_utils.wsrpc.recovery.Reconnector
-import jp.co.soramitsu.fearless_utils.wsrpc.request.RequestExecutor
+import jp.co.soramitsu.shared_utils.wsrpc.SocketService
+import jp.co.soramitsu.shared_utils.wsrpc.logging.Logger
+import jp.co.soramitsu.shared_utils.wsrpc.recovery.ConstantReconnectStrategy
+import jp.co.soramitsu.shared_utils.wsrpc.recovery.Reconnector
+import jp.co.soramitsu.shared_utils.wsrpc.request.RequestExecutor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
