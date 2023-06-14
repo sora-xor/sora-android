@@ -42,10 +42,13 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_impl.data.AssetsRepositoryImpl
 import jp.co.soramitsu.feature_assets_impl.domain.AssetsInteractorImpl
+import jp.co.soramitsu.feature_assets_impl.domain.QrCodeInteractorImpl
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import kotlinx.coroutines.FlowPreview
 
 @FlowPreview
@@ -77,4 +80,16 @@ class AssetsFeatureModule {
             userRepository,
         )
     }
+
+    @Singleton
+    @Provides
+    fun provideQrCodeInteractor(
+        assetsRepository: AssetsRepository,
+        userRepository: UserRepository,
+        runtimeManager: RuntimeManager
+    ): QrCodeInteractor = QrCodeInteractorImpl(
+        assetsRepository = assetsRepository,
+        userRepository = userRepository,
+        runtimeManager = runtimeManager
+    )
 }

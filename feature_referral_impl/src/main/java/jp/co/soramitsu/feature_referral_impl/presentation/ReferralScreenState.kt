@@ -89,6 +89,8 @@ data class ReferralBondState(
     val invitationsCount: Int,
     val invitationsAmount: String,
     val balance: String,
+    val shouldTransactionReminderInsufficientWarningBeShown: Boolean = false,
+    val transactionFeeToken: String = ""
 )
 
 data class ReferralsCardState(

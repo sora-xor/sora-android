@@ -33,13 +33,19 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.polkaswap.liquidity.remove
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.just
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData.NETWORK_FEE
@@ -47,9 +53,11 @@ import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.PolkaswapTestData.VAL_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET_ZERO_BALANCE
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.anyNonNull
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
@@ -63,10 +71,27 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.BDDMockito
 import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.mock
+import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.`when`
+import org.mockito.MockitoAnnotations
+import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.atMost
+import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import java.math.BigDecimal
+
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -107,18 +132,21 @@ class RemoveLiquidityViewModelTest {
     private val sbApyText = "SB APY"
     private val networkFeeText = "network fee"
 
-    private fun setUpViewModel() {
+    private fun setUpViewModel(
+        firstTokenId: String? = null,
+        secondTokenId: String? = null
+    ) {
         viewModel = LiquidityRemoveViewModel(
-            assetsInteractor,
-            assetsRouter,
-            router,
-            mainRouter,
-            walletInteractor,
-            poolsInteractor,
-            NumbersFormatter(),
-            resourceManager,
-            TestTokens.xorToken.id,
-            TestTokens.valToken.id
+            assetsInteractor = assetsInteractor,
+            assetsRouter = assetsRouter,
+            router = router,
+            mainRouter = mainRouter,
+            walletInteractor = walletInteractor,
+            poolsInteractor = poolsInteractor,
+            numbersFormatter = NumbersFormatter(),
+            resourceManager = resourceManager,
+            token1Id = firstTokenId ?: TestTokens.xorToken.id,
+            token2Id = secondTokenId ?: TestTokens.valToken.id
         )
     }
 
@@ -144,6 +172,7 @@ class RemoveLiquidityViewModelTest {
                 VAL_ASSET.token
             )
         ).willReturn(NETWORK_FEE)
+
         given(
             poolsInteractor.subscribePoolCache(
                 XOR_ASSET.token.id,
@@ -152,6 +181,15 @@ class RemoveLiquidityViewModelTest {
         ).willReturn(flowOf(POOL_DATA))
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
 
+        given(
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = anyOrNull(),
+                secondaryTokenAmount = anyOrNull(),
+                networkFeeInXor = any()
+            )
+        ).willReturn(false)
     }
 
     @Test
@@ -226,5 +264,31 @@ class RemoveLiquidityViewModelTest {
                 viewModel.removeState.btnState.text,
             )
             assertFalse(viewModel.removeState.btnState.enabled)
+        }
+
+    @Test
+    fun `WHEN user enters amount including one XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            setUpViewModel(
+                firstTokenId = TestAssets.xorAsset().token.id,
+                secondTokenId = TestAssets.valAsset().token.id
+            )
+
+            advanceUntilIdle()
+
+            viewModel.onAmount1Change(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            verify(
+                mock = assetsInteractor,
+                mode = times(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = TestTokens.xorToken,
+                primaryTokenAmount = BigDecimal.ONE, // is not TEN due to basePooled in POOL_DATA
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = NETWORK_FEE
+            )
         }
 }

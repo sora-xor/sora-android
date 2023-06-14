@@ -36,7 +36,7 @@ import jp.co.soramitsu.common.domain.Token
 
 interface WalletRouter {
 
-    fun showValTransferAmount(recipientId: String, assetId: String)
+    fun showValTransferAmount(recipientId: String, assetId: String, initSendAmount: String? = null)
 
     fun returnToHubFragment()
 
@@ -47,4 +47,6 @@ interface WalletRouter {
     fun showAssetSettings()
 
     fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
+
+    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
 }

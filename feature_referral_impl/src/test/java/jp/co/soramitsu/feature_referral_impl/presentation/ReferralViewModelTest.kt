@@ -73,6 +73,10 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify as kVerify
 import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
@@ -135,6 +139,7 @@ class ReferralViewModelTest {
         given(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)).willReturn(
             assetFlow
         )
+
         given(interactor.observeMyReferrer()).willReturn(myReferrerFlow)
         given(interactor.observeReferrerBalance()).willReturn(referrerBalanceFlow)
         given(interactor.getSetReferrerFee()).willReturn(BigDecimal("0.07"))
@@ -223,4 +228,64 @@ class ReferralViewModelTest {
         assertTrue(actualToolbarState2.type is SoramitsuToolbarType.Small)
         assertEquals(R.string.referral_toolbar_title, actualToolbarState2.basic.title)
     }
+
+    @Test
+    fun `WHEN invitations count is changed EXPECT transaction reminder is checked`() =
+        runTest {
+            given(
+                interactor.getReferrals()
+            ).willReturn(
+                flow {
+                    emit(referrals)
+                }
+            )
+
+            given(
+                interactor.observeReferrals()
+            ).willReturn(emptyFlow())
+
+            given(
+                assetsInteractor.subscribeAssetOfCurAccount(
+                    SubstrateOptionsProvider.feeAssetId
+                )
+            ).willReturn(
+                flow {
+                    emit(TestAssets.xorAsset())
+                }
+            )
+
+            setupViewModel()
+
+            advanceUntilIdle()
+
+            referralViewModel.onBondPlus()
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                mode = atLeastOnce()
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = eq(null),
+                secondaryTokenAmount = eq(null),
+                networkFeeInXor = any()
+            )
+
+            referralViewModel.onBondMinus()
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                mode = atLeastOnce()
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = eq(null),
+                secondaryTokenAmount = eq(null),
+                networkFeeInXor = any()
+            )
+        }
 }

@@ -78,6 +78,29 @@ class AssetsInteractorImpl constructor(
         }
     }
 
+    override suspend fun isEnoughXorLeftAfterTransaction(
+        primaryToken: Token,
+        primaryTokenAmount: BigDecimal,
+        secondaryToken: Token?,
+        secondaryTokenAmount: BigDecimal?,
+        networkFeeInXor: BigDecimal
+    ): Boolean {
+        val xorAssetBalanceAmount = getXorBalance(primaryToken.precision).transferable
+
+        if (primaryToken.id != SubstrateOptionsProvider.feeAssetId &&
+            secondaryToken?.id != SubstrateOptionsProvider.feeAssetId
+        ) {
+            return xorAssetBalanceAmount.minus(networkFeeInXor) < networkFeeInXor
+        }
+
+        if (primaryToken.id == SubstrateOptionsProvider.feeAssetId) {
+            return xorAssetBalanceAmount.minus(primaryTokenAmount)
+                .minus(networkFeeInXor) < networkFeeInXor
+        }
+
+        return secondaryTokenAmount.orZero().minus(networkFeeInXor) < networkFeeInXor
+    }
+
     override suspend fun getAccountName(): String = userRepository.getCurSoraAccount().accountName
 
     override suspend fun getAssetOrThrow(assetId: String): Asset {

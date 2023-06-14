@@ -55,7 +55,7 @@ import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
-import jp.co.soramitsu.feature_wallet_impl.domain.QrCodeDecoder
+import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
@@ -127,9 +127,6 @@ class CardsHubViewModelTest {
 
     @Mock
     private lateinit var polkaswapRouter: PolkaswapRouter
-
-    @Mock
-    private lateinit var qrCodeDecoder: QrCodeDecoder
 
     @Mock
     private lateinit var coroutineManager: CoroutineManager
@@ -210,7 +207,6 @@ class CardsHubViewModelTest {
             mainRouter,
             assetsRouter,
             polkaswapRouter,
-            qrCodeDecoder,
             connectionManager,
             coroutineManager,
         )
@@ -220,37 +216,6 @@ class CardsHubViewModelTest {
     fun `connection buy`() = runTest {
         cardsHubViewModel.onBuyCrypto()
         verify(assetsRouter, times(1)).showBuyCrypto()
-    }
-
-    @Test
-    fun `decode qr`() = runTest {
-        val content = "qr_content"
-        given(walletInteractor.processQr(content)).willReturn(
-            Triple(
-                "recipient",
-                "asset",
-                BigDecimal.ZERO
-            )
-        )
-        cardsHubViewModel.qrResultProcess(content)
-        advanceUntilIdle()
-        verify(router).showValTransferAmount("recipient", "asset")
-    }
-
-    @Test
-    fun `decode qr uri`() = runTest {
-        given(qrCodeDecoder.decodeQrFromUri(mockedUri)).willReturn("content")
-        given(walletInteractor.processQr("content")).willReturn(
-            Triple(
-                "recipient",
-                "asset",
-                BigDecimal.ZERO
-            )
-        )
-        cardsHubViewModel.decodeTextFromBitmapQr(mockedUri)
-        advanceUntilIdle()
-        verify(router).showContactsFilled("asset", "recipient")
-        verify(router).showValTransferAmount("recipient", "asset")
     }
 
     @Test

@@ -47,6 +47,8 @@ data class LiquidityAddState(
     val pairNotExist: Boolean? = null,
     val selectSearchAssetState: SelectSearchAssetState?,
     val hintVisible: Boolean,
+    val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    val transactionFeeToken: String
 )
 
 data class LiquidityAddConfirmState(

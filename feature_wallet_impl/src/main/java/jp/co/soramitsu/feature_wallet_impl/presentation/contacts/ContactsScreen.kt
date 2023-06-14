@@ -177,7 +177,7 @@ private fun PreviewContactsScreen() {
             inputTextState = InputTextState(
                 value = TextFieldValue("cnVko"),
                 label = "Search or add a new address",
-                trailingIcon = R.drawable.ic_scan_wrapped,
+                trailingIcon = R.drawable.ic_scan_qr,
             ),
             onValueChanged = {},
             hint = R.string.address_not_found_1,

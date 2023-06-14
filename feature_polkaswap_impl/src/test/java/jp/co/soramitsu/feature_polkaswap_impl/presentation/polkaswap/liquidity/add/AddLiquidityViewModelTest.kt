@@ -38,7 +38,6 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
@@ -46,13 +45,13 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.equalTo
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData.LIQUIDITY_DATA
 import jp.co.soramitsu.test_data.PolkaswapTestData.LIQUIDITY_DETAILS
@@ -81,7 +80,10 @@ import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.times
 import java.math.BigDecimal
+import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -120,7 +122,10 @@ class AddLiquidityViewModelTest {
 
     private lateinit var viewModel: LiquidityAddViewModel
 
-    private fun setUpViewModel(secondTokenId: String?) {
+    private fun setUpViewModel(
+        secondTokenId: String?,
+        firstTokenId: String? = null,
+    ) {
         viewModel = LiquidityAddViewModel(
                 assetsInteractor,
                 assetsRouter,
@@ -130,7 +135,7 @@ class AddLiquidityViewModelTest {
                 poolsInteractor,
                 NumbersFormatter(),
                 resourceManager,
-                TestTokens.xorToken.id,
+                firstTokenId ?: TestTokens.xorToken.id,
                 secondTokenId,
         )
     }
@@ -146,6 +151,15 @@ class AddLiquidityViewModelTest {
         every { TestTokens.pswapToken.iconUri() } returns mockedUri
         every { TestTokens.xstusdToken.iconUri() } returns mockedUri
         every { TestTokens.xstToken.iconUri() } returns mockedUri
+        given(
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = anyOrNull(),
+                secondaryTokenAmount = anyOrNull(),
+                networkFeeInXor = any()
+            )
+        ).willReturn(false)
         given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(LIQUIDITY_DATA))
         given(
@@ -382,4 +396,52 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         assertEquals("1", viewModel.addState.prices.pair1Value)
     }
+
+    @Test
+    fun `WHEN user enters amount including one XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            given(
+                poolsInteractor.isPairEnabled(
+                    inputAssetId = XOR_ASSET.token.id,
+                    outputAssetId = VAL_ASSET.token.id
+                )
+            ).willReturn(
+                flowOf(
+                    true
+                )
+            )
+
+            given(
+                poolsInteractor.isPairPresentedInNetwork(
+                    baseTokenId = XOR_ASSET.token.id,
+                    tokenId = VAL_ASSET.token.id
+                )
+            ).willReturn(
+                flowOf(
+                    true
+                )
+            )
+
+            setUpViewModel(
+                firstTokenId = XOR_ASSET.token.id,
+                secondTokenId = VAL_ASSET.token.id
+            )
+
+            advanceUntilIdle()
+
+            viewModel.onAmount1Change(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            kVerify(
+                assetsInteractor,
+                times(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = XOR_ASSET.token,
+                primaryTokenAmount = BigDecimal.TEN,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = LIQUIDITY_DETAILS.networkFee
+            )
+        }
 }
