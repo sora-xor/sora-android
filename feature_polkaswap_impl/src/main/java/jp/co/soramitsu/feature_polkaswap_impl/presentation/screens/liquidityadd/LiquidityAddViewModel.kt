@@ -143,6 +143,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var pairPresentedJob: Job? = null
     private var liquidityDetails: LiquidityDetails? = null
     private val assets = mutableListOf<Asset>()
+    private var hasXorReminderWarningBeenChecked = false
 
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
     private val amount2Flow = MutableStateFlow(BigDecimal.ZERO)
@@ -244,9 +245,11 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     desired = WithDesired.INPUT
                     onChangedProperty.set(false)
                 }.filter {
-                    addState.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId
+                    addState.assetState1?.token?.id == SubstrateOptionsProvider.feeAssetId ||
+                        !hasXorReminderWarningBeenChecked
                 }.onEach {
                     updateTransactionReminderWarningVisibility()
+                    hasXorReminderWarningBeenChecked = true
                 }.collect()
         }
         viewModelScope.launch {
@@ -554,6 +557,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     amountFiat = a.token.printFiat(state.amount, numbersFormatter),
                 ),
             )
+            hasXorReminderWarningBeenChecked = false
         }
         setTokensFromArgs()
     }
