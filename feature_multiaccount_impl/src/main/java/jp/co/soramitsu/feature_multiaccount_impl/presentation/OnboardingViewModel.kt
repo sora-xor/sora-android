@@ -64,6 +64,7 @@ import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
+import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -338,12 +339,10 @@ class OnboardingViewModel @Inject constructor(
     ) {
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
-            val isAuth = backupService.isAuthorized(activity)
-            Log.e("TAGAA", isAuth.toString())
-            if (isAuth) {
-                onSuccessfulGoogleSignin(activity, navController)
-            } else {
-                backupService.authorize(activity, launcher)
+            viewModelScope.launch {
+                if (backupService.authorize(activity, launcher)) {
+                    onSuccessfulGoogleSignin(activity, navController)
+                }
             }
         }
     }
@@ -493,10 +492,6 @@ class OnboardingViewModel @Inject constructor(
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
     }
 
-    fun onSkipButtonPressed(context: Context) {
-        finishCreateAccountProcess(context)
-    }
-
     private fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
             multiaccountInteractor.createUser(
@@ -512,7 +507,6 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onSuccessfulGoogleSignin(activity: Activity, navController: NavController) {
-        Log.e("TAGAA", "SUCSUC")
         viewModelScope.launch {
             try {
                 isFromGoogleDrive = true
@@ -566,18 +560,17 @@ class OnboardingViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.IO) {
                 _passphraseCardState.value?.let { passphraseCardState ->
                     tempAccount?.let {
-                        backupService.saveBackupAccount(
+                        val fileID = backupService.saveBackupAccount(
                             activity,
                             DecryptedBackupAccount(
                                 it.accountName,
                                 it.substrateAddress,
-                                passphraseCardState.mnemonicWords.joinToString(" ")
+                                passphraseCardState.mnemonicWords.joinToString(" "),
+                                "",
+                                CryptoType.SR25519
                             ),
                             createBackupPasswordState.password.value.text
                         )
-
-                        val fileID = backupService.getBackupAccounts(activity)
-                            .first { acc -> it.substrateAddress == acc.address }.fileId
 
                         tempAccount = it.copy(backupFileId = fileID)
                         finishCreateAccountProcess(activity)
@@ -635,10 +628,10 @@ class OnboardingViewModel @Inject constructor(
                         )
 
                         val valid =
-                            multiaccountInteractor.isMnemonicValid(decryptedBackupAccount.passphrase)
+                            multiaccountInteractor.isMnemonicValid(decryptedBackupAccount.mnemonicPhrase)
                         if (valid) {
                             val soraAccount = multiaccountInteractor.recoverSoraAccountFromMnemonic(
-                                decryptedBackupAccount.passphrase,
+                                decryptedBackupAccount.mnemonicPhrase,
                                 decryptedBackupAccount.name
                             ).copy(backupFileId = it.backupAccountMeta.fileId)
 

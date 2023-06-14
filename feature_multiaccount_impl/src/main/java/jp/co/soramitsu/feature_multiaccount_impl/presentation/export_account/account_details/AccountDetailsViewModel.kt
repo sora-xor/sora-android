@@ -54,6 +54,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
+import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
@@ -223,22 +224,23 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
 
                     val mnemonic = interactor.getMnemonic(accountDetailsScreenState.address)
-                    backupService.saveBackupAccount(
+                    val fileID = backupService.saveBackupAccount(
                         activity,
                         DecryptedBackupAccount(
                             accountDetailsScreenState.accountNameState.value.text,
                             accountDetailsScreenState.address,
-                            mnemonic
+                            mnemonic,
+                            "",
+                            CryptoType.SR25519
                         ),
                         createBackupPasswordState.password.value.text
                     )
 
-                    val fileID = backupService.getBackupAccounts(activity)
-                        .first { acc -> accountDetailsScreenState.address == acc.address }.fileId
                     interactor.updateBackupFileId(accountDetailsScreenState.address, fileID)
 
                     withContext(Dispatchers.Main) {
-                        _accountDetailsScreenState.value = accountDetailsScreenState.copy(fileId = fileID)
+                        _accountDetailsScreenState.value =
+                            accountDetailsScreenState.copy(fileId = fileID)
                         navController.popBackStack()
                     }
                 }
@@ -254,22 +256,25 @@ class AccountDetailsViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _accountDetailsScreenState.value?.let {
                 _accountDetailsScreenState.value = it.copy(isBackupLoading = true)
-                if (backupService.isAuthorized(activity)) {
+                if (backupService.authorize(activity, launcher)) {
                     if (it.fileId != null) {
                         backupService.deleteBackupAccount(activity, it.fileId)
                         interactor.removeBackupFileId(it.address)
-                        _accountDetailsScreenState.value = it.copy(fileId = null, isBackupLoading = false)
+                        _accountDetailsScreenState.value =
+                            it.copy(fileId = null, isBackupLoading = false)
                     } else {
                         _createBackupPasswordState.value = CreateBackupPasswordState(
                             password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
-                            passwordConfirmation = InputTextState(label = resourceManager.getString(R.string.export_json_input_confirmation_label))
+                            passwordConfirmation = InputTextState(
+                                label = resourceManager.getString(
+                                    R.string.export_json_input_confirmation_label
+                                )
+                            )
                         )
 
                         navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
                         _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
                     }
-                } else {
-                    backupService.authorize(activity, launcher)
                 }
             }
         }
@@ -279,11 +284,10 @@ class AccountDetailsViewModel @AssistedInject constructor(
         viewModelScope.launch {
             _accountDetailsScreenState.value?.let {
                 if (it.fileId != null) {
-                    if (backupService.isAuthorized(activity)) {
-                        backupService.deleteBackupAccount(activity, it.fileId)
-                        interactor.removeBackupFileId(it.address)
-                        _accountDetailsScreenState.value = it.copy(fileId = null, isBackupLoading = false)
-                    }
+                    backupService.deleteBackupAccount(activity, it.fileId)
+                    interactor.removeBackupFileId(it.address)
+                    _accountDetailsScreenState.value =
+                        it.copy(fileId = null, isBackupLoading = false)
                 } else {
                     navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
                     _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
