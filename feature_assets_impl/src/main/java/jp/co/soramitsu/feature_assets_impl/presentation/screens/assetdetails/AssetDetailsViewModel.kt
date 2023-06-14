@@ -105,7 +105,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
     val copyEvent: LiveData<Unit> = _copyEvent
 
     private var xorAssetBalance: XorAssetBalance? = null
-    private var precision = 8
 
     init {
         _toolbarState.value = initSmallTitle2(
@@ -130,11 +129,17 @@ class AssetDetailsViewModel @AssistedInject constructor(
                     )
                 }
         }
+        onPullToRefresh()
+    }
+
+    private fun getBalance() {
+        state = state.copy(
+            loading = true,
+        )
         viewModelScope.launch {
             tryCatch {
                 val soraCard = soraConfigManager.getSoraCard()
                 val asset = assetsInteractor.getAssetOrThrow(assetId)
-                precision = asset.token.precision
                 if (asset.token.id == SubstrateOptionsProvider.feeAssetId) {
                     if (asset.balance.transferable.isZero().not()) {
                         fetchBalanceForXor(asset.token.precision)
@@ -173,18 +178,22 @@ class AssetDetailsViewModel @AssistedInject constructor(
                 )
             }
         }
-        viewModelScope.launch {
-            refreshActivities()
-        }
     }
 
-    private suspend fun refreshActivities() {
-        val events = transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
-        state = state.copy(
-            state = state.state.copy(
-                events = events,
+    fun onPullToRefresh() {
+        getBalance()
+        refreshActivities()
+    }
+
+    private fun refreshActivities() {
+        viewModelScope.launch {
+            val events = transactionHistoryHandler.getCachedEvents(TX_HISTORY_COUNT, assetId)
+            state = state.copy(
+                state = state.state.copy(
+                    events = events,
+                )
             )
-        )
+        }
     }
 
     private suspend fun fetchBalanceForXor(precision: Int) {
