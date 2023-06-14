@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
-import java.math.BigDecimal
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
@@ -52,8 +51,6 @@ interface WalletInteractor {
     suspend fun migrate(): Boolean
 
     suspend fun getContacts(query: String): List<String>?
-
-    suspend fun processQr(contents: String): Triple<String, String, BigDecimal>
 
     suspend fun getSoraAccounts(): List<SoraAccount>
 

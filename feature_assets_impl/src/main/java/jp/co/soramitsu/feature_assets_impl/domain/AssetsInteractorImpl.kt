@@ -43,8 +43,6 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.orZero
-import jp.co.soramitsu.fearless_utils.extensions.toHexString
-import jp.co.soramitsu.fearless_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
@@ -54,6 +52,8 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.shared_utils.extensions.toHexString
+import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -76,6 +76,29 @@ class AssetsInteractorImpl constructor(
         return userRepository.getCurSoraAccount().let {
             assetsRepository.calcTransactionFee(it.substrateAddress, to, token, amount)
         }
+    }
+
+    override suspend fun isEnoughXorLeftAfterTransaction(
+        primaryToken: Token,
+        primaryTokenAmount: BigDecimal,
+        secondaryToken: Token?,
+        secondaryTokenAmount: BigDecimal?,
+        networkFeeInXor: BigDecimal
+    ): Boolean {
+        val xorAssetBalanceAmount = getXorBalance(primaryToken.precision).transferable
+
+        if (primaryToken.id != SubstrateOptionsProvider.feeAssetId &&
+            secondaryToken?.id != SubstrateOptionsProvider.feeAssetId
+        ) {
+            return xorAssetBalanceAmount.minus(networkFeeInXor) < networkFeeInXor
+        }
+
+        if (primaryToken.id == SubstrateOptionsProvider.feeAssetId) {
+            return xorAssetBalanceAmount.minus(primaryTokenAmount)
+                .minus(networkFeeInXor) < networkFeeInXor
+        }
+
+        return secondaryTokenAmount.orZero().minus(networkFeeInXor) < networkFeeInXor
     }
 
     override suspend fun getAccountName(): String = userRepository.getCurSoraAccount().accountName

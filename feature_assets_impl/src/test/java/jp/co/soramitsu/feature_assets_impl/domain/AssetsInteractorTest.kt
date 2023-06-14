@@ -38,15 +38,17 @@ import io.mockk.mockkStatic
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.*
-import jp.co.soramitsu.fearless_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
 import jp.co.soramitsu.test_data.TestTokens
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -204,6 +206,122 @@ class AssetsInteractorTest {
     fun `get account id called`() = runTest {
         Assert.assertEquals(soraAccount.substrateAddress, interactor.getCurSoraAccount().substrateAddress)
     }
+
+    @Test
+    fun `CHECK isEnoughXorLeftAfterTransaction WHEN no xor token is supplied and balance equals network fee`() =
+        runTest {
+            val xorAssetBalance = XorAssetBalance(
+                transferable = BigDecimal(1),
+                frozen = BigDecimal(1),
+                totalBalance = BigDecimal(1),
+                locked = BigDecimal(1),
+                bonded = BigDecimal(1),
+                reserved = BigDecimal(1),
+                redeemable = BigDecimal(1),
+                unbonding = BigDecimal(1)
+            )
+
+            BDDMockito.given(assetsRepository.getXORBalance(any(), any())).willReturn(xorAssetBalance)
+
+            val result = interactor.isEnoughXorLeftAfterTransaction(
+                primaryToken = oneToken(),
+                primaryTokenAmount = BigDecimal(1),
+                secondaryToken = oneToken(),
+                secondaryTokenAmount = BigDecimal(1),
+                networkFeeInXor = BigDecimal(1)
+            )
+
+            Assert.assertEquals(
+                true,
+                result
+            )
+        }
+
+    @Test
+    fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is supplied and balance equals network fee`() =
+        runTest {
+            val xorAssetBalance = XorAssetBalance(
+                transferable = BigDecimal(1),
+                frozen = BigDecimal(1),
+                totalBalance = BigDecimal(1),
+                locked = BigDecimal(1),
+                bonded = BigDecimal(1),
+                reserved = BigDecimal(1),
+                redeemable = BigDecimal(1),
+                unbonding = BigDecimal(1)
+            )
+
+            BDDMockito.given(assetsRepository.getXORBalance(any(), any()))
+                .willReturn(xorAssetBalance)
+
+            val xorToken = Token(
+                id = "MyNetworkFeeToken",
+                name = "",
+                symbol = "xor",
+                precision = 18,
+                isHidable = false,
+                iconFile = null,
+                fiatPrice = null,
+                fiatPriceChange = null,
+                fiatSymbol = null
+            )
+
+            val result = interactor.isEnoughXorLeftAfterTransaction(
+                primaryToken = xorToken,
+                primaryTokenAmount = BigDecimal(1),
+                secondaryToken = oneToken(),
+                secondaryTokenAmount = BigDecimal(1),
+                networkFeeInXor = BigDecimal(1)
+            )
+
+            Assert.assertEquals(
+                true,
+                result
+            )
+        }
+
+    @Test
+    fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is produced and balance equals network fee`() =
+        runTest {
+            val xorAssetBalance = XorAssetBalance(
+                transferable = BigDecimal(1),
+                frozen = BigDecimal(1),
+                totalBalance = BigDecimal(1),
+                locked = BigDecimal(1),
+                bonded = BigDecimal(1),
+                reserved = BigDecimal(1),
+                redeemable = BigDecimal(1),
+                unbonding = BigDecimal(1)
+            )
+
+            BDDMockito.given(assetsRepository.getXORBalance(any(), any()))
+                .willReturn(xorAssetBalance)
+
+            val xorToken = Token(
+                id = "MyNetworkFeeToken",
+                name = "",
+                symbol = "xor",
+                precision = 18,
+                isHidable = false,
+                iconFile = null,
+                fiatPrice = null,
+                fiatPriceChange = null,
+                fiatSymbol = null
+            )
+
+            val result = interactor.isEnoughXorLeftAfterTransaction(
+                primaryToken = oneToken(),
+                primaryTokenAmount = BigDecimal(1),
+                secondaryToken = xorToken,
+                secondaryTokenAmount = BigDecimal(1),
+                networkFeeInXor = BigDecimal(1)
+            )
+
+            Assert.assertEquals(
+                true,
+                result
+            )
+        }
 
     private fun accountList() = listOf(
             "use","contact1","contact2",

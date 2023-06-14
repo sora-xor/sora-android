@@ -18,6 +18,8 @@
   <string name="account_confirmation_title">تأكيد الاستذكار</string>
   <string name="account_confirmation_title_v2">تأكيد عبارة المرور</string>
   <string name="account_options">خيارات الحساب</string>
+  <string name="account_options_backup_google">Backup to Google</string>
+  <string name="account_options_delete_backup">Delete Google backup</string>
   <string name="activity_data_not_up_to_date_title">بعض البيانات ليست محدثة</string>
   <string name="activity_empty_content_title">سترى نشاطك هنا بمجرد بدء المعاملات</string>
   <string name="activity_error_title">تعذر تحميل نشاطك. حاول تحديث القائمة</string>
@@ -37,6 +39,7 @@
   <string name="asset_details_token_price">سعر الرمز المميز</string>
   <string name="asset_details_your_pools">تجمعات %s الخاصة بك</string>
   <string name="asset_to_send">الأصول المراد إرسالها</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">توثيق المصادقة</string>
   <string name="block_id">كتلة التجزئة</string>
   <string name="buy_crypto_buy_xor_banner_title">شراء توكن XOR</string>
@@ -79,6 +82,7 @@
   <string name="common_copied">نسخ إلى ذاكرة لوحة المفاتيح</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">الكرواتية</string>
+  <string name="common_delete">Delete</string>
   <string name="common_discover">اكتشف</string>
   <string name="common_done">تم</string>
   <string name="common_edit">تحرير</string>
@@ -159,6 +163,7 @@
   <string name="common_request">Request</string>
   <string name="common_russian">الروسية</string>
   <string name="common_scan">مسح ضوئي</string>
+  <string name="common_scan_qr">مسح QR</string>
   <string name="common_search">بحث</string>
   <string name="common_search_pools">الأحواض الممكنة</string>
   <string name="common_sec">ثانية</string>
@@ -185,15 +190,27 @@
   <string name="common_turkish">التركية</string>
   <string name="common_ukrainian">الأوكرانية</string>
   <string name="common_update">تحديث</string>
+  <string name="common_upload_from_library">تحميل من المكتبة</string>
   <string name="common_vietnamese">Vietnamese</string>
   <string name="common_yesterday">أمس</string>
   <string name="confirm_sending">تأكيد الإرسال</string>
+  <string name="confirn_supply_liquidity_first_provider_warning">You are the first liquidity provider. The ratio of tokens you add will set the price of this pool.</string>
   <string name="contacts_scan">المسح الضوئي لرمز QR</string>
   <string name="contacts_search_results">نتائج البحث</string>
   <string name="copy_to_clipboard">نسخ إلى الحافظة</string>
   <string name="create_account_title">إنشاء حساب</string>
+  <string name="create_backup_password_button_text">Set backup password</string>
+  <string name="create_backup_password_is_secure">Password is highly secure</string>
+  <string name="create_backup_password_matched">Password matched</string>
+  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_title">Create backup password</string>
+  <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
+  <string name="create_backup_set_password">Set password</string>
+  <string name="create_backup_weak_password">Weak password</string>
   <string name="create_new_account_title">انشاء حساب جديد</string>
   <string name="dark_mode">الوضع المظلم</string>
+  <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
+  <string name="delete_backup_alert_title">Are you sure?</string>
   <string name="details_frozen">مجمد</string>
   <string name="details_receive_from_pool">تم سحبه من المسبح</string>
   <string name="details_sent_to_pool">أرسل إلى المسبح</string>
@@ -201,6 +218,10 @@
   <string name="discovery_polkaswap_pools">حوض Polkaswap</string>
   <string name="empty_recent_recipients">لا يوجد متلقون حديثون.\n سيتم عرض العناوين المرسلة هنا.</string>
   <string name="empty_recent_recipients_2">سيظهر المستلمون هنا</string>
+  <string name="enter_backup_password_title">Enter backup password</string>
+  <string name="enter_password_description">Enter backup password for the selected account to import</string>
+  <string name="enter_password_incorect_title">Incorrect password</string>
+  <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ارصدة غير كافية لرسوم المعاملة</string>
   <string name="export_account_details_backup_description">إذا فقدت الوصول إلى هذا الجهاز ، فستفقد أموالك ، ما لم تقم بعمل نسخة احتياطية!</string>
   <string name="export_account_details_backup_options">خيارات النسخ الاحتياطي</string>
@@ -232,6 +253,11 @@
   <string name="hide_zero_balances">إخفاء الأرصدة الصفرية</string>
   <string name="history_referral">الإحالة</string>
   <string name="history_referrer">المحيل</string>
+  <string name="import_account_not_backed_up">Not backed up!</string>
+  <string name="import_account_not_backed_up_alert_action_title">I will risk it</string>
+  <string name="import_account_not_backed_up_alert_description">If your device gets lost or stolen, you will loose your wallet and all your funds forever.</string>
+  <string name="import_more_title">Import more</string>
+  <string name="imported_account_title">Account imported</string>
   <string name="invite_code">رمز الدعوة</string>
   <string name="invite_code_applied_body">تم تفعيل الرمز بنجاح</string>
   <string name="invite_code_applied_title">تهانينا!</string>
@@ -263,10 +289,12 @@
   <string name="onboarding_create_account_description">أدخل اسم حسابك الجديد وكيف سيظهر تحت عنوانك. من خلال هوية على السلسلة ، يمكن إتاحتها للآخرين.</string>
   <string name="onboarding_create_account_subtitle">مرئي لك فقط ومخزن محليًا</string>
   <string name="onboarding_create_account_title">قم بتسمية حسابك</string>
+  <string name="onboarding_description">SORA is an on-chain governance system where producers make proposals for funding, and all XOR token holders decide on the best goods and services to be created. Accepting XOR as payment then builds the SORA economy.</string>
   <string name="onboarding_enter_passphrase">أدخل الكلمات الأولية(Passphrase)</string>
   <string name="onboarding_enter_seed">أدخل الرمز (Raw Seed)</string>
   <string name="passphrase_confirmation_error_message">تهدف هذه العملية إلى التأكد من كتابة عبارة الاسترداد الخاصة بك</string>
   <string name="passphrase_confirmation_error_title">لا تحاول تخمين الكلمة</string>
+  <string name="passphrase_write">Write down your passphrase</string>
   <string name="personal_info_username">اسم الحساب (اختياري)</string>
   <string name="personal_info_username_v1">اسم الحساب</string>
   <string name="phone_verification_too_frequent_message">تكررت محاولات ادخال رمز التحقق كثيراً. من فضلك، حاول مرة أخرى لاحقاً.</string>
@@ -361,6 +389,7 @@
   <string name="project_ended_template">انتهى %s</string>
   <string name="qr_code">رمز الاستجابة السريعة QR</string>
   <string name="qr_upload">التحميل من معرض الصور</string>
+  <string name="receive_tokens">تلقي العملات</string>
   <string name="recent_recipients">المستلمون الجدد</string>
   <string name="recipient_address">عنوان المستلم</string>
   <string name="recovery_enter_passphrase_title">أدخل عبارة المرور السرية الخاصة بك (Passphrase)</string>
@@ -415,6 +444,7 @@
   <string name="search_assets">البحث عن الأصول</string>
   <string name="select_account_address">البحث عن عنوان الحساب</string>
   <string name="select_account_address_1">بحث أو إضافة عنوان جديد</string>
+  <string name="select_account_import">Select account to import</string>
   <string name="select_asset_receive">تحديد الأصل المطلوب استلامه</string>
   <string name="select_asset_send">تحديد الأصل لإرساله</string>
   <string name="select_node_add_custom_node">أضف عقدة مخصصة</string>
@@ -472,6 +502,7 @@
   <string name="status_success">نجاح</string>
   <string name="status_successful">ناجح</string>
   <string name="status_title">الحالة</string>
+  <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">مظهر النظام</string>

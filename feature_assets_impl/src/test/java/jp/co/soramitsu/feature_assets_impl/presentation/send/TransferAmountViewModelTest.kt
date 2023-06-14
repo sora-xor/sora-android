@@ -39,6 +39,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.resourses.ClipboardManager
@@ -49,9 +50,11 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -69,7 +72,12 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.atMost
+import org.mockito.kotlin.times
 import java.math.BigDecimal
+import org.mockito.kotlin.verify as kVerify
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -163,7 +171,11 @@ class TransferAmountViewModelTest {
         assertTrue(state.input?.amount?.equalTo(BigDecimal.valueOf(0.000075)) == true)
     }
 
-    private fun initViewModel(balance: BigDecimal) {
+    private fun initViewModel(
+        balance: BigDecimal,
+        firstTokenId: String? = null,
+        initialSendAmount: String? = null
+    ) {
         given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(
             flowOf(
                 listOf(
@@ -173,10 +185,106 @@ class TransferAmountViewModelTest {
         )
 
         transferAmountViewModel = TransferAmountViewModel(
-                assetsInteractor, walletRouter, assetsRouter,
-                NumbersFormatter(), clipboardManager, resourceManager,
-                avatarGenerator,
-                recipientId, TestTokens.xorToken.id,
+            interactor = assetsInteractor,
+            walletRouter = walletRouter,
+            assetsRouter = assetsRouter,
+            numbersFormatter = NumbersFormatter(),
+            clipboardManager = clipboardManager,
+            resourceManager = resourceManager,
+            avatarGenerator = avatarGenerator,
+            recipientId = recipientId,
+            assetId = firstTokenId ?: TestTokens.xorToken.id,
+            initialSendAmount = initialSendAmount
         )
     }
+
+    @Test
+    fun `WHEN user enters amount starting with XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            initViewModel(
+                BigDecimal.ZERO,
+                firstTokenId = PolkaswapTestData.XOR_ASSET.token.id
+            )
+
+            advanceUntilIdle()
+
+            transferAmountViewModel.amountChanged(BigDecimal.ONE)
+
+            advanceUntilIdle()
+
+            kVerify(
+                assetsInteractor,
+                atMost(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = PolkaswapTestData.XOR_ASSET.token,
+                primaryTokenAmount = BigDecimal.ONE,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = networkFee
+            )
+
+            transferAmountViewModel.onTokenChange(PolkaswapTestData.TEST_ASSET.token.id)
+
+            advanceUntilIdle()
+
+            transferAmountViewModel.amountChanged(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            kVerify(
+                assetsInteractor,
+                atMost(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = PolkaswapTestData.TEST_ASSET.token,
+                primaryTokenAmount = BigDecimal.TEN,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = networkFee
+            )
+        }
+
+    @Test
+    fun `WHEN user enters amount starting without XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            initViewModel(
+                BigDecimal.ZERO,
+                firstTokenId = TestAssets.pswapAsset().token.id
+            )
+
+            advanceUntilIdle()
+
+            transferAmountViewModel.amountChanged(BigDecimal.ONE)
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                atMost(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = any(),
+                secondaryTokenAmount = any(),
+                networkFeeInXor = any()
+            )
+
+            transferAmountViewModel.onTokenChange(PolkaswapTestData.XOR_ASSET.token.id)
+
+            advanceUntilIdle()
+
+            transferAmountViewModel.amountChanged(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            kVerify(
+                assetsInteractor,
+                atMost(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = PolkaswapTestData.XOR_ASSET.token,
+                primaryTokenAmount = BigDecimal.TEN,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = networkFee
+            )
+        }
 }

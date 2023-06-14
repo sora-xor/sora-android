@@ -34,9 +34,9 @@ package jp.co.soramitsu.sora.substrate.response
 
 import androidx.annotation.Keep
 import java.math.BigInteger
-import jp.co.soramitsu.fearless_utils.extensions.fromHex
-import jp.co.soramitsu.fearless_utils.extensions.fromUnsignedBytes
-import jp.co.soramitsu.fearless_utils.extensions.requireHexPrefix
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.extensions.fromUnsignedBytes
+import jp.co.soramitsu.shared_utils.extensions.requireHexPrefix
 
 @Keep
 class FeeResponse2(

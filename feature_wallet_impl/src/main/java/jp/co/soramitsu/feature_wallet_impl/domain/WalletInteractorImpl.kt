@@ -32,17 +32,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.domain
 
-import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
-import jp.co.soramitsu.feature_wallet_api.domain.exceptions.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
@@ -104,33 +101,6 @@ class WalletInteractorImpl(
                 add(query)
             }
             addAll(contacts)
-        }
-    }
-
-    override suspend fun processQr(contents: String): Triple<String, String, BigDecimal> {
-        val myAddress = userRepository.getCurSoraAccount().substrateAddress
-        val list = contents.split(":")
-        return if (list.size == 5) {
-            if (list[0] == OptionsProvider.substrate) {
-                val address = list[1]
-                if (address == myAddress) {
-                    throw QrException.sendingToMyselfError()
-                } else {
-                    val tokenId = list[4]
-                    val ok = runtimeManager.isAddressOk(address)
-                    if (!ok) throw QrException.userNotFoundError()
-                    val whitelisted = assetsRepository.isWhitelistedToken(tokenId)
-                    Triple(
-                        address,
-                        if (whitelisted) tokenId else SubstrateOptionsProvider.feeAssetId,
-                        BigDecimal.ZERO
-                    )
-                }
-            } else {
-                throw QrException.decodeError()
-            }
-        } else {
-            throw QrException.decodeError()
         }
     }
 
