@@ -43,7 +43,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.printFiat
@@ -99,7 +98,6 @@ class ReferralViewModel @Inject constructor(
     private var extrinsicFee: BigDecimal = BigDecimal.ZERO
     private var setReferrerFee: BigDecimal = BigDecimal.ZERO
     private var bondInvitationsCount: Int = 1
-    private var balanceAsset: Asset? = null
 
     private var referralsState: ReferralsCardState = ReferralsCardState()
         set(value) {
@@ -222,7 +220,6 @@ class ReferralViewModel @Inject constructor(
             .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { asset ->
-                balanceAsset = asset
                 xorBalance = asset.balance.transferable
                 reCalcOnChange(currentDestination)
             }
@@ -385,26 +382,22 @@ class ReferralViewModel @Inject constructor(
         updateTransactionReminderWarningVisibility()
     }
 
-    private suspend fun updateTransactionReminderWarningVisibility() =
-        with(balanceAsset) {
-            if (this == null)
-                return@with
+    private suspend fun updateTransactionReminderWarningVisibility() {
+        val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+            primaryToken = feeToken(),
+            primaryTokenAmount = calcInvitationsAmount(referralScreenState.bondState.invitationsCount),
+            secondaryToken = null,
+            secondaryTokenAmount = null,
+            networkFeeInXor = extrinsicFee.orZero()
+        )
 
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
-                primaryToken = token,
-                primaryTokenAmount = calcInvitationsAmount(referralScreenState.bondState.invitationsCount),
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = extrinsicFee.orZero()
+        referralScreenState = referralScreenState.copy(
+            bondState = referralScreenState.bondState.copy(
+                shouldTransactionReminderInsufficientWarningBeShown = result,
+                transactionFeeToken = feeToken().symbol
             )
-
-            referralScreenState = referralScreenState.copy(
-                bondState = referralScreenState.bondState.copy(
-                    shouldTransactionReminderInsufficientWarningBeShown = result,
-                    transactionFeeToken = feeToken().symbol
-                )
-            )
-        }
+        )
+    }
 
     private fun calcInvitationsCount(): Int {
         return truncate((referrerBalance / setReferrerFee).toDouble()).toInt()
