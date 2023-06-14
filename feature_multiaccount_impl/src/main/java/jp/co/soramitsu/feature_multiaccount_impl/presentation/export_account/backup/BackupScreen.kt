@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -127,8 +126,6 @@ internal fun BackupScreen(
                     size = Size.Large,
                     onClick = onButtonPressed,
                 )
-
-                Log.e("TAGAA", (onBackupWithGoogleButtonPressed == null).toString())
 
                 onBackupWithGoogleButtonPressed?.let {
                     Button(

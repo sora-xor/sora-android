@@ -36,7 +36,6 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -117,7 +116,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
 
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            Log.e("TAGAA", "SUCSUC0")
             if (result.resultCode != Activity.RESULT_OK) {
                 Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT)
                     .show() // todo showError
@@ -227,7 +225,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         ExportProtection(
                             it,
                             viewModel::onItemClicked
-                        ) { viewModel.navPas(); navController.navigate(OnboardingFeatureRoutes.PASSPHRASE) }
+                        ) { navController.navigate(OnboardingFeatureRoutes.PASSPHRASE) }
                     }
                 }
             }

@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
@@ -712,9 +711,5 @@ class OnboardingViewModel @Inject constructor(
                 setPasswordButtonIsEnabled = newWarningState && it.password.value.text == it.passwordConfirmation.value.text && it.password.value.text.isPasswordSecure()
             )
         }
-    }
-
-    fun navPas() {
-        Log.e("TAGAA", isFromGoogleDrive.toString())
     }
 }
