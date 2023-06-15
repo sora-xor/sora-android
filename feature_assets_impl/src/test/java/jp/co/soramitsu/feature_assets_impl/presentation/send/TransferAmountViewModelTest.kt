@@ -39,7 +39,6 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.resourses.ClipboardManager
@@ -54,7 +53,6 @@ import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -73,9 +71,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
-import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.atMost
-import org.mockito.kotlin.times
 import java.math.BigDecimal
 import org.mockito.kotlin.verify as kVerify
 
@@ -223,7 +219,7 @@ class TransferAmountViewModelTest {
                 networkFeeInXor = networkFee
             )
 
-            transferAmountViewModel.onTokenChange(PolkaswapTestData.TEST_ASSET.token.id)
+            transferAmountViewModel.onTokenChange(PolkaswapTestData.VAL_ASSET.token.id)
 
             advanceUntilIdle()
 
@@ -235,7 +231,7 @@ class TransferAmountViewModelTest {
                 assetsInteractor,
                 atMost(1)
             ).isEnoughXorLeftAfterTransaction(
-                primaryToken = PolkaswapTestData.TEST_ASSET.token,
+                primaryToken = PolkaswapTestData.VAL_ASSET.token,
                 primaryTokenAmount = BigDecimal.TEN,
                 secondaryToken = null,
                 secondaryTokenAmount = null,

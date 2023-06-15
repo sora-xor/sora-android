@@ -70,12 +70,20 @@ class LanguagesHolder {
         Language("vi", R.string.common_vietnamese, R.string.common_vietnamese_native)
     private val malay = Language("ms-MY", R.string.common_malay, R.string.common_malay_native)
     private val hindi = Language("hi-IN", R.string.common_hindi, R.string.common_hindi_native)
+    private val finnish = Language("fi", R.string.common_finnish, R.string.common_finnish_native)
+    private val japanese = Language("ja", R.string.common_japanese, R.string.common_japanese_native)
+    private val chinese_taiwan =
+        Language("zh-TW", R.string.common_chinesetaiwan, R.string.common_chinese_taiwan_native)
+    private val azerbaijani =
+        Language("az", R.string.common_azerbaijani, R.string.common_azerbaijani_native)
+    private val dutch = Language("nl", R.string.common_dutch, R.string.common_dutch_native)
+    private val portuguese =
+        Language("pt", R.string.common_portuguese, R.string.common_portuguese_native)
 
     private val bashkir = Language("ba", R.string.common_bashkir, R.string.common_bashkir_native)
     private val spanish_columbia =
         Language("es-CO", R.string.common_spanish_colombia, R.string.common_spanish_colombia_native)
     private val estonian = Language("et", R.string.common_estonian, R.string.common_estonian_native)
-    private val finnish = Language("fi-FI", R.string.common_finnish, R.string.common_finnish_native)
     private val fillipino =
         Language("fil", R.string.common_filipino, R.string.common_filipino_native)
     private val croatian = Language("hr", R.string.common_croatian, R.string.common_croatian_native)
@@ -85,16 +93,13 @@ class LanguagesHolder {
     private val thai = Language("th", R.string.common_thai, R.string.common_thai_native)
     private val ukrainian =
         Language("uk", R.string.common_ukrainian, R.string.common_ukrainian_native)
-    private val japanese = Language("ja", R.string.common_japanese, R.string.common_japanese_native)
-    private val chinese_taiwan =
-        Language("zh-TW", R.string.common_chinesetaiwan, R.string.common_chinese_taiwan_native)
     private val khmer = Language("km-KH", R.string.common_khmer, R.string.common_khmer_native)
 
     private val availableLanguages =
         mutableListOf(english, russian, spanish, french, german, norwegian, chinese, indonesian, turkish)
 
     private val nonProdLanguages =
-        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi)
+        mutableListOf(arab, hebrew, persian, serbian, vietnamese, malay, hindi, finnish, japanese, chinese_taiwan, azerbaijani, dutch, portuguese)
 
     fun getCurrentLocale(): Locale {
         return AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()

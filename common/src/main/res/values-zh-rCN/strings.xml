@@ -64,6 +64,7 @@
   <string name="common_and">和</string>
   <string name="common_app_version">应用程序版本</string>
   <string name="common_arab">阿拉伯语</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">返回</string>
   <string name="common_backup">备份</string>
   <string name="common_balance">余额</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">发现</string>
   <string name="common_done">已完成</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">编辑</string>
   <string name="common_english">英语</string>
   <string name="common_enter_amount">输入金额</string>
@@ -149,6 +151,7 @@
   <string name="common_passphrase_title">助记词</string>
   <string name="common_pay_attention">注意！</string>
   <string name="common_persian">波斯语</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">种子词</string>
   <string name="common_receive">接收</string>
   <string name="common_received">已收到</string>

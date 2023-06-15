@@ -39,21 +39,21 @@ import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
@@ -67,7 +67,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
@@ -401,7 +400,7 @@ class SwapViewModelTest {
         runTest {
             initViewModel(
                 firstTokenId = PolkaswapTestData.XOR_ASSET.token.id,
-                secondTokenId = PolkaswapTestData.TEST_ASSET.token.id
+                secondTokenId = PolkaswapTestData.VAL_ASSET.token.id
             )
 
             advanceUntilIdle()
@@ -416,7 +415,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = PolkaswapTestData.XOR_ASSET.token,
                 primaryTokenAmount = BigDecimal.ONE,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ZERO,
                 networkFeeInXor = networkFee
             )
@@ -431,7 +430,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = PolkaswapTestData.XOR_ASSET.token,
                 primaryTokenAmount = BigDecimal.ONE,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
                 networkFeeInXor = networkFee
             )
@@ -450,7 +449,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = TestAssets.pswapAsset().token,
                 primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
                 networkFeeInXor = networkFee
             )
@@ -499,7 +498,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = TestAssets.xorAsset().token,
                 primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
                 networkFeeInXor = networkFee
             )
