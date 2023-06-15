@@ -41,4 +41,5 @@ import androidx.room.PrimaryKey
 data class SoraAccountLocal(
     @PrimaryKey val substrateAddress: String,
     val accountName: String,
+    val backupFileId: String?
 )

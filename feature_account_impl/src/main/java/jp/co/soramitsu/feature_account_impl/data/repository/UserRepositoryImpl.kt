@@ -287,6 +287,18 @@ class UserRepositoryImpl(
         userDatasource.resetTimerStartedTimestamp()
     }
 
+    override suspend fun accountExists(address: String): Boolean {
+        return db.accountDao().getAccount(address) != null
+    }
+
+    override suspend fun updateBackupFileId(address: String, fileId: String) {
+        db.accountDao().updateBackupFileId(fileId, address)
+    }
+
+    override suspend fun removeBackupFileId(address: String) {
+        db.accountDao().updateBackupFileId(null, address)
+    }
+
     override suspend fun resetTriesUsed() {
         userDatasource.resetPinTriesUsed()
     }

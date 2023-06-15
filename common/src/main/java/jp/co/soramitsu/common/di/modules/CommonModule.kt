@@ -51,6 +51,7 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
+import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl
@@ -277,5 +278,11 @@ class CommonModule {
     fun provideDeviceVibrator(@ApplicationContext context: Context): DeviceVibrator {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         return DeviceVibrator(vibrator)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBackupService(): BackupService {
+        return BackupService.create(BuildConfig.GOOGLE_API_TOKEN)
     }
 }

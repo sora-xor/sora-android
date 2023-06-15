@@ -85,6 +85,8 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
+    var navController: NavHostController? = null
+
     override fun onResume() {
         super.onResume()
         activity?.safeCast<BarsColorhandler>()?.setColor(backgroundColor())
@@ -104,89 +106,101 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     val coroutineScope = rememberCoroutineScope()
                     val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
 
-                    val navController = rememberAnimatedNavController()
-                    LaunchedEffect(Unit) {
-                        navController.addOnDestinationChangedListener { _, destination, _ ->
-                            destination.route?.let {
-                                viewModel.setCurDestination(it)
-                            }
-                        }
-                        viewModel.navigationPop.observe {
-                            var popResult = navController.popBackStack()
-                            if (!popResult) {
-                                popResult = findNavController().popBackStack()
-                                if (!popResult) {
-                                    activity?.finish()
+                    navController = rememberAnimatedNavController()
+                    navController?.let { navController ->
+                        LaunchedEffect(Unit) {
+                            navController.addOnDestinationChangedListener { _, destination, _ ->
+                                destination.route?.let {
+                                    viewModel.setCurDestination(it)
                                 }
                             }
-                        }
-                        viewModel.navEvent.observe {
-                            navController.navigate(route = it.first) {
-                                it.second.invoke(this)
+                            viewModel.navigationPop.observe {
+                                var popResult = navController.popBackStack()
+                                if (!popResult) {
+                                    popResult = findNavController().popBackStack()
+                                    if (!popResult) {
+                                        activity?.finish()
+                                    }
+                                }
                             }
-                        }
-                        viewModel.errorLiveData.observe {
-                            openAlertDialog.value = AlertDialogData(
-                                title = R.string.common_error_general_title,
-                                message = it,
-                            )
-                        }
-                        viewModel.alertDialogLiveData.observe {
-                            it.let { event ->
+                            viewModel.navEvent.observe {
+                                navController.navigate(route = it.first) {
+                                    it.second.invoke(this)
+                                }
+                            }
+                            viewModel.errorLiveData.observe {
                                 openAlertDialog.value = AlertDialogData(
-                                    title = event.first,
-                                    message = event.second,
+                                    title = R.string.common_error_general_title,
+                                    message = it,
                                 )
                             }
-                        }
-                        viewModel.errorFromResourceLiveData.observe {
-                            val (title, message) = it
+                            viewModel.alertDialogLiveData.observe {
+                                it.let { event ->
+                                    openAlertDialog.value = AlertDialogData(
+                                        title = event.first,
+                                        message = event.second,
+                                    )
+                                }
+                            }
+                            viewModel.errorFromResourceLiveData.observe {
+                                val (title, message) = it
 
-                            openAlertDialog.value = AlertDialogData(
-                                title = title,
-                                message = message,
-                            )
-                        }
+                                openAlertDialog.value = AlertDialogData(
+                                    title = title,
+                                    message = message,
+                                )
+                            }
 
-                        viewModel.snackBarLiveData.observe {
-                            coroutineScope.launch {
-                                when (scaffoldState.snackbarHostState.showSnackbar(it.title, it.actionText)) {
-                                    SnackbarResult.Dismissed -> { it.onCancelHandler() }
-                                    SnackbarResult.ActionPerformed -> { it.onActionHandler() }
+                            viewModel.snackBarLiveData.observe {
+                                coroutineScope.launch {
+                                    when (
+                                        scaffoldState.snackbarHostState.showSnackbar(
+                                            it.title,
+                                            it.actionText
+                                        )
+                                    ) {
+                                        SnackbarResult.Dismissed -> {
+                                            it.onCancelHandler()
+                                        }
+
+                                        SnackbarResult.ActionPerformed -> {
+                                            it.onActionHandler()
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Scaffold(
-                        scaffoldState = scaffoldState,
-                        backgroundColor = backgroundColorComposable(),
-                        topBar = {
-                            Toolbar(
-                                toolbarState = viewModel.toolbarState.observeAsState().value,
-                                scrollState = scrollState,
-                                backgroundColor = backgroundColorComposable(),
-                                tintColor = MaterialTheme.customColors.fgPrimary,
-                                onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
-                                onActionClick = viewModel::onAction,
-                                onMenuItemClick = viewModel::onMenuItem,
-                            )
+                        Scaffold(
+                            scaffoldState = scaffoldState,
+                            backgroundColor = backgroundColorComposable(),
+                            topBar = {
+                                Toolbar(
+                                    toolbarState = viewModel.toolbarState.observeAsState().value,
+                                    scrollState = scrollState,
+                                    backgroundColor = backgroundColorComposable(),
+                                    tintColor = MaterialTheme.customColors.fgPrimary,
+                                    onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
+                                    onActionClick = viewModel::onAction,
+                                    onMenuItemClick = viewModel::onMenuItem,
+                                )
+                            }
+                        ) { padding ->
+                            BackHandler {
+                                onBack()
+                            }
+                            AnimatedNavHost(
+                                modifier = Modifier
+                                    .padding(padding)
+                                    .fillMaxSize(),
+                                navController = navController,
+                                contentAlignment = Alignment.TopCenter,
+                                startDestination = viewModel.startScreen(),
+                            ) {
+                                content(scrollState, navController)
+                            }
+                            AlertDialogContent(openAlertDialog)
                         }
-                    ) { padding ->
-                        BackHandler {
-                            onBack()
-                        }
-                        AnimatedNavHost(
-                            modifier = Modifier
-                                .padding(padding)
-                                .fillMaxSize(),
-                            navController = navController,
-                            contentAlignment = Alignment.TopCenter,
-                            startDestination = viewModel.startScreen(),
-                        ) {
-                            content(scrollState, navController)
-                        }
-                        AlertDialogContent(openAlertDialog)
                     }
                 }
             }

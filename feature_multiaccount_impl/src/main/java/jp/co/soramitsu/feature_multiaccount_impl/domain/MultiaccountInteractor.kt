@@ -58,6 +58,8 @@ class MultiaccountInteractor @Inject constructor(
 
     suspend fun isRawSeedValid(rawSeed: String) = credentialsRepository.isRawSeedValid(rawSeed)
 
+    suspend fun accountExists(address: String) = userRepository.accountExists(address)
+
     suspend fun continueRecoverFlow(soraAccount: SoraAccount, update: Boolean) {
         insertAndSetCurAccount(soraAccount, update)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
@@ -135,5 +137,13 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun updateName(accountAddress: String, newName: String) {
         val account = getSoraAccount(address = accountAddress)
         userRepository.updateAccountName(account, newName)
+    }
+
+    suspend fun updateBackupFileId(accountAddress: String, fileId: String) {
+        userRepository.updateBackupFileId(accountAddress, fileId)
+    }
+
+    suspend fun removeBackupFileId(accountAddress: String) {
+        userRepository.removeBackupFileId(accountAddress)
     }
 }
