@@ -45,6 +45,7 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
@@ -71,11 +72,14 @@ class PoolDetailsViewModel @AssistedInject constructor(
 
     internal var detailsState by mutableStateOf(
         PoolDetailsState(
-            DEFAULT_ICON_URI, DEFAULT_ICON_URI,
-            "", "", "", "", "",
+            DEFAULT_ICON_URI, DEFAULT_ICON_URI, DEFAULT_ICON_URI,
+            "", "", "", "", "", "",
             true, true,
         )
     )
+
+    private val rewardTokenAsync by viewModelScope.lazyAsync { poolsInteractor.getRewardToken() }
+    private suspend fun rewardToken() = rewardTokenAsync.await()
 
     init {
         _toolbarState.value = SoramitsuToolbarState(
@@ -99,6 +103,8 @@ class PoolDetailsViewModel @AssistedInject constructor(
                         detailsState = PoolDetailsState(
                             token1Icon = data.baseToken.iconUri(),
                             token2Icon = data.token.iconUri(),
+                            rewardsUri = rewardToken().iconUri(),
+                            rewardsTokenSymbol = rewardToken().symbol,
                             symbol1 = data.baseToken.symbol,
                             symbol2 = data.token.symbol,
                             apy = data.strategicBonusApy?.let { apy ->

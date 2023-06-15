@@ -67,12 +67,14 @@ class PolkaswapFeatureModule {
         transactionHistoryRepository: TransactionHistoryRepository,
         polkaswapRepository: PolkaswapRepository,
         transactionBuilder: TransactionBuilder,
+        assetsRepository: AssetsRepository,
     ): PoolsInteractor {
         return PoolsInteractorImpl(
             credentialsRepository,
             userRepository,
             transactionHistoryRepository,
             polkaswapRepository,
+            assetsRepository,
             transactionBuilder,
         )
     }

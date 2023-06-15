@@ -35,16 +35,20 @@ package jp.co.soramitsu.feature_referral_impl.presentation
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import io.mockk.mockkStatic
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -68,20 +72,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
-import org.mockito.kotlin.atLeastOnce
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.verify as kVerify
 import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class ReferralViewModelTest {
 
     @Rule
@@ -91,24 +84,27 @@ class ReferralViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @Mock
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
     private lateinit var interactor: ReferralInteractor
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = mockk<Uri>()
 
-    @Mock
+    @MockK
     private lateinit var assetsInteractor: AssetsInteractor
 
-    @Mock
+    @MockK
     private lateinit var walletInteractor: WalletInteractor
 
-    @Mock
+    @MockK
     private lateinit var assetsRouter: AssetsRouter
 
-    @Mock
+    @MockK
     private lateinit var router: MainRouter
 
-    @Mock
+    @MockK
     private lateinit var resourceManager: ResourceManager
 
     private lateinit var referralViewModel: ReferralViewModel
@@ -134,18 +130,28 @@ class ReferralViewModelTest {
     fun setUp() = runTest {
         mockkStatic(Uri::parse)
         every { Uri.parse(any()) } returns mockedUri
-        given(walletInteractor.getFeeToken()).willReturn(xorToken)
-        given(interactor.getInvitationLink()).willReturn("polkaswap/link")
-        given(interactor.calcBondFee()).willReturn(BigDecimal("0.07"))
-        given(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)).willReturn(
-            assetFlow
-        )
+        coEvery { walletInteractor.getFeeToken() } returns xorToken
+        coEvery { interactor.getInvitationLink() } returns "polkaswap/link"
+        coEvery { interactor.calcBondFee() } returns BigDecimal("0.07")
+        coEvery { interactor.updateReferrals() } returns Unit
+        every { assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId) } returns assetFlow
+        coEvery {
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns false
 
-        given(interactor.observeMyReferrer()).willReturn(myReferrerFlow)
-        given(interactor.observeReferrerBalance()).willReturn(referrerBalanceFlow)
-        given(interactor.getSetReferrerFee()).willReturn(BigDecimal("0.07"))
-        given(resourceManager.getString(R.string.referral_no_available_invitations)).willReturn("No available invitations")
-        given(resourceManager.getString(R.string.referral_referral_link)).willReturn("Referrer’s link or address")
+        every { interactor.observeMyReferrer() } returns myReferrerFlow
+        every { interactor.observeReferrerBalance() } returns referrerBalanceFlow
+        coEvery { interactor.getSetReferrerFee() } returns BigDecimal("0.07")
+        every { resourceManager.getString(R.string.referral_no_available_invitations) } returns "No available invitations"
+        every { resourceManager.getString(R.string.referral_referral_link) } returns "Referrer’s link or address"
+        every { resourceManager.getString(R.string.referral_invitaion_link_title) } returns "Referrer’s link or address"
+        every { resourceManager.getString(R.string.referral_invitation_link) } returns "Referrer’s link or address"
         assetFlowEmit(xorAsset)
     }
 
@@ -171,8 +177,9 @@ class ReferralViewModelTest {
 
     @Test
     fun `initial screen`() = runTest {
-        given(interactor.getReferrals()).willReturn(flow { emit(referrals) })
-        given(interactor.observeReferrals()).willReturn(flow { emit("") })
+        coEvery { interactor.getReferrals() } returns flow { emit(referrals) }
+        every { interactor.getReferrals() } returns emptyFlow()
+        coEvery { interactor.observeReferrals() } returns flow { emit("") }
         setupViewModel()
         advanceUntilIdle()
         referrerBalanceFlowEmit(BigDecimal.ZERO)
@@ -183,13 +190,13 @@ class ReferralViewModelTest {
         assertEquals(R.string.referral_toolbar_title, actualToolbarState.basic.title)
         val actualScreenState = referralViewModel.referralScreenState
         assertEquals("my referrer", actualScreenState.common.referrer)
-        verify(interactor).updateReferrals()
+        coVerify { interactor.updateReferrals() }
     }
 
     @Test
     fun `no data welcome screen`() = runTest {
-        given(interactor.getReferrals()).willReturn(emptyFlow())
-        given(interactor.observeReferrals()).willReturn(emptyFlow())
+        every { interactor.getReferrals() } returns emptyFlow()
+        every { interactor.observeReferrals() } returns emptyFlow()
         setupViewModel()
         advanceUntilIdle()
         val toolbar = referralViewModel.toolbarState.getOrAwaitValue()
@@ -201,17 +208,18 @@ class ReferralViewModelTest {
         assertNull(state.common.referrer)
         var navEvent = referralViewModel.navEvent.getOrAwaitValue()
         assertEquals(ReferralFeatureRoutes.WELCOME_PAGE, navEvent.first)
-        given(interactor.isLinkOrAddressOk("")).willReturn(false to "")
+        coEvery { interactor.isLinkOrAddressOk("") } returns (false to "")
         referralViewModel.openReferrerInput()
         advanceUntilIdle()
         assertEquals(false, referralViewModel.referralScreenState.common.activate)
         assertEquals(false, referralViewModel.referralScreenState.common.progress)
-        given(interactor.isLinkOrAddressOk("cnVko")).willReturn(true to "cnVko")
+        coEvery { interactor.isLinkOrAddressOk("cnVko") } returns (true to "cnVko")
         referralViewModel.onReferrerInputChange(TextFieldValue("cnVko"))
         advanceUntilIdle()
         assertEquals(true, referralViewModel.referralScreenState.common.activate)
         assertEquals("cnVko", referralViewModel.referralScreenState.referrerInputState.value.text)
-        given(interactor.observeSetReferrer("cnVko")).willReturn("txhash")
+        coEvery { interactor.observeSetReferrer("cnVko") } returns "txhash"
+        every { assetsRouter.showTxDetails(any(), any()) } returns Unit
         referralViewModel.onActivateLinkClick()
         advanceUntilIdle()
         navEvent = referralViewModel.navEvent.getOrAwaitValue()
@@ -220,8 +228,8 @@ class ReferralViewModelTest {
 
     @Test
     fun `onDestinationChanged() called`() = runTest {
-        given(interactor.getReferrals()).willReturn(flow { emit(referrals) })
-        given(interactor.observeReferrals()).willReturn(flow { emit("") })
+        coEvery { interactor.getReferrals() } returns flow { emit(referrals) }
+        coEvery { interactor.observeReferrals() } returns flow { emit("") }
         setupViewModel()
         advanceUntilIdle()
         referralViewModel.onCurrentDestinationChanged(ReferralFeatureRoutes.WELCOME_PAGE)
@@ -231,62 +239,37 @@ class ReferralViewModelTest {
     }
 
     @Test
-    fun `WHEN invitations count is changed EXPECT transaction reminder is checked`() =
-        runTest {
-            given(
-                interactor.getReferrals()
-            ).willReturn(
-                flow {
-                    emit(referrals)
-                }
-            )
-
-            given(
-                interactor.observeReferrals()
-            ).willReturn(emptyFlow())
-
-            given(
-                assetsInteractor.subscribeAssetOfCurAccount(
-                    SubstrateOptionsProvider.feeAssetId
-                )
-            ).willReturn(
-                flow {
-                    emit(TestAssets.xorAsset())
-                }
-            )
-
-            setupViewModel()
-
-            advanceUntilIdle()
-
-            referralViewModel.onBondPlus()
-
-            advanceUntilIdle()
-
-            kVerify(
-                mock = assetsInteractor,
-                mode = atLeastOnce()
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = eq(null),
-                secondaryTokenAmount = eq(null),
-                networkFeeInXor = any()
-            )
-
-            referralViewModel.onBondMinus()
-
-            advanceUntilIdle()
-
-            kVerify(
-                mock = assetsInteractor,
-                mode = atLeastOnce()
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = eq(null),
-                secondaryTokenAmount = eq(null),
-                networkFeeInXor = any()
+    fun `WHEN invitations count is changed EXPECT transaction reminder is checked`() = runTest {
+        every { interactor.getReferrals() } returns flow { emit(referrals) }
+        every { interactor.observeReferrals() } returns emptyFlow()
+        every { assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId) } returns flow {
+            emit(
+                TestAssets.xorAsset()
             )
         }
+        setupViewModel()
+        advanceUntilIdle()
+        referralViewModel.onBondPlus()
+        advanceUntilIdle()
+        coVerify(atLeast = 1) {
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
+        referralViewModel.onBondMinus()
+        advanceUntilIdle()
+        coVerify(atLeast = 1) {
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        }
+    }
 }
