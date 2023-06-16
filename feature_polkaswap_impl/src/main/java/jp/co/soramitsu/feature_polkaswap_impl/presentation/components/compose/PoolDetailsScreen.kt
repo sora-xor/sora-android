@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -78,10 +77,10 @@ internal fun PoolDetailsScreen(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),
-        innerPadding = PaddingValues(Dimens.x3),
     ) {
         Column(
             modifier = Modifier
+                .padding(Dimens.x3)
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {

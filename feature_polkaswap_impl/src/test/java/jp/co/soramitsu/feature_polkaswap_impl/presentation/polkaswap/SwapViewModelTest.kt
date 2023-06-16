@@ -67,7 +67,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
@@ -401,7 +400,7 @@ class SwapViewModelTest {
         runTest {
             initViewModel(
                 firstTokenId = PolkaswapTestData.XOR_ASSET.token.id,
-                secondTokenId = PolkaswapTestData.TEST_ASSET.token.id
+                secondTokenId = PolkaswapTestData.VAL_ASSET.token.id
             )
 
             advanceUntilIdle()
@@ -416,7 +415,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = PolkaswapTestData.XOR_ASSET.token,
                 primaryTokenAmount = BigDecimal.ONE,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ZERO,
                 networkFeeInXor = networkFee
             )
@@ -431,7 +430,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = PolkaswapTestData.XOR_ASSET.token,
                 primaryTokenAmount = BigDecimal.ONE,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
                 networkFeeInXor = networkFee
             )
@@ -450,7 +449,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = TestAssets.pswapAsset().token,
                 primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
                 networkFeeInXor = networkFee
             )
@@ -499,7 +498,7 @@ class SwapViewModelTest {
             ).isEnoughXorLeftAfterTransaction(
                 primaryToken = TestAssets.xorAsset().token,
                 primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = PolkaswapTestData.TEST_ASSET.token,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
                 networkFeeInXor = networkFee
             )

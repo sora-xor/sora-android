@@ -215,13 +215,13 @@ class TransferAmountViewModelTest {
                     networkFeeInXor = networkFee
                 )
             }
-            transferAmountViewModel.onTokenChange(PolkaswapTestData.TEST_ASSET.token.id)
+            transferAmountViewModel.onTokenChange(PolkaswapTestData.VAL_ASSET.token.id)
             advanceUntilIdle()
             transferAmountViewModel.amountChanged(BigDecimal.TEN)
             advanceUntilIdle()
             coVerify(atMost = 1) {
                 assetsInteractor.isEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.TEST_ASSET.token,
+                    primaryToken = PolkaswapTestData.VAL_ASSET.token,
                     primaryTokenAmount = BigDecimal.TEN,
                     secondaryToken = null,
                     secondaryTokenAmount = null,
