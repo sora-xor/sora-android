@@ -64,6 +64,7 @@
   <string name="common_and">و</string>
   <string name="common_app_version">إصدار التطبيق</string>
   <string name="common_arab">العربية</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">رجوع</string>
   <string name="common_backup">نسخ احتياطي</string>
   <string name="common_balance">الرصيد</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">اكتشف</string>
   <string name="common_done">تم</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">تحرير</string>
   <string name="common_english">الإنجليزية</string>
   <string name="common_enter_amount">أدخل المبلغ</string>
@@ -154,6 +156,7 @@
   <string name="common_passphrase_title">الكلمات الأولية</string>
   <string name="common_pay_attention">انتبه!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">الرمز السري(Raw Seed)</string>
   <string name="common_receive">استلام</string>
   <string name="common_received">تم الاستلام</string>
@@ -266,6 +269,7 @@
   <string name="invoice_scan_error_match">لا يمكنك الإرسال إلى حسابك</string>
   <string name="invoice_scan_error_no_info">لا يمكن فك الشفرة QR</string>
   <string name="invoice_scan_error_user_not_found">تعذر العثور على مستخدم من مسح QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">الأصول السائلة</string>
   <string name="liquidity_pair_creation_description">سعر هذا الحوض سيحدد بناء على تقييم العملات الي تضيفها عندما يكون معدل التقييم مرضياً بالنسبة لك، انقر للبت بالعرض.</string>
   <string name="liquidity_pair_creation_title">انت اول موفر سيولة</string>
@@ -345,6 +349,7 @@
   <string name="polkaswap_swapped">تمت المبادلة</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">APY المكافأة الاستراتيجية</string>
   <string name="pool_button_remove">إزالة</string>
   <string name="pool_details">تفاصيل المسبح</string>

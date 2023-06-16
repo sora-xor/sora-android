@@ -151,6 +151,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
 
+    private val syntheticRegex = SubstrateOptionsProvider.syntheticTokenRegex.toRegex()
+
     var addState by mutableStateOf(
         LiquidityAddState(
             btnState = ButtonState(
@@ -522,14 +524,25 @@ class LiquidityAddViewModel @AssistedInject constructor(
             viewModelScope.launch {
                 val bases = poolsInteractor.getPoolDexList()
                 val curBase = bases.find { it.tokenId == addToken1 }
-                val list = assets.filter { asset ->
-                    val inBases = bases.find { it.tokenId == asset.token.id }
-                    if (inBases != null && curBase != null) {
-                        inBases.dexId > curBase.dexId
-                    } else {
-                        asset.token.id != addToken1
+                val list = assets
+                    .filter { asset ->
+                        asset.token.id.matches(syntheticRegex).not()
                     }
-                }
+                    .filter { asset ->
+                        if (addToken1 == SubstrateOptionsProvider.xstusdTokenId) {
+                            asset.token.id != SubstrateOptionsProvider.xstTokenId
+                        } else {
+                            true
+                        }
+                    }
+                    .filter { asset ->
+                        val inBases = bases.find { it.tokenId == asset.token.id }
+                        if (inBases != null && curBase != null) {
+                            inBases.dexId > curBase.dexId
+                        } else {
+                            asset.token.id != addToken1
+                        }
+                    }
                 addState = addState.copy(
                     selectSearchAssetState = SelectSearchAssetState(
                         filter = "",

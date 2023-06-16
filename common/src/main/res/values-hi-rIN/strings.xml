@@ -64,6 +64,7 @@
   <string name="common_and">और</string>
   <string name="common_app_version">ऐप संस्करण</string>
   <string name="common_arab">अरब</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">पीछे</string>
   <string name="common_backup">बैकअप</string>
   <string name="common_balance">राशि</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">खोजना</string>
   <string name="common_done">हो गया</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">संपादित करें</string>
   <string name="common_english">अंग्रेज़ी</string>
   <string name="common_enter_amount">राशि दर्ज करें</string>
@@ -150,6 +152,7 @@
   <string name="common_passphrase_title">पदबंध</string>
   <string name="common_pay_attention">ध्यान दें!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw Seed\n</string>
   <string name="common_receive">प्राप्त करें</string>
   <string name="common_received">प्राप्त किया था</string>
@@ -262,6 +265,7 @@
   <string name="invoice_scan_error_match">आप अपने आप को नहीं भेज सकते हैं</string>
   <string name="invoice_scan_error_no_info">क्यूआर को डिकोड नहीं किया जा सकता है</string>
   <string name="invoice_scan_error_user_not_found">क्यूआर से उपयोगकर्ता नहीं मिल रहा है</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">चल परिसंपत्ति</string>
   <string name="liquidity_pair_creation_description">आपके द्वारा जोड़े गए टोकन का अनुपात इस पूल का मूल्य निर्धारित करेगा। एक बार जब आप दर से खुश हो जाते हैं तो समीक्षा के लिए आपूर्ति पर क्लिक करें।</string>
   <string name="liquidity_pair_creation_title">आप पहले Liquidity  प्रदाता हैं</string>
@@ -341,6 +345,7 @@
   <string name="polkaswap_swapped">बदला गया</string>
   <string name="polkaswap_tbc">टीबीसी</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">रणनीतिक बोनस apy</string>
   <string name="pool_button_remove">हटाये</string>
   <string name="pool_details">पूल विवरण</string>

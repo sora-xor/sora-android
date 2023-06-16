@@ -102,7 +102,7 @@ object TestAssets {
         balance = balance(balance),
     )
 
-    fun balance(balance: BigDecimal) = AssetBalance(
+    private fun balance(balance: BigDecimal) = AssetBalance(
         transferable = balance,
         reserved = balance,
         miscFrozen = balance,

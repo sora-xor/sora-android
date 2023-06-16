@@ -64,6 +64,7 @@
   <string name="common_and">и</string>
   <string name="common_app_version">Версия приложения</string>
   <string name="common_arab">Арабский</string>
+  <string name="common_azerbaijani">Азербайджанский</string>
   <string name="common_back">Назад</string>
   <string name="common_backup">Резервная копия</string>
   <string name="common_balance">Баланс</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Выполнено</string>
+  <string name="common_dutch">Нидерландский</string>
   <string name="common_edit">Редактировать</string>
   <string name="common_english">Английский</string>
   <string name="common_enter_amount">Введите сумму</string>
@@ -153,6 +155,7 @@
   <string name="common_passphrase_title">Парольная фраза</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Персидский</string>
+  <string name="common_portuguese">Португальский</string>
   <string name="common_raw_seed">Сид-фраза</string>
   <string name="common_receive">Получить</string>
   <string name="common_received">Получено</string>
@@ -265,6 +268,7 @@
   <string name="invoice_scan_error_match">Вы не можете отправить токены на активный в данный момент аккаунт</string>
   <string name="invoice_scan_error_no_info">Не удается декодировать QR</string>
   <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
+  <string name="launch_screen_loading_title">На этот раз загружается немного дольше</string>
   <string name="liquid_assets">Ликвидные активы</string>
   <string name="liquidity_pair_creation_description">Соотношение токенов, которое вы добавляете, будет определять цену этого пула. Как только вы будете довольны ставкой, нажмите «Добавить», чтобы проверить данные.</string>
   <string name="liquidity_pair_creation_title">Вы первый провайдер ликвидности</string>
@@ -344,6 +348,7 @@
   <string name="polkaswap_swapped">Продано</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Выплата вознаграждений в</string>
   <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_remove">Забрать</string>
   <string name="pool_details">Информация о пуле</string>

@@ -64,6 +64,7 @@
   <string name="common_and">и</string>
   <string name="common_app_version">Верзија апликације</string>
   <string name="common_arab">Арапски</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Nazad</string>
   <string name="common_backup">Rezervna kopija</string>
   <string name="common_balance">Салдо</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Готово</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Енглески</string>
   <string name="common_enter_amount">Unesite iznos</string>
@@ -151,6 +153,7 @@
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Сирови сид</string>
   <string name="common_receive">Прими</string>
   <string name="common_received">Примљен</string>
@@ -263,6 +266,7 @@
   <string name="invoice_scan_error_match">Не можеш себи да пошаљеш</string>
   <string name="invoice_scan_error_no_info">QR се не може декодирати</string>
   <string name="invoice_scan_error_user_not_found">Не могу да пронађем корисника са QR-а</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Raspoloživa sredstva</string>
   <string name="liquidity_pair_creation_description">Однос токена које додате ће одредити цену овог пула. Када будете задовољни са стопом, кликните на понуду за преглед.</string>
   <string name="liquidity_pair_creation_title">Ви сте први добављача ликвидности</string>
@@ -342,6 +346,7 @@
   <string name="polkaswap_swapped">Заменио</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">Стратешки бонус апи</string>
   <string name="pool_button_remove">Уклони</string>
   <string name="pool_details">Pool details</string>

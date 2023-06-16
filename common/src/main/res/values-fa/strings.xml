@@ -64,6 +64,7 @@
   <string name="common_and">و</string>
   <string name="common_app_version">نسخه App</string>
   <string name="common_arab">عرب</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">بازگشت</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">موجودی</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">انجام شد</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">انگلیسی</string>
   <string name="common_enter_amount">مقدار را وارد کنید</string>
@@ -150,6 +152,7 @@
   <string name="common_passphrase_title">رمز عبور</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">دانه خام (Raw seed)</string>
   <string name="common_receive">دريافت كردن</string>
   <string name="common_received">دریافت شده</string>
@@ -262,6 +265,7 @@
   <string name="invoice_scan_error_match">نمیتوانید برای خودتان بفرستید</string>
   <string name="invoice_scan_error_no_info">کد QR قابل رمزگشایی نیست</string>
   <string name="invoice_scan_error_user_not_found">کاربری با QR پیدا نمی شود</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">نسبت توکن‌هایی که اضافه می‌کنید، قیمت این مخزن را تعیین می‌کند. هر وقت از نرخ راضی بودید، برای بررسی روی تامین کلیک کنید.</string>
   <string name="liquidity_pair_creation_title">شما اولین ارائه دهنده نقدینگی هستید</string>
@@ -341,6 +345,7 @@
   <string name="polkaswap_swapped">مبادله شد</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">نرخ سود سالانه پاداش استراتژیک</string>
   <string name="pool_button_remove">حذف</string>
   <string name="pool_details">Pool details</string>

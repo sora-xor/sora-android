@@ -64,6 +64,7 @@
   <string name="common_and">và</string>
   <string name="common_app_version">Phiên bản ứng dụng</string>
   <string name="common_arab">Tiếng Ả Rập</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Trở lại</string>
   <string name="common_backup">Sao lưu</string>
   <string name="common_balance">Số dư</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Khám phá</string>
   <string name="common_done">Hoàn tất</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Chỉnh sửa</string>
   <string name="common_english">Tiếng Anh</string>
   <string name="common_enter_amount">Nhập số lượng</string>
@@ -149,6 +151,7 @@
   <string name="common_passphrase_title">Chuỗi từ khóa khôi phục</string>
   <string name="common_pay_attention">Chú ý!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Nhận</string>
   <string name="common_received">Nhận</string>
@@ -261,6 +264,7 @@
   <string name="invoice_scan_error_match">Bạn không thể gửi token đến cùng một tài khoản mà bạn hiện đang kết nối</string>
   <string name="invoice_scan_error_no_info">Không thể giải mã QR</string>
   <string name="invoice_scan_error_user_not_found">Không thể tìm thấy người dùng từ mã QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Tài sản lưu động</string>
   <string name="liquidity_pair_creation_description">Tỷ lệ token bạn thêm vào sẽ thiết lập giá của pool này. Một khi bạn hài lòng với tỷ lệ cung cấp hãy nhấp chuột để xem xét.</string>
   <string name="liquidity_pair_creation_title">Bạn là nhà cung cấp thanh khoản đầu tiên</string>
@@ -340,6 +344,7 @@
   <string name="polkaswap_swapped">Đã hoán đổi</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">Apy tiền thưởng chiến lược</string>
   <string name="pool_button_remove">Rút</string>
   <string name="pool_details">Chi tiết Pool</string>

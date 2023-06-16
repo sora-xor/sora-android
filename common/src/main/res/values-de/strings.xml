@@ -64,6 +64,7 @@
   <string name="common_and">und</string>
   <string name="common_app_version">App-Version</string>
   <string name="common_arab">Arabisch</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Zurück</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Saldo</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Erledigt</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Englisch</string>
   <string name="common_enter_amount">Betrag eingeben</string>
@@ -150,6 +152,7 @@
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw Seed</string>
   <string name="common_receive">Empfangen</string>
   <string name="common_received">Empfangen</string>
@@ -262,6 +265,7 @@
   <string name="invoice_scan_error_match">Du kannst nicht an dich selbst senden</string>
   <string name="invoice_scan_error_no_info">QR-Code kann nicht entziffert werden</string>
   <string name="invoice_scan_error_user_not_found">Keinen Benutzer vom QR-Code gefunden</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">Das Verhältnis der Token, die du hinzufügst, bestimmt den Preis dieses Pools. Sobald du mit dem Preis zufrieden bist, klicke auf Angebot, um es zu überprüfen.</string>
   <string name="liquidity_pair_creation_title">Du bist der erste Liquiditätsanbieter</string>
@@ -341,6 +345,7 @@
   <string name="polkaswap_swapped">Getauscht</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">Strategischer Bonus APY</string>
   <string name="pool_button_remove">Entfernen</string>
   <string name="pool_details">Pool details</string>

@@ -64,6 +64,7 @@
   <string name="common_and">et</string>
   <string name="common_app_version">Version de l\'application</string>
   <string name="common_arab">Arabe</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Retour</string>
   <string name="common_backup">Sauvegarde</string>
   <string name="common_balance">Solde</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Découvrir</string>
   <string name="common_done">Terminé</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Modifier</string>
   <string name="common_english">Anglais</string>
   <string name="common_enter_amount">Entrer le montant</string>
@@ -150,6 +152,7 @@
   <string name="common_passphrase_title">Phrase secrète</string>
   <string name="common_pay_attention">Attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Recevoir</string>
   <string name="common_received">Reçu</string>
@@ -262,6 +265,7 @@
   <string name="invoice_scan_error_match">Vous ne pouvez pas envoyer d\'actifs au même compte que vous utilisez actuellement</string>
   <string name="invoice_scan_error_no_info">Le QR code ne peut pas être décodé</string>
   <string name="invoice_scan_error_user_not_found">Utilisateur introuvable à partir du QR code</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Actifs liquides</string>
   <string name="liquidity_pair_creation_description">Le ratio de jetons que vous ajoutez fixera le prix de ce pool. Une fois que vous êtes satisfait du taux, cliquez sur approvisionner pour le réviser.</string>
   <string name="liquidity_pair_creation_title">Vous êtes le premier fournisseur de liquidités</string>
@@ -341,6 +345,7 @@
   <string name="polkaswap_swapped">Échangé</string>
   <string name="polkaswap_tbc">TBC</string>
   <string name="polkaswap_xyk">XYK</string>
+  <string name="polkswap_reward_payout">Rewards payout in</string>
   <string name="pool_apy_title">APY de bonus stratégique</string>
   <string name="pool_button_remove">Retirer</string>
   <string name="pool_details">Détails du pool</string>
