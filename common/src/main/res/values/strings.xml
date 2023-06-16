@@ -64,6 +64,7 @@
   <string name="common_and">and</string>
   <string name="common_app_version">App version</string>
   <string name="common_arab">Arab</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Balance</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Done</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">English</string>
   <string name="common_enter_amount">Enter amount</string>
@@ -150,6 +152,7 @@
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Receive</string>
   <string name="common_received">Received</string>

@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -98,16 +99,16 @@ class NewHistoryEventsWorker @AssistedInject constructor(
             .build()
         val foreground = ForegroundInfo(123123, progress)
         setForeground(foreground)
-//        val new = txHandler.hasNewTransaction()
-//        if (new) {
-//            val notification = Notification.getBuilder(appContext)
-//                .setContentTitle(Const.SORA)
-//                .setTicker(Const.SORA)
-//                .setContentText("New SORA event is found")
-//                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//                .build()
-//            notificationManager.notify(234234, notification)
-//        }
+        val new = txHandler.hasNewTransaction()
+        if (new) {
+            val notification = Notification.getBuilder(appContext)
+                .setContentTitle(Const.SORA)
+                .setTicker(Const.SORA)
+                .setContentText("New SORA event is found")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
+            notificationManager.notify(234234, notification)
+        }
         return Result.success()
     }
 }

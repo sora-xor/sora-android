@@ -45,18 +45,20 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.equalTo
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData.LIQUIDITY_DATA
 import jp.co.soramitsu.test_data.PolkaswapTestData.LIQUIDITY_DETAILS
 import jp.co.soramitsu.test_data.PolkaswapTestData.VAL_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
+import jp.co.soramitsu.test_data.PolkaswapTestData.XSTXAU_ASSET
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -141,8 +143,6 @@ class AddLiquidityViewModelTest {
     @Before
     fun setUp() = runTest {
         mockkObject(FirebaseWrapper)
-//        mockkStatic(SpannableString::valueOf)
-//        every { SpannableString.valueOf(any()) } returns SpannableString("")
         mockkStatic(Uri::parse)
         every { Uri.parse(any()) } returns mockedUri
         mockkStatic(Token::iconUri)
@@ -194,7 +194,11 @@ class AddLiquidityViewModelTest {
             flowOf(
                 listOf(
                     XOR_ASSET,
-                    VAL_ASSET
+                    VAL_ASSET,
+                    XSTXAU_ASSET,
+                    TestAssets.xstusdAsset(BigDecimal.ONE),
+                    TestAssets.pswapAsset(BigDecimal.TEN),
+                    TestAssets.xstAsset(BigDecimal.TEN),
                 )
             )
         )
@@ -234,14 +238,14 @@ class AddLiquidityViewModelTest {
     fun `choose token clicked EXPECT navigate to asset list screen`() = runTest {
         setUpViewModel(null)
         advanceUntilIdle()
-        //viewModel.setTokensFromArgs(XOR_ASSET.token, null)
         viewModel.onToken2Click()
         advanceUntilIdle()
-
-//        verify(router).showSelectToken(
-//            AssetListMode.SELECT_FOR_LIQUIDITY,
-//            SubstrateOptionsProvider.feeAssetId
-//        )
+        assertEquals(4, viewModel.addState.selectSearchAssetState?.fullList?.size)
+        viewModel.onToken1Change(TestTokens.xstusdToken.id)
+        advanceUntilIdle()
+        viewModel.onToken2Click()
+        advanceUntilIdle()
+        assertEquals(2, viewModel.addState.selectSearchAssetState?.fullList?.size)
     }
 
     @Test

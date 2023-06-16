@@ -64,6 +64,7 @@
   <string name="common_and">dan</string>
   <string name="common_app_version">App version</string>
   <string name="common_arab">Arab</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
   <string name="common_backup">Sandaran</string>
   <string name="common_balance">Baki</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Menemui</string>
   <string name="common_done">Selesai</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Bahasa Inggeris</string>
   <string name="common_enter_amount">Masukkan amaun</string>
@@ -149,6 +151,7 @@
   <string name="common_passphrase_title">Frasa Laluan</string>
   <string name="common_pay_attention">Beri perhatian!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Terima</string>
   <string name="common_received">Menerima</string>

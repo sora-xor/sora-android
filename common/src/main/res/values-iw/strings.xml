@@ -64,6 +64,7 @@
   <string name="common_and">ו</string>
   <string name="common_app_version">גרסת אפליקציה</string>
   <string name="common_arab">ערבית</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">חזור</string>
   <string name="common_backup">גיבוי</string>
   <string name="common_balance">יתרה</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">ערוך</string>
   <string name="common_english">אנגלית</string>
   <string name="common_enter_amount">הזן סכום</string>
@@ -152,6 +154,7 @@
   <string name="common_passphrase_title">מילות מפתח</string>
   <string name="common_pay_attention">שים לב!</string>
   <string name="common_persian">פרסית</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">קוד סיד</string>
   <string name="common_receive">קבל</string>
   <string name="common_received">התקבל</string>
