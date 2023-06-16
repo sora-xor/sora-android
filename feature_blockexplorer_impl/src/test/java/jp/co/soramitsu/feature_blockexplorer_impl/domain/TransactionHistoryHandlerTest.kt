@@ -32,13 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_impl.domain
 
-import android.content.Context
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.common.date.DateTimeFormatter
@@ -78,13 +78,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mockito
-import org.mockito.junit.MockitoJUnitRunner
 import java.util.Locale
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class TransactionHistoryHandlerTest {
 
     @Rule
@@ -113,23 +109,19 @@ class TransactionHistoryHandlerTest {
     private lateinit var language: LanguagesHolder
 
     @MockK
-    private lateinit var context: Context
-
-    @MockK
     private lateinit var coroutineManager: CoroutineManager
 
     @MockK
     private lateinit var coroutineScope: CoroutineScope
 
-    private val dateTimeFormatter: DateTimeFormatter by lazy {
-        DateTimeFormatter(language, resourceManager, context)
-    }
+    @MockK
+    private lateinit var dateTimeFormatter: DateTimeFormatter
 
     private val txMapper: TransactionMappers by lazy {
         TransactionMappersImpl(resourceManager, NumbersFormatter(), dateTimeFormatter)
     }
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = mockk<Uri>()
 
     private val tokens = listOf(TestTokens.xorToken)
     private val txHash = "txHash"
@@ -168,6 +160,8 @@ class TransactionHistoryHandlerTest {
         every { TestTokens.xorToken.iconUri() } returns mockedUri
         every { TestTokens.valToken.iconUri() } returns mockedUri
         every { language.getCurrentLocale() } returns Locale.ENGLISH
+        every { dateTimeFormatter.formatTimeWithoutSeconds(any()) } returns "01 Feb 1970"
+        every { dateTimeFormatter.dateToDayWithoutCurrentYear(any(), any(), any()) } returns "01 Feb 1970"
         every { resourceManager.getString(any()) } returns ""
         every { transactionHistoryRepository.state } returns flowOf(true)
         every { coroutineManager.applicationScope } returns coroutineScope
@@ -226,6 +220,7 @@ class TransactionHistoryHandlerTest {
 
     @Test
     fun `has new tx`() = runTest {
+        advanceUntilIdle()
         val new = transactionHistoryHandler.hasNewTransaction()
         assertTrue(new)
     }

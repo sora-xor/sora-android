@@ -38,6 +38,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.common.R
@@ -49,7 +50,6 @@ import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsState
@@ -72,13 +72,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mockito
-import org.mockito.junit.MockitoJUnitRunner
 import java.util.Date
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class TxDetailsViewModelTest {
 
     @Rule
@@ -114,7 +110,7 @@ class TxDetailsViewModelTest {
 
     private val nf = NumbersFormatter()
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = mockk<Uri>()
 
     private val txHash = "txHash"
     private val date = "10 Jan. 2021 12:12"

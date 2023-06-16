@@ -37,6 +37,8 @@ import android.net.Uri
 internal data class PoolDetailsState(
     val token1Icon: Uri,
     val token2Icon: Uri,
+    val rewardsUri: Uri,
+    val rewardsTokenSymbol: String,
     val symbol1: String,
     val symbol2: String,
     val apy: String,
