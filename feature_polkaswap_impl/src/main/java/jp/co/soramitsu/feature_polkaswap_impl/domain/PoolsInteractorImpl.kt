@@ -46,6 +46,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.estimateAddingShareOfPool
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
@@ -53,6 +54,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
@@ -66,6 +68,7 @@ class PoolsInteractorImpl(
     private val userRepository: UserRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val polkaswapRepository: PolkaswapRepository,
+    private val assetsRepository: AssetsRepository,
     private val transactionBuilder: TransactionBuilder,
 ) : PolkaswapInteractorImpl(polkaswapRepository), PoolsInteractor {
 
@@ -403,5 +406,9 @@ class PoolsInteractorImpl(
             )
         }
         return if (status.success) status.txHash else ""
+    }
+
+    override suspend fun getRewardToken(): Token {
+        return requireNotNull(assetsRepository.getToken(SubstrateOptionsProvider.pswapAssetId))
     }
 }

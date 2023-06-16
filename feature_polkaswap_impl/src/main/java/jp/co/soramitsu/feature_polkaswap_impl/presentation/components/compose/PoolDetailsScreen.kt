@@ -138,7 +138,20 @@ internal fun PoolDetailsScreen(
             DetailsItem(
                 text = stringResource(id = R.string.pool_apy_title),
                 value1 = state.apy,
+                value1Bold = true,
                 hint = stringResource(id = R.string.polkaswap_sb_apy_info),
+            )
+            Divider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Dimens.x1),
+                color = MaterialTheme.customColors.bgPage,
+                thickness = 1.dp,
+            )
+            DetailsItem(
+                text = stringResource(id = R.string.pool_apy_title),
+                value1 = state.rewardsTokenSymbol,
+                value1Uri = state.rewardsUri,
             )
             Divider(
                 modifier = Modifier
@@ -199,6 +212,8 @@ private fun PreviewPoolDetailsScreen() {
         PoolDetailsState(
             token1Icon = DEFAULT_ICON_URI,
             token2Icon = DEFAULT_ICON_URI,
+            rewardsUri = DEFAULT_ICON_URI,
+            rewardsTokenSymbol = "PSWAP",
             apy = "23.3%",
             symbol1 = "XOR",
             symbol2 = "VAL",
