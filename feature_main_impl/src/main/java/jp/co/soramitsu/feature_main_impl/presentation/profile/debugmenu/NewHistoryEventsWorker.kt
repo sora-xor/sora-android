@@ -30,68 +30,84 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.presentation.claim
+package jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.common.util.Const
 import jp.co.soramitsu.common.util.Notification
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
+import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 
 @HiltWorker
-class ClaimWorker @AssistedInject constructor(
+class NewHistoryEventsWorker @AssistedInject constructor(
     @Assisted val appContext: Context,
-    @Assisted workerParams: WorkerParameters
+    @Assisted workerParams: WorkerParameters,
 ) :
     CoroutineWorker(appContext, workerParams) {
 
     companion object {
-        private const val TAG = "ClaimWorker"
-        const val NOTIFICATION_ID = 42
+        private const val WORK_NAME = "PushWorker"
+        private const val progress = "SORA is looking for new events..."
 
         fun start(context: Context) {
-            val ethereumWorkRequest = OneTimeWorkRequestBuilder<ClaimWorker>()
-                .addTag(TAG)
+            val workRequest = PeriodicWorkRequestBuilder<NewHistoryEventsWorker>(15, TimeUnit.MINUTES)
                 .build()
 
             WorkManager.getInstance(context)
-                .enqueueUniqueWork(TAG, ExistingWorkPolicy.REPLACE, ethereumWorkRequest)
+                .enqueueUniquePeriodicWork(
+                    WORK_NAME,
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    workRequest
+                )
         }
+
+        fun getInfo(context: Context) =
+            WorkManager.getInstance(context).getWorkInfosForUniqueWorkLiveData(WORK_NAME)
+
+        fun stop(context: Context) =
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
     }
 
     @Inject
-    lateinit var walletInteractor: WalletInteractor
+    lateinit var txHandler: TransactionHistoryHandler
 
-    private val notificationManager = NotificationManagerCompat.from(appContext)
-
+    @SuppressLint("MissingPermission")
     override suspend fun doWork(): Result {
+        val notificationManager = NotificationManagerCompat.from(appContext)
         Notification.checkNotificationChannel(notificationManager)
-        val notification = Notification.getBuilder(appContext)
-            .setContentTitle(appContext.getString(R.string.claim_notification_text))
+        val cancelIntent = WorkManager.getInstance(appContext)
+            .createCancelPendingIntent(id)
+        val progress = Notification.getBuilder(appContext)
+            .setContentTitle(Const.SORA)
+            .setTicker(Const.SORA)
+            .setContentText(progress)
+            .setOngoing(true)
+            .addAction(android.R.drawable.ic_delete, "Cancel", cancelIntent)
             .build()
-
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification)
-        setForegroundAsync(foregroundInfo)
-
-        val result = runCatching { walletInteractor.migrate() }.getOrElse {
-            FirebaseWrapper.recordException(it)
-            false
-        }
-        FirebaseWrapper.log("SORA migration done $result")
-        walletInteractor.saveMigrationStatus(if (result) MigrationStatus.SUCCESS else MigrationStatus.FAILED)
-
+        val foreground = ForegroundInfo(123123, progress)
+        setForeground(foreground)
+//        val new = txHandler.hasNewTransaction()
+//        if (new) {
+//            val notification = Notification.getBuilder(appContext)
+//                .setContentTitle(Const.SORA)
+//                .setTicker(Const.SORA)
+//                .setContentText("New SORA event is found")
+//                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//                .build()
+//            notificationManager.notify(234234, notification)
+//        }
         return Result.success()
     }
 }

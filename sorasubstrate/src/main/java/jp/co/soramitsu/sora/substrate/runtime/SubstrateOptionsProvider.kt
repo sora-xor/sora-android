@@ -47,10 +47,13 @@ import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 
 object SubstrateOptionsProvider {
     const val mortalEraLength = 64
+    const val syntheticTokenRegex = "0[xX]03[0-9a-fA-F]+"
     val encryptionType = EncryptionType.SR25519
     val existentialDeposit: BigInteger = BigInteger.ZERO
     const val feeAssetId = "0x0200000000000000000000000000000000000000000000000000000000000000"
     const val pswapAssetId = "0x0200050000000000000000000000000000000000000000000000000000000000"
+    const val xstTokenId = "0x0200090000000000000000000000000000000000000000000000000000000000"
+    const val xstusdTokenId = "0x0200080000000000000000000000000000000000000000000000000000000000"
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
 }

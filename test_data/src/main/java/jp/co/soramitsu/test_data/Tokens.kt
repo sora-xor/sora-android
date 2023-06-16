@@ -120,6 +120,18 @@ object TestTokens {
         null,
     )
 
+    val xstxau = Token(
+        "0x0300458ad89700876ec191924c6f5a8d01e10000000000000000000000000000",
+        "Gold",
+        "XSTXAU",
+        18,
+        true,
+        null,
+        null,
+        null,
+        null,
+    )
+
     val daiToken = Token(
         "0x020009",
         "dai stable",

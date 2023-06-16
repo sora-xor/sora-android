@@ -30,48 +30,43 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.common.util
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.verify
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.graphics.drawable.BitmapDrawable
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import jp.co.soramitsu.common.R
 
-@ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
-class DiscoverViewModelTest {
+object Notification {
 
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
+    private const val CHANNEL_ID = "jp.co.soramitsu.notification.channel"
 
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
-    @Mock
-    private lateinit var polkaswapRouter: PolkaswapRouter
-
-    private lateinit var discoverViewModel: DiscoverViewModel
-
-    @Before
-    fun setUp() = runTest {
-        discoverViewModel = DiscoverViewModel(polkaswapRouter)
+    fun checkNotificationChannel(manager: NotificationManagerCompat) {
+        if (BuildUtils.sdkAtLeast(Build.VERSION_CODES.O)) {
+            var notificationChannel = manager.getNotificationChannel(CHANNEL_ID)
+            if (notificationChannel == null) {
+                notificationChannel = NotificationChannel(
+                    CHANNEL_ID, Const.SORA, NotificationManager.IMPORTANCE_LOW,
+                )
+                manager.createNotificationChannel(notificationChannel)
+            }
+        }
     }
 
-    @Test
-    fun `onAddLiquidityClick() called`() {
-        discoverViewModel.onAddLiquidityClick()
-
-        verify(polkaswapRouter).showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
+    fun getBuilder(context: Context): NotificationCompat.Builder =
+        NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.icon_small_notification)
+            .setLargeIcon(
+                (
+                    ContextCompat.getDrawable(
+                        context,
+                        R.mipmap.ic_launcher
+                    ) as BitmapDrawable
+                    ).bitmap
+            )
 }
