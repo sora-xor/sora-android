@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.account_details
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
+import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
@@ -86,6 +87,9 @@ class AccountDetailsViewModelTest {
     @Mock
     private lateinit var resourceManager: ResourceManager
 
+    @Mock
+    private lateinit var backupService: BackupService
+
     private lateinit var accountDetailsViewModel: AccountDetailsViewModel
 
     private val account = SoraAccount("address", "accountName")
@@ -100,6 +104,7 @@ class AccountDetailsViewModelTest {
             mainRouter,
             resourceManager,
             copy,
+            backupService,
             account.substrateAddress,
         )
     }
@@ -118,7 +123,9 @@ class AccountDetailsViewModelTest {
                     leadingIcon = R.drawable.ic_input_pencil_24,
                 ),
                 true,
-                "address",
+                false,
+                null,
+                "address"
             ),
             state,
         )
@@ -165,6 +172,8 @@ class AccountDetailsViewModelTest {
                 leadingIcon = R.drawable.ic_input_pencil_24,
             ),
             true,
+            false,
+            null,
             "address",
         )
 

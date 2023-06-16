@@ -136,7 +136,8 @@ class UserRepositoryTest {
         every { db.soraCardDao() } returns soraCardDao
         coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
             accountAddress,
-            accountName
+            accountName,
+            null
         )
         every { coroutineManager.applicationScope } returns this
         userRepository = UserRepositoryImpl(
@@ -180,7 +181,8 @@ class UserRepositoryTest {
         coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
         coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(
             soraAccount.substrateAddress,
-            soraAccount.accountName
+            soraAccount.accountName,
+            soraAccount.backupFileId
         )
 
         userRepository.setCurSoraAccount(soraAccount)
@@ -195,12 +197,13 @@ class UserRepositoryTest {
                 listOf(
                     SoraAccountLocal(
                         "accountAddress",
-                        "accountName"
+                        "accountName",
+                        "fileId"
                     )
                 )
             )
         }
-        val accounts = listOf(SoraAccount("accountAddress", "accountName"))
+        val accounts = listOf(SoraAccount("accountAddress", "accountName", "fileId"))
 
         assertEquals(accounts, userRepository.flowSoraAccountsList().first())
     }
@@ -220,7 +223,8 @@ class UserRepositoryTest {
         coEvery { accountDao.getAccounts() } returns listOf(
             SoraAccountLocal(
                 "accountAddress",
-                "accountName"
+                "accountName",
+                null
             )
         )
         val accounts = listOf(SoraAccount("accountAddress", "accountName"))
@@ -241,7 +245,8 @@ class UserRepositoryTest {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
                     "accountAddress",
-                    "accountName"
+                    "accountName",
+                    null
                 )
             )
         } returns Unit
@@ -253,14 +258,15 @@ class UserRepositoryTest {
         }
         coEvery { hubDao.insert(any()) } returns Unit
 
-        val soraAccount = SoraAccount("accountAddress", "accountName")
+        val soraAccount = SoraAccount("accountAddress", "accountName", null)
         userRepository.insertSoraAccount(soraAccount)
 
         coVerify {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
                     soraAccount.substrateAddress,
-                    soraAccount.accountName
+                    soraAccount.accountName,
+                    null
                 )
             )
         }
@@ -272,7 +278,8 @@ class UserRepositoryTest {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
                     "accountAddress",
-                    "accountName"
+                    "accountName",
+                    null,
                 )
             )
         } returns Unit
