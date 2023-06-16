@@ -46,6 +46,8 @@ interface PoolsInteractor : PolkaswapInteractor {
 
     fun subscribePoolsCache(): Flow<List<PoolData>>
 
+    suspend fun getRewardToken(): Token
+
     suspend fun getPoolsCache(): List<PoolData>
 
     fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<PoolData?>

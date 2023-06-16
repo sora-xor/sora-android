@@ -50,6 +50,7 @@ object SubstrateOptionsProvider {
     val encryptionType = EncryptionType.SR25519
     val existentialDeposit: BigInteger = BigInteger.ZERO
     const val feeAssetId = "0x0200000000000000000000000000000000000000000000000000000000000000"
+    const val pswapAssetId = "0x0200050000000000000000000000000000000000000000000000000000000000"
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
 }
