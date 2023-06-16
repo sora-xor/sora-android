@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">Vous ne pouvez pas envoyer d\'actifs au même compte que vous utilisez actuellement</string>
   <string name="invoice_scan_error_no_info">Le QR code ne peut pas être décodé</string>
   <string name="invoice_scan_error_user_not_found">Utilisateur introuvable à partir du QR code</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Actifs liquides</string>
   <string name="liquidity_pair_creation_description">Le ratio de jetons que vous ajoutez fixera le prix de ce pool. Une fois que vous êtes satisfait du taux, cliquez sur approvisionner pour le réviser.</string>
   <string name="liquidity_pair_creation_title">Vous êtes le premier fournisseur de liquidités</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">Les frais de réseau sont utilisés pour assurer la croissance et la stabilité des performances du système SORA.</string>
   <string name="polkaswap_output_estimated">Le montant à recevoir est estimé. Vous recevrez au moins %s ou la transaction sera annulée.</string>
   <string name="polkaswap_pool_not_created">Le pool n’est pas créé</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Récompense de farming pour l\'apport de liquidités</string>
   <string name="polkaswap_slippage_frontrun">Votre transaction risque d\'être désavantagée (frontrun)</string>
   <string name="polkaswap_slippage_info">La tolérance de glissement est un seuil accepté défini en pourcentage pour le montant final qui affecte le montant minimum reçu.</string>

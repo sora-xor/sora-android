@@ -264,6 +264,7 @@
   <string name="invoice_scan_error_match">您不能發送給自己</string>
   <string name="invoice_scan_error_no_info">無法解讀二維碼</string>
   <string name="invoice_scan_error_user_not_found">從二維碼中找不到用戶</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">流動資產</string>
   <string name="liquidity_pair_creation_description">您添加的代幣比例將決定該池的價格。一旦您對價格感到滿意，請點擊供應進行審查。</string>
   <string name="liquidity_pair_creation_title">您是第一個流動性提供者</string>
@@ -334,6 +335,7 @@
   <string name="polkaswap_network_fee_info">網絡費用用於保證 SORA 系統的增長和穩定的性能。</string>
   <string name="polkaswap_output_estimated">输出是估計的。您将收到至少 %s， 否則交易将被取消。</string>
   <string name="polkaswap_pool_not_created">未創建池</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">流動性提供的農業獎勵</string>
   <string name="polkaswap_slippage_frontrun">您的交易可能是搶先交易</string>
   <string name="polkaswap_slippage_info">滑點容差是一個可接受的閾值，以百分比為單位設置，用於影響最小接收金額的最終金額。</string>

@@ -269,6 +269,7 @@
   <string name="invoice_scan_error_match">لا يمكنك الإرسال إلى حسابك</string>
   <string name="invoice_scan_error_no_info">لا يمكن فك الشفرة QR</string>
   <string name="invoice_scan_error_user_not_found">تعذر العثور على مستخدم من مسح QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">الأصول السائلة</string>
   <string name="liquidity_pair_creation_description">سعر هذا الحوض سيحدد بناء على تقييم العملات الي تضيفها عندما يكون معدل التقييم مرضياً بالنسبة لك، انقر للبت بالعرض.</string>
   <string name="liquidity_pair_creation_title">انت اول موفر سيولة</string>
@@ -339,6 +340,7 @@
   <string name="polkaswap_network_fee_info">تُستخدم رسوم الشبكة لتأمين نمو نظام سورا بآداء مستقر.</string>
   <string name="polkaswap_output_estimated">يتم تقدير النتائج. سوف تتلقى على الأقل %s أو ستتعثر المعاملة وتسترجع.</string>
   <string name="polkaswap_pool_not_created">لم يتم إنشاء الحوض</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">مكافأة الزراعة لتوفير السيولة</string>
   <string name="polkaswap_slippage_frontrun">قد تكون معاملتك قيد التشغيل الأمامي</string>
   <string name="polkaswap_slippage_info">ستتعثر وتسترجع معاملتك حال تغير السعر بشكل غير مقبول يفوق هذه النسبة المئوية.</string>

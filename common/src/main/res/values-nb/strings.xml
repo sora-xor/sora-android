@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">Du kan ikke sende til deg selv</string>
   <string name="invoice_scan_error_no_info">QR kan ikke dekodes</string>
   <string name="invoice_scan_error_user_not_found">Finner ikke bruker fra QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
   <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">Nettverksavgift brukes for å sikre SORA-systemets vekst og stabile ytelse.</string>
   <string name="polkaswap_output_estimated">Beløp er estimert. Du vil motta minst %s ellers vil transaksjonen gå tilbake.</string>
   <string name="polkaswap_pool_not_created">Pool ikke opprettet</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Sklitoleranse er en akseptert terskel angitt i prosent for det endelige beløpet som påvirker minimum mottatt beløp.</string>
@@ -410,7 +412,7 @@
   <string name="referral_your_referrer">Your referrer</string>
   <string name="referrer_set">Referrer set</string>
   <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
-  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_liquidity_title">Remove liquidity</string>
   <string name="remove_node_error_message">To delete this node please connect to another one</string>
   <string name="remove_node_error_title">Unable to delete connected node</string>
   <string name="remove_node_title">Do you really want to remove this node?</string>

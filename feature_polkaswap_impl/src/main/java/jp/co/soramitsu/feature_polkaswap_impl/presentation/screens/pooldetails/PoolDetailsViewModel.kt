@@ -74,7 +74,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
         PoolDetailsState(
             DEFAULT_ICON_URI, DEFAULT_ICON_URI, DEFAULT_ICON_URI,
             "", "", "", "", "", "",
-            true, true,
+            true, true, "",
         )
     )
 
@@ -127,6 +127,12 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             ),
                             addEnabled = true,
                             removeEnabled = true,
+                            userPoolSharePercent = "%s%%".format(
+                                numbersFormatter.format(
+                                    data.poolShare,
+                                    2,
+                                )
+                            ),
                         )
                     }
                 }

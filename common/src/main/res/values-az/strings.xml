@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">Özünüzə göndərə bilməzsiniz</string>
   <string name="invoice_scan_error_no_info">QR kodunu açmaq olmur</string>
   <string name="invoice_scan_error_user_not_found">QR-dən istifadəçi tapa bilinmir</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">Əlavə etdiyiniz tokenlərin nisbəti bu hovuzun qiymətini təyin edəcək. Məzənnədən məmnun olduqdan sonra nəzərdən keçirmək üçün təchizatı klikləyin.</string>
   <string name="liquidity_pair_creation_title">Siz ilk likvidlik təminatçısısınız</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">Şəbəkə haqqı SORA sisteminin böyüməsini və sabit performansını təmin etmək üçün istifadə olunur.</string>
   <string name="polkaswap_output_estimated">Çıxış hesablanır. Ən azı %s alacaqsınız və ya əməliyyat geri qaytarılacaq.</string>
   <string name="polkaswap_pool_not_created">Hovuz (pool) yaradılmadı</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Likvidliyin təminatı üçün əkinçilik mükafatı</string>
   <string name="polkaswap_slippage_frontrun">Əməliyyatınız əvvəlcədən ola bilər</string>
   <string name="polkaswap_slippage_info">Qiymət bu faizdən çox əlverişsiz şəkildə dəyişərsə, əməliyyatlarınız geri qayıdacaq</string>

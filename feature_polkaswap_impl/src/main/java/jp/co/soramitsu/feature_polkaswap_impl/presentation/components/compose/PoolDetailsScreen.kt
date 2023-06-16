@@ -149,9 +149,20 @@ internal fun PoolDetailsScreen(
                 thickness = 1.dp,
             )
             DetailsItem(
-                text = stringResource(id = R.string.pool_apy_title),
+                text = stringResource(id = R.string.polkaswap_reward_payout),
                 value1 = state.rewardsTokenSymbol,
                 value1Uri = state.rewardsUri,
+            )
+            Divider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Dimens.x1),
+                color = MaterialTheme.customColors.bgPage,
+                thickness = 1.dp,
+            )
+            DetailsItem(
+                text = stringResource(id = R.string.pool_share_title_1),
+                value1 = state.userPoolSharePercent,
             )
             Divider(
                 modifier = Modifier
@@ -184,7 +195,7 @@ internal fun PoolDetailsScreen(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 enabled = state.addEnabled,
-                text = stringResource(id = R.string.common_supply),
+                text = stringResource(id = R.string.common_supply_liquidity_title),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onSupply,
             )
@@ -197,7 +208,7 @@ internal fun PoolDetailsScreen(
                 size = Size.Large,
                 order = Order.PRIMARY,
                 enabled = state.removeEnabled,
-                text = stringResource(id = R.string.common_remove),
+                text = stringResource(id = R.string.remove_liquidity_title),
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onRemove,
             )
@@ -221,6 +232,7 @@ private fun PreviewPoolDetailsScreen() {
             pooled2 = "2424.2 XOR",
             addEnabled = true,
             removeEnabled = true,
+            userPoolSharePercent = "12.3%"
         ),
         onRemove = {},
         onSupply = {},

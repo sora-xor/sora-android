@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">Je kan niet naar jezelf sturen</string>
   <string name="invoice_scan_error_no_info">QR kan niet worden gedecodeerd</string>
   <string name="invoice_scan_error_user_not_found">Kan geen gebruiker vinden via QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">De verhouding van tokens die u toevoegt, bepaalt de prijs van deze pool. Zodra u tevreden bent met de snelheid klik aanbod om te beoordelen.</string>
   <string name="liquidity_pair_creation_title">U bent de eerste liquiditeitsverschaffer</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">Netwerkvergoeding wordt gebruikt om de groei en stabiele prestaties van het van het SORA-systeem te garanderen.</string>
   <string name="polkaswap_output_estimated">De output wordt geschat. U ontvangt %s minimaal of de transactie wordt teruggedraaid.</string>
   <string name="polkaswap_pool_not_created">Pool is niet aangemaakt</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Uw transactie kan frontrun zijn</string>
   <string name="polkaswap_slippage_info">Slippage-tolerantie is een geaccepteerde drempel die is ingesteld in procenten voor het uiteindelijke bedrag dat van invloed is op het minimum ontvangen bedrag.</string>

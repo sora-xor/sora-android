@@ -46,4 +46,5 @@ internal data class PoolDetailsState(
     val pooled2: String,
     val addEnabled: Boolean,
     val removeEnabled: Boolean,
+    val userPoolSharePercent: String,
 )

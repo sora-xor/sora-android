@@ -264,6 +264,7 @@
   <string name="invoice_scan_error_match">自分自身に送ることはできません</string>
   <string name="invoice_scan_error_no_info">QRコードを読み取れません</string>
   <string name="invoice_scan_error_user_not_found">QRコードからユーザーを見つけることができません。</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">流動資産</string>
   <string name="liquidity_pair_creation_description">追加するトークンの比率によって、このプールの価格は設定されます。料金に満足したら、供給をタップして確認します。</string>
   <string name="liquidity_pair_creation_title">あなたは最初の流動性供給者です</string>
@@ -334,6 +335,7 @@
   <string name="polkaswap_network_fee_info">ネットワーク手数料は、SORAシステムの発展と安定したパフォーマンスを確保するために使用されます</string>
   <string name="polkaswap_output_estimated">表示は推定値です。少なくとも %s 受け取らなければ、取引は元に戻ります</string>
   <string name="polkaswap_pool_not_created">プールが作成されていません</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">流動性供給に対するファーミング報酬</string>
   <string name="polkaswap_slippage_frontrun">あなたの取引はフロントランの可能性があります</string>
   <string name="polkaswap_slippage_info">価格がこのパーセンテージを超えて不利に変化した場合、取引は元に戻ります</string>

@@ -266,6 +266,7 @@
   <string name="invoice_scan_error_match">Не можеш себи да пошаљеш</string>
   <string name="invoice_scan_error_no_info">QR се не може декодирати</string>
   <string name="invoice_scan_error_user_not_found">Не могу да пронађем корисника са QR-а</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Raspoloživa sredstva</string>
   <string name="liquidity_pair_creation_description">Однос токена које додате ће одредити цену овог пула. Када будете задовољни са стопом, кликните на понуду за преглед.</string>
   <string name="liquidity_pair_creation_title">Ви сте први добављача ликвидности</string>
@@ -336,6 +337,7 @@
   <string name="polkaswap_network_fee_info">Mrežna naknada se koristi da bi se osigurao rast SORA sistema i stabilne performanse.</string>
   <string name="polkaswap_output_estimated">Исход је процењен. Примићете најмање %s или ће трансакција бити отказана.</string>
   <string name="polkaswap_pool_not_created">Pool nije kreiran</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Фарминг награда за давање ликвидности</string>
   <string name="polkaswap_slippage_frontrun">Vaša transakcija može biti u prva na redu</string>
   <string name="polkaswap_slippage_info">Vaša transakcijanece biti procesuirana ukoliko se cena promeni nepovoljno za više od ovog procenta</string>

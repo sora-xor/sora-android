@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">Du kannst nicht an dich selbst senden</string>
   <string name="invoice_scan_error_no_info">QR-Code kann nicht entziffert werden</string>
   <string name="invoice_scan_error_user_not_found">Keinen Benutzer vom QR-Code gefunden</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">Das Verhältnis der Token, die du hinzufügst, bestimmt den Preis dieses Pools. Sobald du mit dem Preis zufrieden bist, klicke auf Angebot, um es zu überprüfen.</string>
   <string name="liquidity_pair_creation_title">Du bist der erste Liquiditätsanbieter</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">Die Netzwerkgebühr wird dazu verwendet, SORAs Systemwachstum und -stabilität abzusichern.</string>
   <string name="polkaswap_output_estimated">Die Ausgabe wird geschätzt. Du erhältst mindestens %s oder die Transaktion wird rückgängig gemacht.</string>
   <string name="polkaswap_pool_not_created">Pool nicht erstellt</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming Belohungen für Liquiditätsbereitstellung</string>
   <string name="polkaswap_slippage_frontrun">Deine Transaktion könnte frontrunnen</string>
   <string name="polkaswap_slippage_info">Deine Transaktionen wird rückgängig gemacht, wenn sich der Preis um mehr als diesen Prozentsatz ungünstig ändert</string>

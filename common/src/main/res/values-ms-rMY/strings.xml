@@ -264,6 +264,7 @@
   <string name="invoice_scan_error_match">Anda tidak boleh menghantar kepada diri sendiri</string>
   <string name="invoice_scan_error_no_info">QR tidak boleh menyahkodkan</string>
   <string name="invoice_scan_error_user_not_found">Tidak dapat mencari pengguna dari QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
   <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
@@ -334,6 +335,7 @@
   <string name="polkaswap_network_fee_info">Yuran rangkaian digunakan untuk memastikan pertumbuhan sistem SORA dan prestasi yang stabil.</string>
   <string name="polkaswap_output_estimated">Output dianggarkan. Anda akan menerima sekurang-kurangnya %s atau transaksi akan kembali.</string>
   <string name="polkaswap_pool_not_created">Kolam tidak dicipta</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Urus niaga anda mungkin dijalankan</string>
   <string name="polkaswap_slippage_info">Urus niaga anda akan kembali jika harga berubah dengan tidak menguntungkan lebih daripada peratusan ini</string>
@@ -404,7 +406,7 @@
   <string name="referral_your_referrer">Perujuk anda</string>
   <string name="referrer_set">Set perujuk</string>
   <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
-  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_liquidity_title">Remove liquidity</string>
   <string name="remove_node_error_message">To delete this node please connect to another one</string>
   <string name="remove_node_error_title">Unable to delete connected node</string>
   <string name="remove_node_title">Do you really want to remove this node?</string>

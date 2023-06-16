@@ -183,7 +183,7 @@
   <string name="common_spanish">Испанский</string>
   <string name="common_spanish_colombia">Испанский (Колумбия)</string>
   <string name="common_supply">Добавить</string>
-  <string name="common_supply_liquidity_title">Supply liquidity</string>
+  <string name="common_supply_liquidity_title">Добавить ликвидность</string>
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
@@ -268,6 +268,7 @@
   <string name="invoice_scan_error_match">Вы не можете отправить токены на активный в данный момент аккаунт</string>
   <string name="invoice_scan_error_no_info">Не удается декодировать QR</string>
   <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
+  <string name="launch_screen_loading_title">На этот раз загружается немного дольше</string>
   <string name="liquid_assets">Ликвидные активы</string>
   <string name="liquidity_pair_creation_description">Соотношение токенов, которое вы добавляете, будет определять цену этого пула. Как только вы будете довольны ставкой, нажмите «Добавить», чтобы проверить данные.</string>
   <string name="liquidity_pair_creation_title">Вы первый провайдер ликвидности</string>
@@ -338,6 +339,7 @@
   <string name="polkaswap_network_fee_info">Комиссия сети используется для обеспечения роста и стабильности системы SORA.</string>
   <string name="polkaswap_output_estimated">Оценочная сумма. Минимально будет куплено %s или транзакция будет отменена.</string>
   <string name="polkaswap_pool_not_created">Пул не создан</string>
+  <string name="polkaswap_reward_payout">Выплата вознаграждений в</string>
   <string name="polkaswap_sb_apy_info">Фарминговое вознаграждение за предоставление ликвидности</string>
   <string name="polkaswap_slippage_frontrun">Возможен фронтран транзакции</string>
   <string name="polkaswap_slippage_info">Ваши транзакции будут отменены, если цена изменится не в вашу пользу больше, чем на указанный процент.</string>
@@ -428,7 +430,7 @@
   <string name="referral_your_referrer">Ваш реферер</string>
   <string name="referrer_set">Referrer set</string>
   <string name="remove_liquidity_info_text">Удаление ликвидности конвертирует вашу позицию обратно по текущему курсу, пропорциональному вашей доле в пуле.</string>
-  <string name="remove_liquidity_title">Удалить Ликвидность</string>
+  <string name="remove_liquidity_title">Забрать ликвидность</string>
   <string name="remove_node_error_message">Для удаления подключитесь к другой ноде</string>
   <string name="remove_node_error_title">Не удалось удалить ноду</string>
   <string name="remove_node_title">Вы уверены, что хотите удалить ноду?</string>

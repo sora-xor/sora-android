@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">Kendinize gönderemezsiniz.</string>
   <string name="invoice_scan_error_no_info">QR kodu çözülemiyor</string>
   <string name="invoice_scan_error_user_not_found">QR\'dan bir kullanıcı bulunamadı</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">Eklediğiniz jetonların oranı bu havuzun fiyatını belirleyecektir. Orandan memnun kaldığınızda, incelemek için arza tıklayın.</string>
   <string name="liquidity_pair_creation_title">İlk likidite sağlayıcısı sizsiniz</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">SORA sisteminin büyümesini ve istikrarlı performansını sağlamak için ağ ücreti alınır.</string>
   <string name="polkaswap_output_estimated">Çıktı tahminidir. En az %s alacaksınız veya işlem geri alınacak.</string>
   <string name="polkaswap_pool_not_created">Havuz oluşturulmadı</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Likidite karşılığında farming ödülü</string>
   <string name="polkaswap_slippage_frontrun">İşleminiz sizden önce başkası tarafından yapılabilir</string>
   <string name="polkaswap_slippage_info">Eğer fiyat bu yüzdeden daha fazla değişirse, işleminiz geri çekilecektir.</string>

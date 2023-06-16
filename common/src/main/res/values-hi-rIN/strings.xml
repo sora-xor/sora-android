@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">आप अपने आप को नहीं भेज सकते हैं</string>
   <string name="invoice_scan_error_no_info">क्यूआर को डिकोड नहीं किया जा सकता है</string>
   <string name="invoice_scan_error_user_not_found">क्यूआर से उपयोगकर्ता नहीं मिल रहा है</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">चल परिसंपत्ति</string>
   <string name="liquidity_pair_creation_description">आपके द्वारा जोड़े गए टोकन का अनुपात इस पूल का मूल्य निर्धारित करेगा। एक बार जब आप दर से खुश हो जाते हैं तो समीक्षा के लिए आपूर्ति पर क्लिक करें।</string>
   <string name="liquidity_pair_creation_title">आप पहले Liquidity  प्रदाता हैं</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">SORA सिस्टम के विकास और स्थिर प्रदर्शन को सुनिश्चित करने के लिए नेटवर्क शुल्क का उपयोग किया जाता है।</string>
   <string name="polkaswap_output_estimated">आउटपुट अनुमानित है। आपको कम से कम %s प्राप्त होगा या लेन-देन वापस हो जाएगा।</string>
   <string name="polkaswap_pool_not_created">पूल नहीं बना है</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Liquidity प्रावधान के लिए Farming  इनाम</string>
   <string name="polkaswap_slippage_frontrun">आपका लेन-देन विफल हो सकता है</string>
   <string name="polkaswap_slippage_info">यदि मूल्य इस प्रतिशत से अधिक प्रतिकूल रूप से बदलता है तो आपके लेन-देन वापस आ जाएंगे</string>

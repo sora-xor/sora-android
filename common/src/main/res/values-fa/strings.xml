@@ -265,6 +265,7 @@
   <string name="invoice_scan_error_match">نمیتوانید برای خودتان بفرستید</string>
   <string name="invoice_scan_error_no_info">کد QR قابل رمزگشایی نیست</string>
   <string name="invoice_scan_error_user_not_found">کاربری با QR پیدا نمی شود</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">نسبت توکن‌هایی که اضافه می‌کنید، قیمت این مخزن را تعیین می‌کند. هر وقت از نرخ راضی بودید، برای بررسی روی تامین کلیک کنید.</string>
   <string name="liquidity_pair_creation_title">شما اولین ارائه دهنده نقدینگی هستید</string>
@@ -335,6 +336,7 @@
   <string name="polkaswap_network_fee_info">کارمزد شبکه برای اطمینان از رشد و عملکرد پایدار سامانه SORA استفاده می‌شود.</string>
   <string name="polkaswap_output_estimated">مقدار دریافتی تخمینی است. حداقل مقدار %s دریافت خواهید کرد، در غیر اینصورت تراکنش برگشت خواهد خورد.</string>
   <string name="polkaswap_pool_not_created">استخر ایجاد نشده</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">پاداش فارمینگ حاصل از تامین نقدینگی</string>
   <string name="polkaswap_slippage_frontrun">تراکنش شما ممکن است پیشتاز (frontrun) باشد</string>
   <string name="polkaswap_slippage_info">در صورتی که قیمت بیش از مقدار تایین شده توسط شما جا به جا شود (اگر باعث ضرر شما شود) این تراکنش برگشت میخورد</string>
