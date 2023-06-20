@@ -106,7 +106,7 @@ class OnboardingViewModel @Inject constructor(
 
     private val _importAccountPasswordState = MutableLiveData(
         ImportAccountPasswordState(
-            passwordInput = InputTextState(label = "Enter password")
+            passwordInput = InputTextState(label = resourceManager.getString(R.string.enter_password_title))
         )
     )
     val importAccountPasswordState: LiveData<ImportAccountPasswordState> =
@@ -582,13 +582,23 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
             val isSecure = textFieldValue.text.isPasswordSecure()
+            val errorString =
+                getPasswordConfirmationError(textFieldValue.text, it.passwordConfirmation.value.text)
             _createBackupPasswordState.value = it.copy(
                 password = it.password.copy(
                     value = textFieldValue,
                     success = isSecure,
-                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else ""
+                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else "",
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && it.passwordConfirmation.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+                passwordConfirmation = it.passwordConfirmation.copy(
+                    error = errorString.isNotEmpty(),
+                    descriptionText = if (textFieldValue.text == it.passwordConfirmation.value.text)
+                        resourceManager.getString(R.string.create_backup_password_matched)
+                    else
+                        errorString
+                ),
+                setPasswordButtonIsEnabled = it.warningIsSelected &&
+                    it.passwordConfirmation.value.text == textFieldValue.text && isSecure
             )
         }
     }
@@ -690,15 +700,18 @@ class OnboardingViewModel @Inject constructor(
 
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
-            val isConfirmationRightAndSecure =
-                it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            val isConfirmationRight =
+                it.password.value.text == textFieldValue.text
+            val errorString =
+                getPasswordConfirmationError(it.password.value.text, textFieldValue.text)
             _createBackupPasswordState.value = it.copy(
                 passwordConfirmation = it.passwordConfirmation.copy(
                     value = textFieldValue,
-                    success = isConfirmationRightAndSecure,
-                    descriptionText = if (isConfirmationRightAndSecure) resourceManager.getString(R.string.create_backup_password_matched) else ""
+                    success = isConfirmationRight,
+                    descriptionText = if (isConfirmationRight) resourceManager.getString(R.string.create_backup_password_matched) else errorString,
+                    error = errorString.isNotEmpty()
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRightAndSecure
+                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRight && textFieldValue.text.isPasswordSecure()
             )
         }
     }
@@ -710,6 +723,14 @@ class OnboardingViewModel @Inject constructor(
                 warningIsSelected = newWarningState,
                 setPasswordButtonIsEnabled = newWarningState && it.password.value.text == it.passwordConfirmation.value.text && it.password.value.text.isPasswordSecure()
             )
+        }
+    }
+
+    private fun getPasswordConfirmationError(password: String, passwordConfirmation: String): String {
+        return if (passwordConfirmation == "" || passwordConfirmation == password) {
+            ""
+        } else {
+            resourceManager.getString(R.string.create_backup_password_not_matched)
         }
     }
 }
