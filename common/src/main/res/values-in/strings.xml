@@ -132,6 +132,8 @@
   <string name="common_finnish">Finlandia</string>
   <string name="common_french">Perancis</string>
   <string name="common_german">German</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -310,6 +312,11 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Siapkan pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh sensor sidik jari</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap dikelola oleh komunitas SORA. Sebelum menggunakan fungsionalitas Polkaswap, harap tinjau %%FAQ Polkaswap%% dan dokumentasi, yang mencakup penjelasan rinci tentang cara kerja Polkaswap, serta %%Memorandum Polkaswap dan Persyaratan Layanan%%, dan %%Kebijakan Privasi%%. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang aman dan positif. Dengan menggunakan Polkaswap, Anda menyatakan bahwa Anda telah membaca dan memahami dokumen-dokumen ini.</string>
   <string name="polkaswap_info_text_2">Anda juga mengakui hal berikut:</string>
   <string name="polkaswap_info_text_3">Tanggung jawab Anda sepenuhnya untuk mematuhi semua undang-undang yang mungkin berlaku untuk penggunaan khusus Anda atas Polkaswap di yurisdiksi hukum Anda;</string>

@@ -132,6 +132,8 @@
   <string name="common_finnish">芬蘭語</string>
   <string name="common_french">法語</string>
   <string name="common_german">德語</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -310,6 +312,11 @@
   <string name="pincode_one_try_left">冷卻前您還有一次嘗試</string>
   <string name="pincode_set_your_pin_code">設置密碼</string>
   <string name="pincode_touch_fingerprint_scanner">觸摸指紋掃描儀</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap 由 SORA 社區維護。在繼續使用 Polkaswap 之前，請查看%% Polkaswap FAQ %%和文檔，其中包括對 Polkaswap 工作原理的詳細說明，以及%% Polkaswap 備忘錄和服務條款%%以及%%隱私政策%% . \n\n這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。</string>
   <string name="polkaswap_info_text_2">Polkaswap 是由 SORA 社區維護。在使用 Polkaswap 功能之前，請查看%% Polkaswap FAQ %%和文檔，其中包括有關 Polkaswap 如何操作的詳細解釋，以及 Polkaswap 備忘錄和服務條款以及隱私政策。這些文檔對於安全和積極的用戶體驗至關重要。通過使用 Polkaswap，您承認您已閱讀並理解這些文件。 \n\n您還承認以下幾點： \n\n 1) 您全權負責遵守在您的法律管轄範圍內可能適用於您對 Polkaswap 的特定使用的所有法律；\n 2）您對Polkaswap當前版本為alpha版本的理解：尚未經過全面測試，部分功能可能無法按設計執行；\n 3) 您理解並自願接受使用 Polkaswap 所涉及的風險，包括但不限於丟失代幣的風險。再一次提醒，在您還沒閱讀常見問題解答、Polkaswap 備忘錄和服務條款以及隱私政策的情況下, 請不要繼續！</string>
   <string name="polkaswap_info_text_3">您在您的法律管轄範圍內遵守可能適用於您對 Polkaswap 的特定使用的所有法律的全部責任；</string>

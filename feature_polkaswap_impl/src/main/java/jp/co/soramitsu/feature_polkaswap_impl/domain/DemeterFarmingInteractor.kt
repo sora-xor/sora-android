@@ -30,44 +30,20 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
+package jp.co.soramitsu.feature_polkaswap_impl.domain
 
-import jp.co.soramitsu.common.domain.AssetAmountInputState
-import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_polkaswap_impl.data.repository.DemeterFarmingRepository
 
-data class LiquidityRemoveState(
-    val btnState: ButtonState,
-    val slippage: Double,
-    val assetState1: AssetAmountInputState?,
-    val assetState2: AssetAmountInputState?,
-    val estimated: LiquidityRemoveEstimatedState,
-    val prices: LiquidityRemovePricesState,
-    val confirm: LiquidityRemoveConfirmState,
-    val hintVisible: Boolean,
-    val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    val transactionFeeToken: String,
-    val poolInFarming: Boolean,
-)
+interface DemeterFarmingInteractor {
+    suspend fun getFarmedPools(): List<DemeterFarmingPool>?
+}
 
-data class LiquidityRemoveConfirmState(
-    val text: String,
-    val confirmResult: Boolean?,
-    val btnState: ButtonState,
-)
+internal class DemeterFarmingInteractorImpl(
+    private val demeterFarmingRepository: DemeterFarmingRepository,
+    private val userRepository: UserRepository,
+) : DemeterFarmingInteractor {
 
-data class LiquidityRemoveEstimatedState(
-    val token1: String,
-    val token1Value: String,
-    val token2: String,
-    val token2Value: String,
-    val shareOfPool: String,
-)
-
-data class LiquidityRemovePricesState(
-    val pair1: String,
-    val pair1Value: String,
-    val pair2: String,
-    val pair2Value: String,
-    val apy: String? = null,
-    val fee: String,
-)
+    override suspend fun getFarmedPools(): List<DemeterFarmingPool>? =
+        demeterFarmingRepository.getFarmedPools(userRepository.getCurSoraAccount().substrateAddress)
+}

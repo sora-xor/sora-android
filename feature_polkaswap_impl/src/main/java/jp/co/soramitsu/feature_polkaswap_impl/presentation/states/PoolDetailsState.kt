@@ -47,4 +47,12 @@ internal data class PoolDetailsState(
     val addEnabled: Boolean,
     val removeEnabled: Boolean,
     val userPoolSharePercent: String,
+    val demeterPools: List<PoolDetailsDemeterState>?,
+    val demeter100Percent: Boolean,
+)
+
+internal data class PoolDetailsDemeterState(
+    val rewardsUri: Uri,
+    val rewardsTokenSymbol: String,
+    val percent: Float,
 )

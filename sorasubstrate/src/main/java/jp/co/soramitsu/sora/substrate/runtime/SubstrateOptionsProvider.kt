@@ -120,7 +120,8 @@ enum class Pallete(val palletName: String) {
     Referrals("Referrals"),
     DEX_MANAGER("DEXManager"),
     XSTPool("XSTPool"),
-    TOKENS("Tokens")
+    TOKENS("Tokens"),
+    DEMETER_FARMING("DemeterFarmingPlatform"),
 }
 
 enum class Storage(val storageName: String) {
@@ -142,6 +143,7 @@ enum class Storage(val storageName: String) {
     REFERRALS("Referrals"),
     DEX_INFOS("DEXInfos"),
     BASE_FEE("BaseFee"),
+    USER_INFOS("UserInfos"),
 }
 
 enum class Method(val methodName: String) {

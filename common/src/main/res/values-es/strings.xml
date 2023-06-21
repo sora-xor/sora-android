@@ -132,6 +132,8 @@
   <string name="common_finnish">Finlandés</string>
   <string name="common_french">Francés</string>
   <string name="common_german">Alemán</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -311,6 +313,11 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Configurar código pin</string>
   <string name="pincode_touch_fingerprint_scanner">Toca el sensor de huellas digitales</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap es mantenido por la comunidad SORA. Antes de continuar usando Polkaswap, por favor revise las %%Preguntas frecuentes (FAQ) de Polkaswap%% y la documentación, que incluye una explicación detallada sobre cómo funciona Polkaswap, así como el %%Memorandum de Polkaswap y los Términos de servicio de Polkaswap%%, y la %%Política de privacidad%%.\n\nEstos documentos son cruciales para una experiencia de usuario segura y positiva. Al utilizar Polkaswap, reconoce haber leído y comprendido estos documentos.</string>
   <string name="polkaswap_info_text_2">También reconoce lo siguiente:</string>
   <string name="polkaswap_info_text_3">Usted es la única persona responsable de cumplir con todas las leyes que puedan aplicarse al uso particular de Polkaswap en su jurisdicción legal;</string>

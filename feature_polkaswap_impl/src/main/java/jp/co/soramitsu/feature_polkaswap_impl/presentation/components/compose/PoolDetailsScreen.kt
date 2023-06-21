@@ -48,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -57,6 +58,7 @@ import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsDemeterState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
@@ -212,6 +214,83 @@ internal fun PoolDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = onRemove,
             )
+            if (state.demeter100Percent) {
+                Text(
+                    modifier = Modifier
+                        .padding(top = Dimens.x2)
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    style = MaterialTheme.customTypography.paragraphXSBold,
+                    text = stringResource(
+                        id = R.string.polkaswap_farming_unstake_to_remove,
+                    ),
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+    state.demeterPools?.forEach { pool ->
+        Divider(
+            color = Color.Transparent,
+            thickness = Dimens.x1,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        ContentCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(Dimens.x3)
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.headline2,
+                    text = stringResource(
+                        id = R.string.polkaswap_farming_staked_for,
+                        pool.rewardsTokenSymbol,
+                    ),
+                    maxLines = 1,
+                )
+                Text(
+                    modifier = Modifier
+                        .padding(top = Dimens.x1_2)
+                        .fillMaxWidth()
+                        .wrapContentHeight(),
+                    color = MaterialTheme.customColors.fgTertiary,
+                    style = MaterialTheme.customTypography.textXSBold,
+                    text = stringResource(
+                        id = R.string.polkaswap_farming_demeter_power,
+                    ),
+                    maxLines = 1,
+                )
+                DetailsItem(
+                    modifier = Modifier.padding(top = Dimens.x3),
+                    text = stringResource(id = R.string.polkaswap_reward_payout),
+                    value1 = pool.rewardsTokenSymbol,
+                    value1Uri = pool.rewardsUri,
+                )
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Dimens.x1),
+                    color = MaterialTheme.customColors.bgPage,
+                    thickness = 1.dp,
+                )
+                DetailsItem(
+                    text = stringResource(id = R.string.polkaswap_farming_pool_share),
+                    value1 = "%.4f %%".format(pool.percent),
+                    value1Percent = pool.percent / 100,
+                )
+            }
         }
     }
 }
@@ -219,22 +298,32 @@ internal fun PoolDetailsScreen(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewPoolDetailsScreen() {
-    PoolDetailsScreen(
-        PoolDetailsState(
-            token1Icon = DEFAULT_ICON_URI,
-            token2Icon = DEFAULT_ICON_URI,
-            rewardsUri = DEFAULT_ICON_URI,
-            rewardsTokenSymbol = "PSWAP",
-            apy = "23.3%",
-            symbol1 = "XOR",
-            symbol2 = "VAL",
-            pooled1 = "123 VAL",
-            pooled2 = "2424.2 XOR",
-            addEnabled = true,
-            removeEnabled = true,
-            userPoolSharePercent = "12.3%"
-        ),
-        onRemove = {},
-        onSupply = {},
-    )
+    Column {
+        PoolDetailsScreen(
+            PoolDetailsState(
+                token1Icon = DEFAULT_ICON_URI,
+                token2Icon = DEFAULT_ICON_URI,
+                rewardsUri = DEFAULT_ICON_URI,
+                rewardsTokenSymbol = "PSWAP",
+                apy = "23.3%",
+                symbol1 = "XOR",
+                symbol2 = "VAL",
+                pooled1 = "123 VAL",
+                pooled2 = "2424.2 XOR",
+                addEnabled = true,
+                removeEnabled = true,
+                userPoolSharePercent = "12.3%",
+                demeterPools = listOf(
+                    PoolDetailsDemeterState(
+                        DEFAULT_ICON_URI,
+                        "DEO",
+                        12.4f,
+                    )
+                ),
+                demeter100Percent = true,
+            ),
+            onRemove = {},
+            onSupply = {},
+        )
+    }
 }

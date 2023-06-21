@@ -132,6 +132,8 @@
   <string name="common_finnish">Tiếng Phần lan</string>
   <string name="common_french">Tiếng Pháp</string>
   <string name="common_german">Tiếng Đức</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -310,6 +312,11 @@
   <string name="pincode_one_try_left">Bạn còn một lần thử nữa</string>
   <string name="pincode_set_your_pin_code">Thiết lập mã pin</string>
   <string name="pincode_touch_fingerprint_scanner">Chạm vào máy quét vân tay</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap được duy trì bởi cộng đồng SORA. Trước khi tiếp tục sử dụng Polkaswap, vui lòng xem lại %% Câu hỏi thường gặp về Polkaswap %% và tài liệu, trong đó có giải thích chi tiết về cách Polkaswap hoạt động, cũng như %% Bản ghi nhớ Polkaswap và Điều khoản dịch vụ %% và %% Chính sách quyền riêng tư %% . \n\n Những tài liệu này rất quan trọng đối với trải nghiệm người dùng an toàn và tích cực. Bằng cách sử dụng Polkaswap, bạn xác nhận rằng bạn đã đọc và hiểu các tài liệu này.</string>
   <string name="polkaswap_info_text_2">Bạn cũng thừa nhận những điều sau:</string>
   <string name="polkaswap_info_text_3">Trách nhiệm duy nhất của bạn đối với việc tuân thủ tất cả các luật có thể áp dụng cho việc sử dụng Polkaswap cụ thể của bạn trong khu vực pháp lý của bạn;</string>
