@@ -255,7 +255,7 @@ class AssetsInteractorTest {
                 .willReturn(xorAssetBalance)
 
             val xorToken = Token(
-                id = "MyNetworkFeeToken",
+                id = SubstrateOptionsProvider.feeAssetId,
                 name = "",
                 symbol = "xor",
                 precision = 18,
@@ -298,7 +298,7 @@ class AssetsInteractorTest {
                 .willReturn(xorAssetBalance)
 
             val xorToken = Token(
-                id = "MyNetworkFeeToken",
+                id = SubstrateOptionsProvider.feeAssetId,
                 name = "",
                 symbol = "xor",
                 precision = 18,
@@ -318,7 +318,7 @@ class AssetsInteractorTest {
             )
 
             Assert.assertEquals(
-                true,
+                false,
                 result
             )
         }
