@@ -64,6 +64,7 @@
   <string name="common_and">dan</string>
   <string name="common_app_version">App version</string>
   <string name="common_arab">Arab</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Saldo</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Selesai</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Inggris</string>
   <string name="common_enter_amount">Masukan jumlah</string>
@@ -130,6 +132,7 @@
   <string name="common_finnish">Finlandia</string>
   <string name="common_french">Perancis</string>
   <string name="common_german">German</string>
+  <string name="common_google_title">Google</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -149,6 +152,7 @@
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Menerima</string>
   <string name="common_received">Diterima</string>
@@ -261,6 +265,7 @@
   <string name="invoice_scan_error_match">Anda tidak dapat mengirim ke diri sendiri</string>
   <string name="invoice_scan_error_no_info">QR tidak dapat diterjemahkan</string>
   <string name="invoice_scan_error_user_not_found">Tidak dapat menemukan pengguna dari QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
   <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
@@ -306,6 +311,9 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Siapkan pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh sensor sidik jari</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_info_text_1">Polkaswap dikelola oleh komunitas SORA. Sebelum menggunakan fungsionalitas Polkaswap, harap tinjau %%FAQ Polkaswap%% dan dokumentasi, yang mencakup penjelasan rinci tentang cara kerja Polkaswap, serta %%Memorandum Polkaswap dan Persyaratan Layanan%%, dan %%Kebijakan Privasi%%. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang aman dan positif. Dengan menggunakan Polkaswap, Anda menyatakan bahwa Anda telah membaca dan memahami dokumen-dokumen ini.</string>
   <string name="polkaswap_info_text_2">Anda juga mengakui hal berikut:</string>
   <string name="polkaswap_info_text_3">Tanggung jawab Anda sepenuhnya untuk mematuhi semua undang-undang yang mungkin berlaku untuk penggunaan khusus Anda atas Polkaswap di yurisdiksi hukum Anda;</string>
@@ -331,6 +339,7 @@
   <string name="polkaswap_network_fee_info">Biaya jaringan digunakan untuk memastikan pertumbuhan sistem SORA dan kinerja yang stabil.</string>
   <string name="polkaswap_output_estimated">Output diperkirakan. Anda akan menerima setidaknya %s atau transaksi akan kembali.</string>
   <string name="polkaswap_pool_not_created">Kumpulan tidak dibuat</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Toleransi slippage adalah ambang batas yang diterima yang ditetapkan dalam persen untuk jumlah akhir yang mempengaruhi jumlah Minimum Diterima.</string>
@@ -402,7 +411,7 @@
   <string name="referral_your_referrer">Your referrer</string>
   <string name="referrer_set">Referrer set</string>
   <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
-  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_liquidity_title">Remove liquidity</string>
   <string name="remove_node_error_message">To delete this node please connect to another one</string>
   <string name="remove_node_error_title">Unable to delete connected node</string>
   <string name="remove_node_title">Do you really want to remove this node?</string>

@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
-import android.app.Activity
 import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
@@ -92,8 +91,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
             InputTextState(value = TextFieldValue("")),
             false,
             false,
-            null,
-            ""
+            false,
+            "",
         )
     )
     val accountDetailsScreenState: LiveData<AccountDetailsScreenState> = _accountDetailsScreenState
@@ -118,7 +117,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 ),
                 isMnemonicAvailable,
                 false,
-                account.backupFileId,
+                isBackupAvailable = backupService.isAccountBackedUp(address),
                 address,
             )
         }
@@ -215,7 +214,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupPasswordClicked(
-        activity: Activity,
         navController: NavController
     ) {
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
@@ -224,23 +222,21 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
 
                     val mnemonic = interactor.getMnemonic(accountDetailsScreenState.address)
-                    val fileID = backupService.saveBackupAccount(
-                        activity,
+                    backupService.saveBackupAccount(
                         DecryptedBackupAccount(
                             accountDetailsScreenState.accountNameState.value.text,
                             accountDetailsScreenState.address,
                             mnemonic,
+                            CryptoType.SR25519,
                             "",
-                            CryptoType.SR25519
+                            "",
                         ),
                         createBackupPasswordState.password.value.text
                     )
 
-                    interactor.updateBackupFileId(accountDetailsScreenState.address, fileID)
-
                     withContext(Dispatchers.Main) {
-                        _accountDetailsScreenState.value =
-                            accountDetailsScreenState.copy(fileId = fileID)
+                        _accountDetailsScreenState.value = _accountDetailsScreenState
+                            .value?.copy(isBackupAvailable = backupService.isAccountBackedUp(address))
                         navController.popBackStack()
                     }
                 }
@@ -250,18 +246,17 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
     fun onBackupClicked(
         navController: NavController,
-        activity: Activity,
         launcher: ActivityResultLauncher<Intent>
     ) {
         viewModelScope.launch {
             _accountDetailsScreenState.value?.let {
                 _accountDetailsScreenState.value = it.copy(isBackupLoading = true)
-                if (backupService.authorize(activity, launcher)) {
-                    if (it.fileId != null) {
-                        backupService.deleteBackupAccount(activity, it.fileId)
-                        interactor.removeBackupFileId(it.address)
+                if (backupService.authorize(launcher)) {
+                    if (backupService.isAccountBackedUp(address)) {
+                        backupService.deleteBackupAccount(address)
+
                         _accountDetailsScreenState.value =
-                            it.copy(fileId = null, isBackupLoading = false)
+                            it.copy(isBackupLoading = false, isBackupAvailable = backupService.isAccountBackedUp(address))
                     } else {
                         _createBackupPasswordState.value = CreateBackupPasswordState(
                             password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
@@ -280,14 +275,13 @@ class AccountDetailsViewModel @AssistedInject constructor(
         }
     }
 
-    fun onSuccessfulGoogleSignin(activity: Activity, navController: NavController) {
+    fun onSuccessfulGoogleSignin(navController: NavController) {
         viewModelScope.launch {
             _accountDetailsScreenState.value?.let {
-                if (it.fileId != null) {
-                    backupService.deleteBackupAccount(activity, it.fileId)
-                    interactor.removeBackupFileId(it.address)
+                if (backupService.isAccountBackedUp(address)) {
+                    backupService.deleteBackupAccount(address)
                     _accountDetailsScreenState.value =
-                        it.copy(fileId = null, isBackupLoading = false)
+                        it.copy(isBackupLoading = false)
                 } else {
                     navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
                     _accountDetailsScreenState.value = it.copy(isBackupLoading = false)

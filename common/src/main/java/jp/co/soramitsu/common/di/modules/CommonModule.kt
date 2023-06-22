@@ -282,7 +282,7 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideBackupService(): BackupService {
-        return BackupService.create(BuildConfig.GOOGLE_API_TOKEN)
+    fun provideBackupService(@ApplicationContext context: Context): BackupService {
+        return BackupService.create(BuildConfig.GOOGLE_API_TOKEN, context)
     }
 }

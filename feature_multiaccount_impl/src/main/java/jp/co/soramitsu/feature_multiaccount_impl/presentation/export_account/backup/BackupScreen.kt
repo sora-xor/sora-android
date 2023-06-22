@@ -130,6 +130,7 @@ internal fun BackupScreen(
                 onBackupWithGoogleButtonPressed?.let {
                     Button(
                         modifier = Modifier
+                            .padding(top = Dimens.x1)
                             .testTagAsId("GoogleBackup")
                             .fillMaxWidth()
                             .heightIn(Dimens.x7),
@@ -158,23 +159,10 @@ internal fun BackupScreen(
 
                         Text(
                             style = MaterialTheme.customTypography.buttonM,
-                            text = "Backup with Google"
+                            text = stringResource(id = R.string.account_options_backup_google)
                         )
                     }
                 }
-
-//                onSkipButtonPressed?.let {
-//                    TonalButton(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(top = Dimens.x3),
-//                    leftIcon = painterResource(id = R.drawable.ic_copy_24),
-//                    text = stringResource(id = R.string.copy_to_clipboard),
-//                    order = Order.TERTIARY,
-//                    size = Size.Large,
-//                    onClick = onButtonPressed,
-//                )
-//                }
             } else {
                 TonalButton(
                     modifier = Modifier

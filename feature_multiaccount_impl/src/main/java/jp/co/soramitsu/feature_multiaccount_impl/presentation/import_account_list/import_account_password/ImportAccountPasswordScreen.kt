@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,7 +124,10 @@ fun ImportAccountPasswordScreen(
                         focusManager.clearFocus()
                     }
                 ),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Password
+                ),
             )
 
             LoaderWrapper(
@@ -192,7 +196,7 @@ fun PreviewEnterPassphraseScreen() {
     ImportAccountPasswordScreen(
         ImportAccountPasswordState(
             selectedAccount = BackupAccountMetaWithIcon(
-                BackupAccountMeta("aa", "add", "fileid"), Drawable.createFromPath("")!!
+                BackupAccountMeta("aa", "add"), Drawable.createFromPath("")!!
             )
         ),
         {},

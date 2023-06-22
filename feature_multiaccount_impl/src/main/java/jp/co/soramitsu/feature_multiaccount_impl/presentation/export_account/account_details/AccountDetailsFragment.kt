@@ -71,7 +71,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                     .show() // todo showError
             } else {
                 navController?.let {
-                    viewModel.onSuccessfulGoogleSignin(requireActivity(), it)
+                    viewModel.onSuccessfulGoogleSignin(it)
                 }
             }
         }
@@ -111,7 +111,6 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                             debounceClickHandler.debounceClick {
                                 viewModel.onBackupClicked(
                                     navController,
-                                    requireActivity(),
                                     launcher
                                 )
                             }
@@ -135,7 +134,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         viewModel::onWarningToggle
                     ) {
                         debounceClickHandler.debounceClick {
-                            viewModel.onBackupPasswordClicked(requireActivity(), navController)
+                            viewModel.onBackupPasswordClicked(navController)
                         }
                     }
                 }

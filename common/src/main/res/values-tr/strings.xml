@@ -64,6 +64,7 @@
   <string name="common_and">ve</string>
   <string name="common_app_version">Uygulama sürümü</string>
   <string name="common_arab">Arapça</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Bakiye</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Tamamlandı</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">İngilizce</string>
   <string name="common_enter_amount">Miktarı girin</string>
@@ -130,6 +132,7 @@
   <string name="common_finnish">Fince</string>
   <string name="common_french">Fransızca</string>
   <string name="common_german">Almanca</string>
+  <string name="common_google_title">Google</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -150,6 +153,7 @@
   <string name="common_passphrase_title">Anımsatıcı Dizi</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Kurtarma Kelimeleri</string>
   <string name="common_receive">Al</string>
   <string name="common_received">Alınan</string>
@@ -262,6 +266,7 @@
   <string name="invoice_scan_error_match">Kendinize gönderemezsiniz.</string>
   <string name="invoice_scan_error_no_info">QR kodu çözülemiyor</string>
   <string name="invoice_scan_error_user_not_found">QR\'dan bir kullanıcı bulunamadı</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">Eklediğiniz jetonların oranı bu havuzun fiyatını belirleyecektir. Orandan memnun kaldığınızda, incelemek için arza tıklayın.</string>
   <string name="liquidity_pair_creation_title">İlk likidite sağlayıcısı sizsiniz</string>
@@ -307,6 +312,9 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">PIN kodunuzu ayarlayın</string>
   <string name="pincode_touch_fingerprint_scanner">Parmak izi tarayıcısına dokunun</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_info_text_1">Polkaswap, SORA topluluğu tarafından korunur. Polkaswap işlevini kullanmadan önce, lütfen %% Polkaswap SSS %% ve Polkaswap\'ın nasıl çalıştığına dair ayrıntılı bir açıklamanın yanı sıra %%Polkaswap Memorandumu ve Hizmet Şartları%% ile %%Gizlilik Politikasını içeren belgeleri inceleyin%%. Bu belgeler, güvenli ve olumlu bir kullanıcı deneyimi için çok önemlidir. Polkaswap\'ı kullanarak, bu belgeleri okuyup anladığınızı kabul etmektesiniz. </string>
   <string name="polkaswap_info_text_2">Ayrıca aşağıdakileri de kabul ediyorsunuz:</string>
   <string name="polkaswap_info_text_3">Yasal yargı yetki alanınızda Polkaswap\'ı özel kullanımınız için geçerli olabilecek tüm yasalara uyum konusunda yegane sorumlu sizsinizdir;</string>
@@ -332,6 +340,7 @@
   <string name="polkaswap_network_fee_info">SORA sisteminin büyümesini ve istikrarlı performansını sağlamak için ağ ücreti alınır.</string>
   <string name="polkaswap_output_estimated">Çıktı tahminidir. En az %s alacaksınız veya işlem geri alınacak.</string>
   <string name="polkaswap_pool_not_created">Havuz oluşturulmadı</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Likidite karşılığında farming ödülü</string>
   <string name="polkaswap_slippage_frontrun">İşleminiz sizden önce başkası tarafından yapılabilir</string>
   <string name="polkaswap_slippage_info">Eğer fiyat bu yüzdeden daha fazla değişirse, işleminiz geri çekilecektir.</string>

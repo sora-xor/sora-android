@@ -120,7 +120,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT)
                     .show() // todo showError
             } else {
-                viewModel.onSuccessfulGoogleSignin(this@OnboardingActivity, navController)
+                viewModel.onSuccessfulGoogleSignin(navController)
             }
         }
 
@@ -170,7 +170,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                 debounceClickHandler.debounceClick {
                                     viewModel.onGoogleSignin(
                                         navController,
-                                        this@OnboardingActivity,
                                         launcher
                                     )
                                 }
@@ -192,11 +191,16 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             title(text = stringResource(id = R.string.recovery_source_type))
                             listItems(
                                 listOf(
+                                    stringResource(id = R.string.common_google_title),
                                     stringResource(id = R.string.common_passphrase_title),
                                     stringResource(id = R.string.common_raw_seed)
                                 ),
                                 onClick = { index, _ ->
-                                    viewModel.onRecoveryClicked(navController, index)
+                                    if (index == 0) {
+                                        viewModel.onGoogleSignin(navController, launcher)
+                                    } else {
+                                        viewModel.onRecoveryClicked(navController, index)
+                                    }
                                 }
                             )
                         }
@@ -246,7 +250,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                 {
                                     viewModel.onGoogleSignin(
                                         navController,
-                                        this@OnboardingActivity,
                                         launcher
                                     )
                                 }
@@ -362,7 +365,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         ) {
                             debounceClickHandler.debounceClick {
                                 viewModel.onImportContinueClicked(
-                                    this@OnboardingActivity,
                                     navController
                                 )
                             }

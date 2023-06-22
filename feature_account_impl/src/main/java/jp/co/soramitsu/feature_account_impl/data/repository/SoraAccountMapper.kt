@@ -41,7 +41,6 @@ object SoraAccountMapper {
         return SoraAccount(
             substrateAddress = account.substrateAddress,
             accountName = account.accountName,
-            backupFileId = account.backupFileId
         )
     }
 
@@ -49,7 +48,6 @@ object SoraAccountMapper {
         return SoraAccountLocal(
             substrateAddress = account.substrateAddress,
             accountName = account.accountName,
-            backupFileId = account.backupFileId
         )
     }
 }

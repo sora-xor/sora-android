@@ -133,7 +133,7 @@ fun PreviewEnterPassphraseScreen() {
     ImportAccountSuccessScreen(
         ImportAccountPasswordState(
             selectedAccount = BackupAccountMetaWithIcon(
-                BackupAccountMeta("aa", "add", "fileid"), Drawable.createFromPath("")!!
+                BackupAccountMeta("aa", "add"), Drawable.createFromPath("")!!
             )
         ),
         {},

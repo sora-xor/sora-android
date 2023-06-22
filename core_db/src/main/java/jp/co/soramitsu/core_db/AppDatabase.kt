@@ -69,7 +69,7 @@ import jp.co.soramitsu.core_db.model.TokenLocal
 
 @TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 70,
+    version = 69,
     entities = [
         AssetLocal::class,
         TokenLocal::class,
@@ -90,7 +90,6 @@ import jp.co.soramitsu.core_db.model.TokenLocal
         AutoMigration(from = 60, to = 61),
         AutoMigration(from = 67, to = 68),
         AutoMigration(from = 68, to = 69, spec = AppDatabase.AutoMigrationSpecTo69::class),
-        AutoMigration(from = 69, to = 70),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

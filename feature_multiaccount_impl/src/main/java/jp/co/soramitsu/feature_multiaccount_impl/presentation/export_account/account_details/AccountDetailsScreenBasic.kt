@@ -74,7 +74,7 @@ internal fun AccountDetailsScreenBasic(
     Spacer(modifier = Modifier.size(Dimens.x2))
     BackupOptions(
         isMnemonicAvailable = state.isMnemonicAvailable,
-        isBackupAvailable = state.fileId != null,
+        isBackupAvailable = state.isBackupAvailable,
         isBackupLoading = state.isBackupLoading,
         onShowPassphrase = onShowPassphrase,
         onShowRawSeed = onShowRawSeed,
@@ -106,7 +106,7 @@ private fun PreviewAccountDetailsScreenBasic() {
                 accountNameState = InputTextState(value = TextFieldValue("bla"), label = "Name"),
                 isMnemonicAvailable = false,
                 isBackupLoading = false,
-                fileId = null,
+                isBackupAvailable = false,
                 "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
             ),
             onValueChanged = {},

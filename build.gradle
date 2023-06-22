@@ -17,7 +17,7 @@ buildscript {
             spongycastle           : '1.58.0.0',
             ed25519                : '2.0.1',
             web3j                  : '4.2.0-android',
-            sharedUtils            : '0.0.26-SNAPSHOT',
+            sharedUtils            : '1.0.0-20230621.151129-5',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
             zXingEmbedded          : '4.3.0@aar',
@@ -52,7 +52,6 @@ buildscript {
             xserializationjson     : '1.5.0',
             composeMaterialDialog  : '0.9.0',
             ktor                   : '2.2.3',
-            guava                  : '31.0.1-android'
     ]
 
     ext {

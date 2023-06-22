@@ -64,6 +64,7 @@
   <string name="common_and">и</string>
   <string name="common_app_version">Верзија апликације</string>
   <string name="common_arab">Арапски</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Nazad</string>
   <string name="common_backup">Rezervna kopija</string>
   <string name="common_balance">Салдо</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Готово</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Енглески</string>
   <string name="common_enter_amount">Unesite iznos</string>
@@ -130,6 +132,7 @@
   <string name="common_finnish">Фински</string>
   <string name="common_french">Француски</string>
   <string name="common_german">Nemački</string>
+  <string name="common_google_title">Google</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -151,6 +154,7 @@
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Сирови сид</string>
   <string name="common_receive">Прими</string>
   <string name="common_received">Примљен</string>
@@ -263,6 +267,7 @@
   <string name="invoice_scan_error_match">Не можеш себи да пошаљеш</string>
   <string name="invoice_scan_error_no_info">QR се не може декодирати</string>
   <string name="invoice_scan_error_user_not_found">Не могу да пронађем корисника са QR-а</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Raspoloživa sredstva</string>
   <string name="liquidity_pair_creation_description">Однос токена које додате ће одредити цену овог пула. Када будете задовољни са стопом, кликните на понуду за преглед.</string>
   <string name="liquidity_pair_creation_title">Ви сте први добављача ликвидности</string>
@@ -308,6 +313,9 @@
   <string name="pincode_one_try_left">Imate još jedan pokušaj pre hlađenja</string>
   <string name="pincode_set_your_pin_code">Подесите пин код</string>
   <string name="pincode_touch_fingerprint_scanner">Додирните скенер отиска прста</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_info_text_1">Полкасвап одржава заједница СОРА. Пре него што наставите да користите Полкасвап, прегледајте%%Полкасвап ФАQ%% и документацију, која укључује детаљно објашњење Полкасвап режима, као и %%Полкасвап Меморандум и Услове коришћења услуге%%, као и %%Привацy Полицy%%. Ови документи су од суштинског значаја за безбедно и позитивно корисничко искуство. Коришћењем Полкасвапа потврђујете да сте прочитали и разумели ова документа.</string>
   <string name="polkaswap_info_text_2">Takođe potvrđujete sledeće:</string>
   <string name="polkaswap_info_text_3">Vi ste potpuno odgovorni za sve zakonske propise i posledice koji se mogu primeniti u vašoj jurisdikciji za vaše korišćenje Polkaswap-a;</string>
@@ -333,6 +341,7 @@
   <string name="polkaswap_network_fee_info">Mrežna naknada se koristi da bi se osigurao rast SORA sistema i stabilne performanse.</string>
   <string name="polkaswap_output_estimated">Исход је процењен. Примићете најмање %s или ће трансакција бити отказана.</string>
   <string name="polkaswap_pool_not_created">Pool nije kreiran</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Фарминг награда за давање ликвидности</string>
   <string name="polkaswap_slippage_frontrun">Vaša transakcija može biti u prva na redu</string>
   <string name="polkaswap_slippage_info">Vaša transakcijanece biti procesuirana ukoliko se cena promeni nepovoljno za više od ovog procenta</string>

@@ -64,6 +64,7 @@
   <string name="common_and">und</string>
   <string name="common_app_version">App-Version</string>
   <string name="common_arab">Arabisch</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Zurück</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Saldo</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Erledigt</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Englisch</string>
   <string name="common_enter_amount">Betrag eingeben</string>
@@ -130,6 +132,7 @@
   <string name="common_finnish">Finnisch</string>
   <string name="common_french">Französisch</string>
   <string name="common_german">Deutsch</string>
+  <string name="common_google_title">Google</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -150,6 +153,7 @@
   <string name="common_passphrase_title">Passphrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw Seed</string>
   <string name="common_receive">Empfangen</string>
   <string name="common_received">Empfangen</string>
@@ -262,6 +266,7 @@
   <string name="invoice_scan_error_match">Du kannst nicht an dich selbst senden</string>
   <string name="invoice_scan_error_no_info">QR-Code kann nicht entziffert werden</string>
   <string name="invoice_scan_error_user_not_found">Keinen Benutzer vom QR-Code gefunden</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">Das Verhältnis der Token, die du hinzufügst, bestimmt den Preis dieses Pools. Sobald du mit dem Preis zufrieden bist, klicke auf Angebot, um es zu überprüfen.</string>
   <string name="liquidity_pair_creation_title">Du bist der erste Liquiditätsanbieter</string>
@@ -307,6 +312,9 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">PIN-Code einrichten</string>
   <string name="pincode_touch_fingerprint_scanner">Berühre den Fingerabdruckscanner</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_info_text_1">Polkaswap wird von der SORA-Community verwaltet. Bevor du die Polkaswap-Funktionalität verwendest, lies bitte die %%Polkaswap-FAQ%% und die Dokumentation, die eine detaillierte Erklärung zur Funktionsweise von Polkaswap, sowie das %%Polkaswap-Memorandum und Servicebedingungen%% und die %%Datenschutzrichtlinien%% enthält.\nDiese Dokumente sind entscheidend für eine sichere und positive Benutzererfahrung. Durch die Nutzung von Polkaswap bestätigst du, dass du diese Dokumente gelesen und verstanden hast.</string>
   <string name="polkaswap_info_text_2">Du erkennst außerdem Folgendes an:</string>
   <string name="polkaswap_info_text_3">Deine alleinige Verantwortung für die Einhaltung aller Gesetze, die für deine spezielle Nutzung von Polkaswap in deiner Rechtsordnung gelten können;</string>
@@ -332,6 +340,7 @@
   <string name="polkaswap_network_fee_info">Die Netzwerkgebühr wird dazu verwendet, SORAs Systemwachstum und -stabilität abzusichern.</string>
   <string name="polkaswap_output_estimated">Die Ausgabe wird geschätzt. Du erhältst mindestens %s oder die Transaktion wird rückgängig gemacht.</string>
   <string name="polkaswap_pool_not_created">Pool nicht erstellt</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming Belohungen für Liquiditätsbereitstellung</string>
   <string name="polkaswap_slippage_frontrun">Deine Transaktion könnte frontrunnen</string>
   <string name="polkaswap_slippage_info">Deine Transaktionen wird rückgängig gemacht, wenn sich der Preis um mehr als diesen Prozentsatz ungünstig ändert</string>

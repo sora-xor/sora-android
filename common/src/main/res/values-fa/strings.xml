@@ -64,6 +64,7 @@
   <string name="common_and">و</string>
   <string name="common_app_version">نسخه App</string>
   <string name="common_arab">عرب</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">بازگشت</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">موجودی</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">انجام شد</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">انگلیسی</string>
   <string name="common_enter_amount">مقدار را وارد کنید</string>
@@ -130,6 +132,7 @@
   <string name="common_finnish">فنلاندی</string>
   <string name="common_french">فرانسوی</string>
   <string name="common_german">آلمانی</string>
+  <string name="common_google_title">Google</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -150,6 +153,7 @@
   <string name="common_passphrase_title">رمز عبور</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">دانه خام (Raw seed)</string>
   <string name="common_receive">دريافت كردن</string>
   <string name="common_received">دریافت شده</string>
@@ -262,6 +266,7 @@
   <string name="invoice_scan_error_match">نمیتوانید برای خودتان بفرستید</string>
   <string name="invoice_scan_error_no_info">کد QR قابل رمزگشایی نیست</string>
   <string name="invoice_scan_error_user_not_found">کاربری با QR پیدا نمی شود</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">نسبت توکن‌هایی که اضافه می‌کنید، قیمت این مخزن را تعیین می‌کند. هر وقت از نرخ راضی بودید، برای بررسی روی تامین کلیک کنید.</string>
   <string name="liquidity_pair_creation_title">شما اولین ارائه دهنده نقدینگی هستید</string>
@@ -307,6 +312,9 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">پین را وارد کنید</string>
   <string name="pincode_touch_fingerprint_scanner">اسکنر اثر انگشت را لمس کنید</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
   <string name="polkaswap_info_text_1">Polkaswap توسط جامعه SORA نگهداری می‌شود. لطفاً قبل از استفاده از قابلیت Polkaswap ،%% سوالات متداول Polkaswap %% و دیگر نوشته ها ، که شامل توضیحات مفصلی در مورد نحوه عملکرد Polkaswap ، و همچنین یادداشت و شرایط خدمات Polkaswap و سیاست حفظ حریم خصوصی است را مرور کنید. این اسناد برای تجربه ایمن و مثبت کاربر بسیار مهم است. با استفاده از Polkaswap ، تایید می کنید که این اسناد را خوانده و درک کرده اید. \n</string>
   <string name="polkaswap_info_text_2">شما همچنین به موارد زیر اذعان می‌کنید:</string>
   <string name="polkaswap_info_text_3">مسئولیت انحصاری شما برای رعایت تمام قوانینی که ممکن است در مورد استفاده خاص شما از Polkaswap در حوزه قضایی شما اعمال شود.</string>
@@ -332,6 +340,7 @@
   <string name="polkaswap_network_fee_info">کارمزد شبکه برای اطمینان از رشد و عملکرد پایدار سامانه SORA استفاده می‌شود.</string>
   <string name="polkaswap_output_estimated">مقدار دریافتی تخمینی است. حداقل مقدار %s دریافت خواهید کرد، در غیر اینصورت تراکنش برگشت خواهد خورد.</string>
   <string name="polkaswap_pool_not_created">استخر ایجاد نشده</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">پاداش فارمینگ حاصل از تامین نقدینگی</string>
   <string name="polkaswap_slippage_frontrun">تراکنش شما ممکن است پیشتاز (frontrun) باشد</string>
   <string name="polkaswap_slippage_info">در صورتی که قیمت بیش از مقدار تایین شده توسط شما جا به جا شود (اگر باعث ضرر شما شود) این تراکنش برگشت میخورد</string>

@@ -65,7 +65,4 @@ interface AccountDao {
 
     @Query("update accounts set accountName = :newName where substrateAddress = :address")
     suspend fun updateAccountName(newName: String, address: String)
-
-    @Query("update accounts set backupFileId = :fileId where substrateAddress = :address")
-    suspend fun updateBackupFileId(fileId: String?, address: String)
 }
