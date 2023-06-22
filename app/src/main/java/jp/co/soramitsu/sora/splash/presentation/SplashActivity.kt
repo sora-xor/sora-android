@@ -34,6 +34,7 @@ package jp.co.soramitsu.sora.splash.presentation
 
 import android.animation.ValueAnimator
 import android.os.Bundle
+import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
@@ -86,6 +87,13 @@ class SplashActivity : AppCompatActivity() {
                 isSecondPartStarted = true
                 viewBinding.animationView.resumeAnimation()
             }
+        }
+
+        splashViewModel.loadingTextVisiblity.observe(
+            this
+        ) {
+            viewBinding.loadingDisclaimerTextView.visibility = View.VISIBLE
+            viewBinding.loadingProgressBar.visibility = View.VISIBLE
         }
 
         splashViewModel.showMainScreen.observe(this) {
