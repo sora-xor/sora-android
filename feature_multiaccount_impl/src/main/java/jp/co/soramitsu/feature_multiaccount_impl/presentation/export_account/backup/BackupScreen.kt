@@ -78,7 +78,6 @@ internal fun BackupScreen(
     state: BackupScreenState,
     onButtonPressed: () -> Unit,
     onBackupWithGoogleButtonPressed: (() -> Unit)? = null,
-    onSkipButtonPressed: (() -> Unit)? = null,
 ) {
     ContentCard(
         modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1),
@@ -220,7 +219,6 @@ private fun PreviewBackup() {
                 mnemonicWords = List(12) { p -> "abcde n ${p + 1}" }
             ),
             onButtonPressed = {},
-//            onSkipButtonPressed = {}
         )
         Spacer(modifier = Modifier.size(10.dp))
         BackupScreen(
@@ -229,7 +227,6 @@ private fun PreviewBackup() {
                 mnemonicWords = List(15) { p -> "zxcvb n ${p + 1}" },
             ),
             onButtonPressed = {},
-//            onSkipButtonPressed = {}
         )
     }
 }

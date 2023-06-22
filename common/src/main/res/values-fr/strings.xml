@@ -132,7 +132,8 @@
   <string name="common_finnish">Finlandais</string>
   <string name="common_french">Français</string>
   <string name="common_german">Allemand</string>
-  <string name="common_google_title">Google</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -313,8 +314,10 @@
   <string name="pincode_set_your_pin_code">Choisissez un code PIN</string>
   <string name="pincode_touch_fingerprint_scanner">Touchez le scanner d\'empreintes digitales</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap est maintenu par la communauté SORA. Avant d\'utiliser la fonctionnalité Polkaswap, veuillez consulter la %%*FAQ Polkaswap%% et la documentation, qui contient une explication détaillée du fonctionnement de Polkaswap, ainsi que %%le mémorandum, les conditions d\'utilisation de Polkaswap%% et %%la politique de confidentialité%%. Ces documents sont cruciaux pour une expérience utilisateur sécurisée et positive. En utilisant Polkaswap, vous reconnaissez avoir lu et compris ces documents.</string>
   <string name="polkaswap_info_text_2">Vous reconnaissez également ce qui suit:</string>
   <string name="polkaswap_info_text_3">Votre seule responsabilité quant au respect de toutes les lois pouvant s\'appliquer à votre utilisation particulière de Polkaswap dans votre juridiction légale;</string>

@@ -132,7 +132,8 @@
   <string name="common_finnish">فنلاندی</string>
   <string name="common_french">فرانسوی</string>
   <string name="common_german">آلمانی</string>
-  <string name="common_google_title">Google</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -313,8 +314,10 @@
   <string name="pincode_set_your_pin_code">پین را وارد کنید</string>
   <string name="pincode_touch_fingerprint_scanner">اسکنر اثر انگشت را لمس کنید</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap توسط جامعه SORA نگهداری می‌شود. لطفاً قبل از استفاده از قابلیت Polkaswap ،%% سوالات متداول Polkaswap %% و دیگر نوشته ها ، که شامل توضیحات مفصلی در مورد نحوه عملکرد Polkaswap ، و همچنین یادداشت و شرایط خدمات Polkaswap و سیاست حفظ حریم خصوصی است را مرور کنید. این اسناد برای تجربه ایمن و مثبت کاربر بسیار مهم است. با استفاده از Polkaswap ، تایید می کنید که این اسناد را خوانده و درک کرده اید. \n</string>
   <string name="polkaswap_info_text_2">شما همچنین به موارد زیر اذعان می‌کنید:</string>
   <string name="polkaswap_info_text_3">مسئولیت انحصاری شما برای رعایت تمام قوانینی که ممکن است در مورد استفاده خاص شما از Polkaswap در حوزه قضایی شما اعمال شود.</string>

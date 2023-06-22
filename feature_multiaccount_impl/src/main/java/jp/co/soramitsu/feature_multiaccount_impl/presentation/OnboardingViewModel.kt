@@ -52,6 +52,7 @@ import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
@@ -73,7 +74,6 @@ import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -85,6 +85,7 @@ class OnboardingViewModel @Inject constructor(
     private val connectionManager: ConnectionManager,
     private val backupService: BackupService,
     private val avatarGenerator: AccountAvatarGenerator,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
     private val _createAccountCardState = MutableLiveData<CreateAccountState>()
@@ -532,7 +533,8 @@ class OnboardingViewModel @Inject constructor(
             } catch (e: UnauthorizedException) {
                 _tutorialScreenState.value =
                     _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
-                e.printStackTrace()
+
+                onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             }
         }
     }
@@ -547,7 +549,7 @@ class OnboardingViewModel @Inject constructor(
     ) {
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(coroutineManager.io) {
                 _passphraseCardState.value?.let { passphraseCardState ->
                     tempAccount?.let {
                         backupService.saveBackupAccount(
@@ -648,9 +650,9 @@ class OnboardingViewModel @Inject constructor(
                             onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
                         }
                     } catch (e: DecryptionException) {
-                        onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
+                        onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: DecodingException) {
-                        onError(SoraException.businessError(ResponseCode.VOTES_NOT_ENOUGH))
+                        onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
                     } catch (e: SoraException) {
                         onError(e)
                     }
@@ -664,7 +666,7 @@ class OnboardingViewModel @Inject constructor(
         mainStarter.start(context)
     }
 
-    fun onImportMoreClicked(activity: Activity, navController: NavController) {
+    fun onImportMoreClicked(navController: NavController) {
         viewModelScope.launch {
             _importAccountPasswordState.value =
                 _importAccountPasswordState.value?.copy(isLoading = true)

@@ -151,8 +151,6 @@ buildscript {
 
         composeMaterialDialogDep = "io.github.vanpra.compose-material-dialogs:core:$versions.composeMaterialDialog"
 
-        guavaDep = "com.google.guava:guava:$versions.guava"
-
         runtimePermissionsDep = "com.github.florent37:runtime-permission-kotlin:$versions.runtimePermissions"
 
         jUnitDep = "junit:junit:$versions.jUnit"

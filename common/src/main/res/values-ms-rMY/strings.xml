@@ -132,7 +132,8 @@
   <string name="common_finnish">Finland</string>
   <string name="common_french">Bahasa Perancis</string>
   <string name="common_german">Jerman</string>
-  <string name="common_google_title">Google</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Bahasa Ibrani</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -312,8 +313,10 @@
   <string name="pincode_set_your_pin_code">Cipta kod pin</string>
   <string name="pincode_touch_fingerprint_scanner">Sentuh pengimbas cap jari</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap diselenggara oleh komuniti SORA. Sebelum menggunakan fungsi Polkaswap, sila semak %% Polkaswap FAQ %% dan dokumentasi, termasuk penjelasan yang terperinci mengenai cara Polkaswap berfungsi, serta Memorandum Polkaswap dan Syarat Perkhidmatan dan Dasar Privasi. Dokumen-dokumen ini sangat penting untuk pengalaman pengguna yang selamat dan positif. Dengan menggunakan Polkaswap, anda mengakui bahawa anda telah membaca dan memahami dokumen-dokumen ini.</string>
   <string name="polkaswap_info_text_2">Anda juga mengakui perkara-perkara berikut:</string>
   <string name="polkaswap_info_text_3">Tanggungjawab anda untuk mematuhi semua undang-undang yang mungkin terpakai untuk penggunaan Polkaswap tertentu dalam bidang kuasa undang-undang anda;</string>

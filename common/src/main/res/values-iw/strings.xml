@@ -132,7 +132,8 @@
   <string name="common_finnish">פינית</string>
   <string name="common_french">צרפתית</string>
   <string name="common_german">גרמנית</string>
-  <string name="common_google_title">Google</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">עברית</string>
   <string name="common_hindi">הינדי</string>
   <plurals name="common_hour">
@@ -315,8 +316,10 @@
   <string name="pincode_set_your_pin_code">הגדר קוד PIN</string>
   <string name="pincode_touch_fingerprint_scanner">גע בסורק טביעת האצבע</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">פולקסוואפ מתוחזק על ידי קהילת סורה. לפני שתמשיך להשתמש בפולקסוואפ, אנא עיין  %%בשאלות הנפוצות של פולקסוואפ%%  ובתיעוד, הכולל הסבר מפורט על אופן הפעולה של פולקסוואפ, כמו גם את %%תזכיר המדיניות ותנאי השירותים של פולקסוואפ%%, ו- %%מדיניות הפרטיות%%.\n\nמסמכים אלה חיוניים לחוויית משתמש מאובטחת וחיובית. על ידי שימוש בפולקסוואפ, אתה מכיר בכך שקראת והבנת את המסמכים האלה.</string>
   <string name="polkaswap_info_text_2">אתה גם מאשר את הדברים הבאים:</string>
   <string name="polkaswap_info_text_3">האחריות הבלעדית שלך לעמידה בכל החוקים שעשויים לחול על השימוש הספציפי שלך בפולקסוואפ בתחום השיפוט הסמכותי שלך;</string>

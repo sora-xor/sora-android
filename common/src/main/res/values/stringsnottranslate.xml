@@ -47,4 +47,5 @@
     <string name="sora_2" translatable="false">SORA 2</string>
     <string name="asset_pswap_fullname" translatable="false">PSWAP</string>
     <string name="common_json" translatable="false">JSON</string>
+    <string name="common_google" translatable="false">Google</string>
 </resources>

@@ -99,7 +99,7 @@ class ClaimWorker @AssistedInject constructor(
             .build()
 
         val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification)
-        setForegroundAsync(foregroundInfo)
+        setForeground(foregroundInfo)
 
         val result = runCatching { walletInteractor.migrate() }.getOrElse {
             FirebaseWrapper.recordException(it)

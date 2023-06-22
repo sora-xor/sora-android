@@ -132,7 +132,8 @@
   <string name="common_finnish">الفنلندية</string>
   <string name="common_french">الفرنسية</string>
   <string name="common_german">الألمانية</string>
-  <string name="common_google_title">Google</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -317,8 +318,10 @@
   <string name="pincode_set_your_pin_code">إعداد رمز الواجهة</string>
   <string name="pincode_touch_fingerprint_scanner">إلمس الماسح الضوئي للبصمة</string>
   <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
   <string name="polkaswap_farming_pool_share">Your pool share staked</string>
   <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">يتم تسيير بولكاسواب من قبل مجتمع سورا. قبل الاستمرار في استخدام بولكاسواب ، يرجى مراجعة %% وثيقة الاسئلة الشائعة حول بولكاسواب %% والوثائق التي تتضمن شرحًا تفصيليًا حول آلية عملها، بالإضافة إلى %% مذكرة شروط استخدام بولكاسواب %% ، و %% احكام الخصوصية %% . \n\n هذه المستندات ضرورية لتجربة مستخدم آمنة وإيجابية. باستخدامك بولكاسواب، فإنك تقر بأنك قد قرأت هذه المستندات وفهمتها.</string>
   <string name="polkaswap_info_text_2">أنت تقر أيضًا بما يلي:</string>
   <string name="polkaswap_info_text_3">من مسؤوليتك الامتثال لجميع القوانين التي قد تشمل استخدامك لبولكاسواب في حدود منطقتك القانونية؛</string>

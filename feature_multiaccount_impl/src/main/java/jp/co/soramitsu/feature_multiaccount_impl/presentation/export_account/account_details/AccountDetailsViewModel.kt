@@ -45,6 +45,7 @@ import dagger.assisted.AssistedInject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
@@ -59,7 +60,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -73,6 +73,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val clipboardManager: ClipboardManager,
     private val backupService: BackupService,
+    private val coroutineManager: CoroutineManager,
     @Assisted("address") private val address: String,
 ) : BaseViewModel() {
 
@@ -218,7 +219,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     ) {
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(coroutineManager.io) {
                 _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
 
                     val mnemonic = interactor.getMnemonic(accountDetailsScreenState.address)
@@ -234,7 +235,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                         createBackupPasswordState.password.value.text
                     )
 
-                    withContext(Dispatchers.Main) {
+                    withContext(coroutineManager.main) {
                         _accountDetailsScreenState.value = _accountDetailsScreenState
                             .value?.copy(isBackupAvailable = backupService.isAccountBackedUp(address))
                         navController.popBackStack()

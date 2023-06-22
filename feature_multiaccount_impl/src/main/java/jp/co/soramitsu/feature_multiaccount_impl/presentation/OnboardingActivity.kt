@@ -36,7 +36,6 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -64,6 +63,8 @@ import com.vanpra.composematerialdialogs.title
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
 import jp.co.soramitsu.common.presentation.compose.webview.WebView
 import jp.co.soramitsu.common.presentation.view.SoraBaseActivity
@@ -117,8 +118,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != Activity.RESULT_OK) {
-                Toast.makeText(this, "Google signin failed", Toast.LENGTH_SHORT)
-                    .show() // todo showError
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } else {
                 viewModel.onSuccessfulGoogleSignin(navController)
             }
@@ -191,7 +191,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             title(text = stringResource(id = R.string.recovery_source_type))
                             listItems(
                                 listOf(
-                                    stringResource(id = R.string.common_google_title),
+                                    stringResource(id = R.string.common_google),
                                     stringResource(id = R.string.common_passphrase_title),
                                     stringResource(id = R.string.common_raw_seed)
                                 ),
@@ -254,7 +254,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                     )
                                 }
                             } else null
-//                            onSkipButtonPressed = { viewModel.onSkipButtonPressed(this@OnboardingActivity) }
                         )
                     }
                 }
@@ -384,7 +383,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         ) {
                             debounceClickHandler.debounceClick {
                                 viewModel.onImportMoreClicked(
-                                    this@OnboardingActivity,
                                     navController
                                 )
                             }

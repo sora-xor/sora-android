@@ -52,6 +52,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
@@ -67,8 +69,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != Activity.RESULT_OK) {
-                Toast.makeText(requireActivity(), "Google signin failed", Toast.LENGTH_SHORT)
-                    .show() // todo showError
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } else {
                 navController?.let {
                     viewModel.onSuccessfulGoogleSignin(it)

@@ -142,9 +142,6 @@ dependencies {
 
     implementation xNetworkingDep
 
-    implementation guavaDep
-
-
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
 

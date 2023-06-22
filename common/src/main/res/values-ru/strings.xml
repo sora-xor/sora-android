@@ -132,7 +132,8 @@
   <string name="common_finnish">Финский</string>
   <string name="common_french">Французский</string>
   <string name="common_german">Немецкий</string>
-  <string name="common_google_title">Google</string>
+  <string name="common_google_authorization_error">Ошибка Google авторизации</string>
+  <string name="common_google_backup_decryption_failed">Ошибка расшифровки аккаунта. Проверьте пароль и попробуйте снова.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
   <plurals name="common_hour">
@@ -316,8 +317,10 @@
   <string name="pincode_set_your_pin_code">Установите пин-код</string>
   <string name="pincode_touch_fingerprint_scanner">Коснитесь сканера отпечатков пальцев</string>
   <string name="polkaswap_farming_demeter_power">Работает на Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Некоторая часть вашей доли в пуле находится в стейкинге. Чтобы получить к ней доступ, вы должны сначала разблокировать ее.</string>
   <string name="polkaswap_farming_pool_share">Застейканая часть пула</string>
   <string name="polkaswap_farming_staked_for">Застейкано в %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">Чтобы забрать ликвидность, необходимо сначала разблокировать ее</string>
   <string name="polkaswap_info_text_1">Polkaswap разрабатывается сообществом SORA. Перед тем, как стать контрибьютером Polkaswap, ознакомьтесь с %%Polkaswap FAQ%% и документацией, которая описывает то, как работает Polkaswap, %%Polkaswap Меморандумом и Условиями и положениями%%, и %%Политикой конфиденциальности%%.\n\nЭти документы важны для безопасной и комфортной работы пользователей. Используя Polkaswap вы соглашаетесь, что вы прочли и поняли суть документов.</string>
   <string name="polkaswap_info_text_2">Вы также осознаете:</string>
   <string name="polkaswap_info_text_3">Вашу личную ответственность за соблюдение законов, которые могут применяться к использованию Polkaswap в вашей юрисдикции;</string>
