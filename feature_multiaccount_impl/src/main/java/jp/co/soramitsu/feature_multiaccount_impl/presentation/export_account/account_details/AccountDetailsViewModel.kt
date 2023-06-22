@@ -221,7 +221,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
                 _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
-
                     val mnemonic = interactor.getMnemonic(accountDetailsScreenState.address)
                     backupService.saveBackupAccount(
                         DecryptedBackupAccount(
@@ -254,26 +253,36 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 _accountDetailsScreenState.value = it.copy(isBackupLoading = true)
                 if (backupService.authorize(launcher)) {
                     if (backupService.isAccountBackedUp(address)) {
-                        backupService.deleteBackupAccount(address)
-
-                        _accountDetailsScreenState.value =
-                            it.copy(isBackupLoading = false, isBackupAvailable = backupService.isAccountBackedUp(address))
+                        deleteGoogleBackup()
                     } else {
-                        _createBackupPasswordState.value = CreateBackupPasswordState(
-                            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
-                            passwordConfirmation = InputTextState(
-                                label = resourceManager.getString(
-                                    R.string.export_json_input_confirmation_label
-                                )
-                            )
-                        )
-
-                        navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
-                        _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
+                        openCreateBackupScreen(navController)
                     }
                 }
             }
         }
+    }
+
+    private suspend fun deleteGoogleBackup() {
+        backupService.deleteBackupAccount(address)
+        _accountDetailsScreenState.value = accountDetailsScreenState.value?.copy(
+            isBackupLoading = false,
+            isBackupAvailable = backupService.isAccountBackedUp(address)
+        )
+    }
+
+    private fun openCreateBackupScreen(navController: NavController) {
+        _createBackupPasswordState.value = CreateBackupPasswordState(
+            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+            passwordConfirmation = InputTextState(
+                label = resourceManager.getString(
+                    R.string.export_json_input_confirmation_label
+                )
+            )
+        )
+
+        navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
+        _accountDetailsScreenState.value =
+            accountDetailsScreenState.value?.copy(isBackupLoading = false)
     }
 
     fun onSuccessfulGoogleSignin(navController: NavController) {

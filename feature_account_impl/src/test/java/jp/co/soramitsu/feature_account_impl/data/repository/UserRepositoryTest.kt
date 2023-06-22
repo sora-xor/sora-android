@@ -137,7 +137,6 @@ class UserRepositoryTest {
         coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
             accountAddress,
             accountName,
-            null
         )
         every { coroutineManager.applicationScope } returns this
         userRepository = UserRepositoryImpl(
@@ -182,7 +181,6 @@ class UserRepositoryTest {
         coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(
             soraAccount.substrateAddress,
             soraAccount.accountName,
-            soraAccount.backupFileId
         )
 
         userRepository.setCurSoraAccount(soraAccount)
@@ -198,12 +196,11 @@ class UserRepositoryTest {
                     SoraAccountLocal(
                         "accountAddress",
                         "accountName",
-                        "fileId"
                     )
                 )
             )
         }
-        val accounts = listOf(SoraAccount("accountAddress", "accountName", "fileId"))
+        val accounts = listOf(SoraAccount("accountAddress", "accountName"))
 
         assertEquals(accounts, userRepository.flowSoraAccountsList().first())
     }
@@ -224,7 +221,6 @@ class UserRepositoryTest {
             SoraAccountLocal(
                 "accountAddress",
                 "accountName",
-                null
             )
         )
         val accounts = listOf(SoraAccount("accountAddress", "accountName"))
@@ -246,7 +242,6 @@ class UserRepositoryTest {
                 SoraAccountLocal(
                     "accountAddress",
                     "accountName",
-                    null
                 )
             )
         } returns Unit
@@ -258,7 +253,7 @@ class UserRepositoryTest {
         }
         coEvery { hubDao.insert(any()) } returns Unit
 
-        val soraAccount = SoraAccount("accountAddress", "accountName", null)
+        val soraAccount = SoraAccount("accountAddress", "accountName")
         userRepository.insertSoraAccount(soraAccount)
 
         coVerify {
@@ -266,7 +261,6 @@ class UserRepositoryTest {
                 SoraAccountLocal(
                     soraAccount.substrateAddress,
                     soraAccount.accountName,
-                    null
                 )
             )
         }
@@ -279,7 +273,6 @@ class UserRepositoryTest {
                 SoraAccountLocal(
                     "accountAddress",
                     "accountName",
-                    null,
                 )
             )
         } returns Unit
