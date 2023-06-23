@@ -71,9 +71,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
             if (result.resultCode != Activity.RESULT_OK) {
                 viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } else {
-                navController?.let {
-                    viewModel.onSuccessfulGoogleSignin(it)
-                }
+                viewModel.onSuccessfulGoogleSignin()
             }
         }
 
@@ -140,6 +138,10 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                     }
                 }
             }
+        }
+
+        viewModel.navigateToBackupEvent.observe {
+            navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
         }
     }
 }

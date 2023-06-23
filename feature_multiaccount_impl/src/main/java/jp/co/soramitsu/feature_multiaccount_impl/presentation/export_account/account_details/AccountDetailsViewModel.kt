@@ -87,6 +87,9 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val _copyEvent = SingleLiveEvent<Unit>()
     val copyEvent: LiveData<Unit> = _copyEvent
 
+    private val _navigateToBackupEvent = SingleLiveEvent<Unit>()
+    val navigateToBackupEvent: LiveData<Unit> = _navigateToBackupEvent
+
     private val _accountDetailsScreenState = MutableLiveData(
         AccountDetailsScreenState(
             InputTextState(value = TextFieldValue("")),
@@ -285,7 +288,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
             accountDetailsScreenState.value?.copy(isBackupLoading = false)
     }
 
-    fun onSuccessfulGoogleSignin(navController: NavController) {
+    fun onSuccessfulGoogleSignin() {
         viewModelScope.launch {
             _accountDetailsScreenState.value?.let {
                 if (backupService.isAccountBackedUp(address)) {
@@ -293,7 +296,15 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     _accountDetailsScreenState.value =
                         it.copy(isBackupLoading = false)
                 } else {
-                    navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
+                    _createBackupPasswordState.value = CreateBackupPasswordState(
+                        password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+                        passwordConfirmation = InputTextState(
+                            label = resourceManager.getString(
+                                R.string.export_json_input_confirmation_label
+                            )
+                        )
+                    )
+                    _navigateToBackupEvent.trigger()
                     _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
                 }
             }

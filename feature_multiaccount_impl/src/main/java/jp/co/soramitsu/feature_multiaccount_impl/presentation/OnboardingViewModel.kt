@@ -333,6 +333,8 @@ class OnboardingViewModel @Inject constructor(
             viewModelScope.launch {
                 if (backupService.authorize(launcher)) {
                     onSuccessfulGoogleSignin(navController)
+                } else {
+                    _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
                 }
             }
         }
@@ -498,6 +500,9 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onSuccessfulGoogleSignin(navController: NavController) {
+        _tutorialScreenState.value =
+            _tutorialScreenState.value?.copy(isGoogleSigninLoading = true)
+
         viewModelScope.launch {
             try {
                 isFromGoogleDrive = true
