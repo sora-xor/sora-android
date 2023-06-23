@@ -75,6 +75,7 @@ dependencies {
     implementation project(":feature_multiaccount_api")
     implementation project(":feature_referral_api")
     implementation project(":feature_select_node_api")
+    implementation project(":feature_sora_card_api")
     implementation project(":sorasubstrate")
 
     implementation androidDep
@@ -105,10 +106,6 @@ dependencies {
     debugImplementation composeToolingDep
     implementation navigationComposeDep
     implementation accompanistNavAnimationDep
-
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
 
     implementation gsonDep
     implementation webSocketLibDep

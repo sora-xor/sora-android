@@ -30,15 +30,17 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.util
+package jp.co.soramitsu.feature_sora_card_api.util
 
-import java.util.Locale
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
 import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import java.util.Locale
 
 fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
     return SoraCardContractData(

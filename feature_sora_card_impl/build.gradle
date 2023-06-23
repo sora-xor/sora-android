@@ -90,9 +90,6 @@ dependencies {
     implementation navigationUiDep
 
     implementation uiCoreDep
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
     implementation xNetworkingDep
 
     implementation composeUiDep

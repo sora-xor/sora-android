@@ -49,12 +49,21 @@ android {
             dimension 'default'
         }
     }
+
+    configurations.all {
+        exclude module: 'pinview'
+    }
 }
 
 dependencies {
+    implementation project(":common")
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
 
     implementation kotlinxSerializationJsonDep
 
     implementation daggerDep
     kapt daggerKaptDep
+    api(soraCardDep) {
+        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
+    }
 }
