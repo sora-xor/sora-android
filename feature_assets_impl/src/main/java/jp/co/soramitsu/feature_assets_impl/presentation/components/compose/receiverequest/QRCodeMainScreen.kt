@@ -130,6 +130,8 @@ fun QrCodeMainScreen(
                 }
                 QrCodeMainScreenPage.REQUEST -> {
                     RequestTokenScreen(
+                        index = qrCodeMainScreenPages.indexOf(QrCodeMainScreenPage.REQUEST),
+                        pagerState = pagerState,
                         scrollState = scrollState,
                         state = requestTokenScreenState,
                         onUserAddressClick = requestToken_onUserAddressClick,
