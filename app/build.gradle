@@ -26,7 +26,7 @@ android {
 
     // https://github.com/idnow/de.idnow.android/issues/60
     // The issue appeared during android-sora-card integration
-    configurations.all {
+    configurations {
         all*.exclude module: 'bcprov-jdk15on'
     }
 
