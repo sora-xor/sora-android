@@ -98,7 +98,8 @@ class AssetsInteractorImpl constructor(
                 .minus(networkFeeInXor) < networkFeeInXor
         }
 
-        return secondaryTokenAmount.orZero().minus(networkFeeInXor) < networkFeeInXor
+        return xorAssetBalanceAmount.plus(secondaryTokenAmount.orZero())
+            .minus(networkFeeInXor) < networkFeeInXor
     }
 
     override suspend fun getAccountName(): String = userRepository.getCurSoraAccount().accountName
