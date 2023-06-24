@@ -47,7 +47,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -111,7 +111,7 @@ fun TopBar(
         Box(modifier = Modifier.size(Size.Small)) {
             BleachedButton(
                 modifier = Modifier,
-                shape = CircleShape,
+                shape = RoundedCornerShape(percent = 49), // value of 50 results in strange shadow behaviour
                 size = Size.Small,
                 order = Order.TERTIARY,
                 leftIcon = painterResource(R.drawable.ic_scan_qr),
