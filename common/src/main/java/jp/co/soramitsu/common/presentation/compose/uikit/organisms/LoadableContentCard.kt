@@ -73,7 +73,7 @@ data class LoadableContentCardState(
     )
 
     val errorText: Text = Text.StringRes(
-        id = R.string.cant_fetch_data
+        id = R.string.common_error_general_title
     )
 }
 

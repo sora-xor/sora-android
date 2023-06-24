@@ -38,8 +38,8 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
+import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -105,7 +105,7 @@ class RemoveLiquidityViewModelTest {
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var mainRouter: MainRouter
+    private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
 
     private lateinit var viewModel: LiquidityRemoveViewModel
 
@@ -121,13 +121,13 @@ class RemoveLiquidityViewModelTest {
             assetsInteractor = assetsInteractor,
             assetsRouter = assetsRouter,
             router = router,
-            mainRouter = mainRouter,
             walletInteractor = walletInteractor,
             poolsInteractor = poolsInteractor,
             numbersFormatter = NumbersFormatter(),
             resourceManager = resourceManager,
             token1Id = firstTokenId ?: TestTokens.xorToken.id,
-            token2Id = secondTokenId ?: TestTokens.valToken.id
+            token2Id = secondTokenId ?: TestTokens.valToken.id,
+            demeterFarmingInteractor = demeterFarmingInteractor,
         )
     }
 

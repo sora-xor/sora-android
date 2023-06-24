@@ -37,7 +37,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
@@ -51,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -59,47 +62,53 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 fun WarningTextCard(
     modifier: Modifier = Modifier,
-    title: String,
-    text: String
+    title: String? = null,
+    text: String,
+    error: Boolean = true,
 ) {
-    // TODO extract to UI lib
-
     val shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
+    val container =
+        if (error) MaterialTheme.customColors.statusErrorContainer else MaterialTheme.customColors.statusWarningContainer
+    val main =
+        if (error) MaterialTheme.customColors.statusError else MaterialTheme.customColors.statusWarning
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.customColors.statusErrorContainer,
-                shape = shape
+                color = container,
+                shape = shape,
             )
             .clip(shape)
             .border(
                 border = BorderStroke(
                     1.dp,
-                    MaterialTheme.customColors.statusError
+                    main,
                 ),
                 shape = shape
-            ).padding(
+            )
+            .padding(
                 vertical = Dimens.x2,
-                horizontal = Dimens.x3
+                horizontal = Dimens.x3,
             ),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = title,
-            color = MaterialTheme.customColors.statusError,
-            style = MaterialTheme.customTypography.paragraphSBold,
-            textAlign = TextAlign.Center
-        )
-        Divider(
-            color = Color.Companion.Transparent,
-            thickness = Dimens.x1_2
-        )
+        if (title != null) {
+            Text(
+                text = title,
+                color = main,
+                style = MaterialTheme.customTypography.paragraphSBold,
+                textAlign = TextAlign.Center
+            )
+            Divider(
+                color = Color.Companion.Transparent,
+                thickness = Dimens.x1_2
+            )
+        }
         Text(
             text = text,
-            color = MaterialTheme.customColors.statusError,
+            color = main,
             style = MaterialTheme.customTypography.paragraphS,
             textAlign = TextAlign.Center
         )
@@ -109,5 +118,18 @@ fun WarningTextCard(
 @Preview
 @Composable
 private fun PreviewWarningTextCard() {
-    WarningTextCard(title = "Warning", text = "AbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabra")
+    SoraAppTheme {
+        Column {
+            WarningTextCard(
+                title = "Warning",
+                text = "AbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabraAbracabra",
+                error = true,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            WarningTextCard(
+                text = "AbracacabraAbracabraAbracabra",
+                error = false,
+            )
+        }
+    }
 }

@@ -41,9 +41,9 @@ import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.github.florent37.runtimepermission.RuntimePermission
 import com.google.accompanist.navigation.animation.composable
 import com.journeyapps.barcodescanner.ScanOptions
+import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
@@ -114,12 +114,13 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
                 requestTokenScreenState = viewModel.requestTokenByQrScreenState,
                 receiveToken_onUserAddressClick = viewModel::onUserAddressClickInReceiveScreen,
                 receiveToken_onScanQrClick = {
-                    RuntimePermission.askPermission(
-                        this@QRCodeFlowFragment,
-                        Manifest.permission.CAMERA
-                    ).onAccepted {
-                        barcodeLauncher.launch(barcodeScanOptions)
-                    }.ask()
+                    PermissionX.init(this@QRCodeFlowFragment)
+                        .permissions(Manifest.permission.CAMERA)
+                        .request { allGranted, _, _ ->
+                            if (allGranted) {
+                                barcodeLauncher.launch(barcodeScanOptions)
+                            }
+                        }
                 },
                 receiveToken_onShareCodeClick = viewModel::onShareQrCodeInReceiveScreen,
                 receiveToken_onTryAgainClick = viewModel::onLoadReceiveScreenDataAgainClick,

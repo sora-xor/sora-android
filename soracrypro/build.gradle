@@ -51,7 +51,6 @@ android {
 
 dependencies {
 
-    api novaCryptoDep
     api ed25519Dep
     api spongycastleDep
     api sharedUtilsDep

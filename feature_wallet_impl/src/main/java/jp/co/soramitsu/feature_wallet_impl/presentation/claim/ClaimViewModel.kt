@@ -32,8 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.claim
 
-import android.Manifest
-import android.os.Build
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -67,6 +65,7 @@ class ClaimViewModel @Inject constructor(
                 when (it) {
                     MigrationStatus.NOT_INITIATED -> {
                     }
+
                     MigrationStatus.FAILED -> onError(R.string.claim_error_title_v1)
                     MigrationStatus.SUCCESS -> router.popBackStackFragment()
                 }
@@ -90,15 +89,6 @@ class ClaimViewModel @Inject constructor(
         _claimScreenState.value?.let {
             _claimScreenState.value = it.copy(loading = true)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            com.github.florent37.runtimepermission.RuntimePermission
-                .askPermission(fragment, Manifest.permission.POST_NOTIFICATIONS)
-                .onAccepted {
-                    ClaimWorker.start(fragment.requireContext())
-                }
-                .ask()
-        } else {
-            ClaimWorker.start(fragment.requireContext())
-        }
+        ClaimWorker.start(fragment.requireContext())
     }
 }
