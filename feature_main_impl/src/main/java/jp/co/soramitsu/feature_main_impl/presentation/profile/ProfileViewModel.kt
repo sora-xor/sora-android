@@ -44,13 +44,13 @@ import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
-import jp.co.soramitsu.common.util.createSoraCardContract
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo

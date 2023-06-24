@@ -30,44 +30,33 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
+package jp.co.soramitsu.feature_sora_card_api.util
 
-import jp.co.soramitsu.common.domain.AssetAmountInputState
-import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import java.util.Locale
+import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.common.util.Flavor
+import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
+import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
+import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 
-data class LiquidityRemoveState(
-    val btnState: ButtonState,
-    val slippage: Double,
-    val assetState1: AssetAmountInputState?,
-    val assetState2: AssetAmountInputState?,
-    val estimated: LiquidityRemoveEstimatedState,
-    val prices: LiquidityRemovePricesState,
-    val confirm: LiquidityRemoveConfirmState,
-    val hintVisible: Boolean,
-    val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    val transactionFeeToken: String,
-    val poolInFarming: Boolean,
-)
-
-data class LiquidityRemoveConfirmState(
-    val text: String,
-    val confirmResult: Boolean?,
-    val btnState: ButtonState,
-)
-
-data class LiquidityRemoveEstimatedState(
-    val token1: String,
-    val token1Value: String,
-    val token2: String,
-    val token2Value: String,
-    val shareOfPool: String,
-)
-
-data class LiquidityRemovePricesState(
-    val pair1: String,
-    val pair1Value: String,
-    val pair2: String,
-    val pair2Value: String,
-    val apy: String? = null,
-    val fee: String,
-)
+fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
+    return SoraCardContractData(
+        locale = Locale.ENGLISH,
+        apiKey = BuildConfig.SORA_CARD_API_KEY,
+        domain = BuildConfig.SORA_CARD_DOMAIN,
+        environment = when {
+            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
+            else -> SoraCardEnvironmentType.TEST
+        },
+        soraCardInfo = soraCardInfo,
+        kycCredentials = SoraCardKycCredentials(
+            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
+            username = BuildConfig.SORA_CARD_KYC_USERNAME,
+            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
+        ),
+        client = OptionsProvider.header,
+    )
+}

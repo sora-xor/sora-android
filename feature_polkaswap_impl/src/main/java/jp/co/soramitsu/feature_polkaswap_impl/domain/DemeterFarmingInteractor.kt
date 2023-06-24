@@ -30,31 +30,20 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.util
+package jp.co.soramitsu.feature_polkaswap_impl.domain
 
-import java.util.Locale
-import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
-import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
-import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_polkaswap_impl.data.repository.DemeterFarmingRepository
 
-fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
-    return SoraCardContractData(
-        locale = Locale.ENGLISH,
-        apiKey = BuildConfig.SORA_CARD_API_KEY,
-        domain = BuildConfig.SORA_CARD_DOMAIN,
-        environment = when {
-            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
-            else -> SoraCardEnvironmentType.TEST
-        },
-        soraCardInfo = soraCardInfo,
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        client = OptionsProvider.header,
-    )
+interface DemeterFarmingInteractor {
+    suspend fun getFarmedPools(): List<DemeterFarmingPool>?
+}
+
+internal class DemeterFarmingInteractorImpl(
+    private val demeterFarmingRepository: DemeterFarmingRepository,
+    private val userRepository: UserRepository,
+) : DemeterFarmingInteractor {
+
+    override suspend fun getFarmedPools(): List<DemeterFarmingPool>? =
+        demeterFarmingRepository.getFarmedPools(userRepository.getCurSoraAccount().substrateAddress)
 }

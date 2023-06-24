@@ -132,6 +132,8 @@
   <string name="common_finnish">Finnish</string>
   <string name="common_french">French</string>
   <string name="common_german">German</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -265,6 +267,7 @@
   <string name="invoice_scan_error_match">You cannot send tokens to the same account you are currently connected to</string>
   <string name="invoice_scan_error_no_info">QR can\'t be decoded</string>
   <string name="invoice_scan_error_user_not_found">Can\'t find a user from QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
   <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
@@ -310,6 +313,11 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Setup pin code</string>
   <string name="pincode_touch_fingerprint_scanner">Touch the fingerprint scanner</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap is maintained by the SORA community. Before continuing to use Polkaswap, please review the %%Polkaswap FAQ%%  and documentation, which includes a detailed explanation on how Polkaswap works, as well as the %%Polkaswap Memorandum and Terms of Services%%, and %%Privacy Policy%%.\n\nThese documents are crucial to a secure and positive user experience. By using Polkaswap, you acknowledge that you have read and understand these documents.</string>
   <string name="polkaswap_info_text_2">You also acknowledge the following:</string>
   <string name="polkaswap_info_text_3">Your sole responsibility for compliance with all laws that may apply to your particular use of Polkaswap in your legal jurisdiction;</string>
@@ -335,6 +343,7 @@
   <string name="polkaswap_network_fee_info">Network fee is used to ensure SORA system\'s growth and stable performance.</string>
   <string name="polkaswap_output_estimated">Output is estimated. You will receive at least %s or the transaction will revert.</string>
   <string name="polkaswap_pool_not_created">Pool isn\'t created</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Your transactions will revert if the price changes unfavorably by more than this percentage</string>
@@ -410,7 +419,7 @@
   <string name="referral_your_referrer">Your referrer</string>
   <string name="referrer_set">Referrer set</string>
   <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
-  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_liquidity_title">Remove liquidity</string>
   <string name="remove_node_error_message">To delete this node please connect to another one</string>
   <string name="remove_node_error_title">Unable to delete connected node</string>
   <string name="remove_node_title">Do you really want to remove this node?</string>

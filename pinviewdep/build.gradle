@@ -1,0 +1,2 @@
+configurations.maybeCreate("pinviewconf")
+artifacts.add("pinviewconf", file('pinview-1.4.3.aar'))

@@ -132,6 +132,8 @@
   <string name="common_finnish">フィンランド語</string>
   <string name="common_french">フランス語</string>
   <string name="common_german">ドイツ語</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -264,6 +266,7 @@
   <string name="invoice_scan_error_match">自分自身に送ることはできません</string>
   <string name="invoice_scan_error_no_info">QRコードを読み取れません</string>
   <string name="invoice_scan_error_user_not_found">QRコードからユーザーを見つけることができません。</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">流動資産</string>
   <string name="liquidity_pair_creation_description">追加するトークンの比率によって、このプールの価格は設定されます。料金に満足したら、供給をタップして確認します。</string>
   <string name="liquidity_pair_creation_title">あなたは最初の流動性供給者です</string>
@@ -309,6 +312,11 @@
   <string name="pincode_one_try_left">クールダウンまであと1回だけ試せます</string>
   <string name="pincode_set_your_pin_code">PINコードの設定</string>
   <string name="pincode_touch_fingerprint_scanner">指紋スキャナーに触れてください</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">PolkaswapはSORAコミュニティによって管理されています。Polkaswapの使用前に、%%Polkaswapのよくある質問 FAQ%%とPolkaswapの仕組みに関する詳細な説明を含む文書、%%Polkaswap覚書と利用規約%%、および%%個人情報保護方針%%を確認してください。\n\nこれらの文書は、安全に使い勝手良く利用して頂くために欠かせないものです。Polkaswapを使用することにより、これらの文書を読んで理解したことを了承したことになります。</string>
   <string name="polkaswap_info_text_2">また、次のことも了承します：</string>
   <string name="polkaswap_info_text_3">あなたの法的管轄区域におけるPolkaswapの特定の使用に適用される可能性のあるすべての法律の遵守については、あなた単独の責任となります；</string>
@@ -334,6 +342,7 @@
   <string name="polkaswap_network_fee_info">ネットワーク手数料は、SORAシステムの発展と安定したパフォーマンスを確保するために使用されます</string>
   <string name="polkaswap_output_estimated">表示は推定値です。少なくとも %s 受け取らなければ、取引は元に戻ります</string>
   <string name="polkaswap_pool_not_created">プールが作成されていません</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">流動性供給に対するファーミング報酬</string>
   <string name="polkaswap_slippage_frontrun">あなたの取引はフロントランの可能性があります</string>
   <string name="polkaswap_slippage_info">価格がこのパーセンテージを超えて不利に変化した場合、取引は元に戻ります</string>

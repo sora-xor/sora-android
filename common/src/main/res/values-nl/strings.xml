@@ -132,6 +132,8 @@
   <string name="common_finnish">Fins</string>
   <string name="common_french">Frans</string>
   <string name="common_german">Duits</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -265,6 +267,7 @@
   <string name="invoice_scan_error_match">Je kan niet naar jezelf sturen</string>
   <string name="invoice_scan_error_no_info">QR kan niet worden gedecodeerd</string>
   <string name="invoice_scan_error_user_not_found">Kan geen gebruiker vinden via QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">De verhouding van tokens die u toevoegt, bepaalt de prijs van deze pool. Zodra u tevreden bent met de snelheid klik aanbod om te beoordelen.</string>
   <string name="liquidity_pair_creation_title">U bent de eerste liquiditeitsverschaffer</string>
@@ -310,6 +313,11 @@
   <string name="pincode_one_try_left">Je hebt nog één poging voor de cooldown.</string>
   <string name="pincode_set_your_pin_code">Stel uw pincode in</string>
   <string name="pincode_touch_fingerprint_scanner">Raak de vingerafdrukscanner aan</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen.</string>
   <string name="polkaswap_info_text_2">Polkaswap wordt onderhouden door de SORA-gemeenschap. Voordat u de Polkaswap-functionaliteit gebruikt, dient u de %%Polkaswap FAQ%% en de documentatie te lezen, die een gedetailleerde uitleg bevat over hoe Polkaswap werkt, evenals het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid. Deze documenten zijn cruciaal voor een veilige en positieve gebruikerservaring. Door Polkaswap te gebruiken, erkent u deze documenten te hebben gelezen en begrepen. \n\n U erkent ook het volgende: \n\n 1) uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;\n 2) uw begrip dat de huidige versie van Polkaswap een alfaversie is: deze is niet volledig getest en sommige functies werken mogelijk niet zoals bedoeld;\n 3) uw begrip en vrijwillige aanvaarding van de risico\'s die verbonden zijn aan het gebruik van Polkaswap, inclusief, maar niet beperkt tot, het risico van verlies van tokens. Nogmaals, ga alsjeblieft niet verder zonder de veelgestelde vragen, het Polkaswap-memorandum en de servicevoorwaarden en het privacybeleid te lezen!</string>
   <string name="polkaswap_info_text_3">Uw enige verantwoordelijkheid voor de naleving van alle wetten die van toepassing kunnen zijn op uw specifieke gebruik van Polkaswap in uw rechtsgebied;</string>
@@ -335,6 +343,7 @@
   <string name="polkaswap_network_fee_info">Netwerkvergoeding wordt gebruikt om de groei en stabiele prestaties van het van het SORA-systeem te garanderen.</string>
   <string name="polkaswap_output_estimated">De output wordt geschat. U ontvangt %s minimaal of de transactie wordt teruggedraaid.</string>
   <string name="polkaswap_pool_not_created">Pool is niet aangemaakt</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Uw transactie kan frontrun zijn</string>
   <string name="polkaswap_slippage_info">Slippage-tolerantie is een geaccepteerde drempel die is ingesteld in procenten voor het uiteindelijke bedrag dat van invloed is op het minimum ontvangen bedrag.</string>
