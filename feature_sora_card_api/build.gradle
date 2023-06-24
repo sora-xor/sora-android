@@ -49,15 +49,10 @@ android {
             dimension 'default'
         }
     }
-
-    configurations.all {
-        exclude module: 'pinview'
-    }
 }
 
 dependencies {
     implementation project(":common")
-    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
 
     implementation kotlinxSerializationJsonDep
 

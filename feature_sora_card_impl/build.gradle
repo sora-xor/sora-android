@@ -62,8 +62,6 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     implementation project(":common")
     implementation project(":feature_assets_api")
     implementation project(":feature_sora_card_api")

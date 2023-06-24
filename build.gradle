@@ -211,7 +211,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        jcenter()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
@@ -236,7 +235,6 @@ allprojects {
         mavenLocal()
         maven { url "https://nexus.iroha.tech/repository/maven-soramitsu/" }
         google()
-        jcenter()
         mavenCentral()
         maven {
             url "https://jitpack.io"
