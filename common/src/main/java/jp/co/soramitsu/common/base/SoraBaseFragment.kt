@@ -150,9 +150,19 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
 
                         viewModel.snackBarLiveData.observe {
                             coroutineScope.launch {
-                                when (scaffoldState.snackbarHostState.showSnackbar(it.title, it.actionText)) {
-                                    SnackbarResult.Dismissed -> { it.onCancelHandler() }
-                                    SnackbarResult.ActionPerformed -> { it.onActionHandler() }
+                                when (
+                                    scaffoldState.snackbarHostState.showSnackbar(
+                                        it.title,
+                                        it.actionText
+                                    )
+                                ) {
+                                    SnackbarResult.Dismissed -> {
+                                        it.onCancelHandler()
+                                    }
+
+                                    SnackbarResult.ActionPerformed -> {
+                                        it.onActionHandler()
+                                    }
                                 }
                             }
                         }

@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -39,7 +41,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
@@ -47,8 +52,11 @@ import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.ext.isPasswordSecure
+import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,12 +64,15 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AccountDetailsViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
-    resourceManager: ResourceManager,
+    private val resourceManager: ResourceManager,
     private val clipboardManager: ClipboardManager,
+    private val backupService: BackupService,
+    private val coroutineManager: CoroutineManager,
     @Assisted("address") private val address: String,
 ) : BaseViewModel() {
 
@@ -76,9 +87,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
     val copyEvent: LiveData<Unit> = _copyEvent
 
     private val _accountDetailsScreenState = MutableLiveData(
-        AccountDetailsScreenState(InputTextState(value = TextFieldValue("")), false, "")
+        AccountDetailsScreenState(
+            InputTextState(value = TextFieldValue("")),
+            false,
+            false,
+            false,
+            "",
+        )
     )
     val accountDetailsScreenState: LiveData<AccountDetailsScreenState> = _accountDetailsScreenState
+
+    private val _createBackupPasswordState = MutableLiveData<CreateBackupPasswordState>()
+    val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
 
     private val changeNameFlow = MutableStateFlow("")
 
@@ -96,6 +116,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     leadingIcon = R.drawable.ic_input_pencil_24,
                 ),
                 isMnemonicAvailable,
+                false,
+                isBackupAvailable = backupService.isAccountBackedUp(address),
                 address,
             )
         }
@@ -111,6 +133,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 }
         }
     }
+
+    override fun startScreen(): String = AccountDetailsRoutes.ACCOUNT_DETAILS
 
     fun onNameChange(textValue: TextFieldValue) {
         _accountDetailsScreenState.value?.let {
@@ -148,5 +172,135 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onAddressCopy() {
         clipboardManager.addToClipboard("address", address)
         _copyEvent.trigger()
+    }
+
+    fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
+        _createBackupPasswordState.value?.let {
+            val isSecure = textFieldValue.text.isPasswordSecure()
+            _createBackupPasswordState.value = it.copy(
+                password = it.password.copy(
+                    value = textFieldValue,
+                    success = isSecure,
+                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else ""
+                ),
+                setPasswordButtonIsEnabled = it.warningIsSelected && it.passwordConfirmation.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            )
+        }
+    }
+
+    fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
+        _createBackupPasswordState.value?.let {
+            val isConfirmationRightAndSecure =
+                it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            _createBackupPasswordState.value = it.copy(
+                passwordConfirmation = it.passwordConfirmation.copy(
+                    value = textFieldValue,
+                    success = isConfirmationRightAndSecure,
+                    descriptionText = if (isConfirmationRightAndSecure) resourceManager.getString(R.string.create_backup_password_matched) else ""
+                ),
+                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRightAndSecure
+            )
+        }
+    }
+
+    fun onWarningToggle() {
+        _createBackupPasswordState.value?.let {
+            val newWarningState = !it.warningIsSelected
+            _createBackupPasswordState.value = it.copy(
+                warningIsSelected = newWarningState,
+                setPasswordButtonIsEnabled = newWarningState && it.password.value.text == it.passwordConfirmation.value.text && it.password.value.text.isPasswordSecure()
+            )
+        }
+    }
+
+    fun onBackupPasswordClicked() {
+        _createBackupPasswordState.value?.let { createBackupPasswordState ->
+            _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
+            viewModelScope.launch(coroutineManager.io) {
+                _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
+                    val mnemonic = interactor.getMnemonic(accountDetailsScreenState.address)
+                    backupService.saveBackupAccount(
+                        DecryptedBackupAccount(
+                            accountDetailsScreenState.accountNameState.value.text,
+                            accountDetailsScreenState.address,
+                            mnemonic,
+                            CryptoType.SR25519,
+                            "",
+                            "",
+                        ),
+                        createBackupPasswordState.password.value.text
+                    )
+
+                    withContext(coroutineManager.main) {
+                        _accountDetailsScreenState.value = _accountDetailsScreenState
+                            .value?.copy(isBackupAvailable = backupService.isAccountBackedUp(address))
+                        _navigationPop.trigger()
+                    }
+                }
+            }
+        }
+    }
+
+    fun onBackupClicked(
+        launcher: ActivityResultLauncher<Intent>
+    ) {
+        viewModelScope.launch {
+            _accountDetailsScreenState.value?.let {
+                _accountDetailsScreenState.value = it.copy(isBackupLoading = true)
+                if (backupService.authorize(launcher)) {
+                    if (backupService.isAccountBackedUp(address)) {
+                        deleteGoogleBackup()
+                    } else {
+                        openCreateBackupScreen()
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun deleteGoogleBackup() {
+        backupService.deleteBackupAccount(address)
+        _accountDetailsScreenState.value = accountDetailsScreenState.value?.copy(
+            isBackupLoading = false,
+            isBackupAvailable = backupService.isAccountBackedUp(address)
+        )
+    }
+
+    private fun openCreateBackupScreen() {
+        _createBackupPasswordState.value = CreateBackupPasswordState(
+            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+            passwordConfirmation = InputTextState(
+                label = resourceManager.getString(
+                    R.string.export_json_input_confirmation_label
+                )
+            )
+        )
+
+        _navEvent.value = AccountDetailsRoutes.BACKUP_ACCOUNT to {}
+        _accountDetailsScreenState.value =
+            accountDetailsScreenState.value?.copy(isBackupLoading = false)
+    }
+
+    fun onSuccessfulGoogleSignin() {
+        viewModelScope.launch {
+            _accountDetailsScreenState.value?.let {
+                if (backupService.isAccountBackedUp(address)) {
+                    backupService.deleteBackupAccount(address)
+                    _accountDetailsScreenState.value =
+                        it.copy(isBackupLoading = false)
+                } else {
+                    _createBackupPasswordState.value = CreateBackupPasswordState(
+                        password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+                        passwordConfirmation = InputTextState(
+                            label = resourceManager.getString(
+                                R.string.export_json_input_confirmation_label
+                            )
+                        )
+                    )
+                    _navEvent.value = AccountDetailsRoutes.BACKUP_ACCOUNT to {}
+                    _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
+                }
+            }
+        }
     }
 }

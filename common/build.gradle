@@ -21,6 +21,7 @@ android {
         buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL")
         buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME")
         buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD")
+        buildConfigField "String", "GOOGLE_API_TOKEN",  readSecretInQuotes("GOOGLE_TOKEN")
     }
 
     buildTypes {
@@ -121,6 +122,9 @@ dependencies {
     implementation datastoreDep
     implementation navigationFragmentDep
     implementation navigationUiDep
+
+    implementation sharedFeaturesBackupDep
+    implementation sharedUtilsDep
 
     implementation gsonDep
 

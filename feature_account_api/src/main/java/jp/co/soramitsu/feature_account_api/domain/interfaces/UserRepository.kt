@@ -108,4 +108,6 @@ interface UserRepository {
     suspend fun resetTriesUsed()
 
     suspend fun resetTimerStartedTimestamp()
+
+    suspend fun accountExists(address: String): Boolean
 }

@@ -58,6 +58,8 @@ class MultiaccountInteractor @Inject constructor(
 
     suspend fun isRawSeedValid(rawSeed: String) = credentialsRepository.isRawSeedValid(rawSeed)
 
+    suspend fun accountExists(address: String) = userRepository.accountExists(address)
+
     suspend fun continueRecoverFlow(soraAccount: SoraAccount, update: Boolean) {
         insertAndSetCurAccount(soraAccount, update)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)

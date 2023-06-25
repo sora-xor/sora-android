@@ -30,11 +30,9 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model
+package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
-data class BackupScreenState(
-    val mnemonicWords: List<String> = emptyList(),
-    val seedString: String = "",
-    val isCreatingFlow: Boolean = false,
-    val isViaGoogleDrive: Boolean = false
-)
+object AccountDetailsRoutes {
+    const val ACCOUNT_DETAILS = "jp.co.soramitsu.feature_multiaccount_impl.AccountDetails"
+    const val BACKUP_ACCOUNT = "jp.co.soramitsu.feature_multiaccount_impl.BackupAccount"
+}

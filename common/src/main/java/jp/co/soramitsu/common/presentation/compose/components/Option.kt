@@ -69,11 +69,13 @@ fun Option(
     bottomDivider: Boolean,
     @DrawableRes iconEnd: Int = R.drawable.ic_chevron_right_24,
     tint: Boolean = true,
+    textColor: Color = Color.Unspecified,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Column(
         modifier = modifier
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick, enabled = enabled)
             .fillMaxWidth()
             .wrapContentHeight(),
     ) {
@@ -105,6 +107,7 @@ fun Option(
                         text = label,
                         style = MaterialTheme.customTypography.textM,
                         maxLines = 1,
+                        color = textColor,
                         overflow = TextOverflow.Ellipsis,
                     )
                     if (description != null) {

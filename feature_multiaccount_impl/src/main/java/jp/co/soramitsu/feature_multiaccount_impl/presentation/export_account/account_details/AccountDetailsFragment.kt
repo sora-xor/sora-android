@@ -32,11 +32,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
+import android.app.Activity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
@@ -45,14 +48,16 @@ import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
-import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.args.address
+import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password.BackupPasswordScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
@@ -60,6 +65,15 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
 
     @Inject
     lateinit var vmf: AccountDetailsViewModel.AccountDetailsViewModelFactory
+
+    private val launcher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } else {
+                viewModel.onSuccessfulGoogleSignin()
+            }
+        }
 
     override val viewModel: AccountDetailsViewModel by viewModels {
         CustomViewModelFactory { vmf.create(requireArguments().address) }
@@ -77,8 +91,8 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
         scrollState: ScrollState,
         navController: NavHostController
     ) {
-        composable(
-            route = theOnlyRoute,
+        animatedComposable(
+            route = AccountDetailsRoutes.ACCOUNT_DETAILS,
         ) {
             Column(
                 modifier = Modifier
@@ -92,9 +106,35 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         viewModel::onShowPassphrase,
                         viewModel::onShowRawSeed,
                         viewModel::onExportJson,
+                        {
+                            debounceClickHandler.debounceClick {
+                                viewModel.onBackupClicked(
+                                    launcher
+                                )
+                            }
+                        },
                         viewModel::onLogout,
                         viewModel::onAddressCopy,
                     )
+                }
+            }
+        }
+
+        animatedComposable(
+            route = AccountDetailsRoutes.BACKUP_ACCOUNT,
+        ) {
+            viewModel.createBackupPasswordState.observeAsState().value?.let {
+                Box {
+                    BackupPasswordScreen(
+                        it,
+                        viewModel::onBackupPasswordChanged,
+                        viewModel::onBackupPasswordConfirmationChanged,
+                        viewModel::onWarningToggle
+                    ) {
+                        debounceClickHandler.debounceClick {
+                            viewModel.onBackupPasswordClicked()
+                        }
+                    }
                 }
             }
         }
