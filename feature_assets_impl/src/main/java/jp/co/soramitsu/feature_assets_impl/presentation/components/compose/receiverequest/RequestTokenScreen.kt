@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest
 
 import android.graphics.drawable.Drawable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
@@ -48,6 +51,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -148,7 +153,10 @@ data class RequestTokenScreenState(
 }
 
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 fun RequestTokenScreen(
+    index: Int,
+    pagerState: PagerState,
     scrollState: ScrollState,
     state: RequestTokenScreenState,
     onUserAddressClick: () -> Unit,
@@ -160,8 +168,19 @@ fun RequestTokenScreen(
 ) {
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+    // We want to request focus ONLY when this page in ViewPager is shown;
+    // otherwise requestFocus breaks ViewPager
+    val requestFocus by remember {
+        derivedStateOf {
+            pagerState.currentPageOffsetFraction == 0f &&
+                index == pagerState.currentPage
+        }
+    }
+
+    LaunchedEffect(requestFocus) {
+        if (requestFocus) {
+            focusRequester.requestFocus()
+        }
     }
 
     Column(
@@ -232,8 +251,11 @@ fun RequestTokenScreen(
 
 @Preview
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun PreviewRequestTokenScreen() {
     RequestTokenScreen(
+        index = 0,
+        pagerState = rememberPagerState(),
         scrollState = rememberScrollState(),
         state = RequestTokenScreenState(
             screenStatus = ScreenStatus.READY_TO_RENDER,
