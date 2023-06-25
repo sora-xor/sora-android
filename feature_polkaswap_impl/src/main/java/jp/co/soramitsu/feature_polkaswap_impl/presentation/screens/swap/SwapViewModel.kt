@@ -49,6 +49,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
@@ -90,7 +91,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -104,6 +108,7 @@ class SwapViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
+    private val coroutineManager: CoroutineManager,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
 ) : BaseViewModel() {
@@ -151,6 +156,7 @@ class SwapViewModel @AssistedInject constructor(
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
     private var networkFee: BigDecimal? = null
+    private var hasXorReminderWarningBeenChecked = false
 
     var swapMainState by mutableStateOf(
         SwapMainState(
@@ -381,6 +387,18 @@ class SwapViewModel @AssistedInject constructor(
                     }
                 }
         }
+
+        merge(fromAmountFlow, toAmountFlow)
+            .filter {
+                swapMainState.tokenFromState?.token?.id == SubstrateOptionsProvider.feeAssetId ||
+                    swapMainState.tokenToState?.token?.id == SubstrateOptionsProvider.feeAssetId ||
+                    !hasXorReminderWarningBeenChecked
+            }.onEach {
+                updateTransactionReminderWarningVisibility()
+                hasXorReminderWarningBeenChecked = true
+            }
+            .flowOn(coroutineManager.io)
+            .launchIn(viewModelScope)
     }
 
     fun onDisclaimerClose() {
@@ -452,16 +470,39 @@ class SwapViewModel @AssistedInject constructor(
         }
     }
 
+    private suspend fun updateTransactionReminderWarningVisibility() =
+        with(swapMainState) {
+            if (tokenFromState == null || tokenToState == null)
+                return@with
+
+            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = tokenFromState.token,
+                primaryTokenAmount = tokenFromState.amount,
+                secondaryToken = tokenToState.token,
+                secondaryTokenAmount = tokenToState.amount,
+                networkFeeInXor = networkFee.orZero()
+            )
+
+            swapMainState = swapMainState.copy(
+                details = details.copy(
+                    shouldTransactionReminderInsufficientWarningBeShown = result,
+                    transactionFeeToken = feeToken().symbol
+                )
+            )
+        }
+
     fun fromAssetSelected(tokenId: String) {
         assetsList.find { it.token.id == tokenId }?.let {
             toAndFromAssetsSelected(null, it.token)
         }
+        hasXorReminderWarningBeenChecked = false
     }
 
     fun toAssetSelected(tokenId: String) {
         assetsList.find { it.token.id == tokenId }?.let {
             toAndFromAssetsSelected(it.token, null)
         }
+        hasXorReminderWarningBeenChecked = false
     }
 
     fun onMarketSelected(market: Market) {

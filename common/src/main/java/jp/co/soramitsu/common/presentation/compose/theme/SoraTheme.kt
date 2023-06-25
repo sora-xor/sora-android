@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.presentation.compose.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.DayThemeColors
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.NightThemeColors
@@ -60,18 +59,6 @@ import jp.co.soramitsu.ui_core.theme.borderRadiuses
 import jp.co.soramitsu.ui_core.theme.darkColors
 import jp.co.soramitsu.ui_core.theme.defaultCustomTypography
 import jp.co.soramitsu.ui_core.theme.lightColors
-
-@Deprecated("use SoraAppTheme instead")
-@Composable
-fun SoraTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
-) {
-    MaterialTheme(
-        colors = if (darkTheme) DarkColors else LightColors,
-        content = content
-    )
-}
 
 private val LightColors = androidx.compose.material.lightColors(
     primary = ThemeColors.Primary,

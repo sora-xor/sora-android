@@ -39,6 +39,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
@@ -97,7 +98,8 @@ class PoolDetailsFragment : SoraBaseFragment<PoolDetailsViewModel>() {
                 modifier = Modifier
                     .padding(top = Dimens.x1)
                     .fillMaxSize()
-                    .padding(horizontal = Dimens.x2),
+                    .padding(horizontal = Dimens.x2)
+                    .verticalScroll(scrollState),
             ) {
                 PoolDetailsScreen(
                     viewModel.detailsState,

@@ -70,7 +70,7 @@ object TestAssets {
         balance = balance(balance),
     )
 
-    fun xstAsset(balance: BigDecimal = BigDecimal.ZERO) = Asset(
+    fun xstusdAsset(balance: BigDecimal = BigDecimal.ZERO) = Asset(
         token = TestTokens.xstusdToken,
         favorite = true,
         visibility = true,
@@ -86,7 +86,23 @@ object TestAssets {
         balance = balance(balance),
     )
 
-    fun balance(balance: BigDecimal) = AssetBalance(
+    fun xstxauAsset(balance: BigDecimal = BigDecimal.ZERO) = Asset(
+        token = TestTokens.xstxau,
+        favorite = true,
+        visibility = true,
+        position = 6,
+        balance = balance(balance),
+    )
+
+    fun xstAsset(balance: BigDecimal = BigDecimal.ZERO) = Asset(
+        token = TestTokens.xstToken,
+        favorite = true,
+        visibility = true,
+        position = 7,
+        balance = balance(balance),
+    )
+
+    private fun balance(balance: BigDecimal) = AssetBalance(
         transferable = balance,
         reserved = balance,
         miscFrozen = balance,

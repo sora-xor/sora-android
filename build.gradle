@@ -17,7 +17,7 @@ buildscript {
             spongycastle           : '1.58.0.0',
             ed25519                : '2.0.1',
             web3j                  : '4.2.0-android',
-            sharedUtils            : '1.0.0-20230621.151129-5',
+            sharedUtils            : '1.0.0-SNAPSHOT',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
             zXingEmbedded          : '4.3.0@aar',
@@ -34,9 +34,8 @@ buildscript {
             workManager            : '2.8.1',
             webSocketLib           : '2.14',
             svgVersion             : '1.4',
-            jdenticonVersion       : '1.0',
+            jdenticonVersion       : '1.1',
             insetter               : '0.6.0',
-            runtimePermissions     : '1.1.2',
             truth                  : '1.1.3',
             lottie                 : '4.2.0',
             xNetworking            : '0.0.57',
@@ -55,10 +54,10 @@ buildscript {
     ]
 
     ext {
-        // soralution 93 3.0.0.15 2023.05.03
+        // soralution 94 3.0.0.16 2023.06.01
         // sora dae 79 3.0.0.1 2023.05.18
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 79)
-        appVersionName = '3.0.0.1'
+        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 94)
+        appVersionName = '3.0.0.16'
 
         compileVersion = 33
         minVersion = 24
@@ -85,7 +84,7 @@ buildscript {
 
         timberDep = "com.jakewharton.timber:timber:$versions.timber"
         svgDep = "com.caverock:androidsvg-aar:$versions.svgVersion"
-        jdenticonDep = "org.wycliffeassociates:jdenticon-kotlin:$versions.jdenticonVersion"
+        jdenticonDep = "com.github.WycliffeAssociates:jdenticon-kotlin:$versions.jdenticonVersion"
 
         daggerDep = "com.google.dagger:hilt-android:$versions.dagger"
         daggerKaptDep = "com.google.dagger:hilt-compiler:$versions.dagger"
@@ -132,7 +131,6 @@ buildscript {
         googlePlayCoreDep = "com.google.android.play:core:$versions.googlePlayCore"
         firebaseBomDep = "com.google.firebase:firebase-bom:$versions.firebaseBom"
 
-        novaCryptoDep = "io.github.novacrypto:BIP39:$versions.novaCrypto"
         ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
         spongycastleDep = "com.madgag.spongycastle:core:$versions.spongycastle"
 
@@ -151,7 +149,8 @@ buildscript {
 
         composeMaterialDialogDep = "io.github.vanpra.compose-material-dialogs:core:$versions.composeMaterialDialog"
 
-        runtimePermissionsDep = "com.github.florent37:runtime-permission-kotlin:$versions.runtimePermissions"
+        permissionsAccompanistDep = "com.google.accompanist:accompanist-permissions:$versions.accompanist"
+        permissionsRuntimeDep = "com.guolindev.permissionx:permissionx:1.7.1"
 
         jUnitDep = "junit:junit:$versions.jUnit"
         mockitoDep = "org.mockito:mockito-inline:$versions.mockito"
@@ -236,22 +235,12 @@ apply from: 'secrets.gradle'
 
 allprojects {
     repositories {
-        maven {
-            url "https://nexus.iroha.tech/repository/maven-capital/"
-            credentials {
-                username = System.getenv("SORAMITSU_MAVEN_USR") ?: "SORAMITSU_MAVEN_USER_NAME"
-                password = System.getenv("SORAMITSU_MAVEN_PSW") ?: "SORAMITSU_MAVEN_USER_PASSWORD"
-            }
-        }
         mavenLocal()
         maven { url "https://nexus.iroha.tech/repository/maven-soramitsu/" }
         google()
         mavenCentral()
         maven {
             url "https://jitpack.io"
-        }
-        maven {
-            url "https://jcenter.bintray.com/"
         }
 
         maven {

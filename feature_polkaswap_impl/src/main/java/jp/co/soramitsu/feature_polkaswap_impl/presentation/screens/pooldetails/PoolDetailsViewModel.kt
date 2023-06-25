@@ -45,8 +45,12 @@ import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.lazyAsync
+import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsDemeterState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
@@ -60,6 +64,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
     private val poolsInteractor: PoolsInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val polkaswapRouter: PolkaswapRouter,
+    private val demeterFarmingInteractor: DemeterFarmingInteractor,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String,
 ) : BaseViewModel() {
@@ -71,11 +76,14 @@ class PoolDetailsViewModel @AssistedInject constructor(
 
     internal var detailsState by mutableStateOf(
         PoolDetailsState(
-            DEFAULT_ICON_URI, DEFAULT_ICON_URI,
-            "", "", "", "", "",
-            true, true,
+            DEFAULT_ICON_URI, DEFAULT_ICON_URI, DEFAULT_ICON_URI,
+            "", "", "", "", "", "",
+            true, true, "", emptyList(), false,
         )
     )
+
+    private val rewardTokenAsync by viewModelScope.lazyAsync { poolsInteractor.getRewardToken() }
+    private suspend fun rewardToken() = rewardTokenAsync.await()
 
     init {
         _toolbarState.value = SoramitsuToolbarState(
@@ -96,9 +104,26 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             removeEnabled = false,
                         )
                     } else {
+                        val pools = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
+                            pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
+                        }?.map {
+                            PoolDetailsDemeterState(
+                                rewardsUri = it.tokenReward.iconUri(),
+                                rewardsTokenSymbol = it.tokenReward.symbol,
+                                percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                    it.amount,
+                                    data.poolProvidersBalance,
+                                ).toFloat(),
+                            )
+                        }
+                        val pools100 = pools?.any {
+                            it.percent == 100.0f
+                        }
                         detailsState = PoolDetailsState(
                             token1Icon = data.baseToken.iconUri(),
                             token2Icon = data.token.iconUri(),
+                            rewardsUri = rewardToken().iconUri(),
+                            rewardsTokenSymbol = rewardToken().symbol,
                             symbol1 = data.baseToken.symbol,
                             symbol2 = data.token.symbol,
                             apy = data.strategicBonusApy?.let { apy ->
@@ -120,7 +145,15 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                 AssetHolder.ROUNDING
                             ),
                             addEnabled = true,
-                            removeEnabled = true,
+                            removeEnabled = (pools100 == null) || (pools100 == false),
+                            userPoolSharePercent = "%s%%".format(
+                                numbersFormatter.format(
+                                    data.poolShare,
+                                    2,
+                                )
+                            ),
+                            demeterPools = pools,
+                            demeter100Percent = pools100 == true,
                         )
                     }
                 }
