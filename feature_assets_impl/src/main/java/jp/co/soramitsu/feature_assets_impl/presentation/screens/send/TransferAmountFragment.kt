@@ -175,6 +175,8 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                         feeFiat = state.feeFiat,
                         feeAmount = state.fee,
                         reviewEnabled = state.reviewEnabled,
+                        shouldTransactionReminderInsufficientWarningBeShown = state.shouldTransactionReminderInsufficientWarningBeShown,
+                        transactionFeeToken = state.transactionFeeToken
                     )
                 }
 

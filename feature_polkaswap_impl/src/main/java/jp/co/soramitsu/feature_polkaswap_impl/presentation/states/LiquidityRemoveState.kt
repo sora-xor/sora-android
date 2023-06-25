@@ -44,6 +44,9 @@ data class LiquidityRemoveState(
     val prices: LiquidityRemovePricesState,
     val confirm: LiquidityRemoveConfirmState,
     val hintVisible: Boolean,
+    val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
+    val transactionFeeToken: String,
+    val poolInFarming: Boolean,
 )
 
 data class LiquidityRemoveConfirmState(

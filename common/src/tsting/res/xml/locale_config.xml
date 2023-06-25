@@ -18,4 +18,10 @@
     <locale android:name="vi" />
     <locale android:name="ms-MY" />
     <locale android:name="hi-IN" />
+    <locale android:name="az" />
+    <locale android:name="zh-TW" />
+    <locale android:name="nl" />
+    <locale android:name="fi" />
+    <locale android:name="ja" />
+    <locale android:name="pt" />
 </locale-config>

@@ -77,6 +77,7 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":feature_blockexplorer_api")
     implementation project(":feature_polkaswap_api")
+    implementation project(":feature_sora_card_api")
 
     implementation sharedUtilsDep
 
@@ -103,7 +104,8 @@ dependencies {
     implementation runtimeKtxDep
     implementation fragmentKtxDep
 
-    implementation runtimePermissionsDep
+    implementation permissionsAccompanistDep
+    implementation permissionsRuntimeDep
 
     implementation daggerDep
     kapt daggerKaptDep
@@ -120,10 +122,6 @@ dependencies {
     implementation roomKtxDep
 
     implementation uiCoreDep
-
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
 
     implementation composeUiDep
     implementation composeThemeAdapterDep
