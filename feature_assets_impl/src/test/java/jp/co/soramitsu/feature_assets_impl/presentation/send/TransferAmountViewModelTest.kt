@@ -35,7 +35,12 @@ package jp.co.soramitsu.feature_assets_impl.presentation.send
 import android.graphics.drawable.PictureDrawable
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -49,6 +54,7 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
@@ -62,17 +68,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.BDDMockito.anyInt
-import org.mockito.BDDMockito.anyString
-import org.mockito.BDDMockito.given
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.junit.MockitoJUnitRunner
 import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class TransferAmountViewModelTest {
 
     @Rule
@@ -82,27 +80,30 @@ class TransferAmountViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @Mock
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
     private lateinit var assetsInteractor: AssetsInteractor
 
-    @Mock
+    @MockK
     private lateinit var walletRouter: WalletRouter
 
-    @Mock
+    @MockK
     private lateinit var assetsRouter: AssetsRouter
 
-    @Mock
+    @MockK
     private lateinit var drawable: PictureDrawable
 
-    @Mock
+    @MockK
     private lateinit var resourceManager: ResourceManager
 
-    @Mock
+    @MockK
     private lateinit var avatarGenerator: AccountAvatarGenerator
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = mockk<Uri>()
 
-    @Mock
+    @MockK
     private lateinit var clipboardManager: ClipboardManager
 
     private val recipientId =
@@ -118,18 +119,24 @@ class TransferAmountViewModelTest {
         mockkStatic(Token::iconUri)
         every { TestTokens.xorToken.iconUri() } returns mockedUri
         every { TestTokens.valToken.iconUri() } returns mockedUri
-
-        given(resourceManager.getString(R.string.error_transaction_fee_title)).willReturn("Not enough funds")
-
-        given(avatarGenerator.createAvatar(anyString(), anyInt())).willReturn(drawable)
-
-        given(
+        every { resourceManager.getString(R.string.error_transaction_fee_title) } returns "Not enough funds"
+        every { avatarGenerator.createAvatar(any(), any()) } returns drawable
+        coEvery {
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns false
+        coEvery {
             assetsInteractor.calcTransactionFee(
                 recipientId,
                 TestTokens.xorToken,
                 BigDecimal.ONE
             )
-        ).willReturn(networkFee)
+        } returns networkFee
     }
 
     @Test
@@ -163,20 +170,97 @@ class TransferAmountViewModelTest {
         assertTrue(state.input?.amount?.equalTo(BigDecimal.valueOf(0.000075)) == true)
     }
 
-    private fun initViewModel(balance: BigDecimal) {
-        given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(
-            flowOf(
-                listOf(
-                    TestAssets.xorAsset(balance), TestAssets.valAsset(balance),
-                )
+    private fun initViewModel(
+        balance: BigDecimal,
+        firstTokenId: String? = null,
+        initialSendAmount: String? = null
+    ) {
+        every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns flowOf(
+            listOf(
+                TestAssets.xorAsset(balance),
+                TestAssets.valAsset(balance),
+                TestAssets.pswapAsset(balance),
             )
         )
-
         transferAmountViewModel = TransferAmountViewModel(
-                assetsInteractor, walletRouter, assetsRouter,
-                NumbersFormatter(), clipboardManager, resourceManager,
-                avatarGenerator,
-                recipientId, TestTokens.xorToken.id, null
+            interactor = assetsInteractor,
+            walletRouter = walletRouter,
+            assetsRouter = assetsRouter,
+            numbersFormatter = NumbersFormatter(),
+            clipboardManager = clipboardManager,
+            resourceManager = resourceManager,
+            avatarGenerator = avatarGenerator,
+            recipientId = recipientId,
+            assetId = firstTokenId ?: TestTokens.xorToken.id,
+            initialSendAmount = initialSendAmount
         )
     }
+
+    @Test
+    fun `WHEN user enters amount starting with XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            initViewModel(
+                BigDecimal.ZERO,
+                firstTokenId = PolkaswapTestData.XOR_ASSET.token.id
+            )
+            advanceUntilIdle()
+            transferAmountViewModel.amountChanged(BigDecimal.ONE)
+            advanceUntilIdle()
+            coVerify(atMost = 1) {
+                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                    primaryToken = PolkaswapTestData.XOR_ASSET.token,
+                    primaryTokenAmount = BigDecimal.ONE,
+                    secondaryToken = null,
+                    secondaryTokenAmount = null,
+                    networkFeeInXor = networkFee
+                )
+            }
+            transferAmountViewModel.onTokenChange(PolkaswapTestData.VAL_ASSET.token.id)
+            advanceUntilIdle()
+            transferAmountViewModel.amountChanged(BigDecimal.TEN)
+            advanceUntilIdle()
+            coVerify(atMost = 1) {
+                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                    primaryToken = PolkaswapTestData.VAL_ASSET.token,
+                    primaryTokenAmount = BigDecimal.TEN,
+                    secondaryToken = null,
+                    secondaryTokenAmount = null,
+                    networkFeeInXor = networkFee
+                )
+            }
+        }
+
+    @Test
+    fun `WHEN user enters amount starting without XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            initViewModel(
+                BigDecimal.ZERO,
+                firstTokenId = TestAssets.pswapAsset().token.id
+            )
+            advanceUntilIdle()
+            transferAmountViewModel.amountChanged(BigDecimal.ONE)
+            advanceUntilIdle()
+            coVerify(atMost = 1) {
+                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                    primaryToken = any(),
+                    primaryTokenAmount = any(),
+                    secondaryToken = any(),
+                    secondaryTokenAmount = any(),
+                    networkFeeInXor = any()
+                )
+            }
+            transferAmountViewModel.onTokenChange(PolkaswapTestData.XOR_ASSET.token.id)
+            advanceUntilIdle()
+            transferAmountViewModel.amountChanged(BigDecimal.TEN)
+            advanceUntilIdle()
+            coVerify(atMost = 1) {
+                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                    primaryToken = PolkaswapTestData.XOR_ASSET.token,
+                    primaryTokenAmount = BigDecimal.TEN,
+                    secondaryToken = null,
+                    secondaryTokenAmount = null,
+                    networkFeeInXor = networkFee
+                )
+            }
+        }
 }

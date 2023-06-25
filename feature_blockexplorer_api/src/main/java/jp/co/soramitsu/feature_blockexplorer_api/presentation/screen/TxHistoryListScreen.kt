@@ -36,6 +36,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,14 +45,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.view.LoadMoreHandler
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
@@ -62,8 +69,41 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TxHistoryScreen(
+fun TxHistoryScreenContainer(
+    modifier: Modifier,
+    historyState: HistoryState,
+    onRefreshClick: () -> Unit,
+    onHistoryItemClick: (String) -> Unit,
+    onMoreHistoryItemRequested: () -> Unit,
+) {
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = historyState.safeCast<HistoryState.History>()?.pullToRefresh ?: false,
+        onRefresh = onRefreshClick
+    )
+    Box(modifier = modifier.pullRefresh(pullRefreshState, historyState is HistoryState.History)) {
+        ContentCardEndless(
+            innerPadding = PaddingValues(top = Dimens.x2),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            TxHistoryScreen(
+                historyState = historyState,
+                onRefresh = onRefreshClick,
+                onHistoryItemClick = onHistoryItemClick,
+                onMoreHistoryItemRequested = onMoreHistoryItemRequested,
+            )
+        }
+        PullRefreshIndicator(
+            historyState.safeCast<HistoryState.History>()?.pullToRefresh ?: false,
+            pullRefreshState,
+            Modifier.align(Alignment.TopCenter)
+        )
+    }
+}
+
+@Composable
+private fun TxHistoryScreen(
     historyState: HistoryState,
     onRefresh: () -> Unit,
     onHistoryItemClick: (String) -> Unit,
@@ -73,11 +113,13 @@ fun TxHistoryScreen(
         HistoryState.Error -> {
             TxHistoryErrorScreen(onRefresh)
         }
+
         is HistoryState.History -> {
-            val list = if (historyState.endReached || historyState.hasErrorLoadingNew) historyState.events else buildList {
-                addAll(historyState.events)
-                add(EventUiModel.EventUiLoading)
-            }
+            val list =
+                if (historyState.endReached || historyState.hasErrorLoadingNew) historyState.events else buildList {
+                    addAll(historyState.events)
+                    add(EventUiModel.EventUiLoading)
+                }
 
             Column(
                 modifier = Modifier
@@ -109,6 +151,7 @@ fun TxHistoryScreen(
                 )
             }
         }
+
         HistoryState.Loading -> {
             Box(
                 modifier = Modifier
@@ -120,6 +163,7 @@ fun TxHistoryScreen(
                 )
             }
         }
+
         HistoryState.NoData -> {
             Box(
                 modifier = Modifier

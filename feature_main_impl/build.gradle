@@ -66,6 +66,7 @@ dependencies {
     implementation project(":common")
     implementation project(":core_db")
     implementation project(":feature_assets_api")
+    implementation project(":feature_blockexplorer_api")
     implementation project(":feature_main_api")
     implementation project(":feature_account_api")
     implementation project(":feature_ethereum_api")
@@ -74,6 +75,7 @@ dependencies {
     implementation project(":feature_multiaccount_api")
     implementation project(":feature_referral_api")
     implementation project(":feature_select_node_api")
+    implementation project(":feature_sora_card_api")
     implementation project(":sorasubstrate")
 
     implementation androidDep
@@ -105,10 +107,6 @@ dependencies {
     implementation navigationComposeDep
     implementation accompanistNavAnimationDep
 
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
-
     implementation gsonDep
     implementation webSocketLibDep
     implementation timberDep
@@ -120,8 +118,12 @@ dependencies {
     implementation roomDep
     implementation roomKtxDep
 
+    implementation workManagerDep
+
     implementation daggerDep
     kapt daggerKaptDep
+    implementation hiltWorkManagerDep
+    kapt hiltWorkManagerKaptDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

@@ -32,29 +32,41 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.util
 
-import java.util.Locale
-import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
-import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
-import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.graphics.drawable.BitmapDrawable
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import jp.co.soramitsu.common.R
 
-fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
-    return SoraCardContractData(
-        locale = Locale.ENGLISH,
-        apiKey = BuildConfig.SORA_CARD_API_KEY,
-        domain = BuildConfig.SORA_CARD_DOMAIN,
-        environment = when {
-            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
-            else -> SoraCardEnvironmentType.TEST
-        },
-        soraCardInfo = soraCardInfo,
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        client = OptionsProvider.header,
-    )
+object Notification {
+
+    private const val CHANNEL_ID = "jp.co.soramitsu.notification.channel"
+
+    fun checkNotificationChannel(manager: NotificationManagerCompat) {
+        if (BuildUtils.sdkAtLeast(Build.VERSION_CODES.O)) {
+            var notificationChannel = manager.getNotificationChannel(CHANNEL_ID)
+            if (notificationChannel == null) {
+                notificationChannel = NotificationChannel(
+                    CHANNEL_ID, Const.SORA, NotificationManager.IMPORTANCE_LOW,
+                )
+                manager.createNotificationChannel(notificationChannel)
+            }
+        }
+    }
+
+    fun getBuilder(context: Context): NotificationCompat.Builder =
+        NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.icon_small_notification)
+            .setLargeIcon(
+                (
+                    ContextCompat.getDrawable(
+                        context,
+                        R.mipmap.ic_launcher
+                    ) as BitmapDrawable
+                    ).bitmap
+            )
 }

@@ -83,7 +83,7 @@ data class QRCodeScannerScreenState(
     val errorText: Text
         get() = throwable?.message?.let {
             Text.SimpleText(it)
-        } ?: Text.StringRes(id = R.string.cant_fetch_data)
+        } ?: Text.StringRes(id = R.string.common_error_general_title)
 }
 
 @Composable

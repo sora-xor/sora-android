@@ -52,7 +52,5 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(path: ":common")
     implementation project(':common_wallet')
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
+    implementation project(':feature_sora_card_api')
 }

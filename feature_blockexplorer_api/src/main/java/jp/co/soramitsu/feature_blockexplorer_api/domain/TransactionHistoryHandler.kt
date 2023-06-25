@@ -50,4 +50,6 @@ interface TransactionHistoryHandler {
     suspend fun refreshHistoryEvents(tokenId: String? = null)
 
     suspend fun getTransaction(txHash: String): Transaction?
+
+    suspend fun hasNewTransaction(): Boolean
 }

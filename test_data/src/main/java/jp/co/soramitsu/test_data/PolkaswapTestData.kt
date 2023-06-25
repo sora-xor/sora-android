@@ -43,7 +43,9 @@ object PolkaswapTestData {
 
     val XOR_ASSET_ZERO_BALANCE = TestAssets.xorAsset(BigDecimal.ZERO)
 
-    val TEST_ASSET = TestAssets.valAsset(BigDecimal.ONE)
+    val VAL_ASSET = TestAssets.valAsset(BigDecimal.ONE)
+
+    val XSTXAU_ASSET = TestAssets.xstxauAsset(BigDecimal.ONE)
 
     val LIQUIDITY_DATA = LiquidityData(
         firstReserves = BigDecimal.ONE,
@@ -52,7 +54,7 @@ object PolkaswapTestData {
     )
 
     val POOL_DATA = PoolData(
-        TEST_ASSET.token,
+        VAL_ASSET.token,
         XOR_ASSET.token,
         BigDecimal.ONE,
         BigDecimal.TEN,

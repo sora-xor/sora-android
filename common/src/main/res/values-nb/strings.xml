@@ -64,6 +64,7 @@
   <string name="common_and">og</string>
   <string name="common_app_version">App version</string>
   <string name="common_arab">Arabisk</string>
+  <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
   <string name="common_backup">Backup</string>
   <string name="common_balance">Balanse</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Ferdig</string>
+  <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
   <string name="common_english">Engelsk</string>
   <string name="common_enter_amount">Angi beløp</string>
@@ -130,6 +132,8 @@
   <string name="common_finnish">Finsk</string>
   <string name="common_french">Fransk</string>
   <string name="common_german">German</string>
+  <string name="common_google_authorization_error">Google authorization failed</string>
+  <string name="common_google_backup_decryption_failed">Backup decryption failed. Please check password and try again</string>
   <string name="common_hebrew">Hebrew</string>
   <string name="common_hindi">Hindi</string>
   <plurals name="common_hour">
@@ -150,6 +154,7 @@
   <string name="common_passphrase_title">Passordfrase</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Persian</string>
+  <string name="common_portuguese">Portuguese</string>
   <string name="common_raw_seed">Raw seed</string>
   <string name="common_receive">Motta</string>
   <string name="common_received">Mottatt</string>
@@ -262,6 +267,7 @@
   <string name="invoice_scan_error_match">Du kan ikke sende til deg selv</string>
   <string name="invoice_scan_error_no_info">QR kan ikke dekodes</string>
   <string name="invoice_scan_error_user_not_found">Finner ikke bruker fra QR</string>
+  <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
   <string name="liquidity_pair_creation_description">The ratio of tokens you add will set the price of this pool. Once you are happy with the rate click supply to review.</string>
   <string name="liquidity_pair_creation_title">You are the first liquidity provider</string>
@@ -307,6 +313,11 @@
   <string name="pincode_one_try_left">You have one more try left before cooldown</string>
   <string name="pincode_set_your_pin_code">Velg PIN-kode</string>
   <string name="pincode_touch_fingerprint_scanner">Berør fingeravtrykkskanneren</string>
+  <string name="polkaswap_farming_demeter_power">Powered by Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Some portion of your pool share is staked. To have access to it you have to unstake it first.</string>
+  <string name="polkaswap_farming_pool_share">Your pool share staked</string>
+  <string name="polkaswap_farming_staked_for">Staked for %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">To remove liquidity you need to unstake it first</string>
   <string name="polkaswap_info_text_1">Polkaswap vedlikeholdes av SORA -samfunnet. Før du bruker Polkaswap -funksjonalitet, vennligst les %%Polkaswap FAQ%% og dokumentasjon, som inneholder en detaljert forklaring på hvordan Polkaswap fungerer, samt %%Polkaswap -notatet og vilkårene%% for bruk og %%personvernerklæring%%. Disse dokumentene er avgjørende for en sikker og positiv brukeropplevelse. Ved å bruke Polkaswap, erkjenner du at du har lest og forstått disse dokumentene.</string>
   <string name="polkaswap_info_text_2">Du godtar også følgende:</string>
   <string name="polkaswap_info_text_3">Ditt eneansvar for overholdelse av alle lover som kan gjelde for din spesielle bruk av Polkaswap i din juridiske jurisdiksjon;</string>
@@ -332,6 +343,7 @@
   <string name="polkaswap_network_fee_info">Nettverksavgift brukes for å sikre SORA-systemets vekst og stabile ytelse.</string>
   <string name="polkaswap_output_estimated">Beløp er estimert. Du vil motta minst %s ellers vil transaksjonen gå tilbake.</string>
   <string name="polkaswap_pool_not_created">Pool ikke opprettet</string>
+  <string name="polkaswap_reward_payout">Rewards payout in</string>
   <string name="polkaswap_sb_apy_info">Farming reward for liquidity provision</string>
   <string name="polkaswap_slippage_frontrun">Your transaction may be frontrun</string>
   <string name="polkaswap_slippage_info">Sklitoleranse er en akseptert terskel angitt i prosent for det endelige beløpet som påvirker minimum mottatt beløp.</string>
@@ -407,7 +419,7 @@
   <string name="referral_your_referrer">Your referrer</string>
   <string name="referrer_set">Referrer set</string>
   <string name="remove_liquidity_info_text">Removing liquidity converts your position back at the current rate, proportional to your share of the pool.</string>
-  <string name="remove_liquidity_title">Remove Liquidity</string>
+  <string name="remove_liquidity_title">Remove liquidity</string>
   <string name="remove_node_error_message">To delete this node please connect to another one</string>
   <string name="remove_node_error_title">Unable to delete connected node</string>
   <string name="remove_node_title">Do you really want to remove this node?</string>

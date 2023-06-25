@@ -136,10 +136,6 @@ dependencies {
     implementation coilDep
     implementation coilComposeDep
 
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
-
     implementation composeActivityDep
     implementation composeUiDep
     implementation composeLiveDataDep
