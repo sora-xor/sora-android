@@ -32,16 +32,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.components
 
+import android.net.Uri
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Icon
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
@@ -52,13 +57,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -69,6 +81,9 @@ fun DetailsItem(
     text: String,
     value1: String,
     value2: String? = null,
+    value1Bold: Boolean = false,
+    value1Uri: Uri? = null,
+    value1Percent: Float? = null,
     hint: String? = null,
     valueColor: Color = MaterialTheme.customColors.fgPrimary,
 ) {
@@ -128,13 +143,40 @@ fun DetailsItem(
                 contentDescription = null
             )
         }
-        Text(
+        Row(
             modifier = Modifier
                 .weight(1f)
+                .padding(horizontal = Dimens.x1_4),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            if (value1Uri != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(value1Uri).build(),
+                    modifier = Modifier
+                        .size(size = Dimens.x2),
+                    contentDescription = null,
+                    imageLoader = LocalContext.current.imageLoader,
+                )
+            }
+            if (value1Percent != null) {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .width(64.dp)
+                        .clip(RoundedCornerShape(Dimens.x2)),
+                    progress = value1Percent,
+                    color = MaterialTheme.customColors.accentPrimary,
+                    backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
+                )
+            }
+        }
+        Text(
+            modifier = Modifier
+                .wrapContentSize()
                 .padding(horizontal = Dimens.x1_2),
             text = value1,
             textAlign = TextAlign.End,
-            style = MaterialTheme.customTypography.textS,
+            style = if (value1Bold) MaterialTheme.customTypography.textSBold else MaterialTheme.customTypography.textS,
             color = valueColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -161,13 +203,20 @@ private fun PreviewSwapDetailsItem() {
             text = "Min received",
             value1 = "1.234 XOR",
             value2 = "~$3.45",
+            value1Bold = true,
             hint = null,
         )
         DetailsItem(
             text = "Min received",
             value1 = "1.234 XOR",
             value2 = "~$3.45",
+            value1Uri = DEFAULT_ICON_URI,
             hint = "some hint",
+        )
+        DetailsItem(
+            text = "Min received",
+            value1 = "0.4 %",
+            value1Percent = 0.4f,
         )
     }
 }

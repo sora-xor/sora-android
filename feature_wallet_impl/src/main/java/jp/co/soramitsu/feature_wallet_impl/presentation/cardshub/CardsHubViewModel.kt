@@ -53,7 +53,6 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common.util.createSoraCardContract
 import jp.co.soramitsu.common_wallet.domain.model.PoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
@@ -70,6 +69,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl

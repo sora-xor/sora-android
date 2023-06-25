@@ -102,7 +102,7 @@ data class RequestTokenScreenState(
         get() {
             if (untransformedUserName == null)
                 return Text.StringRes(
-                    id = R.string.cant_fetch_data
+                    id = R.string.common_error_general_title
                 )
 
             return Text.SimpleText(
@@ -126,7 +126,7 @@ data class RequestTokenScreenState(
         get() {
             if (untransformedUserAddress == null)
                 return Text.StringRes(
-                    id = R.string.cant_fetch_data
+                    id = R.string.common_error_general_title
                 )
 
             return Text.SimpleText(

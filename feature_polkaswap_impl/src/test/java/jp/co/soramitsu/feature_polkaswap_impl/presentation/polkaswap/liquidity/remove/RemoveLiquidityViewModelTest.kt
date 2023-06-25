@@ -38,16 +38,17 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
+import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData.NETWORK_FEE
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
-import jp.co.soramitsu.test_data.PolkaswapTestData.TEST_ASSET
+import jp.co.soramitsu.test_data.PolkaswapTestData.VAL_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET_ZERO_BALANCE
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,7 +67,12 @@ import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
 import java.math.BigDecimal
+
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -99,7 +105,7 @@ class RemoveLiquidityViewModelTest {
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var mainRouter: MainRouter
+    private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
 
     private lateinit var viewModel: LiquidityRemoveViewModel
 
@@ -107,18 +113,21 @@ class RemoveLiquidityViewModelTest {
     private val sbApyText = "SB APY"
     private val networkFeeText = "network fee"
 
-    private fun setUpViewModel() {
+    private fun setUpViewModel(
+        firstTokenId: String? = null,
+        secondTokenId: String? = null
+    ) {
         viewModel = LiquidityRemoveViewModel(
-            assetsInteractor,
-            assetsRouter,
-            router,
-            mainRouter,
-            walletInteractor,
-            poolsInteractor,
-            NumbersFormatter(),
-            resourceManager,
-            TestTokens.xorToken.id,
-            TestTokens.valToken.id
+            assetsInteractor = assetsInteractor,
+            assetsRouter = assetsRouter,
+            router = router,
+            walletInteractor = walletInteractor,
+            poolsInteractor = poolsInteractor,
+            numbersFormatter = NumbersFormatter(),
+            resourceManager = resourceManager,
+            token1Id = firstTokenId ?: TestTokens.xorToken.id,
+            token2Id = secondTokenId ?: TestTokens.valToken.id,
+            demeterFarmingInteractor = demeterFarmingInteractor,
         )
     }
 
@@ -133,7 +142,7 @@ class RemoveLiquidityViewModelTest {
             flowOf(
                 listOf(
                     XOR_ASSET,
-                    TEST_ASSET
+                    VAL_ASSET
                 )
             )
         )
@@ -141,17 +150,27 @@ class RemoveLiquidityViewModelTest {
         given(
             poolsInteractor.fetchRemoveLiquidityNetworkFee(
                 XOR_ASSET.token,
-                TEST_ASSET.token
+                VAL_ASSET.token
             )
         ).willReturn(NETWORK_FEE)
+
         given(
             poolsInteractor.subscribePoolCache(
                 XOR_ASSET.token.id,
-                TEST_ASSET.token.id
+                VAL_ASSET.token.id
             )
         ).willReturn(flowOf(POOL_DATA))
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
 
+        given(
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = anyOrNull(),
+                secondaryTokenAmount = anyOrNull(),
+                networkFeeInXor = any()
+            )
+        ).willReturn(false)
     }
 
     @Test
@@ -212,7 +231,7 @@ class RemoveLiquidityViewModelTest {
                 flowOf(
                     listOf(
                         XOR_ASSET_ZERO_BALANCE,
-                        TEST_ASSET
+                        VAL_ASSET
                     )
                 )
             )
@@ -226,5 +245,31 @@ class RemoveLiquidityViewModelTest {
                 viewModel.removeState.btnState.text,
             )
             assertFalse(viewModel.removeState.btnState.enabled)
+        }
+
+    @Test
+    fun `WHEN user enters amount including one XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            setUpViewModel(
+                firstTokenId = TestAssets.xorAsset().token.id,
+                secondTokenId = TestAssets.valAsset().token.id
+            )
+
+            advanceUntilIdle()
+
+            viewModel.onAmount1Change(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            verify(
+                mock = assetsInteractor,
+                mode = times(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = TestTokens.xorToken,
+                primaryTokenAmount = BigDecimal.ONE, // is not TEN due to basePooled in POOL_DATA
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = NETWORK_FEE
+            )
         }
 }

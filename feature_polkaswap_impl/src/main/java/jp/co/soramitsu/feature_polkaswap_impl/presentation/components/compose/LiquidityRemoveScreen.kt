@@ -35,8 +35,10 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -58,7 +60,9 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItem
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemovePricesState
@@ -141,6 +145,29 @@ internal fun LiquidityRemoveScreen(
                 onClick = onSlippageClick,
             )
         }
+        if (state.shouldTransactionReminderInsufficientWarningBeShown) {
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = Dimens.x2,
+                color = Color.Transparent
+            )
+            WarningTextCard(
+                title = stringResource(id = R.string.common_title_warning),
+                text = stringResource(
+                    id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
+                    formatArgs = arrayOf(state.transactionFeeToken, state.prices.fee)
+                )
+            )
+        }
+        if (state.poolInFarming) {
+            Spacer(modifier = Modifier.height(8.dp))
+            WarningTextCard(
+                text = stringResource(
+                    id = R.string.polkaswap_farming_pool_in_farming_hint
+                ),
+                error = false,
+            )
+        }
         Divider(
             modifier = Modifier.fillMaxWidth(),
             thickness = Dimens.x2,
@@ -193,54 +220,59 @@ internal fun LiquidityRemoveScreen(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewLiquidityRemoveScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(12.dp)
-    ) {
-        LiquidityRemoveScreen(
-            onReview = {},
-            onSlippageClick = {},
-            onAmountChange2 = {},
-            onAmountChange1 = {},
-            onFocusChange2 = {},
-            onFocusChange1 = {},
-            state = LiquidityRemoveState(
-                btnState = ButtonState(
-                    text = "btn",
-                    enabled = true,
-                    loading = false,
-                ),
-                slippage = 0.3,
-                estimated = LiquidityRemoveEstimatedState(
-                    token1 = "XOR",
-                    token2 = "VAL",
-                    token1Value = "12.1231",
-                    token2Value = "0.0123",
-                    shareOfPool = "12.12%",
-                ),
-                prices = LiquidityRemovePricesState(
-                    pair1 = "XOR/VAL",
-                    pair2 = "VAL/XOR",
-                    pair1Value = "1.4",
-                    pair2Value = "0.61",
-                    apy = "1.2%",
-                    fee = "1.999 XOR",
-                ),
-                hintVisible = false,
-                assetState1 = previewAssetAmountInputState,
-                assetState2 = previewAssetAmountInputState,
-                confirm = LiquidityRemoveConfirmState(
-                    text = "",
-                    confirmResult = false,
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(12.dp)
+        ) {
+            LiquidityRemoveScreen(
+                onReview = {},
+                onSlippageClick = {},
+                onAmountChange2 = {},
+                onAmountChange1 = {},
+                onFocusChange2 = {},
+                onFocusChange1 = {},
+                state = LiquidityRemoveState(
                     btnState = ButtonState(
                         text = "btn",
                         enabled = true,
                         loading = false,
                     ),
+                    slippage = 0.3,
+                    estimated = LiquidityRemoveEstimatedState(
+                        token1 = "XOR",
+                        token2 = "VAL",
+                        token1Value = "12.1231",
+                        token2Value = "0.0123",
+                        shareOfPool = "12.12%",
+                    ),
+                    prices = LiquidityRemovePricesState(
+                        pair1 = "XOR/VAL",
+                        pair2 = "VAL/XOR",
+                        pair1Value = "1.4",
+                        pair2Value = "0.61",
+                        apy = "1.2%",
+                        fee = "1.999 XOR",
+                    ),
+                    hintVisible = false,
+                    assetState1 = previewAssetAmountInputState,
+                    assetState2 = previewAssetAmountInputState,
+                    confirm = LiquidityRemoveConfirmState(
+                        text = "",
+                        confirmResult = false,
+                        btnState = ButtonState(
+                            text = "btn",
+                            enabled = true,
+                            loading = false,
+                        ),
+                    ),
+                    shouldTransactionReminderInsufficientWarningBeShown = true,
+                    transactionFeeToken = "",
+                    poolInFarming = true,
                 ),
-            ),
-        )
+            )
+        }
     }
 }

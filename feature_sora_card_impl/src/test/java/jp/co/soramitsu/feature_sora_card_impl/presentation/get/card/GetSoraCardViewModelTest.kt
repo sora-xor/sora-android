@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockkObject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider

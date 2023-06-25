@@ -42,5 +42,6 @@ sealed interface HistoryState {
         val endReached: Boolean,
         val events: List<EventUiModel>,
         val hasErrorLoadingNew: Boolean = false,
+        val pullToRefresh: Boolean = false,
     ) : HistoryState
 }

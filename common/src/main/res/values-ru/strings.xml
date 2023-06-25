@@ -18,8 +18,8 @@
   <string name="account_confirmation_title">Подтверждение</string>
   <string name="account_confirmation_title_v2">Подтвердить парольную фразу</string>
   <string name="account_options">Свойства аккаунта</string>
-  <string name="account_options_backup_google">Backup to Google</string>
-  <string name="account_options_delete_backup">Delete Google backup</string>
+  <string name="account_options_backup_google">Сохранить в Google</string>
+  <string name="account_options_delete_backup">Удалить резервную копию из Google</string>
   <string name="activity_data_not_up_to_date_title">Some data is not up to date</string>
   <string name="activity_empty_content_title">You will see your activity here once you start transacting</string>
   <string name="activity_error_title">Could not load your activity. Try to refresh the list</string>
@@ -64,6 +64,7 @@
   <string name="common_and">и</string>
   <string name="common_app_version">Версия приложения</string>
   <string name="common_arab">Арабский</string>
+  <string name="common_azerbaijani">Азербайджанский</string>
   <string name="common_back">Назад</string>
   <string name="common_backup">Резервная копия</string>
   <string name="common_balance">Баланс</string>
@@ -85,6 +86,7 @@
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Выполнено</string>
+  <string name="common_dutch">Нидерландский</string>
   <string name="common_edit">Редактировать</string>
   <string name="common_english">Английский</string>
   <string name="common_enter_amount">Введите сумму</string>
@@ -130,6 +132,8 @@
   <string name="common_finnish">Финский</string>
   <string name="common_french">Французский</string>
   <string name="common_german">Немецкий</string>
+  <string name="common_google_authorization_error">Ошибка Google авторизации</string>
+  <string name="common_google_backup_decryption_failed">Ошибка расшифровки аккаунта. Проверьте пароль и попробуйте снова.</string>
   <string name="common_hebrew">Иврит</string>
   <string name="common_hindi">Хинди</string>
   <plurals name="common_hour">
@@ -153,6 +157,7 @@
   <string name="common_passphrase_title">Парольная фраза</string>
   <string name="common_pay_attention">Pay attention!</string>
   <string name="common_persian">Персидский</string>
+  <string name="common_portuguese">Португальский</string>
   <string name="common_raw_seed">Сид-фраза</string>
   <string name="common_receive">Получить</string>
   <string name="common_received">Получено</string>
@@ -180,7 +185,7 @@
   <string name="common_spanish">Испанский</string>
   <string name="common_spanish_colombia">Испанский (Колумбия)</string>
   <string name="common_supply">Добавить</string>
-  <string name="common_supply_liquidity_title">Supply liquidity</string>
+  <string name="common_supply_liquidity_title">Добавить ликвидность</string>
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
@@ -201,15 +206,15 @@
   <string name="create_backup_password_button_text">Set backup password</string>
   <string name="create_backup_password_is_secure">Password is highly secure</string>
   <string name="create_backup_password_matched">Password matched</string>
-  <string name="create_backup_password_not_matched">Passwords do not match</string>
+  <string name="create_backup_password_not_matched">Пароли не совпадают</string>
   <string name="create_backup_password_title">Create backup password</string>
   <string name="create_backup_password_warning_text">I understand that if I forget my password there is no way to retrieve it.</string>
   <string name="create_backup_set_password">Set password</string>
-  <string name="create_backup_weak_password">Weak password</string>
+  <string name="create_backup_weak_password">Слабый пароль</string>
   <string name="create_new_account_title">Создать новый аккаунт</string>
   <string name="dark_mode">Ночной режим</string>
   <string name="delete_backup_alert_description">If you delete your Google backup, you’ll only be able to recover your wallet with a manual backup of your passphrase.</string>
-  <string name="delete_backup_alert_title">Are you sure?</string>
+  <string name="delete_backup_alert_title">Вы уверены?</string>
   <string name="details_frozen">Заморожено</string>
   <string name="details_receive_from_pool">Выведено из пула</string>
   <string name="details_sent_to_pool">Sent to pool</string>
@@ -265,6 +270,7 @@
   <string name="invoice_scan_error_match">Вы не можете отправить токены на активный в данный момент аккаунт</string>
   <string name="invoice_scan_error_no_info">Не удается декодировать QR</string>
   <string name="invoice_scan_error_user_not_found">Не удается найти пользователя</string>
+  <string name="launch_screen_loading_title">На этот раз загружается немного дольше</string>
   <string name="liquid_assets">Ликвидные активы</string>
   <string name="liquidity_pair_creation_description">Соотношение токенов, которое вы добавляете, будет определять цену этого пула. Как только вы будете довольны ставкой, нажмите «Добавить», чтобы проверить данные.</string>
   <string name="liquidity_pair_creation_title">Вы первый провайдер ликвидности</string>
@@ -310,6 +316,11 @@
   <string name="pincode_one_try_left">У вас осталась одна попытка до времени восстановления</string>
   <string name="pincode_set_your_pin_code">Установите пин-код</string>
   <string name="pincode_touch_fingerprint_scanner">Коснитесь сканера отпечатков пальцев</string>
+  <string name="polkaswap_farming_demeter_power">Работает на Demeter Farming</string>
+  <string name="polkaswap_farming_pool_in_farming_hint">Некоторая часть вашей доли в пуле находится в стейкинге. Чтобы получить к ней доступ, вы должны сначала разблокировать ее.</string>
+  <string name="polkaswap_farming_pool_share">Застейканая часть пула</string>
+  <string name="polkaswap_farming_staked_for">Застейкано в %s</string>
+  <string name="polkaswap_farming_unstake_to_remove">Чтобы забрать ликвидность, необходимо сначала разблокировать ее</string>
   <string name="polkaswap_info_text_1">Polkaswap разрабатывается сообществом SORA. Перед тем, как стать контрибьютером Polkaswap, ознакомьтесь с %%Polkaswap FAQ%% и документацией, которая описывает то, как работает Polkaswap, %%Polkaswap Меморандумом и Условиями и положениями%%, и %%Политикой конфиденциальности%%.\n\nЭти документы важны для безопасной и комфортной работы пользователей. Используя Polkaswap вы соглашаетесь, что вы прочли и поняли суть документов.</string>
   <string name="polkaswap_info_text_2">Вы также осознаете:</string>
   <string name="polkaswap_info_text_3">Вашу личную ответственность за соблюдение законов, которые могут применяться к использованию Polkaswap в вашей юрисдикции;</string>
@@ -335,6 +346,7 @@
   <string name="polkaswap_network_fee_info">Комиссия сети используется для обеспечения роста и стабильности системы SORA.</string>
   <string name="polkaswap_output_estimated">Оценочная сумма. Минимально будет куплено %s или транзакция будет отменена.</string>
   <string name="polkaswap_pool_not_created">Пул не создан</string>
+  <string name="polkaswap_reward_payout">Выплата вознаграждений в</string>
   <string name="polkaswap_sb_apy_info">Фарминговое вознаграждение за предоставление ликвидности</string>
   <string name="polkaswap_slippage_frontrun">Возможен фронтран транзакции</string>
   <string name="polkaswap_slippage_info">Ваши транзакции будут отменены, если цена изменится не в вашу пользу больше, чем на указанный процент.</string>
@@ -425,7 +437,7 @@
   <string name="referral_your_referrer">Ваш реферер</string>
   <string name="referrer_set">Referrer set</string>
   <string name="remove_liquidity_info_text">Удаление ликвидности конвертирует вашу позицию обратно по текущему курсу, пропорциональному вашей доле в пуле.</string>
-  <string name="remove_liquidity_title">Удалить Ликвидность</string>
+  <string name="remove_liquidity_title">Забрать ликвидность</string>
   <string name="remove_node_error_message">Для удаления подключитесь к другой ноде</string>
   <string name="remove_node_error_title">Не удалось удалить ноду</string>
   <string name="remove_node_title">Вы уверены, что хотите удалить ноду?</string>

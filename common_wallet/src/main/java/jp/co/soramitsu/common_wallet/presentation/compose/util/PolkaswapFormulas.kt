@@ -35,6 +35,7 @@ package jp.co.soramitsu.common_wallet.presentation.compose.util
 import java.math.BigDecimal
 import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
+import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 
@@ -56,8 +57,8 @@ object PolkaswapFormulas {
     fun calculateShareOfPoolFromAmount(
         amount: BigDecimal,
         amountPooled: BigDecimal,
-    ): Double =
-        amount.divideBy(amountPooled).multiply(Big100).toDouble()
+    ): Double = if (amount.equalTo(amountPooled)) 100.0 else
+        calculateShareOfPool(amount, amountPooled).toDouble()
 
     fun calculateAddLiquidityAmount(
         baseAmount: BigDecimal,
@@ -125,7 +126,8 @@ object PolkaswapFormulas {
         percentage: Double,
         precision: Int,
     ): BigDecimal {
-        return if (percentage == 100.0) amount else amount.safeDivide(Big100, precision).multiply(percentage.toBigDecimal())
+        return if (percentage == 100.0) amount else amount.safeDivide(Big100, precision)
+            .multiply(percentage.toBigDecimal())
     }
 
     fun calculateOneAmountFromAnother(

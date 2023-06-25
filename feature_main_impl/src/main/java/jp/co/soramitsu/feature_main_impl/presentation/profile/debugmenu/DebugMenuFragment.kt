@@ -34,15 +34,20 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Button
 import androidx.compose.material.Text
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.work.WorkInfo
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.SoraBaseFragment
@@ -64,6 +69,9 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
             val dm = remember {
                 activity?.getSize()
             }
+            val pushState = NewHistoryEventsWorker.getInfo(requireContext()).observeAsState().value
+            val pushEnabled =
+                (pushState != null) && (pushState.size > 0) && ((pushState[0].state == WorkInfo.State.RUNNING) || (pushState[0].state == WorkInfo.State.ENQUEUED))
             Column(modifier = Modifier.fillMaxSize()) {
                 Text(text = "%s %.3f".format("Density", dm?.first ?: 0.0))
                 Text(text = "%s %d".format("Width", dm?.second ?: 0.0))
@@ -72,6 +80,19 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
                 Button(onClick = viewModel::onResetRuntimeClick) {
                     Text(text = "Reset runtime")
                 }
+                Button(
+                    modifier = Modifier.wrapContentSize().background(color = if (pushEnabled) Color.Green else Color.Gray),
+                    onClick = {
+                        if (pushEnabled) {
+                            NewHistoryEventsWorker.stop(requireContext())
+                        } else {
+                            NewHistoryEventsWorker.start(requireContext())
+                        }
+                    },
+                    content = {
+                        Text(text = if (pushEnabled) "Disable" else "Enable")
+                    }
+                )
                 DebugMenuScreen(state = viewModel.state)
             }
         }
