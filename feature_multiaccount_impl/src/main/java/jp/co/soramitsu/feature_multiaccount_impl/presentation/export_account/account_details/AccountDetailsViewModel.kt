@@ -38,7 +38,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -86,9 +85,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
     private val _copyEvent = SingleLiveEvent<Unit>()
     val copyEvent: LiveData<Unit> = _copyEvent
-
-    private val _navigateToBackupEvent = SingleLiveEvent<Unit>()
-    val navigateToBackupEvent: LiveData<Unit> = _navigateToBackupEvent
 
     private val _accountDetailsScreenState = MutableLiveData(
         AccountDetailsScreenState(
@@ -217,9 +213,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
         }
     }
 
-    fun onBackupPasswordClicked(
-        navController: NavController
-    ) {
+    fun onBackupPasswordClicked() {
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
@@ -240,7 +234,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     withContext(coroutineManager.main) {
                         _accountDetailsScreenState.value = _accountDetailsScreenState
                             .value?.copy(isBackupAvailable = backupService.isAccountBackedUp(address))
-                        navController.popBackStack()
+                        _navigationPop.trigger()
                     }
                 }
             }
@@ -248,7 +242,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupClicked(
-        navController: NavController,
         launcher: ActivityResultLauncher<Intent>
     ) {
         viewModelScope.launch {
@@ -258,7 +251,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     if (backupService.isAccountBackedUp(address)) {
                         deleteGoogleBackup()
                     } else {
-                        openCreateBackupScreen(navController)
+                        openCreateBackupScreen()
                     }
                 }
             }
@@ -273,7 +266,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
         )
     }
 
-    private fun openCreateBackupScreen(navController: NavController) {
+    private fun openCreateBackupScreen() {
         _createBackupPasswordState.value = CreateBackupPasswordState(
             password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
             passwordConfirmation = InputTextState(
@@ -283,7 +276,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
             )
         )
 
-        navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
+        _navEvent.value = AccountDetailsRoutes.BACKUP_ACCOUNT to {}
         _accountDetailsScreenState.value =
             accountDetailsScreenState.value?.copy(isBackupLoading = false)
     }
@@ -304,7 +297,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             )
                         )
                     )
-                    _navigateToBackupEvent.trigger()
+                    _navEvent.value = AccountDetailsRoutes.BACKUP_ACCOUNT to {}
                     _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
                 }
             }

@@ -109,7 +109,6 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         {
                             debounceClickHandler.debounceClick {
                                 viewModel.onBackupClicked(
-                                    navController,
                                     launcher
                                 )
                             }
@@ -133,15 +132,11 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         viewModel::onWarningToggle
                     ) {
                         debounceClickHandler.debounceClick {
-                            viewModel.onBackupPasswordClicked(navController)
+                            viewModel.onBackupPasswordClicked()
                         }
                     }
                 }
             }
-        }
-
-        viewModel.navigateToBackupEvent.observe {
-            navController.navigate(AccountDetailsRoutes.BACKUP_ACCOUNT)
         }
     }
 }

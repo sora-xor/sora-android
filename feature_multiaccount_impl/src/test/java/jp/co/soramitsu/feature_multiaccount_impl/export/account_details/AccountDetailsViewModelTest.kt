@@ -223,7 +223,7 @@ class AccountDetailsViewModelTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
 
-        accountDetailsViewModel.onBackupClicked(navController, accountResultLauncher)
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
         advanceUntilIdle()
         accountDetailsViewModel.onBackupPasswordChanged(TextFieldValue(password))
         accountDetailsViewModel.onBackupPasswordConfirmationChanged(TextFieldValue(password))
@@ -239,11 +239,12 @@ class AccountDetailsViewModelTest {
             "",
         )
 
-        accountDetailsViewModel.onBackupPasswordClicked(navController)
+        accountDetailsViewModel.onBackupPasswordClicked()
         advanceUntilIdle()
 
         verify(backupService).saveBackupAccount(decryptedBackupAccount, password)
-        verify(navController).popBackStack()
+        val popEvent = accountDetailsViewModel.navigationPop.getOrAwaitValue()
+        assertEquals(Unit, popEvent)
         assertTrue(accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable ?: false)
     }
 
@@ -251,7 +252,7 @@ class AccountDetailsViewModelTest {
     fun `onBackupClicked() called when authorize fails`() = runTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(false)
 
-        accountDetailsViewModel.onBackupClicked(navController, accountResultLauncher)
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
         advanceUntilIdle()
 
         verify(backupService).authorize(accountResultLauncher)
@@ -264,7 +265,7 @@ class AccountDetailsViewModelTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
 
-        accountDetailsViewModel.onBackupClicked(navController, accountResultLauncher)
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
         advanceUntilIdle()
 
         verify(backupService).deleteBackupAccount(account.substrateAddress)
@@ -275,9 +276,10 @@ class AccountDetailsViewModelTest {
         given(backupService.authorize(accountResultLauncher)).willReturn(true)
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
 
-        accountDetailsViewModel.onBackupClicked(navController, accountResultLauncher)
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
         advanceUntilIdle()
 
-        verify(navController).navigate("jp.co.soramitsu.feature_multiaccount_impl.BackupAccount")
+        val navEvent = accountDetailsViewModel.navEvent.getOrAwaitValue()
+        assertEquals("jp.co.soramitsu.feature_multiaccount_impl.BackupAccount", navEvent.first)
     }
 }
