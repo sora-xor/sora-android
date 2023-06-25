@@ -173,7 +173,7 @@ fun RequestTokenScreen(
     val requestFocus by remember {
         derivedStateOf {
             pagerState.currentPageOffsetFraction == 0f &&
-            index == pagerState.currentPage
+                index == pagerState.currentPage
         }
     }
 
