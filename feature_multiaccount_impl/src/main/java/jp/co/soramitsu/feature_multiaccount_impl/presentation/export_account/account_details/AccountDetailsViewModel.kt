@@ -253,12 +253,17 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     } else {
                         openCreateBackupScreen()
                     }
+                } else {
+                    _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
                 }
             }
         }
     }
 
     private suspend fun deleteGoogleBackup() {
+        _accountDetailsScreenState.value = accountDetailsScreenState.value?.copy(
+            isBackupLoading = true
+        )
         backupService.deleteBackupAccount(address)
         _accountDetailsScreenState.value = accountDetailsScreenState.value?.copy(
             isBackupLoading = false,
