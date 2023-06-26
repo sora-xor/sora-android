@@ -49,17 +49,12 @@ android {
             dimension 'default'
         }
     }
-
-    configurations.all {
-        exclude module: "pinview"
-    }
 }
 
 dependencies {
     implementation project(":common")
 
     implementation kotlinxSerializationJsonDep
-    api project(path: ":pinviewdep", configuration: "pinviewconf")
 
     implementation daggerDep
     kapt daggerKaptDep
