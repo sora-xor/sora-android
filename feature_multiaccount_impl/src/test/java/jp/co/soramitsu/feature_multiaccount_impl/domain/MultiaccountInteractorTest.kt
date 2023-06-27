@@ -40,10 +40,12 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -71,10 +73,11 @@ class MultiaccountInteractorTest {
     private val credentialsRepository = mock(CredentialsRepository::class.java)
     private val fileManager = mock(FileManager::class.java)
     private val assetsInteractor = mock(AssetsInteractor::class.java)
+    private val runtimeManager = mock(RuntimeManager::class.java)
 
     @Before
     fun setup() {
-        multiaccountInteractor = MultiaccountInteractor(assetsInteractor, userRepository, credentialsRepository, fileManager)
+        multiaccountInteractor = MultiaccountInteractor(assetsInteractor, userRepository, credentialsRepository, fileManager, runtimeManager)
     }
 
     @Test
@@ -84,6 +87,14 @@ class MultiaccountInteractorTest {
         multiaccountInteractor.isMnemonicValid(mnemonic)
 
         verify(credentialsRepository).isMnemonicValid(mnemonic)
+    }
+
+    @Test
+    fun `is address valid called`() {
+        val address = "address"
+        given(runtimeManager.isAddressOk(address)).willReturn(true)
+
+        assertTrue(multiaccountInteractor.isAddressValid(address))
     }
 
     @Test
