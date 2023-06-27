@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.ui_core.component.asset.Asset
@@ -54,7 +55,8 @@ fun AssetsCard(
 ) {
     cardState.assets.forEachIndexed { index, assetState ->
         Asset(
-            modifier = Modifier.padding(horizontal = Dimens.x3),
+            modifier = Modifier.testTagAsId("TokenN$index")
+                .padding(horizontal = Dimens.x3),
             icon = assetState.tokenIcon,
             name = assetState.tokenName,
             balance = assetState.assetAmount,
