@@ -79,6 +79,8 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
             }
             is SoraCardResult.Canceled -> {
             }
+            is SoraCardResult.NavigateTo -> {
+            }
         }
     }
 

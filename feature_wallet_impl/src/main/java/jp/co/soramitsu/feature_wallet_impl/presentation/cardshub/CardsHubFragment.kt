@@ -88,6 +88,8 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
             }
             is SoraCardResult.Canceled -> {
             }
+            is SoraCardResult.NavigateTo -> {
+            }
         }
     }
 
