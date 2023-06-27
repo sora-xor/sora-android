@@ -65,6 +65,7 @@ interface ReferralRepository {
         from: String,
         amount: BigDecimal,
         token: Token,
+        fee: BigDecimal,
     ): Transaction.ReferralUnbond
 
     suspend fun observeBond(
@@ -72,6 +73,7 @@ interface ReferralRepository {
         from: String,
         amount: BigDecimal,
         token: Token,
+        fee: BigDecimal,
     ): Transaction.ReferralBond
 
     suspend fun calcBondFee(
