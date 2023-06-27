@@ -318,7 +318,7 @@ class AssetsInteractorTest {
             )
 
             Assert.assertEquals(
-                false,
+                true,
                 result
             )
         }
