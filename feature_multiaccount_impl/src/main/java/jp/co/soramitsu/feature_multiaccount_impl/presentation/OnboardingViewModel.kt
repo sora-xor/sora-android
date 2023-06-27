@@ -75,6 +75,7 @@ import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class OnboardingViewModel @Inject constructor(
@@ -101,7 +102,8 @@ class OnboardingViewModel @Inject constructor(
     val importAccountListState: LiveData<ImportAccountListScreenState> = _importAccountListState
 
     private val _importAccountPasswordState = MutableLiveData<ImportAccountPasswordState>()
-    val importAccountPasswordState: LiveData<ImportAccountPasswordState> = _importAccountPasswordState
+    val importAccountPasswordState: LiveData<ImportAccountPasswordState> =
+        _importAccountPasswordState
 
     private val _recoveryAccountNameCardState = MutableLiveData<CreateAccountState>()
     val recoveryAccountNameCardState: LiveData<CreateAccountState> = _recoveryAccountNameCardState
@@ -512,7 +514,9 @@ class OnboardingViewModel @Inject constructor(
                 } else {
                     val result = backupService.getBackupAccounts()
                         .filter {
-                            !multiaccountInteractor.accountExists(it.address)
+                            multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
+                                it.address
+                            )
                         }
 
                     _tutorialScreenState.value =
@@ -577,25 +581,31 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
-        _createBackupPasswordState.value?.let {
-            val isSecure = textFieldValue.text.isPasswordSecure()
+        _createBackupPasswordState.value?.let { it ->
+            val filteredValue =
+                textFieldValue.copy(text = textFieldValue.text.filter { it.isLetter() })
+
+            val isSecure = filteredValue.text.isPasswordSecure()
             val errorString =
-                getPasswordConfirmationError(textFieldValue.text, it.passwordConfirmation.value.text)
+                getPasswordConfirmationError(
+                    filteredValue.text,
+                    it.passwordConfirmation.value.text
+                )
             _createBackupPasswordState.value = it.copy(
                 password = it.password.copy(
-                    value = textFieldValue,
+                    value = filteredValue,
                     success = isSecure,
                     descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else "",
                 ),
                 passwordConfirmation = it.passwordConfirmation.copy(
                     error = errorString.isNotEmpty(),
-                    descriptionText = if (textFieldValue.text == it.passwordConfirmation.value.text)
+                    descriptionText = if (filteredValue.text == it.passwordConfirmation.value.text)
                         resourceManager.getString(R.string.create_backup_password_matched)
                     else
                         errorString
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == textFieldValue.text && isSecure
+                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
@@ -622,9 +632,9 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onImportContinueClicked(navController: NavController) {
-        viewModelScope.launch {
-            _importAccountPasswordState.value?.let { state ->
-                _importAccountPasswordState.value = state.copy(isLoading = true)
+        _importAccountPasswordState.value?.let { state ->
+            _importAccountPasswordState.value = state.copy(isLoading = true)
+            viewModelScope.launch(coroutineManager.io) {
                 state.selectedAccount?.let {
                     try {
                         val decryptedBackupAccount = backupService.importBackupAccount(
@@ -645,12 +655,14 @@ class OnboardingViewModel @Inject constructor(
                                 connectionManager.isConnected
                             )
 
-                            navController.navigate(
-                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
-                                navOptions = NavOptions.Builder()
-                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
-                                    .build()
-                            )
+                            withContext(coroutineManager.main) {
+                                navController.navigate(
+                                    route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                                    navOptions = NavOptions.Builder()
+                                        .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                        .build()
+                                )
+                            }
                         } else {
                             onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
                         }
@@ -662,7 +674,9 @@ class OnboardingViewModel @Inject constructor(
                         onError(e)
                     }
                 }
-                _importAccountPasswordState.value = state.copy(isLoading = false)
+                withContext(coroutineManager.main) {
+                    _importAccountPasswordState.value = state.copy(isLoading = false)
+                }
             }
         }
     }
@@ -676,17 +690,21 @@ class OnboardingViewModel @Inject constructor(
             _importAccountPasswordState.value =
                 _importAccountPasswordState.value?.copy(isLoading = true)
             _importAccountListState.value = ImportAccountListScreenState(
-                accountList = backupService.getBackupAccounts().map {
-                    BackupAccountMetaWithIcon(
-                        it,
-                        avatarGenerator.createAvatar(
-                            it.address,
-                            Dimens.x5.value.toInt()
+                accountList = backupService.getBackupAccounts()
+                    .filter {
+                        multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
+                            it.address
                         )
-                    )
-                }.filter {
-                    !multiaccountInteractor.accountExists(it.backupAccountMeta.address)
-                }
+                    }
+                    .map {
+                        BackupAccountMetaWithIcon(
+                            it,
+                            avatarGenerator.createAvatar(
+                                it.address,
+                                Dimens.x5.value.toInt()
+                            )
+                        )
+                    }
             )
 
             resetBackupLiveData()
@@ -707,18 +725,20 @@ class OnboardingViewModel @Inject constructor(
 
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
+            val filteredValue =
+                textFieldValue.copy(text = textFieldValue.text.filter { it.isLetter() })
             val isConfirmationRight =
-                it.password.value.text == textFieldValue.text
+                it.password.value.text == filteredValue.text
             val errorString =
-                getPasswordConfirmationError(it.password.value.text, textFieldValue.text)
+                getPasswordConfirmationError(it.password.value.text, filteredValue.text)
             _createBackupPasswordState.value = it.copy(
                 passwordConfirmation = it.passwordConfirmation.copy(
-                    value = textFieldValue,
+                    value = filteredValue,
                     success = isConfirmationRight,
                     descriptionText = if (isConfirmationRight) resourceManager.getString(R.string.create_backup_password_matched) else errorString,
                     error = errorString.isNotEmpty()
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRight && textFieldValue.text.isPasswordSecure()
+                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRight && filteredValue.text.isPasswordSecure()
             )
         }
     }
@@ -733,7 +753,10 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private fun getPasswordConfirmationError(password: String, passwordConfirmation: String): String {
+    private fun getPasswordConfirmationError(
+        password: String,
+        passwordConfirmation: String
+    ): String {
         return if (passwordConfirmation == "" || passwordConfirmation == password) {
             ""
         } else {

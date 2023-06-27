@@ -105,7 +105,8 @@ fun BackupPasswordScreen(
                 ),
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done,
-                    keyboardType = KeyboardType.Password
+                    keyboardType = KeyboardType.Password,
+                    autoCorrect = false
                 ),
             )
 
@@ -123,7 +124,11 @@ fun BackupPasswordScreen(
                         focusManager.clearFocus()
                     }
                 ),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Password,
+                    autoCorrect = false
+                ),
             )
 
             CheckboxButton(
