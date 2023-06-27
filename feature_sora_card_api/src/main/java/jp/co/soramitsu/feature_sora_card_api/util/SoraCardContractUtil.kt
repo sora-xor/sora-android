@@ -58,5 +58,6 @@ fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
         client = OptionsProvider.header,
+        userAvailableXorAmount = 0.0,
     )
 }

@@ -62,6 +62,7 @@ object SoraCardTestData {
             username = BuildConfig.SORA_CARD_KYC_USERNAME,
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
+        userAvailableXorAmount = 0.0,
     )
 
     val SORA_CARD_INFO = jp.co.soramitsu.common.domain.SoraCardInformation(
@@ -91,6 +92,7 @@ object SoraCardTestData {
             accessTokenExpirationTime = SORA_CARD_INFO.accessTokenExpirationTime
         ),
         client = "test android client",
+        userAvailableXorAmount = 0.0,
     )
 
     val signInLauncher = SoraCardContractData(
@@ -112,5 +114,6 @@ object SoraCardTestData {
             username = BuildConfig.SORA_CARD_KYC_USERNAME,
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
+        userAvailableXorAmount = 0.0,
     )
 }

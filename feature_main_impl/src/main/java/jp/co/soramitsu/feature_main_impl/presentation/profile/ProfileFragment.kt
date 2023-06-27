@@ -81,6 +81,8 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
             }
             is SoraCardResult.Canceled -> {
             }
+            is SoraCardResult.NavigateTo -> {
+            }
         }
     }
 

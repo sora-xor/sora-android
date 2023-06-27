@@ -24,12 +24,6 @@ android {
         //resConfigs "en", "ru", "es", "fr", "de", "nb", "in", "tr", "ar"
     }
 
-    // https://github.com/idnow/de.idnow.android/issues/60
-    // The issue appeared during android-sora-card integration
-    configurations {
-        all*.exclude module: 'bcprov-jdk15on'
-    }
-
     signingConfigs {
         cidebug {
             storeFile file(System.env.CI_KEYSTORE_PATH ?: "../key/testdebug.jks")
