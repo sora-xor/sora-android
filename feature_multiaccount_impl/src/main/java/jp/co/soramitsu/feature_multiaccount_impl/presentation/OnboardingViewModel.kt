@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
@@ -529,10 +530,7 @@ class OnboardingViewModel @Inject constructor(
                             accountList = result.map {
                                 BackupAccountMetaWithIcon(
                                     it,
-                                    avatarGenerator.createAvatar(
-                                        it.address,
-                                        Dimens.x5.value.toInt()
-                                    )
+                                    getDrawableFromGoogleBackup(it.address),
                                 )
                             }
                         )
@@ -697,10 +695,7 @@ class OnboardingViewModel @Inject constructor(
                     .map {
                         BackupAccountMetaWithIcon(
                             it,
-                            avatarGenerator.createAvatar(
-                                it.address,
-                                Dimens.x5.value.toInt()
-                            )
+                            getDrawableFromGoogleBackup(it.address),
                         )
                     }
             )
@@ -750,6 +745,13 @@ class OnboardingViewModel @Inject constructor(
             )
         }
     }
+
+    private fun getDrawableFromGoogleBackup(address: String): Drawable? = runCatching {
+        avatarGenerator.createAvatar(
+            address,
+            Dimens.x5.value.toInt(),
+        )
+    }.getOrNull()
 
     private fun getPasswordConfirmationError(
         password: String,

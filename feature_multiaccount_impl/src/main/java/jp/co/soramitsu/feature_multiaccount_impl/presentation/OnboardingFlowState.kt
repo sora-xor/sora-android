@@ -88,7 +88,7 @@ data class ImportAccountPasswordState(
 
 data class BackupAccountMetaWithIcon(
     val backupAccountMeta: BackupAccountMeta,
-    val icon: Drawable
+    val icon: Drawable?,
 )
 
 data class MnemonicConfirmationState(
