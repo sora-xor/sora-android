@@ -57,8 +57,10 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
@@ -124,6 +126,9 @@ class OnboardingViewModel @Inject constructor(
 
     private val _recoveryState = MutableLiveData<RecoveryState>()
     val recoveryState: LiveData<RecoveryState> = _recoveryState
+
+    private val _onActionEvent = SingleLiveEvent<Unit>()
+    val onActionEvent: LiveData<Unit> = _onActionEvent
 
     private var tempAccount: SoraAccount? = null
 
@@ -244,6 +249,7 @@ class OnboardingViewModel @Inject constructor(
     fun onDestinationChanged(route: String) {
         currentDestination = route
         toggleToolbarTitle(route)
+        toggleToolbarActionButton(route)
     }
 
     fun onAccountNameChanged(textFieldValue: TextFieldValue) {
@@ -377,6 +383,20 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    private fun toggleToolbarActionButton(route: String) {
+        _toolbarState.value?.let {
+            _toolbarState.value = it.copy(
+                basic = it.basic.copy(
+                    actionLabel = if (route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE) {
+                        resourceManager.getString(R.string.common_skip)
+                    } else {
+                        null
+                    }
+                )
+            )
+        }
+    }
+
     fun onCreateAccountContinueClicked(navController: NavController) {
         navController.navigate(OnboardingFeatureRoutes.DISCLAIMER)
 
@@ -488,7 +508,7 @@ class OnboardingViewModel @Inject constructor(
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
     }
 
-    private fun finishCreateAccountProcess(context: Context) {
+    fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
             multiaccountInteractor.createUser(
                 soraAccount = requireNotNull(
@@ -762,5 +782,9 @@ class OnboardingViewModel @Inject constructor(
         } else {
             resourceManager.getString(R.string.create_backup_password_not_matched)
         }
+    }
+
+    override fun onAction() {
+        _onActionEvent.trigger()
     }
 }
