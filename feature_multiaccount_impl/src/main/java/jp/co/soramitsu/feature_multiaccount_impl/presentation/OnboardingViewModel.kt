@@ -634,13 +634,15 @@ class OnboardingViewModel @Inject constructor(
     fun onImportContinueClicked(navController: NavController) {
         _importAccountPasswordState.value?.let { state ->
             _importAccountPasswordState.value = state.copy(isLoading = true)
-            viewModelScope.launch(coroutineManager.io) {
+            viewModelScope.launch {
                 state.selectedAccount?.let {
                     try {
-                        val decryptedBackupAccount = backupService.importBackupAccount(
-                            it.backupAccountMeta.address,
-                            state.passwordInput.value.text
-                        )
+                        val decryptedBackupAccount = withContext(coroutineManager.io) {
+                            backupService.importBackupAccount(
+                                it.backupAccountMeta.address,
+                                state.passwordInput.value.text
+                            )
+                        }
 
                         val valid =
                             multiaccountInteractor.isMnemonicValid(decryptedBackupAccount.mnemonicPhrase)
@@ -655,14 +657,12 @@ class OnboardingViewModel @Inject constructor(
                                 connectionManager.isConnected
                             )
 
-                            withContext(coroutineManager.main) {
-                                navController.navigate(
-                                    route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
-                                    navOptions = NavOptions.Builder()
-                                        .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
-                                        .build()
-                                )
-                            }
+                            navController.navigate(
+                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                                navOptions = NavOptions.Builder()
+                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                    .build()
+                            )
                         } else {
                             onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
                         }
@@ -674,9 +674,7 @@ class OnboardingViewModel @Inject constructor(
                         onError(e)
                     }
                 }
-                withContext(coroutineManager.main) {
-                    _importAccountPasswordState.value = state.copy(isLoading = false)
-                }
+                _importAccountPasswordState.value = state.copy(isLoading = false)
             }
         }
     }
