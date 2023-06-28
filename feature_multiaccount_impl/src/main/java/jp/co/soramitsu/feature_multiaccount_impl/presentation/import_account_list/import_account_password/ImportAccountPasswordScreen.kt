@@ -156,7 +156,7 @@ fun AccountWithIcon(
     modifier: Modifier = Modifier,
     address: String,
     accountName: String,
-    accountIcon: Drawable,
+    accountIcon: Drawable?,
 ) {
     Row(
         modifier = modifier,
@@ -164,7 +164,8 @@ fun AccountWithIcon(
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(accountIcon).build(),
+                .placeholder(R.drawable.ic_token_default)
+                .data(accountIcon ?: R.drawable.ic_token_default).build(),
             modifier = Modifier
                 .size(size = 40.dp),
             contentDescription = null,
