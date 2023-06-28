@@ -214,7 +214,7 @@ fun BasicTxDetails(
         BleachedButton(
             size = Size.Large,
             modifier = Modifier
-                .testTagAsId("PrimaryButton")
+                .testTagAsId("CloseButton")
                 .fillMaxWidth(),
             order = Order.TERTIARY,
             text = stringResource(id = R.string.common_close),

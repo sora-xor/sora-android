@@ -61,6 +61,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AccountWithIcon(
+    modifier: Modifier,
     address: String,
     accountIcon: Drawable?,
     rightIcon: Int = R.drawable.ic_chevron_right_24,
@@ -68,7 +69,7 @@ fun AccountWithIcon(
     onLongClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
             .combinedClickable(
