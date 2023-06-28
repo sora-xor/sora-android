@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.AccountWithIcon
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputText
 import jp.co.soramitsu.ui_core.component.input.InputTextState
@@ -88,6 +89,7 @@ internal fun ContactsScreen(
 
     InputText(
         modifier = Modifier
+            .testTagAsId("SearchInput")
             .focusRequester(focusRequester = focusRequester)
             .background(
                 color = MaterialTheme.customColors.bgSurface,
@@ -147,6 +149,8 @@ internal fun ContactsScreen(
             Divider(thickness = Dimens.x2, color = Color.Transparent)
             accounts.forEachIndexed { index, item ->
                 AccountWithIcon(
+                    modifier = Modifier
+                        .testTagAsId("SearchItemN$index"),
                     address = item.account,
                     accountIcon = item.icon,
                     onClick = { onAccountClick.invoke(item.account) },
