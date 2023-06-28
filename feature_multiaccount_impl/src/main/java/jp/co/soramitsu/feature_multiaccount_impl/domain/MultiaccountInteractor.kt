@@ -41,6 +41,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.shared_utils.encrypt.keypair.Keypair
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import kotlinx.coroutines.flow.Flow
 
 class MultiaccountInteractor @Inject constructor(
@@ -48,6 +49,7 @@ class MultiaccountInteractor @Inject constructor(
     private val userRepository: UserRepository,
     private val credentialsRepository: CredentialsRepository,
     private val fileManager: FileManager,
+    private val runtimeManager: RuntimeManager
 ) {
 
     private companion object {
@@ -138,4 +140,6 @@ class MultiaccountInteractor @Inject constructor(
         val account = getSoraAccount(address = accountAddress)
         userRepository.updateAccountName(account, newName)
     }
+
+    fun isAddressValid(address: String): Boolean = runtimeManager.isAddressOk(address)
 }
