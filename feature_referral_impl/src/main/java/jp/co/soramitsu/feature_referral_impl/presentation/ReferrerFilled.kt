@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -92,6 +93,7 @@ fun ReferrerFilled(
 
             TonalButton(
                 modifier = Modifier
+                    .testTagAsId("CloseButton")
                     .fillMaxWidth()
                     .padding(top = Dimens.x3),
                 size = Size.Large,

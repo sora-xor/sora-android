@@ -60,6 +60,7 @@ import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -127,7 +128,9 @@ internal fun SendScreen(
     }
     Divider(thickness = Dimens.x3, color = Color.Transparent)
     FilledButton(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .testTagAsId("ReviewButton")
+            .fillMaxWidth(),
         enabled = reviewEnabled,
         text = stringResource(id = R.string.review),
         size = Size.Large,
@@ -199,6 +202,8 @@ internal fun SendScreenAddress(
             )
             Divider(thickness = Dimens.x2, color = Color.Transparent)
             AccountWithIcon(
+                modifier = Modifier
+                    .testTagAsId("AccountWithIcon"),
                 address = address,
                 accountIcon = startIcon,
                 rightIcon = endIcon ?: R.drawable.ic_chevron_right_24,
