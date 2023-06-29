@@ -36,6 +36,7 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -132,6 +133,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     override fun onToolbarNavigation() {
         val pop = navController.popBackStack()
         if (!pop) finish()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel.onActionEvent.observe(this) {
+            viewModel.finishCreateAccountProcess(this@OnboardingActivity)
+        }
     }
 
     @OptIn(
