@@ -387,7 +387,7 @@ class OnboardingViewModel @Inject constructor(
         _toolbarState.value?.let {
             _toolbarState.value = it.copy(
                 basic = it.basic.copy(
-                    actionLabel = if (route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE) {
+                    actionLabel = if (route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION) {
                         resourceManager.getString(R.string.common_skip)
                     } else {
                         null
