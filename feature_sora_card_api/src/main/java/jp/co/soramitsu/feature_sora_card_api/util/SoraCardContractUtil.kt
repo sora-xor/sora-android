@@ -51,7 +51,6 @@ fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
             BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
             else -> SoraCardEnvironmentType.TEST
         },
-        soraCardInfo = soraCardInfo,
         kycCredentials = SoraCardKycCredentials(
             endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
             username = BuildConfig.SORA_CARD_KYC_USERNAME,
@@ -59,5 +58,8 @@ fun createSoraCardContract(soraCardInfo: SoraCardInfo?): SoraCardContractData {
         ),
         client = OptionsProvider.header,
         userAvailableXorAmount = 0.0,
+        areAttemptsPaidSuccessfully = false,
+        isEnoughXorAvailable = true,
+        isIssuancePaid = false,
     )
 }
