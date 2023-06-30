@@ -77,10 +77,10 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
                     result.status.toString(),
                 )
             }
-            is SoraCardResult.Canceled -> {
-            }
             is SoraCardResult.NavigateTo -> {
             }
+            SoraCardResult.Canceled -> {}
+            SoraCardResult.Logout -> {}
         }
     }
 
