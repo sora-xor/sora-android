@@ -33,9 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.domain
 
 data class SoraCardInformation(
-    val id: String,
     val accessToken: String,
-    val refreshToken: String,
     val accessTokenExpirationTime: Long,
     val kycStatus: String
 )

@@ -72,7 +72,6 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
             is SoraCardResult.Success -> {
                 viewModel.updateSoraCardInfo(
                     result.accessToken,
-                    result.refreshToken,
                     result.accessTokenExpirationTime,
                     result.status.toString(),
                 )
@@ -80,7 +79,9 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
             is SoraCardResult.NavigateTo -> {
             }
             SoraCardResult.Canceled -> {}
-            SoraCardResult.Logout -> {}
+            SoraCardResult.Logout -> {
+                viewModel.logoutSoraCard()
+            }
         }
     }
 

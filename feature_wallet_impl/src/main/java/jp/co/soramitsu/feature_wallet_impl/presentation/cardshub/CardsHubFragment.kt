@@ -81,7 +81,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
             is SoraCardResult.Success -> {
                 viewModel.updateSoraCardInfo(
                     result.accessToken,
-                    result.refreshToken,
                     result.accessTokenExpirationTime,
                     result.status.toString(),
                 )
@@ -90,7 +89,9 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
             }
 
             SoraCardResult.Canceled -> {}
-            SoraCardResult.Logout -> {}
+            SoraCardResult.Logout -> {
+                viewModel.logoutSoraCard()
+            }
         }
     }
 

@@ -43,11 +43,8 @@ import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
-import jp.co.soramitsu.oauth.common.model.KycStatus
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -142,7 +139,15 @@ class ProfileViewModelTest {
 
     @Test
     fun `init succesfull`() = runTest {
-        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, "")))
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(
+            flowOf(
+                SoraCardInformation(
+                    "accesstoken",
+                    0,
+                    "",
+                )
+            )
+        )
         initViewModel()
 
         advanceUntilIdle()
@@ -155,7 +160,15 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
-        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, "")))
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(
+            flowOf(
+                SoraCardInformation(
+                    "accesstoken",
+                    0,
+                    "",
+                )
+            )
+        )
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()

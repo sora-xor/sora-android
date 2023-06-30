@@ -73,7 +73,6 @@ import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
-import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
@@ -287,30 +286,25 @@ class CardsHubViewModel @Inject constructor(
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
             } else {
-                val soraCardInfo = card
-                    .cardInfo?.let {
-                        SoraCardInfo(
-                            accessToken = it.accessToken,
-                            refreshToken = it.refreshToken,
-                            accessTokenExpirationTime = it.accessTokenExpirationTime
-                        )
-                    }
-
-                _launchSoraCardSignIn.value = createSoraCardContract(soraCardInfo)
+                _launchSoraCardSignIn.value = createSoraCardContract()
             }
+        }
+    }
+
+    fun logoutSoraCard() {
+        viewModelScope.launch {
+            walletInteractor.logoutSoraCard()
         }
     }
 
     fun updateSoraCardInfo(
         accessToken: String,
-        refreshToken: String,
         accessTokenExpirationTime: Long,
         kycStatus: String
     ) {
         viewModelScope.launch {
             walletInteractor.updateSoraCardInfo(
                 accessToken,
-                refreshToken,
                 accessTokenExpirationTime,
                 kycStatus
             )

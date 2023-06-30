@@ -154,7 +154,10 @@ buildscript {
         jUnitDep = "junit:junit:$versions.jUnit"
         mockitoDep = "org.mockito:mockito-inline:$versions.mockito"
         mockitoKotlinDep = "org.mockito.kotlin:mockito-kotlin:4.1.0"
+
+//        https://github.com/mockk/mockk/issues/243
         mockkDep = "io.mockk:mockk:1.13.5"
+
 //        powerMockDep = "org.powermock:powermock-module-junit4:2.0.2"
 //        powerMockMockitoDep = "org.powermock:powermock-api-mockito2:2.0.2"
 //        robolectricDep = "org.robolectric:robolectric:$versions.robolectric" {

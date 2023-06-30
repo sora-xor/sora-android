@@ -207,7 +207,6 @@ class GetSoraCardViewModelTest {
     fun `updateSoraCardInfo EXPECT update data`() = runTest {
         viewModel.updateSoraCardInfo(
             accessToken = "accessToken",
-            refreshToken = "refreshToken",
             accessTokenExpirationTime = Long.MAX_VALUE,
             kycStatus = "kycStatus"
         )
@@ -215,7 +214,6 @@ class GetSoraCardViewModelTest {
 
         verify(walletInteractor).updateSoraCardInfo(
             accessToken = "accessToken",
-            refreshToken = "refreshToken",
             accessTokenExpirationTime = Long.MAX_VALUE,
             kycStatus = "kycStatus"
         )
