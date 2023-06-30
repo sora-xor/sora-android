@@ -86,10 +86,11 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     result.status.toString(),
                 )
             }
-            is SoraCardResult.Canceled -> {
-            }
             is SoraCardResult.NavigateTo -> {
             }
+
+            SoraCardResult.Canceled -> {}
+            SoraCardResult.Logout -> {}
         }
     }
 

@@ -79,10 +79,10 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
                     result.status.toString(),
                 )
             }
-            is SoraCardResult.Canceled -> {
-            }
             is SoraCardResult.NavigateTo -> {
             }
+            SoraCardResult.Logout -> {}
+            SoraCardResult.Canceled -> {}
         }
     }
 
