@@ -55,7 +55,6 @@ import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
-import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
@@ -82,7 +81,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.times
-import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -244,7 +242,6 @@ class CardsHubViewModelTest {
     fun `call updateSoraCardInfo EXPECT update data via interactor`() = runTest {
         cardsHubViewModel.updateSoraCardInfo(
             accessToken = "accessToken",
-            refreshToken = "refreshToken",
             accessTokenExpirationTime = Long.MAX_VALUE,
             kycStatus = "Completed"
         )
@@ -252,7 +249,6 @@ class CardsHubViewModelTest {
 
         verify(walletInteractor).updateSoraCardInfo(
             accessToken = "accessToken",
-            refreshToken = "refreshToken",
             accessTokenExpirationTime = Long.MAX_VALUE,
             kycStatus = "Completed"
         )

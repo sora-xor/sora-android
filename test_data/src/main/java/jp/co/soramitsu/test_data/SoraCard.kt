@@ -34,6 +34,7 @@ package jp.co.soramitsu.test_data
 
 import java.util.Locale
 import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
@@ -62,12 +63,10 @@ object SoraCardTestData {
         isIssuancePaid = false,
     )
 
-    val SORA_CARD_INFO = jp.co.soramitsu.common.domain.SoraCardInformation(
-        id = "soraCardId",
+    val SORA_CARD_INFO = SoraCardInformation(
         accessToken = "accessToken",
-        refreshToken = "refreshToken",
         accessTokenExpirationTime = Long.MAX_VALUE,
-        kycStatus = "Completed"
+        kycStatus = "Completed",
     )
 
     val registrationLauncher = SoraCardContractData(

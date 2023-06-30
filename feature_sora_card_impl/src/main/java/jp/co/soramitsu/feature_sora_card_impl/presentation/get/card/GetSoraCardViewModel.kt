@@ -56,7 +56,6 @@ import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -183,15 +182,7 @@ class GetSoraCardViewModel @Inject constructor(
     }
 
     fun onEnableCard() {
-        _launchSoraCardRegistration.value = createSoraCardContract(
-            state.value.soraCardInfo?.let {
-                SoraCardInfo(
-                    accessToken = it.accessToken,
-                    refreshToken = it.refreshToken,
-                    accessTokenExpirationTime = it.accessTokenExpirationTime
-                )
-            }
-        )
+        _launchSoraCardRegistration.value = createSoraCardContract()
     }
 
     fun onEuroIndicatorClick() {
@@ -205,30 +196,26 @@ class GetSoraCardViewModel @Inject constructor(
     }
 
     fun onAlreadyHaveCard() {
-        _launchSoraCardSignIn.value = createSoraCardContract(
-            state.value.soraCardInfo?.let {
-                SoraCardInfo(
-                    accessToken = it.accessToken,
-                    refreshToken = it.refreshToken,
-                    accessTokenExpirationTime = it.accessTokenExpirationTime
-                )
-            }
-        )
+        _launchSoraCardSignIn.value = createSoraCardContract()
     }
 
     fun updateSoraCardInfo(
         accessToken: String,
-        refreshToken: String,
         accessTokenExpirationTime: Long,
         kycStatus: String
     ) {
         viewModelScope.launch {
             walletInteractor.updateSoraCardInfo(
                 accessToken,
-                refreshToken,
                 accessTokenExpirationTime,
                 kycStatus
             )
+        }
+    }
+
+    fun logoutSoraCard() {
+        viewModelScope.launch {
+            walletInteractor.logoutSoraCard()
         }
     }
 

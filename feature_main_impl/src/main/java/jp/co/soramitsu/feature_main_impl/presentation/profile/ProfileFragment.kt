@@ -74,14 +74,15 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
             is SoraCardResult.Success -> {
                 viewModel.updateSoraCardInfo(
                     result.accessToken,
-                    result.refreshToken,
                     result.accessTokenExpirationTime,
                     result.status.toString(),
                 )
             }
             is SoraCardResult.NavigateTo -> {
             }
-            SoraCardResult.Logout -> {}
+            SoraCardResult.Logout -> {
+                viewModel.logoutSoraCard()
+            }
             SoraCardResult.Canceled -> {}
         }
     }
