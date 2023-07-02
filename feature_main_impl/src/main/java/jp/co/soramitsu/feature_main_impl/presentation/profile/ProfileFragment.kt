@@ -54,7 +54,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -67,25 +66,7 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
 
     private val soraCardSignIn = registerForActivityResult(
         SoraCardSignInContract()
-    ) { result ->
-        when (result) {
-            is SoraCardResult.Failure -> {
-            }
-            is SoraCardResult.Success -> {
-                viewModel.updateSoraCardInfo(
-                    result.accessToken,
-                    result.accessTokenExpirationTime,
-                    result.status.toString(),
-                )
-            }
-            is SoraCardResult.NavigateTo -> {
-            }
-            SoraCardResult.Logout -> {
-                viewModel.logoutSoraCard()
-            }
-            SoraCardResult.Canceled -> {}
-        }
-    }
+    ) { viewModel.handleSoraCardResult(it) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

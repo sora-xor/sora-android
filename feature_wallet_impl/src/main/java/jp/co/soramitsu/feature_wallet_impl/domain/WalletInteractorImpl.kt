@@ -112,10 +112,6 @@ class WalletInteractorImpl(
         return requireNotNull(assetsRepository.getToken(SubstrateOptionsProvider.feeAssetId))
     }
 
-    override suspend fun logoutSoraCard() {
-        walletRepository.logoutSoraCard()
-    }
-
     override suspend fun updateSoraCardInfo(
         accessToken: String,
         accessTokenExpirationTime: Long,
@@ -126,6 +122,10 @@ class WalletInteractorImpl(
             accessTokenExpirationTime,
             kycStatus,
         )
+    }
+
+    override suspend fun deleteSoraCardInfo() {
+        walletRepository.deleteSoraCardInfo()
     }
 
     override fun subscribeSoraCardInfo(): Flow<SoraCardInformation?> =

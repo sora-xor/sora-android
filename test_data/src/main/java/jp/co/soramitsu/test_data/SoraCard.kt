@@ -57,10 +57,10 @@ object SoraCardTestData {
             username = BuildConfig.SORA_CARD_KYC_USERNAME,
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
-        userAvailableXorAmount = 0.0,
         areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = true,
+        isEnoughXorAvailable = false,
         isIssuancePaid = false,
+        userAvailableXorAmount = 0.0,
     )
 
     val SORA_CARD_INFO = SoraCardInformation(
@@ -82,11 +82,11 @@ object SoraCardTestData {
             BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
             else -> SoraCardEnvironmentType.TEST
         },
+        areAttemptsPaidSuccessfully = false,
+        isEnoughXorAvailable = false,
+        isIssuancePaid = false,
         client = "test android client",
         userAvailableXorAmount = 0.0,
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = true,
-        isIssuancePaid = false,
     )
 
     val signInLauncher = SoraCardContractData(
@@ -97,6 +97,9 @@ object SoraCardTestData {
             BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
             else -> SoraCardEnvironmentType.TEST
         },
+        areAttemptsPaidSuccessfully = false,
+        isEnoughXorAvailable = false,
+        isIssuancePaid = false,
         client = "test android client",
         kycCredentials = SoraCardKycCredentials(
             endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -104,8 +107,5 @@ object SoraCardTestData {
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
         userAvailableXorAmount = 0.0,
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = true,
-        isIssuancePaid = false,
     )
 }
