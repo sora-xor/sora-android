@@ -73,9 +73,11 @@ import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
-import jp.co.soramitsu.oauth.base.sdk.SoraCardInfo
+import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -211,6 +213,41 @@ class CardsHubViewModel @Inject constructor(
         }
     }
 
+    fun handleSoraCardResult(soraCardResult: SoraCardResult) {
+        when (soraCardResult) {
+            is SoraCardResult.NavigateTo -> {
+                when (soraCardResult.screen) {
+                    OutwardsScreen.DEPOSIT -> router.openQrCodeFlow(isLaunchedFromSoraCard = true)
+                    OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
+                    OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
+                }
+            }
+            is SoraCardResult.Success -> {
+                viewModelScope.launch {
+                    walletInteractor.updateSoraCardInfo(
+                        accessToken = soraCardResult.accessToken,
+                        accessTokenExpirationTime = soraCardResult.accessTokenExpirationTime,
+                        refreshToken = soraCardResult.refreshToken,
+                        kycStatus = soraCardResult.status.toString()
+                    )
+                }
+            }
+            is SoraCardResult.Failure -> {
+                viewModelScope.launch {
+                    walletInteractor.updateSoraCardKycStatus(
+                        kycStatus = soraCardResult.status.toString()
+                    )
+                }
+            }
+            is SoraCardResult.Canceled -> {}
+            is SoraCardResult.Logout -> {
+                viewModelScope.launch {
+                    walletInteractor.deleteSoraCardInfo()
+                }
+            }
+        }
+    }
+
     fun openQrCodeFlow() {
         router.openQrCodeFlow()
     }
@@ -287,16 +324,12 @@ class CardsHubViewModel @Inject constructor(
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
             } else {
-                val soraCardInfo = card
-                    .cardInfo?.let {
-                        SoraCardInfo(
-                            accessToken = it.accessToken,
-                            refreshToken = it.refreshToken,
-                            accessTokenExpirationTime = it.accessTokenExpirationTime
-                        )
-                    }
-
-                _launchSoraCardSignIn.value = createSoraCardContract(soraCardInfo)
+                viewModelScope.launch {
+                    _launchSoraCardSignIn.value = createSoraCardContract(
+                        userAvailableXorAmount = assetsInteractor.getXorBalance(XOR_TOKEN_PRECISION)
+                            .transferable.toDouble()
+                    )
+                }
             }
         }
     }
@@ -338,5 +371,9 @@ class CardsHubViewModel @Inject constructor(
     fun onBuyCrypto() {
         if (!connectionManager.isConnected) return
         assetsRouter.showBuyCrypto()
+    }
+
+    private companion object {
+        const val XOR_TOKEN_PRECISION = 18
     }
 }

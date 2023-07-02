@@ -38,9 +38,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import java.util.UUID
-import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -56,12 +57,19 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class BuyCryptoViewModel @Inject constructor(
+class BuyCryptoViewModel @AssistedInject constructor(
     private val userRepository: UserRepository,
     private val buyCryptoRepository: BuyCryptoRepository,
-    private val mainRouter: MainRouter
+    private val mainRouter: MainRouter,
+    @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
+
+    @AssistedFactory
+    interface AssistedBuyCryptoViewModelFactory {
+        fun create(
+            @Assisted("isLaunchedFromSoraCard") isLaunchedFromSoraCard: Boolean
+        ): BuyCryptoViewModel
+    }
 
     var state by mutableStateOf(BuyCryptoState())
         private set
@@ -126,7 +134,10 @@ class BuyCryptoViewModel @Inject constructor(
         buyCryptoRepository.subscribePaymentOrderInfo()
             .onEach {
                 if (it.paymentId == payload && it.depositTransactionStatus == "completed") {
-                    mainRouter.popBackStack()
+                    if (isLaunchedFromSoraCard)
+                        mainRouter.showGetSoraCard(shouldStartSignIn = true)
+                    else
+                        mainRouter.popBackStack()
                 }
             }
             .launchIn(viewModelScope)

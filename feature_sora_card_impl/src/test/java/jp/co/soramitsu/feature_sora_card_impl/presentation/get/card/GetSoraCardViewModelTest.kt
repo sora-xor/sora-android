@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
+import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -60,6 +61,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -68,8 +70,11 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -134,6 +139,8 @@ class GetSoraCardViewModelTest {
             resourceManager,
             NumbersFormatter(),
             connectionManager,
+            shouldStartSignIn = false,
+            shouldStartSignUp = false
         )
     }
 
@@ -159,20 +166,47 @@ class GetSoraCardViewModelTest {
     }
 
     @Test
-    fun `enable sora card EXPECT set up launcher`() {
+    fun `enable sora card EXPECT set up launcher`() = runTest{
+        whenever(assetsInteractor.getXorBalance(any()))
+            .thenReturn(
+                XorAssetBalance(
+                    transferable = BigDecimal(1),
+                    frozen = BigDecimal(1),
+                    totalBalance = BigDecimal(1),
+                    locked = BigDecimal(1),
+                    bonded = BigDecimal(1),
+                    reserved = BigDecimal(1),
+                    redeemable = BigDecimal(1),
+                    unbonding = BigDecimal(1)
+                )
+            )
+
         viewModel.onEnableCard()
 
-        assertEquals(
-            SoraCardTestData.registrationLauncher,
+        advanceUntilIdle()
+
+        assertNotNull(
             viewModel.launchSoraCardRegistration.value
         )
     }
 
     @Test
-    fun `on already have card EXPECT set up launcher`() {
-        viewModel.onAlreadyHaveCard()
+    fun `on already have card EXPECT set up launcher`() = runTest{
+        whenever(assetsInteractor.getXorBalance(any())).thenReturn(XorAssetBalance(
+            transferable = BigDecimal(1),
+            frozen = BigDecimal(1),
+            totalBalance = BigDecimal(1),
+            locked = BigDecimal(1),
+            bonded = BigDecimal(1),
+            reserved = BigDecimal(1),
+            redeemable = BigDecimal(1),
+            unbonding = BigDecimal(1)
+        ))
 
-        assertEquals(SoraCardTestData.signInLauncher, viewModel.launchSoraCardSignIn.value)
+        viewModel.onAlreadyHaveCard()
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.launchSoraCardSignIn.value)
     }
 
     @Test

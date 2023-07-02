@@ -61,6 +61,8 @@ interface WalletInteractor {
         kycStatus: String
     )
 
+    suspend fun deleteSoraCardInfo()
+
     fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
 
     suspend fun getSoraCardInfo(): SoraCardInformation?

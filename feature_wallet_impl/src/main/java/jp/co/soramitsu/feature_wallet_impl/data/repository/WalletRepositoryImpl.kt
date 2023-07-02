@@ -174,6 +174,10 @@ class WalletRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun deleteSoraCardInfo() {
+        db.soraCardDao().clearTable()
+    }
+
     override suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean) {
         db.globalCardsHubDao().updateCardVisibility(cardId, visible)
     }

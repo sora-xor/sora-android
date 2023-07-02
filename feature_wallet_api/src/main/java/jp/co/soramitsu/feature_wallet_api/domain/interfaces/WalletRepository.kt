@@ -76,6 +76,8 @@ interface WalletRepository {
         kycStatus: String
     )
 
+    suspend fun deleteSoraCardInfo()
+
     suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean)
 
     suspend fun updateCardCollapsedState(cardId: String, collapsed: Boolean)

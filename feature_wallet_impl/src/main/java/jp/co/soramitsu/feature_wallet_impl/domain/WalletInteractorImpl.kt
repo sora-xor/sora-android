@@ -126,6 +126,10 @@ class WalletInteractorImpl(
         )
     }
 
+    override suspend fun deleteSoraCardInfo() {
+        walletRepository.deleteSoraCardInfo()
+    }
+
     override fun subscribeSoraCardInfo(): Flow<SoraCardInformation?> =
         walletRepository.subscribeSoraCardInfo()
 
