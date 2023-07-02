@@ -200,9 +200,9 @@ class CardsHubViewModel @Inject constructor(
                 resourceManager.getString(R.string.sora_card_verification_failed)
             }
 
-            SoraCardCommonVerification.NoFreeAttempt -> {
-                resourceManager.getString(R.string.sora_card_no_more_free_tries)
-            }
+//            SoraCardCommonVerification.NoFreeAttempt -> {
+//                resourceManager.getString(R.string.sora_card_no_more_free_tries)
+//            }
 
             else -> {
                 null
