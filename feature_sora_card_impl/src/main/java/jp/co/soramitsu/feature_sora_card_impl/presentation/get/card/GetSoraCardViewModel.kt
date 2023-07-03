@@ -95,8 +95,6 @@ class GetSoraCardViewModel @AssistedInject constructor(
     }
 
     private companion object {
-        const val XOR_TOKEN_PRECISION = 18
-
         val KYC_REAL_REQUIRED_BALANCE: BigDecimal = BigDecimal.valueOf(95)
         val KYC_REQUIRED_BALANCE_WITH_BACKLASH: BigDecimal = Big100
     }

@@ -210,20 +210,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    ) {
-        viewModelScope.launch {
-            walletInteractor.updateSoraCardInfo(
-                accessToken,
-                accessTokenExpirationTime,
-                kycStatus
-            )
-        }
-    }
-
     fun showBuyCrypto() {
         assetsRouter.showBuyCrypto()
     }
@@ -252,9 +238,5 @@ class ProfileViewModel @Inject constructor(
         if (BuildUtils.isPlayMarket())
             return
         router.showDebugMenu()
-    }
-
-    private companion object {
-        const val XOR_TOKEN_PRECISION = 18
     }
 }

@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">トークン価格</string>
   <string name="asset_details_your_pools">%s プール</string>
   <string name="asset_to_send">送信するアセット</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
   <string name="biometric_dialog_title">認証する</string>
   <string name="block_id">ブロックのハッシュ</string>
   <string name="buy_crypto_buy_xor_banner_title">XORトークンの購入</string>

@@ -60,7 +60,8 @@ fun createSoraCardContract(
         client = OptionsProvider.header,
         userAvailableXorAmount = userAvailableXorAmount,
         areAttemptsPaidSuccessfully = false, // will be available in Phase 2
-        isEnoughXorAvailable = userAvailableXorAmount / OptionsProvider.defaultScale > 100, // will be moved to SoraCard lib
+//        isEnoughXorAvailable = userAvailableXorAmount / OptionsProvider.defaultScale > 100, // will be moved to SoraCard lib
+        isEnoughXorAvailable = true,
         isIssuancePaid = false // will be available in Phase 2
     )
 }

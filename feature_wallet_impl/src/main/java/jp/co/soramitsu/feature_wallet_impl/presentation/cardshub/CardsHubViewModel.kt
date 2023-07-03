@@ -369,8 +369,4 @@ class CardsHubViewModel @Inject constructor(
         if (!connectionManager.isConnected) return
         assetsRouter.showBuyCrypto()
     }
-
-    private companion object {
-        const val XOR_TOKEN_PRECISION = 18
-    }
 }
