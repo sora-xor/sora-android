@@ -225,7 +225,7 @@ buildscript {
         classpath 'com.google.firebase:firebase-appdistribution-gradle:3.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.4'
         classpath 'com.google.dagger:hilt-android-gradle-plugin:2.45'
-        classpath "com.github.triplet.gradle:play-publisher:3.7.0"
+        classpath "com.github.triplet.gradle:play-publisher:3.8.4"
     }
 }
 
