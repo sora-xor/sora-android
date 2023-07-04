@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">Precio del token</string>
   <string name="asset_details_your_pools">Tus %spares de liquidez</string>
   <string name="asset_to_send">Activo a enviar</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
   <string name="biometric_dialog_title">Autentificar</string>
   <string name="block_id">Hash del bloque</string>
   <string name="buy_crypto_buy_xor_banner_title">Comprar XOR token</string>

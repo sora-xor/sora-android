@@ -179,6 +179,7 @@ class SwapViewModelTest {
             coroutineManager,
             firstTokenId ?: TestAssets.xorAsset().token.id,
             secondTokenId ?: "",
+            isLaunchedFromSoraCard = false
         )
     }
 

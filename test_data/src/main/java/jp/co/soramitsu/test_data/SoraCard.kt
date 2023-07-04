@@ -34,6 +34,7 @@ package jp.co.soramitsu.test_data
 
 import java.util.Locale
 import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
@@ -56,18 +57,16 @@ object SoraCardTestData {
             username = BuildConfig.SORA_CARD_KYC_USERNAME,
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
-        userAvailableXorAmount = 0.0,
         areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = true,
+        isEnoughXorAvailable = false,
         isIssuancePaid = false,
+        userAvailableXorAmount = 0.0,
     )
 
-    val SORA_CARD_INFO = jp.co.soramitsu.common.domain.SoraCardInformation(
-        id = "soraCardId",
+    val SORA_CARD_INFO = SoraCardInformation(
         accessToken = "accessToken",
-        refreshToken = "refreshToken",
         accessTokenExpirationTime = Long.MAX_VALUE,
-        kycStatus = "Completed"
+        kycStatus = "Completed",
     )
 
     val registrationLauncher = SoraCardContractData(
@@ -83,11 +82,11 @@ object SoraCardTestData {
             BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
             else -> SoraCardEnvironmentType.TEST
         },
+        areAttemptsPaidSuccessfully = false,
+        isEnoughXorAvailable = false,
+        isIssuancePaid = false,
         client = "test android client",
         userAvailableXorAmount = 0.0,
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = true,
-        isIssuancePaid = false,
     )
 
     val signInLauncher = SoraCardContractData(
@@ -98,6 +97,9 @@ object SoraCardTestData {
             BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
             else -> SoraCardEnvironmentType.TEST
         },
+        areAttemptsPaidSuccessfully = false,
+        isEnoughXorAvailable = false,
+        isIssuancePaid = false,
         client = "test android client",
         kycCredentials = SoraCardKycCredentials(
             endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -105,8 +107,5 @@ object SoraCardTestData {
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
         userAvailableXorAmount = 0.0,
-        areAttemptsPaidSuccessfully = false,
-        isEnoughXorAvailable = true,
-        isIssuancePaid = false,
     )
 }

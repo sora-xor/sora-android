@@ -54,6 +54,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.presentation.args.isLaunchedFromSoraCard
 import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
@@ -76,7 +77,11 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
 
     override val viewModel: SwapViewModel by viewModels {
         CustomViewModelFactory {
-            vmf.create(requireArguments().tokenFromId, requireArguments().tokenToId)
+            vmf.create(
+                idFrom = requireArguments().tokenFromId,
+                idTo = requireArguments().tokenToId,
+                isLaunchedFromSoraCard = requireArguments().isLaunchedFromSoraCard
+            )
         }
     }
 

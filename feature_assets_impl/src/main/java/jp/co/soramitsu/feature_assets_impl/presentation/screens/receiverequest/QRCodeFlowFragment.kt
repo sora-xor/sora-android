@@ -46,10 +46,12 @@ import com.journeyapps.barcodescanner.ScanOptions
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil
+import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SwapSelectTokenScreen
+import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.QrCodeMainScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity
@@ -58,7 +60,17 @@ import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.ScanTextCon
 @AndroidEntryPoint
 class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
 
-    override val viewModel: QRCodeFlowViewModel by viewModels()
+    @Inject
+    lateinit var vmf: QRCodeFlowViewModel.AssistedQRCodeFlowViewModelFactory
+
+    override val viewModel: QRCodeFlowViewModel by viewModels {
+        CustomViewModelFactory {
+            vmf.create(
+                isLaunchedFromSoraCard = requireArguments()
+                    .getBoolean(IS_LAUNCHED_FROM_SORA_CARD)
+            )
+        }
+    }
 
     private val barcodeScanOptions by lazy {
         ScanOptions()
@@ -163,12 +175,15 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
 
     companion object {
 
+        const val IS_LAUNCHED_FROM_SORA_CARD = "is_launched_from_sora_card"
         const val NAVIGATE_TO_SCANNER_DIRECTLY_KEY = "navigate_to_scanner_activity"
 
         fun createBundle(
-            shouldNavigateToScanner: Boolean
+            shouldNavigateToScanner: Boolean = false,
+            isLaunchedFromSoraCard: Boolean = false
         ) = Bundle().apply {
             putBoolean(NAVIGATE_TO_SCANNER_DIRECTLY_KEY, shouldNavigateToScanner)
+            putBoolean(IS_LAUNCHED_FROM_SORA_CARD, isLaunchedFromSoraCard)
         }
     }
 }

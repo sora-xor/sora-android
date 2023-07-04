@@ -39,10 +39,10 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
 import jp.co.soramitsu.common.presentation.args.addresses
+import jp.co.soramitsu.common.presentation.args.isLaunchedFromSoraCard
 import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenFromNullable
 import jp.co.soramitsu.common.presentation.args.tokenId
-import jp.co.soramitsu.common.presentation.args.tokenTo
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.args.tokenToNullable
 import jp.co.soramitsu.common.presentation.args.txHash
@@ -69,6 +69,7 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
+import jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.GetSoraCardFragment
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.R
 
@@ -227,15 +228,23 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         navController?.popBackStack()
     }
 
-    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {
+    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean, isLaunchedFromSoraCard: Boolean) {
         navController?.navigate(
             R.id.qrCodeFlow,
-            QRCodeFlowFragment.createBundle(shouldNavigateToScannerDirectly)
+            QRCodeFlowFragment.createBundle(
+                shouldNavigateToScanner = shouldNavigateToScannerDirectly,
+                isLaunchedFromSoraCard = isLaunchedFromSoraCard
+            )
         )
     }
 
-    override fun showBuyCrypto() {
-        navController?.navigate(R.id.buyCryptoFragment)
+    override fun showBuyCrypto(isLaunchedFromSoraCard: Boolean) {
+        navController?.navigate(
+            R.id.buyCryptoFragment,
+            withArgs {
+                this.isLaunchedFromSoraCard = isLaunchedFromSoraCard
+            }
+        )
     }
 
     override fun showInformation() {
@@ -250,12 +259,13 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         navController?.navigate(R.id.loginSecurityFragment)
     }
 
-    override fun showSwap(tokenFromId: String?, tokenToId: String?) {
+    override fun showSwap(tokenFromId: String?, tokenToId: String?, isLaunchedFromSoraCard: Boolean) {
         navController?.navigate(
             R.id.swapFragment,
             withArgs {
                 this.tokenFromId = tokenFromId ?: ""
                 this.tokenToId = tokenToId ?: ""
+                this.isLaunchedFromSoraCard = isLaunchedFromSoraCard
             },
         )
     }
@@ -382,9 +392,13 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         )
     }
 
-    override fun showGetSoraCard() {
+    override fun showGetSoraCard(shouldStartSignIn: Boolean, shouldStartSignUp: Boolean) {
         navController?.navigate(
-            R.id.sora_card_nav_graph
+            R.id.sora_card_nav_graph,
+            GetSoraCardFragment.createBundle(
+                shouldStartSignIn,
+                shouldStartSignUp
+            )
         )
     }
 
