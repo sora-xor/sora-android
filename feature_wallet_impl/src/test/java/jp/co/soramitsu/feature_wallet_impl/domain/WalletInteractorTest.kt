@@ -43,17 +43,16 @@ import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
-import jp.co.soramitsu.common_wallet.domain.model.QrException
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.common.domain.KycRepository
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.BlockEntry
 import jp.co.soramitsu.sora.substrate.models.BlockResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -64,7 +63,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -187,18 +185,14 @@ class WalletInteractorTest {
             `when`(walletRepository.getSoraCardInfo())
                 .thenReturn(
                     SoraCardInformation(
-                        id = "id",
                         accessToken = "accessToken",
-                        refreshToken = "refreshToken",
                         accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
                         kycStatus = "${SoraCardCommonVerification.Pending}"
                     )
                 )
                 .thenReturn(
                     SoraCardInformation(
-                        id = "id",
                         accessToken = "accessToken",
-                        refreshToken = "refreshToken",
                         accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
                         kycStatus = "${SoraCardCommonVerification.Successful}"
                     )
@@ -231,27 +225,21 @@ class WalletInteractorTest {
             `when`(walletRepository.getSoraCardInfo())
                 .thenReturn(
                     SoraCardInformation(
-                        id = "id",
                         accessToken = "accessToken",
-                        refreshToken = "refreshToken",
                         accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
                         kycStatus = "${SoraCardCommonVerification.Pending}"
                     )
                 )
                 .thenReturn(
                     SoraCardInformation(
-                        id = "id",
                         accessToken = "accessToken",
-                        refreshToken = "refreshToken",
                         accessTokenExpirationTime = System.currentTimeMillis() + 1_500,
                         kycStatus = "${SoraCardCommonVerification.Pending}"
                     )
                 )
                 .thenReturn(
                     SoraCardInformation(
-                        id = "id",
                         accessToken = "accessToken",
-                        refreshToken = "refreshToken",
                         accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
                         kycStatus = "${SoraCardCommonVerification.Successful}"
                     )

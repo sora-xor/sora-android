@@ -114,23 +114,22 @@ class WalletInteractorImpl(
 
     override suspend fun updateSoraCardInfo(
         accessToken: String,
-        refreshToken: String,
         accessTokenExpirationTime: Long,
-        kycStatus: String
+        kycStatus: String,
     ) {
         walletRepository.updateSoraCardInfo(
             accessToken,
-            refreshToken,
             accessTokenExpirationTime,
-            kycStatus
+            kycStatus,
         )
+    }
+
+    override suspend fun deleteSoraCardInfo() {
+        walletRepository.deleteSoraCardInfo()
     }
 
     override fun subscribeSoraCardInfo(): Flow<SoraCardInformation?> =
         walletRepository.subscribeSoraCardInfo()
-
-    override suspend fun getSoraCardInfo(): SoraCardInformation? =
-        walletRepository.getSoraCardInfo()
 
     override suspend fun updateSoraCardKycStatus(kycStatus: String) {
         walletRepository.updateSoraCardKycStatus(kycStatus)

@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title">Parolun təyin edilməsi Google ehtiyat nüsxənizi şifrələyəcək. Pul kisəsini bərpa edərkən bunu daxil etməlisiniz.\n Minimum parol uzunluğu 6 simvoldur.</string>
   <string name="biometric_dialog_title">Doğrulayın</string>
   <string name="block_id">Qarışığı blok edin</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
@@ -395,7 +395,7 @@
   <string name="referral_bond_button_title">XOR-u ayırın</string>
   <string name="referral_enter_link_title">REFERRAL LİNKİNƏ DAXİL EDİN</string>
   <string name="referral_get_more_invitation_button_title">Daha çox dəvət alın</string>
-  <string name="referral_input_reward_description">Dostlarınızın qoşulması üçün şəbəkə haqqını ödəmək üçün hər bir dəvət üçün %@ bağlanır. \n \n İstifadə olunmamış dəvətlər üçün XOR-unuzu istənilən vaxt ayıra bilərsiniz.</string>
+  <string name="referral_input_reward_description">Dostlarınızın qoşulması üçün şəbəkə haqqını ödəmək üçün hər bir dəvət üçün %s bağlanır. \n \n İstifadə olunmamış dəvətlər üçün XOR-unuzu istənilən vaxt ayıra bilərsiniz.</string>
   <string name="referral_input_reward_title">İstədiyiniz məbləği \n daxil edin</string>
   <string name="referral_invitaion_link_title">Mövcud dəvətnamələr</string>
   <string name="referral_invitation_link">Invitation link</string>
@@ -406,9 +406,9 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">İstinad linki və ya ünvanı</string>
   <string name="referral_referrer_address">İstinad edənin ünvanı</string>
-  <string name="referral_referrer_description">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10%-i mükafat olaraq yönləndiricinizə gedir.</string>
+  <string name="referral_referrer_description">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10% -i mükafat olaraq yönləndiricinizə gedir.</string>
   <string name="referral_start_inviting">Dəvət etməyə başlayın</string>
-  <string name="referral_subtitle">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10%-i mükafat olaraq sizə keçir.</string>
+  <string name="referral_subtitle">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10% -i mükafat olaraq sizə keçir.</string>
   <string name="referral_title">Referallarınızın şəbəkə haqlarının 10%-ni alın</string>
   <string name="referral_toolbar_title">İstiqamət proqramı</string>
   <string name="referral_total_rewards">Ümumi mükafatlar</string>

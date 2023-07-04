@@ -159,7 +159,6 @@ class WalletRepositoryImpl @Inject constructor(
 
     override suspend fun updateSoraCardInfo(
         accessToken: String,
-        refreshToken: String,
         accessTokenExpirationTime: Long,
         kycStatus: String
     ) {
@@ -167,11 +166,15 @@ class WalletRepositoryImpl @Inject constructor(
             SoraCardInfoLocal(
                 id = SORA_CARD_ID,
                 accessToken = accessToken,
-                refreshToken = refreshToken,
+                refreshToken = "",
                 accessTokenExpirationTime = accessTokenExpirationTime,
                 kycStatus = kycStatus
             )
         )
+    }
+
+    override suspend fun deleteSoraCardInfo() {
+        db.soraCardDao().clearTable()
     }
 
     override suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean) {

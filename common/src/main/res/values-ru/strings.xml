@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title">Установка пароля зашифрует резервную копию Google. Его нужно будет ввести при восстановлении кошелька.\nМинимальная длина пароля - 6 символов.</string>
   <string name="biometric_dialog_title">Аутентифицировать</string>
   <string name="block_id">Хеш блока</string>
   <string name="buy_crypto_buy_xor_banner_title">Купить токен XOR</string>
@@ -189,7 +189,7 @@
   <string name="common_swedish">Шведский</string>
   <string name="common_terms_title">Условия и положения</string>
   <string name="common_thai">Тайский</string>
-  <string name="common_title_warning">Warning!</string>
+  <string name="common_title_warning">Предупреждение!</string>
   <string name="common_today">Сегодня</string>
   <string name="common_turkish">Турецкий</string>
   <string name="common_ukrainian">Украинский</string>
@@ -509,7 +509,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">После этой транзакции ваш баланс %s будет меньше, чем %s. Вы не сможете оплатить комиссию сети за другую транзакцию.</string>
   <string name="switch_node">Переключить ноду</string>
   <string name="system_appearance">Внешний вид системы</string>
   <string name="tabbar_parliament_title">Парламент</string>

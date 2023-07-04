@@ -71,10 +71,11 @@ interface WalletRepository {
 
     suspend fun updateSoraCardInfo(
         accessToken: String,
-        refreshToken: String,
         accessTokenExpirationTime: Long,
         kycStatus: String
     )
+
+    suspend fun deleteSoraCardInfo()
 
     suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean)
 

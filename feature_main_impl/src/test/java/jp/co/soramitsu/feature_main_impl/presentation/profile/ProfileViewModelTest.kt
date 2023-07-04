@@ -35,9 +35,12 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.SoraCardInformation
+import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
@@ -45,8 +48,11 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.common.model.KycStatus
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.test_data.SoraCardTestData
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -58,8 +64,10 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -80,6 +88,12 @@ class ProfileViewModelTest {
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
+
+    @Mock
+    private lateinit var polkaswapRouter: PolkaswapRouter
+
+    @Mock
+    private lateinit var assetsInteractor: AssetsInteractor
 
     @Mock
     private lateinit var router: MainRouter
@@ -105,12 +119,14 @@ class ProfileViewModelTest {
         profileViewModel = ProfileViewModel(
             assetsRouter,
             interactor,
+            polkaswapRouter,
             walletInteractor,
             router,
             walletRouter,
             referralRouter,
             selectNodeRouter,
             soraConfigManager,
+            assetsInteractor,
             nodeManager,
         )
     }
@@ -140,7 +156,15 @@ class ProfileViewModelTest {
 
     @Test
     fun `init succesfull`() = runTest {
-        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, "")))
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(
+            flowOf(
+                SoraCardInformation(
+                    "accesstoken",
+                    0,
+                    "",
+                )
+            )
+        )
         initViewModel()
 
         advanceUntilIdle()
@@ -153,7 +177,15 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
-        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, "")))
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(
+            flowOf(
+                SoraCardInformation(
+                    "accesstoken",
+                    0,
+                    "",
+                )
+            )
+        )
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -163,13 +195,13 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
-        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("id", "accesstoken", "refreshToken", 0, KycStatus.Failed.toString())))
+        whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("accesstoken", 0, KycStatus.Failed.toString())))
+        whenever(assetsInteractor.getAssetOrThrow(any())).thenReturn(TestAssets.xorAsset(balance = BigDecimal.ONE))
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
         advanceUntilIdle()
-        assertEquals(jp.co.soramitsu.oauth.base.sdk.SoraCardInfo(accessToken="accesstoken", accessTokenExpirationTime=0, refreshToken="refreshToken"), profileViewModel.launchSoraCardSignIn.value?.soraCardInfo)
-
+        assertNotNull(profileViewModel.launchSoraCardSignIn.value)
     }
 
     @Test
