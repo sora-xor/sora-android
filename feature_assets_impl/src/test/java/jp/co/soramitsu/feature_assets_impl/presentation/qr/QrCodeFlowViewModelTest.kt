@@ -198,6 +198,7 @@ class QrCodeFlowViewModelTest {
             resourceManager = resourceManager,
             fileManager = fileManager,
             walletRouter = walletRouter,
+            isLaunchedFromSoraCard = false
         ).apply { viewModel = this }
     }
 

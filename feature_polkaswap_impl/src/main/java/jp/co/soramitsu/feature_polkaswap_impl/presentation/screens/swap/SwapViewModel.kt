@@ -111,6 +111,7 @@ class SwapViewModel @AssistedInject constructor(
     private val coroutineManager: CoroutineManager,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
+    @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -118,6 +119,7 @@ class SwapViewModel @AssistedInject constructor(
         fun create(
             @Assisted("idfrom") idFrom: String,
             @Assisted("idto") idTo: String,
+            @Assisted("isLaunchedFromSoraCard") isLaunchedFromSoraCard: Boolean
         ): SwapViewModel
     }
 
@@ -952,6 +954,10 @@ class SwapViewModel @AssistedInject constructor(
                             )
                             if (swapResult.isNotEmpty())
                                 assetsRouter.showTxDetails(swapResult, true)
+                            else if (isLaunchedFromSoraCard)
+                                mainRouter.showGetSoraCard(
+                                    shouldStartSignIn = true
+                                )
                             else _navigationPop.trigger()
                         }
                     }

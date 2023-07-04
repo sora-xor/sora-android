@@ -157,10 +157,6 @@ class WalletRepositoryImpl @Inject constructor(
         db.soraCardDao().updateKycStatus(SORA_CARD_ID, kycStatus)
     }
 
-    override suspend fun logoutSoraCard() {
-        db.soraCardDao().clearTable()
-    }
-
     override suspend fun updateSoraCardInfo(
         accessToken: String,
         accessTokenExpirationTime: Long,
@@ -175,6 +171,10 @@ class WalletRepositoryImpl @Inject constructor(
                 kycStatus = kycStatus
             )
         )
+    }
+
+    override suspend fun deleteSoraCardInfo() {
+        db.soraCardDao().clearTable()
     }
 
     override suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean) {

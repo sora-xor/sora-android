@@ -39,9 +39,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import java.math.BigDecimal
-import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.AssetAmountInputState
@@ -82,8 +83,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@HiltViewModel
-class QRCodeFlowViewModel @Inject constructor(
+class QRCodeFlowViewModel @AssistedInject constructor(
     private val interactor: AssetsInteractor,
     private val qrCodeInteractor: QrCodeInteractor,
     private val coroutineManager: CoroutineManager,
@@ -94,8 +94,16 @@ class QRCodeFlowViewModel @Inject constructor(
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
     private val fileManager: FileManager,
-    private val walletRouter: WalletRouter
+    private val walletRouter: WalletRouter,
+    @Assisted("IS_LAUNCHED_FROM_SORA_CARD") val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
+
+    @AssistedFactory
+    interface AssistedQRCodeFlowViewModelFactory {
+        fun create(
+            @Assisted("IS_LAUNCHED_FROM_SORA_CARD") isLaunchedFromSoraCard: Boolean
+        ): QRCodeFlowViewModel
+    }
 
     private var currentTokenId: String? = null
 

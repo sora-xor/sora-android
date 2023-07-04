@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">Prix du jeton</string>
   <string name="asset_details_your_pools">Vos %s pool(s)</string>
   <string name="asset_to_send">Actif à envoyer</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
   <string name="biometric_dialog_title">Authentification</string>
   <string name="block_id">Bloc de hachage</string>
   <string name="buy_crypto_buy_xor_banner_title">Acheter des jetons XOR</string>
@@ -291,7 +291,7 @@
   <string name="onboarding_create_account_description">Entrez un nom pour votre compte et la manière dont il apparaîtra sous votre adresse. En définissant une identité on-chain, celui-ci peut être visible aux autres participants du réseau.</string>
   <string name="onboarding_create_account_subtitle">Visible seulement pour vous et stocké localement</string>
   <string name="onboarding_create_account_title">Nommez votre compte</string>
-  <string name="onboarding_description">SORA est un système de gouvernance sur la blockchain dans lequel les producteurs peuvent proposer de financer un project, et tous les détenteurs de token XOR peuvent décider des meilleurs biens et services à produire. Accepter XOR comme moyen d\'échange permet de construire l\'économie de SORA.</string>
+  <string name="onboarding_description">SORA est un système de gouvernance sur la blockchain dans lequel les producteurs peuvent proposer de financer un projet, et tous les détenteurs de token XOR peuvent décider des meilleurs biens et services à produire. Accepter XOR comme moyen d\'échange permet de construire l\'économie de SORA.</string>
   <string name="onboarding_enter_passphrase">Entrez votre phrase secrète</string>
   <string name="onboarding_enter_seed">Entrez votre seed</string>
   <string name="passphrase_confirmation_error_message">Cette étape a pour but d\'assurer que vous avez bien conservé votre phrase de récupération</string>
@@ -473,9 +473,9 @@
   <string name="sora_card_free_card_issuance">Émission gratuite de la carte</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Si vous détenez, stakez, ou fournissez des liquidités pour un montant d\'au moins 100€ de XOR avec votre compte SORA</string>
   <string name="sora_card_get_more_xor">Obtenir plus de XOR</string>
-  <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
+  <string name="sora_card_log_in_or_sign_up">Se connecter ou s\'inscrire</string>
   <string name="sora_card_no_more_free_tries">Nombre d\'essais gratuits épuisé</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">Détails</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">Swap crypto pour XOR</string>
   <string name="sora_card_title">Rechargez votre SORA Card avec de la monnaie fiduciaire ou de la cryptomonnaie et payez en ligne, chez un marchand, ou retirez au distributeur</string>

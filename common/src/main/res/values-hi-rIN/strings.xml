@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">टोकन मूल्य</string>
   <string name="asset_details_your_pools">आपके %s पूल</string>
   <string name="asset_to_send">भेजने के लिए संपत्ति</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
   <string name="biometric_dialog_title">प्रमाणित करें</string>
   <string name="block_id">ब्लॉक हैश</string>
   <string name="buy_crypto_buy_xor_banner_title">XOR टोकन खरीदें</string>

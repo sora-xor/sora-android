@@ -44,18 +44,23 @@ import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
+import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
+import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -66,12 +71,14 @@ import kotlinx.coroutines.launch
 class ProfileViewModel @Inject constructor(
     private val assetsRouter: AssetsRouter,
     interactor: MainInteractor,
+    private val polkaswapRouter: PolkaswapRouter,
     private val walletInteractor: WalletInteractor,
     private val router: MainRouter,
     private val walletRouter: WalletRouter,
     private val referralRouter: ReferralRouter,
     private val selectNodeRouter: SelectNodeRouter,
     private val soraConfigManager: SoraConfigManager,
+    private val assetsInteractor: AssetsInteractor,
     nodeManager: NodeManager,
 ) : BaseViewModel() {
 
@@ -146,12 +153,6 @@ class ProfileViewModel @Inject constructor(
         router.showAccountList()
     }
 
-    fun logoutSoraCard() {
-        viewModelScope.launch {
-            walletInteractor.logoutSoraCard()
-        }
-    }
-
     fun showSoraCard() {
         if (soraCardInfo == null || isKycStatusAvailable()) {
             router.showGetSoraCard()
@@ -167,20 +168,45 @@ class ProfileViewModel @Inject constructor(
     }.getOrNull() == null
 
     private fun showCardState() {
-        _launchSoraCardSignIn.value = createSoraCardContract()
+        viewModelScope.launch {
+            _launchSoraCardSignIn.value = createSoraCardContract(
+                userAvailableXorAmount = assetsInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
+                    .balance.transferable.toDouble()
+            )
+        }
     }
 
-    fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    ) {
-        viewModelScope.launch {
-            walletInteractor.updateSoraCardInfo(
-                accessToken,
-                accessTokenExpirationTime,
-                kycStatus
-            )
+    fun handleSoraCardResult(soraCardResult: SoraCardResult) {
+        when (soraCardResult) {
+            is SoraCardResult.NavigateTo -> {
+                when (soraCardResult.screen) {
+                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow(isLaunchedFromSoraCard = true)
+                    OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
+                    OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
+                }
+            }
+            is SoraCardResult.Success -> {
+                viewModelScope.launch {
+                    walletInteractor.updateSoraCardInfo(
+                        accessToken = soraCardResult.accessToken,
+                        accessTokenExpirationTime = soraCardResult.accessTokenExpirationTime,
+                        kycStatus = soraCardResult.status.toString()
+                    )
+                }
+            }
+            is SoraCardResult.Failure -> {
+                viewModelScope.launch {
+                    walletInteractor.updateSoraCardKycStatus(
+                        kycStatus = soraCardResult.status.toString()
+                    )
+                }
+            }
+            is SoraCardResult.Canceled -> {}
+            is SoraCardResult.Logout -> {
+                viewModelScope.launch {
+                    walletInteractor.deleteSoraCardInfo()
+                }
+            }
         }
     }
 
