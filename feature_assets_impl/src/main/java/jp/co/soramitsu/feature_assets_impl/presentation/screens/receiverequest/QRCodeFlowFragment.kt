@@ -45,8 +45,8 @@ import com.google.accompanist.navigation.animation.composable
 import com.journeyapps.barcodescanner.ScanOptions
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
