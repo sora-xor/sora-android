@@ -44,6 +44,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.lang.IllegalArgumentException
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.exceptions.DecodingException
@@ -387,7 +388,7 @@ class OnboardingViewModel @Inject constructor(
         _toolbarState.value?.let {
             _toolbarState.value = it.copy(
                 basic = it.basic.copy(
-                    actionLabel = if (route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION) {
+                    actionLabel = if ((route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION) && !isFromGoogleDrive) {
                         resourceManager.getString(R.string.common_skip)
                     } else {
                         null
@@ -689,6 +690,8 @@ class OnboardingViewModel @Inject constructor(
                     } catch (e: DecodingException) {
                         onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
                     } catch (e: SoraException) {
+                        onError(e)
+                    } catch (e: IllegalArgumentException) {
                         onError(e)
                     }
                 }
