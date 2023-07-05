@@ -82,6 +82,7 @@ data class ImportAccountListScreenState(
 data class ImportAccountPasswordState(
     val selectedAccount: BackupAccountMetaWithIcon? = null,
     val passwordInput: InputTextState = InputTextState(),
+    val isImportMoreAvailable: Boolean = false,
     val isContinueButtonEnabled: Boolean = false,
     val isLoading: Boolean = false,
 )
