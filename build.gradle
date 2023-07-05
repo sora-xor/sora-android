@@ -53,10 +53,11 @@ buildscript {
     ]
 
     ext {
-        // soralution 95 3.0.0.17 2023.07.04
+        // soralution 96 3.0.0.18 2023.07.04
         // sora dae 79 3.0.0.1 2023.05.18
-        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 95)
-        appVersionName = '3.0.0.17'
+//        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 96)
+        appVersionName = '3.0.0.18'
 
         compileVersion = 33
         minVersion = 24
@@ -225,7 +226,7 @@ buildscript {
         classpath 'com.google.firebase:firebase-appdistribution-gradle:3.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.4'
         classpath 'com.google.dagger:hilt-android-gradle-plugin:2.45'
-        classpath "com.github.triplet.gradle:play-publisher:3.7.0"
+        classpath "com.github.triplet.gradle:play-publisher:3.8.4"
     }
 }
 
