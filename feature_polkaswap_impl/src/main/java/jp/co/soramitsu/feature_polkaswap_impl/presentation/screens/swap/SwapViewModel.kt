@@ -85,8 +85,9 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -146,8 +147,16 @@ class SwapViewModel @AssistedInject constructor(
 
     val navigationDisclaimerEvent = SingleLiveEvent<Unit>()
 
-    private val fromAmountFlow = MutableStateFlow(BigDecimal.ZERO)
-    private val toAmountFlow = MutableStateFlow(BigDecimal.ZERO)
+    private val fromAmountFlow = MutableSharedFlow<BigDecimal>(
+        replay = 1,
+        extraBufferCapacity = 0,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    private val toAmountFlow = MutableSharedFlow<BigDecimal>(
+        replay = 1,
+        extraBufferCapacity = 0,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     private var isExtrinsicSubmitted = false
 
     private val property = PropertyValue()
@@ -698,7 +707,7 @@ class SwapViewModel @AssistedInject constructor(
         swapMainState.tokenFromState?.let { fromAsset ->
             swapMainState.tokenToState?.let { toAsset ->
                 val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
-                if (amountToCalc > BigDecimal.ZERO) {
+                if (amountToCalc >= BigDecimal.ZERO) {
                     tryCatchFinally(
                         finally = {},
                         block = {
@@ -712,29 +721,31 @@ class SwapViewModel @AssistedInject constructor(
                             )
                             swapDetails = details
                             updateDetailsView()
-                            details?.amount?.let {
+                            details?.amount.let {
                                 if (desired == WithDesired.INPUT) {
                                     swapMainState = swapMainState.copy(
                                         tokenToState = swapMainState.tokenToState?.copy(
                                             amountFiat = toAsset.token.printFiat(
-                                                it,
+                                                it ?: BigDecimal.ZERO,
                                                 numbersFormatter
                                             ),
-                                            amount = it,
-                                            initialAmount = it,
+                                            amount = it ?: BigDecimal.ZERO,
+                                            initialAmount = it ?: BigDecimal.ZERO,
                                         )
                                     )
+                                    amountFromPrev = fromAsset.initialAmount ?: BigDecimal.ZERO
                                 } else {
                                     swapMainState = swapMainState.copy(
                                         tokenFromState = swapMainState.tokenFromState?.copy(
                                             amountFiat = fromAsset.token.printFiat(
-                                                it,
+                                                it ?: BigDecimal.ZERO,
                                                 numbersFormatter
                                             ),
-                                            amount = it,
-                                            initialAmount = it,
+                                            amount = it ?: BigDecimal.ZERO,
+                                            initialAmount = it ?: BigDecimal.ZERO,
                                         )
                                     )
+                                    amountToPrev = toAsset.initialAmount ?: BigDecimal.ZERO
                                 }
                             }
                         },
@@ -834,11 +845,12 @@ class SwapViewModel @AssistedInject constructor(
                 amountFiat = swapMainState.tokenFromState?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                initialAmount = value
             )
         )
         fromAmountOnEach()
-        fromAmountFlow.value = value
+        fromAmountFlow.tryEmit(value)
     }
 
     fun onToAmountChange(value: BigDecimal) {
@@ -848,11 +860,12 @@ class SwapViewModel @AssistedInject constructor(
                 amountFiat = swapMainState.tokenToState?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                initialAmount = value
             )
         )
         toAmountOnEach()
-        toAmountFlow.value = value
+        toAmountFlow.tryEmit(value)
     }
 
     private fun toAmountOnEach() {
