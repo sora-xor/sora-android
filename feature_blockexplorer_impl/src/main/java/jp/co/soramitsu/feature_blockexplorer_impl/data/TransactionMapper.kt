@@ -36,6 +36,7 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.getByIdOrEmpty
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.ext.snakeCaseToCamelCase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
@@ -78,6 +79,17 @@ private fun mapHistoryItemToTransaction(
                 peer = if (to == myAddress) from else to,
                 transferType = if (to == myAddress) TransactionTransferType.INCOMING else TransactionTransferType.OUTGOING,
                 token = tokens.getByIdOrEmpty(tokenId),
+            )
+        }
+    } else if (tx.isMatch(Pallete.ETH_BRIDGE, Method.TRANSFER_TO_SIDECHAIN) && !BuildUtils.isProdPlayMarket()) {
+        tx.data?.toEthTransfer { amount, tokenId, hash, address ->
+            Transaction.EthTransfer(
+                base = transactionBase,
+                amount = amount.toBigDecimalOrDefault(),
+                token = tokens.getByIdOrEmpty(tokenId),
+                ethToken = tokens.getByIdOrEmpty(SubstrateOptionsProvider.ethTokenId),
+                requestHash = hash,
+                sidechainAddress = address,
             )
         }
     } else if (tx.isMatch(Pallete.Referrals, Method.RESERVE)) {
@@ -214,6 +226,16 @@ private fun List<TxHistoryItemParam>.toTransfer(block: (to: String, from: String
     val tokenId = this.firstOrNull { it.paramName == "assetId" }
     return if (to != null && from != null && amount != null && tokenId != null)
         block.invoke(to.paramValue, from.paramValue, amount.paramValue, tokenId.paramValue)
+    else null
+}
+
+private fun List<TxHistoryItemParam>.toEthTransfer(block: (amount: String, tokenId: String, hash: String, address: String) -> Transaction.EthTransfer): Transaction.EthTransfer? {
+    val amount = this.firstOrNull { it.paramName == "amount" }
+    val tokenId = this.firstOrNull { it.paramName == "assetId" }
+    val requestHash = this.firstOrNull { it.paramName == "requestHash" }
+    val sidechainAddress = this.firstOrNull { it.paramName == "sidechainAddress" }
+    return if (amount != null && tokenId != null && requestHash != null && sidechainAddress != null)
+        block.invoke(amount.paramValue, tokenId.paramValue, requestHash.paramValue, sidechainAddress.paramValue)
     else null
 }
 

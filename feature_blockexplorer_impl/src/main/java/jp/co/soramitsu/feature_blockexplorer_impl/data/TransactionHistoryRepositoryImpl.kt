@@ -186,6 +186,7 @@ class TransactionHistoryRepositoryImpl @Inject constructor(
                 is Transaction.ReferralUnbond -> transaction.token.id == tokenId
                 is Transaction.Swap -> transaction.tokenFrom.id == tokenId || transaction.tokenTo.id == tokenId
                 is Transaction.Transfer -> transaction.token.id == tokenId
+                is Transaction.EthTransfer -> transaction.token.id == tokenId
             }
         }.values
 }
