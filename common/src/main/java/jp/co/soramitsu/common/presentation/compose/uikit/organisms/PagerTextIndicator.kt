@@ -51,6 +51,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
@@ -107,9 +108,11 @@ fun PagerTextIndicator(
             Text(
                 modifier = Modifier
                     .noRippleClickable { onIndicatorClick.invoke(it) },
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
                 text = indicatorsArray[it].retrieveString(),
                 color = if (it == currentPageRetriever()) Color.White else Color.Black,
-                style = MaterialTheme.customTypography.textSBold
+                style = MaterialTheme.customTypography.textSBold,
             )
         }
     }
