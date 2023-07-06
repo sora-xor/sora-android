@@ -78,14 +78,14 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -145,8 +145,16 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private val assets = mutableListOf<Asset>()
     private var hasXorReminderWarningBeenChecked = false
 
-    private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
-    private val amount2Flow = MutableStateFlow(BigDecimal.ZERO)
+    private val amount1Flow = MutableSharedFlow<BigDecimal>(
+        replay = 1,
+        extraBufferCapacity = 0,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    private val amount2Flow = MutableSharedFlow<BigDecimal>(
+        replay = 1,
+        extraBufferCapacity = 0,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
@@ -240,7 +248,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             amount1Flow
-                .drop(1)
                 .debounce(ViewHelper.debounce)
                 .onEach { amount ->
                     amountFrom = amount
@@ -256,7 +263,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
         }
         viewModelScope.launch {
             amount2Flow
-                .drop(1)
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
                     amountTo = amount
@@ -733,10 +739,11 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 amountFiat = addState.assetState1?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                initialAmount = value
             )
         )
-        amount1Flow.value = value
+        amount1Flow.tryEmit(value)
     }
 
     fun onAmount2Change(value: BigDecimal) {
@@ -746,10 +753,11 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 amountFiat = addState.assetState2?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                initialAmount = value
             )
         )
-        amount2Flow.value = value
+        amount2Flow.tryEmit(value)
     }
 
     fun onAmount1Focused() {
@@ -784,7 +792,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     initialAmount = amount,
                 )
             )
-            amount1Flow.value = amount
+            amount1Flow.tryEmit(amount)
         } else if (desired == WithDesired.OUTPUT && tokenTo != null) {
             val amount =
                 PolkaswapFormulas.calculateAmountByPercentage(
@@ -799,7 +807,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     initialAmount = amount,
                 )
             )
-            amount2Flow.value = amount
+            amount2Flow.tryEmit(amount)
         }
     }
 
