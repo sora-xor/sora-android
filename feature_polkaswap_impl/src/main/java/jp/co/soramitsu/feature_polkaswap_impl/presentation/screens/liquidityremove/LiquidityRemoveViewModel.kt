@@ -261,21 +261,22 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         }
                         if (maxPercent != null && !maxPercent.isNaN()) {
                             poolInFarming = true
+                            val usablePercent = 100 - maxPercent
                             poolDataLocal.copy(
                                 basePooled = PolkaswapFormulas.calculateAmountByPercentage(
                                     poolDataLocal.basePooled,
-                                    maxPercent,
-                                    poolDataLocal.baseToken.precision
+                                    usablePercent,
+                                    poolDataLocal.baseToken.precision,
                                 ),
                                 secondPooled = PolkaswapFormulas.calculateAmountByPercentage(
                                     poolDataLocal.secondPooled,
-                                    maxPercent,
-                                    poolDataLocal.baseToken.precision
+                                    usablePercent,
+                                    poolDataLocal.baseToken.precision,
                                 ),
                                 poolProvidersBalance = PolkaswapFormulas.calculateAmountByPercentage(
                                     poolDataLocal.poolProvidersBalance,
-                                    maxPercent,
-                                    poolDataLocal.baseToken.precision
+                                    usablePercent,
+                                    poolDataLocal.baseToken.precision,
                                 ),
                             )
                         } else {
