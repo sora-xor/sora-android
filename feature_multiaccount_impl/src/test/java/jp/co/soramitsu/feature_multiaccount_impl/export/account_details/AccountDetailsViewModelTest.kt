@@ -268,7 +268,7 @@ class AccountDetailsViewModelTest {
         accountDetailsViewModel.onBackupClicked(accountResultLauncher)
         advanceUntilIdle()
 
-        verify(backupService).deleteBackupAccount(account.substrateAddress)
+        assertTrue(accountDetailsViewModel.deleteDialogState.value ?: false)
     }
 
     @Test
