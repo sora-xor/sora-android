@@ -47,6 +47,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil.sendEmail
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -97,7 +98,7 @@ class InformationFragment : SoraBaseFragment<InformationViewModel>() {
     }
     private val email: () -> Unit = {
         context?.let { c ->
-            ShareUtil.sendEmail(
+            sendEmail(
                 c,
                 OptionsProvider.email,
                 getString(R.string.common_select_email_app_title)
