@@ -43,8 +43,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -59,6 +64,8 @@ import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.backup_password.BackupPasswordScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 @AndroidEntryPoint
 class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
@@ -94,6 +101,45 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
         animatedComposable(
             route = AccountDetailsRoutes.ACCOUNT_DETAILS,
         ) {
+            viewModel.deleteDialogState.observeAsState().value?.let {
+                if (it) {
+                    AlertDialog(
+                        title = {
+                            Text(
+                                text = stringResource(id = R.string.delete_backup_alert_title),
+                                style = MaterialTheme.customTypography.textSBold
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = stringResource(id = R.string.delete_backup_alert_description),
+                                style = MaterialTheme.customTypography.paragraphSBold
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = viewModel::deleteGoogleBackup
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.common_delete),
+                                    color = MaterialTheme.customColors.statusError,
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = viewModel::deleteDialogDismiss
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.common_cancel),
+                                )
+                            }
+                        },
+                        onDismissRequest = viewModel::deleteDialogDismiss
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .verticalScroll(scrollState)

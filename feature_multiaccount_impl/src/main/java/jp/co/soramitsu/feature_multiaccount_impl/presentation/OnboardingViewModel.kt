@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.lang.IllegalArgumentException
+import java.net.SocketException
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.exceptions.DecodingException
@@ -59,10 +60,8 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
-import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
@@ -129,8 +128,8 @@ class OnboardingViewModel @Inject constructor(
     private val _recoveryState = MutableLiveData<RecoveryState>()
     val recoveryState: LiveData<RecoveryState> = _recoveryState
 
-    private val _onActionEvent = SingleLiveEvent<Unit>()
-    val onActionEvent: LiveData<Unit> = _onActionEvent
+    private val _skipDialogState = MutableLiveData(false)
+    val skipDialogState = _skipDialogState
 
     private var tempAccount: SoraAccount? = null
 
@@ -342,10 +341,15 @@ class OnboardingViewModel @Inject constructor(
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
-                if (backupService.authorize(launcher)) {
-                    onSuccessfulGoogleSignin(navController)
-                } else {
+                try {
+                    if (backupService.authorize(launcher)) {
+                        onSuccessfulGoogleSignin(navController)
+                    } else {
+                        _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
+                    }
+                } catch (e: SocketException) {
                     _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
+                    onError(SoraException.networkError(resourceManager, e))
                 }
             }
         }
@@ -510,7 +514,7 @@ class OnboardingViewModel @Inject constructor(
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
     }
 
-    fun finishCreateAccountProcess(context: Context) {
+    private fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
             multiaccountInteractor.createUser(
                 soraAccount = requireNotNull(
@@ -559,6 +563,8 @@ class OnboardingViewModel @Inject constructor(
                     _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
 
                 onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
             }
         }
     }
@@ -574,21 +580,28 @@ class OnboardingViewModel @Inject constructor(
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
-                _passphraseCardState.value?.let { passphraseCardState ->
-                    tempAccount?.let {
-                        backupService.saveBackupAccount(
-                            DecryptedBackupAccount(
-                                it.accountName,
-                                it.substrateAddress,
-                                passphraseCardState.mnemonicWords.joinToString(" "),
-                                CryptoType.SR25519,
-                                "",
-                                "",
-                            ),
-                            createBackupPasswordState.password.value.text
-                        )
+                try {
+                    _passphraseCardState.value?.let { passphraseCardState ->
+                        tempAccount?.let {
+                            backupService.saveBackupAccount(
+                                DecryptedBackupAccount(
+                                    it.accountName,
+                                    it.substrateAddress,
+                                    passphraseCardState.mnemonicWords.joinToString(" "),
+                                    CryptoType.SR25519,
+                                    "",
+                                    "",
+                                ),
+                                createBackupPasswordState.password.value.text
+                            )
 
-                        finishCreateAccountProcess(activity)
+                            finishCreateAccountProcess(activity)
+                        }
+                    }
+                } catch (e: SocketException) {
+                    withContext(coroutineManager.main) {
+                        _createBackupPasswordState.value =
+                            createBackupPasswordState.copy(isLoading = false)
                     }
                 }
             }
@@ -610,7 +623,6 @@ class OnboardingViewModel @Inject constructor(
                 password = it.password.copy(
                     value = filteredValue,
                     success = isSecure,
-                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else "",
                 ),
                 passwordConfirmation = it.passwordConfirmation.copy(
                     error = errorString.isNotEmpty(),
@@ -649,6 +661,7 @@ class OnboardingViewModel @Inject constructor(
     fun onImportContinueClicked(navController: NavController) {
         _importAccountPasswordState.value?.let { state ->
             _importAccountPasswordState.value = state.copy(isLoading = true)
+            var isImportMoreAvailable = false
             viewModelScope.launch {
                 state.selectedAccount?.let {
                     try {
@@ -672,9 +685,7 @@ class OnboardingViewModel @Inject constructor(
                                 connectionManager.isConnected
                             )
 
-                            _importAccountPasswordState.value = importAccountPasswordState.value?.copy(
-                                isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
-                            )
+                            isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
 
                             navController.navigate(
                                 route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
@@ -693,9 +704,12 @@ class OnboardingViewModel @Inject constructor(
                         onError(e)
                     } catch (e: IllegalArgumentException) {
                         onError(e)
+                    } catch (e: SocketException) {
+                        onError(SoraException.networkError(resourceManager, e))
                     }
                 }
-                _importAccountPasswordState.value = state.copy(isLoading = false)
+                _importAccountPasswordState.value =
+                    state.copy(isImportMoreAvailable = isImportMoreAvailable, isLoading = false)
             }
         }
     }
@@ -706,20 +720,24 @@ class OnboardingViewModel @Inject constructor(
 
     fun onImportMoreClicked(navController: NavController) {
         viewModelScope.launch {
-            _importAccountPasswordState.value =
-                _importAccountPasswordState.value?.copy(isLoading = true)
-            _importAccountListState.value = ImportAccountListScreenState(
-                accountList = getBackupedAccountsFiltered()
-                    .map {
-                        BackupAccountMetaWithIcon(
-                            it,
-                            getDrawableFromGoogleBackup(it.address),
-                        )
-                    }
-            )
+            try {
+                _importAccountPasswordState.value =
+                    _importAccountPasswordState.value?.copy(isLoading = true)
+                _importAccountListState.value = ImportAccountListScreenState(
+                    accountList = getBackupedAccountsFiltered()
+                        .map {
+                            BackupAccountMetaWithIcon(
+                                it,
+                                getDrawableFromGoogleBackup(it.address),
+                            )
+                        }
+                )
 
-            resetBackupLiveData()
-            navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+                resetBackupLiveData()
+                navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+            } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
+            }
         }
     }
 
@@ -792,6 +810,15 @@ class OnboardingViewModel @Inject constructor(
     }
 
     override fun onAction() {
-        _onActionEvent.trigger()
+        _skipDialogState.value = true
+    }
+
+    fun skipDialogConfirm(context: Context) {
+        finishCreateAccountProcess(context)
+        _skipDialogState.value = false
+    }
+
+    fun skipDialogDismiss() {
+        _skipDialogState.value = false
     }
 }
