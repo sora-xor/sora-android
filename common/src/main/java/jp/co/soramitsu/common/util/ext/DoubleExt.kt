@@ -30,24 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.util
+package jp.co.soramitsu.common.util.ext
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import androidx.fragment.app.Fragment
-import jp.co.soramitsu.common.domain.ResponseCode
-import jp.co.soramitsu.common.util.ext.safeStartActivity
-
-object ShareUtil {
-
-    fun shareInBrowser(fragment: Fragment, link: String) {
-        val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(link) }
-        fragment.safeStartActivity(intent, ResponseCode.NOW_BROWSER_FOUND)
-    }
-
-    fun shareInBrowser(context: Context, link: String) {
-        val intent = Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(link) }
-        context.safeStartActivity(intent, ResponseCode.NOW_BROWSER_FOUND)
-    }
-}
+fun Double.isNanZero(): Double =
+    if (this.isNaN()) 0.0 else this

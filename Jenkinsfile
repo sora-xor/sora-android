@@ -1,4 +1,4 @@
-@Library('jenkins-library' ) _
+@Library('jenkins-library@feature/DOPS-2566' ) _
 
 // Job properties
 def jobParams = [
@@ -12,6 +12,7 @@ def pipeline = new org.android.AppPipeline(steps: this,
     testCmd: 'ktlint clean runModuleTests jacocoTestReport',
     jobParams: jobParams,
     appPushNoti: true,
+    gitUpdateSubmodule: true,
     dockerImage: 'build-tools/android-build-box-jdk11:latest',
     gpgFiles: ['app/google-services.json'])
 pipeline.runPipeline('sora')

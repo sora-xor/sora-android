@@ -64,6 +64,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation project(":android-foundation")
     implementation project(":common")
     implementation project(':common_wallet')
     implementation project(":core_db")

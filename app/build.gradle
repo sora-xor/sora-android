@@ -137,13 +137,14 @@ hilt {
 
 play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
-    track = "beta"
+    track = "alpha"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "84 (3.0.0.6)"
+    releaseName = "96 (3.0.0.18)"
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(":android-foundation")
     implementation project(":common")
     implementation project(":core_db")
     implementation project(":feature_assets_api")
