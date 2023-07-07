@@ -82,7 +82,16 @@ sealed class Transaction(
         val amount: BigDecimal,
         val peer: String,
         val transferType: TransactionTransferType,
-        val token: Token
+        val token: Token,
+    ) : Transaction(base)
+
+    class EthTransfer(
+        base: TransactionBase,
+        val amount: BigDecimal,
+        val token: Token,
+        val ethToken: Token,
+        val requestHash: String,
+        val sidechainAddress: String,
     ) : Transaction(base)
 
     class Swap(

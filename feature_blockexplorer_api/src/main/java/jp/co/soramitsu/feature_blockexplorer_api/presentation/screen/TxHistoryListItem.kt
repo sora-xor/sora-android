@@ -104,6 +104,13 @@ fun TxHistoryListItem(
                 eventUiModel = eventUiModel
             )
         }
+        is EventUiModel.EventTxUiModel.EventEthTransfer -> {
+            EventEthTransfer(
+                modifier = modifier
+                    .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
+                eventUiModel = eventUiModel,
+            )
+        }
         EventUiModel.EventUiLoading -> {
             CircularProgressIndicator(modifier = Modifier.size(Size.Small))
         }
