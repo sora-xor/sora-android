@@ -39,6 +39,7 @@ import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.ext.isNanZero
 import jp.co.soramitsu.common_wallet.domain.model.PoolData
 
 class PoolsListState(
@@ -88,7 +89,7 @@ fun mapPoolsData(
                     .orEmpty(),
                 fiatChange = formatted[i]?.second?.let {
                     formatFiatChange(
-                        it,
+                        it.isNanZero(),
                         numbersFormatter
                     )
                 }.orEmpty(),

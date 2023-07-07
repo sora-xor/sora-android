@@ -37,7 +37,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -92,12 +91,18 @@ fun ImportAccountSuccessScreen(
                 )
             }
 
+            val bottomPadding = if (importAccountScreenState.isImportMoreAvailable) {
+                Dimens.x2
+            } else {
+                Dimens.x3
+            }
+
             FilledButton(
                 modifier = Modifier
                     .padding(
                         start = Dimens.x3,
                         end = Dimens.x3,
-                        bottom = Dimens.x2,
+                        bottom = bottomPadding,
                         top = Dimens.x4
                     )
                     .fillMaxWidth(),
@@ -107,21 +112,23 @@ fun ImportAccountSuccessScreen(
                 onClick = onContinueClicked
             )
 
-            LoaderWrapper(
-                modifier = Modifier
-                    .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3)
-                    .fillMaxWidth(),
-                loading = importAccountScreenState.isLoading,
-                loaderSize = Size.Large,
-            ) { modifier, elevation ->
-                OutlinedButton(
-                    modifier = modifier
+            if (importAccountScreenState.isImportMoreAvailable) {
+                LoaderWrapper(
+                    modifier = Modifier
+                        .padding(start = Dimens.x3, end = Dimens.x3, bottom = Dimens.x3)
                         .fillMaxWidth(),
-                    size = Size.Large,
-                    order = Order.PRIMARY,
-                    text = stringResource(id = R.string.import_more_title),
-                    onClick = onImportMoreClicked
-                )
+                    loading = importAccountScreenState.isLoading,
+                    loaderSize = Size.Large,
+                ) { modifier, elevation ->
+                    OutlinedButton(
+                        modifier = modifier
+                            .fillMaxWidth(),
+                        size = Size.Large,
+                        order = Order.PRIMARY,
+                        text = stringResource(id = R.string.import_more_title),
+                        onClick = onImportMoreClicked
+                    )
+                }
             }
         }
     }

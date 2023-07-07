@@ -44,11 +44,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.lang.IllegalArgumentException
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.exceptions.DecodingException
 import jp.co.soramitsu.backup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
+import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -387,7 +389,7 @@ class OnboardingViewModel @Inject constructor(
         _toolbarState.value?.let {
             _toolbarState.value = it.copy(
                 basic = it.basic.copy(
-                    actionLabel = if (route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION) {
+                    actionLabel = if ((route == OnboardingFeatureRoutes.PASSPHRASE || route == OnboardingFeatureRoutes.PASSPHRASE_CONFIRMATION) && !isFromGoogleDrive) {
                         resourceManager.getString(R.string.common_skip)
                     } else {
                         null
@@ -533,12 +535,7 @@ class OnboardingViewModel @Inject constructor(
                 if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
                     navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
                 } else {
-                    val result = backupService.getBackupAccounts()
-                        .filter {
-                            multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
-                                it.address
-                            )
-                        }
+                    val result = getBackupedAccountsFiltered()
 
                     _tutorialScreenState.value =
                         _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
@@ -675,6 +672,10 @@ class OnboardingViewModel @Inject constructor(
                                 connectionManager.isConnected
                             )
 
+                            _importAccountPasswordState.value = importAccountPasswordState.value?.copy(
+                                isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
+                            )
+
                             navController.navigate(
                                 route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
                                 navOptions = NavOptions.Builder()
@@ -689,6 +690,8 @@ class OnboardingViewModel @Inject constructor(
                     } catch (e: DecodingException) {
                         onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
                     } catch (e: SoraException) {
+                        onError(e)
+                    } catch (e: IllegalArgumentException) {
                         onError(e)
                     }
                 }
@@ -706,12 +709,7 @@ class OnboardingViewModel @Inject constructor(
             _importAccountPasswordState.value =
                 _importAccountPasswordState.value?.copy(isLoading = true)
             _importAccountListState.value = ImportAccountListScreenState(
-                accountList = backupService.getBackupAccounts()
-                    .filter {
-                        multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
-                            it.address
-                        )
-                    }
+                accountList = getBackupedAccountsFiltered()
                     .map {
                         BackupAccountMetaWithIcon(
                             it,
@@ -782,6 +780,15 @@ class OnboardingViewModel @Inject constructor(
         } else {
             resourceManager.getString(R.string.create_backup_password_not_matched)
         }
+    }
+
+    private suspend fun getBackupedAccountsFiltered(): List<BackupAccountMeta> {
+        return backupService.getBackupAccounts()
+            .filter {
+                multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
+                    it.address
+                )
+            }
     }
 
     override fun onAction() {
