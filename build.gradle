@@ -37,7 +37,7 @@ buildscript {
             insetter               : '0.6.0',
             truth                  : '1.1.5',
             lottie                 : '4.2.0',
-            xNetworking            : '0.0.58',
+            xNetworking            : '0.0.59',
             compose                : '1.4.3',
             composeMaterial        : '1.4.3',
             composeCompiler        : '1.4.6',
