@@ -45,11 +45,11 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil.shareFile
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.presentation.args.addresses
-import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 
 @AndroidEntryPoint
@@ -71,7 +71,7 @@ class BackupJsonFragment : SoraBaseFragment<BackupJsonViewModel>() {
     ): View? {
         viewModel.jsonTextLiveData.observe { uri ->
             context?.let { context ->
-                ShareUtil.shareFile(context, getString(R.string.common_share), uri)
+                shareFile(context, getString(R.string.common_share), uri)
             }
         }
 
