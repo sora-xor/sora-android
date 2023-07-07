@@ -49,11 +49,11 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil.shareText
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.animatedComposable
-import jp.co.soramitsu.common.util.ShareUtil
 import jp.co.soramitsu.feature_referral_impl.presentation.screens.ReferralWelcomePageScreen
 import jp.co.soramitsu.feature_referral_impl.presentation.screens.WelcomeProgress
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -68,7 +68,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         (activity as BottomBarController).hideBottomBar()
         viewModel.shareLinkEvent.observe { link ->
             context?.let { c ->
-                ShareUtil.shareText(c, getString(R.string.common_share), link)
+                shareText(c, getString(R.string.common_share), link)
             }
         }
     }
