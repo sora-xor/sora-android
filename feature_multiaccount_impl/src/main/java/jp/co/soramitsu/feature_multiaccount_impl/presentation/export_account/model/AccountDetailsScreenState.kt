@@ -38,6 +38,6 @@ data class AccountDetailsScreenState(
     val accountNameState: InputTextState,
     val isMnemonicAvailable: Boolean,
     val isBackupLoading: Boolean,
-    val isBackupAvailable: Boolean,
+    val isBackupAvailable: Boolean?,
     val address: String,
 )
