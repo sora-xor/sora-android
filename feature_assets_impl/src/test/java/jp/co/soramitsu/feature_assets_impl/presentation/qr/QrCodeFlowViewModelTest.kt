@@ -43,7 +43,6 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.io.FileManager
@@ -52,9 +51,6 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.common.util.ext.orZero
-import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
-import jp.co.soramitsu.common_wallet.domain.model.QrException
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
@@ -77,17 +73,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
-import org.mockito.kotlin.atLeastOnce
 import org.mockito.kotlin.given
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.willReturn
-import java.math.BigDecimal
 import java.util.StringJoiner
 
 @RunWith(MockitoJUnitRunner::class)
@@ -119,9 +111,6 @@ class QrCodeFlowViewModelTest {
 
     @Mock
     private lateinit var qrCodeGenerator: QrCodeGenerator
-
-    @Mock
-    private lateinit var qrCodeDecoder: QrCodeDecoder
 
     @Mock
     private lateinit var avatarGenerator: AccountAvatarGenerator
@@ -191,7 +180,6 @@ class QrCodeFlowViewModelTest {
             qrCodeInteractor = qrCodeInteractor,
             coroutineManager = coroutineManager,
             qrCodeGenerator = qrCodeGenerator,
-            qrCodeDecoder = qrCodeDecoder,
             avatarGenerator = avatarGenerator,
             clipboardManager = clipboardManager,
             numbersFormatter = numbersFormatter,
@@ -201,21 +189,6 @@ class QrCodeFlowViewModelTest {
             isLaunchedFromSoraCard = false
         ).apply { viewModel = this }
     }
-
-    @Test
-    fun `WHEN user tries to decode QR uri EXPECT QrDecoder is used`() =
-        runTest {
-            viewModel.decodeScannedQrCodeUri(
-                uri = mockedUri
-            )
-
-            advanceUntilIdle()
-
-            verify(
-                mock = qrCodeDecoder,
-                mode = times(1)
-            ).decodeQrFromUri(data = mockedUri)
-        }
 
 
 
