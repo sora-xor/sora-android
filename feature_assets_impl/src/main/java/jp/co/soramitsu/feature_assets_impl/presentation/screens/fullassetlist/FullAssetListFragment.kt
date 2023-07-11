@@ -70,8 +70,8 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.BasicSearchBar
+import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetslist.CommonAssetsList
-import jp.co.soramitsu.ui_core.component.asset.Asset
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -149,7 +149,9 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                         exit = fadeOut(),
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxWidth().verticalScroll(scrollState),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(scrollState),
                         ) {
                             CommonAssetsList(
                                 state = state,
@@ -178,14 +180,10 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                                 } else {
                                     val item =
                                         if (position < state.topList.size) state.topList[position] else state.bottomList[position - state.topList.size - 1]
-                                    Asset(
-                                        icon = item.tokenIcon,
-                                        name = item.tokenName,
-                                        balance = item.assetAmount,
-                                        symbol = "",
-                                        fiat = item.assetFiatAmount,
-                                        change = item.fiatChange,
-                                        onClick = { viewModel.onAssetClick(item.tokenId) },
+                                    AssetItem(
+                                        assetState = item,
+                                        testTag = "",
+                                        onClick = viewModel::onAssetClick,
                                     )
                                 }
                                 Divider(

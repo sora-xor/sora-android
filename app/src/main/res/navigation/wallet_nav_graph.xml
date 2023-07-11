@@ -46,16 +46,8 @@
         android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsFragment" />
 
     <fragment
-        android:id="@+id/contactsFragment"
-        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment" />
-
-    <fragment
         android:id="@+id/transferAmountFragment"
         android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment" />
-
-    <fragment
-        android:id="@+id/assetDetailsFragment"
-        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment" />
 
     <fragment
         android:id="@+id/txListFragment"

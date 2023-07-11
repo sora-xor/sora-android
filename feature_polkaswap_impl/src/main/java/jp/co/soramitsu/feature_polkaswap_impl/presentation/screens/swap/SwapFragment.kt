@@ -59,7 +59,7 @@ import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.compose.components.PolkaswapDisclaimer
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SwapSelectTokenScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMainScreen
@@ -135,7 +135,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             val type = requireNotNull(it.arguments?.getString(SwapRoutes.selectTokenParamName))
             val state = viewModel.swapMainState.selectSearchAssetState
             if (state != null) {
-                SwapSelectTokenScreen(
+                SelectSearchTokenScreen(
                     state = state,
                     scrollState = scrollState,
                     onAssetSelect = { id -> onTokenSelected.invoke(id, type) },

@@ -30,48 +30,43 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.verify
+import jp.co.soramitsu.common.util.ext.compareNullDesc
+import jp.co.soramitsu.common.util.ext.multiplyNullable
+import jp.co.soramitsu.common.util.mapBalance
+import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-@ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
-class DiscoverViewModelTest {
+internal interface EcoSystemInteractor {
+    fun subscribeTokens(): Flow<EcoSystemTokens>
+}
 
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
-
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
-    @Mock
-    private lateinit var polkaswapRouter: PolkaswapRouter
-
-    private lateinit var discoverViewModel: DiscoverViewModel
-
-    @Before
-    fun setUp() = runTest {
-        discoverViewModel = DiscoverViewModel(polkaswapRouter)
-    }
-
-    @Test
-    fun `onAddLiquidityClick() called`() {
-        discoverViewModel.onAddLiquidityClick()
-
-        verify(polkaswapRouter).showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
+internal class EcoSystemInteractorImpl(
+    private val assetsRepository: AssetsRepository,
+    private val blockExplorerManager: BlockExplorerManager,
+) : EcoSystemInteractor {
+    override fun subscribeTokens(): Flow<EcoSystemTokens> {
+        return assetsRepository.subscribeTokensList().map { list ->
+            val liquidity = blockExplorerManager.getTokensLiquidity(list.map { it.id })
+            val mapped = list.map { token ->
+                token to liquidity.firstOrNull { it.first == token.id }?.second?.let { bi ->
+                    mapBalance(bi, token.precision)
+                }
+            }
+            val marketCap = mapped.map { tokenLiquidity ->
+                val sum =
+                    tokenLiquidity.second?.multiplyNullable(tokenLiquidity.first.fiatPrice?.toBigDecimal())
+                tokenLiquidity.first to sum
+            }
+            val sorted = marketCap.sortedWith { o1, o2 ->
+                compareNullDesc(o1.second, o2.second)
+            }
+            EcoSystemTokens(
+                tokens = sorted,
+            )
+        }
     }
 }

@@ -109,6 +109,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         navController.addOnDestinationChangedListener { _, destination, _ ->
                             destination.route?.let {
                                 viewModel.setCurDestination(it)
+                                onDestinationChanged(it)
                             }
                         }
                         viewModel.navigationPop.observe {
@@ -207,6 +208,8 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     open fun backgroundColorComposable() = MaterialTheme.customColors.bgPage
 
     open fun backgroundColor() = R.attr.baseBackground
+
+    open fun onDestinationChanged(destination: String) {}
 
     open fun onBack() {
         viewModel.onBackPressed()

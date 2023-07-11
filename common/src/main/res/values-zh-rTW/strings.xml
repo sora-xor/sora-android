@@ -83,6 +83,7 @@
   <string name="common_copied">複製到剪貼板</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">克羅地亞語</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">完成</string>
@@ -223,6 +224,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">手續費用資金不足</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">如果您無法訪問此設備，您的資金將會丟失，除非您備份！</string>
   <string name="export_account_details_backup_options">備份選項</string>
   <string name="export_account_details_show_passphrase">顯示密碼</string>

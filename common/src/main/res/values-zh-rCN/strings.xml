@@ -39,7 +39,7 @@
   <string name="asset_details_token_price">代币价格</string>
   <string name="asset_details_your_pools">你的%s池子</string>
   <string name="asset_to_send">待发送的资产</string>
-  <string name="backup_password_title">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。</string>
+  <string name="backup_password_title">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。\n最小密码长度为6个字符。</string>
   <string name="biometric_dialog_title">身份验证</string>
   <string name="block_id">区块哈希</string>
   <string name="buy_crypto_buy_xor_banner_title">购买XOR代币</string>
@@ -83,6 +83,7 @@
   <string name="common_copied">复制到剪贴板</string>
   <string name="common_create_qr_request">创建QR请求</string>
   <string name="common_croatian">克罗地亚语</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">删除</string>
   <string name="common_discover">发现</string>
   <string name="common_done">已完成</string>
@@ -223,6 +224,8 @@
   <string name="enter_password_incorect_title">密码错误</string>
   <string name="enter_password_title">输入密码</string>
   <string name="error_transaction_fee_title">网络费用不足</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">如果您无法访问此设备，您的资金将会丢失，除非您备份！</string>
   <string name="export_account_details_backup_options">备份选项</string>
   <string name="export_account_details_show_passphrase">显示密码短语</string>

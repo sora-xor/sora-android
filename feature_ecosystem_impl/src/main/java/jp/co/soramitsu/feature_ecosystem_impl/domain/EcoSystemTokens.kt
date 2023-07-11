@@ -30,42 +30,11 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common_wallet.presentation.compose.components
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.resources.Dimens
+import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.Token
 
-@Composable
-fun SwapSelectTokenScreen(
-    state: SelectSearchAssetState,
-    scrollState: ScrollState,
-    onAssetSelect: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Dimens.x2)
-    ) {
-        ContentCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            innerPadding = PaddingValues(Dimens.x3)
-        ) {
-            SelectSearchAssetView(
-                state = state,
-                scrollState = scrollState,
-                onSelect = onAssetSelect,
-            )
-        }
-    }
-}
+class EcoSystemTokens(
+    val tokens: List<Pair<Token, BigDecimal?>>,
+)
