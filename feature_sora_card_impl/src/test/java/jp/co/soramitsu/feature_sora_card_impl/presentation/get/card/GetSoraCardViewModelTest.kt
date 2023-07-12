@@ -45,6 +45,8 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
@@ -91,6 +93,9 @@ class GetSoraCardViewModelTest {
     private lateinit var assetsInteractor: AssetsInteractor
 
     @Mock
+    private lateinit var soraCardInteractor: SoraCardInteractor
+
+    @Mock
     private lateinit var walletInteractor: WalletInteractor
 
     @Mock
@@ -118,15 +123,19 @@ class GetSoraCardViewModelTest {
     private lateinit var connectionManager: ConnectionManager
 
     @Before
-    fun setUp() = runTest {
-        given(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId))
-            .willReturn(flowOf(TestAssets.xorAsset(balance = Big100)))
-        given(blockExplorerManager.getXorPerEurRatio()).willReturn(2.34)
+     fun setUp() = runTest {
         given(walletInteractor.subscribeSoraCardInfo()).willReturn(flowOf(SoraCardTestData.SORA_CARD_INFO))
         given(connectionManager.connectionState).willReturn(flowOf(true))
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
+
+        given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(flowOf(
+            SoraCardAvailabilityInfo(
+                xorBalance = BigDecimal.ONE,
+                enoughXor = true,
+            )
+        ))
 
         viewModel = GetSoraCardViewModel(
             assetsInteractor,
@@ -139,6 +148,7 @@ class GetSoraCardViewModelTest {
             resourceManager,
             NumbersFormatter(),
             connectionManager,
+            soraCardInteractor,
             shouldStartSignIn = false,
             shouldStartSignUp = false
         )
@@ -155,7 +165,7 @@ class GetSoraCardViewModelTest {
     fun `init EXPECT subscribe fee asset balance`() = runTest {
         advanceUntilIdle()
 
-        verify(assetsInteractor).subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
+        verify(soraCardInteractor).subscribeToSoraCardAvailabilityFlow()
     }
 
     @Test
@@ -167,23 +177,18 @@ class GetSoraCardViewModelTest {
 
     @Test
     fun `enable sora card EXPECT set up launcher`() = runTest{
-        whenever(assetsInteractor.getAssetOrThrow(any())).thenReturn(TestAssets.xorAsset(balance = BigDecimal.ONE))
+        advanceUntilIdle()
 
         viewModel.onEnableCard()
 
-        advanceUntilIdle()
-
-        assertNotNull(
-            viewModel.launchSoraCardRegistration.value
-        )
+        assertNotNull(viewModel.launchSoraCardRegistration.value)
     }
 
     @Test
     fun `on already have card EXPECT set up launcher`() = runTest{
-        whenever(assetsInteractor.getAssetOrThrow(any())).thenReturn(TestAssets.xorAsset(balance = BigDecimal.ONE))
+        advanceUntilIdle()
 
         viewModel.onAlreadyHaveCard()
-        advanceUntilIdle()
 
         assertNotNull(viewModel.launchSoraCardSignIn.value)
     }
