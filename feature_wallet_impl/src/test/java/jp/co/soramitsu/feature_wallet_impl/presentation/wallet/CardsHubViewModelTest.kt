@@ -52,6 +52,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
@@ -104,6 +105,9 @@ class CardsHubViewModelTest {
 
     @Mock
     private lateinit var cardsHubInteractorImpl: CardsHubInteractorImpl
+
+    @Mock
+    private lateinit var soraCardInteractor: SoraCardInteractor
 
     @Mock
     private lateinit var numbersFormatter: NumbersFormatter
@@ -206,6 +210,7 @@ class CardsHubViewModelTest {
             assetsRouter,
             polkaswapRouter,
             connectionManager,
+            soraCardInteractor,
             coroutineManager,
         )
     }

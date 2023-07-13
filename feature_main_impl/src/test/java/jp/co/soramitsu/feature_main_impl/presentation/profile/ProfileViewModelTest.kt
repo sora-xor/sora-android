@@ -44,6 +44,8 @@ import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.common.model.KycStatus
@@ -96,6 +98,9 @@ class ProfileViewModelTest {
     private lateinit var assetsInteractor: AssetsInteractor
 
     @Mock
+    private lateinit var soraCardInteractor: SoraCardInteractor
+
+    @Mock
     private lateinit var router: MainRouter
 
     @Mock
@@ -127,6 +132,7 @@ class ProfileViewModelTest {
             selectNodeRouter,
             soraConfigManager,
             assetsInteractor,
+            soraCardInteractor,
             nodeManager,
         )
     }
@@ -196,7 +202,12 @@ class ProfileViewModelTest {
     @Test
     fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
         whenever(walletInteractor.subscribeSoraCardInfo()).thenReturn(flowOf(SoraCardInformation("accesstoken", 0, KycStatus.Failed.toString())))
-        whenever(assetsInteractor.getAssetOrThrow(any())).thenReturn(TestAssets.xorAsset(balance = BigDecimal.ONE))
+        whenever(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).thenReturn(flowOf(
+            SoraCardAvailabilityInfo(
+                xorBalance = BigDecimal.ONE,
+                enoughXor = true,
+            )
+        ))
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
