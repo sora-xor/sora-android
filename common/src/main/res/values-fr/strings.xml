@@ -83,6 +83,7 @@
   <string name="common_copied">Copié dans le presse-papier</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Croate</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Supprimer</string>
   <string name="common_discover">Découvrir</string>
   <string name="common_done">Terminé</string>
@@ -224,6 +225,8 @@
   <string name="enter_password_incorect_title">Mot de passe incorrect</string>
   <string name="enter_password_title">Entrer le mot de passe</string>
   <string name="error_transaction_fee_title">Pas assez de fonds pour les frais de transaction</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Si vous perdez l\'accès à cet appareil, vos fonds seront perdus, sauf si vous sauvegardez!</string>
   <string name="export_account_details_backup_options">Options de sauvegarde</string>
   <string name="export_account_details_show_passphrase">Afficher la phrase secrète</string>

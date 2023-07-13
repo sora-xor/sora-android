@@ -83,6 +83,7 @@
   <string name="common_copied">Копирано у међуспремник</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Хрватски</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Готово</string>
@@ -225,6 +226,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Нема довољно средстава за накнаду за трансакцију</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Ako izgubite pristup ovom uređaju, vaša sredstva će biti izgubljena osim ako ne napravite rezervnu kopiju!</string>
   <string name="export_account_details_backup_options">Opcije rezervne kopije</string>
   <string name="export_account_details_show_passphrase">Pokaži pristupnu frazu</string>
