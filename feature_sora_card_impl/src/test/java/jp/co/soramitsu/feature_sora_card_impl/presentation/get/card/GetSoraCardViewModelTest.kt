@@ -38,10 +38,6 @@ import io.mockk.mockkObject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -49,11 +45,9 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.SoraCardTestData
-import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -72,10 +66,8 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
@@ -90,16 +82,10 @@ class GetSoraCardViewModelTest {
     var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
-    private lateinit var assetsInteractor: AssetsInteractor
-
-    @Mock
     private lateinit var soraCardInteractor: SoraCardInteractor
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
-
-    @Mock
-    private lateinit var blockExplorerManager: BlockExplorerManager
 
     @Mock
     private lateinit var assetsRouter: AssetsRouter
@@ -138,15 +124,12 @@ class GetSoraCardViewModelTest {
         ))
 
         viewModel = GetSoraCardViewModel(
-            assetsInteractor,
             assetsRouter,
             walletInteractor,
-            blockExplorerManager,
             walletRouter,
             mainRouter,
             polkaswapRouter,
             resourceManager,
-            NumbersFormatter(),
             connectionManager,
             soraCardInteractor,
             shouldStartSignIn = false,
