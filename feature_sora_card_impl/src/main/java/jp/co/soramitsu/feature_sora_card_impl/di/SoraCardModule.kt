@@ -30,38 +30,23 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_api.util
+package jp.co.soramitsu.feature_sora_card_impl.di
 
-import java.util.Locale
-import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.util.BuildUtils
-import jp.co.soramitsu.common.util.Flavor
-import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
-import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_sora_card_impl.domain.SoraCardInteractorImpl
 
-fun createSoraCardContract(
-    userAvailableXorAmount: Double,
-    isEnoughXorAvailable: Boolean,
-): SoraCardContractData {
-    return SoraCardContractData(
-        locale = Locale.ENGLISH,
-        apiKey = BuildConfig.SORA_CARD_API_KEY,
-        domain = BuildConfig.SORA_CARD_DOMAIN,
-        environment = when {
-            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
-            else -> SoraCardEnvironmentType.TEST
-        },
-        kycCredentials = SoraCardKycCredentials(
-            endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
-            username = BuildConfig.SORA_CARD_KYC_USERNAME,
-            password = BuildConfig.SORA_CARD_KYC_PASSWORD,
-        ),
-        client = OptionsProvider.header,
-        userAvailableXorAmount = userAvailableXorAmount,
-        areAttemptsPaidSuccessfully = false, // will be available in Phase 2
-        isEnoughXorAvailable = isEnoughXorAvailable,
-        isIssuancePaid = false // will be available in Phase 2
-    )
+@Module
+@InstallIn(SingletonComponent::class)
+interface SoraCardModule {
+
+    @Binds
+    @Singleton
+    fun bindSoraCardInteractor(
+        soraCardInteractorImpl: SoraCardInteractorImpl
+    ): SoraCardInteractor
 }

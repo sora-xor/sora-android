@@ -70,6 +70,7 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":sorasubstrate")
     implementation project(":core_di")
+    implementation project(":feature_account_api")
 
     implementation kotlinxSerializationJsonDep
 
