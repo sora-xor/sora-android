@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">टोकन मूल्य</string>
   <string name="asset_details_your_pools">आपके %s पूल</string>
   <string name="asset_to_send">भेजने के लिए संपत्ति</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">प्रमाणित करें</string>
   <string name="block_id">ब्लॉक हैश</string>
   <string name="buy_crypto_buy_xor_banner_title">XOR टोकन खरीदें</string>
@@ -83,6 +86,7 @@
   <string name="common_copied">क्लिपबोर्ड पर प्रतिलिपि किया गया</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">क्रोएशियाई</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">खोजना</string>
   <string name="common_done">हो गया</string>
@@ -224,6 +228,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">नेटवर्क शुल्क के लिए पर्याप्त धनराशि नहीं है</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">अगर आप इस डिवाइस का एक्सेस खो देते हैं, तो आपके फंड का नुकसान हो जाएगा, जब तक कि आप बैकअप नहीं लेते!</string>
   <string name="export_account_details_backup_options">बैकअप विकल्प</string>
   <string name="export_account_details_show_passphrase">Passphrase दिखाएँ</string>

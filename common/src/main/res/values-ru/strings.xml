@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Установка пароля зашифрует резервную копию Google. Его нужно будет ввести при восстановлении кошелька.\nМинимальная длина пароля - 6 символов.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Аутентифицировать</string>
   <string name="block_id">Хеш блока</string>
   <string name="buy_crypto_buy_xor_banner_title">Купить токен XOR</string>
@@ -83,6 +86,7 @@
   <string name="common_copied">Скопировано в буфер обмена</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Хорватский</string>
+  <string name="common_currencies">Токены</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Выполнено</string>
@@ -227,6 +231,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Недостаточно средств для оплаты комиссии</string>
+  <string name="explore_provide_and_earn">Предоставляйте ликвидность и получайте вознаграждения</string>
+  <string name="explore_swap_tokens_on_sora">Меняйте токены в сети SORA</string>
   <string name="export_account_details_backup_description">При потере доступа к этому устройству, ваши средства будут потеряны, если вы не сделаете резервную копию!</string>
   <string name="export_account_details_backup_options">Параметры резервного копирования</string>
   <string name="export_account_details_show_passphrase">Показать парольную фразу</string>

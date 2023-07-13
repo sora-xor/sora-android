@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">מחיר טוקן</string>
   <string name="asset_details_your_pools">%s המאגרים שלך</string>
   <string name="asset_to_send">נכס לשליחה</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">הגדרת סיסמה תצפין את גיבוי ה-Google שלך. יהיה עליך להזין אותה בעת שחזור הארנק שלך.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">לאמת</string>
   <string name="block_id">האש בלוק</string>
   <string name="buy_crypto_buy_xor_banner_title">קנה טוקן XOR</string>
@@ -83,6 +86,7 @@
   <string name="common_copied">הועתק ללוח</string>
   <string name="common_create_qr_request">צור בקשת QR</string>
   <string name="common_croatian">קרואטית</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">מחק</string>
   <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
@@ -226,6 +230,8 @@
   <string name="enter_password_incorect_title">סיסמה שגויה</string>
   <string name="enter_password_title">הזן סיסמה</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">אם תאבד את הגישה למכשיר הזה, הכספים שלך יאבדו, אלא אם תעשה גיבוי!</string>
   <string name="export_account_details_backup_options">אפשרויות גיבוי</string>
   <string name="export_account_details_show_passphrase">הצג את מילות המפתח</string>
