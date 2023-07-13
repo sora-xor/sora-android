@@ -46,6 +46,26 @@
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment" />
 
     <fragment
+        android:id="@+id/qrCodeFlow"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment" />
+
+    <fragment
+        android:id="@+id/poolDetailsFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.pooldetails.PoolDetailsFragment" />
+
+    <fragment
+        android:id="@+id/txListFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.txlist.TxListFragment" />
+
+    <fragment
+        android:id="@+id/liquidityRemoveFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveFragment" />
+
+    <fragment
+        android:id="@+id/transferAmountFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment" />
+
+    <fragment
         android:id="@+id/assetDetailsFragment"
         android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment" />
 
