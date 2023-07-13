@@ -83,6 +83,7 @@
   <string name="common_copied">הועתק ללוח</string>
   <string name="common_create_qr_request">צור בקשת QR</string>
   <string name="common_croatian">קרואטית</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">מחק</string>
   <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
@@ -226,6 +227,8 @@
   <string name="enter_password_incorect_title">סיסמה שגויה</string>
   <string name="enter_password_title">הזן סיסמה</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">אם תאבד את הגישה למכשיר הזה, הכספים שלך יאבדו, אלא אם תעשה גיבוי!</string>
   <string name="export_account_details_backup_options">אפשרויות גיבוי</string>
   <string name="export_account_details_show_passphrase">הצג את מילות המפתח</string>
