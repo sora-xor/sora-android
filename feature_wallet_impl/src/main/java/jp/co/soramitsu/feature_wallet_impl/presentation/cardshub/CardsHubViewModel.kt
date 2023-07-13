@@ -69,6 +69,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -88,6 +89,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -104,6 +106,7 @@ class CardsHubViewModel @Inject constructor(
     private val assetsRouter: AssetsRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val connectionManager: ConnectionManager,
+    private val soraCardInteractor: SoraCardInteractor,
     coroutineManager: CoroutineManager,
 ) : BaseViewModel(), WithProgress by progress {
 
@@ -118,6 +121,8 @@ class CardsHubViewModel @Inject constructor(
 
     private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
+
+    private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
         walletInteractor.pollSoraCardStatusIfPending()
@@ -183,6 +188,13 @@ class CardsHubViewModel @Inject constructor(
                     )
                 }
         }
+
+        soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
+            currentSoraCardContractData = createSoraCardContract(
+                userAvailableXorAmount = it.xorBalance.toDouble(),
+                isEnoughXorAvailable = it.enoughXor
+            )
+        }.launchIn(viewModelScope)
     }
 
     private fun mapKycStatus(kycStatus: String): String? {
@@ -323,11 +335,8 @@ class CardsHubViewModel @Inject constructor(
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
             } else {
-                viewModelScope.launch {
-                    _launchSoraCardSignIn.value = createSoraCardContract(
-                        userAvailableXorAmount = assetsInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
-                            .balance.transferable.toDouble()
-                    )
+                currentSoraCardContractData?.let { contractData ->
+                    _launchSoraCardSignIn.value = contractData
                 }
             }
         }

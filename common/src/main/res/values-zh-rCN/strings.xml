@@ -320,7 +320,7 @@
   <string name="polkaswap_farming_pool_share">您质押的流动池份额</string>
   <string name="polkaswap_farming_staked_for">质押了%s</string>
   <string name="polkaswap_farming_unstake_to_remove">要撤出流动性，您需要先解除质押</string>
-  <string name="polkaswap_info_text_1">Polkaswap 是由 SORA 社区维护。在使用 Polkaswap 功能之前，请查看 %%Polkaswap FAQ%% 和文档，其中包括有关 Polkaswap 操作原理的详细说明、Polkaswap 备忘录和服务条款以及隐私政策。这些文档对于安全和积极的用户体验至关重要。通过使用 Polkaswap，您承认您已阅读并理解这些文件。</string>
+  <string name="polkaswap_info_text_1">Polkaswap 是由 SORA 社区维护。在使用 Polkaswap 功能之前，请查看%% Polkaswap FAQ %% 和文档，其中包括有关 Polkaswap 操作原理%% 的详细说明、 Polkaswap %%备忘录和服务条款以%%及隐私政策。%%这些文档对于安全和积极的用户体验至关重要。通过使用 Polkaswap，您承认您已阅读并理解这些文件。</string>
   <string name="polkaswap_info_text_2">您还承认以下几点：</string>
   <string name="polkaswap_info_text_3">您全权负责遵守在您的法律管辖范围内可能适用于您对 Polkaswap 的特定使用的所有法律；</string>
   <string name="polkaswap_info_text_4">您需要了解Polkaswap当前版本是alpha版：它尚未经过完全测试，某些功能可能无法按设计执行；</string>

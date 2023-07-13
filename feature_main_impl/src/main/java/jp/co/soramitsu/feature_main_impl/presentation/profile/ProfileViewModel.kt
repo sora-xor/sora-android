@@ -52,6 +52,7 @@ import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -79,6 +80,7 @@ class ProfileViewModel @Inject constructor(
     private val selectNodeRouter: SelectNodeRouter,
     private val soraConfigManager: SoraConfigManager,
     private val assetsInteractor: AssetsInteractor,
+    private val soraCardInteractor: SoraCardInteractor,
     nodeManager: NodeManager,
 ) : BaseViewModel() {
 
@@ -96,6 +98,8 @@ class ProfileViewModel @Inject constructor(
 
     private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
+
+    private var currentSoraCardContractData: SoraCardContractData? = null
 
     private var soraCardInfo: SoraCardInformation? = null
         set(value) {
@@ -147,6 +151,13 @@ class ProfileViewModel @Inject constructor(
         walletInteractor.subscribeSoraCardInfo()
             .onEach { soraCardInfo = it }
             .launchIn(viewModelScope)
+
+        soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
+            currentSoraCardContractData = createSoraCardContract(
+                userAvailableXorAmount = it.xorBalance.toDouble(),
+                isEnoughXorAvailable = it.enoughXor
+            )
+        }.launchIn(viewModelScope)
     }
 
     fun showAccountList() {
@@ -168,11 +179,8 @@ class ProfileViewModel @Inject constructor(
     }.getOrNull() == null
 
     private fun showCardState() {
-        viewModelScope.launch {
-            _launchSoraCardSignIn.value = createSoraCardContract(
-                userAvailableXorAmount = assetsInteractor.getAssetOrThrow(SubstrateOptionsProvider.feeAssetId)
-                    .balance.transferable.toDouble()
-            )
+        currentSoraCardContractData?.let { contractData ->
+            _launchSoraCardSignIn.value = contractData
         }
     }
 
