@@ -44,6 +44,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON
+import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.ext.showOrHide
 import jp.co.soramitsu.feature_assets_impl.R
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
@@ -89,15 +90,15 @@ class AssetViewHolder(
 
     fun bind(asset: AssetSettingsState) {
         try {
-            assetIcon.load(asset.tokenIcon)
+            assetIcon.load(asset.token.iconUri())
         } catch (t: Throwable) {
             assetIcon.setImageResource(DEFAULT_ICON)
         }
-        title.text = asset.tokenName
+        title.text = asset.token.name
         amount.text = asset.assetAmount
 
         favoriteIcon.setImageResource(if (asset.favorite) R.drawable.ic_favorite_enabled else R.drawable.ic_favorite_disabled)
-        if (asset.hideAllowed) {
+        if (asset.token.isHidable) {
             favoriteIconClickable.setOnClickListener { v ->
                 if (v.isPressed) favoriteListener.invoke(asset)
             }
@@ -108,7 +109,7 @@ class AssetViewHolder(
         }
 
         visibilityIcon.setImageResource(if (asset.visible) R.drawable.ic_eye_enabled else R.drawable.ic_eye_disabled)
-        if (asset.hideAllowed) {
+        if (asset.token.isHidable) {
             visibilityIcon.setOnClickListener { v ->
                 if (v.isPressed) visibilityListener.invoke(asset)
             }
@@ -117,7 +118,7 @@ class AssetViewHolder(
             visibilityIcon.setOnClickListener(null)
             visibilityIcon.alpha = 0.5f
         }
-        dragIcon.showOrHide(!AssetHolder.isKnownAsset(asset.id))
+        dragIcon.showOrHide(!AssetHolder.isKnownAsset(asset.token.id))
     }
 }
 
@@ -126,7 +127,7 @@ object AssetsManagementAdapterDiffCallback : DiffUtil.ItemCallback<AssetSettings
         oldItem: AssetSettingsState,
         newItem: AssetSettingsState
     ): Boolean {
-        return oldItem.id == newItem.id
+        return oldItem.token.id == newItem.token.id
     }
 
     override fun areContentsTheSame(

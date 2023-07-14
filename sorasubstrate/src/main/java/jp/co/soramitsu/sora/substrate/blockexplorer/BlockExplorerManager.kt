@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.blockexplorer
 
 import androidx.room.withTransaction
+import java.math.BigInteger
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -66,9 +67,21 @@ class BlockExplorerManager @Inject constructor(
 
     private val tempApy = mutableListOf<SbApyInfo>()
 
+    private var assetsInfo: List<Pair<String, BigInteger>>? = null
+
     fun getTempApy(id: String) = tempApy.find {
         it.id == id
     }
+
+    suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, BigInteger>> =
+        assetsInfo ?: getAssetsInfoInternal(tokenIds).also {
+            assetsInfo = it
+        }
+
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> =
+        info.getAssetsInfo(tokenIds).map {
+            it.tokenId to BigInteger(it.liquidity)
+        }
 
     suspend fun updatePoolsSbApy(address: String) {
         updateSbApyInternal(address)

@@ -83,6 +83,7 @@
   <string name="common_copied">Gekopieerd naar het klembord</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Kroatisch</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Gedaan</string>
@@ -224,6 +225,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Niet genoeg fondsen voor transactiekosten</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Als u de toegang tot dit apparaat verliest, gaat uw geld verloren, tenzij u een back-up maakt!</string>
   <string name="export_account_details_backup_options">Back-up opties</string>
   <string name="export_account_details_show_passphrase">Toon passphrase</string>

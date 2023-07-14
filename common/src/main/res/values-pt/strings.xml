@@ -83,6 +83,7 @@
   <string name="common_copied">Copiado para a área de transferência</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Croata</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Concluído</string>
@@ -224,6 +225,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Fundos insuficientes para a taxa de transação</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
@@ -395,7 +398,7 @@
   <string name="referral_bond_button_title">Bond XOR</string>
   <string name="referral_enter_link_title">Enter referrer\'s link</string>
   <string name="referral_get_more_invitation_button_title">Get more invitations</string>
-  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\n\nYou can unbond your XOR at any time for unused invitations.</string>
+  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\nYou can unbond your XOR at any time for unused invitations.</string>
   <string name="referral_input_reward_title">Enter desired amount of invitations</string>
   <string name="referral_invitaion_link_title">Available invitations</string>
   <string name="referral_invitation_link">Invitation link</string>

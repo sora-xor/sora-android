@@ -30,32 +30,37 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.start
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.util.ext.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.FilledButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
+import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.BasicExploreCard
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-internal fun DiscoverScreen(
-    onAddLiquidityClicked: () -> Unit,
+internal fun StartScreen(
+    onCurrencyShowMore: () -> Unit,
+    onPoolShowMore: () -> Unit,
+    onTokenClicked: (String) -> Unit,
+    viewModel: StartScreenViewModel = hiltViewModel(),
 ) {
     Column(
         modifier = Modifier
@@ -63,56 +68,72 @@ internal fun DiscoverScreen(
             .padding(horizontal = Dimens.x2)
     ) {
         Text(
-            modifier = Modifier.padding(start = Dimens.x2, end = Dimens.x2, top = Dimens.x3, bottom = Dimens.x2),
-            text = stringResource(id = R.string.common_discover),
+            modifier = Modifier.padding(
+                start = Dimens.x2,
+                end = Dimens.x2,
+                top = Dimens.x3,
+                bottom = Dimens.x2
+            ),
+            text = stringResource(id = R.string.common_explore),
             style = MaterialTheme.customTypography.headline1,
             color = MaterialTheme.customColors.fgPrimary,
         )
-        ContentCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(Dimens.x3)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    text = stringResource(id = R.string.discovery_polkaswap_pools),
-                    style = MaterialTheme.customTypography.headline2,
-                    color = MaterialTheme.customColors.fgPrimary,
-                )
-                Text(
-                    modifier = Modifier
-                        .padding(top = Dimens.x2)
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    text = stringResource(id = R.string.discover_coming_soon),
-                    style = MaterialTheme.customTypography.paragraphM,
-                    color = MaterialTheme.customColors.fgSecondary,
-                )
-                FilledButton(
-                    modifier = Modifier
-                        .testTagAsId("AddLiquidity")
-                        .padding(top = Dimens.x2)
-                        .fillMaxWidth(),
-                    size = Size.Large,
-                    order = Order.PRIMARY,
-                    text = stringResource(id = R.string.add_liquidity_title),
-                    onClick = onAddLiquidityClicked,
+        StartScreenInternal(
+            viewModel.state.collectAsStateWithLifecycle().value,
+            onCurrencyShowMore,
+            onPoolShowMore,
+            onTokenClicked,
+        )
+    }
+}
+
+@Composable
+private fun StartScreenInternal(
+    state: EcoSystemTokensState,
+    onCurrencyShowMore: () -> Unit,
+    onPoolShowMore: () -> Unit,
+    onTokenClicked: (String) -> Unit,
+) {
+    BasicExploreCard(
+        title = stringResource(id = R.string.common_currencies),
+        description = stringResource(id = R.string.explore_swap_tokens_on_sora),
+        onShowMore = onCurrencyShowMore,
+        content = {
+            state.topTokens.forEach { pair ->
+                AssetItemEnumerated(
+                    modifier = Modifier.padding(vertical = Dimens.x1),
+                    assetState = pair.second,
+                    number = pair.first,
+                    testTag = "",
+                    onClick = onTokenClicked,
                 )
             }
-        }
-    }
+        },
+    )
+    Divider(
+        color = Color.Transparent,
+        modifier = Modifier.height(Dimens.x2)
+    )
+    BasicExploreCard(
+        title = stringResource(id = R.string.discovery_polkaswap_pools),
+        description = stringResource(id = R.string.explore_provide_and_earn),
+        onShowMore = onPoolShowMore,
+        content = {
+        },
+    )
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun DiscoverScreenPreview() {
-    DiscoverScreen {}
+    Column {
+        StartScreenInternal(
+            EcoSystemTokensState(
+                previewAssetItemCardStateList.mapIndexed { i, a ->
+                    i.toString() to a
+                }
+            ),
+            {}, {}, {},
+        )
+    }
 }

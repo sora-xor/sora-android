@@ -10,7 +10,7 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/invest_nav_graph"
+        android:id="@+id/explore_nav_graph"
         android:enabled="true"
         android:icon="@drawable/ic_global"
         android:title="@string/common_explore"
