@@ -117,7 +117,7 @@ dependencies {
     implementation navigationComposeDep
     implementation accompanistNavAnimationDep
     implementation sharedFeaturesBackupDep
-
+    implementation sharedFeaturesModelsDep
     debugImplementation composeToolingDep
 
     implementation daggerDep

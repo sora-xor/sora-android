@@ -343,6 +343,7 @@ class OnboardingViewModel @Inject constructor(
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
                 try {
+                    backupService.logout()
                     if (backupService.authorize(launcher)) {
                         onSuccessfulGoogleSignin(navController)
                     } else {

@@ -129,6 +129,10 @@ android {
             outputFileName = new File("Sora_" + variant.versionName + "_" + variant.flavorName + "_" + buildType.name + ".apk")
         }
     }
+
+    configurations{
+        all*.exclude module: 'bcprov-jdk15on'
+    }
 }
 
 hilt {
