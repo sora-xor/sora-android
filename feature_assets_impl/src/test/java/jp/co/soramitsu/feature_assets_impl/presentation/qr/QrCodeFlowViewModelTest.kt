@@ -32,57 +32,45 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.qr
 
-import android.graphics.Picture
+import android.graphics.Bitmap
 import android.graphics.drawable.PictureDrawable
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
-import org.mockito.kotlin.given
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
 import java.util.StringJoiner
 
-@RunWith(MockitoJUnitRunner::class)
 @OptIn(
     ExperimentalStdlibApi::class,
     ExperimentalCoroutinesApi::class
@@ -91,91 +79,75 @@ class QrCodeFlowViewModelTest {
 
     private lateinit var viewModel: QRCodeFlowViewModel
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = mockk<Uri>()
+    private val drawable = mockk<PictureDrawable>()
+    private val bitmap = mockk<Bitmap>()
 
     @Rule
     @JvmField
     val rule: TestRule = InstantTaskExecutorRule()
 
     @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @Mock
+    @MockK
     private lateinit var assetsInteractor: AssetsInteractor
 
-    @Mock
+    @MockK
     private lateinit var qrCodeInteractor: QrCodeInteractor
 
-    @Mock
+    @MockK
     private lateinit var coroutineManager: CoroutineManager
 
-    @Mock
+    @MockK
     private lateinit var qrCodeGenerator: QrCodeGenerator
 
-    @Mock
+    @MockK
     private lateinit var avatarGenerator: AccountAvatarGenerator
 
-    @Mock
+    @MockK
     private lateinit var clipboardManager: ClipboardManager
 
-    @Mock
-    private lateinit var numbersFormatter: NumbersFormatter
-
-    @Mock
+    @MockK
     private lateinit var resourceManager: ResourceManager
 
-    @Mock
+    @MockK
     private lateinit var fileManager: FileManager
 
-    @Mock
+    @MockK
     private lateinit var walletRouter: WalletRouter
+
+    private val numbersFormatter = NumbersFormatter()
 
     @Before
     fun init() = runTest {
+        mockkStatic(Uri::parse)
+        every { Uri.parse(any()) } returns mockedUri
         val testAssetsList = testAssetsList()
-
         val testAssetsListFlow = testAssetsListFlow(testAssetsList)
-
         val testSoraAccount = testSoraAccount()
+        every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
+        every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns testAssetsListFlow
+//        mockkStatic(::mapAssetsToCardState)
+//        every {
+//            mapAssetsToCardState(
+//                assets = testAssetsList,
+//                nf = numbersFormatter,
+//                precision = AssetHolder.ROUNDING
+//            )
+//        } returns testAssetItemsCardStatesList(testAssetsList)
+        coEvery { assetsInteractor.getCurSoraAccount() } returns testSoraAccount
+        coEvery { assetsInteractor.getPublicKeyHex(any()) } returns "this is sor public hex key"
+        every { avatarGenerator.createAvatar(any(), any()) } returns drawable
+        coEvery { qrCodeInteractor.createQrInput(any(), any(), any(), any(), any()) } returns "qr string"
+        every { qrCodeGenerator.generateQrBitmap(any(), any()) } returns bitmap
+        every { walletRouter.showValTransferAmount(any(), any(), any()) } returns Unit
+        every { clipboardManager.addToClipboard(any(), any()) } returns Unit
 
-        val testAvatarDrawable = testAvatarDrawable()
-
-        given(
-            methodCall = coroutineManager
-                .io
-        ).willReturn(this.coroutineContext[CoroutineDispatcher]!!)
-
-        given(
-            methodCall = assetsInteractor
-                .subscribeAssetsActiveOfCurAccount()
-        ).willReturn(testAssetsListFlow)
-
-        mockkStatic(::mapAssetsToCardState)
-
-        every {
-            mapAssetsToCardState(
-                assets = testAssetsList,
-                nf = numbersFormatter,
-                precision = AssetHolder.ROUNDING
-            )
-        } returns testAssetItemsCardStatesList(testAssetsList)
-
-        given(
-            methodCall = assetsInteractor
-                .getCurSoraAccount()
-        ).willReturn(testSoraAccount)
-
-        given(
-            methodCall = assetsInteractor
-                .getPublicKeyHex(any())
-        ).willReturn("this is sor public hex key")
-
-        given(
-            methodCall = avatarGenerator
-                .createAvatar(any(), any())
-        ).willReturn(testAvatarDrawable)
-
-        QRCodeFlowViewModel(
+        viewModel = QRCodeFlowViewModel(
             interactor = assetsInteractor,
             qrCodeInteractor = qrCodeInteractor,
             coroutineManager = coroutineManager,
@@ -186,19 +158,16 @@ class QrCodeFlowViewModelTest {
             resourceManager = resourceManager,
             fileManager = fileManager,
             walletRouter = walletRouter,
-            isLaunchedFromSoraCard = false
-        ).apply { viewModel = this }
+            isLaunchedFromSoraCard = false,
+        )
     }
-
-
 
     @Test
     fun `WHEN user opens confirmation screen EXPECT data loaded equals to data from request screen`() =
         runTest {
-            viewModel.onLoadRequestConfirmScreenDataAgainClick()
-
             advanceUntilIdle()
-
+            viewModel.onLoadRequestConfirmScreenDataAgainClick()
+            advanceUntilIdle()
             Assert.assertEquals(
                 viewModel.requestTokenByQrScreenState.recipientAddressHeader,
                 viewModel.requestTokenConfirmScreenState.userAddressTitle
@@ -230,48 +199,35 @@ class QrCodeFlowViewModelTest {
             )
         }
 
-
-
     @Test
     fun `WHEN user tries to copy user address EXPECT clipboard manager is invoked`() =
         runTest {
+            advanceUntilIdle()
             viewModel.onUserAddressClickInReceiveScreen()
-
-            verify(
-                mock = clipboardManager,
-                times(1)
-            ).addToClipboard(any(), any())
-
+            advanceUntilIdle()
+            verify(exactly = 1) { clipboardManager.addToClipboard(any(), any()) }
             viewModel.onUserAddressClickInRequestConfirmScreen()
-
-            verify(
-                mock = clipboardManager,
-                times(2)
-            ).addToClipboard(any(), any())
+            advanceUntilIdle()
+            verify(exactly = 2) { clipboardManager.addToClipboard(any(), any()) }
         }
-
-
 
     @Test
     fun `WHEN user has selected assets EXPECT the asset to be chosen in requestTokenByQrScreen`() =
         runTest {
-            val assetInUse = TestAssets.valAsset(balance = Big100)
-
-            viewModel.onSelectToken(assetInUse.token.id)
-
             advanceUntilIdle()
-
+            val assetInUse = TestAssets.valAsset(balance = Big100)
+            viewModel.onSelectToken(assetInUse.token.id)
+            advanceUntilIdle()
             Assert.assertEquals(
                 assetInUse.token.id,
                 viewModel.requestTokenByQrScreenState.assetAmountInputState?.token?.id
             )
         }
 
-
-
     @Test
     fun `WHEN user has scanned a Qr code EXPECT user is sent to Transfer screen`() =
         runTest {
+            advanceUntilIdle()
             val recipientId = "recipientId"
             val tokenId = "tokenId"
             val amount = "123"
@@ -280,65 +236,28 @@ class QrCodeFlowViewModelTest {
                 userAddress = recipientId,
                 feeId = tokenId
             )
-
-            given(
-                methodCall = qrCodeInteractor.processQrResult(
-                    qrCodeDecodingResult = qrCodeDataWithoutAmountInUse
-                )
-            ).willReturn(
-                Triple(
-                    recipientId,
-                    tokenId,
-                    null
-                )
+            coEvery { qrCodeInteractor.processQrResult(qrCodeDataWithoutAmountInUse) } returns Triple(
+                recipientId,
+                tokenId,
+                null,
             )
-
             viewModel.onReceiveQRCodeScanUriResult(qrCodeDataWithoutAmountInUse)
-
             advanceUntilIdle()
-
-            verify(
-                mock = walletRouter,
-                times(1)
-            ).showValTransferAmount(
-                recipientId = recipientId,
-                assetId = tokenId,
-                initSendAmount = null
-            )
-
+            verify(exactly = 1) { walletRouter.showValTransferAmount(recipientId, tokenId, null) }
             val qrCodeDataWithAmountInUse = testQrCodeData(
                 userAddress = recipientId,
                 feeId = tokenId,
                 amount = amount
             )
-
-            given(
-                methodCall = qrCodeInteractor.processQrResult(
-                    qrCodeDecodingResult = qrCodeDataWithAmountInUse
-                )
-            ).willReturn(
-                Triple(
-                    recipientId,
-                    tokenId,
-                    amount
-                )
+            coEvery { qrCodeInteractor.processQrResult(qrCodeDataWithAmountInUse) } returns Triple(
+                recipientId,
+                tokenId,
+                amount,
             )
-
             viewModel.onReceiveQRCodeScanUriResult(qrCodeDataWithAmountInUse)
-
             advanceUntilIdle()
-
-            verify(
-                mock = walletRouter,
-                times(1)
-            ).showValTransferAmount(
-                recipientId = recipientId,
-                assetId = tokenId,
-                initSendAmount = amount
-            )
+            verify(exactly = 1) { walletRouter.showValTransferAmount(recipientId, tokenId, amount) }
         }
-
-
 
     private fun testAssetsListFlow(
         assetsList: List<Asset>? = null
@@ -354,29 +273,6 @@ class QrCodeFlowViewModelTest {
             TestAssets.xorAsset(balance = Big100),
             TestAssets.valAsset(balance = Big100)
         )
-
-    private fun testAssetItemsCardStatesList(
-        testAssetsList: List<Asset>
-    ) = testAssetsList.map { testAsset ->
-        AssetItemCardState(
-            tokenIcon = mockedUri,
-            tokenId = testAsset.token.id,
-            tokenName = testAsset.token.name,
-            tokenSymbol = testAsset.token.symbol,
-            assetAmount = testAsset.token.printBalance(
-                balance = testAsset.balance.transferable,
-                nf = numbersFormatter,
-                precision = AssetHolder.ROUNDING
-            ),
-            assetFiatAmount = testAsset.printFiat(nf = numbersFormatter),
-            fiatChange = testAsset.token.printFiatChange(nf = numbersFormatter)
-        )
-    }
-
-    private fun testAvatarDrawable(picture: Picture? = null) =
-        picture?.let {
-            PictureDrawable(it)
-        } ?: PictureDrawable(Picture())
 
     private fun testSoraAccount(
         substrateAddress: String? = null,
@@ -404,5 +300,4 @@ class QrCodeFlowViewModelTest {
 
         return@with this.toString()
     }
-
 }

@@ -263,6 +263,16 @@ class AssetsRepositoryImpl @Inject constructor(
 
     override suspend fun tokensList(): List<Token> = tokensDeferred.await()
 
+    override fun subscribeTokensList(): Flow<List<Token>> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val tokens = db.assetDao().subscribeTokens(selectedCurrency.code).map { list ->
+            list.map {
+                assetLocalToAssetMapper.map(it)
+            }
+        }
+        emitAll(tokens)
+    }
+
     private suspend fun updateTokens() {
         val tokens: List<TokenInfoDto> = substrateCalls.fetchAssetsList()
         whitelistTokensManager.updateWhitelistStorage()

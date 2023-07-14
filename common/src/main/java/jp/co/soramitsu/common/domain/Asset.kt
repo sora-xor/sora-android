@@ -120,5 +120,10 @@ fun List<Token>.getByIdOrEmpty(id: String): Token =
 
 fun Token.iconUri(): Uri = this.iconFile ?: DEFAULT_ICON_URI
 
+fun Token.isMatchFilter(filter: String): Boolean =
+    name.lowercase().contains(filter.lowercase()) ||
+        symbol.lowercase().contains(filter.lowercase()) ||
+        id.lowercase().contains(filter.lowercase())
+
 val DEFAULT_ICON: Int = R.drawable.ic_token_default
 val DEFAULT_ICON_URI = Uri.parse("file:///android_asset/ic_token_default.png")

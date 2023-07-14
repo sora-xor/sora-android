@@ -83,6 +83,7 @@
   <string name="common_copied">クリップボードにコピーしました</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">クロアチア語</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
   <string name="common_discover">発見</string>
   <string name="common_done">終了</string>
@@ -223,6 +224,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ネットワーク手数料のための資金が不足しています</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">このデバイスへのアクセスを失った場合、バックアップしない限り、資金は失われます！</string>
   <string name="export_account_details_backup_options">バックアップのオプション</string>
   <string name="export_account_details_show_passphrase">パスフレーズを表示</string>

@@ -30,20 +30,9 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_ecosystem_impl.presentation
 
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
-import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-
-@HiltViewModel
-class DiscoverViewModel @Inject constructor(
-    private val polkaswapRouter: PolkaswapRouter,
-) : BaseViewModel() {
-
-    fun onAddLiquidityClick() {
-        polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
+internal object ExploreRoutes {
+    const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
+    const val ALL_CURRENCIES = "jp.co.soramitsu.feature_ecosystem_impl.all_currencies"
 }

@@ -34,9 +34,14 @@ package jp.co.soramitsu.common_wallet.presentation.compose.states
 
 import android.net.Uri
 import androidx.annotation.StringRes
+import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.SoraCardInformation
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
 import jp.co.soramitsu.common.domain.printFiatChange
@@ -75,6 +80,23 @@ data class AssetItemCardState(
     val fiatChange: String,
 )
 
+fun mapTokensToCardState(
+    tokens: List<Pair<Token, BigDecimal?>>,
+    nf: NumbersFormatter,
+): List<AssetItemCardState> {
+    return tokens.mapIndexed { index, pair ->
+        AssetItemCardState(
+            tokenIcon = pair.first.iconUri(),
+            tokenName = pair.first.name,
+            tokenId = pair.first.id,
+            assetAmount = pair.second?.formatFiatSuffix().orEmpty(),
+            tokenSymbol = "",
+            assetFiatAmount = pair.first.formatFiatOrEmpty(pair.first.fiatPrice, nf, true),
+            fiatChange = pair.first.printFiatChange(nf),
+        )
+    }
+}
+
 fun mapAssetsToCardState(
     assets: List<Asset>,
     nf: NumbersFormatter,
@@ -110,3 +132,35 @@ data class BuyXorState(
 class FavoritePoolsCardState(
     val state: PoolsListState,
 ) : AssetCardState
+
+val assetItemCardStateEmpty =
+    AssetItemCardState(
+        tokenName = "",
+        tokenId = "",
+        tokenIcon = DEFAULT_ICON_URI,
+        assetAmount = "",
+        tokenSymbol = "",
+        assetFiatAmount = "",
+        fiatChange = "",
+    )
+
+val previewAssetItemCardStateList = listOf(
+    AssetItemCardState(
+        tokenName = "some qwe",
+        tokenId = "id 01",
+        tokenIcon = DEFAULT_ICON_URI,
+        assetAmount = "13.3 XOR",
+        tokenSymbol = "XOR",
+        assetFiatAmount = "$45.9",
+        fiatChange = "+34%",
+    ),
+    AssetItemCardState(
+        tokenName = "some asd",
+        tokenId = "id 01",
+        tokenIcon = DEFAULT_ICON_URI,
+        assetAmount = "1238.3 VAL",
+        tokenSymbol = "VAL",
+        assetFiatAmount = "$0.09",
+        fiatChange = "-0.12%",
+    ),
+)

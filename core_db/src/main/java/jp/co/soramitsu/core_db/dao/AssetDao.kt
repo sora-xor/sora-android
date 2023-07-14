@@ -190,6 +190,16 @@ interface AssetDao {
     )
     suspend fun getTokensWithFiatOfCurrency(isoCode: String): List<TokenWithFiatLocal>
 
+    @Query(
+        """
+        $joinFiatToken where tokens.whitelistName=:whitelist order by tokens.symbol
+    """
+    )
+    fun subscribeTokens(
+        isoCode: String,
+        whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME,
+    ): Flow<List<TokenWithFiatLocal>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTokenListIgnore(tokens: List<TokenLocal>)
 

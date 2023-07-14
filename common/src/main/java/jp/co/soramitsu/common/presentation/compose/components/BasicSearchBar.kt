@@ -49,8 +49,8 @@ import jp.co.soramitsu.ui_core.theme.customColors
 fun BasicSearchBar(
     backgroundColor: Color = MaterialTheme.customColors.bgSurface,
     placeholder: String,
-    action: String,
-    onAction: () -> Unit,
+    action: String?,
+    onAction: (() -> Unit)?,
     onClear: () -> Unit,
     onSearch: (String) -> Unit,
     onNavigate: () -> Unit
