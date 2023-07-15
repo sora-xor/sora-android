@@ -137,7 +137,7 @@ class CardsHubViewModel @Inject constructor(
                 .flatMapLatest { data ->
                     state =
                         state.copy(curAccount = data.first.accountTitle())
-                    val flows = data.second.map { cardHub ->
+                    val flows = data.second.filter { it.visibility }.map { cardHub ->
                         when (cardHub.cardType) {
                             CardHubType.ASSETS -> {
                                 assetsInteractor.subscribeAssetsFavoriteOfAccount(data.first)
@@ -273,6 +273,10 @@ class CardsHubViewModel @Inject constructor(
 
     fun onAccountClick() {
         mainRouter.showAccountList()
+    }
+
+    fun onEditViewClick() {
+        router.openEditCardsHub()
     }
 
     @Suppress("UNCHECKED_CAST")

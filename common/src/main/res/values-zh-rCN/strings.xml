@@ -217,6 +217,9 @@
   <string name="details_sent_to_pool">发送到池中</string>
   <string name="discover_coming_soon">SORA开发人员目前正在开发一个功能，该功能将显示在Polkaswap上活跃的所有池子的完整列表。\n\n现在，如果您想创建/添加到池中，请使用下面的按钮。</string>
   <string name="discovery_polkaswap_pools">Polkaswap池</string>
+  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
+  <string name="edit_cards_screen_edit_view">Edit View</string>
+  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
   <string name="empty_recent_recipients">没有最近的接收人。\n已发送的地址将在此处显示。</string>
   <string name="empty_recent_recipients_2">接收人将出现在此处</string>
   <string name="enter_backup_password_title">输入备份密码</string>

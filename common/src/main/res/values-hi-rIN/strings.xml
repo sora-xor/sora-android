@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">टोकन मूल्य</string>
   <string name="asset_details_your_pools">आपके %s पूल</string>
   <string name="asset_to_send">भेजने के लिए संपत्ति</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">प्रमाणित करें</string>
   <string name="block_id">ब्लॉक हैश</string>
   <string name="buy_crypto_buy_xor_banner_title">XOR टोकन खरीदें</string>
@@ -218,6 +221,9 @@
   <string name="details_sent_to_pool">पूल में भेजा गया</string>
   <string name="discover_coming_soon">SORA Devs वर्तमान में एक सुविधा पर काम कर रहे हैं जो पोल्कास्वैप पर सक्रिय पूल की पूरी सूची प्रदर्शित करेगा।\n\nअभी के लिए, यदि आप पूल बनाना / जोड़ना चाहते हैं तो कृपया नीचे दिए गए बटन का उपयोग करें।</string>
   <string name="discovery_polkaswap_pools">पोलकस्वैप पूल</string>
+  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
+  <string name="edit_cards_screen_edit_view">Edit View</string>
+  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
   <string name="empty_recent_recipients">हाल ही का कोई प्राप्तकर्ता नहीं।\n भेजे गए पते यहां दिखाए जाएंगे।</string>
   <string name="empty_recent_recipients_2">प्राप्तकर्ता यहां दिखाई देंगे</string>
   <string name="enter_backup_password_title">Enter backup password</string>

@@ -218,6 +218,9 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
+  <string name="edit_cards_screen_edit_view">Edit View</string>
+  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
   <string name="empty_recent_recipients">Sem destinatários recentes.\nOs endereços enviados serão mostrados aqui.</string>
   <string name="empty_recent_recipients_2">Os destinatários aparecerão aqui</string>
   <string name="enter_backup_password_title">Enter backup password</string>

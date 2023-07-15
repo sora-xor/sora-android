@@ -218,6 +218,9 @@
   <string name="details_sent_to_pool">Enviar al par de liquidez</string>
   <string name="discover_coming_soon">Los desarrolladores de SORA están trabajando actualmente en una función que mostrará una lista completa de los pares de liquidez que están activos en Polkaswap\n\nPor ahora, si desea crear/agregar un par, use el botón a continuación.</string>
   <string name="discovery_polkaswap_pools">Liquidez Polkaswap</string>
+  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
+  <string name="edit_cards_screen_edit_view">Edit View</string>
+  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
   <string name="empty_recent_recipients">No hay destinatarios recientes.\nLas direcciones que se han enviado serán mostradas aquí</string>
   <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="enter_backup_password_title">Enter backup password</string>
