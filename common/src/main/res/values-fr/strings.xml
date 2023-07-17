@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Prix du jeton</string>
   <string name="asset_details_your_pools">Vos %s pool(s)</string>
   <string name="asset_to_send">Actif à envoyer</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Authentification</string>
   <string name="block_id">Bloc de hachage</string>
   <string name="buy_crypto_buy_xor_banner_title">Acheter des jetons XOR</string>
@@ -85,10 +88,12 @@
   <string name="common_croatian">Croate</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Supprimer</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Découvrir</string>
   <string name="common_done">Terminé</string>
   <string name="common_dutch">Néerlandais</string>
   <string name="common_edit">Modifier</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Anglais</string>
   <string name="common_enter_amount">Entrer le montant</string>
   <string name="common_error_ambiguous_result">Résultat ambigu</string>
@@ -218,6 +223,7 @@
   <string name="details_sent_to_pool">Envoyé dans le pool</string>
   <string name="discover_coming_soon">Les développeurs de SORA travaillent actuellement sur une fonctionnalité permettant d\'afficher la liste de tous les pools actives sur Polkaswap.\n\nPour le moment, si vous souhaitez créer ou ajouter des liquidités à un pool, veuillez utiliser le bouton ci-dessous.</string>
   <string name="discovery_polkaswap_pools">Pools de Polkaswap</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Aucun destinataire récent.\nLes adresses utilisées seront affichées ici.</string>
   <string name="empty_recent_recipients_2">Les destinataires apparaîtront ici</string>
   <string name="enter_backup_password_title">Entrez le mot de passe de la sauvegarde</string>

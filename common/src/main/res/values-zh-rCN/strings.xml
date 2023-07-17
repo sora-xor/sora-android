@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">代币价格</string>
   <string name="asset_details_your_pools">你的%s池子</string>
   <string name="asset_to_send">待发送的资产</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。\n最小密码长度为6个字符。</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">身份验证</string>
   <string name="block_id">区块哈希</string>
   <string name="buy_crypto_buy_xor_banner_title">购买XOR代币</string>
@@ -85,10 +88,12 @@
   <string name="common_croatian">克罗地亚语</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">删除</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">发现</string>
   <string name="common_done">已完成</string>
   <string name="common_dutch">荷兰语</string>
   <string name="common_edit">编辑</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">英语</string>
   <string name="common_enter_amount">输入金额</string>
   <string name="common_error_ambiguous_result">结果不明确</string>
@@ -217,6 +222,7 @@
   <string name="details_sent_to_pool">发送到池中</string>
   <string name="discover_coming_soon">SORA开发人员目前正在开发一个功能，该功能将显示在Polkaswap上活跃的所有池子的完整列表。\n\n现在，如果您想创建/添加到池中，请使用下面的按钮。</string>
   <string name="discovery_polkaswap_pools">Polkaswap池</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">没有最近的接收人。\n已发送的地址将在此处显示。</string>
   <string name="empty_recent_recipients_2">接收人将出现在此处</string>
   <string name="enter_backup_password_title">输入备份密码</string>

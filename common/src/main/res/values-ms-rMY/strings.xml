@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Harga token</string>
   <string name="asset_details_your_pools">Kolam %s anda</string>
   <string name="asset_to_send">Aset untuk dihantar</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Menetapkan kata laluan akan menyulitkan sandaran Google anda. Anda perlu memasukkannya semasa memulihkan dompet anda.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Mengesahkan</string>
   <string name="block_id">Sekat hash</string>
   <string name="buy_crypto_buy_xor_banner_title">Beli token XOR</string>
@@ -85,10 +88,12 @@
   <string name="common_croatian">Bahasa Croatia</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Padam</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Menemui</string>
   <string name="common_done">Selesai</string>
   <string name="common_dutch">Belanda</string>
   <string name="common_edit">Sunting</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Bahasa Inggeris</string>
   <string name="common_enter_amount">Masukkan amaun</string>
   <string name="common_error_ambiguous_result">Keputusan tidak jelas</string>
@@ -217,6 +222,7 @@
   <string name="details_sent_to_pool">Dihantar ke kolam</string>
   <string name="discover_coming_soon">Pembangun SORA sedang mengusahakan ciri yang akan memaparkan senarai penuh kumpulan yang aktif di Polkaswap. \n\n Buat masa ini, jika anda ingin membuat/menambah pada kolam sila gunakan butang di bawah.</string>
   <string name="discovery_polkaswap_pools">Kolam Polkaswap</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Tiada penerima terkini.\nAlamat yang dihantar akan ditunjukkan di sini.</string>
   <string name="empty_recent_recipients_2">Penerima akan muncul di sini</string>
   <string name="enter_backup_password_title">Masukkan kata laluan sandaran</string>

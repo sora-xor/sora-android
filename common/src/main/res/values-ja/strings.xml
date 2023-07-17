@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">トークン価格</string>
   <string name="asset_details_your_pools">%s プール</string>
   <string name="asset_to_send">送信するアセット</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">認証する</string>
   <string name="block_id">ブロックのハッシュ</string>
   <string name="buy_crypto_buy_xor_banner_title">XORトークンの購入</string>
@@ -85,10 +88,12 @@
   <string name="common_croatian">クロアチア語</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">発見</string>
   <string name="common_done">終了</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">編集</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">英語</string>
   <string name="common_enter_amount">金額を入力</string>
   <string name="common_error_ambiguous_result">あいまいな結果</string>
@@ -217,6 +222,7 @@
   <string name="details_sent_to_pool">プールに送信されました</string>
   <string name="discover_coming_soon">SORAの開発者は現在、Polkaswapでアクティブになっているプールの全リストを表示する機能の開発に取り組んでいます。\n\n当面の間、プールの作成・追加を希望される方は、以下のボタンからお願いします。</string>
   <string name="discovery_polkaswap_pools">Polkaswapのプール</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">最近の受信者はありません。\n送信したアドレスがここに表示されます。</string>
   <string name="empty_recent_recipients_2">受信者はここに表示されます</string>
   <string name="enter_backup_password_title">Enter backup password</string>

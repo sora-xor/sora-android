@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">代幣價格</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">認證</string>
   <string name="block_id">區塊哈希</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
@@ -85,10 +88,12 @@
   <string name="common_croatian">克羅地亞語</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">完成</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">編輯</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">英語</string>
   <string name="common_enter_amount">輸入金額</string>
   <string name="common_error_ambiguous_result">結果不明確</string>
@@ -217,6 +222,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">沒有最近的收件人。\n已發送的地址將在此處顯示。</string>
   <string name="empty_recent_recipients_2">收件人將出現在此處</string>
   <string name="enter_backup_password_title">Enter backup password</string>
