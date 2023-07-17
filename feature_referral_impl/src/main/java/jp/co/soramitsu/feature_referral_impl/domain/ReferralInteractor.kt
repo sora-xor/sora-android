@@ -115,7 +115,8 @@ class ReferralInteractor @Inject constructor(
             keypair,
             soraAccount.substrateAddress,
             amount,
-            getFeeToken()
+            getFeeToken(),
+            calcBondFee(),
         )
 
         transactionHistoryRepository.saveTransaction(result)
@@ -130,7 +131,8 @@ class ReferralInteractor @Inject constructor(
             keypair,
             soraAccount.substrateAddress,
             amount,
-            getFeeToken()
+            getFeeToken(),
+            calcBondFee(),
         )
 
         transactionHistoryRepository.saveTransaction(result)
