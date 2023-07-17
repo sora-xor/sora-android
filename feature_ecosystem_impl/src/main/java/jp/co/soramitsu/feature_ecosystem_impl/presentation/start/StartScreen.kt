@@ -131,7 +131,8 @@ private fun DiscoverScreenPreview() {
             EcoSystemTokensState(
                 previewAssetItemCardStateList.mapIndexed { i, a ->
                     i.toString() to a
-                }
+                },
+                "",
             ),
             {}, {}, {},
         )

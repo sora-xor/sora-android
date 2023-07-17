@@ -47,15 +47,16 @@ import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 fun BasicSearchBar(
+    init: String = "",
     backgroundColor: Color = MaterialTheme.customColors.bgSurface,
     placeholder: String,
     action: String?,
     onAction: (() -> Unit)?,
     onClear: () -> Unit,
     onSearch: (String) -> Unit,
-    onNavigate: () -> Unit
+    onNavigate: () -> Unit,
 ) {
-    val searchValue = remember { mutableStateOf(TextFieldValue("")) }
+    val searchValue = remember { mutableStateOf(TextFieldValue(init)) }
     SearchBar(
         backgroundColor = backgroundColor,
         elevation = 0.dp,
