@@ -504,11 +504,12 @@
   <string name="sora_card_buy_xor_with_eur">شراء XOR باليورو</string>
   <string name="sora_card_description">احصل على حساب Euro IBAN وبطاقة خصم ماستركارد متصلة بمحفظة SORA الخاصة بك</string>
   <string name="sora_card_free_card_issuance">اصدار بطاقة مجاني</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">أو 12 € رسوم الطلب</string>
   <string name="sora_card_free_card_issuance_conditions_xor">إذا كنت تحتفظ أو تشارك أو توفر السيولة لما لا يقل عن 100 يورو من XOR في حساب SORA الخاص بك</string>
   <string name="sora_card_get_more_xor">احصل على المزيد من XOR</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">لا مزيد من المحاولات المجانية</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">View details</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">مبادلة العملات المشفرة ب XOR</string>
   <string name="sora_card_title">قم بتعبئة بطاقة SORA باستخدام العملات الورقية أو المشفرة وادفع عبر الإنترنت أو في المتجر أو السحب من ماكينة الصراف الآلي</string>
