@@ -49,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.presentation.compose.components.BasicSearchBar
 import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
+import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -117,7 +118,11 @@ private fun ColumnScope.AllCurrenciesInternal(
 private fun PreviewAllCurrenciesInternal() {
     Column(modifier = Modifier.fillMaxSize()) {
         AllCurrenciesInternal(
-            state = EcoSystemTokensState(emptyList()),
+            state = EcoSystemTokensState(
+                previewAssetItemCardStateList.mapIndexed { q, w ->
+                    q.toString() to w
+                }
+            ),
             {}, {}, {}, {},
         )
     }

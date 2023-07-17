@@ -30,43 +30,13 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.data.mappers
+package jp.co.soramitsu.core_db.model
 
-import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
-import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
+import androidx.room.Embedded
 
-object PoolLocalMapper {
-
-    fun mapLocal(poolLocal: UserPoolJoinedLocal, baseToken: Token, token: Token): PoolData {
-        val basePooled = PolkaswapFormulas.calculatePooledValue(
-            poolLocal.basicPoolLocal.reserveBase,
-            poolLocal.userPoolLocal.poolProvidersBalance,
-            poolLocal.basicPoolLocal.totalIssuance,
-        )
-        val secondPooled = PolkaswapFormulas.calculatePooledValue(
-            poolLocal.basicPoolLocal.reserveTarget,
-            poolLocal.userPoolLocal.poolProvidersBalance,
-            poolLocal.basicPoolLocal.totalIssuance,
-        )
-        val share = PolkaswapFormulas.calculateShareOfPool(
-            poolLocal.userPoolLocal.poolProvidersBalance,
-            poolLocal.basicPoolLocal.totalIssuance,
-        )
-        val strategicBonusApy = poolLocal.basicPoolLocal.sbApy?.times(100)
-        return PoolData(
-            token,
-            baseToken,
-            basePooled,
-            poolLocal.basicPoolLocal.reserveBase,
-            secondPooled,
-            poolLocal.basicPoolLocal.reserveTarget,
-            strategicBonusApy,
-            share.toDouble(),
-            poolLocal.basicPoolLocal.totalIssuance,
-            poolLocal.userPoolLocal.poolProvidersBalance,
-            poolLocal.userPoolLocal.favorite,
-        )
-    }
-}
+data class UserPoolJoinedLocal(
+    @Embedded
+    val userPoolLocal: UserPoolLocal,
+    @Embedded
+    val basicPoolLocal: BasicPoolLocal,
+)

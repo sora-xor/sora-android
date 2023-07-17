@@ -83,8 +83,8 @@ class BlockExplorerManager @Inject constructor(
             it.tokenId to BigInteger(it.liquidity)
         }
 
-    suspend fun updatePoolsSbApy(address: String) {
-        updateSbApyInternal(address)
+    suspend fun updatePoolsSbApy() {
+        updateSbApyInternal()
     }
 
     suspend fun updateFiat() {
@@ -114,9 +114,7 @@ class BlockExplorerManager @Inject constructor(
         soraCoin.price.toDoubleNan()
     }.getOrNull()
 
-    private suspend fun updateSbApyInternal(
-        address: String,
-    ) {
+    private suspend fun updateSbApyInternal() {
         runCatching {
             val response = info.getSpApy()
             tempApy.clear()
@@ -124,7 +122,7 @@ class BlockExplorerManager @Inject constructor(
             db.withTransaction {
                 response.forEach { info ->
                     db.poolDao()
-                        .updateSbApyByReservesAccount(info.sbApy?.toBigDecimal(), info.id, address)
+                        .updateSbApyByReservesAccount(info.sbApy, info.id)
                 }
             }
         }

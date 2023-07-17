@@ -49,7 +49,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.calculatePooledValue
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
-import jp.co.soramitsu.core_db.model.PoolLocal
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper
@@ -154,12 +154,12 @@ class PolkaswapRepositoryImpl @Inject constructor(
             )
         }
         // pools
-        val pools = mutableListOf<PoolLocal>()
+        val pools = mutableListOf<UserPoolJoinedLocal>()
         val tokensIds = wsConnection.getUserPoolsTokenIds(address)
-        val poolsLocal = db.poolDao().getPools(address).first()
+        val poolsLocal = db.poolDao().getPoolsList(address)
         var count = poolsLocal.size
         val poolsPositionAndFavorite = poolsLocal.associate {
-            (it.assetId + it.assetIdBase) to (it.sortOrder to it.favorite)
+            (it.userPoolLocal.userTokenIdTarget + it.userPoolLocal.userTokenIdBase) to (it.userPoolLocal.sortOrder to it.userPoolLocal.favorite)
         }
         tokensIds.forEach { pair ->
             val xorPrecision =
@@ -193,7 +193,10 @@ class PolkaswapRepositoryImpl @Inject constructor(
                                         poolDataDto.reservesAccount,
                                     )
 
-                                pools.add(poolLocal)
+                                pools.add(UserPoolJoinedLocal(
+                                    userPoolLocal = ,
+                                    basicPoolLocal = ,
+                                ))
                             }
                     }
                 }
@@ -210,14 +213,14 @@ class PolkaswapRepositoryImpl @Inject constructor(
         tokenId: String,
         baseTokenId: String,
         address: String
-    ): BigDecimal? {
-        var result = db.poolDao().getPoolOf(tokenId, baseTokenId, address)?.strategicBonusApy
+    ): Double? {
+        var result = db.poolDao().getPoolOf(tokenId, baseTokenId, address)?.basicPoolLocal?.sbApy
         if (result != null) return result
-        result = blockExplorerManager.getTempApy(tokenId)?.sbApy?.toBigDecimal()
+        result = blockExplorerManager.getTempApy(tokenId)?.sbApy
         if (result != null) return result
         return wsConnection.getPoolReserveAccount(baseTokenId, tokenId.fromHex())?.let {
             val id = runtimeManager.toSoraAddress(it)
-            blockExplorerManager.getTempApy(id)?.sbApy?.toBigDecimal()
+            blockExplorerManager.getTempApy(id)?.sbApy
         }
     }
 
@@ -327,13 +330,13 @@ class PolkaswapRepositoryImpl @Inject constructor(
 
     private suspend fun mapPoolLocalToData(
         fiatCurrencyLocal: SoraCurrency,
-        poolLocal: PoolLocal
+        poolLocal: UserPoolJoinedLocal,
     ): PoolData {
         val token = assetLocalToAssetMapper.map(
-            db.assetDao().getToken(poolLocal.assetId, fiatCurrencyLocal.code),
+            db.assetDao().getToken(poolLocal.userPoolLocal.userTokenIdTarget, fiatCurrencyLocal.code),
         )
         val baseToken = assetLocalToAssetMapper.map(
-            db.assetDao().getToken(poolLocal.assetIdBase, fiatCurrencyLocal.code),
+            db.assetDao().getToken(poolLocal.userPoolLocal.userTokenIdBase, fiatCurrencyLocal.code),
         )
         return PoolLocalMapper.mapLocal(poolLocal, baseToken, token)
     }
@@ -348,22 +351,22 @@ class PolkaswapRepositoryImpl @Inject constructor(
                 null
             } else {
                 val firstPooled = calculatePooledValue(
-                    pool.reservesFirst,
-                    pool.poolProvidersBalance,
-                    pool.totalIssuance
+                    pool.basicPoolLocal.reserveBase,
+                    pool.userPoolLocal.poolProvidersBalance,
+                    pool.basicPoolLocal.totalIssuance,
                 )
                 val secondPooled = calculatePooledValue(
-                    pool.reservesSecond,
-                    pool.poolProvidersBalance,
-                    pool.totalIssuance
+                    pool.basicPoolLocal.reserveTarget,
+                    pool.userPoolLocal.poolProvidersBalance,
+                    pool.basicPoolLocal.totalIssuance,
                 )
 
                 LiquidityData(
-                    pool.reservesFirst,
-                    pool.reservesSecond,
+                    pool.basicPoolLocal.reserveBase,
+                    pool.basicPoolLocal.reserveTarget,
                     firstPooled,
                     secondPooled,
-                    pool.strategicBonusApy?.toDouble()?.times(100)
+                    pool.basicPoolLocal.sbApy?.times(100),
                 )
             }
         }

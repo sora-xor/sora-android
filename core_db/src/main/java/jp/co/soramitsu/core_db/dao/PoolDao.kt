@@ -36,14 +36,21 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import java.math.BigDecimal
 import jp.co.soramitsu.core_db.model.BasePoolWithTokenLocal
+import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
-import jp.co.soramitsu.core_db.model.PoolLocal
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
+import jp.co.soramitsu.core_db.model.UserPoolLocal
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PoolDao {
+
+    companion object {
+        private const val userPoolJoinBasic = """
+            SELECT * FROM userpools left join allpools on userpools.userTokenIdBase=allpools.tokenIdBase and userpools.userTokenIdTarget=allpools.tokenIdTarget
+        """
+    }
 
     @Query("select * from poolBaseTokens left join tokens on poolBaseTokens.tokenId = tokens.id")
     suspend fun getPoolBaseTokens(): List<BasePoolWithTokenLocal>
@@ -57,45 +64,56 @@ interface PoolDao {
     @Query("delete from poolBaseTokens")
     suspend fun clearPoolBaseTokens()
 
-    @Query("DELETE FROM pools where accountAddress = :curAccount")
+    @Query("DELETE FROM userpools where accountAddress = :curAccount")
     suspend fun clearTable(curAccount: String)
 
-    @Query("SELECT * FROM pools where accountAddress = :accountAddress order by pools.sortOrder")
-    fun getPools(accountAddress: String): Flow<List<PoolLocal>>
+    @Query("""
+        $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder
+    """)
+    fun getPools(accountAddress: String): Flow<List<UserPoolJoinedLocal>>
 
-    @Query("SELECT * FROM pools where accountAddress = :accountAddress order by pools.sortOrder")
-    suspend fun getPoolsList(accountAddress: String): List<PoolLocal>
+    @Query("""
+        $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder 
+    """)
+    suspend fun getPoolsList(accountAddress: String): List<UserPoolJoinedLocal>
 
-    @Query("SELECT * FROM pools WHERE assetId = :assetId and assetIdBase = :baseTokenId and accountAddress = :accountAddress")
-    fun getPool(assetId: String, baseTokenId: String, accountAddress: String): Flow<PoolLocal?>
+    @Query("""
+        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
+    """)
+    fun getPool(assetId: String, baseTokenId: String, accountAddress: String): Flow<UserPoolJoinedLocal?>
 
-    @Query("SELECT * FROM pools WHERE assetId = :assetId and assetIdBase = :baseTokenId and accountAddress = :accountAddress")
-    suspend fun getPoolOf(assetId: String, baseTokenId: String, accountAddress: String): PoolLocal?
+    @Query("""
+        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
+    """)
+    suspend fun getPoolOf(assetId: String, baseTokenId: String, accountAddress: String): UserPoolJoinedLocal?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(pools: List<PoolLocal>)
+    suspend fun insertBasicPools(pools: List<BasicPoolLocal>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUserPools(pools: List<UserPoolLocal>)
 
     @Query(
         """
-        update pools set strategicBonusApy = :sbapy where reservesAccount = :reservesAccount and accountAddress = :curAccount
+        update allpools set sbApy = :sbapy where reservesAccount = :reservesAccount
     """
     )
-    suspend fun updateSbApyByReservesAccount(sbapy: BigDecimal?, reservesAccount: String, curAccount: String)
+    suspend fun updateSbApyByReservesAccount(sbapy: Double?, reservesAccount: String)
 
     @Query(
         """
-        update pools set favorite = 1 where assetIdBase = :baseId and assetId = :secondId and accountAddress = :address
+        update userpools set favorite = 1 where userTokenIdBase = :baseId and userTokenIdTarget = :secondId and accountAddress = :address
     """
     )
     suspend fun poolFavoriteOn(baseId: String, secondId: String, address: String)
 
     @Query(
         """
-        update pools set favorite = 0 where assetIdBase = :baseId and assetId = :secondId and accountAddress = :address
+        update userpools set favorite = 0 where userTokenIdBase = :baseId and userTokenIdTarget = :secondId and accountAddress = :address
     """
     )
     suspend fun poolFavoriteOff(baseId: String, secondId: String, address: String)
 
-    @Query("UPDATE pools SET sortOrder = :sortOrder WHERE assetIdBase = :baseAssetId and assetId = :secondAssetId and accountAddress = :address")
+    @Query("UPDATE userpools SET sortOrder = :sortOrder WHERE userTokenIdBase = :baseAssetId and userTokenIdTarget = :secondAssetId and accountAddress = :address")
     fun updatePoolPosition(baseAssetId: String, secondAssetId: String, sortOrder: Int, address: String)
 }
