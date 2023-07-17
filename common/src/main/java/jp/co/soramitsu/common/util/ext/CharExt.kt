@@ -41,18 +41,6 @@ fun Char.isValidNameChar(): Boolean {
     return this.isUnicodeMark() || this.isLetter() || this.isEmoji() || this.isDigit()
 }
 
-fun Char.isLatinChar(): Boolean {
-    return this in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-}
-
-// * English uppercase characters (A through Z)
-// * English lowercase characters (a through z)
-// * At least one numeric digit (0 through 9)
-// * At least one non-alphabetic character (e.g., !, $, #, %)
-fun Char.isValidPasswordChar(): Boolean {
-    return (isLatinChar() || this.isDigit() || !this.isLetterOrDigit()) && !this.isEmoji()
-}
-
 fun Char.isEmoji(): Boolean {
     val type = Character.getType(this).toByte()
     return type == Character.SURROGATE || type == Character.NON_SPACING_MARK || type == Character.OTHER_SYMBOL

@@ -68,7 +68,6 @@ import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
-import jp.co.soramitsu.common.util.ext.isValidPasswordChar
 import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
@@ -613,7 +612,7 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let { it ->
             val filteredValue =
-                textFieldValue.copy(text = textFieldValue.text.filter { it.isValidPasswordChar() })
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
 
             val isSecure = filteredValue.text.isPasswordSecure()
             val descriptionText = if (isSecure) {
@@ -764,7 +763,7 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
             val filteredValue =
-                textFieldValue.copy(text = textFieldValue.text.filter { it.isValidPasswordChar() })
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
             val (confirmationDescText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
                 it.password.value.text,
                 filteredValue.text
