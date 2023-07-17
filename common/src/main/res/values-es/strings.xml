@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Precio del token</string>
   <string name="asset_details_your_pools">Tus %spares de liquidez</string>
   <string name="asset_to_send">Activo a enviar</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Autentificar</string>
   <string name="block_id">Hash del bloque</string>
   <string name="buy_crypto_buy_xor_banner_title">Comprar XOR token</string>
@@ -85,10 +88,12 @@
   <string name="common_croatian">Croata</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Descubrir</string>
   <string name="common_done">Hecho</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Editar</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Inglés</string>
   <string name="common_enter_amount">Introduzca la cantidad</string>
   <string name="common_error_ambiguous_result">Resultado ambiguo</string>
@@ -218,9 +223,7 @@
   <string name="details_sent_to_pool">Enviar al par de liquidez</string>
   <string name="discover_coming_soon">Los desarrolladores de SORA están trabajando actualmente en una función que mostrará una lista completa de los pares de liquidez que están activos en Polkaswap\n\nPor ahora, si desea crear/agregar un par, use el botón a continuación.</string>
   <string name="discovery_polkaswap_pools">Liquidez Polkaswap</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">No hay destinatarios recientes.\nLas direcciones que se han enviado serán mostradas aquí</string>
   <string name="empty_recent_recipients_2">Recipients will appear here</string>
   <string name="enter_backup_password_title">Enter backup password</string>
@@ -401,7 +404,7 @@
   <string name="referral_bond_button_title">Bond XOR</string>
   <string name="referral_enter_link_title">Enter referrer\'s link</string>
   <string name="referral_get_more_invitation_button_title">Get more invitations</string>
-  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\nYou can unbond your XOR at any time for unused invitations.</string>
+  <string name="referral_input_reward_description">%s is bonded per each invitation to cover the network fee for your friends to join.\nYou can unbond unused XOR at any time.</string>
   <string name="referral_input_reward_title">Enter desired amount of invitations</string>
   <string name="referral_invitaion_link_title">Available invitations</string>
   <string name="referral_invitation_link">Enlace de invitación</string>

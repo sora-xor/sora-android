@@ -88,10 +88,12 @@
   <string name="common_croatian">Tiếng Croatia</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Xóa</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Khám phá</string>
   <string name="common_done">Hoàn tất</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Chỉnh sửa</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Tiếng Anh</string>
   <string name="common_enter_amount">Nhập số lượng</string>
   <string name="common_error_ambiguous_result">Kết quả không rõ ràng</string>
@@ -220,9 +222,7 @@
   <string name="details_sent_to_pool">Gửi đến pool</string>
   <string name="discover_coming_soon">Các nhà phát triển SORA hiện đang làm việc để tạo ra tính năng sẽ hiển thị danh sách đầy đủ các nhóm đang hoạt động trên Polkaswap. \n\n Hiện tại, nếu bạn muốn tạo/thêm vào một nhóm, vui lòng sử dụng nút bên dưới.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Không có người nhận gần đây.\nĐịa chỉ đã gửi sẽ được hiển thị tại đây.</string>
   <string name="empty_recent_recipients_2">Người nhận sẽ xuất hiện ở đây</string>
   <string name="enter_backup_password_title">Nhập mật khẩu dự phòng</string>

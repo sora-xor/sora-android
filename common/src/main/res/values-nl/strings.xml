@@ -88,10 +88,12 @@
   <string name="common_croatian">Kroatisch</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Gedaan</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Bewerk</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Engels</string>
   <string name="common_enter_amount">Voer bedrag in</string>
   <string name="common_error_ambiguous_result">Dubbelzinnig resultaat</string>
@@ -221,9 +223,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Geen recente ontvangers.\n Verzonden adressen worden hier getoond.</string>
   <string name="empty_recent_recipients_2">Ontvangers zullen hier verschijnen</string>
   <string name="enter_backup_password_title">Enter backup password</string>

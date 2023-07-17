@@ -39,10 +39,10 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
-  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
-  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Обязательное требование к паролю выполнено</string>
+  <string name="backup_password_requirments">Минимум шесть символов. По желанию, для повышения безопасности, можно включить заглавные буквы, цифры и неалфавитные символы.</string>
   <string name="backup_password_title">Установка пароля зашифрует резервную копию Google. Его нужно будет ввести при восстановлении кошелька.\nМинимальная длина пароля - 6 символов.</string>
-  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_title_2">Установка пароля зашифрует вашу резервную копию Google. Вам нужно будет ввести это при восстановлении кошелька.</string>
   <string name="biometric_dialog_title">Аутентифицировать</string>
   <string name="block_id">Хеш блока</string>
   <string name="buy_crypto_buy_xor_banner_title">Купить токен XOR</string>
@@ -88,10 +88,12 @@
   <string name="common_croatian">Хорватский</string>
   <string name="common_currencies">Токены</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Отключено</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Выполнено</string>
   <string name="common_dutch">Нидерландский</string>
   <string name="common_edit">Редактировать</string>
+  <string name="common_enabled">Включено</string>
   <string name="common_english">Английский</string>
   <string name="common_enter_amount">Введите сумму</string>
   <string name="common_error_ambiguous_result">Неоднозначный результат</string>
@@ -224,9 +226,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Режим редактирования</string>
   <string name="empty_recent_recipients">Адрес получателя будет отображен здесь.</string>
   <string name="empty_recent_recipients_2">Получатели появятся здесь</string>
   <string name="enter_backup_password_title">Enter backup password</string>

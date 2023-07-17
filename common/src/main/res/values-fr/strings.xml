@@ -88,10 +88,12 @@
   <string name="common_croatian">Croate</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Supprimer</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Découvrir</string>
   <string name="common_done">Terminé</string>
   <string name="common_dutch">Néerlandais</string>
   <string name="common_edit">Modifier</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Anglais</string>
   <string name="common_enter_amount">Entrer le montant</string>
   <string name="common_error_ambiguous_result">Résultat ambigu</string>
@@ -221,9 +223,7 @@
   <string name="details_sent_to_pool">Envoyé dans le pool</string>
   <string name="discover_coming_soon">Les développeurs de SORA travaillent actuellement sur une fonctionnalité permettant d\'afficher la liste de tous les pools actives sur Polkaswap.\n\nPour le moment, si vous souhaitez créer ou ajouter des liquidités à un pool, veuillez utiliser le bouton ci-dessous.</string>
   <string name="discovery_polkaswap_pools">Pools de Polkaswap</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Aucun destinataire récent.\nLes adresses utilisées seront affichées ici.</string>
   <string name="empty_recent_recipients_2">Les destinataires apparaîtront ici</string>
   <string name="enter_backup_password_title">Entrez le mot de passe de la sauvegarde</string>

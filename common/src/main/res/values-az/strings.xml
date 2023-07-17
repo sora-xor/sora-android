@@ -88,10 +88,12 @@
   <string name="common_croatian">Xorvat dili</string>
   <string name="common_currencies">Valyutalar</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Əlil</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Tamamlandı</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
+  <string name="common_enabled">Aktivdir</string>
   <string name="common_english">İngilis dili</string>
   <string name="common_enter_amount">Məbləği daxil edin</string>
   <string name="common_error_ambiguous_result">Birmənalı nəticə</string>
@@ -221,9 +223,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
-  <string name="edit_cards_screen_disabled_card_header">Əlil</string>
-  <string name="edit_cards_screen_edit_view">Görünüşü redaktə edin</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Görünüşü redaktə edin</string>
   <string name="empty_recent_recipients">Son alıcılar yoxdur.\n Göndərilən ünvanlar burada göstəriləcək.</string>
   <string name="empty_recent_recipients_2">Qəbul edənlər burada görünəcək</string>
   <string name="enter_backup_password_title">Enter backup password</string>

@@ -174,7 +174,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                                 .align(Alignment.CenterHorizontally),
                             size = Size.Small,
                             order = Order.SECONDARY,
-                            text = stringResource(id = R.string.edit_cards_screen_edit_view),
+                            text = stringResource(id = R.string.edit_view),
                             onClick = { viewModel.onEditViewClick() }
                         )
                 }

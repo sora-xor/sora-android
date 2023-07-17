@@ -88,10 +88,12 @@
   <string name="common_croatian">الكرواتية</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">اكتشف</string>
   <string name="common_done">تم</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">تحرير</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">الإنجليزية</string>
   <string name="common_enter_amount">أدخل المبلغ</string>
   <string name="common_error_ambiguous_result">نتيجة مبهمة</string>
@@ -225,9 +227,7 @@
   <string name="details_sent_to_pool">أرسل إلى المسبح</string>
   <string name="discover_coming_soon">يعمل مطورو SORA حاليا على ميزة ستعرض قائمة كاملة بالتجمعات النشطة على Polkaswap.\n\nفي الوقت الحالي ، إذا كنت ترغب في إنشاء / إضافة إلى تجمع ، فيرجى استخدام الزر أدناه.</string>
   <string name="discovery_polkaswap_pools">حوض Polkaswap</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">لا يوجد متلقون حديثون.\n سيتم عرض العناوين المرسلة هنا.</string>
   <string name="empty_recent_recipients_2">سيظهر المستلمون هنا</string>
   <string name="enter_backup_password_title">Enter backup password</string>

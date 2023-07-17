@@ -88,10 +88,12 @@
   <string name="common_croatian">קרואטית</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">מחק</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
   <string name="common_dutch">הולנדית</string>
   <string name="common_edit">ערוך</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">אנגלית</string>
   <string name="common_enter_amount">הזן סכום</string>
   <string name="common_error_ambiguous_result">תוצאה דו-משמעית</string>
@@ -223,9 +225,7 @@
   <string name="details_sent_to_pool">נשלח למאגר</string>
   <string name="discover_coming_soon">מפתחי סורה עובדים כעת על תכונה שתציג רשימה מלאה של מאגרים שהם פעילים בפולקסוואפ.\n\nלעת עתה, אם ברצונך ליצור/להוסיף למאגר אנא השתמש בכפתור למטה.</string>
   <string name="discovery_polkaswap_pools">מאגרי פולקסוואפ</string>
-  <string name="edit_cards_screen_disabled_card_header">Disabled</string>
-  <string name="edit_cards_screen_edit_view">Edit View</string>
-  <string name="edit_cards_screen_enabled_card_header">Enabled</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">אין נמענים אחרונים.\n כתובות שנשלחו יוצגו כאן.</string>
   <string name="empty_recent_recipients_2">הנמענים יופיעו כאן</string>
   <string name="enter_backup_password_title">הזן סיסמת גיבוי</string>
