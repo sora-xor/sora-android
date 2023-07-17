@@ -492,6 +492,7 @@
   <string name="sora_card_buy_xor_with_eur">קנה XOR עם EUR</string>
   <string name="sora_card_description">קבל חשבון  IBAN אירו וכרטיס דביט מאסטרקארד המחובר לארנק סורה שלך</string>
   <string name="sora_card_free_card_issuance">הנפקת כרטיס חינם</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">או 12 € דמי רישום</string>
   <string name="sora_card_free_card_issuance_conditions_xor">אם אתה מחזיק, נועל או מספק נזילות בשווי של לפחות 100 אירו של XOR בחשבון סורה שלך</string>
   <string name="sora_card_get_more_xor">השג עוד XOR</string>
   <string name="sora_card_log_in_or_sign_up">התחבר או הירשם</string>
