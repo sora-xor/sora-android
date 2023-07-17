@@ -37,7 +37,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface SoraCardInteractor {
 
-    suspend fun updateXorToEuroRates()
-
     fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
 }

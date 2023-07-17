@@ -70,7 +70,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val resourceManager: ResourceManager,
     connectionManager: ConnectionManager,
-    private val soraCardInteractor: SoraCardInteractor,
+    soraCardInteractor: SoraCardInteractor,
     @Assisted("SHOULD_START_SIGN_IN") val shouldStartSignIn: Boolean,
     @Assisted("SHOULD_START_SIGN_UP") val shouldStartSignUp: Boolean
 ) : BaseViewModel() {
@@ -102,7 +102,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
         soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
             currentSoraCardContractData = createSoraCardContract(
                 userAvailableXorAmount = it.xorBalance.toDouble(),
-                isEnoughXorAvailable = it.enoughXor
+                isEnoughXorAvailable = it.enoughXor,
             )
 
             state.value = state.value.copy(
@@ -183,17 +183,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
         }
     }
 
-    fun onEuroIndicatorClick() {
-        if (!state.value.xorRatioAvailable) {
-            viewModelScope.launch {
-                tryCatch {
-                    soraCardInteractor.updateXorToEuroRates()
-                }
-            }
-        }
-    }
-
-    fun onAlreadyHaveCard() {
+    private fun onAlreadyHaveCard() {
         currentSoraCardContractData?.let {
             _launchSoraCardSignIn.value = it
         }
@@ -211,14 +201,6 @@ class GetSoraCardViewModel @AssistedInject constructor(
                 kycStatus
             )
         }
-    }
-
-    fun onGetMoreXor() {
-        state.value = state.value.copy(getMorXorAlert = true)
-    }
-
-    fun onDismissGetMoreXorAlert() {
-        state.value = state.value.copy(getMorXorAlert = false)
     }
 
     fun onBuyCrypto() {
