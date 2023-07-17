@@ -42,7 +42,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface GlobalCardsHubDao {
 
-    @Query("SELECT * FROM globalCardsHub WHERE visibility = 1 order by sortOrder")
+    @Query("SELECT * FROM globalCardsHub order by sortOrder")
     fun getGlobalCardsHubVisible(): Flow<List<GlobalCardHubLocal>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -177,7 +177,7 @@ class WalletRepositoryTest {
 
     @Test
     fun `update card visibility on card hub EXPECT update db`() = runTest {
-        walletRepository.updateCardVisibilityOnCardHub(cardId = "cardId", visible = true)
+        walletRepository.updateCardVisibilityOnGlobalCardsHub(cardId = "cardId", visible = true)
 
         verify(globalCardsHubDao).updateCardVisibility(cardId = "cardId", visibility = true)
     }
