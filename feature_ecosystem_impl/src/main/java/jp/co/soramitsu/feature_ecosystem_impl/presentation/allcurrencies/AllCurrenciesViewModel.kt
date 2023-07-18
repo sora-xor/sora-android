@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
@@ -59,8 +60,14 @@ internal class AllCurrenciesViewModel @Inject constructor(
 ) : BaseViewModel() {
 
     private val filter = MutableStateFlow("")
+    private var positions: Map<String, String>? = null
 
     val state = ecoSystemInteractor.subscribeTokens()
+        .onEach {
+            positions = it.tokens.mapIndexed { index, ecoSystemToken ->
+                ecoSystemToken.token.id to (index + 1).toString()
+            }.toMap()
+        }
         .combine(filter) { t1, t2 ->
             t1 to t2
         }
@@ -72,7 +79,11 @@ internal class AllCurrenciesViewModel @Inject constructor(
                 it.token.isMatchFilter(pair.second)
             }
             val mapped = ecoSystemMapper.mapEcoSystemTokens(EcoSystemTokens(filtered))
-            EcoSystemTokensState(mapped, pair.second)
+            val mappedEnumerated = mapped.map {
+                val indexInAll = positions?.get(it.second.tokenId).orEmpty()
+                indexInAll to it.second
+            }
+            EcoSystemTokensState(mappedEnumerated, pair.second)
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
