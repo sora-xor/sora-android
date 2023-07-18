@@ -54,7 +54,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -65,7 +65,7 @@ class ProfileFragment : SoraBaseFragment<ProfileViewModel>() {
     override val viewModel: ProfileViewModel by viewModels()
 
     private val soraCardSignIn = registerForActivityResult(
-        SoraCardSignInContract()
+        SoraCardContract()
     ) { viewModel.handleSoraCardResult(it) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

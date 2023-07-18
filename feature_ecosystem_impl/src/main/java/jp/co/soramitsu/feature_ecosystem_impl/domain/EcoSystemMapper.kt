@@ -41,7 +41,9 @@ class EcoSystemMapper @Inject constructor(
 ) {
     fun mapEcoSystemTokens(tokens: EcoSystemTokens) =
         mapTokensToCardState(
-            tokens.tokens,
+            tokens.tokens.map {
+                it.token to it.liquidityFiat
+            },
             numbersFormatter,
         )
             .mapIndexed { index, assetItemCardState ->

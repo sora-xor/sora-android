@@ -88,9 +88,6 @@ class GetSoraCardViewModel @AssistedInject constructor(
     private val _launchSoraCardRegistration = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardRegistration: LiveData<SoraCardContractData> = _launchSoraCardRegistration
 
-    private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
-    val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
-
     var state = mutableStateOf(GetSoraCardState())
         private set
 
@@ -185,7 +182,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
 
     private fun onAlreadyHaveCard() {
         currentSoraCardContractData?.let {
-            _launchSoraCardSignIn.value = it
+            _launchSoraCardRegistration.value = it
         }
     }
 

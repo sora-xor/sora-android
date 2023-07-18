@@ -37,8 +37,10 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.assetItemCardSt
 
 internal data class EcoSystemTokensState(
     val topTokens: List<Pair<String, AssetItemCardState>>,
+    val filter: String,
 )
 
 internal val initialEcoSystemTokensState = EcoSystemTokensState(
-    topTokens = List(5) { i -> (i + 1).toString() to assetItemCardStateEmpty }
+    topTokens = List(5) { i -> (i + 1).toString() to assetItemCardStateEmpty },
+    filter = "",
 )
