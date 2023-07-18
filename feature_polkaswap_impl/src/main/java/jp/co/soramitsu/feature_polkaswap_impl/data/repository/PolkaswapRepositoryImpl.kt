@@ -172,31 +172,31 @@ class PolkaswapRepositoryImpl @Inject constructor(
                     ) {
                         db.assetDao().getPrecisionOfToken(poolDataDto.assetId)
                             ?.let { tokenPrecision ->
-                                val poolLocal =
-                                    PoolLocal(
-                                        poolDataDto.assetId,
-                                        pair.first,
-                                        address,
-                                        mapBalance(poolDataDto.reservesFirst, xorPrecision),
-                                        mapBalance(poolDataDto.reservesSecond, tokenPrecision),
-                                        mapBalance(poolDataDto.totalIssuance, xorPrecision),
-                                        getPoolStrategicBonusAPY(
-                                            poolDataDto.assetId,
-                                            pair.first,
-                                            address
-                                        ),
-                                        mapBalance(poolDataDto.poolProvidersBalance, xorPrecision),
-                                        poolsPositionAndFavorite[poolDataDto.assetId + pair.first]?.second
-                                            ?: true,
-                                        poolsPositionAndFavorite[poolDataDto.assetId + pair.first]?.first
-                                            ?: ++count,
-                                        poolDataDto.reservesAccount,
-                                    )
-
-                                pools.add(UserPoolJoinedLocal(
-                                    userPoolLocal = ,
-                                    basicPoolLocal = ,
-                                ))
+//                                val poolLocal =
+//                                    PoolLocal(
+//                                        poolDataDto.assetId,
+//                                        pair.first,
+//                                        address,
+//                                        mapBalance(poolDataDto.reservesFirst, xorPrecision),
+//                                        mapBalance(poolDataDto.reservesSecond, tokenPrecision),
+//                                        mapBalance(poolDataDto.totalIssuance, xorPrecision),
+//                                        getPoolStrategicBonusAPY(
+//                                            poolDataDto.assetId,
+//                                            pair.first,
+//                                            address
+//                                        ),
+//                                        mapBalance(poolDataDto.poolProvidersBalance, xorPrecision),
+//                                        poolsPositionAndFavorite[poolDataDto.assetId + pair.first]?.second
+//                                            ?: true,
+//                                        poolsPositionAndFavorite[poolDataDto.assetId + pair.first]?.first
+//                                            ?: ++count,
+//                                        poolDataDto.reservesAccount,
+//                                    )
+//
+//                                pools.add(UserPoolJoinedLocal(
+//                                    userPoolLocal = ,
+//                                    basicPoolLocal = ,
+//                                ))
                             }
                     }
                 }
@@ -204,9 +204,9 @@ class PolkaswapRepositoryImpl @Inject constructor(
 
         db.withTransaction {
             db.poolDao().clearTable(address)
-            db.poolDao().insert(pools)
+//            db.poolDao().insert(pools)
         }
-        blockExplorerManager.updatePoolsSbApy(address)
+        blockExplorerManager.updatePoolsSbApy()
     }
 
     private suspend fun getPoolStrategicBonusAPY(
