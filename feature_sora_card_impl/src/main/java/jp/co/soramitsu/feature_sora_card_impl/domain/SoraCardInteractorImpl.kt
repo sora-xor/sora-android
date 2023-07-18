@@ -65,14 +65,6 @@ class SoraCardInteractorImpl @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
-    override suspend fun updateXorToEuroRates() {
-        blockExplorerManager.getXorPerEurRatio()?.let {
-            blockExplorerXorToEuroPriceFlow.tryEmit(
-                value = it
-            )
-        }
-    }
-
     override fun subscribeToSoraCardAvailabilityFlow() =
         userRepository.flowCurSoraAccount().flatMapLatest {
             assetsRepository.subscribeAsset(

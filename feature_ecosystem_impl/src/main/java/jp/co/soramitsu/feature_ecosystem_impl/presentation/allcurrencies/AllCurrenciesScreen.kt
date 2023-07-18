@@ -81,6 +81,7 @@ private fun ColumnScope.AllCurrenciesInternal(
     onTokenClicked: (String) -> Unit,
 ) {
     BasicSearchBar(
+        init = state.filter,
         backgroundColor = MaterialTheme.customColors.bgPage,
         placeholder = "",
         action = null,
@@ -121,7 +122,8 @@ private fun PreviewAllCurrenciesInternal() {
             state = EcoSystemTokensState(
                 previewAssetItemCardStateList.mapIndexed { q, w ->
                     q.toString() to w
-                }
+                },
+                "",
             ),
             {}, {}, {}, {},
         )

@@ -238,6 +238,10 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         )
     }
 
+    override fun openEditCardsHub() {
+        navController?.navigate(R.id.editCardsHub)
+    }
+
     override fun showBuyCrypto(isLaunchedFromSoraCard: Boolean) {
         navController?.navigate(
             R.id.buyCryptoFragment,

@@ -342,6 +342,7 @@ class OnboardingViewModel @Inject constructor(
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
                 try {
+                    backupService.logout()
                     if (backupService.authorize(launcher)) {
                         onSuccessfulGoogleSignin(navController)
                     } else {
@@ -611,25 +612,29 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let { it ->
             val filteredValue =
-                textFieldValue.copy(text = textFieldValue.text.filter { it.isLetter() })
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
 
             val isSecure = filteredValue.text.isPasswordSecure()
-            val errorString =
-                getPasswordConfirmationError(
-                    filteredValue.text,
-                    it.passwordConfirmation.value.text
-                )
+            val descriptionText = if (isSecure) {
+                resourceManager.getString(R.string.backup_password_mandatory_reqs_fulfilled)
+            } else {
+                resourceManager.getString(R.string.backup_password_requirments)
+            }
+            val (confirmationDescriptionText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                filteredValue.text,
+                it.passwordConfirmation.value.text
+            )
             _createBackupPasswordState.value = it.copy(
                 password = it.password.copy(
                     value = filteredValue,
                     success = isSecure,
+                    descriptionText = descriptionText,
+                    error = !isSecure && filteredValue.text.isNotEmpty()
                 ),
                 passwordConfirmation = it.passwordConfirmation.copy(
-                    error = errorString.isNotEmpty(),
-                    descriptionText = if (filteredValue.text == it.passwordConfirmation.value.text)
-                        resourceManager.getString(R.string.create_backup_password_matched)
-                    else
-                        errorString
+                    error = isError,
+                    descriptionText = confirmationDescriptionText,
+                    success = !isError && confirmationDescriptionText.isNotEmpty()
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
                     it.passwordConfirmation.value.text == filteredValue.text && isSecure
@@ -743,7 +748,10 @@ class OnboardingViewModel @Inject constructor(
 
     private fun resetBackupLiveData() {
         _createBackupPasswordState.value = CreateBackupPasswordState(
-            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+            password = InputTextState(
+                label = resourceManager.getString(R.string.create_backup_set_password),
+                descriptionText = resourceManager.getString(R.string.backup_password_requirments)
+            ),
             passwordConfirmation = InputTextState(label = resourceManager.getString(R.string.export_json_input_confirmation_label))
         )
 
@@ -755,19 +763,19 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
             val filteredValue =
-                textFieldValue.copy(text = textFieldValue.text.filter { it.isLetter() })
-            val isConfirmationRight =
-                it.password.value.text == filteredValue.text
-            val errorString =
-                getPasswordConfirmationError(it.password.value.text, filteredValue.text)
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
+            val (confirmationDescText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                it.password.value.text,
+                filteredValue.text
+            )
             _createBackupPasswordState.value = it.copy(
                 passwordConfirmation = it.passwordConfirmation.copy(
                     value = filteredValue,
-                    success = isConfirmationRight,
-                    descriptionText = if (isConfirmationRight) resourceManager.getString(R.string.create_backup_password_matched) else errorString,
-                    error = errorString.isNotEmpty()
+                    success = !isError && filteredValue.text.isNotEmpty(),
+                    descriptionText = confirmationDescText,
+                    error = isError
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRight && filteredValue.text.isPasswordSecure()
+                setPasswordButtonIsEnabled = it.warningIsSelected && !isError && filteredValue.text.isPasswordSecure()
             )
         }
     }
@@ -789,14 +797,14 @@ class OnboardingViewModel @Inject constructor(
         )
     }.getOrNull()
 
-    private fun getPasswordConfirmationError(
+    private fun getPasswordConfirmationDescriptionAndErrorStatus(
         password: String,
         passwordConfirmation: String
-    ): String {
-        return if (passwordConfirmation == "" || passwordConfirmation == password) {
-            ""
-        } else {
-            resourceManager.getString(R.string.create_backup_password_not_matched)
+    ): Pair<String, Boolean> {
+        return when (passwordConfirmation) {
+            "" -> "" to false
+            password -> resourceManager.getString(R.string.create_backup_password_matched) to false
+            else -> resourceManager.getString(R.string.create_backup_password_not_matched) to true
         }
     }
 

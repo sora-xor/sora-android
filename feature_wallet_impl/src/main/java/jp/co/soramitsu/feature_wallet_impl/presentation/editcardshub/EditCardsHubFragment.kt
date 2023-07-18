@@ -30,50 +30,30 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
+package jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub
 
 import android.os.Bundle
 import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.runtime.collectAsState
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 
 @AndroidEntryPoint
-class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
+class EditCardsHubFragment : SoraBaseFragment<EditCardsHubViewModel>() {
 
-    @Inject
-    lateinit var vmf: GetSoraCardViewModel.AssistedGetSoraCardViewModelFactory
-
-    override val viewModel: GetSoraCardViewModel by viewModels {
-        CustomViewModelFactory {
-            vmf.create(
-                shouldStartSignIn = requireArguments().getBoolean(SHOULD_START_SIGN_IN),
-                shouldStartSignUp = requireArguments().getBoolean(SHOULD_START_SIGN_UP)
-            )
-        }
-    }
-
-    private val soraCardRegistration = registerForActivityResult(
-        SoraCardContract()
-    ) { viewModel.handleSoraCardResult(it) }
+    override val viewModel: EditCardsHubViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as BottomBarController).hideBottomBar()
-
-        viewModel.launchSoraCardRegistration.observe { contractData ->
-            soraCardRegistration.launch(contractData)
-        }
+        (activity as BottomBarController).showBottomBar()
     }
 
     @OptIn(ExperimentalAnimationApi::class)
@@ -81,28 +61,14 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
         scrollState: ScrollState,
         navController: NavHostController
     ) {
-        composable(
-            route = theOnlyRoute,
-        ) {
-            GetSoraCardScreen(
-                scrollState = scrollState,
-                state = viewModel.state.value,
-                viewModel::onSeeBlacklist,
-                viewModel::onEnableCard,
+        composable(theOnlyRoute) {
+            val state = viewModel.state.collectAsState()
+            EditCardsHubScreen(
+                state = state.value,
+                onCloseScreen = viewModel::onNavIcon,
+                onCardEnabled = viewModel::onEnabledCardItemClick,
+                onCardDisabled = viewModel::onDisabledCardItemClick
             )
-        }
-    }
-
-    companion object {
-        const val SHOULD_START_SIGN_IN = "SHOULD_START_SIGN_IN"
-        const val SHOULD_START_SIGN_UP = "SHOULD_START_SIGN_UP"
-
-        fun createBundle(
-            shouldStartSignIn: Boolean,
-            shouldStartSignUp: Boolean
-        ) = Bundle().apply {
-            putBoolean(SHOULD_START_SIGN_IN, shouldStartSignIn)
-            putBoolean(SHOULD_START_SIGN_UP, shouldStartSignUp)
         }
     }
 }

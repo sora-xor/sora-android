@@ -62,7 +62,7 @@ internal class StartScreenViewModel @Inject constructor(
             )
         }
         .map {
-            EcoSystemTokensState(ecoSystemMapper.mapEcoSystemTokens(it))
+            EcoSystemTokensState(ecoSystemMapper.mapEcoSystemTokens(it), "")
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
 
     init {

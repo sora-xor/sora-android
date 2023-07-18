@@ -36,5 +36,11 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
 
 class EcoSystemTokens(
-    val tokens: List<Pair<Token, BigDecimal?>>,
+    val tokens: List<EcoSystemToken>,
+)
+
+class EcoSystemToken(
+    val token: Token,
+    val liquidityFiat: BigDecimal?,
+    val liquidity: BigDecimal?,
 )

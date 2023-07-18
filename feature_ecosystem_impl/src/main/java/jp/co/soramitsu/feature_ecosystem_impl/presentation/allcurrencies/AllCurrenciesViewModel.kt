@@ -69,10 +69,10 @@ internal class AllCurrenciesViewModel @Inject constructor(
         }
         .map { pair ->
             val filtered = pair.first.tokens.filter {
-                it.first.isMatchFilter(pair.second)
+                it.token.isMatchFilter(pair.second)
             }
             val mapped = ecoSystemMapper.mapEcoSystemTokens(EcoSystemTokens(filtered))
-            EcoSystemTokensState(mapped)
+            EcoSystemTokensState(mapped, pair.second)
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
