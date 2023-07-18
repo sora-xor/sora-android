@@ -66,7 +66,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsC
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
-import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -78,7 +78,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override val viewModel: CardsHubViewModel by viewModels()
 
     private val soraCardSignIn = registerForActivityResult(
-        SoraCardSignInContract()
+        SoraCardContract()
     ) { viewModel.handleSoraCardResult(it) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

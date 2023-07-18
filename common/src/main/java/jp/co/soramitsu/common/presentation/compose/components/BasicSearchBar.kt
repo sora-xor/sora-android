@@ -83,10 +83,9 @@ private fun Preview() {
     BasicSearchBar(
         placeholder = "Placeholder",
         action = "Action",
-        onAction = { /*TODO*/ },
-        onClear = { /*TODO*/ },
-        onSearch = { /*TODO*/ }
-    ) {
-        /*TODO*/
-    }
+        onAction = { },
+        onClear = { },
+        onSearch = { },
+        onNavigate = {},
+    )
 }
