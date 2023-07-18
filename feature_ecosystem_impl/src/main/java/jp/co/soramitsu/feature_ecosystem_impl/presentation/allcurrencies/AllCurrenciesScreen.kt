@@ -80,7 +80,7 @@ private fun ColumnScope.AllCurrenciesInternal(
     onTokenClicked: (String) -> Unit,
 ) {
     BasicSearchBar(
-        init = state.sear,
+        init = state.filter,
         backgroundColor = MaterialTheme.customColors.bgPage,
         placeholder = "",
         action = null,

@@ -59,10 +59,10 @@ internal class EcoSystemInteractorImpl(
             val marketCap = mapped.map { tokenLiquidity ->
                 val sum =
                     tokenLiquidity.second?.multiplyNullable(tokenLiquidity.first.fiatPrice?.toBigDecimal())
-                tokenLiquidity.first to sum
+                EcoSystemToken(tokenLiquidity.first, sum, tokenLiquidity.second)
             }
             val sorted = marketCap.sortedWith { o1, o2 ->
-                compareNullDesc(o1.second, o2.second)
+                compareNullDesc(o1.liquidityFiat, o2.liquidityFiat)
             }
             EcoSystemTokens(
                 tokens = sorted,

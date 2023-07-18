@@ -32,10 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.start
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -57,6 +59,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun StartScreen(
+    scrollState: ScrollState,
     onCurrencyShowMore: () -> Unit,
     onPoolShowMore: () -> Unit,
     onTokenClicked: (String) -> Unit,
@@ -65,6 +68,7 @@ internal fun StartScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(horizontal = Dimens.x2)
     ) {
         Text(
