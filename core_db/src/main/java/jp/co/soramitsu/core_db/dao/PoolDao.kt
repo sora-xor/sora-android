@@ -36,6 +36,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import jp.co.soramitsu.core_db.model.BasePoolWithTokenLocal
 import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
@@ -67,38 +68,42 @@ interface PoolDao {
     @Query("DELETE FROM userpools where accountAddress = :curAccount")
     suspend fun clearTable(curAccount: String)
 
-    @Query("""
-        $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder
-    """)
-    fun getPools(accountAddress: String): Flow<List<UserPoolJoinedLocal>>
-
-    @Query("""
-        $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder 
-    """)
-    suspend fun getPoolsList(accountAddress: String): List<UserPoolJoinedLocal>
-
-    @Query("""
-        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
-    """)
-    fun getPool(assetId: String, baseTokenId: String, accountAddress: String): Flow<UserPoolJoinedLocal?>
-
-    @Query("""
-        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
-    """)
-    suspend fun getPoolOf(assetId: String, baseTokenId: String, accountAddress: String): UserPoolJoinedLocal?
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBasicPools(pools: List<BasicPoolLocal>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUserPools(pools: List<UserPoolLocal>)
+    @Query("DELETE FROM allpools")
+    suspend fun clearBasicTable()
 
     @Query(
         """
-        update allpools set sbApy = :sbapy where reservesAccount = :reservesAccount
+        $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder
     """
     )
-    suspend fun updateSbApyByReservesAccount(sbapy: Double?, reservesAccount: String)
+    fun getPools(accountAddress: String): Flow<List<UserPoolJoinedLocal>>
+
+    @Query(
+        """
+        $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder 
+    """
+    )
+    suspend fun getPoolsList(accountAddress: String): List<UserPoolJoinedLocal>
+
+    @Query(
+        """
+        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
+    """
+    )
+    fun getPool(assetId: String, baseTokenId: String, accountAddress: String): Flow<UserPoolJoinedLocal?>
+
+    @Query(
+        """
+        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
+    """
+    )
+    suspend fun getPoolOf(assetId: String, baseTokenId: String, accountAddress: String): UserPoolJoinedLocal?
+
+    @Upsert()
+    suspend fun insertBasicPools(pools: List<BasicPoolLocal>)
+
+    @Upsert()
+    suspend fun insertUserPools(pools: List<UserPoolLocal>)
 
     @Query(
         """

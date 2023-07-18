@@ -41,7 +41,7 @@ import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.calculateAddLiquidityAmount
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.estimateAddingShareOfPool
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -305,20 +305,20 @@ class PoolsInteractorImpl(
         return polkaswapRepository.updateAccountPools(address)
     }
 
-    override fun subscribePoolsCache(): Flow<List<PoolData>> =
+    override fun subscribePoolsCache(): Flow<List<UserPoolData>> =
         userRepository.flowCurSoraAccount().flatMapLatest {
             polkaswapRepository.subscribePoolFlow(it.substrateAddress)
         }
 
-    override suspend fun getPoolsCache(): List<PoolData> {
+    override suspend fun getPoolsCache(): List<UserPoolData> {
         return polkaswapRepository.getPoolsCache(userRepository.getCurSoraAccount().substrateAddress)
     }
 
-    override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<PoolData>> {
+    override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<UserPoolData>> {
         return polkaswapRepository.subscribePoolFlow(account.substrateAddress)
     }
 
-    override fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<PoolData?> {
+    override fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<UserPoolData?> {
         return userRepository.flowCurSoraAccount().flatMapLatest {
             polkaswapRepository.getPoolData(it.substrateAddress, tokenFromId, tokenToId)
         }
@@ -362,7 +362,6 @@ class PoolsInteractorImpl(
         presented: Boolean
     ): LiquidityData {
         return polkaswapRepository.getRemotePoolReserves(
-            userRepository.getCurSoraAccount().substrateAddress,
             tokenFrom,
             tokenTo,
             enabled,

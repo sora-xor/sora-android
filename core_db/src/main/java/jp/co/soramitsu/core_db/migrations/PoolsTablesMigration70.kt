@@ -48,7 +48,6 @@ internal val migration_PoolsTables_69_70 = object : Migration(69, 70) {
             'reserveBase' text not null,
             'reserveTarget' text not null,
             'totalIssuance' text not null,
-            'sbApy' real,
             'reservesAccount' text not null,
             
             primary key('tokenIdBase', 'tokenIdTarget')
@@ -63,14 +62,19 @@ internal val migration_PoolsTables_69_70 = object : Migration(69, 70) {
             'userTokenIdTarget' text not null,
             'accountAddress' text not null,
             'poolProvidersBalance' text not null,
-            'favorite' integer,
-            'sortOrder' integer,
+            'favorite' integer not null,
+            'sortOrder' integer not null,
             
             primary key('userTokenIdBase', 'userTokenIdTarget', 'accountAddress'),
             foreign key('accountAddress') references 'accounts'('substrateAddress') ON UPDATE NO ACTION ON DELETE CASCADE,
-            foreign key('userTokenIdBase') references 'allpools'('tokenIdBase') ON UPDATE NO ACTION ON DELETE CASCADE,
-            foreign key('userTokenIdTarget') references 'allpools'('tokenIdTarget') ON UPDATE NO ACTION ON DELETE CASCADE
+            foreign key('userTokenIdBase','userTokenIdTarget') references 'allpools'('tokenIdBase','tokenIdTarget') ON UPDATE NO ACTION ON DELETE CASCADE
             )
+            """.trimIndent()
+        )
+
+        database.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS `index_userpools_accountAddress` ON `userpools` (`accountAddress`)
             """.trimIndent()
         )
 

@@ -123,7 +123,6 @@ private fun StartScreenInternal(
         description = stringResource(id = R.string.explore_provide_and_earn),
         onShowMore = onPoolShowMore,
         content = {
-
         },
     )
 }

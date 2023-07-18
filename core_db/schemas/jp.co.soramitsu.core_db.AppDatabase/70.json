@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 70,
-    "identityHash": "986298f55d59fea248c488807f09ed90",
+    "identityHash": "f9ecd5f48d55f79b6aafec087b29fe46",
     "entities": [
       {
         "tableName": "assets",
@@ -265,7 +265,7 @@
       },
       {
         "tableName": "allpools",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tokenIdBase` TEXT NOT NULL, `tokenIdTarget` TEXT NOT NULL, `reserveBase` TEXT NOT NULL, `reserveTarget` TEXT NOT NULL, `totalIssuance` TEXT NOT NULL, `sbApy` REAL, `reservesAccount` TEXT NOT NULL, PRIMARY KEY(`tokenIdBase`, `tokenIdTarget`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tokenIdBase` TEXT NOT NULL, `tokenIdTarget` TEXT NOT NULL, `reserveBase` TEXT NOT NULL, `reserveTarget` TEXT NOT NULL, `totalIssuance` TEXT NOT NULL, `reservesAccount` TEXT NOT NULL, PRIMARY KEY(`tokenIdBase`, `tokenIdTarget`))",
         "fields": [
           {
             "fieldPath": "tokenIdBase",
@@ -296,12 +296,6 @@
             "columnName": "totalIssuance",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "sbApy",
-            "columnName": "sbApy",
-            "affinity": "REAL",
-            "notNull": false
           },
           {
             "fieldPath": "reservesAccount",
@@ -682,7 +676,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '986298f55d59fea248c488807f09ed90')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f9ecd5f48d55f79b6aafec087b29fe46')"
     ]
   }
 }

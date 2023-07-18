@@ -80,21 +80,21 @@ class FullPoolSettingsViewModel @Inject constructor(
             symbol = pools.fiatSymbol
             val mapped = pools.map { poolData ->
                 PoolSettingsState(
-                    id = poolData.baseToken.id to poolData.token.id,
-                    token1Icon = poolData.baseToken.iconUri(),
-                    token2Icon = poolData.token.iconUri(),
+                    id = poolData.basic.baseToken.id to poolData.basic.targetToken.id,
+                    token1Icon = poolData.basic.baseToken.iconUri(),
+                    token2Icon = poolData.basic.targetToken.iconUri(),
                     tokenName = "%s-%s".format(
-                        poolData.baseToken.symbol,
-                        poolData.token.symbol
+                        poolData.basic.baseToken.symbol,
+                        poolData.basic.targetToken.symbol,
                     ),
                     assetAmount = "%s - %s".format(
-                        poolData.baseToken.printBalance(
+                        poolData.basic.baseToken.printBalance(
                             poolData.basePooled,
                             numbersFormatter,
                             AssetHolder.ACTIVITY_LIST_ROUNDING
                         ),
-                        poolData.token.printBalance(
-                            poolData.secondPooled,
+                        poolData.basic.targetToken.printBalance(
+                            poolData.targetPooled,
                             numbersFormatter,
                             AssetHolder.ACTIVITY_LIST_ROUNDING
                         ),

@@ -32,41 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import jp.co.soramitsu.common.util.ext.compareNullDesc
-import jp.co.soramitsu.common.util.ext.multiplyNullable
-import jp.co.soramitsu.common.util.mapBalance
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+internal interface EcoSystemPoolsInteractor
 
-internal interface EcoSystemInteractor {
-    fun subscribeTokens(): Flow<EcoSystemTokens>
-}
-
-internal class EcoSystemInteractorImpl(
-    private val assetsRepository: AssetsRepository,
-    private val blockExplorerManager: BlockExplorerManager,
-) : EcoSystemInteractor {
-    override fun subscribeTokens(): Flow<EcoSystemTokens> {
-        return assetsRepository.subscribeTokensList().map { list ->
-            val liquidity = blockExplorerManager.getTokensLiquidity(list.map { it.id })
-            val mapped = list.map { token ->
-                token to liquidity.firstOrNull { it.first == token.id }?.second?.let { bi ->
-                    mapBalance(bi, token.precision)
-                }
-            }
-            val marketCap = mapped.map { tokenLiquidity ->
-                val sum =
-                    tokenLiquidity.second?.multiplyNullable(tokenLiquidity.first.fiatPrice?.toBigDecimal())
-                EcoSystemToken(tokenLiquidity.first, sum, tokenLiquidity.second)
-            }
-            val sorted = marketCap.sortedWith { o1, o2 ->
-                compareNullDesc(o1.liquidityFiat, o2.liquidityFiat)
-            }
-            EcoSystemTokens(
-                tokens = sorted,
-            )
-        }
-    }
-}
+internal class EcoSystemPoolsInteractorImpl() : EcoSystemPoolsInteractor

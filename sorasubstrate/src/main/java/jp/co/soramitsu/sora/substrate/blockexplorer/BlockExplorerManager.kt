@@ -119,12 +119,6 @@ class BlockExplorerManager @Inject constructor(
             val response = info.getSpApy()
             tempApy.clear()
             tempApy.addAll(response)
-            db.withTransaction {
-                response.forEach { info ->
-                    db.poolDao()
-                        .updateSbApyByReservesAccount(info.sbApy, info.id)
-                }
-            }
         }
     }
 

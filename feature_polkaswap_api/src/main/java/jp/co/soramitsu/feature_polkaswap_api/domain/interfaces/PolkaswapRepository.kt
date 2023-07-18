@@ -39,7 +39,7 @@ import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -58,13 +58,13 @@ interface PolkaswapRepository {
         address: String,
         baseTokenId: String,
         tokenId: String
-    ): Flow<PoolData?>
+    ): Flow<UserPoolData?>
 
     fun subscribeToPoolsAssets(address: String): Flow<String>
 
-    fun subscribePoolFlow(address: String): Flow<List<PoolData>>
+    fun subscribePoolFlow(address: String): Flow<List<UserPoolData>>
 
-    suspend fun getPoolsCache(address: String): List<PoolData>
+    suspend fun getPoolsCache(address: String): List<UserPoolData>
 
     fun subscribeLocalPoolReserves(
         address: String,
@@ -155,7 +155,6 @@ interface PolkaswapRepository {
     ): Flow<Boolean>
 
     suspend fun getRemotePoolReserves(
-        address: String,
         tokenFrom: Token,
         tokenTo: Token,
         enabled: Boolean,
