@@ -88,10 +88,12 @@
   <string name="common_croatian">Tiếng Croatia</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Xóa</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Khám phá</string>
   <string name="common_done">Hoàn tất</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Chỉnh sửa</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Tiếng Anh</string>
   <string name="common_enter_amount">Nhập số lượng</string>
   <string name="common_error_ambiguous_result">Kết quả không rõ ràng</string>
@@ -220,6 +222,7 @@
   <string name="details_sent_to_pool">Gửi đến pool</string>
   <string name="discover_coming_soon">Các nhà phát triển SORA hiện đang làm việc để tạo ra tính năng sẽ hiển thị danh sách đầy đủ các nhóm đang hoạt động trên Polkaswap. \n\n Hiện tại, nếu bạn muốn tạo/thêm vào một nhóm, vui lòng sử dụng nút bên dưới.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Không có người nhận gần đây.\nĐịa chỉ đã gửi sẽ được hiển thị tại đây.</string>
   <string name="empty_recent_recipients_2">Người nhận sẽ xuất hiện ở đây</string>
   <string name="enter_backup_password_title">Nhập mật khẩu dự phòng</string>
@@ -471,6 +474,7 @@
   <string name="sora_card_buy_xor_with_eur">Mua XOR bằng EUR</string>
   <string name="sora_card_description">Nhận tài khoản Euro IBAN và Thẻ ghi nợ Mastercard được kết nối với Ví SORA của bạn</string>
   <string name="sora_card_free_card_issuance">Miễn phí phát hành thẻ</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">hoặc phí đăng ký 20 €</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Nếu bạn nắm giữ, stake hoặc cung cấp thanh khoản cho XOR trị giá ít nhất €100 trong tài khoản SORA của mình</string>
   <string name="sora_card_get_more_xor">Nhận thêm XOR</string>
   <string name="sora_card_log_in_or_sign_up">Đăng nhập hoặc đăng ký</string>

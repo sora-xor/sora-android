@@ -88,10 +88,12 @@
   <string name="common_croatian">Kroatisch</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Erledigt</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Englisch</string>
   <string name="common_enter_amount">Betrag eingeben</string>
   <string name="common_error_ambiguous_result">Mehrdeutiges Ergebnis</string>
@@ -221,6 +223,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Keine kürzlichen Empfänger.\nGesendete Adressen werden hier angezeigt.</string>
   <string name="empty_recent_recipients_2">Die Empfänger werden hier angezeigt</string>
   <string name="enter_backup_password_title">Enter backup password</string>
@@ -477,11 +480,12 @@
   <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
   <string name="sora_card_description">Get a Euro IBAN account and Mastercard Debit Card connected to your SORA Wallet</string>
   <string name="sora_card_free_card_issuance">Free card issuance</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">or €20 application fee</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">No more free attempts</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">View details</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">Swap crypto for XOR</string>
   <string name="sora_card_title">Top up SORA Card with fiat or crypto and pay online, in-store or withdraw from an ATM</string>

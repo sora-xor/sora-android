@@ -98,12 +98,6 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
                 state = viewModel.state.value,
                 viewModel::onSeeBlacklist,
                 viewModel::onEnableCard,
-                viewModel::onGetMoreXor,
-                viewModel::onAlreadyHaveCard,
-                viewModel::onDismissGetMoreXorAlert,
-                viewModel::onBuyCrypto,
-                viewModel::onSwap,
-                viewModel::onEuroIndicatorClick,
             )
         }
     }

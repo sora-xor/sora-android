@@ -88,10 +88,12 @@
   <string name="common_croatian">क्रोएशियाई</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">खोजना</string>
   <string name="common_done">हो गया</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">संपादित करें</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">अंग्रेज़ी</string>
   <string name="common_enter_amount">राशि दर्ज करें</string>
   <string name="common_error_ambiguous_result">अस्पष्ट परिणाम</string>
@@ -221,6 +223,7 @@
   <string name="details_sent_to_pool">पूल में भेजा गया</string>
   <string name="discover_coming_soon">SORA Devs वर्तमान में एक सुविधा पर काम कर रहे हैं जो पोल्कास्वैप पर सक्रिय पूल की पूरी सूची प्रदर्शित करेगा।\n\nअभी के लिए, यदि आप पूल बनाना / जोड़ना चाहते हैं तो कृपया नीचे दिए गए बटन का उपयोग करें।</string>
   <string name="discovery_polkaswap_pools">पोलकस्वैप पूल</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">हाल ही का कोई प्राप्तकर्ता नहीं।\n भेजे गए पते यहां दिखाए जाएंगे।</string>
   <string name="empty_recent_recipients_2">प्राप्तकर्ता यहां दिखाई देंगे</string>
   <string name="enter_backup_password_title">Enter backup password</string>
@@ -477,11 +480,12 @@
   <string name="sora_card_buy_xor_with_eur">EUR से  XOR खरीदें\n</string>
   <string name="sora_card_description">अपने SORA वॉलेट से जुड़ा यूरो IBAN खाता और मास्टरकार्ड डेबिट कार्ड प्राप्त करें</string>
   <string name="sora_card_free_card_issuance">नि: शुल्क कार्ड जारी करना</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">या 20 € आवेदन शुल्क</string>
   <string name="sora_card_free_card_issuance_conditions_xor">यदि आप अपने SORA खाते में कम से कम €100 मूल्य के XOR को रखते हैं, Staking पर लगाते हैं या Liquidity  प्रदान करते हैं</string>
   <string name="sora_card_get_more_xor">अधिक XOR प्राप्त करें</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">कोई और मुफ़्त प्रयास नहीं</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">View details</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">XOR के लिए क्रिप्टो स्वैप / बदले करें</string>
   <string name="sora_card_title">फिएट या क्रिप्टो के साथ सोरा कार्ड को टॉप अप करें और ऑनलाइन भुगतान करें, इन-स्टोर करें या एटीएम से निकासी करें</string>

@@ -88,10 +88,12 @@
   <string name="common_croatian">Bahasa Croatia</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Padam</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Menemui</string>
   <string name="common_done">Selesai</string>
   <string name="common_dutch">Belanda</string>
   <string name="common_edit">Sunting</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Bahasa Inggeris</string>
   <string name="common_enter_amount">Masukkan amaun</string>
   <string name="common_error_ambiguous_result">Keputusan tidak jelas</string>
@@ -220,6 +222,7 @@
   <string name="details_sent_to_pool">Dihantar ke kolam</string>
   <string name="discover_coming_soon">Pembangun SORA sedang mengusahakan ciri yang akan memaparkan senarai penuh kumpulan yang aktif di Polkaswap. \n\n Buat masa ini, jika anda ingin membuat/menambah pada kolam sila gunakan butang di bawah.</string>
   <string name="discovery_polkaswap_pools">Kolam Polkaswap</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Tiada penerima terkini.\nAlamat yang dihantar akan ditunjukkan di sini.</string>
   <string name="empty_recent_recipients_2">Penerima akan muncul di sini</string>
   <string name="enter_backup_password_title">Masukkan kata laluan sandaran</string>
@@ -471,6 +474,7 @@
   <string name="sora_card_buy_xor_with_eur">Beli XOR dengan EUR</string>
   <string name="sora_card_description">Dapatkan akaun Euro IBAN dan Kad Debit Mastercard yang disambungkan ke Dompet SORA anda</string>
   <string name="sora_card_free_card_issuance">Pengeluaran kad percuma</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">atau 20 € yuran permohonan</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Jika anda memegang, mempertaruhkan atau menyediakan kecairan untuk sekurang-kurangnya €100 nilai XOR dalam akaun SORA anda</string>
   <string name="sora_card_get_more_xor">Dapatkan lebih banyak XOR</string>
   <string name="sora_card_log_in_or_sign_up">Log masuk atau Daftar</string>

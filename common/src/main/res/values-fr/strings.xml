@@ -88,10 +88,12 @@
   <string name="common_croatian">Croate</string>
   <string name="common_currencies">Currencies</string>
   <string name="common_delete">Supprimer</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Découvrir</string>
   <string name="common_done">Terminé</string>
   <string name="common_dutch">Néerlandais</string>
   <string name="common_edit">Modifier</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Anglais</string>
   <string name="common_enter_amount">Entrer le montant</string>
   <string name="common_error_ambiguous_result">Résultat ambigu</string>
@@ -221,6 +223,7 @@
   <string name="details_sent_to_pool">Envoyé dans le pool</string>
   <string name="discover_coming_soon">Les développeurs de SORA travaillent actuellement sur une fonctionnalité permettant d\'afficher la liste de tous les pools actives sur Polkaswap.\n\nPour le moment, si vous souhaitez créer ou ajouter des liquidités à un pool, veuillez utiliser le bouton ci-dessous.</string>
   <string name="discovery_polkaswap_pools">Pools de Polkaswap</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Aucun destinataire récent.\nLes adresses utilisées seront affichées ici.</string>
   <string name="empty_recent_recipients_2">Les destinataires apparaîtront ici</string>
   <string name="enter_backup_password_title">Entrez le mot de passe de la sauvegarde</string>
@@ -477,6 +480,7 @@
   <string name="sora_card_buy_xor_with_eur">Acheter du XOR avec de l\'EUR</string>
   <string name="sora_card_description">Obtenez un compte IBAN en Euros et une carte de débit Mastercard SORA</string>
   <string name="sora_card_free_card_issuance">Émission gratuite de la carte</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">ou 20€ de frais de demande</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Si vous détenez, stakez, ou fournissez des liquidités pour un montant d\'au moins 100€ de XOR avec votre compte SORA</string>
   <string name="sora_card_get_more_xor">Obtenir plus de XOR</string>
   <string name="sora_card_log_in_or_sign_up">Se connecter ou s\'inscrire</string>
