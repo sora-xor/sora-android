@@ -124,6 +124,9 @@ class MultiaccountInteractor @Inject constructor(
         return fileManager.writeExternalCacheText("$filename.json", credentialsRepository.generateJson(accounts, password))
     }
 
+    suspend fun generateSubstrateJsonString(accounts: List<SoraAccount>, password: String) =
+        credentialsRepository.generateJson(accounts, password)
+
     suspend fun getSoraAccount(address: String): SoraAccount = userRepository.getSoraAccount(address)
 
     suspend fun getCurrentSoraAccount(): SoraAccount = userRepository.getCurSoraAccount()
@@ -142,4 +145,6 @@ class MultiaccountInteractor @Inject constructor(
     }
 
     fun isAddressValid(address: String): Boolean = runtimeManager.isAddressOk(address)
+
+    fun convertPassphraseToSeed(passphrase: String) = credentialsRepository.convertPassphraseToSeed(passphrase)
 }

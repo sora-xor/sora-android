@@ -44,7 +44,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.lang.IllegalArgumentException
 import java.net.SocketException
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
@@ -52,7 +51,10 @@ import jp.co.soramitsu.backup.domain.exceptions.DecodingException
 import jp.co.soramitsu.backup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
 import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
+import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.backup.domain.models.Json
+import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
@@ -584,14 +586,32 @@ class OnboardingViewModel @Inject constructor(
                 try {
                     _passphraseCardState.value?.let { passphraseCardState ->
                         tempAccount?.let {
+                            val jsonString = multiaccountInteractor.generateSubstrateJsonString(
+                                listOf(it),
+                                createBackupPasswordState.password.value.text
+                            )
+
+                            val passphrase = passphraseCardState.mnemonicWords.joinToString(" ")
+
+                            val seed = Seed(
+                                substrateSeed = multiaccountInteractor.convertPassphraseToSeed(
+                                    passphrase
+                                )
+                            )
+
                             backupService.saveBackupAccount(
                                 DecryptedBackupAccount(
-                                    it.accountName,
-                                    it.substrateAddress,
-                                    passphraseCardState.mnemonicWords.joinToString(" "),
-                                    CryptoType.SR25519,
-                                    "",
-                                    "",
+                                    name = it.accountName,
+                                    address = it.substrateAddress,
+                                    mnemonicPhrase = passphrase,
+                                    cryptoType = CryptoType.SR25519,
+                                    backupAccountType = listOf(
+                                        BackupAccountType.JSON,
+                                        BackupAccountType.PASSHRASE,
+                                        BackupAccountType.SEED
+                                    ),
+                                    seed = seed,
+                                    json = Json(substrateJson = jsonString)
                                 ),
                                 createBackupPasswordState.password.value.text
                             )
@@ -616,9 +636,9 @@ class OnboardingViewModel @Inject constructor(
 
             val isSecure = filteredValue.text.isPasswordSecure()
             val descriptionText = if (isSecure) {
-                resourceManager.getString(R.string.backup_password_mandatory_reqs_fulfilled)
+                R.string.backup_password_mandatory_reqs_fulfilled
             } else {
-                resourceManager.getString(R.string.backup_password_requirments)
+                R.string.backup_password_requirments
             }
             val (confirmationDescriptionText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
                 filteredValue.text,
@@ -634,7 +654,7 @@ class OnboardingViewModel @Inject constructor(
                 passwordConfirmation = it.passwordConfirmation.copy(
                     error = isError,
                     descriptionText = confirmationDescriptionText,
-                    success = !isError && confirmationDescriptionText.isNotEmpty()
+                    success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
                     it.passwordConfirmation.value.text == filteredValue.text && isSecure
@@ -677,31 +697,24 @@ class OnboardingViewModel @Inject constructor(
                             )
                         }
 
-                        val valid =
-                            multiaccountInteractor.isMnemonicValid(decryptedBackupAccount.mnemonicPhrase)
-                        if (valid) {
-                            val soraAccount = multiaccountInteractor.recoverSoraAccountFromMnemonic(
-                                decryptedBackupAccount.mnemonicPhrase,
-                                decryptedBackupAccount.name
-                            )
+                        val soraAccount: SoraAccount =
+                            recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
 
-                            multiaccountInteractor.continueRecoverFlow(
-                                soraAccount,
-                                connectionManager.isConnected
-                            )
+                        multiaccountInteractor.continueRecoverFlow(
+                            soraAccount,
+                            connectionManager.isConnected
+                        )
 
-                            isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
+                        isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
 
-                            navController.navigate(
-                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
-                                navOptions = NavOptions.Builder()
-                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
-                                    .build()
-                            )
-                        } else {
-                            onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
-                        }
+                        navController.navigate(
+                            route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                            navOptions = NavOptions.Builder()
+                                .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                .build()
+                        )
                     } catch (e: DecryptionException) {
+                        e.printStackTrace()
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: DecodingException) {
                         onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
@@ -717,6 +730,36 @@ class OnboardingViewModel @Inject constructor(
                     state.copy(isImportMoreAvailable = isImportMoreAvailable, isLoading = false)
             }
         }
+    }
+
+    private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSHRASE)) {
+            decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
+                val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
+
+                if (isValid) {
+                    return multiaccountInteractor.recoverSoraAccountFromMnemonic(
+                        passphrase,
+                        decryptedBackupAccount.name
+                    )
+                }
+            }
+        }
+
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.SEED)) {
+            decryptedBackupAccount.seed?.substrateSeed?.let { rawSeed ->
+                val isValid = multiaccountInteractor.isRawSeedValid(rawSeed)
+
+                if (isValid) {
+                    return multiaccountInteractor.recoverSoraAccountFromRawSeed(
+                        rawSeed,
+                        decryptedBackupAccount.name
+                    )
+                }
+            }
+        }
+
+        throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
     }
 
     fun onImportFinished(context: Context) {
@@ -800,11 +843,11 @@ class OnboardingViewModel @Inject constructor(
     private fun getPasswordConfirmationDescriptionAndErrorStatus(
         password: String,
         passwordConfirmation: String
-    ): Pair<String, Boolean> {
+    ): Pair<Int, Boolean> {
         return when (passwordConfirmation) {
-            "" -> "" to false
-            password -> resourceManager.getString(R.string.create_backup_password_matched) to false
-            else -> resourceManager.getString(R.string.create_backup_password_not_matched) to true
+            "" -> R.string.common_empty_string to false
+            password -> R.string.create_backup_password_matched to false
+            else -> R.string.create_backup_password_not_matched to true
         }
     }
 
