@@ -474,11 +474,12 @@
   <string name="sora_card_buy_xor_with_eur">EURでXORを買う</string>
   <string name="sora_card_description">ユーロIBANアカウントとMastercardデビットカードをSORAウォレットに接続します</string>
   <string name="sora_card_free_card_issuance">無料カード発行</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">または20€の申請料</string>
   <string name="sora_card_free_card_issuance_conditions_xor">SORAアカウントに少なくとも€100相当のXORを、保有、ステーキング、または流動性供給している場合</string>
   <string name="sora_card_get_more_xor">XOR をさらに取得する</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">これ以上の無料試行はありません</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">View details</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">暗号資産をXORにスワップ</string>
   <string name="sora_card_title">SORAカードに法定通貨や暗号資産を補充し、オンラインや店舗で支払ったり、ATMで引き出すことができます</string>

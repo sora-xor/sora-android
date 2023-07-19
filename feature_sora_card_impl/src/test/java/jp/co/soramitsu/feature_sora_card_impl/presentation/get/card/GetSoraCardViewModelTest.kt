@@ -56,7 +56,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -165,29 +164,6 @@ class GetSoraCardViewModelTest {
         viewModel.onEnableCard()
 
         assertNotNull(viewModel.launchSoraCardRegistration.value)
-    }
-
-    @Test
-    fun `on already have card EXPECT set up launcher`() = runTest{
-        advanceUntilIdle()
-
-        viewModel.onAlreadyHaveCard()
-
-        assertNotNull(viewModel.launchSoraCardSignIn.value)
-    }
-
-    @Test
-    fun `on get more xor EXPECT get more xor alert state is true`() {
-        viewModel.onGetMoreXor()
-
-        assertTrue(viewModel.state.value.getMorXorAlert)
-    }
-
-    @Test
-    fun `on dismiss get more xor alert EXPECT get more xor alert state is false`() {
-        viewModel.onDismissGetMoreXorAlert()
-
-        assertFalse(viewModel.state.value.getMorXorAlert)
     }
 
     @Test

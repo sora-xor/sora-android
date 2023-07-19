@@ -498,11 +498,12 @@
   <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
   <string name="sora_card_description">Получите счет IBAN в евро и дебетовую карту Mastercard, подключенную к вашему кошельку SORA</string>
   <string name="sora_card_free_card_issuance">Бесплатный выпуск карты</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">или плата €20 за подачу заявки</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Если вы держите, ставите или предоставляете ликвидность XOR на сумму не менее 100 евро на своем счете SORA.</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">No more free attempts</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">Подробнее</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">Swap crypto for XOR</string>
   <string name="sora_card_title">Пополняйте карту SORA с помощью фиата или криптовалюты и оплачивайте онлайн, в магазине или в банкомате.</string>

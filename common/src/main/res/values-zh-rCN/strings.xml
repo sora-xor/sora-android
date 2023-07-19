@@ -474,6 +474,7 @@
   <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
   <string name="sora_card_description">获得一个欧元IBAN账户和万事达卡借记卡连接到您的SORA钱包</string>
   <string name="sora_card_free_card_issuance">免费发卡</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">或 20 欧元的申请费</string>
   <string name="sora_card_free_card_issuance_conditions_xor">如果您在SORA账户中持有、质押或提供流动性达到至少价值100欧元的XOR</string>
   <string name="sora_card_get_more_xor">获取更多的XOR</string>
   <string name="sora_card_log_in_or_sign_up">登录或注册</string>

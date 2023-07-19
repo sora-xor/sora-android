@@ -71,6 +71,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
             route = ExploreRoutes.START,
         ) {
             StartScreen(
+                scrollState = scrollState,
                 onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
                 onPoolShowMore = {},
                 onTokenClicked = viewModel::onTokenClicked,

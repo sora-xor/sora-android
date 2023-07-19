@@ -47,7 +47,6 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
-import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
 
 @AndroidEntryPoint
 class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
@@ -68,20 +67,12 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
         SoraCardContract()
     ) { viewModel.handleSoraCardResult(it) }
 
-    private var soraCardSignIn = registerForActivityResult(
-        SoraCardSignInContract()
-    ) { viewModel.handleSoraCardResult(it) }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
 
         viewModel.launchSoraCardRegistration.observe { contractData ->
             soraCardRegistration.launch(contractData)
-        }
-
-        viewModel.launchSoraCardSignIn.observe { contractData ->
-            soraCardSignIn.launch(contractData)
         }
     }
 
@@ -98,12 +89,6 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
                 state = viewModel.state.value,
                 viewModel::onSeeBlacklist,
                 viewModel::onEnableCard,
-                viewModel::onGetMoreXor,
-                viewModel::onAlreadyHaveCard,
-                viewModel::onDismissGetMoreXorAlert,
-                viewModel::onBuyCrypto,
-                viewModel::onSwap,
-                viewModel::onEuroIndicatorClick,
             )
         }
     }
