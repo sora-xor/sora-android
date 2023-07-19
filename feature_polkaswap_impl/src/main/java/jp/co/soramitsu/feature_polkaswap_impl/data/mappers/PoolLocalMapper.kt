@@ -36,9 +36,21 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
+import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 
 object PoolLocalMapper {
+
+    suspend fun mapBasicLocal(basicPoolLocal: BasicPoolLocal, token: suspend (String) -> Token): BasicPoolData {
+        return BasicPoolData(
+            baseToken = token(basicPoolLocal.tokenIdBase),
+            targetToken = token(basicPoolLocal.tokenIdTarget),
+            baseReserves = basicPoolLocal.reserveBase,
+            targetReserves = basicPoolLocal.reserveTarget,
+            totalIssuance = basicPoolLocal.totalIssuance,
+            reserveAccount = basicPoolLocal.reservesAccount,
+        )
+    }
 
     fun mapLocal(poolLocal: UserPoolJoinedLocal, baseToken: Token, token: Token, apy: Double?): UserPoolData {
         val basePooled = PolkaswapFormulas.calculatePooledValue(

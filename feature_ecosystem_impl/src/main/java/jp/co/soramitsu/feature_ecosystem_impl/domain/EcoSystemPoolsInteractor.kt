@@ -32,6 +32,30 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-internal interface EcoSystemPoolsInteractor
+import java.math.BigDecimal
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-internal class EcoSystemPoolsInteractorImpl() : EcoSystemPoolsInteractor
+internal interface EcoSystemPoolsInteractor {
+    fun subscribeBasicPools(): Flow<EcoSystemPools>
+}
+
+internal class EcoSystemPoolsInteractorImpl(
+    private val polkaswapRepository: PolkaswapRepository,
+) : EcoSystemPoolsInteractor {
+
+    override fun subscribeBasicPools(): Flow<EcoSystemPools> {
+        return polkaswapRepository.subscribeBasicPools()
+            .map { list ->
+                EcoSystemPools(
+                    pools = list.map {
+                        EcoSystemPool(
+                            pool = it,
+                            tvl = BigDecimal.TEN,
+                        )
+                    }
+                )
+            }
+    }
+}

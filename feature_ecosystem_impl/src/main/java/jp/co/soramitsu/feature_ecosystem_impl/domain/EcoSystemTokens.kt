@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_ecosystem_impl.domain
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 
 class EcoSystemTokens(
     val tokens: List<EcoSystemToken>,
@@ -43,4 +44,13 @@ class EcoSystemToken(
     val token: Token,
     val liquidityFiat: BigDecimal?,
     val liquidity: BigDecimal?,
+)
+
+class EcoSystemPools(
+    val pools: List<EcoSystemPool>,
+)
+
+class EcoSystemPool(
+    val pool: BasicPoolData,
+    val tvl: BigDecimal?,
 )

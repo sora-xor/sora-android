@@ -75,6 +75,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                 onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
                 onPoolShowMore = {},
                 onTokenClicked = viewModel::onTokenClicked,
+                onPoolClicked = viewModel::onPoolClicked,
             )
         }
         composable(

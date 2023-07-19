@@ -35,11 +35,14 @@ package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import kotlinx.coroutines.flow.Flow
 
 interface PolkaswapRepository {
+
+    fun subscribeBasicPools(): Flow<List<BasicPoolData>>
 
     suspend fun getPoolBaseTokens(): List<PoolDex>
 

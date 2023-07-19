@@ -34,25 +34,33 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.start
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import jp.co.soramitsu.common.domain.CoroutineManager
 import javax.inject.Inject
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPools
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemPoolsState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemTokensState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 internal class StartScreenViewModel @Inject constructor(
     private val ecoSystemTokensInteractor: EcoSystemTokensInteractor,
+    private val ecoSystemPoolsInteractor: EcoSystemPoolsInteractor,
     private val ecoSystemMapper: EcoSystemMapper,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
 
-    val state = ecoSystemTokensInteractor.subscribeTokens()
+    val tokensState = ecoSystemTokensInteractor.subscribeTokens()
         .catch {
             onError(it)
         }
@@ -63,7 +71,27 @@ internal class StartScreenViewModel @Inject constructor(
         }
         .map {
             EcoSystemTokensState(ecoSystemMapper.mapEcoSystemTokens(it), "")
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
+        }
+        .flowOn(coroutineManager.io)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
+
+    val poolsState = ecoSystemPoolsInteractor.subscribeBasicPools()
+        .catch {
+            onError(it)
+        }
+        .map {
+            EcoSystemPools(
+                pools = it.pools.take(5)
+            )
+        }
+        .map {
+            EcoSystemPoolsState(
+                pools = ecoSystemMapper.mapEcoSystemPools(it),
+                filter = "",
+            )
+        }
+        .flowOn(coroutineManager.io)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemPoolsState)
 
     init {
     }

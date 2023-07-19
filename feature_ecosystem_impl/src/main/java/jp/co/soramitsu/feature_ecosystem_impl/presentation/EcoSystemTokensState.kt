@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation
 
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.basicPoolListItemStateEmpty
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.assetItemCardStateEmpty
 
@@ -42,5 +44,15 @@ internal data class EcoSystemTokensState(
 
 internal val initialEcoSystemTokensState = EcoSystemTokensState(
     topTokens = List(5) { i -> (i + 1).toString() to assetItemCardStateEmpty },
+    filter = "",
+)
+
+internal data class EcoSystemPoolsState(
+    val pools: List<BasicPoolListItemState>,
+    val filter: String,
+)
+
+internal val initialEcoSystemPoolsState = EcoSystemPoolsState(
+    pools = List(5) { i -> basicPoolListItemStateEmpty },
     filter = "",
 )
