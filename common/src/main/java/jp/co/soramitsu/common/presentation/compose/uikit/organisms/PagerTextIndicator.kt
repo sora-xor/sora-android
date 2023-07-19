@@ -91,13 +91,15 @@ fun PagerTextIndicator(
 
                     if (elementsList.size == indicatorsArray.size) {
                         val start = elementsList[currentPage].left
-                        
-                        val stop = (elementsList.getOrNull(currentPage + 1)
-                            ?: elementsList[currentPage]).run {
-                                /* for Arabic languages */
-                                if (layoutDirection === LayoutDirection.Ltr)
-                                    right else left
-                            }
+
+                        val stop = (
+                            elementsList.getOrNull(currentPage + 1)
+                                ?: elementsList[currentPage]
+                            ).run {
+                            /* for Arabic languages */
+                            if (layoutDirection === LayoutDirection.Ltr)
+                                right else left
+                        }
 
                         val sectorOffsetXLerp = lerp(
                             start = start,
@@ -162,9 +164,10 @@ private fun PreviewSlidingPagerIndicator() {
 
     Box(
         modifier = Modifier
-            .clickable { ci.value = ci.value
-                .plus(1)
-                .rem(2)
+            .clickable {
+                ci.value = ci.value
+                    .plus(1)
+                    .rem(2)
             }
             .fillMaxWidth()
             .height(Dimens.x7)
