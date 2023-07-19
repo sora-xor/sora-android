@@ -53,7 +53,7 @@ class EditCardsHubFragment : SoraBaseFragment<EditCardsHubViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as BottomBarController).showBottomBar()
+        (activity as BottomBarController).hideBottomBar()
     }
 
     @OptIn(ExperimentalAnimationApi::class)
@@ -65,7 +65,6 @@ class EditCardsHubFragment : SoraBaseFragment<EditCardsHubViewModel>() {
             val state = viewModel.state.collectAsState()
             EditCardsHubScreen(
                 state = state.value,
-                onCloseScreen = viewModel::onNavIcon,
                 onCardEnabled = viewModel::onEnabledCardItemClick,
                 onCardDisabled = viewModel::onDisabledCardItemClick
             )

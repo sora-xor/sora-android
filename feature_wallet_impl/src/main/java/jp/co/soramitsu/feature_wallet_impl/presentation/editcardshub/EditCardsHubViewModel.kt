@@ -72,37 +72,23 @@ class EditCardsHubViewModel @Inject constructor(
 
     val state: StateFlow<EditCardsHubScreenState> = mutableState.map { cardsHub ->
         EditCardsHubScreenState(
-            toolbarState = SoramitsuToolbarState(
-                basic = BasicToolbarState(
-                    title = R.string.edit_view,
-                    navIcon = R.drawable.ic_cross_24
-                ),
-                type = SoramitsuToolbarType.SmallCentered()
-            ),
             enabledCardsHeader = Text.StringRes(id = R.string.common_enabled),
             enabledCards = cardsHub.filter {
                 it.second
-            }.map { (cardType, isSelected) ->
-                cardType.mapToText() to isSelected
+            }.map { (cardType, _) ->
+                cardType.mapToState(isVisible = true)
             },
             disabledCardsHeader = Text.StringRes(id = R.string.common_disabled),
             disabledCards = cardsHub.filter {
                 !it.second
-            }.map { (cardType, isSelected) ->
-                cardType.mapToText() to isSelected
+            }.map { (cardType, _) ->
+                cardType.mapToState(isVisible = false)
             }
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = EditCardsHubScreenState(
-            toolbarState = SoramitsuToolbarState(
-                basic = BasicToolbarState(
-                    title = "",
-                    navIcon = null
-                ),
-                type = SoramitsuToolbarType.SmallCentered()
-            ),
             enabledCardsHeader = Text.SimpleText(""),
             enabledCards = emptyList(),
             disabledCardsHeader = Text.SimpleText(""),
@@ -110,14 +96,33 @@ class EditCardsHubViewModel @Inject constructor(
         )
     )
 
-    private fun CardHubType.mapToText() = when (this) {
-        CardHubType.ASSETS -> Text.StringRes(R.string.liquid_assets)
-        CardHubType.POOLS -> Text.StringRes(R.string.pooled_assets)
-        CardHubType.GET_SORA_CARD -> Text.SimpleText("Sora Card")
-        CardHubType.BUY_XOR_TOKEN -> Text.SimpleText("Buy Xor")
+    private fun CardHubType.mapToState(isVisible: Boolean) = when (this) {
+        CardHubType.ASSETS ->
+            Text.StringRes(R.string.liquid_assets) to
+                HubCardState(HubCardVisibility.VISIBLE_AND_DISABLED)
+        CardHubType.POOLS ->
+            Text.StringRes(R.string.pooled_assets) to
+                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
+                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
+        CardHubType.GET_SORA_CARD ->
+            Text.StringRes(R.string.more_menu_sora_card_title) to
+                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
+                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
+        CardHubType.BUY_XOR_TOKEN ->
+            Text.StringRes(R.string.common_buy_xor) to
+                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
+                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
     }
 
     init {
+        SoramitsuToolbarState(
+            basic = BasicToolbarState(
+                title = R.string.edit_view,
+                navIcon = R.drawable.ic_cross_24
+            ),
+            type = SoramitsuToolbarType.SmallCentered()
+        ).apply { _toolbarState.value = this }
+
         cardsHubInteractor.subscribeVisibleCardsHubList().onEach { (_, cardsHubListState) ->
             mutableState.tryEmit(
                 value = cardsHubListState.map {
@@ -129,7 +134,7 @@ class EditCardsHubViewModel @Inject constructor(
 
     override fun onNavIcon() {
         super.onNavIcon()
-        walletRouter.popBackStackFragment()
+        walletRouter.returnToHubFragment()
     }
 
     fun onEnabledCardItemClick(position: Int) =
@@ -159,6 +164,6 @@ class EditCardsHubViewModel @Inject constructor(
         }
 
     private companion object {
-        const val ANIMATION_DURATION_DELAY = 450L
+        const val ANIMATION_DURATION_DELAY = 750L
     }
 }
