@@ -1,3 +1,35 @@
+/*
+This file is part of the SORA network and Polkaswap app.
+
+Copyright (c) 2020, 2021, Polka Biome Ltd. All rights reserved.
+SPDX-License-Identifier: BSD-4-Clause
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list
+of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice, this
+list of conditions and the following disclaimer in the documentation and/or other
+materials provided with the distribution.
+
+All advertising materials mentioning features or use of this software must display
+the following acknowledgement: This product includes software developed by Polka Biome
+Ltd., SORA, and Polkaswap.
+
+Neither the name of the Polka Biome Ltd. nor the names of its contributors may be used
+to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY Polka Biome Ltd. AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Polka Biome Ltd. BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 package jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub
 
 import androidx.lifecycle.viewModelScope
@@ -40,37 +72,23 @@ class EditCardsHubViewModel @Inject constructor(
 
     val state: StateFlow<EditCardsHubScreenState> = mutableState.map { cardsHub ->
         EditCardsHubScreenState(
-            toolbarState = SoramitsuToolbarState(
-                basic = BasicToolbarState(
-                    title = R.string.edit_cards_screen_edit_view,
-                    navIcon = R.drawable.ic_cross_24
-                ),
-                type = SoramitsuToolbarType.SmallCentered()
-            ),
             enabledCardsHeader = Text.StringRes(id = R.string.edit_cards_screen_enabled_card_header),
             enabledCards = cardsHub.filter {
                 it.second
-            }.map { (cardType, isSelected) ->
-                cardType.mapToText() to isSelected
+            }.map { (cardType, _) ->
+                cardType.mapToState(isVisible = true)
             },
             disabledCardsHeader = Text.StringRes(id = R.string.edit_cards_screen_disabled_card_header),
             disabledCards = cardsHub.filter {
                 !it.second
-            }.map { (cardType, isSelected) ->
-                cardType.mapToText() to isSelected
+            }.map { (cardType, _) ->
+                cardType.mapToState(isVisible = false)
             }
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = EditCardsHubScreenState(
-            toolbarState = SoramitsuToolbarState(
-                basic = BasicToolbarState(
-                    title = "",
-                    navIcon = null
-                ),
-                type = SoramitsuToolbarType.SmallCentered()
-            ),
             enabledCardsHeader = Text.SimpleText(""),
             enabledCards = emptyList(),
             disabledCardsHeader = Text.SimpleText(""),
@@ -78,11 +96,32 @@ class EditCardsHubViewModel @Inject constructor(
         )
     )
 
-    private fun CardHubType.mapToText() = when (this) {
-        CardHubType.ASSETS -> Text.StringRes(R.string.liquid_assets)
-        CardHubType.POOLS -> Text.StringRes(R.string.pooled_assets)
-        CardHubType.GET_SORA_CARD -> Text.SimpleText("Sora Card")
-        CardHubType.BUY_XOR_TOKEN -> Text.SimpleText("Buy Xor")
+    init {
+        _toolbarState.value = SoramitsuToolbarState(
+            basic = BasicToolbarState(
+                title = R.string.edit_cards_screen_edit_view,
+                navIcon = R.drawable.ic_cross_24
+            ),
+            type = SoramitsuToolbarType.SmallCentered()
+        )
+    }
+
+    private fun CardHubType.mapToState(isVisible: Boolean) = when (this) {
+        CardHubType.ASSETS ->
+            Text.StringRes(R.string.liquid_assets) to
+                HubCardState(HubCardVisibility.VISIBLE_AND_DISABLED)
+        CardHubType.POOLS ->
+            Text.StringRes(R.string.pooled_assets) to
+                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
+                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
+        CardHubType.GET_SORA_CARD ->
+            Text.StringRes(R.string.more_menu_sora_card_title) to
+                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
+                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
+        CardHubType.BUY_XOR_TOKEN ->
+            Text.StringRes(R.string.common_buy_xor) to
+                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
+                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
     }
 
     init {
@@ -127,6 +166,6 @@ class EditCardsHubViewModel @Inject constructor(
         }
 
     private companion object {
-        const val ANIMATION_DURATION_DELAY = 450L
+        const val ANIMATION_DURATION_DELAY = 750L
     }
 }
