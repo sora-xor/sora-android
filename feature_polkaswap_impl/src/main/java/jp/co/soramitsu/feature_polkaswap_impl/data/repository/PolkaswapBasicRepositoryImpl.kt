@@ -30,42 +30,39 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
+package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
-import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.PoolDex
-import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
-import kotlinx.coroutines.flow.Flow
+import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 
-interface PolkaswapRepository {
+abstract class PolkaswapBasicRepositoryImpl(
+    private val db: AppDatabase,
+) {
 
-    suspend fun getPoolBaseTokens(): List<PoolDex>
+    protected suspend fun getPoolBaseTokenDexId(tokenId: String): Int {
+        return db.poolDao().getPoolBaseToken(tokenId)?.dexId ?: 0
+    }
+}
 
-    fun getPoolData(
-        address: String,
+abstract class PolkaswapBlockchainRepositoryImpl(
+    private val blockExplorerManager: BlockExplorerManager,
+    private val runtimeManager: RuntimeManager,
+    private val wsConnection: SubstrateApi,
+    db: AppDatabase,
+) : PolkaswapBasicRepositoryImpl(db) {
+
+    protected suspend fun getPoolStrategicBonusAPY(
+        tokenId: String,
         baseTokenId: String,
-        tokenId: String
-    ): Flow<UserPoolData?>
-
-    fun subscribePoolFlow(address: String): Flow<List<UserPoolData>>
-
-    suspend fun getPoolsCache(address: String): List<UserPoolData>
-
-    fun subscribeLocalPoolReserves(
-        address: String,
-        baseTokenId: String,
-        assetId: String
-    ): Flow<LiquidityData?>
-
-    fun getPolkaswapDisclaimerVisibility(): Flow<Boolean>
-
-    suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
-
-    suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount)
-
-    suspend fun poolFavoriteOff(ids: StringPair, account: SoraAccount)
-
-    suspend fun updatePoolPosition(pools: Map<StringPair, Int>, account: SoraAccount)
+    ): Double? {
+        val result = blockExplorerManager.getTempApy(tokenId)?.sbApy
+        if (result != null) return result
+        return wsConnection.getPoolReserveAccount(baseTokenId, tokenId.fromHex())?.let {
+            val id = runtimeManager.toSoraAddress(it)
+            blockExplorerManager.getTempApy(id)?.sbApy
+        }
+    }
 }

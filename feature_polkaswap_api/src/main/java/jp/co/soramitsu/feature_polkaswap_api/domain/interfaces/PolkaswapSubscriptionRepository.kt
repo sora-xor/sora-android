@@ -32,40 +32,58 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 
-import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.PoolDex
-import jp.co.soramitsu.common.util.StringPair
+import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
+import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.flow.Flow
 
-interface PolkaswapRepository {
+interface PolkaswapSubscriptionRepository {
 
-    suspend fun getPoolBaseTokens(): List<PoolDex>
+    suspend fun getRemotePoolReserves(
+        tokenFrom: Token,
+        tokenTo: Token,
+        enabled: Boolean,
+        presented: Boolean
+    ): LiquidityData
 
-    fun getPoolData(
-        address: String,
+    suspend fun updateAccountPools(address: String)
+
+    fun subscribeToPoolsAssets(address: String): Flow<String>
+
+    fun subscribeToPoolsData(address: String): Flow<String>
+
+    fun observePoolXYKReserves(
         baseTokenId: String,
         tokenId: String
-    ): Flow<UserPoolData?>
+    ): Flow<String>
 
-    fun subscribePoolFlow(address: String): Flow<List<UserPoolData>>
+    fun observePoolTBCReserves(tokenId: String): Flow<String>
 
-    suspend fun getPoolsCache(address: String): List<UserPoolData>
+    suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean
 
-    fun subscribeLocalPoolReserves(
-        address: String,
+    suspend fun getAvailableSources(tokenId1: String, tokenId2: String, dexId: Int): List<Market>
+
+    suspend fun getSwapQuote(
+        tokenId1: String,
+        tokenId2: String,
+        amount: BigDecimal,
+        swapVariant: WithDesired,
+        markets: List<Market>,
+        feeToken: Token,
+        dexId: Int,
+    ): SwapQuote?
+
+    fun isPairEnabled(
+        inputAssetId: String,
+        outputAssetId: String,
+        accountAddress: String,
+    ): Flow<Boolean>
+
+    fun isPairPresentedInNetwork(
         baseTokenId: String,
-        assetId: String
-    ): Flow<LiquidityData?>
-
-    fun getPolkaswapDisclaimerVisibility(): Flow<Boolean>
-
-    suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
-
-    suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount)
-
-    suspend fun poolFavoriteOff(ids: StringPair, account: SoraAccount)
-
-    suspend fun updatePoolPosition(pools: Map<StringPair, Int>, account: SoraAccount)
+        tokenId: String, accountAddress: String
+    ): Flow<Boolean>
 }
