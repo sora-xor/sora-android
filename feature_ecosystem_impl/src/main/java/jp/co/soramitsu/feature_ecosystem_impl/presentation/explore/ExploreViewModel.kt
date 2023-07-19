@@ -49,14 +49,11 @@ class ExploreViewModel @Inject constructor(
 
     override fun startScreen(): String = ExploreRoutes.START
 
-    fun onAddLiquidityClick() {
-        polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
-
     fun onTokenClicked(tokenId: String) {
         assetsRouter.showAssetDetails(tokenId)
     }
 
     fun onPoolClicked(pool: StringPair) {
+        polkaswapRouter.showPoolDetails(pool)
     }
 }

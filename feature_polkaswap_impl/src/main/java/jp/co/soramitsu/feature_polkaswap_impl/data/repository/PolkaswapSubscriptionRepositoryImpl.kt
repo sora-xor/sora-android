@@ -78,7 +78,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val runtimeManager: RuntimeManager,
 ) : PolkaswapSubscriptionRepository,
-    PolkaswapBlockchainRepositoryImpl(blockExplorerManager, runtimeManager, wsConnection, db) {
+    PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
     override suspend fun updateAccountPools(address: String) {
         // pool base tokens
@@ -185,13 +185,16 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 tokenTo.id
             ) ?: (BigInteger.ZERO to BigInteger.ZERO)
 
+            val poolLocal = db.poolDao().getBasicPool(tokenFrom.id, tokenTo.id)
+
             LiquidityData(
                 firstReserves = mapBalance(reservesFirst, tokenFrom.precision),
                 secondReserves = mapBalance(reservesSecond, tokenTo.precision),
                 firstPooled = mapBalance(BigInteger.ZERO, tokenFrom.precision),
                 secondPooled = mapBalance(BigInteger.ZERO, tokenTo.precision),
-                sbApy = getPoolStrategicBonusAPY(tokenTo.id, tokenFrom.id)
-                    ?.times(100)
+                sbApy = poolLocal?.reservesAccount?.let {
+                    getPoolStrategicBonusAPY(it)?.times(100)
+                },
             )
         } else {
             LiquidityData()

@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import java.math.BigDecimal
+import jp.co.soramitsu.common.util.ext.compareNullDesc
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -52,8 +52,11 @@ internal class EcoSystemPoolsInteractorImpl(
                     pools = list.map {
                         EcoSystemPool(
                             pool = it,
-                            tvl = BigDecimal.TEN,
+                            tvl = it.baseToken.fiatPrice?.times(2)?.toBigDecimal()
+                                ?.multiply(it.baseReserves),
                         )
+                    }.sortedWith { o1, o2 ->
+                        compareNullDesc(o1.tvl, o2.tvl)
                     }
                 )
             }

@@ -89,7 +89,7 @@ fun mapTokensToCardState(
             tokenIcon = pair.first.iconUri(),
             tokenName = pair.first.name,
             tokenId = pair.first.id,
-            assetAmount = pair.second?.formatFiatSuffix().orEmpty(),
+            assetAmount = pair.first.printFiat(pair.second?.formatFiatSuffix()).orEmpty(),
             tokenSymbol = "",
             assetFiatAmount = pair.first.formatFiatOrEmpty(pair.first.fiatPrice, nf, true),
             fiatChange = pair.first.printFiatChange(nf),

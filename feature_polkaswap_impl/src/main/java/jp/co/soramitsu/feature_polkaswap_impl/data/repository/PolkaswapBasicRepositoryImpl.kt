@@ -33,36 +33,18 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.shared_utils.extensions.fromHex
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 
 abstract class PolkaswapBasicRepositoryImpl(
     private val db: AppDatabase,
+    private val blockExplorerManager: BlockExplorerManager,
 ) {
+    protected fun getPoolStrategicBonusAPY(
+        reserveAccountOfPool: String,
+    ): Double? =
+        blockExplorerManager.getTempApy(reserveAccountOfPool)
 
     protected suspend fun getPoolBaseTokenDexId(tokenId: String): Int {
         return db.poolDao().getPoolBaseToken(tokenId)?.dexId ?: 0
-    }
-}
-
-abstract class PolkaswapBlockchainRepositoryImpl(
-    private val blockExplorerManager: BlockExplorerManager,
-    private val runtimeManager: RuntimeManager,
-    private val wsConnection: SubstrateApi,
-    db: AppDatabase,
-) : PolkaswapBasicRepositoryImpl(db) {
-
-    protected suspend fun getPoolStrategicBonusAPY(
-        tokenId: String,
-        baseTokenId: String,
-    ): Double? {
-        val result = blockExplorerManager.getTempApy(tokenId)?.sbApy
-        if (result != null) return result
-        return wsConnection.getPoolReserveAccount(baseTokenId, tokenId.fromHex())?.let {
-            val id = runtimeManager.toSoraAddress(it)
-            blockExplorerManager.getTempApy(id)?.sbApy
-        }
     }
 }

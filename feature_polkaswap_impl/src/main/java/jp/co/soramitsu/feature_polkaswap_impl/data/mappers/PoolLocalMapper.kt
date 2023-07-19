@@ -41,7 +41,11 @@ import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 
 object PoolLocalMapper {
 
-    suspend fun mapBasicLocal(basicPoolLocal: BasicPoolLocal, token: suspend (String) -> Token): BasicPoolData {
+    suspend fun mapBasicLocal(
+        basicPoolLocal: BasicPoolLocal,
+        token: suspend (String) -> Token,
+        sbapy: (String) -> Double?,
+    ): BasicPoolData {
         return BasicPoolData(
             baseToken = token(basicPoolLocal.tokenIdBase),
             targetToken = token(basicPoolLocal.tokenIdTarget),
@@ -49,10 +53,16 @@ object PoolLocalMapper {
             targetReserves = basicPoolLocal.reserveTarget,
             totalIssuance = basicPoolLocal.totalIssuance,
             reserveAccount = basicPoolLocal.reservesAccount,
+            sbapy = sbapy(basicPoolLocal.reservesAccount),
         )
     }
 
-    fun mapLocal(poolLocal: UserPoolJoinedLocal, baseToken: Token, token: Token, apy: Double?): UserPoolData {
+    fun mapLocal(
+        poolLocal: UserPoolJoinedLocal,
+        baseToken: Token,
+        token: Token,
+        apy: Double?
+    ): UserPoolData {
         val basePooled = PolkaswapFormulas.calculatePooledValue(
             poolLocal.basicPoolLocal.reserveBase,
             poolLocal.userPoolLocal.poolProvidersBalance,
@@ -75,10 +85,10 @@ object PoolLocalMapper {
                 targetReserves = poolLocal.basicPoolLocal.reserveTarget,
                 totalIssuance = poolLocal.basicPoolLocal.totalIssuance,
                 reserveAccount = poolLocal.basicPoolLocal.reservesAccount,
+                sbapy = apy,
             ),
             basePooled = basePooled,
             targetPooled = secondPooled,
-            apy,
             share.toDouble(),
             poolLocal.userPoolLocal.poolProvidersBalance,
             poolLocal.userPoolLocal.favorite,

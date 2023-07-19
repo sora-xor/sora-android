@@ -52,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +61,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -95,7 +97,7 @@ val previewBasicPoolListItemState = listOf(
         token2Icon = DEFAULT_ICON_URI,
         text1 = "XOR-VAL",
         text2 = "123.4M",
-        text3 = "12.3% APY",
+        text3 = "1234.3%",
     ),
     BasicPoolListItemState(
         ids = "2" to "3",
@@ -104,7 +106,7 @@ val previewBasicPoolListItemState = listOf(
         token2Icon = DEFAULT_ICON_URI,
         text1 = "XSTUSD-PSWAP",
         text2 = "234.4512",
-        text3 = "1.23% APY",
+        text3 = "19876.23%",
     ),
 )
 
@@ -185,7 +187,7 @@ fun BasicPoolListItem(
             )
         }
         Text(
-            text = state.text3,
+            text = "%s %s".format(state.text3, stringResource(id = R.string.common_apy)),
             modifier = Modifier
                 .background(
                     color = MaterialTheme.customColors.bgSurfaceVariant,

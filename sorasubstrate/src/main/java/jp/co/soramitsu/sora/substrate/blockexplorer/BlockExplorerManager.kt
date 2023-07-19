@@ -71,7 +71,7 @@ class BlockExplorerManager @Inject constructor(
 
     fun getTempApy(id: String) = tempApy.find {
         it.id == id
-    }
+    }?.sbApy?.times(100)
 
     suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, BigInteger>> =
         assetsInfo ?: getAssetsInfoInternal(tokenIds).also {

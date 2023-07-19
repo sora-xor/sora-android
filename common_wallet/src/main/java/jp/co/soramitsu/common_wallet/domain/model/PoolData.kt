@@ -43,6 +43,7 @@ data class BasicPoolData(
     val targetReserves: BigDecimal,
     val totalIssuance: BigDecimal,
     val reserveAccount: String,
+    val sbapy: Double?,
 ) {
     val fiatSymbol = baseToken.fiatSymbol
 }

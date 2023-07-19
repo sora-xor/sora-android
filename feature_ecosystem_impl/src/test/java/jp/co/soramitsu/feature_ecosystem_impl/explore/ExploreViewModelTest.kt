@@ -36,18 +36,15 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
-import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.verify
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -73,10 +70,4 @@ class ExploreViewModelTest {
         discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter)
     }
 
-    @Test
-    fun `onAddLiquidityClick() called`() {
-        discoverViewModel.onAddLiquidityClick()
-
-        verify(polkaswapRouter).showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
 }

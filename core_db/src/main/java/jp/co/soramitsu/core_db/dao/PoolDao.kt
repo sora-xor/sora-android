@@ -56,6 +56,13 @@ interface PoolDao {
     @Query("select * from allpools")
     fun subscribeBasicPools(): Flow<List<BasicPoolLocal>>
 
+    @Query(
+        """
+        select * from allpools where tokenIdBase=:base and tokenIdTarget=:target
+    """
+    )
+    fun getBasicPool(base: String, target: String): BasicPoolLocal?
+
     @Query("select * from poolBaseTokens left join tokens on poolBaseTokens.tokenId = tokens.id")
     suspend fun getPoolBaseTokens(): List<BasePoolWithTokenLocal>
 

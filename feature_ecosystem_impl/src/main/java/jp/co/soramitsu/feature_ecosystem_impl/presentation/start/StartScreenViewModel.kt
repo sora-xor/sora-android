@@ -34,8 +34,8 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.start
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jp.co.soramitsu.common.domain.CoroutineManager
 import javax.inject.Inject
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPools
@@ -92,9 +92,6 @@ internal class StartScreenViewModel @Inject constructor(
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemPoolsState)
-
-    init {
-    }
 
     fun onTokenClicked(tokenId: String) {
     }

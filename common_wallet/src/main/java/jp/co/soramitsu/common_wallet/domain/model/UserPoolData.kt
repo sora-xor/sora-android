@@ -42,7 +42,6 @@ data class UserPoolData(
     val basic: BasicPoolData,
     val basePooled: BigDecimal,
     val targetPooled: BigDecimal,
-    val strategicBonusApy: Double?,
     val poolShare: Double,
     val poolProvidersBalance: BigDecimal,
     val favorite: Boolean,

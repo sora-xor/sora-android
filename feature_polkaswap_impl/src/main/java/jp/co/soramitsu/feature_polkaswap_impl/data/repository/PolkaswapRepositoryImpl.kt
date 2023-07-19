@@ -50,8 +50,6 @@ import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
@@ -64,17 +62,17 @@ class PolkaswapRepositoryImpl @Inject constructor(
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     private val blockExplorerManager: BlockExplorerManager,
     private val soraConfigManager: SoraConfigManager,
-    runtimeManager: RuntimeManager,
-    wsConnection: SubstrateApi,
 ) : PolkaswapRepository,
-    PolkaswapBlockchainRepositoryImpl(blockExplorerManager, runtimeManager, wsConnection, db) {
+    PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
     override fun subscribeBasicPools(): Flow<List<BasicPoolData>> {
         return db.poolDao().subscribeBasicPools().map { list ->
             list.map { local ->
-                PoolLocalMapper.mapBasicLocal(local) {
-                    getToken(it)
-                }
+                PoolLocalMapper.mapBasicLocal(
+                    local,
+                    { getToken(it) },
+                    { getPoolStrategicBonusAPY(it) }
+                )
             }
         }
     }
@@ -150,7 +148,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
             poolLocal,
             baseToken,
             token,
-            getPoolStrategicBonusAPY(token.id, baseToken.id),
+            getPoolStrategicBonusAPY(poolLocal.basicPoolLocal.reservesAccount),
         )
     }
 
@@ -187,9 +185,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
                     pool.basicPoolLocal.reserveTarget,
                     firstPooled,
                     secondPooled,
-                    blockExplorerManager.getTempApy(pool.basicPoolLocal.reservesAccount)?.sbApy?.times(
-                        100
-                    ),
+                    blockExplorerManager.getTempApy(pool.basicPoolLocal.reservesAccount),
                 )
             }
         }
