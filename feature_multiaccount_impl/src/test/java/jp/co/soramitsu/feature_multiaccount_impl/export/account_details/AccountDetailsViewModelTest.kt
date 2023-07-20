@@ -40,6 +40,8 @@ import androidx.navigation.NavController
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.backup.domain.models.Json
+import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -231,15 +233,20 @@ class AccountDetailsViewModelTest {
 
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
 
-        val decryptedBackupAccount = DecryptedBackupAccount(
-            account.accountName,
-            account.substrateAddress,
-            "mne mo nic",
-            CryptoType.SR25519,
-            "",
-            "",
-            backupAccountType = listOf(BackupAccountType.PASSHRASE)
-        )
+        val decryptedBackupAccount =
+            DecryptedBackupAccount(
+                name = "accountName",
+                address = "address",
+                mnemonicPhrase = "mne mo nic",
+                cryptoType = CryptoType.SR25519,
+                backupAccountType = listOf(
+                    BackupAccountType.JSON,
+                    BackupAccountType.PASSHRASE,
+                    BackupAccountType.SEED
+                ),
+                seed = Seed(),
+                json = Json()
+            )
 
         accountDetailsViewModel.onBackupPasswordClicked()
         advanceUntilIdle()
