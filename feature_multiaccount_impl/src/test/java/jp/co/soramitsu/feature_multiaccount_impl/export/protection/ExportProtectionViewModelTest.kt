@@ -74,7 +74,7 @@ class ExportProtectionViewModelTest {
     @Before
     fun setUp() = runTest {
         exportProtectionViewModel =
-            ExportProtectionViewModel(router, resourceManager, type, "address", listOf("address"))
+            ExportProtectionViewModel(router, type, "address", listOf("address"))
     }
 
     @Test

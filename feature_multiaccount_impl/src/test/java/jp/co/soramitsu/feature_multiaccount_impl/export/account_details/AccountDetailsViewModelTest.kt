@@ -38,6 +38,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
 import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
@@ -237,6 +238,7 @@ class AccountDetailsViewModelTest {
             CryptoType.SR25519,
             "",
             "",
+            backupAccountType = listOf(BackupAccountType.PASSHRASE)
         )
 
         accountDetailsViewModel.onBackupPasswordClicked()
@@ -245,7 +247,9 @@ class AccountDetailsViewModelTest {
         verify(backupService).saveBackupAccount(decryptedBackupAccount, password)
         val popEvent = accountDetailsViewModel.navigationPop.getOrAwaitValue()
         assertEquals(Unit, popEvent)
-        assertTrue(accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable ?: false)
+        assertTrue(
+            accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable ?: false
+        )
     }
 
     @Test

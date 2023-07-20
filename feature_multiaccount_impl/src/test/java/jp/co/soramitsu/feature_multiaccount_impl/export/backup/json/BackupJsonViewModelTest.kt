@@ -84,7 +84,7 @@ class BackupJsonViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        viewModel = BackupJsonViewModel(interactor, router, addresses, resourceManager)
+        viewModel = BackupJsonViewModel(interactor, router, addresses)
     }
 
     @Test
@@ -103,7 +103,10 @@ class BackupJsonViewModelTest {
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(
                 it,
-                BackupJsonScreenState(state = InputTextState(textFieldValue), buttonEnabledState = false)
+                BackupJsonScreenState(
+                    state = InputTextState(textFieldValue),
+                    buttonEnabledState = false
+                )
             )
         }
     }
@@ -118,7 +121,11 @@ class BackupJsonViewModelTest {
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(
                 it,
-                BackupJsonScreenState(state = InputTextState(textFieldValue), confirmationState = InputTextState(textFieldValue), buttonEnabledState = true)
+                BackupJsonScreenState(
+                    state = InputTextState(textFieldValue),
+                    confirmationState = InputTextState(textFieldValue),
+                    buttonEnabledState = true
+                )
             )
         }
     }
@@ -134,7 +141,11 @@ class BackupJsonViewModelTest {
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(
                 it,
-                BackupJsonScreenState(state = InputTextState(textFieldValue), confirmationState = InputTextState(textFieldValue2), buttonEnabledState = false)
+                BackupJsonScreenState(
+                    state = InputTextState(textFieldValue),
+                    confirmationState = InputTextState(textFieldValue2),
+                    buttonEnabledState = false
+                )
             )
         }
     }
