@@ -714,7 +714,6 @@ class OnboardingViewModel @Inject constructor(
                                 .build()
                         )
                     } catch (e: DecryptionException) {
-                        e.printStackTrace()
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: DecodingException) {
                         onError(SoraException.businessError(ResponseCode.GENERAL_ERROR))
