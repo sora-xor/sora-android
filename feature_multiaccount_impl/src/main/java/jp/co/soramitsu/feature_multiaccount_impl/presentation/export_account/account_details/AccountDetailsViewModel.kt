@@ -43,8 +43,12 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.SocketException
 import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.backup.domain.models.Json
+import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.SoraException
@@ -106,6 +110,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     val deleteDialogState: LiveData<Boolean> = _deleteDialogState
 
     private val changeNameFlow = MutableStateFlow("")
+    private var account: SoraAccount? = null
 
     init {
         _toolbarState.value = initSmallTitle2(
@@ -119,19 +124,21 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 null
             }
 
-            val account = interactor.getSoraAccount(address)
-            val isMnemonicAvailable = interactor.getMnemonic(account).isNotEmpty()
-            _accountDetailsScreenState.value = AccountDetailsScreenState(
-                InputTextState(
-                    value = TextFieldValue(account.accountName),
-                    label = resourceManager.getString(R.string.personal_info_username_v1),
-                    leadingIcon = R.drawable.ic_input_pencil_24,
-                ),
-                isMnemonicAvailable,
-                false,
-                isBackupAvailable = isAccountBackedUp,
-                address,
-            )
+            account = interactor.getSoraAccount(address)
+            account?.let { account ->
+                val isMnemonicAvailable = interactor.getMnemonic(account).isNotEmpty()
+                _accountDetailsScreenState.value = AccountDetailsScreenState(
+                    InputTextState(
+                        value = TextFieldValue(account.accountName),
+                        label = resourceManager.getString(R.string.personal_info_username_v1),
+                        leadingIcon = R.drawable.ic_input_pencil_24,
+                    ),
+                    isMnemonicAvailable,
+                    false,
+                    isBackupAvailable = isAccountBackedUp,
+                    address,
+                )
+            }
         }
 
         viewModelScope.launch {
@@ -231,27 +238,44 @@ class AccountDetailsViewModel @AssistedInject constructor(
             try {
                 viewModelScope.launch(coroutineManager.io) {
                     _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
-                        val mnemonic = interactor.getMnemonic(accountDetailsScreenState.address)
-                        backupService.saveBackupAccount(
-                            DecryptedBackupAccount(
-                                accountDetailsScreenState.accountNameState.value.text,
-                                accountDetailsScreenState.address,
-                                mnemonic,
-                                CryptoType.SR25519,
-                                "",
-                                "",
-                            ),
-                            createBackupPasswordState.password.value.text
-                        )
+                        account?.let { account ->
+                            val passphrase =
+                                interactor.getMnemonic(accountDetailsScreenState.address)
+                            val jsonString = interactor.generateSubstrateJsonString(
+                                listOf(account),
+                                createBackupPasswordState.password.value.text
+                            )
 
-                        withContext(coroutineManager.main) {
-                            _accountDetailsScreenState.value = _accountDetailsScreenState
-                                .value?.copy(
-                                    isBackupAvailable = backupService.isAccountBackedUp(
-                                        address
+                            val seed = Seed(
+                                substrateSeed = interactor.convertPassphraseToSeed(passphrase)
+                            )
+
+                            backupService.saveBackupAccount(
+                                DecryptedBackupAccount(
+                                    name = accountDetailsScreenState.accountNameState.value.text,
+                                    address = accountDetailsScreenState.address,
+                                    mnemonicPhrase = passphrase,
+                                    cryptoType = CryptoType.SR25519,
+                                    backupAccountType = listOf(
+                                        BackupAccountType.JSON,
+                                        BackupAccountType.PASSHRASE,
+                                        BackupAccountType.SEED
+                                    ),
+                                    seed = seed,
+                                    json = Json(substrateJson = jsonString)
+                                ),
+                                createBackupPasswordState.password.value.text
+                            )
+
+                            withContext(coroutineManager.main) {
+                                _accountDetailsScreenState.value = _accountDetailsScreenState
+                                    .value?.copy(
+                                        isBackupAvailable = backupService.isAccountBackedUp(
+                                            address
+                                        )
                                     )
-                                )
-                            _navigationPop.trigger()
+                                _navigationPop.trigger()
+                            }
                         }
                     }
                 }
