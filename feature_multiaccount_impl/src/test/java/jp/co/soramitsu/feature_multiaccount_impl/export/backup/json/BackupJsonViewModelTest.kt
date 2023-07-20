@@ -35,12 +35,11 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.backup.json
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.json.BackupJsonViewModel
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupJsonScreenState
-import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -70,9 +69,6 @@ class BackupJsonViewModelTest {
     private lateinit var router: MainRouter
 
     @Mock
-    private lateinit var resourceManager: ResourceManager
-
-    @Mock
     private lateinit var interactor: MultiaccountInteractor
 
     @Mock
@@ -82,6 +78,16 @@ class BackupJsonViewModelTest {
 
     private val addresses = listOf("address1", "address2")
 
+    private val initialState = BackupJsonScreenState(
+        state = InputTextState(
+            descriptionText = R.string.backup_password_requirments,
+            label = R.string.export_json_input_label
+        ),
+        confirmationState = InputTextState(
+            label = R.string.export_json_input_confirmation_label
+        )
+    )
+
     @Before
     fun setUp() = runTest {
         viewModel = BackupJsonViewModel(interactor, router, addresses)
@@ -90,62 +96,91 @@ class BackupJsonViewModelTest {
     @Test
     fun init() = runTest {
         viewModel.backupJsonScreenState.value?.let {
-            assertEquals(it, BackupJsonScreenState())
+            assertEquals(initialState, it)
         }
     }
 
     @Test
     fun passwordInputChangedCalled() {
-        val textFieldValue = TextFieldValue("text")
+        val textFieldValue = TextFieldValue("password")
+
+        val expectedState = initialState.copy(
+            state = initialState.state.copy(
+                value = textFieldValue,
+                descriptionText = R.string.backup_password_mandatory_reqs_fulfilled,
+                success = true
+            ),
+            confirmationState = initialState.confirmationState.copy(
+                descriptionText = R.string.common_empty_string
+            ),
+            buttonEnabledState = false
+        )
 
         viewModel.passwordInputChanged(textFieldValue)
 
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(
                 it,
-                BackupJsonScreenState(
-                    state = InputTextState(textFieldValue),
-                    buttonEnabledState = false
-                )
+                expectedState
             )
         }
     }
 
     @Test
     fun confirmationInputChangedCalled() {
-        val textFieldValue = TextFieldValue("text")
+        val textFieldValue = TextFieldValue("password")
 
         viewModel.passwordInputChanged(textFieldValue)
         viewModel.confirmationInputChanged(textFieldValue)
+        val expectedState = initialState.copy(
+            state = initialState.state.copy(
+                value = textFieldValue,
+                descriptionText = R.string.backup_password_mandatory_reqs_fulfilled,
+                success = true
+            ),
+            confirmationState = initialState.confirmationState.copy(
+                value = textFieldValue,
+                descriptionText = R.string.create_backup_password_matched,
+                success = true
+            ),
+            buttonEnabledState = true
+        )
 
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(
-                it,
-                BackupJsonScreenState(
-                    state = InputTextState(textFieldValue),
-                    confirmationState = InputTextState(textFieldValue),
-                    buttonEnabledState = true
-                )
+                expectedState,
+                it
             )
         }
     }
 
     @Test
     fun confirmationInputChangedWithButtonDisabledCalled() {
-        val textFieldValue = TextFieldValue("text")
-        val textFieldValue2 = TextFieldValue("text2")
+        val textFieldValue = TextFieldValue("password")
+        val textFieldValue2 = TextFieldValue("password2")
+
+        val expectedState = initialState.copy(
+            state = initialState.state.copy(
+                value = textFieldValue,
+                descriptionText = R.string.backup_password_mandatory_reqs_fulfilled,
+                success = true
+            ),
+            confirmationState = initialState.confirmationState.copy(
+                value = textFieldValue2,
+                descriptionText = R.string.create_backup_password_not_matched,
+                success = false,
+                error = true
+            ),
+            buttonEnabledState = false
+        )
 
         viewModel.passwordInputChanged(textFieldValue)
         viewModel.confirmationInputChanged(textFieldValue2)
 
         viewModel.backupJsonScreenState.value?.let {
             assertEquals(
-                it,
-                BackupJsonScreenState(
-                    state = InputTextState(textFieldValue),
-                    confirmationState = InputTextState(textFieldValue2),
-                    buttonEnabledState = false
-                )
+                expectedState,
+                it
             )
         }
     }

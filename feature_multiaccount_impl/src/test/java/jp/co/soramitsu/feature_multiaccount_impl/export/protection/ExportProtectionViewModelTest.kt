@@ -64,9 +64,6 @@ class ExportProtectionViewModelTest {
     @Mock
     private lateinit var router: MainRouter
 
-    @Mock
-    private lateinit var resourceManager: ResourceManager
-
     private lateinit var exportProtectionViewModel: ExportProtectionViewModel
 
     private val type = ExportProtectionViewModel.Type.PASSPHRASE
