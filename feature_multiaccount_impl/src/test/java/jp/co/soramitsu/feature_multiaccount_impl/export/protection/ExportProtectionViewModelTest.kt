@@ -64,9 +64,6 @@ class ExportProtectionViewModelTest {
     @Mock
     private lateinit var router: MainRouter
 
-    @Mock
-    private lateinit var resourceManager: ResourceManager
-
     private lateinit var exportProtectionViewModel: ExportProtectionViewModel
 
     private val type = ExportProtectionViewModel.Type.PASSPHRASE
@@ -74,7 +71,7 @@ class ExportProtectionViewModelTest {
     @Before
     fun setUp() = runTest {
         exportProtectionViewModel =
-            ExportProtectionViewModel(router, resourceManager, type, "address", listOf("address"))
+            ExportProtectionViewModel(router, type, "address", listOf("address"))
     }
 
     @Test

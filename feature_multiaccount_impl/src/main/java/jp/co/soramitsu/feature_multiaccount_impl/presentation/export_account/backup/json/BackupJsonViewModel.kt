@@ -42,7 +42,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
@@ -54,7 +54,6 @@ class BackupJsonViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
     @Assisted("addresses") private val addresses: List<String>,
-    resourceManager: ResourceManager,
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -76,28 +75,64 @@ class BackupJsonViewModel @AssistedInject constructor(
         )
         _backupJsonScreenState.value = BackupJsonScreenState(
             state = InputTextState(
-                label = resourceManager.getString(R.string.export_json_input_label)
+                descriptionText = R.string.backup_password_requirments,
+                label = R.string.export_json_input_label
             ),
             confirmationState = InputTextState(
-                label = resourceManager.getString(R.string.export_json_input_confirmation_label)
+                label = R.string.export_json_input_confirmation_label
             )
         )
     }
 
     fun passwordInputChanged(textFieldValue: TextFieldValue) {
         backupJsonScreenState.value?.let {
+            val filteredValue = textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
+            val isSecure = filteredValue.text.isPasswordSecure()
+
+            val descriptionText = if (isSecure) {
+                R.string.backup_password_mandatory_reqs_fulfilled
+            } else {
+                R.string.backup_password_requirments
+            }
+            val (confirmationDescriptionText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                filteredValue.text,
+                it.confirmationState.value.text
+            )
+
             _backupJsonScreenState.value = it.copy(
-                state = it.state.copy(textFieldValue),
-                buttonEnabledState = textFieldValue.text.isNotEmpty() && textFieldValue.text == it.confirmationState.value.text
+                state = it.state.copy(
+                    value = filteredValue,
+                    success = isSecure,
+                    descriptionText = descriptionText,
+                    error = !isSecure && filteredValue.text.isNotEmpty()
+                ),
+                confirmationState = it.confirmationState.copy(
+                    error = isError,
+                    descriptionText = confirmationDescriptionText,
+                    success = !isError && confirmationDescriptionText != R.string.common_empty_string
+                ),
+                buttonEnabledState = isSecure && textFieldValue.text == it.confirmationState.value.text
             )
         }
     }
 
     fun confirmationInputChanged(textFieldValue: TextFieldValue) {
         backupJsonScreenState.value?.let {
+            val filteredValue =
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
+            val (confirmationDescText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                it.state.value.text,
+                filteredValue.text
+            )
+
             _backupJsonScreenState.value = it.copy(
-                confirmationState = it.confirmationState.copy(textFieldValue),
-                buttonEnabledState = textFieldValue.text.isNotEmpty() && it.state.value.text == textFieldValue.text
+                confirmationState = it.confirmationState.copy(
+                    value = filteredValue,
+                    success = !isError && filteredValue.text.isNotEmpty(),
+                    descriptionText = confirmationDescText,
+                    error = isError
+                ),
+                buttonEnabledState = !isError && it.state.value.text == textFieldValue.text
             )
         }
     }
@@ -117,5 +152,16 @@ class BackupJsonViewModel @AssistedInject constructor(
 
     override fun onBackPressed() {
         router.popBackStackToAccountList()
+    }
+
+    private fun getPasswordConfirmationDescriptionAndErrorStatus(
+        password: String,
+        passwordConfirmation: String
+    ): Pair<Int, Boolean> {
+        return when (passwordConfirmation) {
+            "" -> R.string.common_empty_string to false
+            password -> R.string.create_backup_password_matched to false
+            else -> R.string.create_backup_password_not_matched to true
+        }
     }
 }

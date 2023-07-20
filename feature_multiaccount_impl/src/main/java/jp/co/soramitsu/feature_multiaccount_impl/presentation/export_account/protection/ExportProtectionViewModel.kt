@@ -40,7 +40,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.R
@@ -50,7 +49,6 @@ import kotlinx.parcelize.Parcelize
 
 class ExportProtectionViewModel @AssistedInject constructor(
     private val router: MainRouter,
-    private val resourceManager: ResourceManager,
     @Assisted("type") private val type: Type,
     @Assisted("address") private val address: String,
     @Assisted("addresses") private val addresses: List<String>
