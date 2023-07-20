@@ -38,9 +38,9 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemTokensState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +54,7 @@ import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 internal class AllCurrenciesViewModel @Inject constructor(
-    ecoSystemInteractor: EcoSystemInteractor,
+    ecoSystemTokensInteractor: EcoSystemTokensInteractor,
     private val ecoSystemMapper: EcoSystemMapper,
     coroutineManager: CoroutineManager,
 ) : BaseViewModel() {
@@ -62,7 +62,7 @@ internal class AllCurrenciesViewModel @Inject constructor(
     private val filter = MutableStateFlow("")
     private var positions: Map<String, String>? = null
 
-    val state = ecoSystemInteractor.subscribeTokens()
+    val state = ecoSystemTokensInteractor.subscribeTokens()
         .onEach {
             positions = it.tokens.mapIndexed { index, ecoSystemToken ->
                 ecoSystemToken.token.id to (index + 1).toString()

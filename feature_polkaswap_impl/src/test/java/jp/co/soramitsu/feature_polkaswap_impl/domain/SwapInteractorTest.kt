@@ -38,7 +38,9 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,6 +68,12 @@ class SwapInteractorTest {
     private lateinit var polkaswapRepository: PolkaswapRepository
 
     @Mock
+    private lateinit var polkaswapSubscriptionRepository: PolkaswapSubscriptionRepository
+
+    @Mock
+    private lateinit var polkaswapExtrinsicRepository: PolkaswapExtrinsicRepository
+
+    @Mock
     private lateinit var assetsRepository: AssetsRepository
 
     @Mock
@@ -85,12 +93,14 @@ class SwapInteractorTest {
     @Before
     fun setUp() {
         interactor = SwapInteractorImpl(
-                assetsRepository,
-                credentialsRepository,
-                userRepository,
-                transactionHistoryRepository,
-                polkaswapRepository,
-                builder,
+            assetsRepository,
+            credentialsRepository,
+            userRepository,
+            transactionHistoryRepository,
+            polkaswapRepository,
+            polkaswapExtrinsicRepository,
+            polkaswapSubscriptionRepository,
+            builder,
         )
     }
 

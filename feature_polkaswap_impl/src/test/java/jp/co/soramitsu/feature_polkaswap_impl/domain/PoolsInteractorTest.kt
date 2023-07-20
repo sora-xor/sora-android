@@ -39,7 +39,9 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.test_data.TestTokens
@@ -73,6 +75,12 @@ class PoolsInteractorTest {
     private lateinit var polkaswapRepository: PolkaswapRepository
 
     @Mock
+    private lateinit var polkaswapSubscriptionRepository: PolkaswapSubscriptionRepository
+
+    @Mock
+    private lateinit var polkaswapExtrinsicRepository: PolkaswapExtrinsicRepository
+
+    @Mock
     private lateinit var credentialsRepository: CredentialsRepository
 
     @Mock
@@ -99,6 +107,8 @@ class PoolsInteractorTest {
             userRepository,
             transactionHistoryRepository,
             polkaswapRepository,
+            polkaswapSubscriptionRepository,
+            polkaswapExtrinsicRepository,
             assetsRepository,
             builder,
         )
@@ -110,7 +120,7 @@ class PoolsInteractorTest {
         val myVal = BigDecimal(30)
         val fee = BigDecimal(0.07)
         whenever(
-            polkaswapRepository.calcAddLiquidityNetworkFee(
+            polkaswapExtrinsicRepository.calcAddLiquidityNetworkFee(
                 any(),
                 any(),
                 any(),

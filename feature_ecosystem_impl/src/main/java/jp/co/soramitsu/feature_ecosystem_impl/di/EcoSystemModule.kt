@@ -38,8 +38,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.scopes.ViewModelScoped
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemInteractor
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemInteractorImpl
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractorImpl
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 
 @Module
@@ -51,8 +51,8 @@ object EcoSystemModule {
     internal fun provideEcoSystemInteractor(
         repo: AssetsRepository,
         blockExplorerManager: BlockExplorerManager,
-    ): EcoSystemInteractor {
-        return EcoSystemInteractorImpl(
+    ): EcoSystemTokensInteractor {
+        return EcoSystemTokensInteractorImpl(
             repo,
             blockExplorerManager,
         )

@@ -131,14 +131,6 @@ class QrCodeFlowViewModelTest {
         val testSoraAccount = testSoraAccount()
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
         every { assetsInteractor.subscribeAssetsActiveOfCurAccount() } returns testAssetsListFlow
-//        mockkStatic(::mapAssetsToCardState)
-//        every {
-//            mapAssetsToCardState(
-//                assets = testAssetsList,
-//                nf = numbersFormatter,
-//                precision = AssetHolder.ROUNDING
-//            )
-//        } returns testAssetItemsCardStatesList(testAssetsList)
         coEvery { assetsInteractor.getCurSoraAccount() } returns testSoraAccount
         coEvery { assetsInteractor.getPublicKeyHex(any()) } returns "this is sor public hex key"
         every { avatarGenerator.createAvatar(any(), any()) } returns drawable
