@@ -32,40 +32,68 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 
-import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.PoolDex
-import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
-import kotlinx.coroutines.flow.Flow
+import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 
-interface PolkaswapRepository {
+interface PolkaswapExtrinsicRepository {
 
-    suspend fun getPoolBaseTokens(): List<PoolDex>
-
-    fun getPoolData(
+    suspend fun calcSwapNetworkFee(
+        tokenId1: Token,
         address: String,
-        baseTokenId: String,
-        tokenId: String
-    ): Flow<UserPoolData?>
+    ): BigDecimal?
 
-    fun subscribePoolFlow(address: String): Flow<List<UserPoolData>>
-
-    suspend fun getPoolsCache(address: String): List<UserPoolData>
-
-    fun subscribeLocalPoolReserves(
+    suspend fun observeRemoveLiquidity(
         address: String,
-        baseTokenId: String,
-        assetId: String
-    ): Flow<LiquidityData?>
+        keypair: Sr25519Keypair,
+        token1: Token,
+        token2: Token,
+        markerAssetDesired: BigDecimal,
+        firstAmountMin: BigDecimal,
+        secondAmountMin: BigDecimal
+    ): ExtrinsicSubmitStatus
 
-    fun getPolkaswapDisclaimerVisibility(): Flow<Boolean>
+    suspend fun observeSwap(
+        tokenId1: Token,
+        tokenId2: Token,
+        keypair: Sr25519Keypair,
+        address: String,
+        markets: List<Market>,
+        swapVariant: WithDesired,
+        amount: BigDecimal,
+        limit: BigDecimal,
+        dexId: Int,
+    ): ExtrinsicSubmitStatus
 
-    suspend fun setPolkaswapDisclaimerVisibility(v: Boolean)
+    suspend fun observeAddLiquidity(
+        address: String,
+        keypair: Sr25519Keypair,
+        tokenFrom: Token,
+        tokenTo: Token,
+        tokenFromAmount: BigDecimal,
+        tokenToAmount: BigDecimal,
+        pairEnabled: Boolean,
+        pairPresented: Boolean,
+        slippageTolerance: Double
+    ): ExtrinsicSubmitStatus
 
-    suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount)
+    suspend fun calcAddLiquidityNetworkFee(
+        address: String,
+        tokenFrom: Token,
+        tokenTo: Token,
+        tokenFromAmount: BigDecimal,
+        tokenToAmount: BigDecimal,
+        pairEnabled: Boolean,
+        pairPresented: Boolean,
+        slippageTolerance: Double
+    ): BigDecimal?
 
-    suspend fun poolFavoriteOff(ids: StringPair, account: SoraAccount)
-
-    suspend fun updatePoolPosition(pools: Map<StringPair, Int>, account: SoraAccount)
+    suspend fun calcRemoveLiquidityNetworkFee(
+        tokenId1: Token,
+        tokenId2: Token,
+        address: String
+    ): BigDecimal?
 }

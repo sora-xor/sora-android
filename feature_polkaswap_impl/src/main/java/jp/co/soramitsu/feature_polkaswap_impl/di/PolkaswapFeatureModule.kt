@@ -45,12 +45,16 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.data.repository.DemeterFarmingRepository
 import jp.co.soramitsu.feature_polkaswap_impl.data.repository.DemeterFarmingRepositoryImpl
+import jp.co.soramitsu.feature_polkaswap_impl.data.repository.PolkaswapExtrinsicRepositoryImpl
 import jp.co.soramitsu.feature_polkaswap_impl.data.repository.PolkaswapRepositoryImpl
+import jp.co.soramitsu.feature_polkaswap_impl.data.repository.PolkaswapSubscriptionRepositoryImpl
 import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractorImpl
 import jp.co.soramitsu.feature_polkaswap_impl.domain.PoolsInteractorImpl
@@ -100,6 +104,14 @@ class PolkaswapFeatureModule {
     @Singleton
     fun providePolkaswapRepository(impl: PolkaswapRepositoryImpl): PolkaswapRepository = impl
 
+    @Provides
+    @Singleton
+    fun providePolkaswapExtrinsicRepository(impl: PolkaswapExtrinsicRepositoryImpl): PolkaswapExtrinsicRepository = impl
+
+    @Provides
+    @Singleton
+    fun providePolkaswapSubscriptionRepository(impl: PolkaswapSubscriptionRepositoryImpl): PolkaswapSubscriptionRepository = impl
+
     @Singleton
     @Provides
     fun providePolkaswapInteractor(
@@ -107,6 +119,8 @@ class PolkaswapFeatureModule {
         userRepository: UserRepository,
         transactionHistoryRepository: TransactionHistoryRepository,
         polkaswapRepository: PolkaswapRepository,
+        polkaswapExtrinsicRepository: PolkaswapExtrinsicRepository,
+        polkaswapSubscriptionRepository: PolkaswapSubscriptionRepository,
         transactionBuilder: TransactionBuilder,
         assetsRepository: AssetsRepository,
     ): PoolsInteractor {
@@ -115,6 +129,8 @@ class PolkaswapFeatureModule {
             userRepository,
             transactionHistoryRepository,
             polkaswapRepository,
+            polkaswapSubscriptionRepository,
+            polkaswapExtrinsicRepository,
             assetsRepository,
             transactionBuilder,
         )
@@ -128,6 +144,8 @@ class PolkaswapFeatureModule {
         userRepository: UserRepository,
         transactionHistoryRepository: TransactionHistoryRepository,
         polkaswapRepository: PolkaswapRepository,
+        polkaswapExtrinsicRepository: PolkaswapExtrinsicRepository,
+        polkaswapSubscriptionRepository: PolkaswapSubscriptionRepository,
         transactionBuilder: TransactionBuilder,
     ): SwapInteractor {
         return SwapInteractorImpl(
@@ -136,6 +154,8 @@ class PolkaswapFeatureModule {
             userRepository,
             transactionHistoryRepository,
             polkaswapRepository,
+            polkaswapExtrinsicRepository,
+            polkaswapSubscriptionRepository,
             transactionBuilder,
         )
     }

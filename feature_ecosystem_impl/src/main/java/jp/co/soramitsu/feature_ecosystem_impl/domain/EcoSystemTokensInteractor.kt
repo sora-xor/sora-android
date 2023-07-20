@@ -30,61 +30,43 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.core_db.model
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
-import java.math.BigDecimal
+import jp.co.soramitsu.common.util.ext.compareNullDesc
+import jp.co.soramitsu.common.util.ext.multiplyNullable
+import jp.co.soramitsu.common.util.mapBalance
+import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-@Entity(
-    tableName = "allpools",
-    primaryKeys = ["tokenIdBase", "tokenIdTarget"],
-)
-data class BasicPoolLocal(
-    val tokenIdBase: String,
-    val tokenIdTarget: String,
-    val reserveBase: BigDecimal,
-    val reserveTarget: BigDecimal,
-    val totalIssuance: BigDecimal,
-    val reservesAccount: String,
-)
+internal interface EcoSystemTokensInteractor {
+    fun subscribeTokens(): Flow<EcoSystemTokens>
+}
 
-@Entity(
-    tableName = "userpools",
-    primaryKeys = ["userTokenIdBase", "userTokenIdTarget", "accountAddress"],
-    indices = [Index(value = ["accountAddress"])],
-    foreignKeys = [
-        ForeignKey(
-            entity = SoraAccountLocal::class,
-            parentColumns = ["substrateAddress"],
-            childColumns = ["accountAddress"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.NO_ACTION,
-        ),
-        ForeignKey(
-            entity = BasicPoolLocal::class,
-            parentColumns = ["tokenIdBase", "tokenIdTarget"],
-            childColumns = ["userTokenIdBase", "userTokenIdTarget"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.NO_ACTION,
-        )
-    ]
-)
-data class UserPoolLocal(
-    val userTokenIdBase: String,
-    val userTokenIdTarget: String,
-    val accountAddress: String,
-    val poolProvidersBalance: BigDecimal,
-    val favorite: Boolean,
-    val sortOrder: Int,
-)
-
-@Entity(
-    tableName = "poolBaseTokens"
-)
-data class PoolBaseTokenLocal(
-    @PrimaryKey val tokenId: String,
-    val dexId: Int,
-)
+internal class EcoSystemTokensInteractorImpl(
+    private val assetsRepository: AssetsRepository,
+    private val blockExplorerManager: BlockExplorerManager,
+) : EcoSystemTokensInteractor {
+    override fun subscribeTokens(): Flow<EcoSystemTokens> {
+        return assetsRepository.subscribeTokensList().map { list ->
+            val liquidity = blockExplorerManager.getTokensLiquidity(list.map { it.id })
+            val mapped = list.map { token ->
+                token to liquidity.firstOrNull { it.first == token.id }?.second?.let { bi ->
+                    mapBalance(bi, token.precision)
+                }
+            }
+            val marketCap = mapped.map { tokenLiquidity ->
+                val sum =
+                    tokenLiquidity.second?.multiplyNullable(tokenLiquidity.first.fiatPrice?.toBigDecimal())
+                EcoSystemToken(tokenLiquidity.first, sum, tokenLiquidity.second)
+            }
+            val sorted = marketCap.sortedWith { o1, o2 ->
+                compareNullDesc(o1.liquidityFiat, o2.liquidityFiat)
+            }
+            EcoSystemTokens(
+                tokens = sorted,
+            )
+        }
+    }
+}
