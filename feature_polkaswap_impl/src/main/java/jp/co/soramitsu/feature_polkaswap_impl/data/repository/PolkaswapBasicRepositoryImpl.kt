@@ -30,61 +30,39 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.core_db.model
+package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
-import java.math.BigDecimal
+import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 
-@Entity(
-    tableName = "allpools",
-    primaryKeys = ["tokenIdBase", "tokenIdTarget"],
-)
-data class BasicPoolLocal(
-    val tokenIdBase: String,
-    val tokenIdTarget: String,
-    val reserveBase: BigDecimal,
-    val reserveTarget: BigDecimal,
-    val totalIssuance: BigDecimal,
-    val reservesAccount: String,
-)
+abstract class PolkaswapBasicRepositoryImpl(
+    private val db: AppDatabase,
+) {
 
-@Entity(
-    tableName = "userpools",
-    primaryKeys = ["userTokenIdBase", "userTokenIdTarget", "accountAddress"],
-    indices = [Index(value = ["accountAddress"])],
-    foreignKeys = [
-        ForeignKey(
-            entity = SoraAccountLocal::class,
-            parentColumns = ["substrateAddress"],
-            childColumns = ["accountAddress"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.NO_ACTION,
-        ),
-        ForeignKey(
-            entity = BasicPoolLocal::class,
-            parentColumns = ["tokenIdBase", "tokenIdTarget"],
-            childColumns = ["userTokenIdBase", "userTokenIdTarget"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.NO_ACTION,
-        )
-    ]
-)
-data class UserPoolLocal(
-    val userTokenIdBase: String,
-    val userTokenIdTarget: String,
-    val accountAddress: String,
-    val poolProvidersBalance: BigDecimal,
-    val favorite: Boolean,
-    val sortOrder: Int,
-)
+    protected suspend fun getPoolBaseTokenDexId(tokenId: String): Int {
+        return db.poolDao().getPoolBaseToken(tokenId)?.dexId ?: 0
+    }
+}
 
-@Entity(
-    tableName = "poolBaseTokens"
-)
-data class PoolBaseTokenLocal(
-    @PrimaryKey val tokenId: String,
-    val dexId: Int,
-)
+abstract class PolkaswapBlockchainRepositoryImpl(
+    private val blockExplorerManager: BlockExplorerManager,
+    private val runtimeManager: RuntimeManager,
+    private val wsConnection: SubstrateApi,
+    db: AppDatabase,
+) : PolkaswapBasicRepositoryImpl(db) {
+
+    protected suspend fun getPoolStrategicBonusAPY(
+        tokenId: String,
+        baseTokenId: String,
+    ): Double? {
+        val result = blockExplorerManager.getTempApy(tokenId)?.sbApy
+        if (result != null) return result
+        return wsConnection.getPoolReserveAccount(baseTokenId, tokenId.fromHex())?.let {
+            val id = runtimeManager.toSoraAddress(it)
+            blockExplorerManager.getTempApy(id)?.sbApy
+        }
+    }
+}

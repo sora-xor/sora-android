@@ -30,61 +30,42 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.core_db.model
+package jp.co.soramitsu.common_wallet.domain.model
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
 import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.calcAmount
+import jp.co.soramitsu.common.domain.calcFiat
+import jp.co.soramitsu.common.domain.fiatChange
 
-@Entity(
-    tableName = "allpools",
-    primaryKeys = ["tokenIdBase", "tokenIdTarget"],
-)
-data class BasicPoolLocal(
-    val tokenIdBase: String,
-    val tokenIdTarget: String,
-    val reserveBase: BigDecimal,
-    val reserveTarget: BigDecimal,
-    val totalIssuance: BigDecimal,
-    val reservesAccount: String,
-)
-
-@Entity(
-    tableName = "userpools",
-    primaryKeys = ["userTokenIdBase", "userTokenIdTarget", "accountAddress"],
-    indices = [Index(value = ["accountAddress"])],
-    foreignKeys = [
-        ForeignKey(
-            entity = SoraAccountLocal::class,
-            parentColumns = ["substrateAddress"],
-            childColumns = ["accountAddress"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.NO_ACTION,
-        ),
-        ForeignKey(
-            entity = BasicPoolLocal::class,
-            parentColumns = ["tokenIdBase", "tokenIdTarget"],
-            childColumns = ["userTokenIdBase", "userTokenIdTarget"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.NO_ACTION,
-        )
-    ]
-)
-data class UserPoolLocal(
-    val userTokenIdBase: String,
-    val userTokenIdTarget: String,
-    val accountAddress: String,
+data class UserPoolData(
+    val basic: BasicPoolData,
+    val basePooled: BigDecimal,
+    val targetPooled: BigDecimal,
+    val strategicBonusApy: Double?,
+    val poolShare: Double,
     val poolProvidersBalance: BigDecimal,
     val favorite: Boolean,
-    val sortOrder: Int,
-)
+    val sort: Int,
+) {
 
-@Entity(
-    tableName = "poolBaseTokens"
-)
-data class PoolBaseTokenLocal(
-    @PrimaryKey val tokenId: String,
-    val dexId: Int,
-)
+    fun printFiat(): Pair<Double, Double>? {
+        val f1 = basic.baseToken.calcFiat(basePooled)
+        val f2 = basic.targetToken.calcFiat(targetPooled)
+        if (f1 == null || f2 == null) return null
+        val change1 = basic.baseToken.fiatPriceChange ?: return null
+        val change2 = basic.targetToken.fiatPriceChange ?: return null
+        val price1 = basic.baseToken.fiatPrice ?: return null
+        val price2 = basic.targetToken.fiatPrice ?: return null
+        val newPoolFiat = f1 + f2
+        val oldPoolFiat = calcAmount(price1 / (1 + change1), basePooled) +
+            calcAmount(price2 / (1 + change2), targetPooled)
+        val changePool = fiatChange(oldPoolFiat, newPoolFiat)
+        return newPoolFiat to changePool
+    }
+}
+
+val List<UserPoolData>.fiatSymbol: String
+    get() {
+        return getOrNull(0)?.basic?.fiatSymbol ?: OptionsProvider.fiatSymbol
+    }

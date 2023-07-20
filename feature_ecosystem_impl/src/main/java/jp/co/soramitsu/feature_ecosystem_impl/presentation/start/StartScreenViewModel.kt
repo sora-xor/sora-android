@@ -36,9 +36,9 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemTokensState
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,11 +48,11 @@ import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 internal class StartScreenViewModel @Inject constructor(
-    private val ecoSystemInteractor: EcoSystemInteractor,
+    private val ecoSystemTokensInteractor: EcoSystemTokensInteractor,
     private val ecoSystemMapper: EcoSystemMapper,
 ) : BaseViewModel() {
 
-    val state = ecoSystemInteractor.subscribeTokens()
+    val state = ecoSystemTokensInteractor.subscribeTokens()
         .catch {
             onError(it)
         }

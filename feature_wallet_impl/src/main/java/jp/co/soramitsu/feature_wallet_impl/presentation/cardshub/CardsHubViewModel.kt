@@ -53,7 +53,7 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
@@ -284,7 +284,7 @@ class CardsHubViewModel @Inject constructor(
         return data.map {
             when (it.first.cardType) {
                 CardHubType.ASSETS -> mapAssetsCard(it.first.collapsed, it.second as List<Asset>)
-                CardHubType.POOLS -> mapPoolsCard(it.first.collapsed, it.second as List<PoolData>)
+                CardHubType.POOLS -> mapPoolsCard(it.first.collapsed, it.second as List<UserPoolData>)
                 CardHubType.GET_SORA_CARD -> (it.second as List<SoraCardState>).first()
                 CardHubType.BUY_XOR_TOKEN -> (it.second as List<BuyXorState>).first()
             }
@@ -302,7 +302,7 @@ class CardsHubViewModel @Inject constructor(
         )
     }
 
-    private fun mapPoolsCard(collapsed: Boolean, pools: List<PoolData>): CardState {
+    private fun mapPoolsCard(collapsed: Boolean, pools: List<UserPoolData>): CardState {
         val data = mapPoolsData(pools, numbersFormatter)
         return TitledAmountCardState(
             amount = formatFiatAmount(data.second, pools.fiatSymbol, numbersFormatter),

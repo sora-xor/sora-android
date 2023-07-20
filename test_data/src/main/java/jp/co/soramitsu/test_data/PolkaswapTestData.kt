@@ -34,8 +34,9 @@ package jp.co.soramitsu.test_data
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.LiquidityDetails
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 
 object PolkaswapTestData {
 
@@ -53,18 +54,22 @@ object PolkaswapTestData {
         secondPooled = BigDecimal.ONE
     )
 
-    val POOL_DATA = PoolData(
-        VAL_ASSET.token,
-        XOR_ASSET.token,
+    val POOL_DATA = UserPoolData(
+        BasicPoolData(
+            XOR_ASSET.token,
+            VAL_ASSET.token,
+            BigDecimal.TEN,
+            BigDecimal.TEN,
+            BigDecimal.TEN,
+            "",
+        ),
         BigDecimal.ONE,
-        BigDecimal.TEN,
         BigDecimal.ONE,
-        BigDecimal.TEN,
         1.0,
         10.0,
         BigDecimal.TEN,
-        BigDecimal.TEN,
         true,
+        2,
     )
 
     val NETWORK_FEE = BigDecimal(0.007)

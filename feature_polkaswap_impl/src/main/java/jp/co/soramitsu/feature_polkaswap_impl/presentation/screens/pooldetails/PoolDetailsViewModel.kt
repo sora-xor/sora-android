@@ -120,12 +120,12 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             it.percent == 100.0f
                         }
                         detailsState = PoolDetailsState(
-                            token1Icon = data.baseToken.iconUri(),
-                            token2Icon = data.token.iconUri(),
+                            token1Icon = data.basic.baseToken.iconUri(),
+                            token2Icon = data.basic.targetToken.iconUri(),
                             rewardsUri = rewardToken().iconUri(),
                             rewardsTokenSymbol = rewardToken().symbol,
-                            symbol1 = data.baseToken.symbol,
-                            symbol2 = data.token.symbol,
+                            symbol1 = data.basic.baseToken.symbol,
+                            symbol2 = data.basic.targetToken.symbol,
                             apy = data.strategicBonusApy?.let { apy ->
                                 "%s%%".format(
                                     numbersFormatter.format(
@@ -134,13 +134,13 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                     )
                                 )
                             } ?: "",
-                            pooled1 = data.baseToken.printBalance(
+                            pooled1 = data.basic.baseToken.printBalance(
                                 data.basePooled,
                                 numbersFormatter,
                                 AssetHolder.ROUNDING
                             ),
-                            pooled2 = data.token.printBalance(
-                                data.secondPooled,
+                            pooled2 = data.basic.targetToken.printBalance(
+                                data.targetPooled,
                                 numbersFormatter,
                                 AssetHolder.ROUNDING
                             ),
