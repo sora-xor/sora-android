@@ -16,7 +16,7 @@ buildscript {
             spongycastle           : '1.58.0.0',
             ed25519                : '2.0.1',
             web3j                  : '4.2.0-android',
-            sharedUtils            : '1.1.1-20230714.074218-5',
+            sharedUtils            : '1.1.1.3-20230719.081227-3',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
             zXingEmbedded          : '4.3.0@aar',
@@ -56,7 +56,7 @@ buildscript {
         // soralution 96 3.0.0.18 2023.07.04
         // sora dae 79 3.0.0.1 2023.05.18
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 96)
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 97)
         appVersionName = '3.0.0.18'
 
         compileVersion = 33

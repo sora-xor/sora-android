@@ -30,43 +30,60 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.domain
+package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 
-import jp.co.soramitsu.common.util.ext.compareNullDesc
-import jp.co.soramitsu.common.util.ext.multiplyNullable
-import jp.co.soramitsu.common.util.mapBalance
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.Market
+import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
+import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
+import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
-internal interface EcoSystemInteractor {
-    fun subscribeTokens(): Flow<EcoSystemTokens>
-}
+interface PolkaswapSubscriptionRepository {
 
-internal class EcoSystemInteractorImpl(
-    private val assetsRepository: AssetsRepository,
-    private val blockExplorerManager: BlockExplorerManager,
-) : EcoSystemInteractor {
-    override fun subscribeTokens(): Flow<EcoSystemTokens> {
-        return assetsRepository.subscribeTokensList().map { list ->
-            val liquidity = blockExplorerManager.getTokensLiquidity(list.map { it.id })
-            val mapped = list.map { token ->
-                token to liquidity.firstOrNull { it.first == token.id }?.second?.let { bi ->
-                    mapBalance(bi, token.precision)
-                }
-            }
-            val marketCap = mapped.map { tokenLiquidity ->
-                val sum =
-                    tokenLiquidity.second?.multiplyNullable(tokenLiquidity.first.fiatPrice?.toBigDecimal())
-                EcoSystemToken(tokenLiquidity.first, sum, tokenLiquidity.second)
-            }
-            val sorted = marketCap.sortedWith { o1, o2 ->
-                compareNullDesc(o1.liquidityFiat, o2.liquidityFiat)
-            }
-            EcoSystemTokens(
-                tokens = sorted,
-            )
-        }
-    }
+    suspend fun getRemotePoolReserves(
+        tokenFrom: Token,
+        tokenTo: Token,
+        enabled: Boolean,
+        presented: Boolean
+    ): LiquidityData
+
+    suspend fun updateAccountPools(address: String)
+
+    fun subscribeToPoolsAssets(address: String): Flow<String>
+
+    fun subscribeToPoolsData(address: String): Flow<String>
+
+    fun observePoolXYKReserves(
+        baseTokenId: String,
+        tokenId: String
+    ): Flow<String>
+
+    fun observePoolTBCReserves(tokenId: String): Flow<String>
+
+    suspend fun isSwapAvailable(tokenId1: String, tokenId2: String, dexId: Int): Boolean
+
+    suspend fun getAvailableSources(tokenId1: String, tokenId2: String, dexId: Int): List<Market>
+
+    suspend fun getSwapQuote(
+        tokenId1: String,
+        tokenId2: String,
+        amount: BigDecimal,
+        swapVariant: WithDesired,
+        markets: List<Market>,
+        feeToken: Token,
+        dexId: Int,
+    ): SwapQuote?
+
+    fun isPairEnabled(
+        inputAssetId: String,
+        outputAssetId: String,
+        accountAddress: String,
+    ): Flow<Boolean>
+
+    fun isPairPresentedInNetwork(
+        baseTokenId: String,
+        tokenId: String, accountAddress: String
+    ): Flow<Boolean>
 }
