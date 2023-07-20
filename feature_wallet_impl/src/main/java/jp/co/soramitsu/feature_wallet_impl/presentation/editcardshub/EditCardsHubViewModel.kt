@@ -36,116 +36,72 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
 class EditCardsHubViewModel @Inject constructor(
-    private val walletRouter: WalletRouter,
     private val cardsHubInteractor: CardsHubInteractorImpl
 ) : BaseViewModel() {
 
-    private val mutableState = MutableSharedFlow<List<Pair<CardHubType, Boolean>>>(
-        replay = 1,
-        extraBufferCapacity = 0,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-
-    override fun startScreen() = theOnlyRoute
-
-    val state: StateFlow<EditCardsHubScreenState> = mutableState.map { cardsHub ->
+    val state = cardsHubInteractor.subscribeVisibleCardsHubList().map { (_, cardsHubList) ->
         EditCardsHubScreenState(
-            enabledCardsHeader = Text.StringRes(id = R.string.common_enabled),
-            enabledCards = cardsHub.filter {
-                it.second
-            }.map { (cardType, _) ->
-                cardType.mapToState(isVisible = true)
+            enabledCards = cardsHubList.filter { it.visibility }.map {
+                HubCardState(
+                    it.cardType.hubName,
+                    it.cardType.mapToState(true),
+                    it.cardType.userName
+                )
             },
-            disabledCardsHeader = Text.StringRes(id = R.string.common_disabled),
-            disabledCards = cardsHub.filter {
-                !it.second
-            }.map { (cardType, _) ->
-                cardType.mapToState(isVisible = false)
-            }
+            disabledCards = cardsHubList.filter { it.visibility.not() }
+                .map {
+                    HubCardState(
+                        it.cardType.hubName,
+                        it.cardType.mapToState(false),
+                        it.cardType.userName,
+                    )
+                },
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = EditCardsHubScreenState(
-            enabledCardsHeader = Text.SimpleText(""),
-            enabledCards = emptyList(),
-            disabledCardsHeader = Text.SimpleText(""),
-            disabledCards = emptyList()
+    }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            EditCardsHubScreenState(emptyList(), emptyList()),
         )
-    )
 
     private fun CardHubType.mapToState(isVisible: Boolean) = when (this) {
-        CardHubType.ASSETS ->
-            Text.StringRes(R.string.liquid_assets) to
-                HubCardState(HubCardVisibility.VISIBLE_AND_DISABLED)
-        CardHubType.POOLS ->
-            Text.StringRes(R.string.pooled_assets) to
-                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
-                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
-        CardHubType.GET_SORA_CARD ->
-            Text.StringRes(R.string.more_menu_sora_card_title) to
-                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
-                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
-        CardHubType.BUY_XOR_TOKEN ->
-            Text.StringRes(R.string.common_buy_xor) to
-                if (isVisible) HubCardState(HubCardVisibility.VISIBLE_AND_ENABLED) else
-                    HubCardState(HubCardVisibility.NOT_VISIBLE_ENABLED)
+        CardHubType.ASSETS -> HubCardVisibility.VISIBLE_AND_DISABLED
+        CardHubType.POOLS -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
+        CardHubType.GET_SORA_CARD -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
+        CardHubType.BUY_XOR_TOKEN -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
     }
 
     init {
-        SoramitsuToolbarState(
+        _toolbarState.value = SoramitsuToolbarState(
             basic = BasicToolbarState(
                 title = R.string.edit_view,
                 navIcon = R.drawable.ic_cross_24
             ),
-            type = SoramitsuToolbarType.SmallCentered()
-        ).apply { _toolbarState.value = this }
-
-        cardsHubInteractor.subscribeVisibleCardsHubList().onEach { (_, cardsHubListState) ->
-            mutableState.tryEmit(
-                value = cardsHubListState.map {
-                    it.cardType to it.visibility
-                }
-            )
-        }.launchIn(viewModelScope)
-    }
-
-    override fun onNavIcon() {
-        super.onNavIcon()
-        walletRouter.returnToHubFragment()
+            type = SoramitsuToolbarType.SmallCentered(),
+        )
     }
 
     fun onEnabledCardItemClick(position: Int) =
         viewModelScope.launch {
             delay(ANIMATION_DURATION_DELAY)
-            mutableState.replayCache.firstOrNull()?.filter {
-                it.second
-            }?.getOrNull(position)?.let { (cardHub, isSelected) ->
+            state.value.enabledCards.getOrNull(position)?.let { cardHub ->
                 cardsHubInteractor.updateCardVisibilityOnCardHub(
                     cardId = cardHub.hubName,
-                    visible = !isSelected
+                    visible = false,
                 )
             }
         }
@@ -153,17 +109,15 @@ class EditCardsHubViewModel @Inject constructor(
     fun onDisabledCardItemClick(position: Int) =
         viewModelScope.launch {
             delay(ANIMATION_DURATION_DELAY)
-            mutableState.replayCache.firstOrNull()?.filter {
-                !it.second
-            }?.getOrNull(position)?.let { (cardHub, isSelected) ->
+            state.value.disabledCards.getOrNull(position)?.let { cardHub ->
                 cardsHubInteractor.updateCardVisibilityOnCardHub(
                     cardId = cardHub.hubName,
-                    visible = !isSelected
+                    visible = true,
                 )
             }
         }
 
     private companion object {
-        const val ANIMATION_DURATION_DELAY = 750L
+        const val ANIMATION_DURATION_DELAY = 500L
     }
 }

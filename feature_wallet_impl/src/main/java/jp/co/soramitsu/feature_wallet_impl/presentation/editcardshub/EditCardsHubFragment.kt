@@ -36,8 +36,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.runtime.collectAsState
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -59,12 +59,13 @@ class EditCardsHubFragment : SoraBaseFragment<EditCardsHubViewModel>() {
     @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
-        navController: NavHostController
+        navController: NavHostController,
     ) {
         composable(theOnlyRoute) {
-            val state = viewModel.state.collectAsState()
+            val state = viewModel.state.collectAsStateWithLifecycle()
             EditCardsHubScreen(
                 state = state.value,
+                scrollState = scrollState,
                 onCardEnabled = viewModel::onEnabledCardItemClick,
                 onCardDisabled = viewModel::onDisabledCardItemClick
             )
