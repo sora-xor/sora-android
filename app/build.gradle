@@ -43,6 +43,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             versionNameSuffix '-debug'
+            signingConfig signingConfigs.cidebug
         }
         firebasedebug {
 //            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -130,7 +131,7 @@ android {
         }
     }
 
-    configurations{
+    configurations {
         all*.exclude module: 'bcprov-jdk15on'
     }
 }
@@ -215,7 +216,7 @@ dependencies {
     implementation zXingEmbeddedDep
 
     implementation gsonDep
-    
+
     // Tests
     testImplementation project(":test_shared")
 }
