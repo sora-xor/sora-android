@@ -36,7 +36,6 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -46,6 +45,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
@@ -81,6 +84,8 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_lis
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic_confirmation.MnemonicConfirmationScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TermsAndPrivacyEnum
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TutorialScreen
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 @AndroidEntryPoint
 class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
@@ -135,14 +140,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         if (!pop) finish()
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        viewModel.onActionEvent.observe(this) {
-            viewModel.finishCreateAccountProcess(this@OnboardingActivity)
-        }
-    }
-
     @OptIn(
         ExperimentalAnimationApi::class, ExperimentalUnitApi::class,
     )
@@ -154,6 +151,48 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 viewModel.onDestinationChanged(destination.route ?: "")
             }
         }
+
+        viewModel.skipDialogState.observeAsState().value?.let {
+            if (it) {
+                AlertDialog(
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.import_account_not_backed_up),
+                            style = MaterialTheme.customTypography.textSBold
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(id = R.string.import_account_not_backed_up_alert_description),
+                            style = MaterialTheme.customTypography.paragraphSBold
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.skipDialogConfirm(this@OnboardingActivity)
+                            }
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.import_account_not_backed_up_alert_action_title),
+                                color = MaterialTheme.customColors.statusError,
+                            )
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = viewModel::skipDialogDismiss
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.common_cancel),
+                            )
+                        }
+                    },
+                    onDismissRequest = viewModel::skipDialogDismiss
+                )
+            }
+        }
+
         AnimatedNavHost(
             modifier = Modifier
                 .padding(padding)

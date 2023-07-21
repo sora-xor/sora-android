@@ -66,7 +66,7 @@ object SoraCardTestData {
     val SORA_CARD_INFO = SoraCardInformation(
         accessToken = "accessToken",
         accessTokenExpirationTime = Long.MAX_VALUE,
-        kycStatus = "Completed",
+        kycStatus = "Successful",
     )
 
     val registrationLauncher = SoraCardContractData(

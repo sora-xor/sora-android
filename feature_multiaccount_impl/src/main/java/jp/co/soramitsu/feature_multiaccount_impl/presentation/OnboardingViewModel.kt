@@ -44,13 +44,17 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.lang.IllegalArgumentException
+import java.net.SocketException
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.exceptions.DecodingException
 import jp.co.soramitsu.backup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
+import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
+import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.backup.domain.models.Json
+import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
@@ -58,10 +62,8 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
-import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
@@ -128,8 +130,8 @@ class OnboardingViewModel @Inject constructor(
     private val _recoveryState = MutableLiveData<RecoveryState>()
     val recoveryState: LiveData<RecoveryState> = _recoveryState
 
-    private val _onActionEvent = SingleLiveEvent<Unit>()
-    val onActionEvent: LiveData<Unit> = _onActionEvent
+    private val _skipDialogState = MutableLiveData(false)
+    val skipDialogState = _skipDialogState
 
     private var tempAccount: SoraAccount? = null
 
@@ -341,10 +343,16 @@ class OnboardingViewModel @Inject constructor(
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
-                if (backupService.authorize(launcher)) {
-                    onSuccessfulGoogleSignin(navController)
-                } else {
+                try {
+                    backupService.logout()
+                    if (backupService.authorize(launcher)) {
+                        onSuccessfulGoogleSignin(navController)
+                    } else {
+                        _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
+                    }
+                } catch (e: SocketException) {
                     _tutorialScreenState.value = it.copy(isGoogleSigninLoading = false)
+                    onError(SoraException.networkError(resourceManager, e))
                 }
             }
         }
@@ -509,7 +517,7 @@ class OnboardingViewModel @Inject constructor(
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
     }
 
-    fun finishCreateAccountProcess(context: Context) {
+    private fun finishCreateAccountProcess(context: Context) {
         viewModelScope.launch {
             multiaccountInteractor.createUser(
                 soraAccount = requireNotNull(
@@ -534,12 +542,7 @@ class OnboardingViewModel @Inject constructor(
                 if (navController.currentDestination?.route == OnboardingFeatureRoutes.PASSPHRASE) {
                     navController.navigate(OnboardingFeatureRoutes.CREATE_BACKUP_PASSWORD)
                 } else {
-                    val result = backupService.getBackupAccounts()
-                        .filter {
-                            multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
-                                it.address
-                            )
-                        }
+                    val result = getBackupedAccountsFiltered()
 
                     _tutorialScreenState.value =
                         _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
@@ -563,6 +566,8 @@ class OnboardingViewModel @Inject constructor(
                     _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
 
                 onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
             }
         }
     }
@@ -578,21 +583,46 @@ class OnboardingViewModel @Inject constructor(
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
             viewModelScope.launch(coroutineManager.io) {
-                _passphraseCardState.value?.let { passphraseCardState ->
-                    tempAccount?.let {
-                        backupService.saveBackupAccount(
-                            DecryptedBackupAccount(
-                                it.accountName,
-                                it.substrateAddress,
-                                passphraseCardState.mnemonicWords.joinToString(" "),
-                                CryptoType.SR25519,
-                                "",
-                                "",
-                            ),
-                            createBackupPasswordState.password.value.text
-                        )
+                try {
+                    _passphraseCardState.value?.let { passphraseCardState ->
+                        tempAccount?.let {
+                            val jsonString = multiaccountInteractor.generateSubstrateJsonString(
+                                listOf(it),
+                                createBackupPasswordState.password.value.text
+                            )
 
-                        finishCreateAccountProcess(activity)
+                            val passphrase = passphraseCardState.mnemonicWords.joinToString(" ")
+
+                            val seed = Seed(
+                                substrateSeed = multiaccountInteractor.convertPassphraseToSeed(
+                                    passphrase
+                                )
+                            )
+
+                            backupService.saveBackupAccount(
+                                DecryptedBackupAccount(
+                                    name = it.accountName,
+                                    address = it.substrateAddress,
+                                    mnemonicPhrase = passphrase,
+                                    cryptoType = CryptoType.SR25519,
+                                    backupAccountType = listOf(
+                                        BackupAccountType.JSON,
+                                        BackupAccountType.PASSHRASE,
+                                        BackupAccountType.SEED
+                                    ),
+                                    seed = seed,
+                                    json = Json(substrateJson = jsonString)
+                                ),
+                                createBackupPasswordState.password.value.text
+                            )
+
+                            finishCreateAccountProcess(activity)
+                        }
+                    }
+                } catch (e: SocketException) {
+                    withContext(coroutineManager.main) {
+                        _createBackupPasswordState.value =
+                            createBackupPasswordState.copy(isLoading = false)
                     }
                 }
             }
@@ -602,26 +632,29 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let { it ->
             val filteredValue =
-                textFieldValue.copy(text = textFieldValue.text.filter { it.isLetter() })
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
 
             val isSecure = filteredValue.text.isPasswordSecure()
-            val errorString =
-                getPasswordConfirmationError(
-                    filteredValue.text,
-                    it.passwordConfirmation.value.text
-                )
+            val descriptionText = if (isSecure) {
+                R.string.backup_password_mandatory_reqs_fulfilled
+            } else {
+                R.string.backup_password_requirments
+            }
+            val (confirmationDescriptionText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                filteredValue.text,
+                it.passwordConfirmation.value.text
+            )
             _createBackupPasswordState.value = it.copy(
                 password = it.password.copy(
                     value = filteredValue,
                     success = isSecure,
-                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else "",
+                    descriptionText = descriptionText,
+                    error = !isSecure && filteredValue.text.isNotEmpty()
                 ),
                 passwordConfirmation = it.passwordConfirmation.copy(
-                    error = errorString.isNotEmpty(),
-                    descriptionText = if (filteredValue.text == it.passwordConfirmation.value.text)
-                        resourceManager.getString(R.string.create_backup_password_matched)
-                    else
-                        errorString
+                    error = isError,
+                    descriptionText = confirmationDescriptionText,
+                    success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
                     it.passwordConfirmation.value.text == filteredValue.text && isSecure
@@ -653,6 +686,7 @@ class OnboardingViewModel @Inject constructor(
     fun onImportContinueClicked(navController: NavController) {
         _importAccountPasswordState.value?.let { state ->
             _importAccountPasswordState.value = state.copy(isLoading = true)
+            var isImportMoreAvailable = false
             viewModelScope.launch {
                 state.selectedAccount?.let {
                     try {
@@ -663,28 +697,22 @@ class OnboardingViewModel @Inject constructor(
                             )
                         }
 
-                        val valid =
-                            multiaccountInteractor.isMnemonicValid(decryptedBackupAccount.mnemonicPhrase)
-                        if (valid) {
-                            val soraAccount = multiaccountInteractor.recoverSoraAccountFromMnemonic(
-                                decryptedBackupAccount.mnemonicPhrase,
-                                decryptedBackupAccount.name
-                            )
+                        val soraAccount: SoraAccount =
+                            recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount)
 
-                            multiaccountInteractor.continueRecoverFlow(
-                                soraAccount,
-                                connectionManager.isConnected
-                            )
+                        multiaccountInteractor.continueRecoverFlow(
+                            soraAccount,
+                            connectionManager.isConnected
+                        )
 
-                            navController.navigate(
-                                route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
-                                navOptions = NavOptions.Builder()
-                                    .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
-                                    .build()
-                            )
-                        } else {
-                            onError(SoraException.businessError(ResponseCode.MNEMONIC_IS_NOT_VALID))
-                        }
+                        isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()
+
+                        navController.navigate(
+                            route = OnboardingFeatureRoutes.IMPORT_ACCOUNT_SUCCESS,
+                            navOptions = NavOptions.Builder()
+                                .setPopUpTo(OnboardingFeatureRoutes.TUTORIAL, true)
+                                .build()
+                        )
                     } catch (e: DecryptionException) {
                         onError(SoraException.businessError(ResponseCode.GOOGLE_BACKUP_DECRYPTION_FAILED))
                     } catch (e: DecodingException) {
@@ -693,11 +721,44 @@ class OnboardingViewModel @Inject constructor(
                         onError(e)
                     } catch (e: IllegalArgumentException) {
                         onError(e)
+                    } catch (e: SocketException) {
+                        onError(SoraException.networkError(resourceManager, e))
                     }
                 }
-                _importAccountPasswordState.value = state.copy(isLoading = false)
+                _importAccountPasswordState.value =
+                    state.copy(isImportMoreAvailable = isImportMoreAvailable, isLoading = false)
             }
         }
+    }
+
+    private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSHRASE)) {
+            decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
+                val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
+
+                if (isValid) {
+                    return multiaccountInteractor.recoverSoraAccountFromMnemonic(
+                        passphrase,
+                        decryptedBackupAccount.name
+                    )
+                }
+            }
+        }
+
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.SEED)) {
+            decryptedBackupAccount.seed?.substrateSeed?.let { rawSeed ->
+                val isValid = multiaccountInteractor.isRawSeedValid(rawSeed)
+
+                if (isValid) {
+                    return multiaccountInteractor.recoverSoraAccountFromRawSeed(
+                        rawSeed,
+                        decryptedBackupAccount.name
+                    )
+                }
+            }
+        }
+
+        throw SoraException.businessError(ResponseCode.GENERAL_ERROR)
     }
 
     fun onImportFinished(context: Context) {
@@ -706,31 +767,33 @@ class OnboardingViewModel @Inject constructor(
 
     fun onImportMoreClicked(navController: NavController) {
         viewModelScope.launch {
-            _importAccountPasswordState.value =
-                _importAccountPasswordState.value?.copy(isLoading = true)
-            _importAccountListState.value = ImportAccountListScreenState(
-                accountList = backupService.getBackupAccounts()
-                    .filter {
-                        multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
-                            it.address
-                        )
-                    }
-                    .map {
-                        BackupAccountMetaWithIcon(
-                            it,
-                            getDrawableFromGoogleBackup(it.address),
-                        )
-                    }
-            )
+            try {
+                _importAccountPasswordState.value =
+                    _importAccountPasswordState.value?.copy(isLoading = true)
+                _importAccountListState.value = ImportAccountListScreenState(
+                    accountList = getBackupedAccountsFiltered()
+                        .map {
+                            BackupAccountMetaWithIcon(
+                                it,
+                                getDrawableFromGoogleBackup(it.address),
+                            )
+                        }
+                )
 
-            resetBackupLiveData()
-            navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+                resetBackupLiveData()
+                navController.navigate(OnboardingFeatureRoutes.IMPORT_ACCOUNT_LIST)
+            } catch (e: SocketException) {
+                onError(SoraException.networkError(resourceManager, e))
+            }
         }
     }
 
     private fun resetBackupLiveData() {
         _createBackupPasswordState.value = CreateBackupPasswordState(
-            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
+            password = InputTextState(
+                label = resourceManager.getString(R.string.create_backup_set_password),
+                descriptionText = resourceManager.getString(R.string.backup_password_requirments)
+            ),
             passwordConfirmation = InputTextState(label = resourceManager.getString(R.string.export_json_input_confirmation_label))
         )
 
@@ -742,19 +805,19 @@ class OnboardingViewModel @Inject constructor(
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
             val filteredValue =
-                textFieldValue.copy(text = textFieldValue.text.filter { it.isLetter() })
-            val isConfirmationRight =
-                it.password.value.text == filteredValue.text
-            val errorString =
-                getPasswordConfirmationError(it.password.value.text, filteredValue.text)
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
+            val (confirmationDescText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                it.password.value.text,
+                filteredValue.text
+            )
             _createBackupPasswordState.value = it.copy(
                 passwordConfirmation = it.passwordConfirmation.copy(
                     value = filteredValue,
-                    success = isConfirmationRight,
-                    descriptionText = if (isConfirmationRight) resourceManager.getString(R.string.create_backup_password_matched) else errorString,
-                    error = errorString.isNotEmpty()
+                    success = !isError && filteredValue.text.isNotEmpty(),
+                    descriptionText = confirmationDescText,
+                    error = isError
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRight && filteredValue.text.isPasswordSecure()
+                setPasswordButtonIsEnabled = it.warningIsSelected && !isError && filteredValue.text.isPasswordSecure()
             )
         }
     }
@@ -776,18 +839,36 @@ class OnboardingViewModel @Inject constructor(
         )
     }.getOrNull()
 
-    private fun getPasswordConfirmationError(
+    private fun getPasswordConfirmationDescriptionAndErrorStatus(
         password: String,
         passwordConfirmation: String
-    ): String {
-        return if (passwordConfirmation == "" || passwordConfirmation == password) {
-            ""
-        } else {
-            resourceManager.getString(R.string.create_backup_password_not_matched)
+    ): Pair<Int, Boolean> {
+        return when (passwordConfirmation) {
+            "" -> R.string.common_empty_string to false
+            password -> R.string.create_backup_password_matched to false
+            else -> R.string.create_backup_password_not_matched to true
         }
     }
 
+    private suspend fun getBackupedAccountsFiltered(): List<BackupAccountMeta> {
+        return backupService.getBackupAccounts()
+            .filter {
+                multiaccountInteractor.isAddressValid(it.address) && !multiaccountInteractor.accountExists(
+                    it.address
+                )
+            }
+    }
+
     override fun onAction() {
-        _onActionEvent.trigger()
+        _skipDialogState.value = true
+    }
+
+    fun skipDialogConfirm(context: Context) {
+        finishCreateAccountProcess(context)
+        _skipDialogState.value = false
+    }
+
+    fun skipDialogDismiss() {
+        _skipDialogState.value = false
     }
 }

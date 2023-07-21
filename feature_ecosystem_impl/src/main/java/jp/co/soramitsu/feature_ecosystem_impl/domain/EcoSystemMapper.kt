@@ -30,20 +30,23 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.states.mapTokensToCardState
 
-@HiltViewModel
-class DiscoverViewModel @Inject constructor(
-    private val polkaswapRouter: PolkaswapRouter,
-) : BaseViewModel() {
-
-    fun onAddLiquidityClick() {
-        polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
+class EcoSystemMapper @Inject constructor(
+    private val numbersFormatter: NumbersFormatter,
+) {
+    fun mapEcoSystemTokens(tokens: EcoSystemTokens) =
+        mapTokensToCardState(
+            tokens.tokens.map {
+                it.token to it.liquidityFiat
+            },
+            numbersFormatter,
+        )
+            .mapIndexed { index, assetItemCardState ->
+                (index + 1).toString() to assetItemCardState
+            }
 }

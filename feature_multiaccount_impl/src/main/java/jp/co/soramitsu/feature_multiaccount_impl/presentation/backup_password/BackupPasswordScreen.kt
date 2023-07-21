@@ -85,7 +85,7 @@ fun BackupPasswordScreen(
             Text(
                 modifier = Modifier
                     .fillMaxWidth(),
-                text = stringResource(id = R.string.backup_password_title),
+                text = stringResource(id = R.string.backup_password_title_2),
                 style = MaterialTheme.customTypography.paragraphM,
             )
 

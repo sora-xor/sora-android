@@ -46,11 +46,11 @@ import com.journeyapps.barcodescanner.ScanOptions
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common.util.ShareUtil
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SwapSelectTokenScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.QrCodeMainScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreen
@@ -151,7 +151,7 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
         }
 
         composable(route = QRCodeFlowRoute.SelectToken.route) {
-            SwapSelectTokenScreen(
+            SelectSearchTokenScreen(
                 state = viewModel.selectTokenScreenState,
                 scrollState = scrollState,
                 onAssetSelect = {

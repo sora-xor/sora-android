@@ -26,8 +26,8 @@
         android:name="jp.co.soramitsu.common.presentation.compose.webview.WebViewFragment" />
 
     <fragment
-        android:id="@+id/invest_nav_graph"
-        android:name="jp.co.soramitsu.feature_main_impl.presentation.discover.DiscoverFragment" />
+        android:id="@+id/explore_nav_graph"
+        android:name="jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreFragment" />
 
     <fragment
         android:id="@+id/addLiquidityFragment"
@@ -40,6 +40,38 @@
     <fragment
         android:id="@+id/buyCryptoFragment"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.buycrypto.BuyCryptoFragment" />
+
+    <fragment
+        android:id="@+id/contactsFragment"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.contacts.ContactsFragment" />
+
+    <fragment
+        android:id="@+id/qrCodeFlow"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment" />
+
+    <fragment
+        android:id="@+id/poolDetailsFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.pooldetails.PoolDetailsFragment" />
+
+    <fragment
+        android:id="@+id/txListFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.txlist.TxListFragment" />
+
+    <fragment
+        android:id="@+id/liquidityRemoveFragment"
+        android:name="jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveFragment" />
+
+    <fragment
+        android:id="@+id/transferAmountFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment" />
+
+    <fragment
+        android:id="@+id/assetDetailsFragment"
+        android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment" />
+
+    <fragment
+        android:id="@+id/editCardsHub"
+        android:name="jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub.EditCardsHubFragment" />
 
     <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />

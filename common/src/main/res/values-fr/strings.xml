@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Prix du jeton</string>
   <string name="asset_details_your_pools">Vos %s pool(s)</string>
   <string name="asset_to_send">Actif à envoyer</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Authentification</string>
   <string name="block_id">Bloc de hachage</string>
   <string name="buy_crypto_buy_xor_banner_title">Acheter des jetons XOR</string>
@@ -83,11 +86,14 @@
   <string name="common_copied">Copié dans le presse-papier</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Croate</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Supprimer</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Découvrir</string>
   <string name="common_done">Terminé</string>
   <string name="common_dutch">Néerlandais</string>
   <string name="common_edit">Modifier</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Anglais</string>
   <string name="common_enter_amount">Entrer le montant</string>
   <string name="common_error_ambiguous_result">Résultat ambigu</string>
@@ -217,6 +223,7 @@
   <string name="details_sent_to_pool">Envoyé dans le pool</string>
   <string name="discover_coming_soon">Les développeurs de SORA travaillent actuellement sur une fonctionnalité permettant d\'afficher la liste de tous les pools actives sur Polkaswap.\n\nPour le moment, si vous souhaitez créer ou ajouter des liquidités à un pool, veuillez utiliser le bouton ci-dessous.</string>
   <string name="discovery_polkaswap_pools">Pools de Polkaswap</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Aucun destinataire récent.\nLes adresses utilisées seront affichées ici.</string>
   <string name="empty_recent_recipients_2">Les destinataires apparaîtront ici</string>
   <string name="enter_backup_password_title">Entrez le mot de passe de la sauvegarde</string>
@@ -224,6 +231,8 @@
   <string name="enter_password_incorect_title">Mot de passe incorrect</string>
   <string name="enter_password_title">Entrer le mot de passe</string>
   <string name="error_transaction_fee_title">Pas assez de fonds pour les frais de transaction</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Si vous perdez l\'accès à cet appareil, vos fonds seront perdus, sauf si vous sauvegardez!</string>
   <string name="export_account_details_backup_options">Options de sauvegarde</string>
   <string name="export_account_details_show_passphrase">Afficher la phrase secrète</string>
@@ -471,6 +480,7 @@
   <string name="sora_card_buy_xor_with_eur">Acheter du XOR avec de l\'EUR</string>
   <string name="sora_card_description">Obtenez un compte IBAN en Euros et une carte de débit Mastercard SORA</string>
   <string name="sora_card_free_card_issuance">Émission gratuite de la carte</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">ou 20€ de frais de demande</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Si vous détenez, stakez, ou fournissez des liquidités pour un montant d\'au moins 100€ de XOR avec votre compte SORA</string>
   <string name="sora_card_get_more_xor">Obtenir plus de XOR</string>
   <string name="sora_card_log_in_or_sign_up">Se connecter ou s\'inscrire</string>

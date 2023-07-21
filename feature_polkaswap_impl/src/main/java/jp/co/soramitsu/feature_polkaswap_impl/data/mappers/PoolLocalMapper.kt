@@ -33,41 +33,44 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.data.mappers
 
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.core_db.model.PoolLocal
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 
 object PoolLocalMapper {
 
-    fun mapLocal(poolLocal: PoolLocal, baseToken: Token, token: Token): PoolData {
+    fun mapLocal(poolLocal: UserPoolJoinedLocal, baseToken: Token, token: Token, apy: Double?): UserPoolData {
         val basePooled = PolkaswapFormulas.calculatePooledValue(
-            poolLocal.reservesFirst,
-            poolLocal.poolProvidersBalance,
-            poolLocal.totalIssuance,
+            poolLocal.basicPoolLocal.reserveBase,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.basicPoolLocal.totalIssuance,
         )
         val secondPooled = PolkaswapFormulas.calculatePooledValue(
-            poolLocal.reservesSecond,
-            poolLocal.poolProvidersBalance,
-            poolLocal.totalIssuance,
+            poolLocal.basicPoolLocal.reserveTarget,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.basicPoolLocal.totalIssuance,
         )
         val share = PolkaswapFormulas.calculateShareOfPool(
-            poolLocal.poolProvidersBalance,
-            poolLocal.totalIssuance,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.basicPoolLocal.totalIssuance,
         )
-        val strategicBonusApy = poolLocal.strategicBonusApy?.multiply(Big100)
-        return PoolData(
-            token,
-            baseToken,
-            basePooled,
-            poolLocal.reservesFirst,
-            secondPooled,
-            poolLocal.reservesSecond,
-            strategicBonusApy?.toDouble(),
+        return UserPoolData(
+            basic = BasicPoolData(
+                baseToken = baseToken,
+                targetToken = token,
+                baseReserves = poolLocal.basicPoolLocal.reserveBase,
+                targetReserves = poolLocal.basicPoolLocal.reserveTarget,
+                totalIssuance = poolLocal.basicPoolLocal.totalIssuance,
+                reserveAccount = poolLocal.basicPoolLocal.reservesAccount,
+            ),
+            basePooled = basePooled,
+            targetPooled = secondPooled,
+            apy,
             share.toDouble(),
-            poolLocal.totalIssuance,
-            poolLocal.poolProvidersBalance,
-            poolLocal.favorite,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.userPoolLocal.favorite,
+            poolLocal.userPoolLocal.sortOrder,
         )
     }
 }

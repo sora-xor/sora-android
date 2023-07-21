@@ -44,6 +44,7 @@ object BuildUtils {
     fun sdkAtLeast(v: Int): Boolean = Build.VERSION.SDK_INT >= v
 
     fun isPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD, Flavor.SORALUTION)
+    fun isProdPlayMarket(): Boolean = isBuildType(BuildType.RELEASE) && isFlavors(Flavor.PROD)
 }
 
 enum class BuildType(val type: String) {

@@ -53,11 +53,11 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common.util.ShareUtil
 
 @AndroidEntryPoint
 class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {

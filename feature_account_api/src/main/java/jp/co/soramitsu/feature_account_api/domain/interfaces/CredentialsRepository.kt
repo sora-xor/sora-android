@@ -63,4 +63,6 @@ interface CredentialsRepository {
     suspend fun getAddressForMigration(): String
 
     suspend fun generateJson(accounts: List<SoraAccount>, password: String): String
+
+    fun convertPassphraseToSeed(mnemonic: String): String
 }

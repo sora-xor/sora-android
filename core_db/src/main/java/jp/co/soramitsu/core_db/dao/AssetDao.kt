@@ -73,7 +73,7 @@ interface AssetDao {
         private const val QUERY_ASSET_TOKEN_ACTIVE = """
             select * from assets inner join ($joinFiatToken) tokensfiats on assets.tokenId=tokensfiats.id 
             where assets.accountAddress=:address and tokensfiats.whitelistName=:whitelist 
-            and ((assets.visibility=1 or assets.displayAsset=1 or tokensfiats.isHidable = 0) or (tokensfiats.id in (select assetId from pools)) or (tokensfiats.id in (select tokenId from poolBaseTokens))) order by assets.position
+            and ((assets.visibility=1 or assets.displayAsset=1 or tokensfiats.isHidable = 0) or (tokensfiats.id in (select userTokenIdTarget from userpools)) or (tokensfiats.id in (select tokenId from poolBaseTokens))) order by assets.position
         """
     }
 
@@ -189,6 +189,16 @@ interface AssetDao {
     """
     )
     suspend fun getTokensWithFiatOfCurrency(isoCode: String): List<TokenWithFiatLocal>
+
+    @Query(
+        """
+        $joinFiatToken where tokens.whitelistName=:whitelist order by tokens.symbol
+    """
+    )
+    fun subscribeTokens(
+        isoCode: String,
+        whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME,
+    ): Flow<List<TokenWithFiatLocal>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTokenListIgnore(tokens: List<TokenLocal>)

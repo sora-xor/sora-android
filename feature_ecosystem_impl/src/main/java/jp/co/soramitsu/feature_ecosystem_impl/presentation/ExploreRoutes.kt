@@ -30,48 +30,9 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_ecosystem_impl.presentation
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.verify
-
-@ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
-class DiscoverViewModelTest {
-
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
-
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
-    @Mock
-    private lateinit var polkaswapRouter: PolkaswapRouter
-
-    private lateinit var discoverViewModel: DiscoverViewModel
-
-    @Before
-    fun setUp() = runTest {
-        discoverViewModel = DiscoverViewModel(polkaswapRouter)
-    }
-
-    @Test
-    fun `onAddLiquidityClick() called`() {
-        discoverViewModel.onAddLiquidityClick()
-
-        verify(polkaswapRouter).showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
-    }
+internal object ExploreRoutes {
+    const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
+    const val ALL_CURRENCIES = "jp.co.soramitsu.feature_ecosystem_impl.all_currencies"
 }

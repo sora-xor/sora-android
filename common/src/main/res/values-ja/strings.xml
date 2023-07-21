@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">トークン価格</string>
   <string name="asset_details_your_pools">%s プール</string>
   <string name="asset_to_send">送信するアセット</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">認証する</string>
   <string name="block_id">ブロックのハッシュ</string>
   <string name="buy_crypto_buy_xor_banner_title">XORトークンの購入</string>
@@ -83,11 +86,14 @@
   <string name="common_copied">クリップボードにコピーしました</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">クロアチア語</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">発見</string>
   <string name="common_done">終了</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">編集</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">英語</string>
   <string name="common_enter_amount">金額を入力</string>
   <string name="common_error_ambiguous_result">あいまいな結果</string>
@@ -216,6 +222,7 @@
   <string name="details_sent_to_pool">プールに送信されました</string>
   <string name="discover_coming_soon">SORAの開発者は現在、Polkaswapでアクティブになっているプールの全リストを表示する機能の開発に取り組んでいます。\n\n当面の間、プールの作成・追加を希望される方は、以下のボタンからお願いします。</string>
   <string name="discovery_polkaswap_pools">Polkaswapのプール</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">最近の受信者はありません。\n送信したアドレスがここに表示されます。</string>
   <string name="empty_recent_recipients_2">受信者はここに表示されます</string>
   <string name="enter_backup_password_title">Enter backup password</string>
@@ -223,6 +230,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ネットワーク手数料のための資金が不足しています</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">このデバイスへのアクセスを失った場合、バックアップしない限り、資金は失われます！</string>
   <string name="export_account_details_backup_options">バックアップのオプション</string>
   <string name="export_account_details_show_passphrase">パスフレーズを表示</string>
@@ -465,11 +474,12 @@
   <string name="sora_card_buy_xor_with_eur">EURでXORを買う</string>
   <string name="sora_card_description">ユーロIBANアカウントとMastercardデビットカードをSORAウォレットに接続します</string>
   <string name="sora_card_free_card_issuance">無料カード発行</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">または20€の申請料</string>
   <string name="sora_card_free_card_issuance_conditions_xor">SORAアカウントに少なくとも€100相当のXORを、保有、ステーキング、または流動性供給している場合</string>
   <string name="sora_card_get_more_xor">XOR をさらに取得する</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">これ以上の無料試行はありません</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">View details</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">暗号資産をXORにスワップ</string>
   <string name="sora_card_title">SORAカードに法定通貨や暗号資産を補充し、オンラインや店舗で支払ったり、ATMで引き出すことができます</string>

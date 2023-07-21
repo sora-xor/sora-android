@@ -38,7 +38,10 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
 import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.backup.domain.models.Json
+import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -230,14 +233,20 @@ class AccountDetailsViewModelTest {
 
         given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
 
-        val decryptedBackupAccount = DecryptedBackupAccount(
-            account.accountName,
-            account.substrateAddress,
-            "mne mo nic",
-            CryptoType.SR25519,
-            "",
-            "",
-        )
+        val decryptedBackupAccount =
+            DecryptedBackupAccount(
+                name = "accountName",
+                address = "address",
+                mnemonicPhrase = "mne mo nic",
+                cryptoType = CryptoType.SR25519,
+                backupAccountType = listOf(
+                    BackupAccountType.JSON,
+                    BackupAccountType.PASSHRASE,
+                    BackupAccountType.SEED
+                ),
+                seed = Seed(),
+                json = Json()
+            )
 
         accountDetailsViewModel.onBackupPasswordClicked()
         advanceUntilIdle()
@@ -245,7 +254,9 @@ class AccountDetailsViewModelTest {
         verify(backupService).saveBackupAccount(decryptedBackupAccount, password)
         val popEvent = accountDetailsViewModel.navigationPop.getOrAwaitValue()
         assertEquals(Unit, popEvent)
-        assertTrue(accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable ?: false)
+        assertTrue(
+            accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable ?: false
+        )
     }
 
     @Test
@@ -268,7 +279,7 @@ class AccountDetailsViewModelTest {
         accountDetailsViewModel.onBackupClicked(accountResultLauncher)
         advanceUntilIdle()
 
-        verify(backupService).deleteBackupAccount(account.substrateAddress)
+        assertTrue(accountDetailsViewModel.deleteDialogState.value ?: false)
     }
 
     @Test

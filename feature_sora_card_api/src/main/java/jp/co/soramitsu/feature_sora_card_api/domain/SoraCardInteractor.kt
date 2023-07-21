@@ -30,42 +30,12 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_sora_card_api.domain
 
-import android.os.Bundle
-import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ScrollState
-import androidx.fragment.app.viewModels
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
-import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.base.SoraBaseFragment
-import jp.co.soramitsu.common.base.theOnlyRoute
-import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
+import kotlinx.coroutines.flow.Flow
 
-@AndroidEntryPoint
-class DiscoverFragment : SoraBaseFragment<DiscoverViewModel>() {
+interface SoraCardInteractor {
 
-    override val viewModel: DiscoverViewModel by viewModels()
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (activity as BottomBarController).showBottomBar()
-    }
-
-    @OptIn(ExperimentalAnimationApi::class)
-    override fun NavGraphBuilder.content(
-        scrollState: ScrollState,
-        navController: NavHostController
-    ) {
-        composable(
-            route = theOnlyRoute,
-        ) {
-            DiscoverScreen(
-                onAddLiquidityClicked = viewModel::onAddLiquidityClick,
-            )
-        }
-    }
+    fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
 }

@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Giá token</string>
   <string name="asset_details_your_pools">%s pool của bạn</string>
   <string name="asset_to_send">Tài sản cần gửi</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Đặt mật khẩu mã hóa bản sao lưu bản sao lưu Google. Bạn sẽ cần nhập thông tin này khi khôi phục ví của mình.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Xác thực</string>
   <string name="block_id">Block hash</string>
   <string name="buy_crypto_buy_xor_banner_title">Mua token XOR</string>
@@ -83,11 +86,14 @@
   <string name="common_copied">Đã sao chép vào bảng tạm</string>
   <string name="common_create_qr_request">Tạo QR yêu cầu</string>
   <string name="common_croatian">Tiếng Croatia</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Xóa</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Khám phá</string>
   <string name="common_done">Hoàn tất</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Chỉnh sửa</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Tiếng Anh</string>
   <string name="common_enter_amount">Nhập số lượng</string>
   <string name="common_error_ambiguous_result">Kết quả không rõ ràng</string>
@@ -216,6 +222,7 @@
   <string name="details_sent_to_pool">Gửi đến pool</string>
   <string name="discover_coming_soon">Các nhà phát triển SORA hiện đang làm việc để tạo ra tính năng sẽ hiển thị danh sách đầy đủ các nhóm đang hoạt động trên Polkaswap. \n\n Hiện tại, nếu bạn muốn tạo/thêm vào một nhóm, vui lòng sử dụng nút bên dưới.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Không có người nhận gần đây.\nĐịa chỉ đã gửi sẽ được hiển thị tại đây.</string>
   <string name="empty_recent_recipients_2">Người nhận sẽ xuất hiện ở đây</string>
   <string name="enter_backup_password_title">Nhập mật khẩu dự phòng</string>
@@ -223,6 +230,8 @@
   <string name="enter_password_incorect_title">Mật khẩu không chính xác</string>
   <string name="enter_password_title">Nhập mật khẩu</string>
   <string name="error_transaction_fee_title">Không đủ tiền cho phí giao dịch</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Nếu bạn mất quyền truy cập vào thiết bị này, tiền của bạn sẽ bị mất, trừ khi bạn sao lưu!</string>
   <string name="export_account_details_backup_options">Các tùy chọn sao lưu</string>
   <string name="export_account_details_show_passphrase">Hiển thị cụm mật khẩu</string>
@@ -465,6 +474,7 @@
   <string name="sora_card_buy_xor_with_eur">Mua XOR bằng EUR</string>
   <string name="sora_card_description">Nhận tài khoản Euro IBAN và Thẻ ghi nợ Mastercard được kết nối với Ví SORA của bạn</string>
   <string name="sora_card_free_card_issuance">Miễn phí phát hành thẻ</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">hoặc phí đăng ký 20 €</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Nếu bạn nắm giữ, stake hoặc cung cấp thanh khoản cho XOR trị giá ít nhất €100 trong tài khoản SORA của mình</string>
   <string name="sora_card_get_more_xor">Nhận thêm XOR</string>
   <string name="sora_card_log_in_or_sign_up">Đăng nhập hoặc đăng ký</string>

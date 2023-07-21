@@ -1005,6 +1005,8 @@ class SwapViewModel @AssistedInject constructor(
             )
             desired = WithDesired.INPUT
 
+            fromAmountFlow.value = amount
+
             onChangedProperty.set(property.newReloadMarkets(false))
         }
     }

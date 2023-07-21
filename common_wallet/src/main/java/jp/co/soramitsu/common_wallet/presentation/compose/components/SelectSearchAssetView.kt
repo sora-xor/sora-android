@@ -49,10 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
-import jp.co.soramitsu.ui_core.component.asset.Asset
+import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.ui_core.component.searchview.SearchView
 import jp.co.soramitsu.ui_core.component.searchview.SearchViewState
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -107,15 +106,10 @@ fun SelectSearchAssetView(
         )
         Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
         filtered.forEachIndexed { index, assetState ->
-            Asset(
-                modifier = Modifier.testTagAsId("${assetState.tokenSymbol}Element"),
-                icon = assetState.tokenIcon,
-                name = assetState.tokenName,
-                balance = assetState.assetAmount,
-                symbol = "",
-                fiat = assetState.assetFiatAmount,
-                change = assetState.fiatChange,
-                onClick = { onSelect.invoke(assetState.tokenId) },
+            AssetItem(
+                assetState = assetState,
+                testTag = "${assetState.tokenSymbol}Element",
+                onClick = onSelect,
             )
             if (index < filtered.lastIndex) {
                 Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
@@ -130,26 +124,7 @@ private fun PreviewSelectSearchAssetView() {
     SelectSearchAssetView(
         state = SelectSearchAssetState(
             filter = "some",
-            fullList = listOf(
-                AssetItemCardState(
-                    tokenName = "some qwe",
-                    tokenId = "id 01",
-                    tokenIcon = DEFAULT_ICON_URI,
-                    assetAmount = "13.3 XOR",
-                    tokenSymbol = "XOR",
-                    assetFiatAmount = "$45.9",
-                    fiatChange = "+34%"
-                ),
-                AssetItemCardState(
-                    tokenName = "some asd",
-                    tokenId = "id 01",
-                    tokenIcon = DEFAULT_ICON_URI,
-                    assetAmount = "1238.3 VAL",
-                    tokenSymbol = "VAL",
-                    assetFiatAmount = "$0.09",
-                    fiatChange = "-0.12%"
-                ),
-            )
+            fullList = previewAssetItemCardStateList,
         ),
         scrollState = rememberScrollState(),
         onSelect = {},

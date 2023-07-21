@@ -42,7 +42,8 @@ import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 
 fun createSoraCardContract(
-    userAvailableXorAmount: Double
+    userAvailableXorAmount: Double,
+    isEnoughXorAvailable: Boolean,
 ): SoraCardContractData {
     return SoraCardContractData(
         locale = Locale.ENGLISH,
@@ -60,8 +61,7 @@ fun createSoraCardContract(
         client = OptionsProvider.header,
         userAvailableXorAmount = userAvailableXorAmount,
         areAttemptsPaidSuccessfully = false, // will be available in Phase 2
-//        isEnoughXorAvailable = userAvailableXorAmount / OptionsProvider.defaultScale > 100, // will be moved to SoraCard lib
-        isEnoughXorAvailable = true,
+        isEnoughXorAvailable = isEnoughXorAvailable,
         isIssuancePaid = false // will be available in Phase 2
     )
 }

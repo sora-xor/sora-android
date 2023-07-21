@@ -110,6 +110,8 @@ interface AssetsRepository {
 
     suspend fun tokensList(): List<Token>
 
+    fun subscribeTokensList(): Flow<List<Token>>
+
     suspend fun transfer(
         keypair: Sr25519Keypair,
         from: String,

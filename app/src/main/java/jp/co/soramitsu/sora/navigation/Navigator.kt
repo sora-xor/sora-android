@@ -34,6 +34,7 @@ package jp.co.soramitsu.sora.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil.openAppSettings
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.presentation.args.BUNDLE_KEY
 import jp.co.soramitsu.common.presentation.args.address
@@ -49,7 +50,6 @@ import jp.co.soramitsu.common.presentation.args.withArgs
 import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
 import jp.co.soramitsu.common.util.BuildUtils
-import jp.co.soramitsu.common.util.ShareUtil.openAppSettings
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
@@ -236,6 +236,10 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
                 isLaunchedFromSoraCard = isLaunchedFromSoraCard
             )
         )
+    }
+
+    override fun openEditCardsHub() {
+        navController?.navigate(R.id.editCardsHub)
     }
 
     override fun showBuyCrypto(isLaunchedFromSoraCard: Boolean) {

@@ -57,6 +57,20 @@ class TransactionMappersImpl @Inject constructor(
 
     override fun mapTransaction(tx: Transaction, curAddress: String): EventUiModel.EventTxUiModel =
         when (tx) {
+            is Transaction.EthTransfer -> {
+                EventUiModel.EventTxUiModel.EventEthTransfer(
+                    hash = tx.base.txHash,
+                    timestamp = tx.base.timestamp,
+                    status = tx.base.status,
+                    tokenUri = tx.token.iconUri(),
+                    ethTokenUri = tx.ethToken.iconUri(),
+                    dateTime = dateTimeFormatter.formatTimeWithoutSeconds(Date(tx.base.timestamp)),
+                    amountFormatted = tx.token.printBalance(tx.amount, numbersFormatter, AssetHolder.ACTIVITY_LIST_ROUNDING),
+                    fiatFormatted = "~%s".format(tx.token.printFiat(tx.amount, numbersFormatter)),
+                    requestHash = tx.requestHash,
+                    sidechainAddress = tx.sidechainAddress,
+                )
+            }
             is Transaction.Transfer -> {
                 if (tx.transferType == TransactionTransferType.INCOMING)
                     EventUiModel.EventTxUiModel.EventTransferInUiModel(

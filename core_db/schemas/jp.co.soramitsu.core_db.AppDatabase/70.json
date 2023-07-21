@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 70,
-    "identityHash": "a2b6278b0113dd39d482a5f0f3af390a",
+    "identityHash": "f9ecd5f48d55f79b6aafec087b29fe46",
     "entities": [
       {
         "tableName": "assets",
@@ -264,36 +264,30 @@
         ]
       },
       {
-        "tableName": "pools",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`assetId` TEXT NOT NULL, `assetIdBase` TEXT NOT NULL, `accountAddress` TEXT NOT NULL, `reservesFirst` TEXT NOT NULL, `reservesSecond` TEXT NOT NULL, `totalIssuance` TEXT NOT NULL, `strategicBonusApy` TEXT, `poolProvidersBalance` TEXT NOT NULL, `favorite` INTEGER NOT NULL DEFAULT 1, `sortOrder` INTEGER NOT NULL DEFAULT 0, `reservesAccount` TEXT NOT NULL DEFAULT '', PRIMARY KEY(`assetId`, `assetIdBase`, `accountAddress`), FOREIGN KEY(`accountAddress`) REFERENCES `accounts`(`substrateAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "tableName": "allpools",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tokenIdBase` TEXT NOT NULL, `tokenIdTarget` TEXT NOT NULL, `reserveBase` TEXT NOT NULL, `reserveTarget` TEXT NOT NULL, `totalIssuance` TEXT NOT NULL, `reservesAccount` TEXT NOT NULL, PRIMARY KEY(`tokenIdBase`, `tokenIdTarget`))",
         "fields": [
           {
-            "fieldPath": "assetId",
-            "columnName": "assetId",
+            "fieldPath": "tokenIdBase",
+            "columnName": "tokenIdBase",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "assetIdBase",
-            "columnName": "assetIdBase",
+            "fieldPath": "tokenIdTarget",
+            "columnName": "tokenIdTarget",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "accountAddress",
-            "columnName": "accountAddress",
+            "fieldPath": "reserveBase",
+            "columnName": "reserveBase",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "reservesFirst",
-            "columnName": "reservesFirst",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "reservesSecond",
-            "columnName": "reservesSecond",
+            "fieldPath": "reserveTarget",
+            "columnName": "reserveTarget",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -304,10 +298,43 @@
             "notNull": true
           },
           {
-            "fieldPath": "strategicBonusApy",
-            "columnName": "strategicBonusApy",
+            "fieldPath": "reservesAccount",
+            "columnName": "reservesAccount",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tokenIdBase",
+            "tokenIdTarget"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "userpools",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userTokenIdBase` TEXT NOT NULL, `userTokenIdTarget` TEXT NOT NULL, `accountAddress` TEXT NOT NULL, `poolProvidersBalance` TEXT NOT NULL, `favorite` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, PRIMARY KEY(`userTokenIdBase`, `userTokenIdTarget`, `accountAddress`), FOREIGN KEY(`accountAddress`) REFERENCES `accounts`(`substrateAddress`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`userTokenIdBase`, `userTokenIdTarget`) REFERENCES `allpools`(`tokenIdBase`, `tokenIdTarget`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "userTokenIdBase",
+            "columnName": "userTokenIdBase",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userTokenIdTarget",
+            "columnName": "userTokenIdTarget",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountAddress",
+            "columnName": "accountAddress",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "poolProvidersBalance",
@@ -319,33 +346,34 @@
             "fieldPath": "favorite",
             "columnName": "favorite",
             "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "1"
+            "notNull": true
           },
           {
             "fieldPath": "sortOrder",
             "columnName": "sortOrder",
             "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "0"
-          },
-          {
-            "fieldPath": "reservesAccount",
-            "columnName": "reservesAccount",
-            "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "''"
+            "notNull": true
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "assetId",
-            "assetIdBase",
+            "userTokenIdBase",
+            "userTokenIdTarget",
             "accountAddress"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_userpools_accountAddress",
+            "unique": false,
+            "columnNames": [
+              "accountAddress"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_userpools_accountAddress` ON `${TABLE_NAME}` (`accountAddress`)"
+          }
+        ],
         "foreignKeys": [
           {
             "table": "accounts",
@@ -356,6 +384,19 @@
             ],
             "referencedColumns": [
               "substrateAddress"
+            ]
+          },
+          {
+            "table": "allpools",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userTokenIdBase",
+              "userTokenIdTarget"
+            ],
+            "referencedColumns": [
+              "tokenIdBase",
+              "tokenIdTarget"
             ]
           }
         ]
@@ -388,7 +429,7 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`substrateAddress` TEXT NOT NULL, `accountName` TEXT NOT NULL, `backupFileId` TEXT, PRIMARY KEY(`substrateAddress`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`substrateAddress` TEXT NOT NULL, `accountName` TEXT NOT NULL, PRIMARY KEY(`substrateAddress`))",
         "fields": [
           {
             "fieldPath": "substrateAddress",
@@ -401,12 +442,6 @@
             "columnName": "accountName",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "backupFileId",
-            "columnName": "backupFileId",
-            "affinity": "TEXT",
-            "notNull": false
           }
         ],
         "primaryKey": {
@@ -641,7 +676,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a2b6278b0113dd39d482a5f0f3af390a')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f9ecd5f48d55f79b6aafec087b29fe46')"
     ]
   }
 }

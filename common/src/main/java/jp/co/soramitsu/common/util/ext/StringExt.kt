@@ -234,5 +234,5 @@ fun String.snakeCaseToCamelCase(): String {
 private val nameBytesLimit = 32
 fun String.isAccountNameLongerThen32Bytes() = this.toByteArray().size > nameBytesLimit
 
-private val passwordLength = 6
+private const val passwordLength = 6
 fun String.isPasswordSecure() = this.length >= passwordLength

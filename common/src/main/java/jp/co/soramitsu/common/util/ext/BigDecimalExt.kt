@@ -39,7 +39,18 @@ import kotlin.math.max
 
 val Big100 = BigDecimal.valueOf(100)
 
+fun compareNullDesc(o1: BigDecimal?, o2: BigDecimal?): Int =
+    when {
+        o1 == null && o2 == null -> 0
+        o1 != null && o2 != null -> o2.compareTo(o1)
+        o1 == null -> 1
+        else -> -1
+    }
+
 fun BigDecimal.isZero(): Boolean = this.compareTo(BigDecimal.ZERO) == 0
+
+fun BigDecimal?.multiplyNullable(decimal: BigDecimal?): BigDecimal? =
+    if (this != null && decimal != null) this.multiply(decimal) else null
 
 fun BigDecimal.equalTo(a: BigDecimal) = this.compareTo(a) == 0
 
