@@ -30,61 +30,32 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.test_data
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools
 
-import java.math.BigDecimal
-import jp.co.soramitsu.common.domain.LiquidityDetails
-import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
-import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesViewModel
 
-object PolkaswapTestData {
+@Composable
+internal fun AllPoolsScreen(
+    onTokenClicked: (String) -> Unit,
+    onNavClicked: () -> Unit,
+    viewModel: AllCurrenciesViewModel = hiltViewModel(),
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        val state = viewModel.state.collectAsStateWithLifecycle().value
+        AllPoolsInternal(
+        )
+    }
+}
 
-    val XOR_ASSET = TestAssets.xorAsset(BigDecimal.ONE)
+@Composable
+private fun AllPoolsInternal(
 
-    val XOR_ASSET_ZERO_BALANCE = TestAssets.xorAsset(BigDecimal.ZERO)
+) {
 
-    val VAL_ASSET = TestAssets.valAsset(BigDecimal.ONE)
-
-    val XSTXAU_ASSET = TestAssets.xstxauAsset(BigDecimal.ONE)
-
-    val LIQUIDITY_DATA = LiquidityData(
-        firstReserves = BigDecimal.ONE,
-        secondReserves = BigDecimal.ONE,
-        secondPooled = BigDecimal.ONE
-    )
-
-    val POOL_DATA = UserPoolData(
-        BasicPoolData(
-            XOR_ASSET.token,
-            VAL_ASSET.token,
-            BigDecimal.TEN,
-            BigDecimal.TEN,
-            BigDecimal.TEN,
-            "",
-            1.0,
-        ),
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        10.0,
-        BigDecimal.TEN,
-        true,
-        2,
-    )
-
-    val NETWORK_FEE = BigDecimal(0.007)
-    const val SLIPPAGE_TOLERANCE = 0.5f
-    private val SHARE_OF_POOL = BigDecimal("0.34678")
-    const val STRATEGIC_BONUS_APY = 0.234
-
-    val LIQUIDITY_DETAILS = LiquidityDetails(
-        baseAmount = BigDecimal.ONE,
-        targetAmount = BigDecimal.ONE,
-        perFirst = BigDecimal.ONE,
-        perSecond = BigDecimal.ONE,
-        networkFee = BigDecimal.ZERO,
-        shareOfPool = SHARE_OF_POOL,
-        pairEnabled = true,
-        pairPresented = true
-    )
 }

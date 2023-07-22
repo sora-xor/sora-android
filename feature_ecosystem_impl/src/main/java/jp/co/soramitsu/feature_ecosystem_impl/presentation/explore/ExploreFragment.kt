@@ -86,5 +86,13 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
                 onNavClicked = { navController.popBackStack() },
             )
         }
+        composable(
+            route = ExploreRoutes.ALL_POOLS,
+        ) {
+            AllCurrenciesScreen(
+                onTokenClicked = viewModel::onTokenClicked,
+                onNavClicked = { navController.popBackStack() },
+            )
+        }
     }
 }

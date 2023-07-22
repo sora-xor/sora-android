@@ -30,61 +30,41 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.test_data
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools
 
-import java.math.BigDecimal
-import jp.co.soramitsu.common.domain.LiquidityDetails
-import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
-import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPools
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemPoolsState
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
 
-object PolkaswapTestData {
+@HiltViewModel
+internal class AllPoolsViewModel @Inject constructor(
+    private val ecoSystemPoolsInteractor: EcoSystemPoolsInteractor,
+    private val coroutineManager: CoroutineManager,
+    private val ecoSystemMapper: EcoSystemMapper,
+) : BaseViewModel() {
 
-    val XOR_ASSET = TestAssets.xorAsset(BigDecimal.ONE)
-
-    val XOR_ASSET_ZERO_BALANCE = TestAssets.xorAsset(BigDecimal.ZERO)
-
-    val VAL_ASSET = TestAssets.valAsset(BigDecimal.ONE)
-
-    val XSTXAU_ASSET = TestAssets.xstxauAsset(BigDecimal.ONE)
-
-    val LIQUIDITY_DATA = LiquidityData(
-        firstReserves = BigDecimal.ONE,
-        secondReserves = BigDecimal.ONE,
-        secondPooled = BigDecimal.ONE
-    )
-
-    val POOL_DATA = UserPoolData(
-        BasicPoolData(
-            XOR_ASSET.token,
-            VAL_ASSET.token,
-            BigDecimal.TEN,
-            BigDecimal.TEN,
-            BigDecimal.TEN,
-            "",
-            1.0,
-        ),
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        10.0,
-        BigDecimal.TEN,
-        true,
-        2,
-    )
-
-    val NETWORK_FEE = BigDecimal(0.007)
-    const val SLIPPAGE_TOLERANCE = 0.5f
-    private val SHARE_OF_POOL = BigDecimal("0.34678")
-    const val STRATEGIC_BONUS_APY = 0.234
-
-    val LIQUIDITY_DETAILS = LiquidityDetails(
-        baseAmount = BigDecimal.ONE,
-        targetAmount = BigDecimal.ONE,
-        perFirst = BigDecimal.ONE,
-        perSecond = BigDecimal.ONE,
-        networkFee = BigDecimal.ZERO,
-        shareOfPool = SHARE_OF_POOL,
-        pairEnabled = true,
-        pairPresented = true
-    )
+    val poolsState = ecoSystemPoolsInteractor.subscribeBasicPools()
+        .catch {
+            onError(it)
+        }
+        .map {
+            EcoSystemPoolsState(
+                pools = ecoSystemMapper.mapEcoSystemPools(it),
+                filter = "",
+            )
+        }
+        .flowOn(coroutineManager.io)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemPoolsState)
 }
