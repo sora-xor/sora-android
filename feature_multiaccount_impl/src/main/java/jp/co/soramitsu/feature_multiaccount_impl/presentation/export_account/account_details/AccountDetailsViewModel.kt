@@ -194,30 +194,54 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
-        _createBackupPasswordState.value?.let {
-            val isSecure = textFieldValue.text.isPasswordSecure()
+        _createBackupPasswordState.value?.let { it ->
+            val filteredValue =
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
+
+            val isSecure = filteredValue.text.isPasswordSecure()
+            val descriptionText = if (isSecure) {
+                R.string.backup_password_mandatory_reqs_fulfilled
+            } else {
+                R.string.backup_password_requirments
+            }
+            val (confirmationDescriptionText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                filteredValue.text,
+                it.passwordConfirmation.value.text
+            )
             _createBackupPasswordState.value = it.copy(
                 password = it.password.copy(
-                    value = textFieldValue,
+                    value = filteredValue,
                     success = isSecure,
-                    descriptionText = if (isSecure) resourceManager.getString(R.string.create_backup_password_is_secure) else ""
+                    descriptionText = descriptionText,
+                    error = !isSecure && filteredValue.text.isNotEmpty()
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && it.passwordConfirmation.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+                passwordConfirmation = it.passwordConfirmation.copy(
+                    error = isError,
+                    descriptionText = confirmationDescriptionText,
+                    success = !isError && confirmationDescriptionText != R.string.common_empty_string
+                ),
+                setPasswordButtonIsEnabled = it.warningIsSelected &&
+                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
 
     fun onBackupPasswordConfirmationChanged(textFieldValue: TextFieldValue) {
         _createBackupPasswordState.value?.let {
-            val isConfirmationRightAndSecure =
-                it.password.value.text == textFieldValue.text && it.password.value.text.isPasswordSecure()
+            val filteredValue =
+                textFieldValue.copy(text = textFieldValue.text.filter { it != ' ' })
+            val (confirmationDescText, isError) = getPasswordConfirmationDescriptionAndErrorStatus(
+                it.password.value.text,
+                filteredValue.text
+            )
             _createBackupPasswordState.value = it.copy(
                 passwordConfirmation = it.passwordConfirmation.copy(
-                    value = textFieldValue,
-                    success = isConfirmationRightAndSecure,
-                    descriptionText = if (isConfirmationRightAndSecure) resourceManager.getString(R.string.create_backup_password_matched) else ""
+                    value = filteredValue,
+                    success = !isError && filteredValue.text.isNotEmpty(),
+                    descriptionText = confirmationDescText,
+                    error = isError
                 ),
-                setPasswordButtonIsEnabled = it.warningIsSelected && isConfirmationRightAndSecure
+                setPasswordButtonIsEnabled = it.warningIsSelected && !isError && filteredValue.text.isPasswordSecure()
             )
         }
     }
@@ -329,12 +353,11 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
     private fun openCreateBackupScreen() {
         _createBackupPasswordState.value = CreateBackupPasswordState(
-            password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
-            passwordConfirmation = InputTextState(
-                label = resourceManager.getString(
-                    R.string.export_json_input_confirmation_label
-                )
-            )
+            password = InputTextState(
+                label = resourceManager.getString(R.string.create_backup_set_password),
+                descriptionText = resourceManager.getString(R.string.backup_password_requirments)
+            ),
+            passwordConfirmation = InputTextState(label = resourceManager.getString(R.string.export_json_input_confirmation_label))
         )
 
         _navEvent.value = AccountDetailsRoutes.BACKUP_ACCOUNT to {}
@@ -375,6 +398,17 @@ class AccountDetailsViewModel @AssistedInject constructor(
             _accountDetailsScreenState.value = it.copy(
                 isBackupLoading = false
             )
+        }
+    }
+
+    private fun getPasswordConfirmationDescriptionAndErrorStatus(
+        password: String,
+        passwordConfirmation: String
+    ): Pair<Int, Boolean> {
+        return when (passwordConfirmation) {
+            "" -> R.string.common_empty_string to false
+            password -> R.string.create_backup_password_matched to false
+            else -> R.string.create_backup_password_not_matched to true
         }
     }
 }
