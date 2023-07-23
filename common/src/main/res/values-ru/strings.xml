@@ -492,6 +492,7 @@
   <string name="show_more">Show more</string>
   <string name="show_zero_balances">Показать нулевые балансы</string>
   <string name="slippage">Проскальзывание</string>
+  <string name="something_went_wrong">Что-то пошло не так</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">0 € годовой сервисный сбор</string>
   <string name="sora_card_blacklisted_countires_title">Исключения из заявки</string>
@@ -534,6 +535,7 @@
   <string name="tutorial_terms_and_conditions">Создавая учетную запись, вы соглашаетесь с %% Условиями и положениями %% и %% Политикой конфиденциальности %%</string>
   <string name="tutorial_terms_and_conditions_3">Условиями использования</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
+  <string name="unexpected_error">Произошла непредвиденная ошибка.\n\nВы можете решить эту проблему в сообществе SORA в Telegram чате @SORAhappiness.</string>
   <string name="update_downloaded">Обновление для приложения SORA было загружено и готово к установке. \n\n Важно использовать последнюю версию приложения. \n\n Чтобы обновить приложение, требуется перезагрузка.</string>
   <string name="update_install_now">Хотите установить обновление сейчас?</string>
   <string name="wallet_balance_locked">Заблокировано</string>

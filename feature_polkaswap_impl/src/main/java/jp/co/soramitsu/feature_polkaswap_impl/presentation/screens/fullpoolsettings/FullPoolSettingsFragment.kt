@@ -46,6 +46,7 @@ import androidx.compose.material.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
@@ -58,11 +59,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
-import jp.co.soramitsu.common.presentation.compose.components.BasicSearchBar
 import jp.co.soramitsu.common.presentation.view.WrappedRecyclerView
 import jp.co.soramitsu.common.view.CustomItemTouchHelperCallback
 import jp.co.soramitsu.common_wallet.R as polkaswapR
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.classic.PoolsManagementAdapter
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -91,19 +95,20 @@ class FullPoolSettingsFragment : SoraBaseFragment<FullPoolSettingsViewModel>() {
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
             ) {
-                BasicSearchBar(
-                    placeholder = getString(R.string.common_search_pools),
-                    action = getString(R.string.common_done),
-                    onNavigate = {
-                        viewModel.onCloseClick()
-                    },
-                    onClear = {
-                        viewModel.searchAssets("")
-                        itemTouchHelperCallback.isDraggable = true
-                    },
-                    onAction = {
-                        viewModel.onCloseClick()
-                    },
+                SoramitsuToolbar(
+                    state = SoramitsuToolbarState(
+                        basic = BasicToolbarState(
+                            title = "",
+                            navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
+                            actionLabel = R.string.common_done,
+                        ),
+                        type = SoramitsuToolbarType.Small(),
+                    ),
+                    backgroundColor = MaterialTheme.customColors.bgSurface,
+                    elevation = 0.dp,
+                    onAction = viewModel::onCloseClick,
+                    onNavigate = viewModel::onCloseClick,
+                    searchInitial = "",
                     onSearch = {
                         viewModel.searchAssets(it)
                         itemTouchHelperCallback.isDraggable = it.isBlank()
@@ -115,7 +120,7 @@ class FullPoolSettingsFragment : SoraBaseFragment<FullPoolSettingsViewModel>() {
                             start = Dimens.x3,
                             end = Dimens.x3,
                             top = Dimens.x2,
-                            bottom = Dimens.x2
+                            bottom = Dimens.x2,
                         )
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

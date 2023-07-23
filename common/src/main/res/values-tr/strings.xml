@@ -474,6 +474,7 @@
   <string name="show_more">Show more</string>
   <string name="show_zero_balances">Show zero balances</string>
   <string name="slippage">Slippage</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">€0 annual service fee</string>
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
@@ -516,6 +517,7 @@
   <string name="tutorial_terms_and_conditions">Bir hesap oluşturarak %%Kullanım Şartlarını%% &amp; %%Gizlilik Politikasını%% kabul ediyorsunuz.</string>
   <string name="tutorial_terms_and_conditions_3">Şartlar ve Koşullar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORA uygulaması için bir güncelleme indirildi ve yüklenmek için hazır.\n\nUygulamanın son sürümünü kullanmak önemlidir.\n\nUygulamayı güncellemek için yeniden başlatma gereklidir.</string>
   <string name="update_install_now">Güncellemeyi şimdi yüklemek Istiyor musunuz?</string>
   <string name="wallet_balance_locked">Kilitli</string>

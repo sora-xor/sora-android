@@ -30,62 +30,29 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.presentation.compose.components
+package jp.co.soramitsu.common.presentation.compose
 
-import androidx.compose.material.MaterialTheme
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.ui_core.component.searchbar.SearchBar
-import jp.co.soramitsu.ui_core.theme.customColors
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
 
 @Composable
-fun BasicSearchBar(
-    init: String = "",
-    backgroundColor: Color = MaterialTheme.customColors.bgSurface,
-    placeholder: String,
-    action: String?,
-    onAction: (() -> Unit)?,
-    onClear: () -> Unit,
-    onSearch: (String) -> Unit,
-    onNavigate: () -> Unit,
+fun TokenIcon(
+    modifier: Modifier = Modifier,
+    uri: Any,
+    size: Dp,
 ) {
-    val searchValue = remember { mutableStateOf(TextFieldValue(init)) }
-    SearchBar(
-        backgroundColor = backgroundColor,
-        elevation = 0.dp,
-        navIcon = painterResource(id = R.drawable.ic_cross),
-        onNavigate = onNavigate,
-        searchValue = searchValue.value,
-        searchPlaceholder = placeholder,
-        actionLabel = action,
-        onSearch = {
-            searchValue.value = it
-            onSearch.invoke(it.text)
-        },
-        onClear = {
-            searchValue.value = TextFieldValue("")
-            onClear.invoke()
-        },
-        onAction = onAction,
-    )
-}
-
-@Preview
-@Composable
-private fun Preview() {
-    BasicSearchBar(
-        placeholder = "Placeholder",
-        action = "Action",
-        onAction = { },
-        onClear = { },
-        onSearch = { },
-        onNavigate = {},
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(uri).build(),
+        modifier = modifier
+            .size(size = size),
+        contentDescription = null,
+        imageLoader = LocalContext.current.imageLoader,
     )
 }

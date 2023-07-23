@@ -40,19 +40,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import jp.co.soramitsu.common.presentation.compose.components.BasicSearchBar
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 internal fun AllCurrenciesScreen(
@@ -65,7 +68,6 @@ internal fun AllCurrenciesScreen(
         AllCurrenciesInternal(
             state = state,
             onNavIconClicked = onNavClicked,
-            onClearClicked = viewModel::onClearSearch,
             onSearch = viewModel::onSearch,
             onTokenClicked = onTokenClicked,
         )
@@ -76,18 +78,20 @@ internal fun AllCurrenciesScreen(
 private fun ColumnScope.AllCurrenciesInternal(
     state: EcoSystemTokensState,
     onNavIconClicked: () -> Unit,
-    onClearClicked: () -> Unit,
     onSearch: (String) -> Unit,
     onTokenClicked: (String) -> Unit,
 ) {
-    BasicSearchBar(
-        init = state.filter,
-        backgroundColor = MaterialTheme.customColors.bgPage,
-        placeholder = "",
-        action = null,
+    SoramitsuToolbar(
+        state = SoramitsuToolbarState(
+            basic = BasicToolbarState(
+                title = R.string.common_currencies,
+                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
+            ),
+            type = SoramitsuToolbarType.Small(),
+        ),
+        elevation = 0.dp,
         onNavigate = onNavIconClicked,
-        onClear = onClearClicked,
-        onAction = null,
+        searchInitial = state.filter,
         onSearch = onSearch,
     )
     ContentCardEndless(
@@ -125,7 +129,7 @@ private fun PreviewAllCurrenciesInternal() {
                 },
                 "",
             ),
-            {}, {}, {}, {},
+            {}, {}, {},
         )
     }
 }

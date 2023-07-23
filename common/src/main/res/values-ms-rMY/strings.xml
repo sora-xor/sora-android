@@ -468,6 +468,7 @@
   <string name="show_more">Tunjukkan lagi</string>
   <string name="show_zero_balances">Tunjukkan baki sifar</string>
   <string name="slippage">Gelinciran</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">Saya sudah mempunyai kad</string>
   <string name="sora_card_annual_service_fee">€ 0 Yuran Perkhidmatan Tahunan</string>
   <string name="sora_card_blacklisted_countires_title">Dikecualikan daripada permohonan</string>
@@ -510,6 +511,7 @@
   <string name="tutorial_terms_and_conditions">Dengan mencipta akaun yang anda bersetuju dengan %%Terma &amp; Syarat%% dan %%Dasar Privasi%%</string>
   <string name="tutorial_terms_and_conditions_3">Terma &amp; Syarat</string>
   <string name="tutorial_terms_and_conditions_template_1">Dengan meneruskan anda bersetuju dengan</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Kemas kini untuk aplikasi SORA telah dimuat turun dan sedia untuk dipasang.\n\nAdalah penting untuk menggunakan versi terkini aplikasi.\n\nUntuk mengemas kini aplikasi, mulakan semula diperlukan.</string>
   <string name="update_install_now">Adakah anda ingin memasang kemas kini sekarang?</string>
   <string name="wallet_balance_locked">Dikunci</string>

@@ -30,55 +30,28 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.explore
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
-import io.mockk.verify
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
-import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.test_shared.MainCoroutineRule
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TestRule
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 
-@ExperimentalCoroutinesApi
-class ExploreViewModelTest {
+internal interface PoolsUpdateSubscription {
+    fun start(): Flow<String>
+}
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
+internal class PoolsUpdateSubscriptionImpl(
+    private val repository: PolkaswapSubscriptionRepository,
+    private val coroutineManager: CoroutineManager,
+) : PoolsUpdateSubscription {
 
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
-
-    @get:Rule
-    var mainCoroutineRule = MainCoroutineRule()
-
-    @MockK
-    private lateinit var polkaswapRouter: PolkaswapRouter
-
-    @MockK
-    private lateinit var assetsRouter: AssetsRouter
-
-    private lateinit var discoverViewModel: ExploreViewModel
-
-    @Before
-    fun setUp() = runTest {
-        every { assetsRouter.showAssetDetails(any()) } returns Unit
-        discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter)
-    }
-
-    @Test
-    fun test() = runTest {
-        discoverViewModel.onTokenClicked("0x00")
-        verify { assetsRouter.showAssetDetails("0x00") }
-    }
-
+    override fun start(): Flow<String> =
+        repository
+            .subscribeToBasicPools()
+            .onEach {
+                repository.updateBasicPools()
+            }
+            .flowOn(coroutineManager.io)
 }

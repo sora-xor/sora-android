@@ -55,6 +55,10 @@ interface PolkaswapSubscriptionRepository {
 
     fun subscribeToPoolsData(address: String): Flow<String>
 
+    fun subscribeToBasicPools(): Flow<String>
+
+    suspend fun updateBasicPools()
+
     fun observePoolXYKReserves(
         baseTokenId: String,
         tokenId: String

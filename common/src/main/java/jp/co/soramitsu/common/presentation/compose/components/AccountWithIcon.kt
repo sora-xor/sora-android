@@ -46,13 +46,10 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -78,14 +75,7 @@ fun AccountWithIcon(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(accountIcon ?: DEFAULT_ICON_URI).build(),
-            modifier = Modifier
-                .size(size = Size.Small),
-            contentDescription = null,
-            imageLoader = LocalContext.current.imageLoader,
-        )
+        TokenIcon(uri = accountIcon ?: DEFAULT_ICON_URI, size = Size.Small)
         Text(
             modifier = Modifier
                 .weight(1f)

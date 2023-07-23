@@ -53,6 +53,7 @@ import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 @ExperimentalCoroutinesApi
@@ -66,15 +67,14 @@ class PolkaswapRepositoryImpl @Inject constructor(
     PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
     override fun subscribeBasicPools(): Flow<List<BasicPoolData>> {
-        return db.poolDao().subscribeBasicPools().map { list ->
+        return db.poolDao().subscribeBasicPoolsWithToken().map { list ->
             list.map { local ->
-                PoolLocalMapper.mapBasicLocal(
+                PoolLocalMapper.mapBasicPoolTokenFiatLocal(
                     local,
-                    { getToken(it) },
-                    { getPoolStrategicBonusAPY(it) }
-                )
+                    assetLocalToAssetMapper,
+                ) { getPoolStrategicBonusAPY(it) }
             }
-        }
+        }.distinctUntilChanged()
     }
 
     override suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount) {
@@ -185,7 +185,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
                     pool.basicPoolLocal.reserveTarget,
                     firstPooled,
                     secondPooled,
-                    blockExplorerManager.getTempApy(pool.basicPoolLocal.reservesAccount),
+                    getPoolStrategicBonusAPY(pool.basicPoolLocal.reservesAccount),
                 )
             }
         }

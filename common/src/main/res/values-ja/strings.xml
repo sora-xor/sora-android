@@ -468,6 +468,7 @@
   <string name="show_more">さらに表示</string>
   <string name="show_zero_balances">残高ゼロを表示</string>
   <string name="slippage">スリッページ</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">すでにカードを持っている</string>
   <string name="sora_card_annual_service_fee">年間サービス料€0</string>
   <string name="sora_card_blacklisted_countires_title">適用除外</string>
@@ -510,6 +511,7 @@
   <string name="tutorial_terms_and_conditions">アカウントを作成することにより、%%規約と条件%%および%%個人情報保護方針%%に同意したことになります</string>
   <string name="tutorial_terms_and_conditions_3">規約と条件</string>
   <string name="tutorial_terms_and_conditions_template_1">続行することにより、同意したことになります</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORAアプリのアップデートがダウンロードされ、インストールできるようになりました。\n\n最新バージョンのアプリを使用することが重要です。\n\nアプリをアップデートするためには再起動が必要です。</string>
   <string name="update_install_now">今すぐアップデートをインストールしますか？</string>
   <string name="wallet_balance_locked">ロック済み</string>

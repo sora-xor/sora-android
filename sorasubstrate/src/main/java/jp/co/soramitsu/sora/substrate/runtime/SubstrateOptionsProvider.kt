@@ -107,6 +107,18 @@ fun RuntimeSnapshot.reservesKey(baseTokenId: String, tokenId: ByteArray): String
             )
         )
 
+fun RuntimeSnapshot.reservesKeyToken(baseTokenId: String): String =
+    this.metadata.module(Pallete.POOL_XYK.palletName)
+        .storage(Storage.RESERVES.storageName)
+        .storageKey(
+            this,
+            Struct.Instance(
+                mapOf(
+                    "code" to baseTokenId.mapAssetId()
+                )
+            ),
+        )
+
 enum class Pallete(val palletName: String) {
     ASSETS("Assets"),
     IROHA_MIGRATION("IrohaMigration"),

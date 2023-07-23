@@ -33,27 +33,28 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.data.mappers
 
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.core_db.model.BasicPoolLocal
+import jp.co.soramitsu.core_db.model.BasicPoolWithTokenFiatLocal
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 
 object PoolLocalMapper {
 
-    suspend fun mapBasicLocal(
-        basicPoolLocal: BasicPoolLocal,
-        token: suspend (String) -> Token,
+    suspend fun mapBasicPoolTokenFiatLocal(
+        basic: BasicPoolWithTokenFiatLocal,
+        mapper: AssetLocalToAssetMapper,
         sbapy: (String) -> Double?,
     ): BasicPoolData {
         return BasicPoolData(
-            baseToken = token(basicPoolLocal.tokenIdBase),
-            targetToken = token(basicPoolLocal.tokenIdTarget),
-            baseReserves = basicPoolLocal.reserveBase,
-            targetReserves = basicPoolLocal.reserveTarget,
-            totalIssuance = basicPoolLocal.totalIssuance,
-            reserveAccount = basicPoolLocal.reservesAccount,
-            sbapy = sbapy(basicPoolLocal.reservesAccount),
+            baseToken = mapper.map(basic.tokenBaseLocal),
+            targetToken = mapper.map(basic.tokenTargetLocal),
+            baseReserves = basic.basicPoolLocal.reserveBase,
+            targetReserves = basic.basicPoolLocal.reserveTarget,
+            totalIssuance = basic.basicPoolLocal.totalIssuance,
+            reserveAccount = basic.basicPoolLocal.reservesAccount,
+            sbapy = sbapy(basic.basicPoolLocal.reservesAccount),
         )
     }
 

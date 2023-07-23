@@ -52,17 +52,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -116,15 +112,9 @@ internal fun ReceiveScreen(
                 .wrapContentHeight(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(avatar).build(),
-                alignment = Alignment.Center,
-                modifier = Modifier
-                    .size(size = Size.Small),
-                contentScale = ContentScale.Inside,
-                contentDescription = null,
-                imageLoader = LocalContext.current.imageLoader,
+            TokenIcon(
+                uri = avatar,
+                size = Size.Small,
             )
             Spacer(modifier = Modifier.size(Dimens.x1))
             Column(

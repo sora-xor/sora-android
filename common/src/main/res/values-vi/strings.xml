@@ -468,6 +468,7 @@
   <string name="show_more">Xm nhiều hơn</string>
   <string name="show_zero_balances">Hiển thị số dư bằng không</string>
   <string name="slippage">Trượt giá</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">Tôi đã có thẻ</string>
   <string name="sora_card_annual_service_fee">Phí dịch vụ hàng năm € 0</string>
   <string name="sora_card_blacklisted_countires_title">Không bao gồm ứng dụng</string>
@@ -510,6 +511,7 @@
   <string name="tutorial_terms_and_conditions">Tạo tài khoản là bạn đã đồng ý với %% Điều khoản &amp; Điều kiện %% và %% Chính sách quyền riêng tư %%</string>
   <string name="tutorial_terms_and_conditions_3">Điều khoản &amp; Điều kiện</string>
   <string name="tutorial_terms_and_conditions_template_1">Bằng cách tiếp tục, bạn đồng ý với</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Bản cập nhật cho ứng dụng SORA đã được tải xuống và sẵn sàng cài đặt. \n\n Hãy sử dụng phiên bản mới nhất của ứng dụng. \n\n Để cập nhật ứng dụng thành công, bạn cần khởi động lại ứng dụng.</string>
   <string name="update_install_now">Bạn có muốn cài đặt bản cập nhật ngay bây giờ không?</string>
   <string name="wallet_balance_locked">Đã khóa</string>

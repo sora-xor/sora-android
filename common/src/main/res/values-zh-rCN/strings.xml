@@ -468,6 +468,7 @@
   <string name="show_more">显示更多</string>
   <string name="show_zero_balances">显示零余额</string>
   <string name="slippage">滑点</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">我已经有一张卡了</string>
   <string name="sora_card_annual_service_fee">年服务费€0</string>
   <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
@@ -510,6 +511,7 @@
   <string name="tutorial_terms_and_conditions">创建账户即表示您同意%%条款和条件%%和%%隐私政策%%</string>
   <string name="tutorial_terms_and_conditions_3">条款及细则</string>
   <string name="tutorial_terms_and_conditions_template_1">继续操作即表示您同意</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORA 应用程序的更新已下载并可以安装。 \n\n使用最新版本的应用程序很重要。 \n\n为了更新应用程序，需要重新启动。</string>
   <string name="update_install_now">您想现在安装更新吗？</string>
   <string name="wallet_balance_locked">已被锁定</string>

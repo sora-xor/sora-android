@@ -474,6 +474,7 @@
   <string name="show_more">Enseñar más</string>
   <string name="show_zero_balances">Mostrar balances a cero</string>
   <string name="slippage">Slippage</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">Ya tengo una tarjeta </string>
   <string name="sora_card_annual_service_fee">Cuota anual de servicio 0 €</string>
   <string name="sora_card_blacklisted_countires_title">Excluidos de solicitud</string>
@@ -516,6 +517,7 @@
   <string name="tutorial_terms_and_conditions">Al crear una cuenta, acepta los %%Términos y condiciones%% y la %%Política de privacidad%%.</string>
   <string name="tutorial_terms_and_conditions_3">Términos y condiciones</string>
   <string name="tutorial_terms_and_conditions_template_1">Al continuar usted está de acuerdo con el </string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">An update for the SORA application has been downloaded and is ready to be installed.\n\nIt is important to use the latest version of the application.\n\nIn order to update the app, a restart is required.</string>
   <string name="update_install_now">Would you like to install the update now?</string>
   <string name="wallet_balance_locked">Bloqueado</string>

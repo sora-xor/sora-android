@@ -79,6 +79,7 @@ import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest
 import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest2
 import jp.co.soramitsu.sora.substrate.request.FinalizedHeadRequest
 import jp.co.soramitsu.sora.substrate.request.NextAccountIndexRequest
+import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.request.StateKeysPaged
 import jp.co.soramitsu.sora.substrate.request.StateQueryStorageAt
 import jp.co.soramitsu.sora.substrate.response.ChainHeaderResponse
@@ -117,6 +118,12 @@ class SubstrateCalls @Inject constructor(
             request = GetStorageRequest(listOf(storageKey)),
             mapper = pojo<String>(),
         ).result
+
+    suspend fun getStateKeys(partialKey: String): List<String> =
+        socketService.executeAsync(
+            request = StateKeys(listOf(partialKey)),
+            mapper = pojoList<String>(),
+        ).result ?: emptyList()
 
     suspend fun fetchXORBalances(
         accountId: String,

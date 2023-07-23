@@ -38,20 +38,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.ui_core.component.asset.changePriceColor
@@ -78,29 +74,21 @@ fun PoolsList(
                 modifier = Modifier.wrapContentSize()
             ) {
                 val (token1, token2) = createRefs()
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(poolState.token1Icon).build(),
+                TokenIcon(
+                    uri = poolState.token1Icon, size = Size.Small,
                     modifier = Modifier
-                        .size(size = Size.Small)
                         .constrainAs(token1) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
-                        },
-                    contentDescription = null,
-                    imageLoader = LocalContext.current.imageLoader,
+                        }
                 )
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(poolState.token2Icon).build(),
+                TokenIcon(
+                    uri = poolState.token2Icon, size = Size.Small,
                     modifier = Modifier
-                        .size(size = Size.Small)
                         .constrainAs(token2) {
                             top.linkTo(parent.top)
                             start.linkTo(token1.start, margin = 24.dp)
-                        },
-                    contentDescription = null,
-                    imageLoader = LocalContext.current.imageLoader,
+                        }
                 )
             }
             Column(

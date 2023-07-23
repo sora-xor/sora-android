@@ -38,6 +38,7 @@ import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.core_db.AppDatabase
@@ -49,6 +50,7 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscrip
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.SwapMarketMapper
 import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
 import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.shared_utils.runtime.metadata.storage
 import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
@@ -58,8 +60,10 @@ import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
+import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.poolTBCReserves
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
+import jp.co.soramitsu.sora.substrate.runtime.reservesKeyToken
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import kotlinx.coroutines.flow.Flow
@@ -81,6 +85,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
     override suspend fun updateAccountPools(address: String) {
+        blockExplorerManager.updatePoolsSbApy()
         // pool base tokens
         val baseTokens = wsConnection.getPoolBaseTokens()
         db.withTransaction {
@@ -170,7 +175,6 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 }
             )
         }
-        blockExplorerManager.updatePoolsSbApy()
     }
 
     override suspend fun getRemotePoolReserves(
@@ -225,6 +229,51 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 it.route,
             )
         }
+    }
+
+    override suspend fun updateBasicPools() {
+        val storage = runtimeManager.getRuntimeSnapshot().metadata
+            .module(Pallete.POOL_XYK.palletName)
+            .storage(Storage.RESERVES.storageName)
+        val list = mutableListOf<BasicPoolLocal>()
+        db.poolDao().getPoolBaseTokens().forEach { token ->
+            val key = runtimeManager.getRuntimeSnapshot().reservesKeyToken(token.base.tokenId)
+            substrateCalls.getStateKeys(key).forEach { storageKey ->
+                val targetToken = storageKey.assetIdFromKey()
+                val whitelisted =
+                    db.assetDao().getWhitelistOfToken(targetToken).isNullOrEmpty().not()
+                if (whitelisted) {
+                    substrateCalls.getStorageHex(storageKey)?.let { storageHex ->
+                        storage.type.value
+                            ?.fromHex(runtimeManager.getRuntimeSnapshot(), storageHex)
+                            ?.safeCast<List<BigInteger>>()?.let { reserves ->
+                                val reserveAccount = wsConnection.getPoolReserveAccount(
+                                    token.base.tokenId,
+                                    targetToken.fromHex()
+                                )
+                                val total = reserveAccount?.let { wsConnection.getPoolTotalIssuances(it) }?.let {
+                                    mapBalance(it, token.token.precision)
+                                }
+                                list.add(
+                                    BasicPoolLocal(
+                                        token.base.tokenId,
+                                        targetToken,
+                                        mapBalance(reserves[0], token.token.precision),
+                                        mapBalance(reserves[1], token.token.precision),
+                                        total ?: BigDecimal.ZERO,
+                                        reserveAccount?.let { runtimeManager.toSoraAddress(it) } ?: "",
+                                    )
+                                )
+                            }
+                    }
+                }
+            }
+        }
+        db.poolDao().insertBasicPools(list)
+    }
+
+    override fun subscribeToBasicPools(): Flow<String> {
+        return flowOf("")
     }
 
     override fun subscribeToPoolsAssets(address: String): Flow<String> {

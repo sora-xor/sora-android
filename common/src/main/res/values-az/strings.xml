@@ -474,6 +474,7 @@
   <string name="show_more">Show more</string>
   <string name="show_zero_balances">Show zero balances</string>
   <string name="slippage">Slippage</string>
+  <string name="something_went_wrong">Nəsə xəta baş verdi</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">€0 annual service fee</string>
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
@@ -516,6 +517,7 @@
   <string name="tutorial_terms_and_conditions">Bir hesab yaratmaqla %% Şərtlər %% və %% Məxfilik Siyasəti %%</string>
   <string name="tutorial_terms_and_conditions_3">Şərtlər və Qaydalar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
+  <string name="unexpected_error">Gözlənilməz xəta baş verdi. \n\n Siz @SORAhappiness Telegram çatında SORA icmasında bu problemi həll edə bilərsiniz.</string>
   <string name="update_downloaded">SORA tətbiqi üçün yeniləmə endirilib və quraşdırılmağa hazırdır. \n\n Proqramın ən son versiyasından istifadə etmək vacibdir. \n\n Proqramı yeniləmək üçün yenidən başladın tələb olunur.</string>
   <string name="update_install_now">Güncəlləməni indi quraşdırmaq istərdinizmi?</string>
   <string name="wallet_balance_locked">Kilidlənmiş</string>
