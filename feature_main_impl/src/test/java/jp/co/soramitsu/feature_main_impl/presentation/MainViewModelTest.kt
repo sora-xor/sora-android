@@ -47,7 +47,6 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_shared.MainCoroutineRule
@@ -83,9 +82,6 @@ class MainViewModelTest {
     private lateinit var assetsInteractor: AssetsInteractor
 
     @MockK
-    private lateinit var walletInteractor: WalletInteractor
-
-    @MockK
     private lateinit var pinCodeInteractor: PinCodeInteractor
 
     @MockK
@@ -108,7 +104,7 @@ class MainViewModelTest {
         coEvery { assetsInteractor.getCurSoraAccount() } returns TestAccounts.soraAccount
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
         coEvery { blockExplorerManager.updateFiat() } returns Unit
-        coEvery { assetsInteractor.updateWhitelistBalances(true) } returns Unit
+        coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
         mockkObject(RepeatStrategyBuilder)
         every { RepeatStrategyBuilder.infinite() } returns object : RepeatStrategy {
             override suspend fun repeat(block: suspend () -> Unit) {
@@ -124,7 +120,6 @@ class MainViewModelTest {
         mainViewModel = MainViewModel(
             assetsInteractor,
             nodeManager,
-            walletInteractor,
             pinCodeInteractor,
             globalSubscriptionManager,
             blockExplorerManager,
@@ -132,7 +127,7 @@ class MainViewModelTest {
         )
         advanceTimeBy(22000)
         verify { globalSubscriptionManager.start() }
-        coVerify { assetsInteractor.updateWhitelistBalances(true) }
+        coVerify { assetsInteractor.updateWhitelistBalances() }
         coVerify(exactly = 3) { blockExplorerManager.updateFiat() }
         assertFalse(mainViewModel.badConnectionVisibilityLiveData.getOrAwaitValue())
     }

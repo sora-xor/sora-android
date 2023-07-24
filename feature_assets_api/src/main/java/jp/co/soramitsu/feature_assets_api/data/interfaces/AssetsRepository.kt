@@ -124,5 +124,5 @@ interface AssetsRepository {
 
     suspend fun updateBalancesVisibleAssets(address: String)
 
-    suspend fun updateWhitelistBalances(address: String, update: Boolean)
+    suspend fun updateWhitelistBalances(address: String)
 }

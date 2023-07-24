@@ -28,9 +28,31 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "default"
+
+    productFlavors {
+        develop {
+            dimension 'default'
+        }
+
+        soralution {
+            dimension 'default'
+        }
+
+        tsting {
+            dimension 'default'
+        }
+
+        production {
+            dimension 'default'
+        }
+    }
 }
 
 dependencies {
+    implementation project(":common")
+
     implementation navigationFragmentDep
     implementation navigationUiDep
 

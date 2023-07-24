@@ -45,6 +45,7 @@ import kotlin.math.pow
 
 private const val DECIMAL_PATTERN_BASE = "###,###."
 private const val TWO_DIGITS_PATTERN = "00"
+const val nbspace = ' '
 
 private const val DEFAULT_PRECISION = 2
 
@@ -53,7 +54,7 @@ val GROUPING_SEPARATOR: Char
         return if (Locale.getDefault().toString() == "ar") {
             ','
         } else {
-            ' '
+            nbspace
         }
     }
 

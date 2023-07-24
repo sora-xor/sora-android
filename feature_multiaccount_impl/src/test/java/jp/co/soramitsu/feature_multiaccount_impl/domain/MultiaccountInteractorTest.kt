@@ -95,7 +95,7 @@ class MultiaccountInteractorTest {
         coEvery { credentialsRepository.isRawSeedValid(any()) } returns true
         coEvery { userRepository.insertSoraAccount(any()) } returns Unit
         coEvery { userRepository.setCurSoraAccount(any()) } returns Unit
-        coEvery { assetsInteractor.updateWhitelistBalances(any()) } returns Unit
+        coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
         coEvery { userRepository.saveRegistrationState(any()) } returns Unit
         coEvery { credentialsRepository.restoreUserCredentialsFromMnemonic(any(), any()) } returns account
         coEvery { credentialsRepository.restoreUserCredentialsFromRawSeed(any(), any()) } returns account
@@ -128,7 +128,7 @@ class MultiaccountInteractorTest {
 
     @Test
     fun `continueRecoverFlow is called`() = runTest {
-        multiaccountInteractor.continueRecoverFlow(account, true)
+        multiaccountInteractor.continueRecoverFlow(account)
         coVerify { userRepository.insertSoraAccount(account) }
         coVerify { userRepository.setCurSoraAccount(account) }
         coVerify { userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED) }
@@ -152,7 +152,7 @@ class MultiaccountInteractorTest {
 
     @Test
     fun `createUser is called`() = runTest {
-        multiaccountInteractor.createUser(account, true)
+        multiaccountInteractor.createUser(account)
         coVerify { userRepository.insertSoraAccount(account) }
         coVerify { userRepository.setCurSoraAccount(account) }
         coVerify { userRepository.saveRegistrationState(OnboardingState.INITIAL) }

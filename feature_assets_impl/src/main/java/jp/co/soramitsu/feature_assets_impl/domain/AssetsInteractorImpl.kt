@@ -221,13 +221,9 @@ class AssetsInteractorImpl constructor(
         assetsRepository.updateAssetPositions(assetPositions, curAccount)
     }
 
-    override suspend fun updateBalancesVisibleAssets() {
-        assetsRepository.updateBalancesVisibleAssets(userRepository.getCurSoraAccount().substrateAddress)
-    }
-
-    override suspend fun updateWhitelistBalances(update: Boolean) {
+    override suspend fun updateWhitelistBalances() {
         val soraAccount = userRepository.getCurSoraAccount()
-        assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress, update)
+        assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress)
 
         if (needFakeBalance()) {
             coroutineManager.applicationScope.launch(coroutineManager.io) {
