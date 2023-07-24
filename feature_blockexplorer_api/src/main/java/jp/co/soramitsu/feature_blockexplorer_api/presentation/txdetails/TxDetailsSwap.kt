@@ -45,16 +45,13 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -78,29 +75,21 @@ fun TxDetailsSwap(
                 modifier = Modifier.wrapContentSize()
             ) {
                 val (token1, token2) = createRefs()
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(icon1).build(),
-                    modifier = Modifier
-                        .size(size = 48.dp)
-                        .constrainAs(token1) {
-                            top.linkTo(parent.top)
-                            start.linkTo(parent.start)
-                        },
-                    contentDescription = null,
-                    imageLoader = LocalContext.current.imageLoader,
+                TokenIcon(
+                    modifier = Modifier.constrainAs(token1) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    },
+                    uri = icon1,
+                    size = 48.dp,
                 )
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(icon2).build(),
-                    modifier = Modifier
-                        .size(size = 48.dp)
-                        .constrainAs(token2) {
-                            top.linkTo(token1.top, margin = 24.dp)
-                            start.linkTo(token1.start, margin = 24.dp)
-                        },
-                    contentDescription = null,
-                    imageLoader = LocalContext.current.imageLoader,
+                TokenIcon(
+                    modifier = Modifier.constrainAs(token2) {
+                        top.linkTo(token1.top, margin = 24.dp)
+                        start.linkTo(token1.start, margin = 24.dp)
+                    },
+                    uri = icon2,
+                    size = 48.dp,
                 )
             }
         },

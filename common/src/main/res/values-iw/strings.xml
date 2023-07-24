@@ -66,6 +66,7 @@
   <string name="common_activity">פעילות</string>
   <string name="common_and">ו</string>
   <string name="common_app_version">גרסת אפליקציה</string>
+  <string name="common_apy">APY</string>
   <string name="common_arab">ערבית</string>
   <string name="common_azerbaijani">אזרבייג\'נית</string>
   <string name="common_back">חזור</string>
@@ -485,6 +486,7 @@
   <string name="show_more">הצג עוד</string>
   <string name="show_zero_balances">הצג יתרות אפסיות</string>
   <string name="slippage">החלקה</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">כבר יש לי כרטיס</string>
   <string name="sora_card_annual_service_fee">€0 דמי שירות שנתיים</string>
   <string name="sora_card_blacklisted_countires_title">לא נכלל באפליקציה</string>
@@ -527,6 +529,7 @@
   <string name="tutorial_terms_and_conditions">על ידי יצירת חשבון אתה מסכים עם %%התנאים וההגבלות%% ו- %%מדיניות הפרטיות%%</string>
   <string name="tutorial_terms_and_conditions_3">תנאים והגבלות</string>
   <string name="tutorial_terms_and_conditions_template_1">כשאתה ממשיך אתה מסכים עם ה-</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">עדכון עבור אפליקצית סורה הורד והוא מוכן להתקנה.\n\nחשוב להשתמש בגירסה העדכנית ביותר של האפליקציה.\n\nכדי לעדכן את האפליקציה, נדרשת הפעלה מחדש.</string>
   <string name="update_install_now">האם ברצונך להתקין את העדכון כעת?</string>
   <string name="wallet_balance_locked">נעול</string>

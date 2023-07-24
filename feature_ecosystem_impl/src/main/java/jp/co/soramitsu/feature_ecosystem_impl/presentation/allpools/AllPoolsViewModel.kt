@@ -30,76 +30,71 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.start
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools
 
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemMapper
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPools
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokens
-import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
-import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscription
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemPoolsState
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemTokensState
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 @HiltViewModel
-internal class StartScreenViewModel @Inject constructor(
-    ecoSystemTokensInteractor: EcoSystemTokensInteractor,
+internal class AllPoolsViewModel @Inject constructor(
     ecoSystemPoolsInteractor: EcoSystemPoolsInteractor,
-    private val ecoSystemMapper: EcoSystemMapper,
-    private val poolsUpdateSubscription: PoolsUpdateSubscription,
     coroutineManager: CoroutineManager,
+    private val ecoSystemMapper: EcoSystemMapper,
 ) : BaseViewModel() {
 
-    init {
-        viewModelScope.launch {
-            poolsUpdateSubscription.start().collect()
-        }
-    }
-
-    val tokensState = ecoSystemTokensInteractor.subscribeTokens()
-        .catch {
-            onError(it)
-        }
-        .map {
-            EcoSystemTokens(
-                tokens = it.tokens.take(5),
-            )
-        }
-        .map {
-            EcoSystemTokensState(ecoSystemMapper.mapEcoSystemTokens(it), "")
-        }
-        .flowOn(coroutineManager.io)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
+    private val filter = MutableStateFlow("")
+    private var positions: Map<StringPair, String>? = null
 
     val poolsState = ecoSystemPoolsInteractor.subscribeBasicPools()
+        .onEach {
+            positions = it.pools.mapIndexed { index, ecoSystemToken ->
+                (ecoSystemToken.pool.baseToken.id to ecoSystemToken.pool.targetToken.id) to (index + 1).toString()
+            }.toMap()
+        }
+        .combine(filter) { t1, t2 ->
+            t1 to t2
+        }
         .catch {
             onError(it)
         }
-        .map {
-            EcoSystemPools(
-                pools = it.pools.take(5)
-            )
-        }
-        .map {
+        .map { pair ->
+            val filtered = pair.first.pools.filter {
+                it.pool.baseToken.isMatchFilter(pair.second) || it.pool.targetToken.isMatchFilter(
+                    pair.second
+                )
+            }
+            val mapped = ecoSystemMapper.mapEcoSystemPools(EcoSystemPools(filtered))
+            val mappedEnumerated = mapped.map {
+                val indexInAll = positions?.get(it.ids).orEmpty()
+                it.copy(number = indexInAll)
+            }
             EcoSystemPoolsState(
-                pools = ecoSystemMapper.mapEcoSystemPools(it),
-                filter = "",
+                pools = mappedEnumerated,
+                filter = pair.second,
             )
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemPoolsState)
+
+    fun onSearch(value: String) {
+        filter.value = value
+    }
 }

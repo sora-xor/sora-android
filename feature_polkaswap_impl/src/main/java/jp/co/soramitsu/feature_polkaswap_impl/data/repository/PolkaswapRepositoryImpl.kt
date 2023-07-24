@@ -36,8 +36,10 @@ import androidx.room.withTransaction
 import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.PoolDex
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.calculatePooledValue
@@ -48,12 +50,10 @@ import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 @ExperimentalCoroutinesApi
@@ -63,10 +63,19 @@ class PolkaswapRepositoryImpl @Inject constructor(
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
     private val blockExplorerManager: BlockExplorerManager,
     private val soraConfigManager: SoraConfigManager,
-    runtimeManager: RuntimeManager,
-    wsConnection: SubstrateApi,
 ) : PolkaswapRepository,
-    PolkaswapBlockchainRepositoryImpl(blockExplorerManager, runtimeManager, wsConnection, db) {
+    PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
+
+    override fun subscribeBasicPools(): Flow<List<BasicPoolData>> {
+        return db.poolDao().subscribeBasicPoolsWithToken().map { list ->
+            list.map { local ->
+                PoolLocalMapper.mapBasicPoolTokenFiatLocal(
+                    local,
+                    assetLocalToAssetMapper,
+                ) { getPoolStrategicBonusAPY(it) }
+            }
+        }.distinctUntilChanged()
+    }
 
     override suspend fun poolFavoriteOn(ids: StringPair, account: SoraAccount) {
         db.poolDao().poolFavoriteOn(ids.first, ids.second, account.substrateAddress)
@@ -109,46 +118,45 @@ class PolkaswapRepositoryImpl @Inject constructor(
         tokenId: String
     ): Flow<UserPoolData?> {
         return db.poolDao().getPool(tokenId, baseTokenId, address).map {
-            val selectedCurrency = soraConfigManager.getSelectedCurrency()
             it?.let { poolLocal ->
-                mapPoolLocalToData(selectedCurrency, poolLocal)
+                mapPoolLocalToData(poolLocal)
             }
         }
     }
 
     override suspend fun getPoolsCache(address: String): List<UserPoolData> {
         val poolsLocal = db.poolDao().getPoolsList(address)
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
         return poolsLocal.map { poolLocal ->
-            mapPoolLocalToData(selectedCurrency, poolLocal)
+            mapPoolLocalToData(poolLocal)
         }
     }
 
     override fun subscribePoolFlow(address: String): Flow<List<UserPoolData>> {
         return db.poolDao().getPools(address).map { pools ->
-            val selectedCurrency = soraConfigManager.getSelectedCurrency()
             pools.map { poolLocal ->
-                mapPoolLocalToData(selectedCurrency, poolLocal)
+                mapPoolLocalToData(poolLocal)
             }
         }.debounce(500)
     }
 
     private suspend fun mapPoolLocalToData(
-        fiatCurrencyLocal: SoraCurrency,
         poolLocal: UserPoolJoinedLocal,
     ): UserPoolData {
-        val token = assetLocalToAssetMapper.map(
-            db.assetDao()
-                .getToken(poolLocal.userPoolLocal.userTokenIdTarget, fiatCurrencyLocal.code),
-        )
-        val baseToken = assetLocalToAssetMapper.map(
-            db.assetDao().getToken(poolLocal.userPoolLocal.userTokenIdBase, fiatCurrencyLocal.code),
-        )
+        val token = getToken(poolLocal.userPoolLocal.userTokenIdTarget)
+        val baseToken = getToken(poolLocal.userPoolLocal.userTokenIdBase)
         return PoolLocalMapper.mapLocal(
             poolLocal,
             baseToken,
             token,
-            getPoolStrategicBonusAPY(token.id, baseToken.id),
+            getPoolStrategicBonusAPY(poolLocal.basicPoolLocal.reservesAccount),
+        )
+    }
+
+    private suspend fun getToken(tokenId: String): Token {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        return assetLocalToAssetMapper.map(
+            db.assetDao()
+                .getToken(tokenId, selectedCurrency.code),
         )
     }
 
@@ -177,9 +185,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
                     pool.basicPoolLocal.reserveTarget,
                     firstPooled,
                     secondPooled,
-                    blockExplorerManager.getTempApy(pool.basicPoolLocal.reservesAccount)?.sbApy?.times(
-                        100
-                    ),
+                    getPoolStrategicBonusAPY(pool.basicPoolLocal.reservesAccount),
                 )
             }
         }

@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -47,7 +46,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -57,11 +55,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.ImportAccountPasswordState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -162,14 +158,9 @@ fun AccountWithIcon(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .placeholder(R.drawable.ic_token_default)
-                .data(accountIcon ?: R.drawable.ic_token_default).build(),
-            modifier = Modifier
-                .size(size = 40.dp),
-            contentDescription = null,
-            imageLoader = LocalContext.current.imageLoader,
+        TokenIcon(
+            uri = accountIcon ?: R.drawable.ic_token_default,
+            size = 40.dp,
         )
 
         Column(

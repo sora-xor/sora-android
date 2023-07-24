@@ -35,4 +35,5 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation
 internal object ExploreRoutes {
     const val START = "jp.co.soramitsu.feature_ecosystem_impl.Start"
     const val ALL_CURRENCIES = "jp.co.soramitsu.feature_ecosystem_impl.all_currencies"
+    const val ALL_POOLS = "jp.co.soramitsu.feature_ecosystem_impl.all_pools"
 }

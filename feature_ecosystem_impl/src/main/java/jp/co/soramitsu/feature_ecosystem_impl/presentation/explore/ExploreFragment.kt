@@ -43,6 +43,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.start.StartScreen
 
 @AndroidEntryPoint
@@ -73,8 +74,9 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
             StartScreen(
                 scrollState = scrollState,
                 onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
-                onPoolShowMore = {},
+                onPoolShowMore = { navController.navigate(ExploreRoutes.ALL_POOLS) },
                 onTokenClicked = viewModel::onTokenClicked,
+                onPoolClicked = viewModel::onPoolClicked,
             )
         }
         composable(
@@ -83,6 +85,15 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
             AllCurrenciesScreen(
                 onTokenClicked = viewModel::onTokenClicked,
                 onNavClicked = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = ExploreRoutes.ALL_POOLS,
+        ) {
+            AllPoolsScreen(
+                onPoolClicked = viewModel::onPoolClicked,
+                onNavClicked = { navController.popBackStack() },
+                onPoolPlus = viewModel::onPoolPlus,
             )
         }
     }

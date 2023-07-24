@@ -591,9 +591,9 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         pair1Value = firstPerSecond,
                         pair2 = "${secondToken.symbol}/${firstToken.symbol}",
                         pair2Value = secondPerFirst,
-                        apy = if (poolDataLocal?.strategicBonusApy != null) "${
+                        apy = if (poolDataLocal?.basic?.sbapy != null) "${
                             numbersFormatter.format(
-                                poolDataLocal.strategicBonusApy ?: 0.0,
+                                poolDataLocal.basic.sbapy ?: 0.0,
                                 ASSET_PRECISION
                             )
                         }%" else "",

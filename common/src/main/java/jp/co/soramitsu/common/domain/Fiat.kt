@@ -72,6 +72,9 @@ fun Token.calcFiat(amount: BigDecimal): Double? = fiatPrice?.let {
 fun Token.printFiat(amount: BigDecimal, nf: NumbersFormatter): String =
     formatFiat(calcFiat(amount) ?: 0.0, nf)
 
+fun Token.printFiat(amount: String?): String? =
+    amount?.let { "$fiatSymbol%s".format(it) }
+
 fun Token.formatFiat(
     value: Double,
     nf: NumbersFormatter,

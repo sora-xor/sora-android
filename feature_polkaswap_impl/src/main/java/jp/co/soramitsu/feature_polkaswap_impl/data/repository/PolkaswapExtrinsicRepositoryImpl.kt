@@ -42,6 +42,7 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.SwapMarketMapper
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
@@ -55,8 +56,9 @@ class PolkaswapExtrinsicRepositoryImpl @Inject constructor(
     private val extrinsicManager: ExtrinsicManager,
     private val marketMapper: SwapMarketMapper,
     db: AppDatabase,
+    blockExplorerManager: BlockExplorerManager,
 ) : PolkaswapExtrinsicRepository,
-    PolkaswapBasicRepositoryImpl(db) {
+    PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
     override suspend fun calcSwapNetworkFee(
         tokenId1: Token,

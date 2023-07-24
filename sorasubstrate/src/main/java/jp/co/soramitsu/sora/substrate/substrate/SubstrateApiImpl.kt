@@ -270,8 +270,8 @@ class SubstrateApiImpl @Inject constructor(
         }
     }
 
-    private suspend fun getPoolTotalIssuances(
-        reservesAccountId: ByteArray
+    override suspend fun getPoolTotalIssuances(
+        reservesAccountId: ByteArray,
     ): BigInteger? {
         val storageKey =
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)

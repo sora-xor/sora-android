@@ -37,9 +37,16 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.scopes.ViewModelScoped
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
+import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractorImpl
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemTokensInteractorImpl
+import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscription
+import jp.co.soramitsu.feature_ecosystem_impl.domain.PoolsUpdateSubscriptionImpl
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 
 @Module
@@ -48,7 +55,29 @@ object EcoSystemModule {
 
     @Provides
     @ViewModelScoped
-    internal fun provideEcoSystemInteractor(
+    internal fun providePoolsUpdateSubscription(
+        repo: PolkaswapSubscriptionRepository,
+        manager: CoroutineManager,
+    ): PoolsUpdateSubscription {
+        return PoolsUpdateSubscriptionImpl(
+            repo,
+            manager,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    internal fun provideEcoSystemPoolsInteractor(
+        repo: PolkaswapRepository,
+    ): EcoSystemPoolsInteractor {
+        return EcoSystemPoolsInteractorImpl(
+            repo,
+        )
+    }
+
+    @Provides
+    @ViewModelScoped
+    internal fun provideEcoSystemTokensInteractor(
         repo: AssetsRepository,
         blockExplorerManager: BlockExplorerManager,
     ): EcoSystemTokensInteractor {

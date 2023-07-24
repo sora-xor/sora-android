@@ -39,6 +39,7 @@ import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
 import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
+import jp.co.soramitsu.core_db.model.TokenFiatLocal
 import jp.co.soramitsu.core_db.model.TokenWithFiatLocal
 import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 
@@ -47,6 +48,20 @@ class AssetLocalToAssetMapper @Inject constructor(
     private val whitelistTokensManager: WhitelistTokensManager,
     private val soraConfigManager: SoraConfigManager,
 ) {
+
+    suspend fun map(token: TokenFiatLocal): Token {
+        return Token(
+            id = token.token.id,
+            name = token.token.name,
+            symbol = token.token.symbol,
+            precision = token.token.precision,
+            isHidable = token.token.isHidable,
+            iconFile = whitelistTokensManager.getTokenIconUri(token.token.id),
+            fiatPrice = token.fiat.fiatPrice,
+            fiatPriceChange = token.fiat.fiatChange,
+            fiatSymbol = soraConfigManager.getSelectedCurrency().sign,
+        )
+    }
 
     @Throws(IllegalArgumentException::class)
     suspend fun map(asset: AssetTokenWithFiatLocal): Asset {

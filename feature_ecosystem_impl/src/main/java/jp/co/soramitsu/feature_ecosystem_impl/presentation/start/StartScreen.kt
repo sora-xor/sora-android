@@ -49,9 +49,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
+import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicPoolListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.BasicExploreCard
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -63,6 +67,7 @@ internal fun StartScreen(
     onCurrencyShowMore: () -> Unit,
     onPoolShowMore: () -> Unit,
     onTokenClicked: (String) -> Unit,
+    onPoolClicked: (StringPair) -> Unit,
     viewModel: StartScreenViewModel = hiltViewModel(),
 ) {
     Column(
@@ -83,27 +88,31 @@ internal fun StartScreen(
             color = MaterialTheme.customColors.fgPrimary,
         )
         StartScreenInternal(
-            viewModel.state.collectAsStateWithLifecycle().value,
+            viewModel.tokensState.collectAsStateWithLifecycle().value,
+            viewModel.poolsState.collectAsStateWithLifecycle().value,
             onCurrencyShowMore,
             onPoolShowMore,
             onTokenClicked,
+            onPoolClicked,
         )
     }
 }
 
 @Composable
 private fun StartScreenInternal(
-    state: EcoSystemTokensState,
+    tokensState: EcoSystemTokensState,
+    poolsState: EcoSystemPoolsState,
     onCurrencyShowMore: () -> Unit,
     onPoolShowMore: () -> Unit,
     onTokenClicked: (String) -> Unit,
+    onPoolClicked: (StringPair) -> Unit,
 ) {
     BasicExploreCard(
         title = stringResource(id = R.string.common_currencies),
         description = stringResource(id = R.string.explore_swap_tokens_on_sora),
         onShowMore = onCurrencyShowMore,
         content = {
-            state.topTokens.forEach { pair ->
+            tokensState.topTokens.forEach { pair ->
                 AssetItemEnumerated(
                     modifier = Modifier.padding(vertical = Dimens.x1),
                     assetState = pair.second,
@@ -123,7 +132,18 @@ private fun StartScreenInternal(
         description = stringResource(id = R.string.explore_provide_and_earn),
         onShowMore = onPoolShowMore,
         content = {
+            poolsState.pools.forEach { pool ->
+                BasicPoolListItem(
+                    modifier = Modifier.padding(vertical = Dimens.x1),
+                    state = pool,
+                    onPoolClick = onPoolClicked,
+                )
+            }
         },
+    )
+    Divider(
+        color = Color.Transparent,
+        modifier = Modifier.height(Dimens.x2)
     )
 }
 
@@ -138,7 +158,11 @@ private fun DiscoverScreenPreview() {
                 },
                 "",
             ),
-            {}, {}, {},
+            EcoSystemPoolsState(
+                previewBasicPoolListItemState,
+                "",
+            ),
+            {}, {}, {}, {},
         )
     }
 }
