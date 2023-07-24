@@ -221,7 +221,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
+                        it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
@@ -281,7 +281,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             if (!seed.substrateSeed.isNullOrEmpty()) {
                                 backupAccounts.add(BackupAccountType.SEED)
                             }
-                            if (jsonString.isNotEmpty()) {
+                            if (!jsonString.isNullOrEmpty()) {
                                 backupAccounts.add(BackupAccountType.JSON)
                             }
 

@@ -240,9 +240,7 @@ class AccountDetailsViewModelTest {
                 mnemonicPhrase = "mne mo nic",
                 cryptoType = CryptoType.SR25519,
                 backupAccountType = listOf(
-                    BackupAccountType.JSON,
                     BackupAccountType.PASSHRASE,
-                    BackupAccountType.SEED
                 ),
                 seed = Seed(),
                 json = Json()
