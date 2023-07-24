@@ -52,6 +52,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -87,6 +88,7 @@ class MainViewModel @Inject constructor(
             globalSubscriptionManager
                 .start()
                 .catch { onError(it) }
+                .flowOn(coroutineManager.io)
                 .collect()
         }
         viewModelScope.launch {

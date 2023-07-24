@@ -50,6 +50,7 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscrip
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.SwapMarketMapper
 import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.extensions.toHexString
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
 import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.shared_utils.runtime.metadata.storage
@@ -69,10 +70,10 @@ import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.zip
 
 class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
@@ -272,8 +273,41 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         db.poolDao().insertBasicPools(list)
     }
 
-    override fun subscribeToBasicPools(): Flow<String> {
-        return flowOf("")
+    override fun subscribeToBasicPools(): Flow<String> = flow {
+        val flows = db.poolDao().getPoolBaseTokens().map { token ->
+            subscribeBasicPoolsOfToken(token.base.tokenId).flatMapLatest {
+                val poolsFlow = it.map { triple ->
+                    subscribeToPoolData(triple.first, triple.second.fromHex(), triple.third)
+                }
+                combine(poolsFlow) { "combined" }
+            }
+        }
+        val combined = if (flows.isEmpty())
+            flowOf("")
+        else
+            combine(flows) {
+                it.getOrElse(0) { "" }
+            }
+        emitAll(combined)
+    }
+
+    private fun subscribeBasicPoolsOfToken(tokenId: String): Flow<List<Triple<String, String, ByteArray>>> = flow {
+        val key = runtimeManager.getRuntimeSnapshot().reservesKeyToken(tokenId)
+        val flows = substrateCalls.getStateKeys(key).mapNotNull { storageKey ->
+            val targetToken = storageKey.assetIdFromKey()
+            val whitelisted =
+                db.assetDao().getWhitelistOfToken(targetToken).isNullOrEmpty().not()
+            val reserve = getReserveAccountOfPool(tokenId, targetToken)
+            if (whitelisted && reserve != null) {
+                substrateCalls.observeStorage(storageKey).map {
+                    Triple(tokenId, targetToken, reserve)
+                }
+            } else {
+                null
+            }
+        }
+        val combined = combine(flows) { it.toList() }
+        emitAll(combined)
     }
 
     override fun subscribeToPoolsAssets(address: String): Flow<String> {
@@ -292,12 +326,20 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
 
     override fun subscribeToPoolsData(address: String): Flow<String> = flow {
         val tokensPair = wsConnection.getUserPoolsTokenIds(address)
-        val r = if (tokensPair.isEmpty()) {
+        val poolsFlow = if (tokensPair.isEmpty()) {
             flowOf("")
         } else {
             val flows = tokensPair.map { tokenPair ->
-                tokenPair.second.map {
-                    subscribeToPoolData(address, tokenPair.first, it)
+                tokenPair.second.mapNotNull { tToken ->
+                    getReserveAccountOfPool(
+                        tokenPair.first,
+                        tToken.toHexString(),
+                    )?.let { resAccount ->
+                        subscribeToPoolData(tokenPair.first, tToken, resAccount)
+                            .combine(subscribeAccountPoolProviders(address, resAccount)) { a, b ->
+                                (a + b).take(5)
+                            }
+                    }
                 }
             }.flatten()
             if (flows.isEmpty())
@@ -307,18 +349,30 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                     it.getOrElse(0) { "" }
                 }
         }
-        emitAll(r)
+        emitAll(poolsFlow)
     }
 
-    private suspend fun subscribeToPoolData(
+    private fun subscribeAccountPoolProviders(
         address: String,
+        reservesAccount: ByteArray,
+    ): Flow<String> = flow {
+        val poolProvidersKey =
+            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
+                .storage(Storage.POOL_PROVIDERS.storageName)
+                .storageKey(
+                    runtimeManager.getRuntimeSnapshot(),
+                    reservesAccount,
+                    address.toAccountId()
+                )
+        val poolProvidersFlow = substrateCalls.observeStorage(poolProvidersKey)
+        emitAll(poolProvidersFlow)
+    }
+
+    private fun subscribeToPoolData(
         baseTokenId: String,
-        tokenId: ByteArray
-    ): Flow<String> {
-        val reservesAccount = wsConnection.getPoolReserveAccount(
-            baseTokenId,
-            tokenId
-        )
+        tokenId: ByteArray,
+        reservesAccount: ByteArray,
+    ): Flow<String> = flow {
         val reservesKey =
             runtimeManager.getRuntimeSnapshot().reservesKey(baseTokenId, tokenId)
         val reservesFlow = substrateCalls.observeStorage(reservesKey)
@@ -329,25 +383,12 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 .storageKey(runtimeManager.getRuntimeSnapshot(), reservesAccount)
         val totalIssuanceFlow = substrateCalls.observeStorage(totalIssuanceKey)
 
-        val poolProvidersKey =
-            runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
-                .storage(Storage.POOL_PROVIDERS.storageName)
-                .storageKey(
-                    runtimeManager.getRuntimeSnapshot(),
-                    reservesAccount,
-                    address.toAccountId()
-                )
-        val poolProvidersFlow = substrateCalls.observeStorage(poolProvidersKey)
-
         val resultFlow = reservesFlow
-            .zip(totalIssuanceFlow) { reservesString, totalIssuanceString ->
-                Pair(reservesString, totalIssuanceString)
-            }
-            .zip(poolProvidersFlow) { _, poolProvidersString ->
-                poolProvidersString
+            .combine(totalIssuanceFlow) { reservesString, totalIssuanceString ->
+                (reservesString + totalIssuanceString).take(5)
             }
 
-        return resultFlow
+        emitAll(resultFlow)
     }
 
     override fun observePoolXYKReserves(
@@ -417,5 +458,14 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                     }
             }
         }
+    }
+
+    private suspend fun getReserveAccountOfPool(
+        baseToken: String,
+        targetToken: String,
+    ): ByteArray? {
+        val local = db.poolDao().getBasicPool(baseToken, targetToken)
+        return local?.reservesAccount?.toAccountId()
+            ?: wsConnection.getPoolReserveAccount(baseToken, targetToken.fromHex())
     }
 }

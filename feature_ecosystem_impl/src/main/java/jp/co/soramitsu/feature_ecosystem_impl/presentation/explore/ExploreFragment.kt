@@ -93,6 +93,7 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
             AllPoolsScreen(
                 onPoolClicked = viewModel::onPoolClicked,
                 onNavClicked = { navController.popBackStack() },
+                onPoolPlus = viewModel::onPoolPlus,
             )
         }
     }
