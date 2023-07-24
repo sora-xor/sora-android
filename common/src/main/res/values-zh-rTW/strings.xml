@@ -66,6 +66,7 @@
   <string name="common_activity">活動</string>
   <string name="common_and">和</string>
   <string name="common_app_version">應用版本</string>
+  <string name="common_apy">APY</string>
   <string name="common_arab">阿拉伯</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">返回</string>
@@ -468,6 +469,7 @@
   <string name="show_more">顯示更多</string>
   <string name="show_zero_balances">顯示零餘額</string>
   <string name="slippage">Slippage</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">€0 annual service fee</string>
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
@@ -510,6 +512,7 @@
   <string name="tutorial_terms_and_conditions">創建賬戶即表示您同意%%條款和條件%%和%%隱私政策%%</string>
   <string name="tutorial_terms_and_conditions_3">條款及細則</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORA 應用程序的更新已下載並可以安裝。 \n\n使用最新版本的應用程序很重要。 \n\n為了更新應用程序，需要重新啟動。</string>
   <string name="update_install_now">您想要現在安裝更新嗎？</string>
   <string name="wallet_balance_locked">已鎖定</string>

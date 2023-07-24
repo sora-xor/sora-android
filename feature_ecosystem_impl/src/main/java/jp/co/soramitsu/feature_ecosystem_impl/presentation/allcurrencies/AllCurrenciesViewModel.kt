@@ -88,10 +88,6 @@ internal class AllCurrenciesViewModel @Inject constructor(
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
 
-    fun onClearSearch() {
-        filter.value = ""
-    }
-
     fun onSearch(value: String) {
         filter.value = value
     }

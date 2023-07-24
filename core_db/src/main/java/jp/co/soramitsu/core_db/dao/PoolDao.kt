@@ -39,6 +39,7 @@ import androidx.room.Query
 import androidx.room.Upsert
 import jp.co.soramitsu.core_db.model.BasePoolWithTokenLocal
 import jp.co.soramitsu.core_db.model.BasicPoolLocal
+import jp.co.soramitsu.core_db.model.BasicPoolWithTokenFiatLocal
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 import jp.co.soramitsu.core_db.model.UserPoolLocal
@@ -52,6 +53,16 @@ interface PoolDao {
             SELECT * FROM userpools left join allpools on userpools.userTokenIdBase=allpools.tokenIdBase and userpools.userTokenIdTarget=allpools.tokenIdTarget
         """
     }
+
+    @Query("select * from allpools")
+    fun subscribeBasicPoolsWithToken(): Flow<List<BasicPoolWithTokenFiatLocal>>
+
+    @Query(
+        """
+        select * from allpools where tokenIdBase=:base and tokenIdTarget=:target
+    """
+    )
+    fun getBasicPool(base: String, target: String): BasicPoolLocal?
 
     @Query("select * from poolBaseTokens left join tokens on poolBaseTokens.tokenId = tokens.id")
     suspend fun getPoolBaseTokens(): List<BasePoolWithTokenLocal>

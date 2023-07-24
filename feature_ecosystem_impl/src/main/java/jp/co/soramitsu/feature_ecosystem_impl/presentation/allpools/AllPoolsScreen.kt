@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies
+package jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -48,9 +48,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
-import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItemEnumerated
-import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemTokensState
+import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
+import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicPoolListItemState
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
+import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -58,33 +60,37 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @Composable
-internal fun AllCurrenciesScreen(
-    onTokenClicked: (String) -> Unit,
+internal fun AllPoolsScreen(
+    onPoolClicked: (StringPair) -> Unit,
     onNavClicked: () -> Unit,
-    viewModel: AllCurrenciesViewModel = hiltViewModel(),
+    onPoolPlus: () -> Unit,
+    viewModel: AllPoolsViewModel = hiltViewModel(),
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        val state = viewModel.state.collectAsStateWithLifecycle().value
-        AllCurrenciesInternal(
+        val state = viewModel.poolsState.collectAsStateWithLifecycle().value
+        AllPoolsInternal(
             state = state,
             onNavIconClicked = onNavClicked,
             onSearch = viewModel::onSearch,
-            onTokenClicked = onTokenClicked,
+            onPoolClicked = onPoolClicked,
+            onPoolPlus = onPoolPlus,
         )
     }
 }
 
 @Composable
-private fun ColumnScope.AllCurrenciesInternal(
-    state: EcoSystemTokensState,
+private fun ColumnScope.AllPoolsInternal(
+    state: EcoSystemPoolsState,
     onNavIconClicked: () -> Unit,
     onSearch: (String) -> Unit,
-    onTokenClicked: (String) -> Unit,
+    onPoolClicked: (StringPair) -> Unit,
+    onPoolPlus: () -> Unit,
 ) {
     SoramitsuToolbar(
         state = SoramitsuToolbarState(
             basic = BasicToolbarState(
-                title = R.string.common_currencies,
+                title = R.string.discovery_polkaswap_pools,
+                menu = listOf(Action.Plus()),
                 navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
             ),
             type = SoramitsuToolbarType.Small(),
@@ -93,6 +99,7 @@ private fun ColumnScope.AllCurrenciesInternal(
         onNavigate = onNavIconClicked,
         searchInitial = state.filter,
         onSearch = onSearch,
+        onMenuItemClicked = { onPoolPlus.invoke() },
     )
     ContentCardEndless(
         modifier = Modifier
@@ -104,32 +111,31 @@ private fun ColumnScope.AllCurrenciesInternal(
         val listState = rememberLazyListState()
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
             items(
-                count = state.topTokens.size,
+                count = state.pools.size,
             ) { position ->
-                AssetItemEnumerated(
+                BasicPoolListItem(
                     modifier = Modifier.padding(vertical = Dimens.x1),
-                    assetState = state.topTokens[position].second,
-                    number = state.topTokens[position].first,
-                    testTag = "",
-                    onClick = onTokenClicked,
+                    state = state.pools[position],
+                    onPoolClick = onPoolClicked,
                 )
             }
         }
     }
 }
 
+@Preview
 @Composable
-@Preview(showBackground = true)
-private fun PreviewAllCurrenciesInternal() {
-    Column(modifier = Modifier.fillMaxSize()) {
-        AllCurrenciesInternal(
-            state = EcoSystemTokensState(
-                previewAssetItemCardStateList.mapIndexed { q, w ->
-                    q.toString() to w
-                },
-                "",
+private fun PreviewAllPoolsInternal() {
+    Column() {
+        AllPoolsInternal(
+            state = EcoSystemPoolsState(
+                pools = previewBasicPoolListItemState,
+                filter = "",
             ),
-            {}, {}, {},
+            onNavIconClicked = {},
+            onSearch = {},
+            onPoolClicked = {},
+            onPoolPlus = {},
         )
     }
 }

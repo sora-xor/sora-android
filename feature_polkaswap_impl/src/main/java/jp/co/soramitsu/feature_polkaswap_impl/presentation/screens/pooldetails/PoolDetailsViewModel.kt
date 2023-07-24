@@ -126,7 +126,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             rewardsTokenSymbol = rewardToken().symbol,
                             symbol1 = data.basic.baseToken.symbol,
                             symbol2 = data.basic.targetToken.symbol,
-                            apy = data.strategicBonusApy?.let { apy ->
+                            apy = data.basic.sbapy?.let { apy ->
                                 "%s%%".format(
                                     numbersFormatter.format(
                                         apy,

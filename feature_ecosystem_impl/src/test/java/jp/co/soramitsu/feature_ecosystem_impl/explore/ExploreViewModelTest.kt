@@ -33,10 +33,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_ecosystem_impl.explore
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.verify
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -44,14 +47,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.verify
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class ExploreViewModelTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
 
     @Rule
     @JvmField
@@ -60,23 +61,24 @@ class ExploreViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @Mock
+    @MockK
     private lateinit var polkaswapRouter: PolkaswapRouter
 
-    @Mock
+    @MockK
     private lateinit var assetsRouter: AssetsRouter
 
     private lateinit var discoverViewModel: ExploreViewModel
 
     @Before
     fun setUp() = runTest {
+        every { assetsRouter.showAssetDetails(any()) } returns Unit
         discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter)
     }
 
     @Test
-    fun `onAddLiquidityClick() called`() {
-        discoverViewModel.onAddLiquidityClick()
-
-        verify(polkaswapRouter).showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
+    fun test() = runTest {
+        discoverViewModel.onTokenClicked("0x00")
+        verify { assetsRouter.showAssetDetails("0x00") }
     }
+
 }

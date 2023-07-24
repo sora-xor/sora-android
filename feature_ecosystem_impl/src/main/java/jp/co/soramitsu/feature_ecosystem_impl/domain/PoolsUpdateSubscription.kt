@@ -30,29 +30,28 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_ecosystem_impl.presentation
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
-import jp.co.soramitsu.common_wallet.presentation.compose.basicPoolListItemStateEmpty
-import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.assetItemCardStateEmpty
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 
-internal data class EcoSystemTokensState(
-    val topTokens: List<Pair<String, AssetItemCardState>>,
-    val filter: String,
-)
+internal interface PoolsUpdateSubscription {
+    fun start(): Flow<String>
+}
 
-internal val initialEcoSystemTokensState = EcoSystemTokensState(
-    topTokens = List(5) { i -> (i + 1).toString() to assetItemCardStateEmpty },
-    filter = "",
-)
+internal class PoolsUpdateSubscriptionImpl(
+    private val repository: PolkaswapSubscriptionRepository,
+    private val coroutineManager: CoroutineManager,
+) : PoolsUpdateSubscription {
 
-internal data class EcoSystemPoolsState(
-    val pools: List<BasicPoolListItemState>,
-    val filter: String,
-)
-
-internal val initialEcoSystemPoolsState = EcoSystemPoolsState(
-    pools = List(5) { i -> basicPoolListItemStateEmpty },
-    filter = "",
-)
+    override fun start(): Flow<String> =
+        repository
+            .subscribeToBasicPools()
+            .onEach {
+                repository.updateBasicPools()
+            }
+            .flowOn(coroutineManager.io)
+}

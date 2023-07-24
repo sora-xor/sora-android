@@ -59,18 +59,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -150,13 +147,9 @@ fun DetailsItem(
             horizontalArrangement = Arrangement.End,
         ) {
             if (value1Uri != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(value1Uri).build(),
-                    modifier = Modifier
-                        .size(size = Dimens.x2),
-                    contentDescription = null,
-                    imageLoader = LocalContext.current.imageLoader,
+                TokenIcon(
+                    uri = value1Uri,
+                    size = Dimens.x2,
                 )
             }
             if (value1Percent != null) {

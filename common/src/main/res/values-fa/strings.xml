@@ -66,6 +66,7 @@
   <string name="common_activity">Activity</string>
   <string name="common_and">و</string>
   <string name="common_app_version">نسخه App</string>
+  <string name="common_apy">APY</string>
   <string name="common_arab">عرب</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">بازگشت</string>
@@ -473,6 +474,7 @@
   <string name="show_more">Show more</string>
   <string name="show_zero_balances">Show zero balances</string>
   <string name="slippage">Slippage</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">€0 annual service fee</string>
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
@@ -515,6 +517,7 @@
   <string name="tutorial_terms_and_conditions"> با ایجاد حساب شما با %% شرایط و ضوابط %% و %% خط مشی رازداری %% موافقت می‌کنید</string>
   <string name="tutorial_terms_and_conditions_3">شرایط و ضوابط</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">بروز رسانی برنامه SORA دانلود شده و آماده نصب است. \n\n مهم است که از آخرین نسخه برنامه استفاده کنید. \n\n برای به روز رسانی، برنامه نیازمند راه‌اندازی مجدد است.</string>
   <string name="update_install_now">آیا می‌خواهید هم اکنون آپدیت را نصب کنید؟</string>
   <string name="wallet_balance_locked">قفل شده</string>
