@@ -169,16 +169,20 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
         animatedComposable(
             route = AccountDetailsRoutes.BACKUP_ACCOUNT,
         ) {
-            viewModel.createBackupPasswordState.observeAsState().value?.let {
-                Box {
-                    BackupPasswordScreen(
-                        it,
-                        viewModel::onBackupPasswordChanged,
-                        viewModel::onBackupPasswordConfirmationChanged,
-                        viewModel::onWarningToggle
-                    ) {
-                        debounceClickHandler.debounceClick {
-                            viewModel.onBackupPasswordClicked()
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                viewModel.createBackupPasswordState.observeAsState().value?.let {
+                    Box {
+                        BackupPasswordScreen(
+                            it,
+                            viewModel::onBackupPasswordChanged,
+                            viewModel::onBackupPasswordConfirmationChanged,
+                            viewModel::onWarningToggle
+                        ) {
+                            debounceClickHandler.debounceClick {
+                                viewModel.onBackupPasswordClicked()
+                            }
                         }
                     }
                 }
