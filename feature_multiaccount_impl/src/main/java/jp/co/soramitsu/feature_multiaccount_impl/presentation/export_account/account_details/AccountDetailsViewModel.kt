@@ -271,8 +271,19 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             )
 
                             val seed = Seed(
-                                substrateSeed = interactor.convertPassphraseToSeed(passphrase)
+                                substrateSeed = interactor.getSeed(accountDetailsScreenState.address)
                             )
+
+                            val backupAccounts = mutableListOf<BackupAccountType>()
+                            if (passphrase.isNotEmpty()) {
+                                backupAccounts.add(BackupAccountType.PASSHRASE)
+                            }
+                            if (!seed.substrateSeed.isNullOrEmpty()) {
+                                backupAccounts.add(BackupAccountType.SEED)
+                            }
+                            if (!jsonString.isNullOrEmpty()) {
+                                backupAccounts.add(BackupAccountType.JSON)
+                            }
 
                             backupService.saveBackupAccount(
                                 DecryptedBackupAccount(
@@ -280,11 +291,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                                     address = accountDetailsScreenState.address,
                                     mnemonicPhrase = passphrase,
                                     cryptoType = CryptoType.SR25519,
-                                    backupAccountType = listOf(
-                                        BackupAccountType.JSON,
-                                        BackupAccountType.PASSHRASE,
-                                        BackupAccountType.SEED
-                                    ),
+                                    backupAccountType = backupAccounts,
                                     seed = seed,
                                     json = Json(substrateJson = jsonString)
                                 ),
