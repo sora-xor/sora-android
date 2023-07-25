@@ -76,7 +76,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
-import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
@@ -89,7 +88,6 @@ class OnboardingViewModel @Inject constructor(
     private val multiaccountInteractor: MultiaccountInteractor,
     private val mainStarter: MainStarter,
     private val resourceManager: ResourceManager,
-    private val connectionManager: ConnectionManager,
     private val backupService: BackupService,
     private val avatarGenerator: AccountAvatarGenerator,
     private val coroutineManager: CoroutineManager,
@@ -317,7 +315,6 @@ class OnboardingViewModel @Inject constructor(
                             )
                             multiaccountInteractor.continueRecoverFlow(
                                 soraAccount,
-                                connectionManager.isConnected
                             )
                             mainStarter.start(context)
                         } else {
@@ -523,7 +520,6 @@ class OnboardingViewModel @Inject constructor(
                 soraAccount = requireNotNull(
                     tempAccount
                 ),
-                update = connectionManager.isConnected,
             )
             multiaccountInteractor.saveRegistrationStateFinished()
 
@@ -702,7 +698,6 @@ class OnboardingViewModel @Inject constructor(
 
                         multiaccountInteractor.continueRecoverFlow(
                             soraAccount,
-                            connectionManager.isConnected
                         )
 
                         isImportMoreAvailable = getBackupedAccountsFiltered().isNotEmpty()

@@ -57,8 +57,8 @@ class SoraConfigManager @Inject constructor(
         return getConfig()?.nodes ?: emptyList()
     }
 
-    suspend fun getSoraCard(): Boolean = true
-//        getConfig()?.soracard ?: false
+    suspend fun getSoraCard(): Boolean =
+        getConfig()?.soracard ?: false
 
     suspend fun getGenesis(): String = getConfig()?.genesis.orEmpty()
 

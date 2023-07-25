@@ -94,7 +94,5 @@ interface AssetsInteractor {
 
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
-    suspend fun updateBalancesVisibleAssets()
-
-    suspend fun updateWhitelistBalances(update: Boolean)
+    suspend fun updateWhitelistBalances()
 }
