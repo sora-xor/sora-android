@@ -88,7 +88,7 @@ interface AssetsRepository {
     fun subscribeAsset(
         address: String,
         tokenId: String,
-    ): Flow<Asset>
+    ): Flow<Asset?>
 
     fun subscribeAssetsActive(
         address: String

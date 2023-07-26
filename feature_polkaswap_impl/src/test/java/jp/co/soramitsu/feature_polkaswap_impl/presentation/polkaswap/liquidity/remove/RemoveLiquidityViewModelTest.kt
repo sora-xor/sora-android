@@ -43,8 +43,8 @@ import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.test_data.PolkaswapTestData.COMMON_POOL_DATA
 import jp.co.soramitsu.test_data.PolkaswapTestData.NETWORK_FEE
-import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.PolkaswapTestData.VAL_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET_ZERO_BALANCE
@@ -155,11 +155,11 @@ class RemoveLiquidityViewModelTest {
         ).willReturn(NETWORK_FEE)
 
         given(
-            poolsInteractor.subscribePoolCache(
+            poolsInteractor.subscribePoolCacheOfCurAccount(
                 XOR_ASSET.token.id,
                 VAL_ASSET.token.id
             )
-        ).willReturn(flowOf(POOL_DATA))
+        ).willReturn(flowOf(COMMON_POOL_DATA))
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
 
         given(

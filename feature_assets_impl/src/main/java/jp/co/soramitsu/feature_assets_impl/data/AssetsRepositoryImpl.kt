@@ -64,6 +64,7 @@ import jp.co.soramitsu.sora.substrate.substrate.faucetTransfer
 import jp.co.soramitsu.sora.substrate.substrate.transfer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -91,7 +92,11 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addFakeBalance(keypair: Sr25519Keypair, soraAccount: SoraAccount, assetIds: List<String>) {
+    override suspend fun addFakeBalance(
+        keypair: Sr25519Keypair,
+        soraAccount: SoraAccount,
+        assetIds: List<String>
+    ) {
         if (!BuildUtils.isFlavors(Flavor.SORALUTION)) {
             return
         }
@@ -228,11 +233,13 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun subscribeAsset(address: String, tokenId: String): Flow<Asset> = flow {
+    override fun subscribeAsset(address: String, tokenId: String): Flow<Asset?> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val f = db.assetDao().subscribeAsset(address, tokenId, selectedCurrency.code).map { l ->
-            assetLocalToAssetMapper.map(l)
-        }
+        val f = db.assetDao().subscribeAsset(address, tokenId, selectedCurrency.code)
+            .distinctUntilChanged()
+            .map { l ->
+                assetLocalToAssetMapper.mapNullable(l)
+            }
         emitAll(f)
     }
 
@@ -260,7 +267,11 @@ class AssetsRepositoryImpl @Inject constructor(
         emitAll(f)
     }
 
-    override suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean, soraAccount: SoraAccount) {
+    override suspend fun toggleVisibilityOfToken(
+        tokenId: String,
+        visibility: Boolean,
+        soraAccount: SoraAccount
+    ) {
         db.assetDao().toggleVisibilityOfToken(tokenId, visibility, soraAccount.substrateAddress)
     }
 
@@ -340,7 +351,10 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateAssetPositions(assetPositions: Map<String, Int>, soraAccount: SoraAccount) {
+    override suspend fun updateAssetPositions(
+        assetPositions: Map<String, Int>,
+        soraAccount: SoraAccount
+    ) {
         db.withTransaction {
             assetPositions.entries.forEach {
                 db.assetDao().updateAssetPosition(it.key, it.value, soraAccount.substrateAddress)

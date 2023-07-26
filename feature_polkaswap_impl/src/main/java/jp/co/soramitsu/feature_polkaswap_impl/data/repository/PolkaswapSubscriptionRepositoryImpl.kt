@@ -427,7 +427,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         outputAssetId: String,
         accountAddress: String
     ): Flow<Boolean> {
-        return db.poolDao().getPool(outputAssetId, inputAssetId, accountAddress).map { pool ->
+        return db.poolDao().subscribePool(outputAssetId, inputAssetId, accountAddress).map { pool ->
             val dexId = getPoolBaseTokenDexId(inputAssetId)
             if (pool != null) {
                 true
@@ -442,7 +442,7 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         tokenId: String,
         accountAddress: String
     ): Flow<Boolean> {
-        return db.poolDao().getPool(tokenId, baseTokenId, accountAddress).map { pool ->
+        return db.poolDao().subscribePool(tokenId, baseTokenId, accountAddress).map { pool ->
             if (pool != null) {
                 true
             } else {

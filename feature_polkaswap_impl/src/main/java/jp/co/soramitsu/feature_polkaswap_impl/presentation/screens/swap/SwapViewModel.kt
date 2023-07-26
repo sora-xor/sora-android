@@ -476,7 +476,6 @@ class SwapViewModel @AssistedInject constructor(
         with(swapMainState) {
             if (tokenFromState == null || tokenToState == null)
                 return@with
-
             val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
                 primaryToken = tokenFromState.token,
                 primaryTokenAmount = tokenFromState.amount,
@@ -526,6 +525,9 @@ class SwapViewModel @AssistedInject constructor(
         )
         setSwapButtonLoading(true)
         onChangedProperty.set(property.newReloadMarkets(false))
+        viewModelScope.launch {
+            updateTransactionReminderWarningVisibility()
+        }
     }
 
     private fun toAndFromAssetsSelected(to: Token?, from: Token?) {
