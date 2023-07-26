@@ -37,7 +37,9 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -62,13 +64,18 @@ internal fun MnemonicWordsColumn(
                 style = MaterialTheme.customTypography.textL
             )
         }
-        val end = createEndBarrier(elements = refsIndex, margin = Dimens.x2)
+        val margin = if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
+            Dimens.x2
+        } else {
+            -Dimens.x2
+        }
+        val barrier = createEndBarrier(elements = refsIndex, margin = margin)
         val refsWord = Array(words.size) { createRef() }
         words.forEachIndexed { index, s ->
             Text(
                 modifier = Modifier.constrainAs(refsWord[index]) {
                     baseline.linkTo(refsIndex[index].baseline)
-                    start.linkTo(end)
+                    start.linkTo(barrier)
                 },
                 text = s,
                 style = MaterialTheme.customTypography.textLBold
@@ -77,11 +84,42 @@ internal fun MnemonicWordsColumn(
     }
 }
 
-@Preview(backgroundColor = 1874927, showBackground = true)
+@Preview(backgroundColor = 1874927, showBackground = true, locale = "ru")
 @Composable
 private fun PreviewMnemonic() {
+    val letters = "abcdefghijklmnop"
+    val size = letters.length - 1
+    val s = List(7) {
+        val len = (3..8).random()
+        buildString {
+            repeat(len) {
+                val p = (0..size).random()
+                this.append(letters[p])
+            }
+        }
+    }
     MnemonicWordsColumn(
-        startNumber = 95,
-        words = List(12) { p -> "abcdefghijklmnop ${p + 111}" },
+        startNumber = 97,
+        words = s,
+    )
+}
+
+@Preview(backgroundColor = 1874927, showBackground = true, locale = "he")
+@Composable
+private fun PreviewMnemonicRtl() {
+    val letters = "abcdefghijklmnop"
+    val size = letters.length - 1
+    val s = List(7) {
+        val len = (3..8).random()
+        buildString {
+            repeat(len) {
+                val p = (0..size).random()
+                this.append(letters[p])
+            }
+        }
+    }
+    MnemonicWordsColumn(
+        startNumber = 97,
+        words = s,
     )
 }
