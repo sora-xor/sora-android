@@ -40,7 +40,7 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.isNanZero
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 
 class PoolsListState(
     val pools: List<PoolsListItemState>
@@ -57,7 +57,7 @@ data class PoolsListItemState(
 )
 
 fun mapPoolsData(
-    poolsData: List<UserPoolData>,
+    poolsData: List<CommonUserPoolData>,
     numbersFormatter: NumbersFormatter
 ): Pair<PoolsListState, Double> {
     val formatted = poolsData.map { it.printFiat() }
@@ -73,12 +73,12 @@ fun mapPoolsData(
                 poolAmounts = String.format(
                     "%s - %s",
                     poolData.basic.baseToken.printBalance(
-                        poolData.basePooled,
+                        poolData.user.basePooled,
                         numbersFormatter,
                         AssetHolder.ROUNDING
                     ),
                     poolData.basic.targetToken.printBalance(
-                        poolData.targetPooled,
+                        poolData.user.targetPooled,
                         numbersFormatter,
                         AssetHolder.ROUNDING
                     )

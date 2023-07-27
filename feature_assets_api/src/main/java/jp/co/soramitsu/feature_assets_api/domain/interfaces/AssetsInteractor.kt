@@ -76,7 +76,7 @@ interface AssetsInteractor {
         fee: BigDecimal
     ): String
 
-    fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset>
+    fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?>
 
     fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
 

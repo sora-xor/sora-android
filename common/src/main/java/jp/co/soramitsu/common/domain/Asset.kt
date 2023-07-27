@@ -37,6 +37,7 @@ import android.os.Parcelable
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.equalTo
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -111,6 +112,14 @@ data class Token(
 
         return printBalance(balance, nf, newPrecision)
     }
+}
+
+fun compareByTransferable(old: Asset?, new: Asset?): Boolean = if (old == null && new == null) {
+    true
+} else if (old == null || new == null) {
+    false
+} else {
+    old.token.id == new.token.id && old.balance.transferable.equalTo(new.balance.transferable)
 }
 
 fun List<Token>.getByIdOrEmpty(id: String): Token =

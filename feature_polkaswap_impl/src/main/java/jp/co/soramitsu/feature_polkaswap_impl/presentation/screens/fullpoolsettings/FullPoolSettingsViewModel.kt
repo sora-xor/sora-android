@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolSettingsState
@@ -74,7 +75,7 @@ class FullPoolSettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val pools = poolsInteractor.getPoolsCache()
+            val pools: List<CommonUserPoolData> = poolsInteractor.getPoolsCacheOfCurAccount()
 
             curPoolList.clear()
             symbol = pools.fiatSymbol
@@ -89,17 +90,17 @@ class FullPoolSettingsViewModel @Inject constructor(
                     ),
                     assetAmount = "%s - %s".format(
                         poolData.basic.baseToken.printBalance(
-                            poolData.basePooled,
+                            poolData.user.basePooled,
                             numbersFormatter,
                             AssetHolder.ACTIVITY_LIST_ROUNDING
                         ),
                         poolData.basic.targetToken.printBalance(
-                            poolData.targetPooled,
+                            poolData.user.targetPooled,
                             numbersFormatter,
                             AssetHolder.ACTIVITY_LIST_ROUNDING
                         ),
                     ),
-                    favorite = poolData.favorite,
+                    favorite = poolData.user.favorite,
                     fiat = poolData.printFiat()?.first ?: 0.0
                 )
             }

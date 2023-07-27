@@ -125,7 +125,7 @@ interface AssetDao {
         address: String,
         tokenId: String,
         isoCode: String,
-    ): Flow<AssetTokenWithFiatLocal>
+    ): Flow<AssetTokenWithFiatLocal?>
 
     @Query("select precision from tokens where tokens.id = :tokenId")
     suspend fun getPrecisionOfToken(tokenId: String): Int?

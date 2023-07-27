@@ -42,6 +42,13 @@ data class UserPoolJoinedLocal(
     val basicPoolLocal: BasicPoolLocal,
 )
 
+data class UserPoolJoinedLocalNullable(
+    @Embedded
+    val userPoolLocal: UserPoolLocal?,
+    @Embedded
+    val basicPoolLocal: BasicPoolLocal,
+)
+
 data class TokenFiatLocal(
     @Embedded
     val token: TokenLocal,

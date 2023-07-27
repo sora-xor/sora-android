@@ -40,11 +40,13 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.calculatePooledValue
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocalNullable
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
@@ -61,7 +63,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
     private val datasource: WalletDatasource,
     private val db: AppDatabase,
     private val assetLocalToAssetMapper: AssetLocalToAssetMapper,
-    private val blockExplorerManager: BlockExplorerManager,
+    blockExplorerManager: BlockExplorerManager,
     private val soraConfigManager: SoraConfigManager,
 ) : PolkaswapRepository,
     PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
@@ -112,36 +114,59 @@ class PolkaswapRepositoryImpl @Inject constructor(
         datasource.saveDisclaimerVisibility(v)
     }
 
-    override fun getPoolData(
+    override fun subscribePoolOfAccount(
         address: String,
         baseTokenId: String,
-        tokenId: String
-    ): Flow<UserPoolData?> {
-        return db.poolDao().getPool(tokenId, baseTokenId, address).map {
-            it?.let { poolLocal ->
-                mapPoolLocalToData(poolLocal)
-            }
+        targetTokenId: String
+    ): Flow<CommonPoolData?> {
+        return db.poolDao().subscribePool(targetTokenId, baseTokenId, address).map {
+            mapPoolLocalToData(it)
         }
     }
 
-    override suspend fun getPoolsCache(address: String): List<UserPoolData> {
+    override suspend fun getPoolsCacheOfAccount(address: String): List<CommonUserPoolData> {
         val poolsLocal = db.poolDao().getPoolsList(address)
         return poolsLocal.map { poolLocal ->
-            mapPoolLocalToData(poolLocal)
+            mapPoolLocalToUserData(poolLocal)
         }
     }
 
-    override fun subscribePoolFlow(address: String): Flow<List<UserPoolData>> {
-        return db.poolDao().getPools(address).map { pools ->
+    override fun subscribePools(address: String): Flow<List<CommonUserPoolData>> {
+        return db.poolDao().subscribePoolsList(address).map { pools ->
             pools.map { poolLocal ->
-                mapPoolLocalToData(poolLocal)
+                mapPoolLocalToUserData(poolLocal)
             }
         }.debounce(500)
     }
 
     private suspend fun mapPoolLocalToData(
+        poolLocal: UserPoolJoinedLocalNullable?,
+    ): CommonPoolData? {
+        if (poolLocal == null) return null
+        val userLocal = poolLocal.userPoolLocal
+        val basic = PoolLocalMapper.mapBasicToPoolData(
+            poolLocal.basicPoolLocal,
+            getToken(poolLocal.basicPoolLocal.tokenIdBase),
+            getToken(poolLocal.basicPoolLocal.tokenIdTarget),
+            getPoolStrategicBonusAPY(poolLocal.basicPoolLocal.reservesAccount),
+        )
+        return if (userLocal == null) {
+            CommonPoolData(
+                basic, null,
+            )
+        } else {
+            val userPoolData =
+                mapPoolLocalToUserData(UserPoolJoinedLocal(userLocal, poolLocal.basicPoolLocal))
+            CommonPoolData(
+                basic,
+                userPoolData.user,
+            )
+        }
+    }
+
+    private suspend fun mapPoolLocalToUserData(
         poolLocal: UserPoolJoinedLocal,
-    ): UserPoolData {
+    ): CommonUserPoolData {
         val token = getToken(poolLocal.userPoolLocal.userTokenIdTarget)
         val baseToken = getToken(poolLocal.userPoolLocal.userTokenIdBase)
         return PoolLocalMapper.mapLocal(
@@ -165,18 +190,19 @@ class PolkaswapRepositoryImpl @Inject constructor(
         baseTokenId: String,
         assetId: String
     ): Flow<LiquidityData?> {
-        return db.poolDao().getPool(assetId, baseTokenId, address).map { pool ->
-            if (pool == null) {
+        return db.poolDao().subscribePool(assetId, baseTokenId, address).map { pool ->
+            val userLocal = pool?.userPoolLocal
+            if (userLocal == null) {
                 null
             } else {
                 val firstPooled = calculatePooledValue(
                     pool.basicPoolLocal.reserveBase,
-                    pool.userPoolLocal.poolProvidersBalance,
+                    userLocal.poolProvidersBalance,
                     pool.basicPoolLocal.totalIssuance,
                 )
                 val secondPooled = calculatePooledValue(
                     pool.basicPoolLocal.reserveTarget,
-                    pool.userPoolLocal.poolProvidersBalance,
+                    userLocal.poolProvidersBalance,
                     pool.basicPoolLocal.totalIssuance,
                 )
 
