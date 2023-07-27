@@ -40,8 +40,9 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.calculateAddLiquidityAmount
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.estimateAddingShareOfPool
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -309,22 +310,25 @@ class PoolsInteractorImpl(
         return polkaswapSubscriptionRepository.updateAccountPools(address)
     }
 
-    override fun subscribePoolsCache(): Flow<List<UserPoolData>> =
+    override fun subscribePoolsCacheOfCurAccount(): Flow<List<CommonUserPoolData>> =
         userRepository.flowCurSoraAccount().flatMapLatest {
-            polkaswapRepository.subscribePoolFlow(it.substrateAddress)
+            polkaswapRepository.subscribePools(it.substrateAddress)
         }
 
-    override suspend fun getPoolsCache(): List<UserPoolData> {
-        return polkaswapRepository.getPoolsCache(userRepository.getCurSoraAccount().substrateAddress)
+    override suspend fun getPoolsCacheOfCurAccount(): List<CommonUserPoolData> {
+        return polkaswapRepository.getPoolsCacheOfAccount(userRepository.getCurSoraAccount().substrateAddress)
     }
 
-    override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<UserPoolData>> {
-        return polkaswapRepository.subscribePoolFlow(account.substrateAddress)
+    override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<CommonUserPoolData>> {
+        return polkaswapRepository.subscribePools(account.substrateAddress)
     }
 
-    override fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<UserPoolData?> {
+    override fun subscribePoolCacheOfCurAccount(
+        tokenFromId: String,
+        tokenToId: String,
+    ): Flow<CommonPoolData?> {
         return userRepository.flowCurSoraAccount().flatMapLatest {
-            polkaswapRepository.getPoolData(it.substrateAddress, tokenFromId, tokenToId)
+            polkaswapRepository.subscribePoolOfAccount(it.substrateAddress, tokenFromId, tokenToId)
         }
     }
 

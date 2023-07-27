@@ -42,6 +42,7 @@ import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.BasicPoolWithTokenFiatLocal
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocalNullable
 import jp.co.soramitsu.core_db.model.UserPoolLocal
 import kotlinx.coroutines.flow.Flow
 
@@ -87,7 +88,7 @@ interface PoolDao {
         $userPoolJoinBasic where userpools.accountAddress = :accountAddress order by userpools.sortOrder
     """
     )
-    fun getPools(accountAddress: String): Flow<List<UserPoolJoinedLocal>>
+    fun subscribePoolsList(accountAddress: String): Flow<List<UserPoolJoinedLocal>>
 
     @Query(
         """
@@ -98,17 +99,12 @@ interface PoolDao {
 
     @Query(
         """
-        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
+        select * from allpools left join userpools on 
+        allpools.tokenIdBase=userpools.userTokenIdBase and allpools.tokenIdTarget=userpools.userTokenIdTarget 
+        where allpools.tokenIdBase=:baseTokenId and allpools.tokenIdTarget=:assetId and (userpools.accountAddress=:accountAddress or userpools.accountAddress is null)
     """
     )
-    fun getPool(assetId: String, baseTokenId: String, accountAddress: String): Flow<UserPoolJoinedLocal?>
-
-    @Query(
-        """
-        $userPoolJoinBasic WHERE userpools.userTokenIdTarget = :assetId and userpools.userTokenIdBase = :baseTokenId and accountAddress = :accountAddress
-    """
-    )
-    suspend fun getPoolOf(assetId: String, baseTokenId: String, accountAddress: String): UserPoolJoinedLocal?
+    fun subscribePool(assetId: String, baseTokenId: String, accountAddress: String): Flow<UserPoolJoinedLocalNullable?>
 
     @Upsert()
     suspend fun insertBasicPools(pools: List<BasicPoolLocal>)

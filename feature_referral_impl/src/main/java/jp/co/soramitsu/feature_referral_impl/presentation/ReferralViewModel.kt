@@ -220,7 +220,7 @@ class ReferralViewModel @Inject constructor(
             .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { asset ->
-                xorBalance = asset.balance.transferable
+                xorBalance = asset?.balance?.transferable ?: BigDecimal.ZERO
                 reCalcOnChange(currentDestination)
             }
             .launchIn(viewModelScope)

@@ -85,7 +85,7 @@ class AssetsInteractorImpl constructor(
         secondaryTokenAmount: BigDecimal?,
         networkFeeInXor: BigDecimal
     ): Boolean {
-        val xorAssetBalanceAmount = getXorBalance(primaryToken.precision).transferable
+        val xorAssetBalanceAmount = getAssetOrThrow(SubstrateOptionsProvider.feeAssetId).balance.transferable
 
         if (primaryToken.id != SubstrateOptionsProvider.feeAssetId &&
             secondaryToken?.id != SubstrateOptionsProvider.feeAssetId
@@ -174,7 +174,7 @@ class AssetsInteractorImpl constructor(
         return if (status.success) status.txHash else ""
     }
 
-    override fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset> {
+    override fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?> {
         return userRepository.flowCurSoraAccount().flatMapLatest {
             assetsRepository.subscribeAsset(it.substrateAddress, tokenId)
         }

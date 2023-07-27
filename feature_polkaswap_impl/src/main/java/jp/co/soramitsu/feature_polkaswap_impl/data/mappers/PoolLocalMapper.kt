@@ -35,12 +35,31 @@ package jp.co.soramitsu.feature_polkaswap_impl.data.mappers
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
+import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.BasicPoolWithTokenFiatLocal
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 
 object PoolLocalMapper {
+
+    fun mapBasicToPoolData(
+        basicPoolLocal: BasicPoolLocal,
+        baseToken: Token,
+        token: Token,
+        apy: Double?,
+    ): BasicPoolData {
+        return BasicPoolData(
+            baseToken = baseToken,
+            targetToken = token,
+            baseReserves = basicPoolLocal.reserveBase,
+            targetReserves = basicPoolLocal.reserveTarget,
+            totalIssuance = basicPoolLocal.totalIssuance,
+            reserveAccount = basicPoolLocal.reservesAccount,
+            sbapy = apy,
+        )
+    }
 
     suspend fun mapBasicPoolTokenFiatLocal(
         basic: BasicPoolWithTokenFiatLocal,
@@ -62,8 +81,8 @@ object PoolLocalMapper {
         poolLocal: UserPoolJoinedLocal,
         baseToken: Token,
         token: Token,
-        apy: Double?
-    ): UserPoolData {
+        apy: Double?,
+    ): CommonUserPoolData {
         val basePooled = PolkaswapFormulas.calculatePooledValue(
             poolLocal.basicPoolLocal.reserveBase,
             poolLocal.userPoolLocal.poolProvidersBalance,
@@ -78,7 +97,7 @@ object PoolLocalMapper {
             poolLocal.userPoolLocal.poolProvidersBalance,
             poolLocal.basicPoolLocal.totalIssuance,
         )
-        return UserPoolData(
+        return CommonUserPoolData(
             basic = BasicPoolData(
                 baseToken = baseToken,
                 targetToken = token,
@@ -88,12 +107,14 @@ object PoolLocalMapper {
                 reserveAccount = poolLocal.basicPoolLocal.reservesAccount,
                 sbapy = apy,
             ),
-            basePooled = basePooled,
-            targetPooled = secondPooled,
-            share.toDouble(),
-            poolLocal.userPoolLocal.poolProvidersBalance,
-            poolLocal.userPoolLocal.favorite,
-            poolLocal.userPoolLocal.sortOrder,
+            user = UserPoolData(
+                basePooled = basePooled,
+                targetPooled = secondPooled,
+                share.toDouble(),
+                poolLocal.userPoolLocal.poolProvidersBalance,
+                poolLocal.userPoolLocal.favorite,
+                poolLocal.userPoolLocal.sortOrder,
+            ),
         )
     }
 }

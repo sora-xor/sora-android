@@ -36,8 +36,9 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import kotlinx.coroutines.flow.Flow
 
 interface PolkaswapRepository {
@@ -46,15 +47,15 @@ interface PolkaswapRepository {
 
     suspend fun getPoolBaseTokens(): List<PoolDex>
 
-    fun getPoolData(
+    fun subscribePools(address: String): Flow<List<CommonUserPoolData>>
+
+    suspend fun getPoolsCacheOfAccount(address: String): List<CommonUserPoolData>
+
+    fun subscribePoolOfAccount(
         address: String,
         baseTokenId: String,
-        tokenId: String
-    ): Flow<UserPoolData?>
-
-    fun subscribePoolFlow(address: String): Flow<List<UserPoolData>>
-
-    suspend fun getPoolsCache(address: String): List<UserPoolData>
+        targetTokenId: String,
+    ): Flow<CommonPoolData?>
 
     fun subscribeLocalPoolReserves(
         address: String,

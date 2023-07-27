@@ -152,37 +152,43 @@ internal fun PoolDetailsScreen(
                 color = MaterialTheme.customColors.bgPage,
                 thickness = 1.dp,
             )
-            DetailsItem(
-                text = stringResource(id = R.string.pool_share_title_1),
-                value1 = state.userPoolSharePercent,
-            )
-            Divider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = Dimens.x1),
-                color = MaterialTheme.customColors.bgPage,
-                thickness = 1.dp,
-            )
-            DetailsItem(
-                text = stringResource(id = R.string.your_pooled).format(state.symbol1),
-                value1 = state.pooled1,
-            )
-            Divider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = Dimens.x1),
-                color = MaterialTheme.customColors.bgPage,
-                thickness = 1.dp,
-            )
-            DetailsItem(
-                text = stringResource(id = R.string.your_pooled).format(state.symbol2),
-                value1 = state.pooled2,
-            )
-            Divider(
-                color = Color.Transparent,
-                thickness = Dimens.x3,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (state.userPoolSharePercent != null) {
+                DetailsItem(
+                    text = stringResource(id = R.string.pool_share_title_1),
+                    value1 = state.userPoolSharePercent,
+                )
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Dimens.x1),
+                    color = MaterialTheme.customColors.bgPage,
+                    thickness = 1.dp,
+                )
+            }
+            if (state.pooled1 != null) {
+                DetailsItem(
+                    text = stringResource(id = R.string.your_pooled).format(state.symbol1),
+                    value1 = state.pooled1,
+                )
+                Divider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = Dimens.x1),
+                    color = MaterialTheme.customColors.bgPage,
+                    thickness = 1.dp,
+                )
+            }
+            if (state.pooled2 != null) {
+                DetailsItem(
+                    text = stringResource(id = R.string.your_pooled).format(state.symbol2),
+                    value1 = state.pooled2,
+                )
+                Divider(
+                    color = Color.Transparent,
+                    thickness = Dimens.x3,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
             FilledButton(
                 size = Size.Large,
                 order = Order.PRIMARY,

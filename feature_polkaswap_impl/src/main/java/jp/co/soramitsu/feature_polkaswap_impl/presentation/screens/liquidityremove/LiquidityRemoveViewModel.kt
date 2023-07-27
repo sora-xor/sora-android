@@ -52,7 +52,7 @@ import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common.util.ext.nullZero
 import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
-import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
@@ -119,8 +119,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     private val feeTokenAsync by viewModelScope.lazyAsync { walletInteractor.getFeeToken() }
     private suspend fun feeToken() = feeTokenAsync.await()
 
-    private var poolDataUsable: UserPoolData? = null
-    private var poolDataReal: UserPoolData? = null
+    private var poolDataUsable: CommonUserPoolData? = null
+    private var poolDataReal: CommonUserPoolData? = null
     private val amount1Flow = MutableStateFlow(BigDecimal.ZERO)
     private val amount2Flow = MutableStateFlow(BigDecimal.ZERO)
     private var percent: Double = 0.0
@@ -243,7 +243,15 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 }
         }
         viewModelScope.launch {
-            poolsInteractor.subscribePoolCache(token1Id, token2Id)
+            poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
+                .map {
+                    it?.let {
+                        CommonUserPoolData(
+                            it.basic,
+                            it.user!!,
+                        )
+                    }
+                }
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .debounce(500)
@@ -256,28 +264,30 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         }?.maxOfOrNull {
                             PolkaswapFormulas.calculateShareOfPoolFromAmount(
                                 it.amount,
-                                poolDataLocal.poolProvidersBalance,
+                                poolDataLocal.user.poolProvidersBalance,
                             )
                         }
                         if (maxPercent != null && !maxPercent.isNaN()) {
                             poolInFarming = true
                             val usablePercent = 100 - maxPercent
                             poolDataLocal.copy(
-                                basePooled = PolkaswapFormulas.calculateAmountByPercentage(
-                                    poolDataLocal.basePooled,
-                                    usablePercent,
-                                    poolDataLocal.basic.baseToken.precision,
-                                ),
-                                targetPooled = PolkaswapFormulas.calculateAmountByPercentage(
-                                    poolDataLocal.targetPooled,
-                                    usablePercent,
-                                    poolDataLocal.basic.baseToken.precision,
-                                ),
-                                poolProvidersBalance = PolkaswapFormulas.calculateAmountByPercentage(
-                                    poolDataLocal.poolProvidersBalance,
-                                    usablePercent,
-                                    poolDataLocal.basic.baseToken.precision,
-                                ),
+                                user = poolDataLocal.user.copy(
+                                    basePooled = PolkaswapFormulas.calculateAmountByPercentage(
+                                        poolDataLocal.user.basePooled,
+                                        usablePercent,
+                                        poolDataLocal.basic.baseToken.precision,
+                                    ),
+                                    targetPooled = PolkaswapFormulas.calculateAmountByPercentage(
+                                        poolDataLocal.user.targetPooled,
+                                        usablePercent,
+                                        poolDataLocal.basic.baseToken.precision,
+                                    ),
+                                    poolProvidersBalance = PolkaswapFormulas.calculateAmountByPercentage(
+                                        poolDataLocal.user.poolProvidersBalance,
+                                        usablePercent,
+                                        poolDataLocal.basic.baseToken.precision,
+                                    ),
+                                )
                             )
                         } else {
                             poolDataLocal
@@ -290,13 +300,13 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     poolDataUsable = poolDataLocal
                     amount1 =
                         if (poolDataLocal != null) PolkaswapFormulas.calculateAmountByPercentage(
-                            poolDataLocal.basePooled,
+                            poolDataLocal.user.basePooled,
                             percent,
                             poolDataLocal.basic.baseToken.precision,
                         ) else BigDecimal.ZERO
                     amount2 =
                         if (poolDataLocal != null) PolkaswapFormulas.calculateAmountByPercentage(
-                            poolDataLocal.targetPooled,
+                            poolDataLocal.user.targetPooled,
                             percent,
                             poolDataLocal.basic.targetToken.precision,
                         ) else BigDecimal.ZERO
@@ -308,15 +318,15 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 .debounce(ViewHelper.debounce)
                 .onEach { amount ->
                     poolDataUsable?.let {
-                        amount1 = if (amount <= it.basePooled) amount else it.basePooled
+                        amount1 = if (amount <= it.user.basePooled) amount else it.user.basePooled
                         amount2 = PolkaswapFormulas.calculateOneAmountFromAnother(
                             amount1,
-                            it.basePooled,
-                            it.targetPooled,
+                            it.user.basePooled,
+                            it.user.targetPooled,
                         )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
-                            it.basePooled,
+                            it.user.basePooled,
                         )
                         reCalcDetails()
                     }
@@ -331,16 +341,16 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
                     poolDataUsable?.let {
-                        amount2 = if (amount <= it.targetPooled) amount else it.targetPooled
+                        amount2 = if (amount <= it.user.targetPooled) amount else it.user.targetPooled
                         amount1 =
                             PolkaswapFormulas.calculateOneAmountFromAnother(
                                 amount2,
-                                it.targetPooled,
-                                it.basePooled
+                                it.user.targetPooled,
+                                it.user.basePooled
                             )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
-                            it.basePooled,
+                            it.user.basePooled,
                         )
                         reCalcDetails()
                     }
@@ -394,16 +404,16 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     removeState.assetState2?.let { asset2 ->
                         percent = p.toDouble()
                         if (percent == 100.0) {
-                            amount1 = poolData.basePooled
-                            amount2 = poolData.targetPooled
+                            amount1 = poolData.user.basePooled
+                            amount2 = poolData.user.targetPooled
                         } else {
                             amount1 = PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.basePooled,
+                                poolData.user.basePooled,
                                 percent,
                                 asset1.token.precision,
                             )
                             amount2 = PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.targetPooled,
+                                poolData.user.targetPooled,
                                 percent,
                                 asset2.token.precision,
                             )
@@ -492,8 +502,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                                 removeState.slippage
                             )
                         val desired =
-                            if (percent == 100.0) poolData.poolProvidersBalance else PolkaswapFormulas.calculateAmountByPercentage(
-                                poolData.poolProvidersBalance,
+                            if (percent == 100.0) poolData.user.poolProvidersBalance else PolkaswapFormulas.calculateAmountByPercentage(
+                                poolData.user.poolProvidersBalance,
                                 percent,
                                 poolData.basic.baseToken.precision
                             )
@@ -552,7 +562,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         poolDataReal?.let { poolDataRealLocal ->
                             val share = PolkaswapFormulas.estimateRemovingShareOfPool(
                                 amount2,
-                                poolDataRealLocal.targetPooled,
+                                poolDataRealLocal.user.targetPooled,
                                 poolDataRealLocal.basic.targetReserves,
                             )
                             "${
@@ -568,16 +578,16 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
 
                 val firstPerSecond = numbersFormatter.formatBigDecimal(
                     PolkaswapFormulas.calculateTokenPerTokenRate(
-                        poolDataUsable?.basePooled.orZero(),
-                        poolDataUsable?.targetPooled.orZero()
+                        poolDataUsable?.user?.basePooled.orZero(),
+                        poolDataUsable?.user?.targetPooled.orZero()
                     ),
                     ASSET_PRECISION
                 )
 
                 val secondPerFirst = numbersFormatter.formatBigDecimal(
                     PolkaswapFormulas.calculateTokenPerTokenRate(
-                        poolDataUsable?.targetPooled.orZero(),
-                        poolDataUsable?.basePooled.orZero()
+                        poolDataUsable?.user?.targetPooled.orZero(),
+                        poolDataUsable?.user?.basePooled.orZero()
                     ),
                     ASSET_PRECISION
                 )
@@ -602,12 +612,12 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     estimated = removeState.estimated.copy(
                         token1 = firstToken.symbol,
                         token1Value = if (poolDataLocal == null) "" else numbersFormatter.formatBigDecimal(
-                            poolDataLocal.basePooled - amount1,
+                            poolDataLocal.user.basePooled - amount1,
                             ASSET_PRECISION
                         ),
                         token2 = secondToken.symbol,
                         token2Value = if (poolDataLocal == null) "" else numbersFormatter.formatBigDecimal(
-                            poolDataLocal.targetPooled - amount2,
+                            poolDataLocal.user.targetPooled - amount2,
                             ASSET_PRECISION
                         ),
                         shareOfPool = newPoolShare,

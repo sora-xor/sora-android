@@ -208,7 +208,7 @@ private fun BackupMnemonicView(words: List<String>) {
     }
 }
 
-@Preview
+@Preview(locale = "ru")
 @Composable
 private fun PreviewBackup() {
     Column(
@@ -216,7 +216,7 @@ private fun PreviewBackup() {
     ) {
         BackupScreen(
             state = BackupScreenState(
-                mnemonicWords = List(12) { p -> "abcde n ${p + 1}" }
+                mnemonicWords = List(12) { p -> "abcde" }
             ),
             onButtonPressed = {},
         )
@@ -224,7 +224,7 @@ private fun PreviewBackup() {
         BackupScreen(
             state = BackupScreenState(
                 isCreatingFlow = true,
-                mnemonicWords = List(15) { p -> "zxcvb n ${p + 1}" },
+                mnemonicWords = List(15) { p -> "zxcvb" },
             ),
             onButtonPressed = {},
         )

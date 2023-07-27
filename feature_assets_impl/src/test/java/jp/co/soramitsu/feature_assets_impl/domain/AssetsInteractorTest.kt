@@ -59,6 +59,7 @@ import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -224,18 +225,7 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN no xor token is supplied and balance equals network fee`() =
         runTest {
-            val xorAssetBalance = XorAssetBalance(
-                transferable = BigDecimal(1),
-                frozen = BigDecimal(1),
-                totalBalance = BigDecimal(1),
-                locked = BigDecimal(1),
-                bonded = BigDecimal(1),
-                reserved = BigDecimal(1),
-                redeemable = BigDecimal(1),
-                unbonding = BigDecimal(1)
-            )
-
-            coEvery { assetsRepository.getXORBalance(any(), any()) } returns xorAssetBalance
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
 
             val result = interactor.isEnoughXorLeftAfterTransaction(
                 primaryToken = oneToken(),
@@ -254,18 +244,7 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is supplied and balance equals network fee`() =
         runTest {
-            val xorAssetBalance = XorAssetBalance(
-                transferable = BigDecimal(1),
-                frozen = BigDecimal(1),
-                totalBalance = BigDecimal(1),
-                locked = BigDecimal(1),
-                bonded = BigDecimal(1),
-                reserved = BigDecimal(1),
-                redeemable = BigDecimal(1),
-                unbonding = BigDecimal(1)
-            )
-
-            coEvery { assetsRepository.getXORBalance(any(), any()) } returns xorAssetBalance
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
 
             val xorToken = Token(
                 id = SubstrateOptionsProvider.feeAssetId,
@@ -296,18 +275,7 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is produced and balance equals network fee`() =
         runTest {
-            val xorAssetBalance = XorAssetBalance(
-                transferable = BigDecimal(1),
-                frozen = BigDecimal(1),
-                totalBalance = BigDecimal(1),
-                locked = BigDecimal(1),
-                bonded = BigDecimal(1),
-                reserved = BigDecimal(1),
-                redeemable = BigDecimal(1),
-                unbonding = BigDecimal(1)
-            )
-
-            coEvery { assetsRepository.getXORBalance(any(), any()) } returns xorAssetBalance
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
 
             val xorToken = Token(
                 id = SubstrateOptionsProvider.feeAssetId,

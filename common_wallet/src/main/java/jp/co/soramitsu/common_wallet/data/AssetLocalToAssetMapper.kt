@@ -64,6 +64,12 @@ class AssetLocalToAssetMapper @Inject constructor(
     }
 
     @Throws(IllegalArgumentException::class)
+    suspend fun mapNullable(asset: AssetTokenWithFiatLocal?): Asset? {
+        if (asset == null) return null
+        return map(asset)
+    }
+
+    @Throws(IllegalArgumentException::class)
     suspend fun map(asset: AssetTokenWithFiatLocal): Asset {
         val assetLocal = asset.assetLocal
         requireNotNull(assetLocal)

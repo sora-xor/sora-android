@@ -91,6 +91,8 @@ dependencies {
     implementation uiCoreDep
     implementation xNetworkingDep
 
+    implementation timberDep
+
     implementation composeUiDep
     implementation composeThemeAdapterDep
     implementation composeFoundationDep

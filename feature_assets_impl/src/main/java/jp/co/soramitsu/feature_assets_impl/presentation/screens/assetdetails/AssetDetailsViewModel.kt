@@ -111,7 +111,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
             title = "",
         )
         viewModelScope.launch {
-            poolsInteractor.subscribePoolsCache()
+            poolsInteractor.subscribePoolsCacheOfCurAccount()
                 .catch { onError(it) }
                 .collectLatest {
                     val filtered =
