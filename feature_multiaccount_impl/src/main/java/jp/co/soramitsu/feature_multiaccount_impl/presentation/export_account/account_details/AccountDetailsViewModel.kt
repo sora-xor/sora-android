@@ -323,6 +323,9 @@ class AccountDetailsViewModel @AssistedInject constructor(
             try {
                 _accountDetailsScreenState.value?.let {
                     _accountDetailsScreenState.value = it.copy(isBackupLoading = true)
+                    if (it.isBackupAvailable == false) {
+                        backupService.logout()
+                    }
                     if (backupService.authorize(launcher)) {
                         if (backupService.isAccountBackedUp(address)) {
                             _deleteDialogState.value = true
@@ -350,7 +353,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 backupService.deleteBackupAccount(address)
                 _accountDetailsScreenState.value = accountDetailsScreenState.value?.copy(
                     isBackupLoading = false,
-                    isBackupAvailable = backupService.isAccountBackedUp(address)
+                    isBackupAvailable = false
                 )
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
