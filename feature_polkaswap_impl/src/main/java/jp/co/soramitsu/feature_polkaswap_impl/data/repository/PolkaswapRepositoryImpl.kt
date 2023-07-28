@@ -119,7 +119,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
         baseTokenId: String,
         targetTokenId: String
     ): Flow<CommonPoolData?> {
-        return db.poolDao().subscribePool(targetTokenId, baseTokenId, address).map {
+        return getUserPool(baseTokenId, targetTokenId, address).map {
             mapPoolLocalToData(it)
         }
     }
@@ -190,7 +190,7 @@ class PolkaswapRepositoryImpl @Inject constructor(
         baseTokenId: String,
         assetId: String
     ): Flow<LiquidityData?> {
-        return db.poolDao().subscribePool(assetId, baseTokenId, address).map { pool ->
+        return getUserPool(baseTokenId, assetId, address).map { pool ->
             val userLocal = pool?.userPoolLocal
             if (userLocal == null) {
                 null

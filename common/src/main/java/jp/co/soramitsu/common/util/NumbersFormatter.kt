@@ -90,11 +90,6 @@ class NumbersFormatter {
         return formatter.format(num)
     }
 
-    fun format(num: Double, precision: Int = DEFAULT_PRECISION): String {
-        return decimalFormatterFor(patternWith(precision))
-            .format(num)
-    }
-
     fun format(
         num: Double,
         precision: Int = DEFAULT_PRECISION,

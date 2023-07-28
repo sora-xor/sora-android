@@ -157,7 +157,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             removeEnabled = (userData != null) && ((pools100 == null) || (pools100 == false)),
                             userPoolSharePercent = userData?.poolShare?.let {
                                 "%s%%".format(
-                                    numbersFormatter.format(it, 2)
+                                    numbersFormatter.format(it, 2, true)
                                 )
                             },
                             demeterPools = pools,
