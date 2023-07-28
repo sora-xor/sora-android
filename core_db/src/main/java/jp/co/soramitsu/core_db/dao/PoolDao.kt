@@ -101,10 +101,10 @@ interface PoolDao {
         """
         select * from allpools left join userpools on 
         allpools.tokenIdBase=userpools.userTokenIdBase and allpools.tokenIdTarget=userpools.userTokenIdTarget 
-        where allpools.tokenIdBase=:baseTokenId and allpools.tokenIdTarget=:assetId and (userpools.accountAddress=:accountAddress or userpools.accountAddress is null)
+        where allpools.tokenIdBase=:baseTokenId and allpools.tokenIdTarget=:assetId
     """
     )
-    fun subscribePool(assetId: String, baseTokenId: String, accountAddress: String): Flow<UserPoolJoinedLocalNullable?>
+    fun subscribePool(assetId: String, baseTokenId: String): Flow<List<UserPoolJoinedLocalNullable>>
 
     @Upsert()
     suspend fun insertBasicPools(pools: List<BasicPoolLocal>)
