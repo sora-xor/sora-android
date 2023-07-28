@@ -125,43 +125,43 @@ internal fun BackupScreen(
                     size = Size.Large,
                     onClick = onButtonPressed,
                 )
-
-                onBackupWithGoogleButtonPressed?.let {
-                    Button(
-                        modifier = Modifier
-                            .padding(top = Dimens.x1)
-                            .testTagAsId("GoogleBackup")
-                            .fillMaxWidth()
-                            .heightIn(Dimens.x7),
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = Color(0xFF3579F7)
-                        ),
-                        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = MaterialTheme.customColors.bgPage,
-                            contentColor = MaterialTheme.customColors.accentPrimary,
-                            disabledBackgroundColor = MaterialTheme.customColors.bgPage,
-                            disabledContentColor = MaterialTheme.customColors.fgPrimary.withOpacity(
-                                MaterialTheme.opacity.actionFgDisabled
-                            )
-                        ),
-                        shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
-                        onClick = it,
-                        contentPadding = PaddingValues(0.dp),
-                    ) {
-                        Image(
-                            modifier = Modifier.padding(end = Dimens.x1),
-                            painter = painterResource(id = R.drawable.ic_google_white),
-                            contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
-                        )
-
-                        Text(
-                            style = MaterialTheme.customTypography.buttonM,
-                            text = stringResource(id = R.string.account_options_backup_google)
-                        )
-                    }
-                }
+//
+//                onBackupWithGoogleButtonPressed?.let {
+//                    Button(
+//                        modifier = Modifier
+//                            .padding(top = Dimens.x1)
+//                            .testTagAsId("GoogleBackup")
+//                            .fillMaxWidth()
+//                            .heightIn(Dimens.x7),
+//                        border = BorderStroke(
+//                            width = 1.dp,
+//                            color = Color(0xFF3579F7)
+//                        ),
+//                        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            backgroundColor = MaterialTheme.customColors.bgPage,
+//                            contentColor = MaterialTheme.customColors.accentPrimary,
+//                            disabledBackgroundColor = MaterialTheme.customColors.bgPage,
+//                            disabledContentColor = MaterialTheme.customColors.fgPrimary.withOpacity(
+//                                MaterialTheme.opacity.actionFgDisabled
+//                            )
+//                        ),
+//                        shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
+//                        onClick = it,
+//                        contentPadding = PaddingValues(0.dp),
+//                    ) {
+//                        Image(
+//                            modifier = Modifier.padding(end = Dimens.x1),
+//                            painter = painterResource(id = R.drawable.ic_google_white),
+//                            contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
+//                        )
+//
+//                        Text(
+//                            style = MaterialTheme.customTypography.buttonM,
+//                            text = stringResource(id = R.string.account_options_backup_google)
+//                        )
+//                    }
+//                }
             } else {
                 TonalButton(
                     modifier = Modifier
