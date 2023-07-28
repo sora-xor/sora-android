@@ -147,8 +147,8 @@ dependencies {
 
     implementation gsonDep
 
-    implementation platform(firebaseBomDep)
-    implementation crashlyticsDep
+    implementation platform(googleFirebaseBomDep)
+    implementation googleCrashlyticsDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
