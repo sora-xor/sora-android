@@ -33,7 +33,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocalNullable
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 abstract class PolkaswapBasicRepositoryImpl(
     private val db: AppDatabase,
@@ -46,5 +49,24 @@ abstract class PolkaswapBasicRepositoryImpl(
 
     protected suspend fun getPoolBaseTokenDexId(tokenId: String): Int {
         return db.poolDao().getPoolBaseToken(tokenId)?.dexId ?: 0
+    }
+
+    protected fun getUserPool(
+        baseTokenId: String,
+        targetTokenId: String,
+        address: String,
+    ): Flow<UserPoolJoinedLocalNullable?> {
+        return db.poolDao().subscribePool(targetTokenId, baseTokenId).map { list ->
+            if (list.isEmpty()) {
+                null
+            } else {
+                list.find {
+                    it.userPoolLocal?.accountAddress == address
+                } ?: UserPoolJoinedLocalNullable(
+                    basicPoolLocal = list[0].basicPoolLocal,
+                    userPoolLocal = null,
+                )
+            }
+        }
     }
 }
