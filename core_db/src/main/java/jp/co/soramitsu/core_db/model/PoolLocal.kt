@@ -32,15 +32,29 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.core_db.model
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.math.BigDecimal
 
 @Entity(
-    tableName = "pools",
-    primaryKeys = ["assetId", "assetIdBase", "accountAddress"],
+    tableName = "allpools",
+    primaryKeys = ["tokenIdBase", "tokenIdTarget"],
+)
+data class BasicPoolLocal(
+    val tokenIdBase: String,
+    val tokenIdTarget: String,
+    val reserveBase: BigDecimal,
+    val reserveTarget: BigDecimal,
+    val totalIssuance: BigDecimal,
+    val reservesAccount: String,
+)
+
+@Entity(
+    tableName = "userpools",
+    primaryKeys = ["userTokenIdBase", "userTokenIdTarget", "accountAddress"],
+    indices = [Index(value = ["accountAddress"])],
     foreignKeys = [
         ForeignKey(
             entity = SoraAccountLocal::class,
@@ -48,21 +62,23 @@ import java.math.BigDecimal
             childColumns = ["accountAddress"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.NO_ACTION,
+        ),
+        ForeignKey(
+            entity = BasicPoolLocal::class,
+            parentColumns = ["tokenIdBase", "tokenIdTarget"],
+            childColumns = ["userTokenIdBase", "userTokenIdTarget"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.NO_ACTION,
         )
     ]
 )
-data class PoolLocal(
-    val assetId: String,
-    val assetIdBase: String,
+data class UserPoolLocal(
+    val userTokenIdBase: String,
+    val userTokenIdTarget: String,
     val accountAddress: String,
-    val reservesFirst: BigDecimal,
-    val reservesSecond: BigDecimal,
-    val totalIssuance: BigDecimal,
-    val strategicBonusApy: BigDecimal?,
     val poolProvidersBalance: BigDecimal,
-    @ColumnInfo(defaultValue = "1") val favorite: Boolean = true,
-    @ColumnInfo(defaultValue = "0") val sortOrder: Int,
-    @ColumnInfo(defaultValue = "") val reservesAccount: String,
+    val favorite: Boolean,
+    val sortOrder: Int,
 )
 
 @Entity(

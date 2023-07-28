@@ -85,7 +85,7 @@ class AssetsInteractorImpl constructor(
         secondaryTokenAmount: BigDecimal?,
         networkFeeInXor: BigDecimal
     ): Boolean {
-        val xorAssetBalanceAmount = getXorBalance(primaryToken.precision).transferable
+        val xorAssetBalanceAmount = getAssetOrThrow(SubstrateOptionsProvider.feeAssetId).balance.transferable
 
         if (primaryToken.id != SubstrateOptionsProvider.feeAssetId &&
             secondaryToken?.id != SubstrateOptionsProvider.feeAssetId
@@ -174,7 +174,7 @@ class AssetsInteractorImpl constructor(
         return if (status.success) status.txHash else ""
     }
 
-    override fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset> {
+    override fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?> {
         return userRepository.flowCurSoraAccount().flatMapLatest {
             assetsRepository.subscribeAsset(it.substrateAddress, tokenId)
         }
@@ -221,13 +221,9 @@ class AssetsInteractorImpl constructor(
         assetsRepository.updateAssetPositions(assetPositions, curAccount)
     }
 
-    override suspend fun updateBalancesVisibleAssets() {
-        assetsRepository.updateBalancesVisibleAssets(userRepository.getCurSoraAccount().substrateAddress)
-    }
-
-    override suspend fun updateWhitelistBalances(update: Boolean) {
+    override suspend fun updateWhitelistBalances() {
         val soraAccount = userRepository.getCurSoraAccount()
-        assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress, update)
+        assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress)
 
         if (needFakeBalance()) {
             coroutineManager.applicationScope.launch(coroutineManager.io) {

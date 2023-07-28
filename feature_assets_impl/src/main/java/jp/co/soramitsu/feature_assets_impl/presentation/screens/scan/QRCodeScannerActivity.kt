@@ -46,6 +46,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -55,18 +56,17 @@ import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.feature_assets_impl.databinding.QrCodeScannerLayoutBinding
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QrCodeScannerScreen
-import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class QRCodeScannerActivity : AppCompatActivity() {
 
+    private val viewModel: QrCodeScannerViewModel by viewModels()
+
     private val binding by lazy { QrCodeScannerLayoutBinding.inflate(layoutInflater) }
 
     private var capture: CaptureManager? = null
-
-    private val viewModel: QRCodeFlowViewModel by viewModels()
 
     private val startForResultFromGallery: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->

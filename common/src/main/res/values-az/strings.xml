@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
-  <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Parol üçün məcburi tələb yerinə yetirildi</string>
+  <string name="backup_password_requirments">Minimum altı simvol. İsteğe bağlı olaraq, daha yaxşı təhlükəsizlik üçün böyük hərflər, rəqəmlər və qeyri-əlifba simvolları daxil edin.</string>
+  <string name="backup_password_title">Parolun təyin edilməsi Google ehtiyat nüsxənizi şifrələyəcək. Pul kisəsini bərpa edərkən bunu daxil etməlisiniz.\n Minimum parol uzunluğu 6 simvoldur.</string>
+  <string name="backup_password_title_2">Parolun təyin edilməsi Google ehtiyat nüsxənizi şifrələyəcək. Pul kisəsini bərpa edərkən bunu daxil etməlisiniz.</string>
   <string name="biometric_dialog_title">Doğrulayın</string>
   <string name="block_id">Qarışığı blok edin</string>
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
@@ -63,6 +66,7 @@
   <string name="common_activity">Fəaliyyət</string>
   <string name="common_and">və</string>
   <string name="common_app_version">Proqram versiyası</string>
+  <string name="common_apy">APY</string>
   <string name="common_arab">Ərəb dili</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Geri</string>
@@ -83,11 +87,14 @@
   <string name="common_copied">Panoya kopyalandı</string>
   <string name="common_create_qr_request">Create QR-request</string>
   <string name="common_croatian">Xorvat dili</string>
+  <string name="common_currencies">Valyutalar</string>
   <string name="common_delete">Delete</string>
+  <string name="common_disabled">Əlil</string>
   <string name="common_discover">Discover</string>
   <string name="common_done">Tamamlandı</string>
   <string name="common_dutch">Dutch</string>
   <string name="common_edit">Edit</string>
+  <string name="common_enabled">Aktivdir</string>
   <string name="common_english">İngilis dili</string>
   <string name="common_enter_amount">Məbləği daxil edin</string>
   <string name="common_error_ambiguous_result">Birmənalı nəticə</string>
@@ -217,6 +224,7 @@
   <string name="details_sent_to_pool">Sent to pool</string>
   <string name="discover_coming_soon">SORA devs are currently working on a feature that will display a full list of pools that are active on Polkaswap.\n\nFor now, if you want to create/add to a pool please use the button below.</string>
   <string name="discovery_polkaswap_pools">Polkaswap pools</string>
+  <string name="edit_view">Görünüşü redaktə edin</string>
   <string name="empty_recent_recipients">Son alıcılar yoxdur.\n Göndərilən ünvanlar burada göstəriləcək.</string>
   <string name="empty_recent_recipients_2">Qəbul edənlər burada görünəcək</string>
   <string name="enter_backup_password_title">Enter backup password</string>
@@ -224,6 +232,8 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Əməliyyat haqqı üçün kifayət qədər vəsait yoxdur</string>
+  <string name="explore_provide_and_earn">Likvidliyi təmin edin və mükafatlar qazanın</string>
+  <string name="explore_swap_tokens_on_sora">SORA şəbəkəsində tokenləri dəyişdirin</string>
   <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Yedəkləmə seçimləri</string>
   <string name="export_account_details_show_passphrase">Parol ifadəsini göstərin</string>
@@ -395,7 +405,7 @@
   <string name="referral_bond_button_title">XOR-u ayırın</string>
   <string name="referral_enter_link_title">REFERRAL LİNKİNƏ DAXİL EDİN</string>
   <string name="referral_get_more_invitation_button_title">Daha çox dəvət alın</string>
-  <string name="referral_input_reward_description">Dostlarınızın qoşulması üçün şəbəkə haqqını ödəmək üçün hər bir dəvət üçün %@ bağlanır. \n \n İstifadə olunmamış dəvətlər üçün XOR-unuzu istənilən vaxt ayıra bilərsiniz.</string>
+  <string name="referral_input_reward_description">Dostlarınızın qoşulması üçün şəbəkə haqqını ödəmək üçün hər bir dəvət üçün %s bağlanır. \n \n İstifadə olunmamış dəvətlər üçün XOR-unuzu istənilən vaxt ayıra bilərsiniz.</string>
   <string name="referral_input_reward_title">İstədiyiniz məbləği \n daxil edin</string>
   <string name="referral_invitaion_link_title">Mövcud dəvətnamələr</string>
   <string name="referral_invitation_link">Invitation link</string>
@@ -406,9 +416,9 @@
   <string name="referral_no_available_invitations">No available invitations</string>
   <string name="referral_referral_link">İstinad linki və ya ünvanı</string>
   <string name="referral_referrer_address">İstinad edənin ünvanı</string>
-  <string name="referral_referrer_description">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10%-i mükafat olaraq yönləndiricinizə gedir.</string>
+  <string name="referral_referrer_description">Hər hansı bir əməliyyat etdiyiniz zaman ödənilən şəbəkə haqqının 10% -i mükafat olaraq yönləndiricinizə gedir.</string>
   <string name="referral_start_inviting">Dəvət etməyə başlayın</string>
-  <string name="referral_subtitle">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10%-i mükafat olaraq sizə keçir.</string>
+  <string name="referral_subtitle">Referalınız hər hansı bir əməliyyat həyata keçirdikdə, ödənilən şəbəkə haqqının 10% -i mükafat olaraq sizə keçir.</string>
   <string name="referral_title">Referallarınızın şəbəkə haqlarının 10%-ni alın</string>
   <string name="referral_toolbar_title">İstiqamət proqramı</string>
   <string name="referral_total_rewards">Ümumi mükafatlar</string>
@@ -464,6 +474,7 @@
   <string name="show_more">Show more</string>
   <string name="show_zero_balances">Show zero balances</string>
   <string name="slippage">Slippage</string>
+  <string name="something_went_wrong">Nəsə xəta baş verdi</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">€0 annual service fee</string>
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
@@ -471,11 +482,12 @@
   <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
   <string name="sora_card_description">Get a Euro IBAN account and Mastercard Debit Card connected to your SORA Wallet</string>
   <string name="sora_card_free_card_issuance">Free card issuance</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">və ya €20 ərizə haqqı</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">No more free attempts</string>
-  <string name="sora_card_see_details">See the details</string>
+  <string name="sora_card_see_details">Detallara baxın</string>
   <string name="sora_card_sign_in_required">Apply for card or log in if you have one</string>
   <string name="sora_card_swap_crypto_for_xor">Swap crypto for XOR</string>
   <string name="sora_card_title">Top up SORA Card with fiat or crypto and pay online, in-store or withdraw from an ATM</string>
@@ -505,6 +517,7 @@
   <string name="tutorial_terms_and_conditions">Bir hesab yaratmaqla %% Şərtlər %% və %% Məxfilik Siyasəti %%</string>
   <string name="tutorial_terms_and_conditions_3">Şərtlər və Qaydalar</string>
   <string name="tutorial_terms_and_conditions_template_1">By continuing you are agreeing with the </string>
+  <string name="unexpected_error">Gözlənilməz xəta baş verdi. \n\n Siz @SORAhappiness Telegram çatında SORA icmasında bu problemi həll edə bilərsiniz.</string>
   <string name="update_downloaded">SORA tətbiqi üçün yeniləmə endirilib və quraşdırılmağa hazırdır. \n\n Proqramın ən son versiyasından istifadə etmək vacibdir. \n\n Proqramı yeniləmək üçün yenidən başladın tələb olunur.</string>
   <string name="update_install_now">Güncəlləməni indi quraşdırmaq istərdinizmi?</string>
   <string name="wallet_balance_locked">Kilidlənmiş</string>

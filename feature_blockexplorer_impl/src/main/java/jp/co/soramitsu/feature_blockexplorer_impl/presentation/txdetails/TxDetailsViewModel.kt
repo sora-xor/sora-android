@@ -121,6 +121,9 @@ class TxDetailsViewModel @AssistedInject constructor(
         val feeToken = walletInteractor.getFeeToken()
         val transaction = transactionHistoryHandler.getTransaction(txHash)
         txDetailsScreenState = when (transaction) {
+            is Transaction.EthTransfer -> {
+                emptyTxDetailsState
+            }
             is Transaction.Transfer -> {
                 var sender = transaction.peer
                 var recipient = currentAddress

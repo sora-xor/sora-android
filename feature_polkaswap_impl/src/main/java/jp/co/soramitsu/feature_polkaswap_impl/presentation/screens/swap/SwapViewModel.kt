@@ -111,6 +111,7 @@ class SwapViewModel @AssistedInject constructor(
     private val coroutineManager: CoroutineManager,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
+    @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
 
     @AssistedFactory
@@ -118,6 +119,7 @@ class SwapViewModel @AssistedInject constructor(
         fun create(
             @Assisted("idfrom") idFrom: String,
             @Assisted("idto") idTo: String,
+            @Assisted("isLaunchedFromSoraCard") isLaunchedFromSoraCard: Boolean
         ): SwapViewModel
     }
 
@@ -474,7 +476,6 @@ class SwapViewModel @AssistedInject constructor(
         with(swapMainState) {
             if (tokenFromState == null || tokenToState == null)
                 return@with
-
             val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
                 primaryToken = tokenFromState.token,
                 primaryTokenAmount = tokenFromState.amount,
@@ -524,6 +525,9 @@ class SwapViewModel @AssistedInject constructor(
         )
         setSwapButtonLoading(true)
         onChangedProperty.set(property.newReloadMarkets(false))
+        viewModelScope.launch {
+            updateTransactionReminderWarningVisibility()
+        }
     }
 
     private fun toAndFromAssetsSelected(to: Token?, from: Token?) {
@@ -952,6 +956,10 @@ class SwapViewModel @AssistedInject constructor(
                             )
                             if (swapResult.isNotEmpty())
                                 assetsRouter.showTxDetails(swapResult, true)
+                            else if (isLaunchedFromSoraCard)
+                                mainRouter.showGetSoraCard(
+                                    shouldStartSignIn = true
+                                )
                             else _navigationPop.trigger()
                         }
                     }
@@ -985,6 +993,8 @@ class SwapViewModel @AssistedInject constructor(
                 )
             )
             desired = WithDesired.INPUT
+
+            fromAmountFlow.value = amount
 
             onChangedProperty.set(property.newReloadMarkets(false))
         }

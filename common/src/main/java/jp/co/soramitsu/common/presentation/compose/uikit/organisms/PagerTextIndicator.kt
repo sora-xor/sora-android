@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -49,9 +50,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
@@ -67,52 +74,85 @@ fun PagerTextIndicator(
     slideOffsetRetriever: () -> Float,
     onIndicatorClick: (Int) -> Unit
 ) {
+    val elementsList = remember {
+        Array(indicatorsArray.size) { Rect.Zero }
+    }
+
+    val layoutDirection = LocalLayoutDirection.current
+
     Row(
         modifier = modifier
             .drawWithCache {
-                val elementWidth = size.width.div(indicatorsArray.size)
-                val elementWidthWithPaddingInPercent = .7f
-                val paddingInPercent = .15f
                 val cornerRadius = CornerRadius(Dimens.x3.toPx(), Dimens.x3.toPx())
 
-                onDrawBehind {
+                onDrawWithContent {
                     val currentPage = currentPageRetriever.invoke()
                     val offset = slideOffsetRetriever.invoke()
 
-                    val normalizedOffset = 1f + offset
+                    if (elementsList.size == indicatorsArray.size) {
+                        val start = elementsList[currentPage].left
 
-                    val offsetX = elementWidth.times(currentPage - 1)
-                        .plus(elementWidth.times(normalizedOffset))
-                        .plus(elementWidth.times(paddingInPercent))
+                        val stop = (
+                            elementsList.getOrNull(currentPage + 1)
+                                ?: elementsList[currentPage]
+                            ).run {
+                            /* for Arabic languages */
+                            if (layoutDirection === LayoutDirection.Ltr)
+                                right else left
+                        }
 
-                    val offsetY = 0f // Sliding only in horizontal plane
+                        val sectorOffsetXLerp = lerp(
+                            start = start,
+                            stop = stop,
+                            fraction = offset
+                        )
 
-                    val width = elementWidth.times(elementWidthWithPaddingInPercent)
-                        .times(1f + abs(offset))
+                        val sectorOffsetY = 0f // Sliding only in horizontal plane
 
-                    val height = size.height
+                        val sectorWidthLerp = lerp(
+                            start = elementsList[currentPage].width,
+                            stop = (elementsList.getOrNull(currentPage + 1) ?: elementsList[currentPage]).width,
+                            fraction = abs(offset)
+                        )
 
-                    drawRoundRect(
-                        color = Color.Black,
-                        topLeft = Offset(offsetX, offsetY),
-                        size = Size(width, height),
-                        cornerRadius = cornerRadius
-                    )
+                        val sectorHeight = size.height
+
+                        drawRoundRect(
+                            color = Color.Black,
+                            topLeft = Offset(sectorOffsetXLerp, sectorOffsetY),
+                            size = Size(sectorWidthLerp, sectorHeight),
+                            cornerRadius = cornerRadius
+                        )
+
+                        drawContent()
+                    }
                 }
             },
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        repeat(indicatorsArray.size) {
+        repeat(indicatorsArray.size) { index ->
             Text(
                 modifier = Modifier
-                    .noRippleClickable { onIndicatorClick.invoke(it) },
-                text = indicatorsArray[it].retrieveString(),
-                color = if (it == currentPageRetriever()) Color.White else Color.Black,
-                style = MaterialTheme.customTypography.textSBold
+                    .noRippleClickable { onIndicatorClick.invoke(index) }
+                    .onPlaced { elementsList[index] = it.boundsInParent() }
+                    .padding(horizontal = Dimens.x2),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+                text = indicatorsArray[index].retrieveString(),
+                style = MaterialTheme.customTypography.textSBold,
+                color = if (index == currentPageRetriever())
+                    Color.White else Color.Black,
             )
         }
     }
+}
+
+/**
+ * lerp short for Linear Interpolation, google-known function
+ */
+private fun lerp(start: Float, stop: Float, fraction: Float): Float {
+    return start + fraction * (stop - start)
 }
 
 @Preview
@@ -124,7 +164,11 @@ private fun PreviewSlidingPagerIndicator() {
 
     Box(
         modifier = Modifier
-            .clickable { ci.value = ci.value + 1 }
+            .clickable {
+                ci.value = ci.value
+                    .plus(1)
+                    .rem(2)
+            }
             .fillMaxWidth()
             .height(Dimens.x7)
     ) {
@@ -133,12 +177,11 @@ private fun PreviewSlidingPagerIndicator() {
                 .fillMaxWidth()
                 .wrapContentHeight(),
             indicatorsArray = listOf(
-                Text.SimpleText("1"),
-                Text.SimpleText("2"),
-                Text.SimpleText("3")
+                Text.SimpleText("1234512345"),
+                Text.SimpleText("3"),
             ),
             currentPageRetriever = { ci.value },
-            slideOffsetRetriever = { ci.value.toFloat() },
+            slideOffsetRetriever = { 0f },
             onIndicatorClick = {}
         )
     }

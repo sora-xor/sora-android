@@ -49,18 +49,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -80,29 +77,23 @@ internal fun EventLiquidity(
             modifier = Modifier.wrapContentSize()
         ) {
             val (token1, token2, typeIcon) = createRefs()
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(eventUiModel.icon1).build(),
+            TokenIcon(
+                uri = eventUiModel.icon1, size = 28.dp,
                 modifier = Modifier
                     .size(size = 28.dp)
                     .constrainAs(token1) {
                         top.linkTo(parent.top)
                         start.linkTo(parent.start)
-                    },
-                contentDescription = null,
-                imageLoader = LocalContext.current.imageLoader,
+                    }
             )
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(eventUiModel.icon2).build(),
+            TokenIcon(
+                uri = eventUiModel.icon2, size = 28.dp,
                 modifier = Modifier
                     .size(size = 28.dp)
                     .constrainAs(token2) {
                         top.linkTo(token1.top, margin = 12.dp)
                         start.linkTo(token1.start, margin = 12.dp)
-                    },
-                contentDescription = null,
-                imageLoader = LocalContext.current.imageLoader,
+                    }
             )
             Icon(
                 modifier = Modifier
@@ -193,7 +184,9 @@ internal fun EventLiquidity(
 fun PreviewEventLiquidity() {
     EventLiquidity(
         eventUiModel = eventPreview,
-        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
     )
 }
 

@@ -39,9 +39,9 @@ import java.math.BigDecimal
 
 class NumbersFormatterTest {
 
-    private val formatWithGroupingDelimeter = "1 000 000.27"
-    private val formatAsInteger = "1 000 000"
-    private val formatWithRounding = "1 000 000.27"
+    private val formatWithGroupingDelimeter = "1${nbspace}000${nbspace}000.27"
+    private val formatAsInteger = "1${nbspace}000${nbspace}000"
+    private val formatWithRounding = "1${nbspace}000${nbspace}000.27"
 
     lateinit var numbersFormatter: NumbersFormatter
 
@@ -138,7 +138,7 @@ class NumbersFormatterTest {
 
         val toFormat = BigDecimal(1_000_000.12345678912)
 
-        val expected = "1 000 000.123456789"
+        val expected = "1${nbspace}000${nbspace}000.123456789"
         val actual = numbersFormatter.formatBigDecimal(toFormat, precision)
 
         assertEquals(expected, actual)

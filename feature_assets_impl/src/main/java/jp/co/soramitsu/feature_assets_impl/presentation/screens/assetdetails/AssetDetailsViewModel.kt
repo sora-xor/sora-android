@@ -111,11 +111,11 @@ class AssetDetailsViewModel @AssistedInject constructor(
             title = "",
         )
         viewModelScope.launch {
-            poolsInteractor.subscribePoolsCache()
+            poolsInteractor.subscribePoolsCacheOfCurAccount()
                 .catch { onError(it) }
                 .collectLatest {
                     val filtered =
-                        it.filter { poolData -> poolData.token.id == assetId || poolData.baseToken.id == assetId }
+                        it.filter { poolData -> poolData.basic.targetToken.id == assetId || poolData.basic.baseToken.id == assetId }
                     val mapped = mapPoolsData(filtered, numbersFormatter)
                     state = state.copy(
                         state = state.state.copy(

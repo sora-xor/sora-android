@@ -93,7 +93,7 @@ open class BaseViewModel : ViewModel() {
                 SoraException.Kind.UNEXPECTED -> {
                     throwable.errorResponseCode?.messageResource?.let {
                         errorFromResourceLiveData.setValue(
-                            throwable.errorResponseCode.titleResource to it
+                            R.string.something_went_wrong to R.string.unexpected_error
                         )
                     }
                 }

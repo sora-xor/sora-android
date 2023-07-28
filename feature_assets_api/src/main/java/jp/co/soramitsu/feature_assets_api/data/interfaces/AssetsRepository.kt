@@ -88,7 +88,7 @@ interface AssetsRepository {
     fun subscribeAsset(
         address: String,
         tokenId: String,
-    ): Flow<Asset>
+    ): Flow<Asset?>
 
     fun subscribeAssetsActive(
         address: String
@@ -110,6 +110,8 @@ interface AssetsRepository {
 
     suspend fun tokensList(): List<Token>
 
+    fun subscribeTokensList(): Flow<List<Token>>
+
     suspend fun transfer(
         keypair: Sr25519Keypair,
         from: String,
@@ -122,5 +124,5 @@ interface AssetsRepository {
 
     suspend fun updateBalancesVisibleAssets(address: String)
 
-    suspend fun updateWhitelistBalances(address: String, update: Boolean)
+    suspend fun updateWhitelistBalances(address: String)
 }

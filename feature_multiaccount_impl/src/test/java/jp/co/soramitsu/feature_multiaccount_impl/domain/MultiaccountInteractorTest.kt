@@ -32,14 +32,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.domain
 
+import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.mockk
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -48,14 +55,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
-import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
-import org.mockito.junit.MockitoJUnitRunner
 
 @ExperimentalCoroutinesApi
-@RunWith(MockitoJUnitRunner::class)
 class MultiaccountInteractorTest {
 
     @get:Rule
@@ -64,108 +65,124 @@ class MultiaccountInteractorTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
+    @get:Rule
+    var mockKRule = MockKRule(this)
+
 
     private lateinit var multiaccountInteractor: MultiaccountInteractor
 
-    private val userRepository = mock(UserRepository::class.java)
-    private val credentialsRepository = mock(CredentialsRepository::class.java)
-    private val fileManager = mock(FileManager::class.java)
-    private val assetsInteractor = mock(AssetsInteractor::class.java)
+    @MockK
+    lateinit var userRepository: UserRepository
+
+    @MockK
+    lateinit var credentialsRepository: CredentialsRepository
+
+    @MockK
+    lateinit var fileManager: FileManager
+
+    @MockK
+    lateinit var assetsInteractor: AssetsInteractor
+
+    @MockK
+    lateinit var runtimeManager: RuntimeManager
+
+    private val account = mockk<SoraAccount>()
+    private val uri = mockk<Uri>()
 
     @Before
     fun setup() {
-        multiaccountInteractor = MultiaccountInteractor(assetsInteractor, userRepository, credentialsRepository, fileManager)
+        coEvery { credentialsRepository.isMnemonicValid(any()) } returns true
+        coEvery { credentialsRepository.isRawSeedValid(any()) } returns true
+        coEvery { userRepository.insertSoraAccount(any()) } returns Unit
+        coEvery { userRepository.setCurSoraAccount(any()) } returns Unit
+        coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
+        coEvery { userRepository.saveRegistrationState(any()) } returns Unit
+        coEvery { credentialsRepository.restoreUserCredentialsFromMnemonic(any(), any()) } returns account
+        coEvery { credentialsRepository.restoreUserCredentialsFromRawSeed(any(), any()) } returns account
+        coEvery { userRepository.saveNeedsMigration(any(), any()) } returns Unit
+        coEvery { userRepository.saveIsMigrationFetched(any(), any()) } returns Unit
+        coEvery { userRepository.updateAccountName(any(), any()) } returns Unit
+        coEvery { fileManager.writeExternalCacheText(any(), any()) } returns uri
+        multiaccountInteractor = MultiaccountInteractor(
+            assetsInteractor,
+            userRepository,
+            credentialsRepository,
+            fileManager,
+            runtimeManager,
+        )
     }
 
     @Test
     fun `is mnemonic valid called`() = runTest {
         val mnemonic = "mnemonic"
-
         multiaccountInteractor.isMnemonicValid(mnemonic)
-
-        verify(credentialsRepository).isMnemonicValid(mnemonic)
+        coVerify { credentialsRepository.isMnemonicValid(mnemonic) }
     }
 
     @Test
     fun `is raw seed valid called`() = runTest {
         val seed = "seed"
-
         multiaccountInteractor.isRawSeedValid(seed)
-
-        verify(credentialsRepository).isRawSeedValid(seed)
+        coVerify { credentialsRepository.isRawSeedValid(seed) }
     }
 
     @Test
     fun `continueRecoverFlow is called`() = runTest {
-        val account = mock(SoraAccount::class.java)
-        multiaccountInteractor.continueRecoverFlow(account, true)
-
-        verify(userRepository).insertSoraAccount(account)
-        verify(userRepository).setCurSoraAccount(account)
-        verify(userRepository).saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+        multiaccountInteractor.continueRecoverFlow(account)
+        coVerify { userRepository.insertSoraAccount(account) }
+        coVerify { userRepository.setCurSoraAccount(account) }
+        coVerify { userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED) }
     }
 
     @Test
     fun `recoverSoraAccountFromMnemonic is called`() = runTest {
         val mnemonic = "mnemonic"
         val accountName = "accountName"
-
         multiaccountInteractor.recoverSoraAccountFromMnemonic(mnemonic, accountName)
-
-        verify(credentialsRepository).restoreUserCredentialsFromMnemonic(mnemonic, accountName)
+        coVerify { credentialsRepository.restoreUserCredentialsFromMnemonic(mnemonic, accountName) }
     }
 
     @Test
     fun `recoverSoraAccountFromRawSeed is called`() = runTest {
         val rawSeed = "seed"
         val accountName = "accountName"
-
         multiaccountInteractor.recoverSoraAccountFromRawSeed(rawSeed, accountName)
-
-        verify(credentialsRepository).restoreUserCredentialsFromRawSeed(rawSeed, accountName)
+        coVerify { credentialsRepository.restoreUserCredentialsFromRawSeed(rawSeed, accountName) }
     }
 
     @Test
     fun `createUser is called`() = runTest {
-        val account = mock(SoraAccount::class.java)
-
-        multiaccountInteractor.createUser(account, true)
-
-        verify(userRepository).insertSoraAccount(account)
-        verify(userRepository).setCurSoraAccount(account)
-        verify(userRepository).saveRegistrationState(OnboardingState.INITIAL)
-        verify(userRepository).saveNeedsMigration(false, account)
-        verify(userRepository).saveIsMigrationFetched(true, account)
+        multiaccountInteractor.createUser(account)
+        coVerify { userRepository.insertSoraAccount(account) }
+        coVerify { userRepository.setCurSoraAccount(account) }
+        coVerify { userRepository.saveRegistrationState(OnboardingState.INITIAL) }
+        coVerify { userRepository.saveNeedsMigration(false, account) }
+        coVerify { userRepository.saveIsMigrationFetched(true, account) }
     }
 
     @Test
     fun `saveRegistrationStateFinished is called`() = runTest {
         multiaccountInteractor.saveRegistrationStateFinished()
-
-        verify(userRepository).saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
+        coVerify { userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED) }
     }
 
     @Test
     fun `update name is called`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
-        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
-
+        coEvery { userRepository.getSoraAccount(address) } returns soraAccount
         multiaccountInteractor.updateName(address, "newName")
-
-        verify(userRepository).updateAccountName(soraAccount, "newName")
+        coVerify { userRepository.updateAccountName(soraAccount, "newName") }
     }
 
     @Test
     fun `get mnemonic is called`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
-        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+        coEvery { userRepository.getSoraAccount(address) } returns soraAccount
         val mnemonic = "mnemonic"
-        given(credentialsRepository.retrieveMnemonic(soraAccount)).willReturn(mnemonic)
-
+        coEvery { credentialsRepository.retrieveMnemonic(soraAccount) } returns mnemonic
         val result = multiaccountInteractor.getMnemonic(address)
-
         assertEquals(mnemonic, result)
     }
 
@@ -173,12 +190,10 @@ class MultiaccountInteractorTest {
     fun `get seed is called`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
-        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
+        coEvery { userRepository.getSoraAccount(address) } returns soraAccount
         val seed = "seed"
-        given(credentialsRepository.retrieveSeed(soraAccount)).willReturn(seed)
-
+        coEvery { credentialsRepository.retrieveSeed(soraAccount) } returns seed
         val result = multiaccountInteractor.getSeed(address)
-
         assertEquals(seed, result)
     }
 
@@ -186,12 +201,10 @@ class MultiaccountInteractorTest {
     fun `get keypair is called`() = runTest {
         val address = "address"
         val soraAccount = SoraAccount("address", "name")
-        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
-        val keypair = mock(Sr25519Keypair::class.java)
-        given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(keypair)
-
+        coEvery { userRepository.getSoraAccount(address) } returns soraAccount
+        val keypair = mockk<Sr25519Keypair>()
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns keypair
         val result = multiaccountInteractor.getKeypair(address)
-
         assertEquals(keypair, result)
     }
 
@@ -202,12 +215,14 @@ class MultiaccountInteractorTest {
         val soraAccount = SoraAccount("address", "name")
         val expectedFileName = "address.json"
         val expectedJson = "{JSON}"
-        given(userRepository.getSoraAccount(address)).willReturn(soraAccount)
-        given(credentialsRepository.generateJson(listOf(soraAccount), password)).willReturn(expectedJson)
-
-
+        coEvery { userRepository.getSoraAccount(address) } returns soraAccount
+        coEvery {
+            credentialsRepository.generateJson(
+                listOf(soraAccount),
+                password
+            )
+        } returns expectedJson
         multiaccountInteractor.getJsonFileUri(listOf(address), password)
-
-        verify(fileManager).writeExternalCacheText(expectedFileName, expectedJson)
+        coVerify { fileManager.writeExternalCacheText(expectedFileName, expectedJson) }
     }
 }

@@ -51,6 +51,7 @@ import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.components.AssetAmountInput
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -125,7 +126,8 @@ internal fun SendConfirmScreen(
         loaderSize = Size.Large,
     ) { modifier, elevation ->
         FilledButton(
-            modifier = modifier,
+            modifier = modifier
+                .testTagAsId("ConfirmButton"),
             enabled = reviewEnabled,
             text = stringResource(id = R.string.common_confirm),
             size = Size.Large,

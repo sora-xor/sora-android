@@ -50,13 +50,10 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.ui_core.component.asset.changePriceColor
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -130,13 +127,7 @@ internal fun AssetDetailsTokenPriceCard(
                 .size(Dimens.x9)
                 .align(Alignment.TopCenter)
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(iconUri).build(),
-                modifier = Modifier.size(size = Dimens.x9),
-                contentDescription = null,
-                imageLoader = LocalContext.current.imageLoader,
-            )
+            TokenIcon(uri = iconUri, size = Dimens.x9)
         }
     }
 }

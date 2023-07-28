@@ -44,11 +44,14 @@ interface CardsHubDao {
     @Query("select * from cardsHub where accountAddress = :address order by sortOrder")
     fun getCardsHub(address: String): Flow<List<CardHubLocal>>
 
-    @Query("select * from cardsHub where accountAddress = :address and visibility = 1 order by sortOrder")
+    @Query("select * from cardsHub where accountAddress = :address order by sortOrder")
     fun getCardsHubVisible(address: String): Flow<List<CardHubLocal>>
 
     @Query("UPDATE cardsHub SET collapsed = :collapsed WHERE cardId = :cardId")
     suspend fun updateCardCollapsed(cardId: String, collapsed: Boolean)
+
+    @Query("UPDATE cardsHub SET visibility = :visible WHERE cardId = :cardId")
+    suspend fun updateCardVisibility(cardId: String, visible: Boolean)
 
     @Insert
     suspend fun insert(cards: List<CardHubLocal>)

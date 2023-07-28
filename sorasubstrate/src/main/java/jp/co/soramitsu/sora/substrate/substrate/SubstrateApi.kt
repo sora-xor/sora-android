@@ -60,6 +60,10 @@ interface SubstrateApi {
         tokenId: String
     ): Pair<BigInteger, BigInteger>?
 
+    suspend fun getPoolTotalIssuances(
+        reservesAccountId: ByteArray,
+    ): BigInteger?
+
     suspend fun getUserPoolsData(
         address: String,
         baseTokenId: String,

@@ -38,16 +38,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -60,20 +65,25 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.testTagAsId
-import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.TutorialScreenState
+import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
+import jp.co.soramitsu.ui_core.component.button.OutlinedButton
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @ExperimentalUnitApi
 @Composable
 internal fun TutorialScreen(
+    state: TutorialScreenState,
     onCreateAccount: () -> Unit,
     onImportAccount: () -> Unit,
+    onGoogleSignin: () -> Unit,
     onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit
 ) {
     Box(
@@ -128,7 +138,9 @@ internal fun TutorialScreen(
                 TutorialButtons(
                     modifier = Modifier.padding(top = Dimens.x3),
                     onCreateAccount = onCreateAccount,
-                    onRecoveryAccount = onImportAccount
+                    onRecoveryAccount = onImportAccount,
+                    onGoogleSignin = onGoogleSignin,
+                    isGoogleSignInLoading = state.isGoogleSigninLoading
                 )
 
                 val annotatedLinkString: AnnotatedString = buildAnnotatedString {
@@ -212,19 +224,53 @@ internal fun TutorialScreen(
 private fun TutorialButtons(
     modifier: Modifier = Modifier,
     onCreateAccount: () -> Unit,
-    onRecoveryAccount: () -> Unit
+    onGoogleSignin: () -> Unit,
+    onRecoveryAccount: () -> Unit,
+    isGoogleSignInLoading: Boolean = false,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
-        FilledButton(
+        LoaderWrapper(
+            modifier = Modifier
+                .padding(top = Dimens.x1)
+                .fillMaxWidth(),
+            loading = isGoogleSignInLoading,
+            loaderSize = Size.Large,
+        ) { modifier, elevation ->
+            Button(
+                modifier = modifier
+                    .testTagAsId("GoogleSignin")
+                    .height(Dimens.x7)
+                    .fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFF3579F7),
+                    contentColor = Color.White,
+                ),
+                shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
+                onClick = onGoogleSignin,
+            ) {
+                Image(
+                    modifier = Modifier.padding(end = Dimens.x1),
+                    painter = painterResource(id = R.drawable.ic_google_white),
+                    contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
+                )
+
+                Text(
+                    style = MaterialTheme.customTypography.buttonM,
+                    text = stringResource(id = R.string.onboarding_continue_with_google)
+                )
+            }
+        }
+
+        OutlinedButton(
             modifier = Modifier
                 .testTagAsId("CreateNewAccount")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
-            text = stringResource(R.string.create_new_account_title).uppercase(),
+            text = stringResource(R.string.create_account_title),
             onClick = onCreateAccount,
             size = Size.Large,
             order = Order.PRIMARY
@@ -235,10 +281,10 @@ private fun TutorialButtons(
                 .testTagAsId("ImportAccount")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
-            text = stringResource(R.string.recovery_title).uppercase(),
+            text = stringResource(R.string.recovery_title),
             onClick = onRecoveryAccount,
             size = Size.Large,
-            order = Order.SECONDARY
+            order = Order.PRIMARY
         )
     }
 }
@@ -248,6 +294,8 @@ private fun TutorialButtons(
 @Composable
 fun PreviewTutorialScreen() {
     TutorialScreen(
+        state = TutorialScreenState(),
+        {},
         {},
         {},
         {}

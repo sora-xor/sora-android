@@ -41,46 +41,31 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
-import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
 
 @AndroidEntryPoint
 class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
 
-    override val viewModel: GetSoraCardViewModel by viewModels()
+    @Inject
+    lateinit var vmf: GetSoraCardViewModel.AssistedGetSoraCardViewModelFactory
+
+    override val viewModel: GetSoraCardViewModel by viewModels {
+        CustomViewModelFactory {
+            vmf.create(
+                shouldStartSignIn = requireArguments().getBoolean(SHOULD_START_SIGN_IN),
+                shouldStartSignUp = requireArguments().getBoolean(SHOULD_START_SIGN_UP)
+            )
+        }
+    }
 
     private val soraCardRegistration = registerForActivityResult(
         SoraCardContract()
-    ) { result ->
-        handleSoraCardResult(result)
-    }
-
-    private var soraCardSignIn = registerForActivityResult(
-        SoraCardSignInContract()
-    ) { result ->
-        handleSoraCardResult(result)
-    }
-
-    private fun handleSoraCardResult(result: SoraCardResult) {
-        when (result) {
-            is SoraCardResult.Failure -> {
-            }
-            is SoraCardResult.Success -> {
-                viewModel.updateSoraCardInfo(
-                    result.accessToken,
-                    result.refreshToken,
-                    result.accessTokenExpirationTime,
-                    result.status.toString(),
-                )
-            }
-            is SoraCardResult.Canceled -> {
-            }
-        }
-    }
+    ) { viewModel.handleSoraCardResult(it) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -88,10 +73,6 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
 
         viewModel.launchSoraCardRegistration.observe { contractData ->
             soraCardRegistration.launch(contractData)
-        }
-
-        viewModel.launchSoraCardSignIn.observe { contractData ->
-            soraCardSignIn.launch(contractData)
         }
     }
 
@@ -108,13 +89,20 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
                 state = viewModel.state.value,
                 viewModel::onSeeBlacklist,
                 viewModel::onEnableCard,
-                viewModel::onGetMoreXor,
-                viewModel::onAlreadyHaveCard,
-                viewModel::onDismissGetMoreXorAlert,
-                viewModel::onBuyCrypto,
-                viewModel::onSwap,
-                viewModel::onEuroIndicatorClick,
             )
+        }
+    }
+
+    companion object {
+        const val SHOULD_START_SIGN_IN = "SHOULD_START_SIGN_IN"
+        const val SHOULD_START_SIGN_UP = "SHOULD_START_SIGN_UP"
+
+        fun createBundle(
+            shouldStartSignIn: Boolean,
+            shouldStartSignUp: Boolean
+        ) = Bundle().apply {
+            putBoolean(SHOULD_START_SIGN_IN, shouldStartSignIn)
+            putBoolean(SHOULD_START_SIGN_UP, shouldStartSignUp)
         }
     }
 }

@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.domain
 
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.nbspace
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -55,7 +56,7 @@ class FiatTest {
     @Test
     fun test001() {
         val f = formatFiatChange(12.2394, nf)
-        assertEquals("+1 223.94 %", f)
+        assertEquals("+1${nbspace}223.94 %", f)
     }
 
     @Test

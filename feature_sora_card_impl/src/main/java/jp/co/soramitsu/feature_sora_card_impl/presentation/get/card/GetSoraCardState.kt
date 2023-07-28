@@ -41,7 +41,6 @@ data class GetSoraCardState(
     val percent: BigDecimal = BigDecimal.ZERO,
     val needInXor: String = "",
     val needInEur: String = "",
-    val getMorXorAlert: Boolean = false,
     val xorRatioAvailable: Boolean = false,
     val soraCardInfo: SoraCardInformation? = null,
     val connection: Boolean = false,

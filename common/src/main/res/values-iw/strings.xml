@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">מחיר טוקן</string>
   <string name="asset_details_your_pools">%s המאגרים שלך</string>
   <string name="asset_to_send">נכס לשליחה</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">הגדרת סיסמה תצפין את גיבוי ה-Google שלך. יהיה עליך להזין אותה בעת שחזור הארנק שלך.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">לאמת</string>
   <string name="block_id">האש בלוק</string>
   <string name="buy_crypto_buy_xor_banner_title">קנה טוקן XOR</string>
@@ -63,6 +66,7 @@
   <string name="common_activity">פעילות</string>
   <string name="common_and">ו</string>
   <string name="common_app_version">גרסת אפליקציה</string>
+  <string name="common_apy">APY</string>
   <string name="common_arab">ערבית</string>
   <string name="common_azerbaijani">אזרבייג\'נית</string>
   <string name="common_back">חזור</string>
@@ -83,11 +87,14 @@
   <string name="common_copied">הועתק ללוח</string>
   <string name="common_create_qr_request">צור בקשת QR</string>
   <string name="common_croatian">קרואטית</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">מחק</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">גלה</string>
   <string name="common_done">בוצע</string>
   <string name="common_dutch">הולנדית</string>
   <string name="common_edit">ערוך</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">אנגלית</string>
   <string name="common_enter_amount">הזן סכום</string>
   <string name="common_error_ambiguous_result">תוצאה דו-משמעית</string>
@@ -219,6 +226,7 @@
   <string name="details_sent_to_pool">נשלח למאגר</string>
   <string name="discover_coming_soon">מפתחי סורה עובדים כעת על תכונה שתציג רשימה מלאה של מאגרים שהם פעילים בפולקסוואפ.\n\nלעת עתה, אם ברצונך ליצור/להוסיף למאגר אנא השתמש בכפתור למטה.</string>
   <string name="discovery_polkaswap_pools">מאגרי פולקסוואפ</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">אין נמענים אחרונים.\n כתובות שנשלחו יוצגו כאן.</string>
   <string name="empty_recent_recipients_2">הנמענים יופיעו כאן</string>
   <string name="enter_backup_password_title">הזן סיסמת גיבוי</string>
@@ -226,6 +234,8 @@
   <string name="enter_password_incorect_title">סיסמה שגויה</string>
   <string name="enter_password_title">הזן סיסמה</string>
   <string name="error_transaction_fee_title">אין מספיק כספים עבור עמלת רשת</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">אם תאבד את הגישה למכשיר הזה, הכספים שלך יאבדו, אלא אם תעשה גיבוי!</string>
   <string name="export_account_details_backup_options">אפשרויות גיבוי</string>
   <string name="export_account_details_show_passphrase">הצג את מילות המפתח</string>
@@ -476,6 +486,7 @@
   <string name="show_more">הצג עוד</string>
   <string name="show_zero_balances">הצג יתרות אפסיות</string>
   <string name="slippage">החלקה</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">כבר יש לי כרטיס</string>
   <string name="sora_card_annual_service_fee">€0 דמי שירות שנתיים</string>
   <string name="sora_card_blacklisted_countires_title">לא נכלל באפליקציה</string>
@@ -483,6 +494,7 @@
   <string name="sora_card_buy_xor_with_eur">קנה XOR עם EUR</string>
   <string name="sora_card_description">קבל חשבון  IBAN אירו וכרטיס דביט מאסטרקארד המחובר לארנק סורה שלך</string>
   <string name="sora_card_free_card_issuance">הנפקת כרטיס חינם</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">או 20 € דמי רישום</string>
   <string name="sora_card_free_card_issuance_conditions_xor">אם אתה מחזיק, נועל או מספק נזילות בשווי של לפחות 100 אירו של XOR בחשבון סורה שלך</string>
   <string name="sora_card_get_more_xor">השג עוד XOR</string>
   <string name="sora_card_log_in_or_sign_up">התחבר או הירשם</string>
@@ -517,6 +529,7 @@
   <string name="tutorial_terms_and_conditions">על ידי יצירת חשבון אתה מסכים עם %%התנאים וההגבלות%% ו- %%מדיניות הפרטיות%%</string>
   <string name="tutorial_terms_and_conditions_3">תנאים והגבלות</string>
   <string name="tutorial_terms_and_conditions_template_1">כשאתה ממשיך אתה מסכים עם ה-</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">עדכון עבור אפליקצית סורה הורד והוא מוכן להתקנה.\n\nחשוב להשתמש בגירסה העדכנית ביותר של האפליקציה.\n\nכדי לעדכן את האפליקציה, נדרשת הפעלה מחדש.</string>
   <string name="update_install_now">האם ברצונך להתקין את העדכון כעת?</string>
   <string name="wallet_balance_locked">נעול</string>

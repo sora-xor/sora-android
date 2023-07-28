@@ -39,7 +39,10 @@
   <string name="asset_details_token_price">Harga token</string>
   <string name="asset_details_your_pools">Kolam %s anda</string>
   <string name="asset_to_send">Aset untuk dihantar</string>
+  <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
+  <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Menetapkan kata laluan akan menyulitkan sandaran Google anda. Anda perlu memasukkannya semasa memulihkan dompet anda.</string>
+  <string name="backup_password_title_2">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.</string>
   <string name="biometric_dialog_title">Mengesahkan</string>
   <string name="block_id">Sekat hash</string>
   <string name="buy_crypto_buy_xor_banner_title">Beli token XOR</string>
@@ -63,6 +66,7 @@
   <string name="common_activity">Aktiviti</string>
   <string name="common_and">dan</string>
   <string name="common_app_version">Versi aplikasi</string>
+  <string name="common_apy">APY</string>
   <string name="common_arab">Arab</string>
   <string name="common_azerbaijani">Azerbaijan</string>
   <string name="common_back">Kembali</string>
@@ -83,11 +87,14 @@
   <string name="common_copied">Disalin ke papan klip</string>
   <string name="common_create_qr_request">Buat permintaan QR</string>
   <string name="common_croatian">Bahasa Croatia</string>
+  <string name="common_currencies">Currencies</string>
   <string name="common_delete">Padam</string>
+  <string name="common_disabled">Disabled</string>
   <string name="common_discover">Menemui</string>
   <string name="common_done">Selesai</string>
   <string name="common_dutch">Belanda</string>
   <string name="common_edit">Sunting</string>
+  <string name="common_enabled">Enabled</string>
   <string name="common_english">Bahasa Inggeris</string>
   <string name="common_enter_amount">Masukkan amaun</string>
   <string name="common_error_ambiguous_result">Keputusan tidak jelas</string>
@@ -216,6 +223,7 @@
   <string name="details_sent_to_pool">Dihantar ke kolam</string>
   <string name="discover_coming_soon">Pembangun SORA sedang mengusahakan ciri yang akan memaparkan senarai penuh kumpulan yang aktif di Polkaswap. \n\n Buat masa ini, jika anda ingin membuat/menambah pada kolam sila gunakan butang di bawah.</string>
   <string name="discovery_polkaswap_pools">Kolam Polkaswap</string>
+  <string name="edit_view">Edit view</string>
   <string name="empty_recent_recipients">Tiada penerima terkini.\nAlamat yang dihantar akan ditunjukkan di sini.</string>
   <string name="empty_recent_recipients_2">Penerima akan muncul di sini</string>
   <string name="enter_backup_password_title">Masukkan kata laluan sandaran</string>
@@ -223,6 +231,8 @@
   <string name="enter_password_incorect_title">Kata laluan tidak betul</string>
   <string name="enter_password_title">Masukkan kata laluan</string>
   <string name="error_transaction_fee_title">Tidak cukup dana untuk bayaran transaksi</string>
+  <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
+  <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">Jika anda kehilangan akses kepada peranti ini, dana anda akan hilang, melainkan anda membuat sandaran!</string>
   <string name="export_account_details_backup_options">Pilihan sandaran</string>
   <string name="export_account_details_show_passphrase">Tunjukkan Frasa Laluan</string>
@@ -458,6 +468,7 @@
   <string name="show_more">Tunjukkan lagi</string>
   <string name="show_zero_balances">Tunjukkan baki sifar</string>
   <string name="slippage">Gelinciran</string>
+  <string name="something_went_wrong">Something went wrong</string>
   <string name="sora_card_already_have_card">Saya sudah mempunyai kad</string>
   <string name="sora_card_annual_service_fee">€ 0 Yuran Perkhidmatan Tahunan</string>
   <string name="sora_card_blacklisted_countires_title">Dikecualikan daripada permohonan</string>
@@ -465,6 +476,7 @@
   <string name="sora_card_buy_xor_with_eur">Beli XOR dengan EUR</string>
   <string name="sora_card_description">Dapatkan akaun Euro IBAN dan Kad Debit Mastercard yang disambungkan ke Dompet SORA anda</string>
   <string name="sora_card_free_card_issuance">Pengeluaran kad percuma</string>
+  <string name="sora_card_free_card_issuance_conditions_euro">atau 20 € yuran permohonan</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Jika anda memegang, mempertaruhkan atau menyediakan kecairan untuk sekurang-kurangnya €100 nilai XOR dalam akaun SORA anda</string>
   <string name="sora_card_get_more_xor">Dapatkan lebih banyak XOR</string>
   <string name="sora_card_log_in_or_sign_up">Log masuk atau Daftar</string>
@@ -499,6 +511,7 @@
   <string name="tutorial_terms_and_conditions">Dengan mencipta akaun yang anda bersetuju dengan %%Terma &amp; Syarat%% dan %%Dasar Privasi%%</string>
   <string name="tutorial_terms_and_conditions_3">Terma &amp; Syarat</string>
   <string name="tutorial_terms_and_conditions_template_1">Dengan meneruskan anda bersetuju dengan</string>
+  <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Kemas kini untuk aplikasi SORA telah dimuat turun dan sedia untuk dipasang.\n\nAdalah penting untuk menggunakan versi terkini aplikasi.\n\nUntuk mengemas kini aplikasi, mulakan semula diperlukan.</string>
   <string name="update_install_now">Adakah anda ingin memasang kemas kini sekarang?</string>
   <string name="wallet_balance_locked">Dikunci</string>

@@ -60,6 +60,9 @@ inline fun <reified T : Parcelable> Bundle.getParcelableKey(key: String): T? {
 fun Bundle.requireString(key: String): String =
     requireNotNull(this.getString(key)) { "Argument with key $key is null" }
 
+fun Bundle.requireBoolean(key: String): Boolean =
+    requireNotNull(this.getBoolean(key)) { "Argument with key $key is null" }
+
 private const val ADDRESSES_KEY = "ADDRESSES"
 var Bundle.addresses: List<String>
     get() = this.getStringArrayList(ADDRESSES_KEY) ?: emptyList()

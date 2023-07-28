@@ -58,6 +58,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -223,6 +224,7 @@ private fun AmountCardIcon(
     ) {
         Box(modifier = Modifier.size(Size.Large)) {
             BleachedButton(
+                modifier = Modifier.testTagAsId("${text}Button"),
                 shape = CircleShape,
                 size = Size.Large,
                 order = Order.TERTIARY,

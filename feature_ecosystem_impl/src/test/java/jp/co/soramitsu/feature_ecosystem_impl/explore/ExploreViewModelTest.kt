@@ -30,42 +30,55 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_impl.presentation.discover
+package jp.co.soramitsu.feature_ecosystem_impl.explore
 
-import android.os.Bundle
-import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.ScrollState
-import androidx.fragment.app.viewModels
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
-import dagger.hilt.android.AndroidEntryPoint
-import jp.co.soramitsu.common.base.SoraBaseFragment
-import jp.co.soramitsu.common.base.theOnlyRoute
-import jp.co.soramitsu.common.domain.BottomBarController
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.verify
+import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
+import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TestRule
 
-@AndroidEntryPoint
-class DiscoverFragment : SoraBaseFragment<DiscoverViewModel>() {
+@ExperimentalCoroutinesApi
+class ExploreViewModelTest {
 
-    override val viewModel: DiscoverViewModel by viewModels()
+    @get:Rule
+    val mockkRule = MockKRule(this)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        (activity as BottomBarController).showBottomBar()
+    @Rule
+    @JvmField
+    val rule: TestRule = InstantTaskExecutorRule()
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
+    @MockK
+    private lateinit var polkaswapRouter: PolkaswapRouter
+
+    @MockK
+    private lateinit var assetsRouter: AssetsRouter
+
+    private lateinit var discoverViewModel: ExploreViewModel
+
+    @Before
+    fun setUp() = runTest {
+        every { assetsRouter.showAssetDetails(any()) } returns Unit
+        discoverViewModel = ExploreViewModel(polkaswapRouter, assetsRouter)
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
-    override fun NavGraphBuilder.content(
-        scrollState: ScrollState,
-        navController: NavHostController
-    ) {
-        composable(
-            route = theOnlyRoute,
-        ) {
-            DiscoverScreen(
-                onAddLiquidityClicked = viewModel::onAddLiquidityClick,
-            )
-        }
+    @Test
+    fun test() = runTest {
+        discoverViewModel.onTokenClicked("0x00")
+        verify { assetsRouter.showAssetDetails("0x00") }
     }
+
 }

@@ -64,10 +64,13 @@ import jp.co.soramitsu.sora.substrate.substrate.faucetTransfer
 import jp.co.soramitsu.sora.substrate.substrate.transfer
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 class AssetsRepositoryImpl @Inject constructor(
@@ -81,6 +84,7 @@ class AssetsRepositoryImpl @Inject constructor(
 ) : AssetsRepository {
 
     private val tokensDeferred = CompletableDeferred<List<Token>>()
+    private val assetsMutex = Mutex()
 
     init {
         coroutineManager.applicationScope.launch {
@@ -88,7 +92,11 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addFakeBalance(keypair: Sr25519Keypair, soraAccount: SoraAccount, assetIds: List<String>) {
+    override suspend fun addFakeBalance(
+        keypair: Sr25519Keypair,
+        soraAccount: SoraAccount,
+        assetIds: List<String>
+    ) {
         if (!BuildUtils.isFlavors(Flavor.SORALUTION)) {
             return
         }
@@ -225,11 +233,13 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun subscribeAsset(address: String, tokenId: String): Flow<Asset> = flow {
+    override fun subscribeAsset(address: String, tokenId: String): Flow<Asset?> = flow {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        val f = db.assetDao().subscribeAsset(address, tokenId, selectedCurrency.code).map { l ->
-            assetLocalToAssetMapper.map(l)
-        }
+        val f = db.assetDao().subscribeAsset(address, tokenId, selectedCurrency.code)
+            .distinctUntilChanged()
+            .map { l ->
+                assetLocalToAssetMapper.mapNullable(l)
+            }
         emitAll(f)
     }
 
@@ -257,11 +267,25 @@ class AssetsRepositoryImpl @Inject constructor(
         emitAll(f)
     }
 
-    override suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean, soraAccount: SoraAccount) {
+    override suspend fun toggleVisibilityOfToken(
+        tokenId: String,
+        visibility: Boolean,
+        soraAccount: SoraAccount
+    ) {
         db.assetDao().toggleVisibilityOfToken(tokenId, visibility, soraAccount.substrateAddress)
     }
 
     override suspend fun tokensList(): List<Token> = tokensDeferred.await()
+
+    override fun subscribeTokensList(): Flow<List<Token>> = flow {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        val tokens = db.assetDao().subscribeTokens(selectedCurrency.code).map { list ->
+            list.map {
+                assetLocalToAssetMapper.map(it)
+            }
+        }
+        emitAll(tokens)
+    }
 
     private suspend fun updateTokens() {
         val tokens: List<TokenInfoDto> = substrateCalls.fetchAssetsList()
@@ -327,7 +351,10 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateAssetPositions(assetPositions: Map<String, Int>, soraAccount: SoraAccount) {
+    override suspend fun updateAssetPositions(
+        assetPositions: Map<String, Int>,
+        soraAccount: SoraAccount
+    ) {
         db.withTransaction {
             assetPositions.entries.forEach {
                 db.assetDao().updateAssetPosition(it.key, it.value, soraAccount.substrateAddress)
@@ -336,24 +363,27 @@ class AssetsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateBalancesVisibleAssets(address: String) {
-        val currency = soraConfigManager.getSelectedCurrency()
-        val assets = db.assetDao().getAssetsVisible(address, currency.code)
-        insertAssetsInternal(address, assets, true)
-    }
-
-    override suspend fun updateWhitelistBalances(address: String, update: Boolean) {
-        withContext(coroutineManager.io) {
+        if (assetsMutex.isLocked) return
+        assetsMutex.withLock {
             tokensDeferred.await()
             val selectedCurrency = soraConfigManager.getSelectedCurrency()
-            if (db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
-                    .all { it.assetLocal == null }
-            ) {
-                checkDefaultAssetData(address)
+            checkDefaultNeed(address, selectedCurrency.code)
+            val assets = db.assetDao().getAssetsVisible(address, selectedCurrency.code)
+            insertAssetsInternal(address, assets, true)
+        }
+    }
+
+    override suspend fun updateWhitelistBalances(address: String) {
+        assetsMutex.withLock {
+            withContext(coroutineManager.io) {
+                tokensDeferred.await()
+                val selectedCurrency = soraConfigManager.getSelectedCurrency()
+                checkDefaultNeed(address, selectedCurrency.code)
+                val assetsLocal =
+                    db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
+                val assetsLocalSorted = assetsLocal.sortedBy { it.token.symbol }
+                insertAssetsInternal(address, assetsLocalSorted, true)
             }
-            val assetsLocal =
-                db.assetDao().getAssetsWhitelist(address, selectedCurrency.code)
-            val assetsLocalSorted = assetsLocal.sortedBy { it.token.symbol }
-            insertAssetsInternal(address, assetsLocalSorted, update)
         }
     }
 
@@ -361,7 +391,7 @@ class AssetsRepositoryImpl @Inject constructor(
         address: String,
         locals: List<AssetTokenWithFiatLocal>,
         updateBalance: Boolean,
-    ): List<AssetLocal> {
+    ) {
         val balance =
             if (updateBalance) fetchBalances(address, locals.map { it.token.id }) else null
         var withAsset = locals.count { it.assetLocal != null }
@@ -389,7 +419,6 @@ class AssetsRepositoryImpl @Inject constructor(
             )
         }
         db.assetDao().insertAssets(updated)
-        return updated
     }
 
     private suspend fun fetchBalances(
@@ -407,6 +436,14 @@ class AssetsRepositoryImpl @Inject constructor(
         )
         (balances as MutableList).add(xorIndex, transferable)
         return balances
+    }
+
+    private suspend fun checkDefaultNeed(address: String, code: String) {
+        if (db.assetDao().getAssetsWhitelist(address, code)
+                .all { it.assetLocal == null }
+        ) {
+            checkDefaultAssetData(address)
+        }
     }
 
     private suspend fun checkDefaultAssetData(address: String) {

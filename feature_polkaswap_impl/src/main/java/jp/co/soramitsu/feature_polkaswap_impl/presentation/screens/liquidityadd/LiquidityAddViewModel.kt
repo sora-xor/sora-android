@@ -43,6 +43,7 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.printFiat
@@ -90,6 +91,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -102,6 +104,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private val poolsInteractor: PoolsInteractor,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
+    private val coroutineManager: CoroutineManager,
     @Assisted("id1") private val token1Id: String,
     @Assisted("id2") private val token2Id: String?,
 ) : BaseViewModel() {
@@ -701,8 +704,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
             return
         }
 
-        liquidityData =
+        liquidityData = withContext(coroutineManager.io) {
             poolsInteractor.getLiquidityData(tokenFrom, tokenTo, pairEnabled, pairPresented)
+        }
         addState = addState.copy(
             pairNotExist = liquidityData.secondReserves.isZero() && liquidityData.firstReserves.isZero(),
         )

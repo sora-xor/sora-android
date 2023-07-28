@@ -36,4 +36,5 @@ data class BackupScreenState(
     val mnemonicWords: List<String> = emptyList(),
     val seedString: String = "",
     val isCreatingFlow: Boolean = false,
+    val isViaGoogleDrive: Boolean = false
 )

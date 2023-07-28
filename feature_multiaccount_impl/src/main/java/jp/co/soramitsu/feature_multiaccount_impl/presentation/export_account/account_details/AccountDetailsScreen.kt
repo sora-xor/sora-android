@@ -46,6 +46,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,6 +57,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.Option
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputText
 import jp.co.soramitsu.ui_core.component.input.InputTextState
@@ -126,9 +129,12 @@ internal fun AccountAddress(
 @Composable
 internal fun BackupOptions(
     isMnemonicAvailable: Boolean,
+    isBackupAvailable: Boolean?,
+    isBackupLoading: Boolean,
     onShowPassphrase: () -> Unit,
     onShowRawSeed: () -> Unit,
     onExportJson: () -> Unit,
+    onBackupGoogle: () -> Unit,
 ) {
     ContentCard {
         Column(
@@ -169,6 +175,30 @@ internal fun BackupOptions(
                 onClick = onExportJson,
                 bottomDivider = false,
             )
+
+            isBackupAvailable?.let {
+                val text = if (isBackupAvailable) {
+                    stringResource(id = R.string.account_options_delete_backup)
+                } else {
+                    stringResource(id = R.string.account_options_backup_google)
+                }
+
+                LoaderWrapper(
+                    modifier = Modifier.fillMaxWidth(),
+                    loading = isBackupLoading,
+                    loaderSize = Size.Small,
+                ) { modifier, elevation ->
+                    Option(
+                        modifier = modifier.testTagAsId("GoogleLogin"),
+                        icon = painterResource(R.drawable.ic_arrow_up_rectangle_24),
+                        label = text,
+                        onClick = onBackupGoogle,
+                        textColor = if (isBackupAvailable) MaterialTheme.customColors.statusError else Color.Unspecified,
+                        enabled = !isBackupLoading,
+                        bottomDivider = false,
+                    )
+                }
+            }
             Spacer(modifier = Modifier.size(Dimens.x1))
             Text(
                 modifier = Modifier.padding(horizontal = Dimens.x3),
@@ -185,8 +215,11 @@ internal fun BackupOptions(
 private fun PreviewBackup() {
     BackupOptions(
         isMnemonicAvailable = true,
+        isBackupAvailable = true,
+        isBackupLoading = false,
         onShowPassphrase = { },
         onShowRawSeed = { },
         onExportJson = { },
+        onBackupGoogle = {}
     )
 }
