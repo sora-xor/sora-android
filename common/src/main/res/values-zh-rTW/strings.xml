@@ -475,7 +475,6 @@
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
   <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
   <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
-  <string name="sora_card_description">Get a Euro IBAN account and Mastercard Debit Card connected to your SORA Wallet</string>
   <string name="sora_card_free_card_issuance">Free card issuance</string>
   <string name="sora_card_free_card_issuance_conditions_euro">or €20 application fee</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
