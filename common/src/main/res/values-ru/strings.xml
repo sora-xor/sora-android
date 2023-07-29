@@ -498,7 +498,6 @@
   <string name="sora_card_blacklisted_countires_title">Исключения из заявки</string>
   <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
   <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>
-  <string name="sora_card_description">Получите счет IBAN в евро и дебетовую карту Mastercard, подключенную к вашему кошельку SORA</string>
   <string name="sora_card_free_card_issuance">Бесплатный выпуск карты</string>
   <string name="sora_card_free_card_issuance_conditions_euro">или плата €20 за подачу заявки</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Если вы держите, ставите или предоставляете ликвидность XOR на сумму не менее 100 евро на своем счете SORA.</string>

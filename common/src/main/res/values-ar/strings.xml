@@ -504,7 +504,6 @@
   <string name="sora_card_blacklisted_countires_title">مستبعد من التطبيق</string>
   <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
   <string name="sora_card_buy_xor_with_eur">شراء XOR باليورو</string>
-  <string name="sora_card_description">احصل على حساب Euro IBAN وبطاقة خصم ماستركارد متصلة بمحفظة SORA الخاصة بك</string>
   <string name="sora_card_free_card_issuance">اصدار بطاقة مجاني</string>
   <string name="sora_card_free_card_issuance_conditions_euro">أو 20 € رسوم الطلب</string>
   <string name="sora_card_free_card_issuance_conditions_xor">إذا كنت تحتفظ أو تشارك أو توفر السيولة لما لا يقل عن 100 يورو من XOR في حساب SORA الخاص بك</string>

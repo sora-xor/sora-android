@@ -474,7 +474,6 @@
   <string name="sora_card_blacklisted_countires_title">Không bao gồm ứng dụng</string>
   <string name="sora_card_blacklisted_countires_warning">Cư dân từ một số quốc gia không thể đăng ký Thẻ SORA tại thời điểm này</string>
   <string name="sora_card_buy_xor_with_eur">Mua XOR bằng EUR</string>
-  <string name="sora_card_description">Nhận tài khoản Euro IBAN và Thẻ ghi nợ Mastercard được kết nối với Ví SORA của bạn</string>
   <string name="sora_card_free_card_issuance">Miễn phí phát hành thẻ</string>
   <string name="sora_card_free_card_issuance_conditions_euro">hoặc phí đăng ký 20 €</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Nếu bạn nắm giữ, stake hoặc cung cấp thanh khoản cho XOR trị giá ít nhất €100 trong tài khoản SORA của mình</string>

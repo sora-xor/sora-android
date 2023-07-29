@@ -480,7 +480,6 @@
   <string name="sora_card_blacklisted_countires_title">Excluidos de solicitud</string>
   <string name="sora_card_blacklisted_countires_warning">Residentes de algunos países no pueden solicitar la Tarjeta SORA en este momento</string>
   <string name="sora_card_buy_xor_with_eur">Comprar XOR con EUR</string>
-  <string name="sora_card_description">Obtenga una cuenta Euro IBAN y una tarjeta de débito Mastercard conectada a su billetera SORA</string>
   <string name="sora_card_free_card_issuance">Emisión de tarjeta gratuita</string>
   <string name="sora_card_free_card_issuance_conditions_euro">o tarifa de inscripción 20 €</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
