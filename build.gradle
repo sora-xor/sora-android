@@ -8,8 +8,10 @@ buildscript {
             hiltCompose            : '1.0.0',
             timber                 : '5.0.1',
             gson                   : '2.10.1',
-            firebaseBom            : '31.1.1',
+            googleFirebaseBom      : '31.1.1',
             googlePlayCore         : '1.10.3',
+            googleApiServicesDrive : 'v3-rev136-1.25.0',
+            googlePlayServiceAuth  : '20.5.0',
             constraint             : '2.2.0-alpha05',
             soraSdk                : '0.3.10',
             iroha                  : '5.1.2',
@@ -127,9 +129,11 @@ buildscript {
 
         gsonDep = "com.google.code.gson:gson:$versions.gson"
 
-        crashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
+        googleCrashlyticsDep = "com.google.firebase:firebase-crashlytics-ktx"
         googlePlayCoreDep = "com.google.android.play:core:$versions.googlePlayCore"
-        firebaseBomDep = "com.google.firebase:firebase-bom:$versions.firebaseBom"
+        googleFirebaseBomDep = "com.google.firebase:firebase-bom:$versions.googleFirebaseBom"
+        googlePlayServiceAuth = "com.google.android.gms:play-services-auth:$versions.googlePlayServiceAuth"
+        googleApiServicesDrive = "com.google.apis:google-api-services-drive:$versions.googleApiServiceDrive"
 
         ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
         spongycastleDep = "com.madgag.spongycastle:core:$versions.spongycastle"

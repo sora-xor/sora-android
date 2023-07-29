@@ -112,7 +112,6 @@ dependencies {
     kapt daggerKaptDep
     implementation hiltWorkManagerDep
     kapt hiltWorkManagerKaptDep
-    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     implementation gsonDep
 
