@@ -474,7 +474,6 @@
   <string name="sora_card_blacklisted_countires_title">適用除外</string>
   <string name="sora_card_blacklisted_countires_warning">現時点では、特定の国の居住者はSORAカードを申請できません</string>
   <string name="sora_card_buy_xor_with_eur">EURでXORを買う</string>
-  <string name="sora_card_description">ユーロIBANアカウントとMastercardデビットカードをSORAウォレットに接続します</string>
   <string name="sora_card_free_card_issuance">無料カード発行</string>
   <string name="sora_card_free_card_issuance_conditions_euro">または20€の申請料</string>
   <string name="sora_card_free_card_issuance_conditions_xor">SORAアカウントに少なくとも€100相当のXORを、保有、ステーキング、または流動性供給している場合</string>

@@ -474,7 +474,6 @@
   <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
   <string name="sora_card_blacklisted_countires_warning">来自某些国家的居民目前无法申请SORA卡。</string>
   <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
-  <string name="sora_card_description">获得一个欧元IBAN账户和万事达卡借记卡连接到您的SORA钱包</string>
   <string name="sora_card_free_card_issuance">免费发卡</string>
   <string name="sora_card_free_card_issuance_conditions_euro">或 20 欧元的申请费</string>
   <string name="sora_card_free_card_issuance_conditions_xor">如果您在SORA账户中持有、质押或提供流动性达到至少价值100欧元的XOR</string>
