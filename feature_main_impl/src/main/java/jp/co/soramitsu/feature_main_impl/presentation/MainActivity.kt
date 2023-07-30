@@ -60,6 +60,7 @@ import java.util.Date
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.BarsColorhandler
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
@@ -152,6 +153,9 @@ class MainActivity :
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
 
     private var timeInBackground: Date? = null
 

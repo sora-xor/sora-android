@@ -59,6 +59,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
@@ -82,6 +83,7 @@ internal fun BackupScreen(
                     .wrapContentHeight()
                     .fillMaxWidth(),
                 text = stringResource(id = R.string.mnemonic_text),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 
@@ -97,6 +99,7 @@ internal fun BackupScreen(
                         end = Dimens.x4
                     ),
                     text = state.seedString,
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphMBold,
                     textAlign = TextAlign.Center
                 )

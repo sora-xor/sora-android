@@ -46,7 +46,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
@@ -58,11 +57,13 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
+import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapSlippageScreen
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -96,7 +97,11 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
     }
 
     @Composable
-    override fun backgroundColorComposable() = colorResource(id = R.color.polkaswap_background_alfa)
+    override fun backgroundColorComposable() = Color(
+        color = requireContext().getColorFromAttrs(
+            R.attr.polkaswapBackground
+        ).data
+    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 
@@ -164,12 +169,14 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                         title = {
                             Text(
                                 text = stringResource(id = R.string.common_supply),
+                                color = MaterialTheme.customColors.fgPrimary,
                                 style = MaterialTheme.customTypography.textSBold
                             )
                         },
                         text = {
                             Text(
                                 text = stringResource(id = R.string.add_liquidity_alert_text),
+                                color = MaterialTheme.customColors.fgPrimary,
                                 style = MaterialTheme.customTypography.paragraphSBold
                             )
                         },

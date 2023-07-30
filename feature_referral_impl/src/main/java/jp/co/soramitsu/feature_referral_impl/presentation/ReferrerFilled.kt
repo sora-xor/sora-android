@@ -71,6 +71,7 @@ fun ReferrerFilled(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x3),
                 text = stringResource(id = R.string.referral_referrer_description),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 
@@ -88,6 +89,7 @@ fun ReferrerFilled(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x3),
                 text = state.referrer.orEmpty(),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textXS,
             )
 

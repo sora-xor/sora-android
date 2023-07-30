@@ -86,6 +86,7 @@ internal fun SwapAmountSquare(
                 text = amount,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.displayS,
             )
             Text(

@@ -120,12 +120,14 @@ private fun MarketScreenItem(
                 title = {
                     Text(
                         text = stringResource(id = market.titleResource),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.textSBold
                     )
                 },
                 text = {
                     Text(
                         text = stringResource(id = market.descriptionResource),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.paragraphSBold
                     )
                 },

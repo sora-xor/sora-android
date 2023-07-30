@@ -94,6 +94,7 @@ fun ImportAccountPasswordScreen(
                         bottom = Dimens.x3
                     ),
                 text = stringResource(id = R.string.enter_password_description),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM
             )
             importAccountScreenState.selectedAccount?.let {
@@ -171,6 +172,7 @@ fun AccountWithIcon(
                 text = accountName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textS,
             )
 

@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
@@ -74,6 +75,7 @@ internal fun DebugMenuScreen(
                 ) {
                     Text(
                         text = item.name,
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.textM,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -83,6 +85,7 @@ internal fun DebugMenuScreen(
                     )
                     Text(
                         text = item.value,
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.textM,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

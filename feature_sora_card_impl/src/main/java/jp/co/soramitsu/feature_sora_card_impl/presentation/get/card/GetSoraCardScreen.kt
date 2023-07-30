@@ -95,6 +95,7 @@ fun GetSoraCardScreen(
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
                     text = stringResource(R.string.sora_card_title),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.headline2,
                 )
 
@@ -103,6 +104,7 @@ fun GetSoraCardScreen(
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
                     text = stringResource(jp.co.soramitsu.oauth.R.string.details_description),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 
@@ -115,6 +117,7 @@ fun GetSoraCardScreen(
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
                     text = stringResource(R.string.sora_card_blacklisted_countires_warning),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphXS.copy(textAlign = TextAlign.Center),
                 )
                 Text(
@@ -152,7 +155,7 @@ private fun AnnualFee() {
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1)
+            .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
     ) {
         Text(
             modifier = Modifier
@@ -162,6 +165,7 @@ private fun AnnualFee() {
                     top = Dimens.x2, bottom = Dimens.x2, start = Dimens.x3, end = Dimens.x3,
                 ),
             text = stringResource(R.string.sora_card_annual_service_fee),
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textL,
         )
     }
@@ -184,6 +188,7 @@ private fun FreeCardIssuance() {
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 text = stringResource(R.string.sora_card_free_card_issuance),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textL,
             )
 

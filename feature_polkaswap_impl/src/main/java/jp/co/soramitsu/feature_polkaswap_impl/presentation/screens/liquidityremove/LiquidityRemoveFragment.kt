@@ -46,7 +46,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
@@ -60,10 +59,12 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityRemoveConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityRemoveScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapSlippageScreen
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @AndroidEntryPoint
@@ -89,7 +90,11 @@ class LiquidityRemoveFragment : SoraBaseFragment<LiquidityRemoveViewModel>() {
     }
 
     @Composable
-    override fun backgroundColorComposable() = colorResource(id = R.color.polkaswap_background_alfa)
+    override fun backgroundColorComposable() = Color(
+        color = requireContext().getColorFromAttrs(
+            R.attr.polkaswapBackground
+        ).data
+    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 
@@ -132,12 +137,14 @@ class LiquidityRemoveFragment : SoraBaseFragment<LiquidityRemoveViewModel>() {
                         title = {
                             Text(
                                 text = stringResource(id = R.string.remove_liquidity_title),
+                                color = MaterialTheme.customColors.fgPrimary,
                                 style = MaterialTheme.customTypography.textSBold
                             )
                         },
                         text = {
                             Text(
                                 text = stringResource(id = R.string.remove_liquidity_info_text),
+                                color = MaterialTheme.customColors.fgPrimary,
                                 style = MaterialTheme.customTypography.paragraphSBold
                             )
                         },

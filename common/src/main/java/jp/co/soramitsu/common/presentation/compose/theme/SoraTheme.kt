@@ -69,7 +69,7 @@ private val LightColors = androidx.compose.material.lightColors(
     onBackground = ThemeColors.Background
 )
 
-private val DarkColors = androidx.compose.material.lightColors(
+private val DarkColors = androidx.compose.material.darkColors(
     primary = ThemeColorsDark.Primary,
     onPrimary = ThemeColorsDark.OnPrimary,
     secondary = ThemeColorsDark.Secondary,
@@ -85,9 +85,8 @@ fun SoraAppTheme(
 ) {
     AppTheme(
         darkTheme = darkTheme,
-        // todo fix
         lightColors = soraLightColors,
-        darkColors = soraLightColors,
+        darkColors = soraDarkColors,
         typography = soraTypography,
         borderRadius = soraBorderRadius,
         content = content

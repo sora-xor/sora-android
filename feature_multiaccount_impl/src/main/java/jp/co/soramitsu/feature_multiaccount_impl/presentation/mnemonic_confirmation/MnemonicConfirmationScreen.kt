@@ -78,6 +78,7 @@ fun MnemonicConfirmationScreen(
                     modifier = Modifier
                         .padding(bottom = Dimens.x2),
                     text = stringResource(id = R.string.mnemonic_confirmation_select_word_number),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 
@@ -85,6 +86,7 @@ fun MnemonicConfirmationScreen(
                     modifier = Modifier
                         .padding(bottom = Dimens.x2),
                     text = mnemonicConfirmationState.currentWordIndex.toString(),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphXSBold.copy(
                         fontSize = 128.sp
                     ),
@@ -94,6 +96,7 @@ fun MnemonicConfirmationScreen(
                     modifier = Modifier
                         .padding(bottom = Dimens.x2),
                     text = stringResource(id = R.string.mnemonic_confirmation_select_word_2),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 

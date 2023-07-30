@@ -38,6 +38,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,6 +62,7 @@ import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
@@ -71,11 +73,15 @@ fun BuyCryptoScreen(
     onAlertCloseClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .background(color = MaterialTheme.customColors.bgPage)
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(color = MaterialTheme.customColors.bgSurface)
+                .fillMaxSize(),
             factory = { context ->
                 WebView(context).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -133,6 +139,7 @@ private fun PaymentWidgetUnavailableAlert(onCloseClick: () -> Unit) {
                 .fillMaxWidth()
                 .padding(top = Dimens.x3),
             style = MaterialTheme.customTypography.headline1.copy(textAlign = TextAlign.Center),
+            color = MaterialTheme.customColors.fgPrimary,
             text = stringResource(id = SoraCardR.string.payment_widget_unavailable_message),
         )
         Text(
@@ -140,6 +147,7 @@ private fun PaymentWidgetUnavailableAlert(onCloseClick: () -> Unit) {
                 .fillMaxWidth()
                 .padding(top = Dimens.x3),
             style = MaterialTheme.customTypography.paragraphM.copy(textAlign = TextAlign.Center),
+            color = MaterialTheme.customColors.fgPrimary,
             text = stringResource(id = SoraCardR.string.payment_widget_unavailable_description),
         )
         FilledButton(

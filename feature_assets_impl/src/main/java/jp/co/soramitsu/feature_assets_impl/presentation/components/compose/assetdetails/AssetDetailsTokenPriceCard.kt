@@ -99,6 +99,7 @@ internal fun AssetDetailsTokenPriceCard(
                 Spacer(modifier = Modifier.height(Dimens.x1))
                 Text(
                     modifier = Modifier.wrapContentSize(),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.headline1,
                     textAlign = TextAlign.Center,
                     text = tokenName,

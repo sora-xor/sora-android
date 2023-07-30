@@ -474,7 +474,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun onRecoveryClicked(navController: NavController, index: Int) {
         _recoveryState.value = when (index) {
-            1 -> {
+            0 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
                 errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
@@ -488,7 +488,7 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
-            2 -> {
+            1 -> {
                 isValidMethod = multiaccountInteractor::isRawSeedValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromRawSeed
                 errorMessageCode = ResponseCode.RAW_SEED_IS_NOT_VALID

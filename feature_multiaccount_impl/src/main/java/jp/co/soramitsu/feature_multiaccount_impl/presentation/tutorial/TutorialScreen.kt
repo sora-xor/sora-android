@@ -126,6 +126,7 @@ internal fun TutorialScreen(
                     text = stringResource(id = R.string.tutorial_many_world_desc),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.customTypography.paragraphS,
+                    color = MaterialTheme.customColors.fgPrimary,
                 )
 
                 TutorialButtons(
@@ -140,6 +141,13 @@ internal fun TutorialScreen(
                     val startingString =
                         stringResource(id = R.string.tutorial_terms_and_conditions_template_1) + "\n"
                     append(startingString)
+                    addStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            textDecoration = TextDecoration.None
+                        ),
+                        start = 0, end = startingString.length
+                    )
 
                     val termsWord = stringResource(id = R.string.tutorial_terms_and_conditions_3)
                     val startIndex = startingString.length
@@ -163,6 +171,13 @@ internal fun TutorialScreen(
 
                     val andWord = " ${stringResource(id = R.string.common_and)} "
                     append(andWord)
+                    addStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            textDecoration = TextDecoration.None
+                        ),
+                        start = endIndex, end = endIndex + andWord.length
+                    )
 
                     val privacyWord = stringResource(id = R.string.tutorial_privacy_policy)
                     val privacyWordStartIndex =

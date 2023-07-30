@@ -43,7 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -59,6 +59,7 @@ import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.compose.components.PolkaswapDisclaimer
+import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapConfirmScreen
@@ -91,7 +92,11 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
     }
 
     @Composable
-    override fun backgroundColorComposable() = colorResource(id = R.color.polkaswap_background_alfa)
+    override fun backgroundColorComposable() = Color(
+        color = requireContext().getColorFromAttrs(
+            R.attr.polkaswapBackground
+        ).data
+    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 

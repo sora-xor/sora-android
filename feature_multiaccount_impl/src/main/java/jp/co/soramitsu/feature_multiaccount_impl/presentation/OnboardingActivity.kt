@@ -158,12 +158,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                     title = {
                         Text(
                             text = stringResource(id = R.string.import_account_not_backed_up),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.textSBold
                         )
                     },
                     text = {
                         Text(
                             text = stringResource(id = R.string.import_account_not_backed_up_alert_description),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.paragraphSBold
                         )
                     },
@@ -184,6 +186,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             onClick = viewModel::skipDialogDismiss
                         ) {
                             Text(
+                                color = MaterialTheme.customColors.fgPrimary,
                                 text = stringResource(id = R.string.common_cancel),
                             )
                         }
@@ -235,7 +238,10 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             }
                         )
 
-                        MaterialDialog(dialogState = dialogState) {
+                        MaterialDialog(
+                            backgroundColor = MaterialTheme.customColors.bgSurface,
+                            dialogState = dialogState
+                        ) {
                             title(text = stringResource(id = R.string.recovery_source_type))
                             listItems(
                                 listOf(

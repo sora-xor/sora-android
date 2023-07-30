@@ -123,6 +123,7 @@ private fun TxHistoryScreen(
 
             Column(
                 modifier = Modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -155,6 +156,7 @@ private fun TxHistoryScreen(
         HistoryState.Loading -> {
             Box(
                 modifier = Modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
@@ -167,6 +169,7 @@ private fun TxHistoryScreen(
         HistoryState.NoData -> {
             Box(
                 modifier = Modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
                     .padding(horizontal = Dimens.x6),
                 contentAlignment = Alignment.Center
@@ -194,6 +197,7 @@ private fun TxHistoryList(
     LazyColumn(
         state = listState,
         modifier = Modifier
+            .background(color = MaterialTheme.customColors.bgSurface)
             .fillMaxSize(),
     ) {
         listItems.forEach { event ->
@@ -226,9 +230,9 @@ private fun EventUiModelItem(
 ) {
     Spacer(
         modifier = Modifier
+            .background(MaterialTheme.customColors.bgSurface)
             .fillMaxWidth()
             .height(Dimens.x1)
-            .background(MaterialTheme.customColors.bgSurface)
     )
     TxHistoryListItem(
         modifier = modifier,

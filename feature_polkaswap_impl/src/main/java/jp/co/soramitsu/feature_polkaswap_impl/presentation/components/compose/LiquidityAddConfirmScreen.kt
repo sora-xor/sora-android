@@ -143,6 +143,7 @@ internal fun LiquidityAddConfirmScreen(
                         .wrapContentHeight(),
                     textAlign = TextAlign.Center,
                     text = state.confirm.text,
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphS,
                 )
                 Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
@@ -240,6 +241,7 @@ internal fun LiquidityAddConfirmScreen(
                             modifier = Modifier.wrapContentSize(),
                             textAlign = TextAlign.Center,
                             text = stringResource(id = if (state.confirm.confirmResult == true) R.string.wallet_transaction_submitted_1 else R.string.wallet_transaction_rejected),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.paragraphSBold,
                         )
                     }

@@ -82,6 +82,7 @@ internal fun XorBalancesDialog(
                     Row {
                         Text(
                             text = stringResource(id = R.string.details_frozen),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.headline2
                         )
                         Icon(
@@ -97,6 +98,7 @@ internal fun XorBalancesDialog(
                     Text(
                         text = state.frozen,
                         textAlign = TextAlign.End,
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.headline2
                     )
                 }
@@ -174,6 +176,7 @@ private fun BalanceItem(title: String, amount: String, amountFiat: String) {
         Text(
             text = amount,
             textAlign = TextAlign.End,
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textM
         )
     }
