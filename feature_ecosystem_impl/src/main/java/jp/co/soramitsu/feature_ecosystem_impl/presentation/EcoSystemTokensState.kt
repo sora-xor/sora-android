@@ -30,42 +30,29 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common_wallet.presentation.compose.components
+package jp.co.soramitsu.feature_ecosystem_impl.presentation
 
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.basicPoolListItemStateEmpty
+import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.assetItemCardStateEmpty
 
-@Composable
-fun SwapSelectTokenScreen(
-    state: SelectSearchAssetState,
-    scrollState: ScrollState,
-    onAssetSelect: (String) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Dimens.x2)
-    ) {
-        ContentCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            innerPadding = PaddingValues(Dimens.x3)
-        ) {
-            SelectSearchAssetView(
-                state = state,
-                scrollState = scrollState,
-                onSelect = onAssetSelect,
-            )
-        }
-    }
-}
+internal data class EcoSystemTokensState(
+    val topTokens: List<Pair<String, AssetItemCardState>>,
+    val filter: String,
+)
+
+internal val initialEcoSystemTokensState = EcoSystemTokensState(
+    topTokens = List(5) { i -> (i + 1).toString() to assetItemCardStateEmpty },
+    filter = "",
+)
+
+internal data class EcoSystemPoolsState(
+    val pools: List<BasicPoolListItemState>,
+    val filter: String,
+)
+
+internal val initialEcoSystemPoolsState = EcoSystemPoolsState(
+    pools = List(5) { i -> basicPoolListItemStateEmpty },
+    filter = "",
+)

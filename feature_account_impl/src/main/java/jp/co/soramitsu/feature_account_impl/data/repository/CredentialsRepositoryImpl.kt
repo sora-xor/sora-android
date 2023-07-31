@@ -238,7 +238,7 @@ class CredentialsRepositoryImpl constructor(
         }
     }
 
-    private fun convertPassphraseToSeed(mnemonic: String): String {
+    override fun convertPassphraseToSeed(mnemonic: String): String {
         val derivationResult = SubstrateSeedFactory.deriveSeed32(MnemonicCreator.fromWords(mnemonic).words, null)
         return derivationResult.seed.toHexString()
     }

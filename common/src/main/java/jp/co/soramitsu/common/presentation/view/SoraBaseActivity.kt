@@ -127,7 +127,8 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
                                 scrollState = scrollState,
                                 backgroundColor = MaterialTheme.customColors.bgPage.copy(alpha = 0f),
                                 tintColor = MaterialTheme.customColors.fgPrimary,
-                                onNavClick = { viewModel.onNavIcon() },
+                                onNavClick = viewModel::onNavIcon,
+                                onActionClick = viewModel::onAction
                             )
                         }
                     ) { padding ->

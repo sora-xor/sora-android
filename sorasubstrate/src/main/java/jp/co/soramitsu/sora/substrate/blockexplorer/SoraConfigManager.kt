@@ -69,7 +69,13 @@ class SoraConfigManager @Inject constructor(
     private suspend fun getCurrencies(): List<SoraCurrency> =
         getConfig()?.currencies ?: listOf(default)
 
-    suspend fun getSelectedCurrency(): SoraCurrency = getCurrencies().find {
+    private var selectedCurrency: SoraCurrency? = null
+
+    suspend fun getSelectedCurrency() = selectedCurrency ?: getSelectedCurrencyInternal().also {
+        selectedCurrency = it
+    }
+
+    private suspend fun getSelectedCurrencyInternal(): SoraCurrency = getCurrencies().find {
         it.code == (
             soraPreferences.getString(SELECTED_CURRENCY).takeIf { pref -> pref.isNotEmpty() }
                 ?: "USD"

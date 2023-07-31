@@ -126,9 +126,12 @@ internal fun AccountAddress(
 @Composable
 internal fun BackupOptions(
     isMnemonicAvailable: Boolean,
+    isBackupAvailable: Boolean?,
+    isBackupLoading: Boolean,
     onShowPassphrase: () -> Unit,
     onShowRawSeed: () -> Unit,
     onExportJson: () -> Unit,
+    onBackupGoogle: () -> Unit,
 ) {
     ContentCard {
         Column(
@@ -169,6 +172,30 @@ internal fun BackupOptions(
                 onClick = onExportJson,
                 bottomDivider = false,
             )
+
+//            isBackupAvailable?.let {
+//                val text = if (isBackupAvailable) {
+//                    stringResource(id = R.string.account_options_delete_backup)
+//                } else {
+//                    stringResource(id = R.string.account_options_backup_google)
+//                }
+//
+//                LoaderWrapper(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    loading = isBackupLoading,
+//                    loaderSize = Size.Small,
+//                ) { modifier, elevation ->
+//                    Option(
+//                        modifier = modifier.testTagAsId("GoogleLogin"),
+//                        icon = painterResource(R.drawable.ic_arrow_up_rectangle_24),
+//                        label = text,
+//                        onClick = onBackupGoogle,
+//                        textColor = if (isBackupAvailable) MaterialTheme.customColors.statusError else Color.Unspecified,
+//                        enabled = !isBackupLoading,
+//                        bottomDivider = false,
+//                    )
+//                }
+//            }
             Spacer(modifier = Modifier.size(Dimens.x1))
             Text(
                 modifier = Modifier.padding(horizontal = Dimens.x3),
@@ -185,8 +212,11 @@ internal fun BackupOptions(
 private fun PreviewBackup() {
     BackupOptions(
         isMnemonicAvailable = true,
+        isBackupAvailable = true,
+        isBackupLoading = false,
         onShowPassphrase = { },
         onShowRawSeed = { },
         onExportJson = { },
+        onBackupGoogle = {}
     )
 }

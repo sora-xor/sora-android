@@ -58,7 +58,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SwapSelectTokenScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddScreen
@@ -118,7 +118,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                 requireNotNull(entry.arguments?.getString(LiquidityAddRoutes.selectTokenParamName))
             val state = viewModel.addState.selectSearchAssetState
             if (state != null) {
-                SwapSelectTokenScreen(
+                SelectSearchTokenScreen(
                     state = state,
                     scrollState = scrollState,
                     onAssetSelect = { id -> onTokenSelected.invoke(id, type) },

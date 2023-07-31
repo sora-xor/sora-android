@@ -127,7 +127,7 @@ class BuyCryptoViewModelTest {
         every { BuildConfigWrapper.getX1EndpointUrl() }.returns("https://some.domain.url")
         every { BuildConfigWrapper.getX1WidgetId() }.returns("somewidgetid")
 
-        viewModel = BuyCryptoViewModel(userRepository, buyCryptoRepository, mainRouter)
+        viewModel = BuyCryptoViewModel(userRepository, buyCryptoRepository, mainRouter, isLaunchedFromSoraCard = false)
     }
 
     @Test

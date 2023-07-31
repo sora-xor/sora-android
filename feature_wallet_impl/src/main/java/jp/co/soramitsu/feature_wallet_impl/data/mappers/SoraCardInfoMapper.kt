@@ -39,11 +39,9 @@ object SoraCardInfoMapper {
 
     fun map(infoLocal: SoraCardInfoLocal): SoraCardInformation {
         return SoraCardInformation(
-            id = infoLocal.id,
             accessToken = infoLocal.accessToken,
             accessTokenExpirationTime = infoLocal.accessTokenExpirationTime,
-            refreshToken = infoLocal.refreshToken,
-            kycStatus = infoLocal.kycStatus
+            kycStatus = infoLocal.kycStatus,
         )
     }
 }

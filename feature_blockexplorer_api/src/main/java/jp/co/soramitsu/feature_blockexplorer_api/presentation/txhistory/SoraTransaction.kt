@@ -57,6 +57,19 @@ sealed class EventUiModel {
             val amountFormatted: String,
         ) : EventTxUiModel(hash, timestamp, status)
 
+        class EventEthTransfer(
+            hash: String,
+            timestamp: Long,
+            status: TransactionStatus,
+            val tokenUri: Uri,
+            val ethTokenUri: Uri,
+            val dateTime: String,
+            val amountFormatted: String,
+            val fiatFormatted: String,
+            val requestHash: String,
+            val sidechainAddress: String,
+        ) : EventTxUiModel(hash, timestamp, status)
+
         class EventTransferInUiModel(
             hash: String,
             val tokenIcon: Uri,

@@ -32,68 +32,74 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.domain
 
+import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.*
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
-import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
+import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.BDDMockito
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.any
 import java.math.BigDecimal
 
-@RunWith(MockitoJUnitRunner::class)
 @ExperimentalCoroutinesApi
 class AssetsInteractorTest {
-    @Mock
+
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
     private lateinit var assetsRepository: AssetsRepository
 
-    @Mock
+    @MockK
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
-    @Mock
+    @MockK
     private lateinit var userRepository: UserRepository
 
-    @Mock
+    @MockK
     private lateinit var credentialsRepository: CredentialsRepository
 
-    @Mock
-    private lateinit var runtimeManager: RuntimeManager
-
-    @Mock
+    @MockK
     private lateinit var builder: TransactionBuilder
 
-    @Mock
+    @MockK
     private lateinit var coroutineManager: CoroutineManager
 
     private lateinit var interactor: AssetsInteractor
 
     private val soraAccount = SoraAccount("address", "name")
-
-    private val irohaData: IrohaData =
-            IrohaData(address = "abcdef", claimSignature = "qweasdzc", publicKey = "publickey")
 
     @Before
     fun setUp() = runTest {
@@ -101,127 +107,125 @@ class AssetsInteractorTest {
         every { "0x112323345".extrinsicHash() } returns "blake2b"
         every { "0x35456472".extrinsicHash() } returns "blake2b"
         mockkObject(OptionsProvider)
-        BDDMockito.given(userRepository.getCurSoraAccount()).willReturn(soraAccount)
+        coEvery { userRepository.getCurSoraAccount() } returns soraAccount
         interactor = AssetsInteractorImpl(
-                assetsRepository = assetsRepository,
-                credentialsRepository = credentialsRepository,
-                coroutineManager = coroutineManager,
-                transactionBuilder = builder,
-                transactionHistoryRepository = transactionHistoryRepository,
-                userRepository = userRepository,
+            assetsRepository = assetsRepository,
+            credentialsRepository = credentialsRepository,
+            coroutineManager = coroutineManager,
+            transactionBuilder = builder,
+            transactionHistoryRepository = transactionHistoryRepository,
+            userRepository = userRepository,
         )
     }
 
     @Test
     fun `get assets`() = runTest {
-        BDDMockito.given(
-                assetsRepository.getAssetsFavorite(
-                        "address",
-                )
-        ).willReturn(assetList())
+        coEvery { assetsRepository.getAssetsFavorite("address") } returns assetList()
         Assert.assertEquals(assetList(), interactor.getVisibleAssets())
     }
 
     @Test
     fun `just transfer`() = runTest {
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
-        BDDMockito.given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
-        BDDMockito.given(
-                assetsRepository.transfer(
-                        kp,
-                        "address",
-                        "to",
-                        TestTokens.xorToken,
-                        BigDecimal.ONE
-                )
-        ).willReturn(
-                Result.success("")
-        )
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.transfer(
+                kp,
+                "address",
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE
+            )
+        } returns Result.success("")
         Assert.assertEquals(
-                Result.success(""),
-                interactor.transfer("to", TestTokens.xorToken, BigDecimal.ONE)
+            Result.success(""),
+            interactor.transfer("to", TestTokens.xorToken, BigDecimal.ONE)
         )
     }
 
     @Test
     fun `calc transaction fee`() = runTest {
-        BDDMockito.given(
-                assetsRepository.calcTransactionFee(
-                        "address",
-                        "to",
-                        TestTokens.xorToken,
-                        BigDecimal.ONE
-                )
-        ).willReturn(BigDecimal.TEN)
+        coEvery {
+            assetsRepository.calcTransactionFee(
+                "address",
+                "to",
+                TestTokens.xorToken,
+                BigDecimal.ONE
+            )
+        } returns BigDecimal.TEN
         Assert.assertEquals(
-                BigDecimal.TEN,
-                interactor.calcTransactionFee("to", TestTokens.xorToken, BigDecimal.ONE)
+            BigDecimal.TEN,
+            interactor.calcTransactionFee("to", TestTokens.xorToken, BigDecimal.ONE)
         )
     }
 
     @Test
-    fun `observe transfer`() = runTest(UnconfinedTestDispatcher()) {
+    fun `observe transfer`() = runTest {
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
-        BDDMockito.given(credentialsRepository.retrieveKeyPair(soraAccount)).willReturn(kp)
-        BDDMockito.given(
-                assetsRepository.observeTransfer(
-                        any(),
-                        BDDMockito.anyString(),
-                        BDDMockito.anyString(),
-                        any(),
-                        any(),
-                        any(),
-                )
-        ).willReturn(
-                ExtrinsicSubmitStatus(true, "txhash", "")
-        )
+        every {
+            builder.buildTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns txTransfer()
+        every { transactionHistoryRepository.saveTransaction(any()) } returns Unit
+        coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp
+        coEvery {
+            assetsRepository.observeTransfer(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        } returns ExtrinsicSubmitStatus(true, "txhash", "")
         Assert.assertEquals(
-                "txhash",
-                interactor.observeTransfer("to", TestTokens.xorToken, BigDecimal.ONE, BigDecimal.ONE)
+            "txhash",
+            interactor.observeTransfer("to", TestTokens.xorToken, BigDecimal.ONE, BigDecimal.ONE)
         )
     }
 
     @Test
     fun `hide assets`() = runTest {
         val assets = listOf("id1", "id2")
-        BDDMockito.given(assetsRepository.hideAssets(assets, soraAccount)).willReturn(Unit)
+        coEvery { assetsRepository.hideAssets(assets, soraAccount) } returns Unit
         Assert.assertEquals(Unit, interactor.tokenFavoriteOff(assets))
     }
 
     @Test
     fun `display assets`() = runTest {
         val assets = listOf("id1", "id2")
-        BDDMockito.given(assetsRepository.displayAssets(assets, soraAccount)).willReturn(Unit)
+        coEvery { assetsRepository.displayAssets(assets, soraAccount) } returns Unit
         Assert.assertEquals(Unit, interactor.tokenFavoriteOn(assets))
     }
 
     @Test
     fun `update assets position`() = runTest {
         val assets = mapOf("id1" to 1, "id2" to 2)
-        BDDMockito.given(assetsRepository.updateAssetPositions(assets, soraAccount)).willReturn(Unit)
+        coEvery { assetsRepository.updateAssetPositions(assets, soraAccount) } returns Unit
         Assert.assertEquals(Unit, interactor.updateAssetPositions(assets))
     }
 
     @Test
     fun `get account id called`() = runTest {
-        Assert.assertEquals(soraAccount.substrateAddress, interactor.getCurSoraAccount().substrateAddress)
+        Assert.assertEquals(
+            soraAccount.substrateAddress,
+            interactor.getCurSoraAccount().substrateAddress
+        )
     }
 
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN no xor token is supplied and balance equals network fee`() =
         runTest {
-            val xorAssetBalance = XorAssetBalance(
-                transferable = BigDecimal(1),
-                frozen = BigDecimal(1),
-                totalBalance = BigDecimal(1),
-                locked = BigDecimal(1),
-                bonded = BigDecimal(1),
-                reserved = BigDecimal(1),
-                redeemable = BigDecimal(1),
-                unbonding = BigDecimal(1)
-            )
-
-            BDDMockito.given(assetsRepository.getXORBalance(any(), any())).willReturn(xorAssetBalance)
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
 
             val result = interactor.isEnoughXorLeftAfterTransaction(
                 primaryToken = oneToken(),
@@ -240,19 +244,7 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is supplied and balance equals network fee`() =
         runTest {
-            val xorAssetBalance = XorAssetBalance(
-                transferable = BigDecimal(1),
-                frozen = BigDecimal(1),
-                totalBalance = BigDecimal(1),
-                locked = BigDecimal(1),
-                bonded = BigDecimal(1),
-                reserved = BigDecimal(1),
-                redeemable = BigDecimal(1),
-                unbonding = BigDecimal(1)
-            )
-
-            BDDMockito.given(assetsRepository.getXORBalance(any(), any()))
-                .willReturn(xorAssetBalance)
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
 
             val xorToken = Token(
                 id = SubstrateOptionsProvider.feeAssetId,
@@ -283,19 +275,7 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is produced and balance equals network fee`() =
         runTest {
-            val xorAssetBalance = XorAssetBalance(
-                transferable = BigDecimal(1),
-                frozen = BigDecimal(1),
-                totalBalance = BigDecimal(1),
-                locked = BigDecimal(1),
-                bonded = BigDecimal(1),
-                reserved = BigDecimal(1),
-                redeemable = BigDecimal(1),
-                unbonding = BigDecimal(1)
-            )
-
-            BDDMockito.given(assetsRepository.getXORBalance(any(), any()))
-                .willReturn(xorAssetBalance)
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
 
             val xorToken = Token(
                 id = SubstrateOptionsProvider.feeAssetId,
@@ -317,39 +297,46 @@ class AssetsInteractorTest {
                 networkFeeInXor = BigDecimal(1)
             )
 
-            Assert.assertEquals(
-                true,
-                result
-            )
+            Assert.assertEquals(true, result)
         }
 
-    private fun accountList() = listOf(
-            "use","contact1","contact2",
+    private fun txTransfer() = Transaction.Transfer(
+        base = TransactionBase(
+            txHash = "",
+            blockHash = "",
+            fee = BigDecimal.ZERO,
+            status = TransactionStatus.COMMITTED,
+            timestamp = 123123,
+        ),
+        amount = BigDecimal.ZERO,
+        peer = "",
+        transferType = TransactionTransferType.OUTGOING,
+        token = TestTokens.xorToken,
     )
 
     private fun assetList() = listOf(
-            Asset(oneToken(), true, 1, assetBalance(), true),
+        Asset(oneToken(), true, 1, assetBalance(), true),
     )
 
     private fun oneToken() = Token(
-            "token_id",
-            "token name",
-            "token symbol",
-            18,
-            true,
-            null,
-            null,
-            null,
-            null,
+        "token_id",
+        "token name",
+        "token symbol",
+        18,
+        true,
+        null,
+        null,
+        null,
+        null,
     )
 
     private fun assetBalance() = AssetBalance(
-            BigDecimal.ONE,
-            BigDecimal.ONE,
-            BigDecimal.ONE,
-            BigDecimal.ONE,
-            BigDecimal.ONE,
-            BigDecimal.ONE,
-            BigDecimal.ONE
+        BigDecimal.ONE,
+        BigDecimal.ONE,
+        BigDecimal.ONE,
+        BigDecimal.ONE,
+        BigDecimal.ONE,
+        BigDecimal.ONE,
+        BigDecimal.ONE
     )
 }

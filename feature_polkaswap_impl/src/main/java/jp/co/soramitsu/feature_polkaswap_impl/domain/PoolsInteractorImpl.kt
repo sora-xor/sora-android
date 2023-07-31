@@ -40,8 +40,9 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.calculateAddLiquidityAmount
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas.estimateAddingShareOfPool
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
@@ -51,7 +52,9 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
@@ -68,6 +71,8 @@ class PoolsInteractorImpl(
     private val userRepository: UserRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val polkaswapRepository: PolkaswapRepository,
+    private val polkaswapSubscriptionRepository: PolkaswapSubscriptionRepository,
+    private val polkaswapExtrinsicRepository: PolkaswapExtrinsicRepository,
     private val assetsRepository: AssetsRepository,
     private val transactionBuilder: TransactionBuilder,
 ) : PolkaswapInteractorImpl(polkaswapRepository), PoolsInteractor {
@@ -99,7 +104,7 @@ class PoolsInteractorImpl(
     ): BigDecimal {
         return removeLiquidityNetworkFee ?: (
             (
-                polkaswapRepository.calcRemoveLiquidityNetworkFee(
+                polkaswapExtrinsicRepository.calcRemoveLiquidityNetworkFee(
                     tokenId1,
                     tokenId2,
                     userRepository.getCurSoraAccount().substrateAddress,
@@ -120,7 +125,7 @@ class PoolsInteractorImpl(
         slippageTolerance: Double
     ): BigDecimal {
         val user = userRepository.getCurSoraAccount().substrateAddress
-        val result = polkaswapRepository.calcAddLiquidityNetworkFee(
+        val result = polkaswapExtrinsicRepository.calcAddLiquidityNetworkFee(
             user,
             tokenFrom,
             tokenTo,
@@ -180,10 +185,10 @@ class PoolsInteractorImpl(
     }
 
     override fun subscribePoolsChangesOfAccount(address: String): Flow<String> {
-        return polkaswapRepository.subscribeToPoolsAssets(address)
+        return polkaswapSubscriptionRepository.subscribeToPoolsAssets(address)
             .debounce(300)
             .flatMapLatest {
-                polkaswapRepository.subscribeToPoolsData(address)
+                polkaswapSubscriptionRepository.subscribeToPoolsData(address)
             }
     }
 
@@ -270,7 +275,7 @@ class PoolsInteractorImpl(
             slippageTolerance
         )
 
-        val status = polkaswapRepository.observeAddLiquidity(
+        val status = polkaswapExtrinsicRepository.observeAddLiquidity(
             soraAccount.substrateAddress,
             keypair,
             tokenFrom,
@@ -302,25 +307,28 @@ class PoolsInteractorImpl(
 
     override suspend fun updatePools() {
         val address = userRepository.getCurSoraAccount().substrateAddress
-        return polkaswapRepository.updateAccountPools(address)
+        return polkaswapSubscriptionRepository.updateAccountPools(address)
     }
 
-    override fun subscribePoolsCache(): Flow<List<PoolData>> =
+    override fun subscribePoolsCacheOfCurAccount(): Flow<List<CommonUserPoolData>> =
         userRepository.flowCurSoraAccount().flatMapLatest {
-            polkaswapRepository.subscribePoolFlow(it.substrateAddress)
+            polkaswapRepository.subscribePools(it.substrateAddress)
         }
 
-    override suspend fun getPoolsCache(): List<PoolData> {
-        return polkaswapRepository.getPoolsCache(userRepository.getCurSoraAccount().substrateAddress)
+    override suspend fun getPoolsCacheOfCurAccount(): List<CommonUserPoolData> {
+        return polkaswapRepository.getPoolsCacheOfAccount(userRepository.getCurSoraAccount().substrateAddress)
     }
 
-    override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<PoolData>> {
-        return polkaswapRepository.subscribePoolFlow(account.substrateAddress)
+    override fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<CommonUserPoolData>> {
+        return polkaswapRepository.subscribePools(account.substrateAddress)
     }
 
-    override fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<PoolData?> {
+    override fun subscribePoolCacheOfCurAccount(
+        tokenFromId: String,
+        tokenToId: String,
+    ): Flow<CommonPoolData?> {
         return userRepository.flowCurSoraAccount().flatMapLatest {
-            polkaswapRepository.getPoolData(it.substrateAddress, tokenFromId, tokenToId)
+            polkaswapRepository.subscribePoolOfAccount(it.substrateAddress, tokenFromId, tokenToId)
         }
     }
 
@@ -339,7 +347,7 @@ class PoolsInteractorImpl(
     override fun isPairEnabled(inputAssetId: String, outputAssetId: String): Flow<Boolean> = flow {
         val address = userRepository.getCurSoraAccount().substrateAddress
         emitAll(
-            polkaswapRepository.isPairEnabled(
+            polkaswapSubscriptionRepository.isPairEnabled(
                 inputAssetId,
                 outputAssetId,
                 address
@@ -352,7 +360,13 @@ class PoolsInteractorImpl(
         tokenId: String
     ): Flow<Boolean> = flow {
         val address = userRepository.getCurSoraAccount().substrateAddress
-        emitAll(polkaswapRepository.isPairPresentedInNetwork(baseTokenId, tokenId, address))
+        emitAll(
+            polkaswapSubscriptionRepository.isPairPresentedInNetwork(
+                baseTokenId,
+                tokenId,
+                address
+            )
+        )
     }
 
     override suspend fun getLiquidityData(
@@ -361,8 +375,7 @@ class PoolsInteractorImpl(
         enabled: Boolean,
         presented: Boolean
     ): LiquidityData {
-        return polkaswapRepository.getRemotePoolReserves(
-            userRepository.getCurSoraAccount().substrateAddress,
+        return polkaswapSubscriptionRepository.getRemotePoolReserves(
             tokenFrom,
             tokenTo,
             enabled,
@@ -380,7 +393,7 @@ class PoolsInteractorImpl(
     ): String {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val status = polkaswapRepository.observeRemoveLiquidity(
+        val status = polkaswapExtrinsicRepository.observeRemoveLiquidity(
             soraAccount.substrateAddress,
             keypair,
             token1,

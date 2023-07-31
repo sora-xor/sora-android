@@ -38,6 +38,7 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
@@ -61,6 +62,7 @@ import jp.co.soramitsu.test_data.PolkaswapTestData.XSTXAU_ASSET
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
@@ -113,6 +115,9 @@ class AddLiquidityViewModelTest {
     private lateinit var assetsRouter: AssetsRouter
 
     @Mock
+    private lateinit var coroutineManager: CoroutineManager
+
+    @Mock
     private lateinit var router: WalletRouter
 
     private val mockedUri = Mockito.mock(Uri::class.java)
@@ -127,19 +132,21 @@ class AddLiquidityViewModelTest {
         firstTokenId: String? = null,
     ) {
         viewModel = LiquidityAddViewModel(
-                assetsInteractor,
-                assetsRouter,
-                router,
-                mainRouter,
-                walletInteractor,
-                poolsInteractor,
-                NumbersFormatter(),
-                resourceManager,
-                firstTokenId ?: TestTokens.xorToken.id,
-                secondTokenId,
+            assetsInteractor,
+            assetsRouter,
+            router,
+            mainRouter,
+            walletInteractor,
+            poolsInteractor,
+            NumbersFormatter(),
+            resourceManager,
+            coroutineManager,
+            firstTokenId ?: TestTokens.xorToken.id,
+            secondTokenId,
         )
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
         mockkObject(FirebaseWrapper)
@@ -184,7 +191,8 @@ class AddLiquidityViewModelTest {
                     TestTokens.xorToken.id,
                     TestTokens.xorToken.symbol
                 ),
-                PoolDex(1,
+                PoolDex(
+                    1,
                     TestTokens.xstusdToken.id,
                     TestTokens.xstusdToken.symbol,
                 )
@@ -203,6 +211,7 @@ class AddLiquidityViewModelTest {
             )
         )
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
+        given(coroutineManager.io).willReturn(this.coroutineContext[CoroutineDispatcher])
 
         given(resourceManager.getString(R.string.common_supply)).willReturn("Supply")
         given(resourceManager.getString(R.string.common_confirm)).willReturn("Confirm")

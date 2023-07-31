@@ -136,7 +136,7 @@ class UserRepositoryTest {
         every { db.soraCardDao() } returns soraCardDao
         coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
             accountAddress,
-            accountName
+            accountName,
         )
         every { coroutineManager.applicationScope } returns this
         userRepository = UserRepositoryImpl(
@@ -180,7 +180,7 @@ class UserRepositoryTest {
         coEvery { userDatasource.setCurAccountAddress(soraAccount.substrateAddress) } returns Unit
         coEvery { accountDao.getAccount(soraAccount.substrateAddress) } returns SoraAccountLocal(
             soraAccount.substrateAddress,
-            soraAccount.accountName
+            soraAccount.accountName,
         )
 
         userRepository.setCurSoraAccount(soraAccount)
@@ -195,7 +195,7 @@ class UserRepositoryTest {
                 listOf(
                     SoraAccountLocal(
                         "accountAddress",
-                        "accountName"
+                        "accountName",
                     )
                 )
             )
@@ -220,7 +220,7 @@ class UserRepositoryTest {
         coEvery { accountDao.getAccounts() } returns listOf(
             SoraAccountLocal(
                 "accountAddress",
-                "accountName"
+                "accountName",
             )
         )
         val accounts = listOf(SoraAccount("accountAddress", "accountName"))
@@ -241,7 +241,7 @@ class UserRepositoryTest {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
                     "accountAddress",
-                    "accountName"
+                    "accountName",
                 )
             )
         } returns Unit
@@ -260,7 +260,7 @@ class UserRepositoryTest {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
                     soraAccount.substrateAddress,
-                    soraAccount.accountName
+                    soraAccount.accountName,
                 )
             )
         }
@@ -272,7 +272,7 @@ class UserRepositoryTest {
             accountDao.insertSoraAccount(
                 SoraAccountLocal(
                     "accountAddress",
-                    "accountName"
+                    "accountName",
                 )
             )
         } returns Unit

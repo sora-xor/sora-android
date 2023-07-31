@@ -43,7 +43,7 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
-import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
@@ -79,9 +79,7 @@ class FullAssetSettingsViewModel @Inject constructor(
                     }
                     .map { asset ->
                         AssetSettingsState(
-                            id = asset.token.id,
-                            tokenIcon = asset.token.iconUri(),
-                            tokenName = asset.token.name,
+                            token = asset.token,
                             symbol = asset.token.symbol,
                             assetAmount = asset.token.printBalance(
                                 asset.balance.transferable,
@@ -90,12 +88,11 @@ class FullAssetSettingsViewModel @Inject constructor(
                             ),
                             favorite = asset.favorite,
                             visible = asset.visibility,
-                            hideAllowed = asset.token.isHidable,
                             fiat = asset.fiat,
                         )
                     }
             )
-            positions.addAll(curAssetList.map { it.id })
+            positions.addAll(curAssetList.map { it.token.id })
             filterAndUpdateAssetsList()
         }
     }
@@ -108,9 +105,7 @@ class FullAssetSettingsViewModel @Inject constructor(
             buildList {
                 addAll(
                     curAssetList.filter {
-                        it.tokenName.lowercase().contains(filter) ||
-                            it.symbol.lowercase().contains(filter) ||
-                            it.id.lowercase().contains(filter)
+                        it.token.isMatchFilter(filter)
                     }
                 )
             }
@@ -129,34 +124,34 @@ class FullAssetSettingsViewModel @Inject constructor(
 
     fun onFavoriteClick(asset: AssetSettingsState) {
         val checked = asset.favorite.not()
-        val position = curAssetList.indexOfFirst { it.id == asset.id }
+        val position = curAssetList.indexOfFirst { it.token.id == asset.token.id }
         if (position < 0) return
         curAssetList[position] = curAssetList[position].copy(favorite = checked)
         filterAndUpdateAssetsList()
-        val index = tokensToMove.indexOfFirst { it.first == asset.id }
+        val index = tokensToMove.indexOfFirst { it.first == asset.token.id }
         if (index >= 0) {
             tokensToMove.removeAt(index)
         } else {
-            if (!AssetHolder.isKnownAsset(asset.id)) {
-                tokensToMove.add(asset.id to checked)
+            if (!AssetHolder.isKnownAsset(asset.token.id)) {
+                tokensToMove.add(asset.token.id to checked)
             }
         }
         viewModelScope.launch {
             if (checked) {
-                assetsInteractor.tokenFavoriteOn(listOf(asset.id))
+                assetsInteractor.tokenFavoriteOn(listOf(asset.token.id))
             } else {
-                assetsInteractor.tokenFavoriteOff(listOf(asset.id))
+                assetsInteractor.tokenFavoriteOff(listOf(asset.token.id))
             }
         }
     }
 
     fun assetPositionChanged(from: Int, to: Int): Boolean {
-        if (!curAssetList[from].hideAllowed ||
-            !curAssetList[to].hideAllowed ||
-            AssetHolder.isKnownAsset(curAssetList[from].id) ||
-            AssetHolder.isKnownAsset(curAssetList[to].id)
+        if (!curAssetList[from].token.isHidable ||
+            !curAssetList[to].token.isHidable ||
+            AssetHolder.isKnownAsset(curAssetList[from].token.id) ||
+            AssetHolder.isKnownAsset(curAssetList[to].token.id)
         ) return false
-        val index = tokensToMove.indexOfFirst { it.first == curAssetList[from].id }
+        val index = tokensToMove.indexOfFirst { it.first == curAssetList[from].token.id }
         if (index >= 0) {
             tokensToMove.removeAt(index)
         }
@@ -169,12 +164,12 @@ class FullAssetSettingsViewModel @Inject constructor(
     }
 
     fun onVisibilityClick(asset: AssetSettingsState) {
-        val position = curAssetList.indexOfFirst { it.id == asset.id }
+        val position = curAssetList.indexOfFirst { it.token.id == asset.token.id }
         if (position < 0) return
         viewModelScope.launch {
             tryCatch {
                 val visibility = asset.visible.not()
-                assetsInteractor.toggleVisibilityOfToken(asset.id, visibility)
+                assetsInteractor.toggleVisibilityOfToken(asset.token.id, visibility)
                 curAssetList[position] = curAssetList[position].copy(visible = visibility)
                 filterAndUpdateAssetsList()
             }
@@ -183,19 +178,19 @@ class FullAssetSettingsViewModel @Inject constructor(
 
     fun onCloseClick() {
         val unknownVisibleCount =
-            curAssetList.count { it.favorite && !AssetHolder.isKnownAsset(it.id) }
+            curAssetList.count { it.favorite && !AssetHolder.isKnownAsset(it.token.id) }
         val position = AssetHolder.knownCount() + unknownVisibleCount
         val lastUnknownVisibleIndex =
-            curAssetList.indexOfLast { it.favorite && !AssetHolder.isKnownAsset(it.id) }
+            curAssetList.indexOfLast { it.favorite && !AssetHolder.isKnownAsset(it.token.id) }
         val offTokensId = tokensToMove.filter { !it.second }.map { pair ->
-            curAssetList.indexOfFirst { it.id == pair.first }
+            curAssetList.indexOfFirst { it.token.id == pair.first }
         }.filter { it in 0 until lastUnknownVisibleIndex }
         moveTokens(offTokensId.sortedDescending(), position)
         val firstUnknownInvisibleIndex =
-            curAssetList.indexOfFirst { !it.favorite && !AssetHolder.isKnownAsset(it.id) }
+            curAssetList.indexOfFirst { !it.favorite && !AssetHolder.isKnownAsset(it.token.id) }
         if (firstUnknownInvisibleIndex >= 0) {
             val onTokensId = tokensToMove.filter { it.second }.map { pair ->
-                curAssetList.indexOfFirst { it.id == pair.first }
+                curAssetList.indexOfFirst { it.token.id == pair.first }
             }.filter { it >= 0 && it > firstUnknownInvisibleIndex }
             moveTokens(onTokensId.sortedDescending(), firstUnknownInvisibleIndex)
         }

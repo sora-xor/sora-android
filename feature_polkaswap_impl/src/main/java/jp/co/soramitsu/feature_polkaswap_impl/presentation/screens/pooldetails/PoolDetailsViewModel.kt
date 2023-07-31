@@ -95,7 +95,7 @@ class PoolDetailsViewModel @AssistedInject constructor(
             ),
         )
         viewModelScope.launch {
-            poolsInteractor.subscribePoolCache(token1Id, token2Id)
+            poolsInteractor.subscribePoolCacheOfCurAccount(token1Id, token2Id)
                 .catch { onError(it) }
                 .collectLatest { data ->
                     if (data == null) {
@@ -104,29 +104,34 @@ class PoolDetailsViewModel @AssistedInject constructor(
                             removeEnabled = false,
                         )
                     } else {
+                        val userData = data.user
                         val pools = demeterFarmingInteractor.getFarmedPools()?.filter { pool ->
                             pool.tokenBase.id == token1Id && pool.tokenTarget.id == token2Id
-                        }?.map {
+                        }?.map { farming ->
                             PoolDetailsDemeterState(
-                                rewardsUri = it.tokenReward.iconUri(),
-                                rewardsTokenSymbol = it.tokenReward.symbol,
-                                percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
-                                    it.amount,
-                                    data.poolProvidersBalance,
-                                ).toFloat(),
+                                rewardsUri = farming.tokenReward.iconUri(),
+                                rewardsTokenSymbol = farming.tokenReward.symbol,
+                                percent = if (userData != null) {
+                                    PolkaswapFormulas.calculateShareOfPoolFromAmount(
+                                        farming.amount,
+                                        userData.poolProvidersBalance,
+                                    ).toFloat()
+                                } else {
+                                    0.0f
+                                },
                             )
                         }
                         val pools100 = pools?.any {
                             it.percent == 100.0f
                         }
                         detailsState = PoolDetailsState(
-                            token1Icon = data.baseToken.iconUri(),
-                            token2Icon = data.token.iconUri(),
+                            token1Icon = data.basic.baseToken.iconUri(),
+                            token2Icon = data.basic.targetToken.iconUri(),
                             rewardsUri = rewardToken().iconUri(),
                             rewardsTokenSymbol = rewardToken().symbol,
-                            symbol1 = data.baseToken.symbol,
-                            symbol2 = data.token.symbol,
-                            apy = data.strategicBonusApy?.let { apy ->
+                            symbol1 = data.basic.baseToken.symbol,
+                            symbol2 = data.basic.targetToken.symbol,
+                            apy = data.basic.sbapy?.let { apy ->
                                 "%s%%".format(
                                     numbersFormatter.format(
                                         apy,
@@ -134,24 +139,27 @@ class PoolDetailsViewModel @AssistedInject constructor(
                                     )
                                 )
                             } ?: "",
-                            pooled1 = data.baseToken.printBalance(
-                                data.basePooled,
-                                numbersFormatter,
-                                AssetHolder.ROUNDING
-                            ),
-                            pooled2 = data.token.printBalance(
-                                data.secondPooled,
-                                numbersFormatter,
-                                AssetHolder.ROUNDING
-                            ),
-                            addEnabled = true,
-                            removeEnabled = (pools100 == null) || (pools100 == false),
-                            userPoolSharePercent = "%s%%".format(
-                                numbersFormatter.format(
-                                    data.poolShare,
-                                    2,
+                            pooled1 = userData?.basePooled?.let {
+                                data.basic.baseToken.printBalance(
+                                    it,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
                                 )
-                            ),
+                            },
+                            pooled2 = userData?.targetPooled?.let {
+                                data.basic.targetToken.printBalance(
+                                    it,
+                                    numbersFormatter,
+                                    AssetHolder.ROUNDING,
+                                )
+                            },
+                            addEnabled = true,
+                            removeEnabled = (userData != null) && ((pools100 == null) || (pools100 == false)),
+                            userPoolSharePercent = userData?.poolShare?.let {
+                                "%s%%".format(
+                                    numbersFormatter.format(it, 2, true)
+                                )
+                            },
                             demeterPools = pools,
                             demeter100Percent = pools100 == true,
                         )

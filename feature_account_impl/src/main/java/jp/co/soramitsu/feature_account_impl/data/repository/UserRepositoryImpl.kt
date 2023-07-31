@@ -287,6 +287,10 @@ class UserRepositoryImpl(
         userDatasource.resetTimerStartedTimestamp()
     }
 
+    override suspend fun accountExists(address: String): Boolean {
+        return db.accountDao().getAccount(address) != null
+    }
+
     override suspend fun resetTriesUsed() {
         userDatasource.resetPinTriesUsed()
     }

@@ -65,7 +65,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 internal fun BackupScreen(
     state: BackupScreenState,
     onButtonPressed: () -> Unit,
-    onSkipButtonPressed: (() -> Unit)? = null,
+    onBackupWithGoogleButtonPressed: (() -> Unit)? = null,
 ) {
     ContentCard(
         modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1),
@@ -113,17 +113,43 @@ internal fun BackupScreen(
                     size = Size.Large,
                     onClick = onButtonPressed,
                 )
-
-                TonalButton(
-                    modifier = Modifier
-                        .testTagAsId("Skip")
-                        .fillMaxWidth()
-                        .padding(top = Dimens.x1),
-                    text = stringResource(id = R.string.common_skip),
-                    order = Order.PRIMARY,
-                    size = Size.Large,
-                    onClick = { onSkipButtonPressed?.invoke() },
-                )
+//
+//                onBackupWithGoogleButtonPressed?.let {
+//                    Button(
+//                        modifier = Modifier
+//                            .padding(top = Dimens.x1)
+//                            .testTagAsId("GoogleBackup")
+//                            .fillMaxWidth()
+//                            .heightIn(Dimens.x7),
+//                        border = BorderStroke(
+//                            width = 1.dp,
+//                            color = Color(0xFF3579F7)
+//                        ),
+//                        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            backgroundColor = MaterialTheme.customColors.bgPage,
+//                            contentColor = MaterialTheme.customColors.accentPrimary,
+//                            disabledBackgroundColor = MaterialTheme.customColors.bgPage,
+//                            disabledContentColor = MaterialTheme.customColors.fgPrimary.withOpacity(
+//                                MaterialTheme.opacity.actionFgDisabled
+//                            )
+//                        ),
+//                        shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
+//                        onClick = it,
+//                        contentPadding = PaddingValues(0.dp),
+//                    ) {
+//                        Image(
+//                            modifier = Modifier.padding(end = Dimens.x1),
+//                            painter = painterResource(id = R.drawable.ic_google_white),
+//                            contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
+//                        )
+//
+//                        Text(
+//                            style = MaterialTheme.customTypography.buttonM,
+//                            text = stringResource(id = R.string.account_options_backup_google)
+//                        )
+//                    }
+//                }
             } else {
                 TonalButton(
                     modifier = Modifier
@@ -170,7 +196,7 @@ private fun BackupMnemonicView(words: List<String>) {
     }
 }
 
-@Preview
+@Preview(locale = "ru")
 @Composable
 private fun PreviewBackup() {
     Column(
@@ -178,19 +204,17 @@ private fun PreviewBackup() {
     ) {
         BackupScreen(
             state = BackupScreenState(
-                mnemonicWords = List(12) { p -> "abcde n ${p + 1}" }
+                mnemonicWords = List(12) { p -> "abcde" }
             ),
             onButtonPressed = {},
-            onSkipButtonPressed = {}
         )
         Spacer(modifier = Modifier.size(10.dp))
         BackupScreen(
             state = BackupScreenState(
                 isCreatingFlow = true,
-                mnemonicWords = List(15) { p -> "zxcvb n ${p + 1}" },
+                mnemonicWords = List(15) { p -> "zxcvb" },
             ),
             onButtonPressed = {},
-            onSkipButtonPressed = {}
         )
     }
 }

@@ -40,7 +40,7 @@ interface AssetsRouter {
 
     fun showContacts(tokenId: String)
 
-    fun showBuyCrypto()
+    fun showBuyCrypto(isLaunchedFromSoraCard: Boolean = false)
 
     fun showFullAssetsSettings()
 

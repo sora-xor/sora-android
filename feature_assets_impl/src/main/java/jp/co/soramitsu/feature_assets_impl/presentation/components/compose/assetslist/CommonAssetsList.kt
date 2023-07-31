@@ -50,10 +50,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
+import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FullAssetListState
-import jp.co.soramitsu.ui_core.component.asset.Asset
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -65,14 +64,10 @@ fun ColumnScope.CommonAssetsList(
     onAssetClick: (String) -> Unit,
 ) {
     state.topList.forEachIndexed { index, assetState ->
-        Asset(
-            icon = assetState.tokenIcon,
-            name = assetState.tokenName,
-            balance = assetState.assetAmount,
-            symbol = "",
-            fiat = assetState.assetFiatAmount,
-            change = assetState.fiatChange,
-            onClick = { onAssetClick.invoke(assetState.tokenId) }
+        AssetItem(
+            assetState = assetState,
+            testTag = "",
+            onClick = onAssetClick,
         )
         if (index < state.topList.lastIndex) {
             Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
@@ -98,14 +93,10 @@ fun ColumnScope.CommonAssetsList(
                     .wrapContentHeight()
             ) {
                 state.bottomList.forEachIndexed { index, assetState ->
-                    Asset(
-                        icon = assetState.tokenIcon,
-                        name = assetState.tokenName,
-                        balance = assetState.assetAmount,
-                        symbol = "",
-                        fiat = assetState.assetFiatAmount,
-                        change = assetState.fiatChange,
-                        onClick = { onAssetClick.invoke(assetState.tokenId) }
+                    AssetItem(
+                        assetState = assetState,
+                        testTag = "",
+                        onClick = onAssetClick,
                     )
                     if (index < state.bottomList.lastIndex) {
                         Divider(
@@ -131,64 +122,8 @@ private fun PreviewCommonAssetsList() {
             onAssetClick = {},
             state = FullAssetListState(
                 searchMode = false,
-                topList = listOf(
-                    AssetItemCardState(
-                        tokenName = "qwe",
-                        tokenId = "id 01",
-                        tokenIcon = DEFAULT_ICON_URI,
-                        assetAmount = "13.3",
-                        tokenSymbol = "XOR",
-                        assetFiatAmount = "$45.9",
-                        fiatChange = "+34%"
-                    ),
-                    AssetItemCardState(
-                        tokenName = "qwe",
-                        tokenId = "id 02",
-                        tokenIcon = DEFAULT_ICON_URI,
-                        assetAmount = "13.3",
-                        tokenSymbol = "XOR",
-                        assetFiatAmount = "$45.9",
-                        fiatChange = "+34%"
-                    ),
-                    AssetItemCardState(
-                        tokenName = "qwe",
-                        tokenId = "id 03",
-                        tokenIcon = DEFAULT_ICON_URI,
-                        assetAmount = "13.3",
-                        tokenSymbol = "XOR",
-                        assetFiatAmount = "$45.9",
-                        fiatChange = "+34%"
-                    ),
-                ),
-                bottomList = listOf(
-                    AssetItemCardState(
-                        tokenName = "qwe",
-                        tokenId = "id 01",
-                        tokenIcon = DEFAULT_ICON_URI,
-                        assetAmount = "13.3",
-                        tokenSymbol = "XOR",
-                        assetFiatAmount = "$45.9",
-                        fiatChange = "+34%"
-                    ),
-                    AssetItemCardState(
-                        tokenName = "qwe",
-                        tokenId = "id 02",
-                        tokenIcon = DEFAULT_ICON_URI,
-                        assetAmount = "13.3",
-                        tokenSymbol = "XOR",
-                        assetFiatAmount = "$45.9",
-                        fiatChange = "+34%"
-                    ),
-                    AssetItemCardState(
-                        tokenName = "qwe",
-                        tokenId = "id 03",
-                        tokenIcon = DEFAULT_ICON_URI,
-                        assetAmount = "13.3",
-                        tokenSymbol = "XOR",
-                        assetFiatAmount = "$45.9",
-                        fiatChange = "+34%"
-                    ),
-                ),
+                topList = previewAssetItemCardStateList,
+                bottomList = previewAssetItemCardStateList,
                 fiatSum = "$12 123.44"
             ),
         )

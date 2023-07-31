@@ -46,13 +46,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
+import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -99,15 +96,7 @@ private fun AccountWithIcon(
     accountIcon: Drawable,
 ) {
     Row {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(accountIcon).build(),
-            modifier = Modifier
-                .padding(start = Dimens.x2)
-                .size(size = 40.dp),
-            contentDescription = null,
-            imageLoader = LocalContext.current.imageLoader,
-        )
+        TokenIcon(uri = accountIcon, size = 40.dp, modifier = Modifier.padding(start = Dimens.x2))
 
         Column(
             modifier = Modifier

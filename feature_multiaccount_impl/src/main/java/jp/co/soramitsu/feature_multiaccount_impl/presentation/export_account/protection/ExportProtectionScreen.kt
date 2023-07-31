@@ -32,28 +32,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.CheckboxButton
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
@@ -62,7 +54,6 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -117,35 +108,11 @@ fun ExportProtectionItems(
     itemClicked: (index: Int) -> Unit
 ) {
     state.selectableItemList.forEachIndexed { index, it ->
-        val shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
-        Row(
-            modifier = Modifier
-                .padding(vertical = Dimens.x1_2)
-                .border(
-                    border = BorderStroke(
-                        1.dp,
-                        if (it.isSelected) MaterialTheme.customColors.accentPrimary else MaterialTheme.customColors.bgSurfaceVariant
-                    ),
-                    shape = shape,
-                )
-                .clip(shape)
-                .clickable { itemClicked(index) }
-                .padding(vertical = Dimens.x1, horizontal = Dimens.x2),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                modifier = Modifier.size(Dimens.x3),
-                painter = painterResource(id = if (it.isSelected) R.drawable.ic_selected_accent_pin_24 else R.drawable.ic_selected_pin_empty_24),
-                contentDescription = null
-            )
-
-            Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = Dimens.x2),
-                text = stringResource(id = it.textString)
-            )
-        }
+        CheckboxButton(
+            isSelected = it.isSelected,
+            itemClicked = { itemClicked(index) },
+            text = stringResource(id = it.textString)
+        )
     }
 }
 

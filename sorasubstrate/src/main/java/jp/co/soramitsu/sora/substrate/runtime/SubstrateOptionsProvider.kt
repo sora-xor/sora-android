@@ -54,6 +54,7 @@ object SubstrateOptionsProvider {
     const val pswapAssetId = "0x0200050000000000000000000000000000000000000000000000000000000000"
     const val xstTokenId = "0x0200090000000000000000000000000000000000000000000000000000000000"
     const val xstusdTokenId = "0x0200080000000000000000000000000000000000000000000000000000000000"
+    const val ethTokenId = "0x0200070000000000000000000000000000000000000000000000000000000000"
     const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
     const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
 }
@@ -106,6 +107,18 @@ fun RuntimeSnapshot.reservesKey(baseTokenId: String, tokenId: ByteArray): String
             )
         )
 
+fun RuntimeSnapshot.reservesKeyToken(baseTokenId: String): String =
+    this.metadata.module(Pallete.POOL_XYK.palletName)
+        .storage(Storage.RESERVES.storageName)
+        .storageKey(
+            this,
+            Struct.Instance(
+                mapOf(
+                    "code" to baseTokenId.mapAssetId()
+                )
+            ),
+        )
+
 enum class Pallete(val palletName: String) {
     ASSETS("Assets"),
     IROHA_MIGRATION("IrohaMigration"),
@@ -122,6 +135,7 @@ enum class Pallete(val palletName: String) {
     XSTPool("XSTPool"),
     TOKENS("Tokens"),
     DEMETER_FARMING("DemeterFarmingPlatform"),
+    ETH_BRIDGE("EthBridge"),
 }
 
 enum class Storage(val storageName: String) {
@@ -159,6 +173,7 @@ enum class Method(val methodName: String) {
     SET_REFERRER("set_referrer"),
     UNRESERVE("unreserve"),
     RESERVE("reserve"),
+    TRANSFER_TO_SIDECHAIN("transfer_to_sidechain"),
 }
 
 enum class Events(val eventName: String) {

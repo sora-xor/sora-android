@@ -46,12 +46,12 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -59,7 +59,6 @@ import kotlinx.coroutines.withContext
 class MainViewModel @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
     nodeManager: NodeManager,
-    private val walletInteractor: WalletInteractor,
     private val pinCodeInteractor: PinCodeInteractor,
     private val globalSubscriptionManager: GlobalSubscriptionManager,
     private val blockExplorerManager: BlockExplorerManager,
@@ -87,6 +86,7 @@ class MainViewModel @Inject constructor(
             globalSubscriptionManager
                 .start()
                 .catch { onError(it) }
+                .flowOn(coroutineManager.io)
                 .collect()
         }
         viewModelScope.launch {
@@ -101,7 +101,7 @@ class MainViewModel @Inject constructor(
             assetsInteractor.flowCurSoraAccount()
                 .catch { onError(it) }
                 .collectLatest {
-                    assetsInteractor.updateWhitelistBalances(true)
+                    assetsInteractor.updateWhitelistBalances()
                 }
         }
         viewModelScope.launch {

@@ -433,8 +433,8 @@ class AssetSettingsViewModelTest {
         val res = viewModel.assetPositionChanged(6, 7)
         advanceUntilIdle()
         val ld = viewModel.settingsState.getOrAwaitValue()
-        assertEquals("token3_id", ld[6].id)
-        assertEquals("token2_id", ld[7].id)
+        assertEquals("token3_id", ld[6].token.id)
+        assertEquals("token2_id", ld[7].token.id)
         assertEquals(true, res)
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -500,8 +500,8 @@ class AssetSettingsViewModelTest {
         Collections.swap(mappedModels, 7, 8)
         val pos = viewModel.settingsState.getOrAwaitValue()
         assertTrue(v)
-        assertEquals("token4_id", pos[7].id)
-        assertEquals("token3_id", pos[8].id)
+        assertEquals("token4_id", pos[7].token.id)
+        assertEquals("token3_id", pos[8].token.id)
         viewModel.onFavoriteClick(mappedModels[7])
         advanceUntilIdle()
         val after = viewModel.settingsState.getOrAwaitValue()
@@ -689,14 +689,11 @@ class AssetSettingsViewModelTest {
 
     private fun mapModels(list: List<Asset>) = list.map {
         AssetSettingsState(
-                it.token.id,
-                mockedUri,
-                it.token.name,
+                it.token,
                 it.token.printBalance(it.balance.transferable, nf, 8),
                 it.token.symbol,
                 it.favorite,
                 it.visibility,
-                it.token.isHidable,
                 fiat = 0.0,
         )
     }

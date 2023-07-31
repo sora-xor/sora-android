@@ -30,62 +30,42 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.presentation.compose.components
+package jp.co.soramitsu.feature_ecosystem_impl.domain
 
-import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.ui_core.component.searchbar.SearchBar
-import jp.co.soramitsu.ui_core.theme.customColors
+import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
+import jp.co.soramitsu.common.domain.iconUri
+import jp.co.soramitsu.common.domain.printFiat
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItemState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.mapTokensToCardState
 
-@Composable
-fun BasicSearchBar(
-    backgroundColor: Color = MaterialTheme.customColors.bgSurface,
-    placeholder: String,
-    action: String,
-    onAction: () -> Unit,
-    onClear: () -> Unit,
-    onSearch: (String) -> Unit,
-    onNavigate: () -> Unit
+class EcoSystemMapper @Inject constructor(
+    private val numbersFormatter: NumbersFormatter,
 ) {
-    val searchValue = remember { mutableStateOf(TextFieldValue("")) }
-    SearchBar(
-        backgroundColor = backgroundColor,
-        elevation = 0.dp,
-        navIcon = painterResource(id = R.drawable.ic_cross),
-        onNavigate = onNavigate,
-        searchValue = searchValue.value,
-        searchPlaceholder = placeholder,
-        actionLabel = action,
-        onSearch = {
-            searchValue.value = it
-            onSearch.invoke(it.text)
-        },
-        onClear = {
-            searchValue.value = TextFieldValue("")
-            onClear.invoke()
-        },
-        onAction = onAction,
-    )
-}
+    fun mapEcoSystemTokens(tokens: EcoSystemTokens) =
+        mapTokensToCardState(
+            tokens.tokens.map {
+                it.token to it.liquidityFiat
+            },
+            numbersFormatter,
+        )
+            .mapIndexed { index, assetItemCardState ->
+                (index + 1).toString() to assetItemCardState
+            }
 
-@Preview
-@Composable
-private fun Preview() {
-    BasicSearchBar(
-        placeholder = "Placeholder",
-        action = "Action",
-        onAction = { /*TODO*/ },
-        onClear = { /*TODO*/ },
-        onSearch = { /*TODO*/ }
-    ) {
-        /*TODO*/
-    }
+    fun mapEcoSystemPools(pools: EcoSystemPools) =
+        pools.pools.mapIndexed { index, pool ->
+            BasicPoolListItemState(
+                ids = pool.pool.baseToken.id to pool.pool.targetToken.id,
+                number = (index + 1).toString(),
+                token1Icon = pool.pool.baseToken.iconUri(),
+                token2Icon = pool.pool.targetToken.iconUri(),
+                text1 = "%s-%s".format(pool.pool.baseToken.symbol, pool.pool.targetToken.symbol),
+                text2 = pool.pool.baseToken.printFiat(pool.tvl?.formatFiatSuffix()).orEmpty(),
+                text3 = pool.pool.sbapy?.let {
+                    "%s%%".format(numbersFormatter.format(it, 2))
+                }.orEmpty(),
+            )
+        }
 }

@@ -37,6 +37,7 @@ import android.os.Parcelable
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.equalTo
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -113,12 +114,25 @@ data class Token(
     }
 }
 
+fun compareByTransferable(old: Asset?, new: Asset?): Boolean = if (old == null && new == null) {
+    true
+} else if (old == null || new == null) {
+    false
+} else {
+    old.token.id == new.token.id && old.balance.transferable.equalTo(new.balance.transferable)
+}
+
 fun List<Token>.getByIdOrEmpty(id: String): Token =
     this.find {
         it.id == id
     } ?: AssetHolder.emptyToken
 
 fun Token.iconUri(): Uri = this.iconFile ?: DEFAULT_ICON_URI
+
+fun Token.isMatchFilter(filter: String): Boolean =
+    name.lowercase().contains(filter.lowercase()) ||
+        symbol.lowercase().contains(filter.lowercase()) ||
+        id.lowercase().contains(filter.lowercase())
 
 val DEFAULT_ICON: Int = R.drawable.ic_token_default
 val DEFAULT_ICON_URI = Uri.parse("file:///android_asset/ic_token_default.png")

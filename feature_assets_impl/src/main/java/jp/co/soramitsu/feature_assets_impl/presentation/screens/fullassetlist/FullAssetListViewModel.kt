@@ -42,6 +42,7 @@ import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
+import jp.co.soramitsu.common.domain.isMatchFilter
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
@@ -117,8 +118,8 @@ class FullAssetListViewModel @Inject constructor(
                 ),
             )
         } else {
-            val topFilter = visAssets.filter { isFilterMatch(it, filter) }
-            val bottomFilter = invisibleAssets.filter { isFilterMatch(it, filter) }
+            val topFilter = visAssets.filter { it.token.isMatchFilter(filter) }
+            val bottomFilter = invisibleAssets.filter { it.token.isMatchFilter(filter) }
             val topSum = topFilter.fiatSum()
             val bottomSum = bottomFilter.fiatSum()
             state = state.copy(
@@ -144,11 +145,5 @@ class FullAssetListViewModel @Inject constructor(
 
     fun onAssetClick(tokenId: String) {
         assetsRouter.showAssetDetails(tokenId)
-    }
-
-    private fun isFilterMatch(asset: Asset, filter: String): Boolean {
-        return asset.token.name.lowercase().contains(filter.lowercase()) ||
-            asset.token.symbol.lowercase().contains(filter.lowercase()) ||
-            asset.token.id.lowercase().contains(filter.lowercase())
     }
 }

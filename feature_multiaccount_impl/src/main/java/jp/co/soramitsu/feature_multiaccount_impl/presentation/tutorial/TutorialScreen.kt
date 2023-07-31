@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.feature_multiaccount_impl.presentation.TutorialScreenState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -72,8 +73,10 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @ExperimentalUnitApi
 @Composable
 internal fun TutorialScreen(
+    state: TutorialScreenState,
     onCreateAccount: () -> Unit,
     onImportAccount: () -> Unit,
+    onGoogleSignin: () -> Unit,
     onTermsAndPrivacyClicked: (TermsAndPrivacyEnum) -> Unit
 ) {
     Box(
@@ -128,7 +131,9 @@ internal fun TutorialScreen(
                 TutorialButtons(
                     modifier = Modifier.padding(top = Dimens.x3),
                     onCreateAccount = onCreateAccount,
-                    onRecoveryAccount = onImportAccount
+                    onRecoveryAccount = onImportAccount,
+                    onGoogleSignin = onGoogleSignin,
+                    isGoogleSignInLoading = state.isGoogleSigninLoading
                 )
 
                 val annotatedLinkString: AnnotatedString = buildAnnotatedString {
@@ -212,19 +217,53 @@ internal fun TutorialScreen(
 private fun TutorialButtons(
     modifier: Modifier = Modifier,
     onCreateAccount: () -> Unit,
-    onRecoveryAccount: () -> Unit
+    onGoogleSignin: () -> Unit,
+    onRecoveryAccount: () -> Unit,
+    isGoogleSignInLoading: Boolean = false,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
+//        LoaderWrapper(
+//            modifier = Modifier
+//                .padding(top = Dimens.x1)
+//                .fillMaxWidth(),
+//            loading = isGoogleSignInLoading,
+//            loaderSize = Size.Large,
+//        ) { modifier, elevation ->
+//            Button(
+//                modifier = modifier
+//                    .testTagAsId("GoogleSignin")
+//                    .height(Dimens.x7)
+//                    .fillMaxWidth(),
+//                colors = ButtonDefaults.buttonColors(
+//                    backgroundColor = Color(0xFF3579F7),
+//                    contentColor = Color.White,
+//                ),
+//                shape = RoundedCornerShape(MaterialTheme.borderRadius.ml),
+//                onClick = onGoogleSignin,
+//            ) {
+//                Image(
+//                    modifier = Modifier.padding(end = Dimens.x1),
+//                    painter = painterResource(id = R.drawable.ic_google_white),
+//                    contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
+//                )
+//
+//                Text(
+//                    style = MaterialTheme.customTypography.buttonM,
+//                    text = stringResource(id = R.string.onboarding_continue_with_google)
+//                )
+//            }
+//        }
+
         FilledButton(
             modifier = Modifier
                 .testTagAsId("CreateNewAccount")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
-            text = stringResource(R.string.create_new_account_title).uppercase(),
+            text = stringResource(R.string.create_account_title),
             onClick = onCreateAccount,
             size = Size.Large,
             order = Order.PRIMARY
@@ -235,10 +274,10 @@ private fun TutorialButtons(
                 .testTagAsId("ImportAccount")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
-            text = stringResource(R.string.recovery_title).uppercase(),
+            text = stringResource(R.string.recovery_title),
             onClick = onRecoveryAccount,
             size = Size.Large,
-            order = Order.SECONDARY
+            order = Order.PRIMARY
         )
     }
 }
@@ -248,6 +287,8 @@ private fun TutorialButtons(
 @Composable
 fun PreviewTutorialScreen() {
     TutorialScreen(
+        state = TutorialScreenState(),
+        {},
         {},
         {},
         {}

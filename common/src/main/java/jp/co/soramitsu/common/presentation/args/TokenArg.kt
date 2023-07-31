@@ -63,6 +63,11 @@ var Bundle.tokenToId: String
     get() = this.requireString(TOKEN_TO_ID)
     set(value) = this.putString(TOKEN_TO_ID, value)
 
+private const val IS_LAUNCHED_FROM_SORA_CARD = "IS_LAUNCHED_FROM_SORA_CARD"
+var Bundle.isLaunchedFromSoraCard: Boolean
+    get() = this.requireBoolean(IS_LAUNCHED_FROM_SORA_CARD)
+    set(value) = this.putBoolean(IS_LAUNCHED_FROM_SORA_CARD, value)
+
 private const val TOKEN_ID = "TOKEN_ID"
 var Bundle.tokenId: String
     get() = this.requireString(TOKEN_ID)

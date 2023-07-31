@@ -44,7 +44,10 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -94,6 +97,10 @@ internal fun SwapMainScreen(
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {
+            val focus1 = remember { FocusRequester() }
+            val focus2 = remember { FocusRequester() }
+            val focusPosition1 = remember { mutableStateOf(false) }
+            val focusPosition2 = remember { mutableStateOf(false) }
             val (token1, token2, arrow) = createRefs()
             AssetAmountInput(
                 modifier = Modifier.constrainAs(token1) {
@@ -103,7 +110,11 @@ internal fun SwapMainScreen(
                 state = state.tokenFromState,
                 onAmountChange = onAmountChangeFrom,
                 onSelectToken = onSelectFrom,
-                onFocusChange = onFocusChangeFrom,
+                onFocusChange = {
+                    focusPosition1.value = it
+                    onFocusChangeFrom.invoke(it)
+                },
+                focusRequester = focus1,
             )
             AssetAmountInput(
                 modifier = Modifier.constrainAs(token2) {
@@ -113,11 +124,22 @@ internal fun SwapMainScreen(
                 state = state.tokenToState,
                 onAmountChange = onAmountChangeTo,
                 onSelectToken = onSelectTo,
-                onFocusChange = onFocusChangeTo,
+                onFocusChange = {
+                    focusPosition2.value = it
+                    onFocusChangeTo.invoke(it)
+                },
+                focusRequester = focus2,
             )
             Icon(
                 modifier = Modifier
-                    .clickable { onTokenSwapClick() }
+                    .clickable {
+                        onTokenSwapClick()
+                        if (focusPosition1.value) {
+                            focus2.requestFocus()
+                        } else if (focusPosition2.value) {
+                            focus1.requestFocus()
+                        }
+                    }
                     .size(size = Dimens.x3)
                     .constrainAs(arrow) {
                         top.linkTo(token1.bottom, (-8).dp)
