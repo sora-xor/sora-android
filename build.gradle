@@ -43,7 +43,7 @@ buildscript {
             composeCompiler        : '1.4.6',
             composeConstraintLayout: '1.1.0-alpha05',
             uiCore                 : '0.0.73',
-            soraCard               : '0.1.13',
+            soraCard               : '0.1.14',
             lazySodium             : '5.0.2',
             jna                    : '5.8.0',
             accompanist            : '0.30.1',
@@ -54,10 +54,10 @@ buildscript {
 
     ext {
         // soralution 98 3.2.0.1 2023.07.26
-        // sora dae 79 3.0.0.1 2023.05.18
+        // sora dae 81 3.2.0.0 2023.07.31
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 98)
-        appVersionName = '3.2.0.1'
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 81)
+        appVersionName = '3.2.0.0'
 
         compileVersion = 33
         minVersion = 24
