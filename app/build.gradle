@@ -144,7 +144,7 @@ play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
     track = "beta"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "97 (3.2.0.0)"
+    releaseName = "99 (3.2.0.2)"
 }
 
 dependencies {
