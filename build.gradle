@@ -54,9 +54,9 @@ buildscript {
 
     ext {
         // soralution 98 3.2.0.1 2023.07.26
-        // sora dae 81 3.2.0.0 2023.07.31
+        // sora dae 82 3.2.0.0 2023.07.31
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 81)
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 82)
         appVersionName = '3.2.0.0'
 
         compileVersion = 33
