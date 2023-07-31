@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -44,6 +45,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -55,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.ui_core.component.card.ContentCard
+import jp.co.soramitsu.ui_core.modifier.applyIf
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -93,6 +96,14 @@ class HubCardState(
             HubCardVisibility.NOT_VISIBLE_ENABLED -> true
 
             HubCardVisibility.VISIBLE_AND_DISABLED -> false
+        }
+
+    val isBorderVisible
+        get() = when (visibility) {
+            HubCardVisibility.VISIBLE_AND_ENABLED,
+            HubCardVisibility.VISIBLE_AND_DISABLED -> false
+
+            HubCardVisibility.NOT_VISIBLE_ENABLED -> true
         }
 }
 
@@ -149,7 +160,7 @@ private fun EnabledCards(
         ) {
             Text(
                 modifier = Modifier.padding(bottom = Dimens.x1_2),
-                text = stringResource(id = cardTitle),
+                text = stringResource(id = cardTitle).uppercase(),
                 style = MaterialTheme.customTypography.textS,
                 color = MaterialTheme.customColors.fgSecondary,
             )
@@ -164,8 +175,17 @@ private fun EnabledCards(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Dimens.x1)
                 ) {
+                    val borderColor = MaterialTheme.customColors.accentPrimary
                     Image(
-                        modifier = Modifier.size(size = Dimens.x3),
+                        modifier = Modifier
+                            .size(size = Dimens.x3)
+                            .applyIf(state.isBorderVisible) {
+                                border(
+                                    color = borderColor,
+                                    shape = CircleShape,
+                                    width = Dimens.x1_4
+                                )
+                            },
                         painter = painterResource(id = state.icon),
                         contentDescription = null,
                         alpha = state.alpha
