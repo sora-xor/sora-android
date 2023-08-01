@@ -221,7 +221,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
+                        it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
@@ -276,7 +276,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
                             val backupAccounts = mutableListOf<BackupAccountType>()
                             if (passphrase.isNotEmpty()) {
-                                backupAccounts.add(BackupAccountType.PASSHRASE)
+                                backupAccounts.add(BackupAccountType.PASSPHRASE)
                             }
                             if (!seed.substrateSeed.isNullOrEmpty()) {
                                 backupAccounts.add(BackupAccountType.SEED)

@@ -603,7 +603,7 @@ class OnboardingViewModel @Inject constructor(
                                     cryptoType = CryptoType.SR25519,
                                     backupAccountType = listOf(
                                         BackupAccountType.JSON,
-                                        BackupAccountType.PASSHRASE,
+                                        BackupAccountType.PASSPHRASE,
                                         BackupAccountType.SEED
                                     ),
                                     seed = seed,
@@ -653,7 +653,7 @@ class OnboardingViewModel @Inject constructor(
                     success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
+                        it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
@@ -727,7 +727,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSHRASE)) {
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE)) {
             decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
                 val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
 
