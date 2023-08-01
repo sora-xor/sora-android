@@ -243,8 +243,6 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun showDebugMenu() {
-        if (BuildUtils.isPlayMarket())
-            return
         router.showDebugMenu()
     }
 }
