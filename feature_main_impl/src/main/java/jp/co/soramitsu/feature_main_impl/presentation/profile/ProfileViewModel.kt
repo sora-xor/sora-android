@@ -43,7 +43,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -244,8 +243,6 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun showDebugMenu() {
-        if (BuildUtils.isPlayMarket())
-            return
         router.showDebugMenu()
     }
 }
