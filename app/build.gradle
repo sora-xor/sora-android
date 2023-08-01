@@ -142,9 +142,9 @@ hilt {
 
 play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
-    track = "beta"
+    track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "97 (3.2.0.0)"
+    releaseName = "82 (3.2.0.0)"
 }
 
 dependencies {
