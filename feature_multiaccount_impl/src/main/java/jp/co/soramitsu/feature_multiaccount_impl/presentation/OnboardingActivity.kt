@@ -245,16 +245,16 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             title(text = stringResource(id = R.string.recovery_source_type))
                             listItems(
                                 listOf(
-//                                    stringResource(id = R.string.common_google),
+                                    stringResource(id = R.string.common_google),
                                     stringResource(id = R.string.common_passphrase_title),
                                     stringResource(id = R.string.common_raw_seed)
                                 ),
                                 onClick = { index, _ ->
-//                                    if (index == 0) {
-//                                        viewModel.onGoogleSignin(navController, launcher)
-//                                    } else {
-//                                        viewModel.onRecoveryClicked(navController, index)
-//                                    }
+                                    if (index == 0) {
+                                        viewModel.onGoogleSignin(navController, launcher)
+                                    } else {
+                                        viewModel.onRecoveryClicked(navController, index)
+                                    }
                                     viewModel.onRecoveryClicked(navController, index)
                                 }
                             )

@@ -67,7 +67,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCa
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
-import jp.co.soramitsu.ui_core.component.button.TonalButton
+import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -168,7 +168,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     }
 
                     if (state.cards.isNotEmpty())
-                        TonalButton(
+                        BleachedButton(
                             modifier = Modifier
                                 .padding(bottom = Dimens.x4)
                                 .align(Alignment.CenterHorizontally),
