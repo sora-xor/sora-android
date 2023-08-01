@@ -88,7 +88,8 @@ class ProfileViewModel @Inject constructor(
         ProfileScreenState(
             nodeName = "",
             nodeConnected = false,
-            isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
+//            isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
+            isDebugMenuAvailable = true,
             soraCardEnabled = false,
             soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
             soraCardStatusIconDrawableRes = null

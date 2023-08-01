@@ -77,6 +77,8 @@ class DebugMenuViewModel @Inject constructor(
 
                 add(SettingOption(name = "Sora KYS Username:", value = BuildConfig.SORA_CARD_KYC_USERNAME))
                 add(SettingOption(name = "X1 Endpoint:", value = BuildConfig.X1_ENDPOINT_URL))
+                add(SettingOption(name = "backtest:", value = jp.co.soramitsu.oauth.BuildConfig.SORA_API_BASE_URL_TEST))
+                add(SettingOption(name = "backprod:", value = jp.co.soramitsu.oauth.BuildConfig.SORA_API_BASE_URL_PROD))
             }
         )
     }
