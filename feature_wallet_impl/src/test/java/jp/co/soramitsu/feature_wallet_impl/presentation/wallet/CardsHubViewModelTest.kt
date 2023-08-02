@@ -71,6 +71,7 @@ import jp.co.soramitsu.test_data.SoraCardTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -274,9 +275,10 @@ class CardsHubViewModelTest {
         advanceUntilIdle()
         cardsHubViewModel.onCardStateClicked()
         advanceUntilIdle()
+        val liveData = cardsHubViewModel.launchSoraCardSignIn.getOrAwaitValue()
         assertEquals(
             SoraCardTestData.SORA_CARD_CONTRACT_DATA,
-            cardsHubViewModel.launchSoraCardSignIn.value
+            liveData,
         )
     }
 }

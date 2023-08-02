@@ -41,4 +41,9 @@ object BuildConfigWrapper {
 
     fun getX1WidgetId(): String =
         BuildConfig.X1_WIDGET_ID
+
+    fun getSoraCardBackEndUrl(): String =
+        BuildConfig.SORACARD_BACKEND_URL.let { url ->
+            if (url.endsWith("/")) url else "$url/"
+        }
 }

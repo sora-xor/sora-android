@@ -40,6 +40,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -77,7 +78,7 @@ class DebugMenuViewModel @Inject constructor(
 
                 add(SettingOption(name = "X1w:", value = BuildConfig.X1_WIDGET_ID))
                 add(SettingOption(name = "X1e:", value = BuildConfig.X1_ENDPOINT_URL))
-                add(SettingOption(name = "su:", value = BuildConfig.SORACARD_BACKEND_URL))
+                add(SettingOption(name = "su:", value = BuildConfigWrapper.getSoraCardBackEndUrl()))
             }
         )
     }
