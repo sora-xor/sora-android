@@ -82,6 +82,15 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
             }
         }
 
+    private val consentHandlerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } else {
+                viewModel.onSuccessfulConsent()
+            }
+        }
+
     override val viewModel: AccountDetailsViewModel by viewModels {
         CustomViewModelFactory { vmf.create(requireArguments().address) }
     }
@@ -90,6 +99,10 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
         super.onViewCreated(view, savedInstanceState)
         viewModel.copyEvent.observe {
             Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        }
+
+        viewModel.consentExceptionHandler.observe {
+            consentHandlerLauncher.launch(it)
         }
     }
 
