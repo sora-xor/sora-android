@@ -63,6 +63,7 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -132,7 +133,7 @@ class OnboardingViewModel @Inject constructor(
     private val _skipDialogState = MutableLiveData(false)
     val skipDialogState = _skipDialogState
 
-    private val _consentExceptionHandler = MutableLiveData<Intent>()
+    private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
     private var tempAccount: SoraAccount? = null
@@ -667,7 +668,7 @@ class OnboardingViewModel @Inject constructor(
                     success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
+                        it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }

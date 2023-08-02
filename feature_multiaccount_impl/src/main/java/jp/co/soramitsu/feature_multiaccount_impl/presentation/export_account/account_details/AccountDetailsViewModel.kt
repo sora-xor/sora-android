@@ -111,7 +111,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val _deleteDialogState = MutableLiveData(false)
     val deleteDialogState: LiveData<Boolean> = _deleteDialogState
 
-    private val _consentExceptionHandler = MutableLiveData<Intent>()
+    private val _consentExceptionHandler = SingleLiveEvent<Intent>()
     val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
     private val changeNameFlow = MutableStateFlow("")
@@ -227,7 +227,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                     success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
+                        it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
