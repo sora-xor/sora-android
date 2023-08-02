@@ -77,8 +77,7 @@ class DebugMenuViewModel @Inject constructor(
 
                 add(SettingOption(name = "X1w:", value = BuildConfig.X1_WIDGET_ID))
                 add(SettingOption(name = "X1e:", value = BuildConfig.X1_ENDPOINT_URL))
-                add(SettingOption(name = "bt:", value = jp.co.soramitsu.oauth.BuildConfig.SORA_API_BASE_URL_TEST))
-                add(SettingOption(name = "bp:", value = jp.co.soramitsu.oauth.BuildConfig.SORA_API_BASE_URL_PROD))
+                add(SettingOption(name = "su:", value = BuildConfig.SORACARD_BACKEND_URL))
             }
         )
     }

@@ -35,17 +35,17 @@ package jp.co.soramitsu.feature_sora_card_impl.di
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import dagger.hilt.android.components.ActivityRetainedComponent
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_impl.domain.SoraCardInteractorImpl
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ActivityRetainedComponent::class)
 interface SoraCardModule {
 
     @Binds
-    @Singleton
+    @ActivityRetainedScoped
     fun bindSoraCardInteractor(
         soraCardInteractorImpl: SoraCardInteractorImpl
     ): SoraCardInteractor
