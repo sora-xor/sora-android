@@ -267,7 +267,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                     } else {
                                         viewModel.onRecoveryClicked(navController, index)
                                     }
-                                    viewModel.onRecoveryClicked(navController, index)
                                 }
                             )
                         }
