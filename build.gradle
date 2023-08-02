@@ -18,7 +18,7 @@ buildscript {
             spongycastle           : '1.58.0.0',
             ed25519                : '2.0.1',
             web3j                  : '4.2.0-android',
-            sharedUtils            : '1.1.1.3-20230719.081227-3',
+            sharedUtils            : '1.1.1.7-20230802.072656-2',
             navigation             : '2.5.0',
             zXing                  : '3.3.3',
             zXingEmbedded          : '4.3.0@aar',
