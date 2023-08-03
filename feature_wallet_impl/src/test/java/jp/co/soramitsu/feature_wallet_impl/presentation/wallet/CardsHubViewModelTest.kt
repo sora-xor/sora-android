@@ -45,6 +45,7 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -149,6 +150,8 @@ class CardsHubViewModelTest {
         mockkStatic(Uri::parse)
         every { Uri.parse(any()) } returns mockedUri
         mockkStatic(Token::iconUri)
+        mockkObject(BuildConfigWrapper)
+        every { BuildConfigWrapper.getSoraCardBackEndUrl() }.returns("soracard backend")
         every { TestTokens.xorToken.iconUri() } returns mockedUri
         every { TestTokens.valToken.iconUri() } returns mockedUri
         every { TestTokens.pswapToken.iconUri() } returns mockedUri
@@ -194,7 +197,7 @@ class CardsHubViewModelTest {
         coEvery { walletInteractor.updateSoraCardInfo(any(), any(), any()) } returns Unit
         every { cardsHubInteractorImpl.subscribeSoraCardInfo() } returns flowOf(SoraCardTestData.SORA_CARD_INFO)
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every { walletInteractor.pollSoraCardStatusIfPending() } returns flowOf("")
+        every { soraCardInteractor.pollSoraCardStatusIfPending() } returns flowOf("")
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
             SoraCardAvailabilityInfo()
         )

@@ -53,6 +53,7 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_DEBUG")
 
             buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_TEST")
             buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_TEST")
@@ -66,6 +67,7 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_DEBUG")
 
             buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_TEST")
             buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_TEST")
@@ -79,6 +81,7 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_DEBUG")
 
             buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_TEST")
             buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_TEST")
@@ -92,6 +95,7 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_RELEASE")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_RELEASE")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_RELEASE")
 
             buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_PROD")
             buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_PROD")

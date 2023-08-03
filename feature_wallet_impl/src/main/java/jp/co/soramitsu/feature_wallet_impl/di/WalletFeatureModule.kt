@@ -56,7 +56,6 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.BuyCryptoD
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
 import jp.co.soramitsu.feature_wallet_impl.domain.PoolsFeatureStorageManager
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
-import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
 import kotlinx.coroutines.FlowPreview
@@ -92,7 +91,6 @@ class WalletFeatureModule {
         credentialsRepository: CredentialsRepository,
         userRepository: UserRepository,
         runtimeManager: RuntimeManager,
-        kycRepository: KycRepository
     ): WalletInteractor {
         return WalletInteractorImpl(
             assetsRepository,
@@ -101,7 +99,6 @@ class WalletFeatureModule {
             userRepository,
             credentialsRepository,
             runtimeManager,
-            kycRepository
         )
     }
 
