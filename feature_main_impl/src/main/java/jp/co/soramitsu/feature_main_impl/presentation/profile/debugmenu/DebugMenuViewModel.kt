@@ -76,9 +76,9 @@ class DebugMenuViewModel @Inject constructor(
                 add(SettingOption(name = "Build Type:", value = BuildConfig.BUILD_TYPE))
                 add(SettingOption(name = "Build Flavor:", value = BuildConfig.FLAVOR))
 
-                add(SettingOption(name = "X1w:", value = BuildConfig.X1_WIDGET_ID))
-                add(SettingOption(name = "X1e:", value = BuildConfig.X1_ENDPOINT_URL))
-                add(SettingOption(name = "su:", value = BuildConfigWrapper.getSoraCardBackEndUrl()))
+                add(SettingOption(name = "X1:", value = BuildConfig.X1_WIDGET_ID))
+                add(SettingOption(name = "X1:", value = BuildConfig.X1_ENDPOINT_URL))
+                add(SettingOption(name = "SoraCard Backend:", value = BuildConfigWrapper.getSoraCardBackEndUrl()))
             }
         )
     }
