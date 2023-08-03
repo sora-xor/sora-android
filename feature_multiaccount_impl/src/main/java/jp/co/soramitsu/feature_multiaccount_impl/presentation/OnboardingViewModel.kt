@@ -474,7 +474,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun onRecoveryClicked(navController: NavController, index: Int) {
         _recoveryState.value = when (index) {
-            1 -> {
+            0 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
                 errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
@@ -488,7 +488,7 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
-            2 -> {
+            1 -> {
                 isValidMethod = multiaccountInteractor::isRawSeedValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromRawSeed
                 errorMessageCode = ResponseCode.RAW_SEED_IS_NOT_VALID
@@ -502,13 +502,7 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
-            else -> RecoveryState(
-                title = R.string.recovery_enter_passphrase_title,
-                recoveryType = RecoveryType.PASSPHRASE,
-                recoveryInputState = InputTextState(
-                    label = resourceManager.getString(R.string.recovery_mnemonic_passphrase)
-                )
-            )
+            else -> null
         }
 
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
@@ -653,7 +647,7 @@ class OnboardingViewModel @Inject constructor(
                     success = !isError && confirmationDescriptionText != R.string.common_empty_string
                 ),
                 setPasswordButtonIsEnabled = it.warningIsSelected &&
-                    it.passwordConfirmation.value.text == filteredValue.text && isSecure
+                        it.passwordConfirmation.value.text == filteredValue.text && isSecure
             )
         }
     }
