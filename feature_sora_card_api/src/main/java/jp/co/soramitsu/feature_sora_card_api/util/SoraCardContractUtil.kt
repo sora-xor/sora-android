@@ -62,6 +62,7 @@ fun createSoraCardContract(
         userAvailableXorAmount = userAvailableXorAmount,
         areAttemptsPaidSuccessfully = false, // will be available in Phase 2
         isEnoughXorAvailable = isEnoughXorAvailable,
-        isIssuancePaid = false // will be available in Phase 2
+        isIssuancePaid = false, // will be available in Phase 2
+        soraBackEndUrl = BuildConfig.SORACARD_BACKEND_URL,
     )
 }

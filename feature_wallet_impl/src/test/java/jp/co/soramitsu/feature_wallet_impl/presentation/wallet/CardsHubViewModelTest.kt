@@ -194,7 +194,7 @@ class CardsHubViewModelTest {
         coEvery { walletInteractor.updateSoraCardInfo(any(), any(), any()) } returns Unit
         every { cardsHubInteractorImpl.subscribeSoraCardInfo() } returns flowOf(SoraCardTestData.SORA_CARD_INFO)
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every { walletInteractor.pollSoraCardStatusIfPending() } returns flowOf("")
+        every { soraCardInteractor.pollSoraCardStatusIfPending() } returns flowOf("")
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
             SoraCardAvailabilityInfo()
         )
