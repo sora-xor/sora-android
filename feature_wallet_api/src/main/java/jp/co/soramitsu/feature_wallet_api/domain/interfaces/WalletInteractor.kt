@@ -65,6 +65,4 @@ interface WalletInteractor {
     fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
 
     suspend fun updateSoraCardKycStatus(kycStatus: String)
-
-    fun pollSoraCardStatusIfPending(): Flow<String?>
 }

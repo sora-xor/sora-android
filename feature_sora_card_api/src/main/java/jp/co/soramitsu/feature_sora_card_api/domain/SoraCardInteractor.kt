@@ -38,4 +38,6 @@ import kotlinx.coroutines.flow.Flow
 interface SoraCardInteractor {
 
     fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
+
+    fun pollSoraCardStatusIfPending(): Flow<String?>
 }
