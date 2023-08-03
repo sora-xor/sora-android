@@ -58,7 +58,7 @@ object OptionsProvider {
     const val twitterLink = "https://twitter.com/sora_xor"
     const val youtubeLink = "https://youtube.com/sora_xor"
     const val instagramLink = "https://instagram.com/sora_xor"
-    const val mediumLink = "https://medium.com/sora_xor"
+    const val mediumLink = "https://medium.com/sora-xor"
     const val wikiLink = "https://wiki.sora.org"
     const val soraCardBlackList = "https://soracard.com/blacklist/"
 }
