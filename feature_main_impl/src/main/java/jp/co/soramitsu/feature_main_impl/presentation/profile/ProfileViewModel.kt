@@ -43,6 +43,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -87,8 +88,7 @@ class ProfileViewModel @Inject constructor(
         ProfileScreenState(
             nodeName = "",
             nodeConnected = false,
-//            isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
-            isDebugMenuAvailable = true,
+            isDebugMenuAvailable = BuildUtils.isPlayMarket().not(),
             soraCardEnabled = false,
             soraCardStatusStringRes = R.string.more_menu_sora_card_subtitle,
             soraCardStatusIconDrawableRes = null
