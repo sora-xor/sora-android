@@ -507,13 +507,7 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
-            else -> RecoveryState(
-                title = R.string.recovery_enter_passphrase_title,
-                recoveryType = RecoveryType.PASSPHRASE,
-                recoveryInputState = InputTextState(
-                    label = resourceManager.getString(R.string.recovery_mnemonic_passphrase)
-                )
-            )
+            else -> null
         }
 
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
