@@ -51,8 +51,6 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.RecoveryType
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.ui_core.component.input.InputTextState
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -105,15 +103,8 @@ class OnboardingViewModelTest {
 
     private val account = SoraAccount("address", "accountName")
 
-    @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        given(multiAccInteractor.getSoraAccount(account.substrateAddress)).willReturn(account)
-        given(multiAccInteractor.getMnemonic(account)).willReturn("mne mo nic")
-        given(coroutineManager.io).willReturn(this.coroutineContext[CoroutineDispatcher])
-        given(coroutineManager.main).willReturn(Dispatchers.Main)
-        given(backupService.isAccountBackedUp("address")).willReturn(true)
-
         onboardingViewModel = OnboardingViewModel(
             invitationHandler,
             multiAccInteractor,
