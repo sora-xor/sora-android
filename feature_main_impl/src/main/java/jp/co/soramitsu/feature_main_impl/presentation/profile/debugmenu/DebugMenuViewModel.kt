@@ -44,6 +44,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
@@ -83,8 +84,9 @@ class DebugMenuViewModel @Inject constructor(
                 add(SettingOption(name = "Java:", value = System.getProperty("java.vm.name").orEmpty()))
                 add(SettingOption(name = "Build Type:", value = BuildConfig.BUILD_TYPE))
                 add(SettingOption(name = "Build Flavor:", value = BuildConfig.FLAVOR))
-                add(SettingOption(name = "Sora KYS Username:", value = BuildConfig.SORA_CARD_KYC_USERNAME))
                 add(SettingOption(name = "X1 Endpoint:", value = BuildConfig.X1_ENDPOINT_URL))
+                add(SettingOption(name = "X1 Widget:", value = BuildConfig.X1_WIDGET_ID))
+                add(SettingOption(name = "SoraCard:", value = BuildConfigWrapper.getSoraCardBackEndUrl()))
             }
         )
     }

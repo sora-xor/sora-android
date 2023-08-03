@@ -125,7 +125,7 @@ class CardsHubViewModel @Inject constructor(
     private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
-        walletInteractor.pollSoraCardStatusIfPending()
+        soraCardInteractor.pollSoraCardStatusIfPending()
             .flowOn(coroutineManager.io)
             .launchIn(viewModelScope)
 
