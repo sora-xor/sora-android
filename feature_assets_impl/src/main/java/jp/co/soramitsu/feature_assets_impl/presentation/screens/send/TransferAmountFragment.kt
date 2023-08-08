@@ -56,7 +56,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.view.ToastDialog
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SwapSelectTokenScreen
+import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendConfirmScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendScreen
@@ -127,7 +127,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
             }
         }
         composable(SendRoutes.selectToken) {
-            SwapSelectTokenScreen(
+            SelectSearchTokenScreen(
                 state = viewModel.sendState.selectSearchAssetState,
                 scrollState = scrollState,
                 onAssetSelect = onTokenChange,
@@ -175,6 +175,8 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                         feeFiat = state.feeFiat,
                         feeAmount = state.fee,
                         reviewEnabled = state.reviewEnabled,
+                        shouldTransactionReminderInsufficientWarningBeShown = state.shouldTransactionReminderInsufficientWarningBeShown,
+                        transactionFeeToken = state.transactionFeeToken
                     )
                 }
 

@@ -58,6 +58,7 @@ internal fun AccountDetailsScreenBasic(
     onShowPassphrase: () -> Unit,
     onShowRawSeed: () -> Unit,
     onExportJson: () -> Unit,
+    onBackupClicked: () -> Unit,
     onLogout: () -> Unit,
     onAddressClick: () -> Unit,
 ) {
@@ -73,9 +74,12 @@ internal fun AccountDetailsScreenBasic(
     Spacer(modifier = Modifier.size(Dimens.x2))
     BackupOptions(
         isMnemonicAvailable = state.isMnemonicAvailable,
+        isBackupAvailable = state.isBackupAvailable,
+        isBackupLoading = state.isBackupLoading,
         onShowPassphrase = onShowPassphrase,
         onShowRawSeed = onShowRawSeed,
         onExportJson = onExportJson,
+        onBackupGoogle = onBackupClicked
     )
     Spacer(modifier = Modifier.size(Dimens.x2))
     TonalButton(
@@ -101,6 +105,8 @@ private fun PreviewAccountDetailsScreenBasic() {
             state = AccountDetailsScreenState(
                 accountNameState = InputTextState(value = TextFieldValue("bla"), label = "Name"),
                 isMnemonicAvailable = false,
+                isBackupLoading = false,
+                isBackupAvailable = false,
                 "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
             ),
             onValueChanged = {},
@@ -109,6 +115,7 @@ private fun PreviewAccountDetailsScreenBasic() {
             onExportJson = {},
             onLogout = {},
             onAddressClick = {},
+            onBackupClicked = {}
         )
     }
 }

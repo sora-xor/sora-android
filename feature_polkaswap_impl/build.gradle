@@ -103,13 +103,10 @@ dependencies {
     implementation runtimeKtxDep
     implementation fragmentKtxDep
 
-    implementation runtimePermissionsDep
-
     implementation daggerDep
     kapt daggerKaptDep
     implementation hiltWorkManagerDep
     kapt hiltWorkManagerKaptDep
-    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     implementation gsonDep
 
@@ -120,10 +117,6 @@ dependencies {
     implementation roomKtxDep
 
     implementation uiCoreDep
-
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
 
     implementation composeUiDep
     implementation composeThemeAdapterDep

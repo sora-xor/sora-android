@@ -60,6 +60,7 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddEstimatedState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddPricesState
@@ -143,6 +144,20 @@ internal fun LiquidityAddScreen(
                 value = "${state.slippage}%",
                 description = stringResource(id = R.string.slippage),
                 onClick = onSlippageClick,
+            )
+        }
+        if (state.shouldTransactionReminderInsufficientWarningBeShown) {
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = Dimens.x2,
+                color = Color.Transparent
+            )
+            WarningTextCard(
+                title = stringResource(id = R.string.common_title_warning),
+                text = stringResource(
+                    id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
+                    formatArgs = arrayOf(state.transactionFeeToken, state.prices.fee)
+                )
             )
         }
         Divider(
@@ -277,6 +292,8 @@ private fun PreviewLiquidityRemoveScreen() {
                     ),
                 ),
                 selectSearchAssetState = null,
+                shouldTransactionReminderInsufficientWarningBeShown = true,
+                transactionFeeToken = ""
             ),
             onSelect1 = {},
             onSelect2 = {},

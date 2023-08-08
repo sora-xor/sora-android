@@ -53,28 +53,31 @@ import jp.co.soramitsu.core_db.migrations.migration_CardHub_63_64
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_65_66
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_66_67
 import jp.co.soramitsu.core_db.migrations.migration_PoolOrderReservesAccount_64_65
+import jp.co.soramitsu.core_db.migrations.migration_PoolsTables_69_70
 import jp.co.soramitsu.core_db.migrations.migration_poolsBaseToken_61_62
 import jp.co.soramitsu.core_db.migrations.migration_reorderBaseToken_62_63
 import jp.co.soramitsu.core_db.model.AssetLocal
+import jp.co.soramitsu.core_db.model.BasicPoolLocal
 import jp.co.soramitsu.core_db.model.CardHubLocal
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.GlobalCardHubLocal
 import jp.co.soramitsu.core_db.model.NodeLocal
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
-import jp.co.soramitsu.core_db.model.PoolLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
+import jp.co.soramitsu.core_db.model.UserPoolLocal
 
 @TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 69,
+    version = 70,
     entities = [
         AssetLocal::class,
         TokenLocal::class,
         FiatTokenPriceLocal::class,
-        PoolLocal::class,
+        BasicPoolLocal::class,
+        UserPoolLocal::class,
         PoolBaseTokenLocal::class,
         SoraAccountLocal::class,
         ReferralLocal::class,
@@ -117,6 +120,7 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(migration_PoolOrderReservesAccount_64_65)
                 .addMigrations(migration_CardHub_65_66)
                 .addMigrations(migration_CardHub_66_67)
+                .addMigrations(migration_PoolsTables_69_70)
                 .build()
         }
     }

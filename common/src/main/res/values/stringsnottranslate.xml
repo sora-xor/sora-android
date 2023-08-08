@@ -28,6 +28,9 @@
     <string name="common_persian_native" translatable="false">زبان فارسی</string>
     <string name="common_serbian_native" translatable="false">Српски</string>
     <string name="common_vietnamese_native" translatable="false">tiếng Việt</string>
+    <string name="common_azerbaijani_native" translatable="false">Azərbaycan</string>
+    <string name="common_dutch_native" translatable="false">Nederlands</string>
+    <string name="common_portuguese_native" translatable="false">Portuguese</string>
     <string name="common_hindi_native" translatable="false">हिंदी</string>
     <string name="common_norwegian_native" translatable="false">Norwegian Bokmål</string>
     <string name="invitation_code_alphabet" translatable="false">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890</string>
@@ -47,4 +50,6 @@
     <string name="sora_2" translatable="false">SORA 2</string>
     <string name="asset_pswap_fullname" translatable="false">PSWAP</string>
     <string name="common_json" translatable="false">JSON</string>
+    <string name="common_google" translatable="false">Google</string>
+    <string name="common_empty_string" translatable="false" />
 </resources>

@@ -33,41 +33,88 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.data.mappers
 
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.core_db.model.PoolLocal
+import jp.co.soramitsu.core_db.model.BasicPoolLocal
+import jp.co.soramitsu.core_db.model.BasicPoolWithTokenFiatLocal
+import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 
 object PoolLocalMapper {
 
-    fun mapLocal(poolLocal: PoolLocal, baseToken: Token, token: Token): PoolData {
+    fun mapBasicToPoolData(
+        basicPoolLocal: BasicPoolLocal,
+        baseToken: Token,
+        token: Token,
+        apy: Double?,
+    ): BasicPoolData {
+        return BasicPoolData(
+            baseToken = baseToken,
+            targetToken = token,
+            baseReserves = basicPoolLocal.reserveBase,
+            targetReserves = basicPoolLocal.reserveTarget,
+            totalIssuance = basicPoolLocal.totalIssuance,
+            reserveAccount = basicPoolLocal.reservesAccount,
+            sbapy = apy,
+        )
+    }
+
+    suspend fun mapBasicPoolTokenFiatLocal(
+        basic: BasicPoolWithTokenFiatLocal,
+        mapper: AssetLocalToAssetMapper,
+        sbapy: (String) -> Double?,
+    ): BasicPoolData {
+        return BasicPoolData(
+            baseToken = mapper.map(basic.tokenBaseLocal),
+            targetToken = mapper.map(basic.tokenTargetLocal),
+            baseReserves = basic.basicPoolLocal.reserveBase,
+            targetReserves = basic.basicPoolLocal.reserveTarget,
+            totalIssuance = basic.basicPoolLocal.totalIssuance,
+            reserveAccount = basic.basicPoolLocal.reservesAccount,
+            sbapy = sbapy(basic.basicPoolLocal.reservesAccount),
+        )
+    }
+
+    fun mapLocal(
+        poolLocal: UserPoolJoinedLocal,
+        baseToken: Token,
+        token: Token,
+        apy: Double?,
+    ): CommonUserPoolData {
         val basePooled = PolkaswapFormulas.calculatePooledValue(
-            poolLocal.reservesFirst,
-            poolLocal.poolProvidersBalance,
-            poolLocal.totalIssuance,
+            poolLocal.basicPoolLocal.reserveBase,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.basicPoolLocal.totalIssuance,
         )
         val secondPooled = PolkaswapFormulas.calculatePooledValue(
-            poolLocal.reservesSecond,
-            poolLocal.poolProvidersBalance,
-            poolLocal.totalIssuance,
+            poolLocal.basicPoolLocal.reserveTarget,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.basicPoolLocal.totalIssuance,
         )
         val share = PolkaswapFormulas.calculateShareOfPool(
-            poolLocal.poolProvidersBalance,
-            poolLocal.totalIssuance,
+            poolLocal.userPoolLocal.poolProvidersBalance,
+            poolLocal.basicPoolLocal.totalIssuance,
         )
-        val strategicBonusApy = poolLocal.strategicBonusApy?.multiply(Big100)
-        return PoolData(
-            token,
-            baseToken,
-            basePooled,
-            poolLocal.reservesFirst,
-            secondPooled,
-            poolLocal.reservesSecond,
-            strategicBonusApy?.toDouble(),
-            share.toDouble(),
-            poolLocal.totalIssuance,
-            poolLocal.poolProvidersBalance,
-            poolLocal.favorite,
+        return CommonUserPoolData(
+            basic = BasicPoolData(
+                baseToken = baseToken,
+                targetToken = token,
+                baseReserves = poolLocal.basicPoolLocal.reserveBase,
+                targetReserves = poolLocal.basicPoolLocal.reserveTarget,
+                totalIssuance = poolLocal.basicPoolLocal.totalIssuance,
+                reserveAccount = poolLocal.basicPoolLocal.reservesAccount,
+                sbapy = apy,
+            ),
+            user = UserPoolData(
+                basePooled = basePooled,
+                targetPooled = secondPooled,
+                share.toDouble(),
+                poolLocal.userPoolLocal.poolProvidersBalance,
+                poolLocal.userPoolLocal.favorite,
+                poolLocal.userPoolLocal.sortOrder,
+            ),
         )
     }
 }

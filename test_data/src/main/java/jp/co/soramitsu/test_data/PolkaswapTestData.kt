@@ -34,8 +34,11 @@ package jp.co.soramitsu.test_data
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.LiquidityDetails
+import jp.co.soramitsu.common_wallet.domain.model.BasicPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
+import jp.co.soramitsu.common_wallet.domain.model.UserPoolData
 
 object PolkaswapTestData {
 
@@ -43,7 +46,9 @@ object PolkaswapTestData {
 
     val XOR_ASSET_ZERO_BALANCE = TestAssets.xorAsset(BigDecimal.ZERO)
 
-    val TEST_ASSET = TestAssets.valAsset(BigDecimal.ONE)
+    val VAL_ASSET = TestAssets.valAsset(BigDecimal.ONE)
+
+    val XSTXAU_ASSET = TestAssets.xstxauAsset(BigDecimal.ONE)
 
     val LIQUIDITY_DATA = LiquidityData(
         firstReserves = BigDecimal.ONE,
@@ -51,18 +56,33 @@ object PolkaswapTestData {
         secondPooled = BigDecimal.ONE
     )
 
-    val POOL_DATA = PoolData(
-        TEST_ASSET.token,
+    val BASIC_POOL_DATA = BasicPoolData(
         XOR_ASSET.token,
-        BigDecimal.ONE,
+        VAL_ASSET.token,
         BigDecimal.TEN,
-        BigDecimal.ONE,
         BigDecimal.TEN,
+        BigDecimal.TEN,
+        "",
         1.0,
+    )
+
+    val USER_POOL_DATA = UserPoolData(
+        BigDecimal.ONE,
+        BigDecimal.ONE,
         10.0,
         BigDecimal.TEN,
-        BigDecimal.TEN,
         true,
+        2,
+    )
+
+    val COMMON_POOL_DATA = CommonPoolData(
+        BASIC_POOL_DATA,
+        USER_POOL_DATA,
+    )
+
+    val POOL_DATA = CommonUserPoolData(
+        BASIC_POOL_DATA,
+        USER_POOL_DATA,
     )
 
     val NETWORK_FEE = BigDecimal(0.007)

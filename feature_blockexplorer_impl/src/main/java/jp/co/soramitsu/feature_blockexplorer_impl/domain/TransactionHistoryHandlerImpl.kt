@@ -39,6 +39,7 @@ import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.DateTimeUtils
+import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
@@ -91,6 +92,16 @@ class TransactionHistoryHandlerImpl @Inject constructor(
         return transactionHistoryRepository.state
     }
 
+    override suspend fun hasNewTransaction(): Boolean {
+        val curTime = getCachedEvents(1).getOrNull(0)
+            ?.safeCast<EventUiModel.EventTxUiModel>()?.timestamp ?: 0
+        refreshHistoryEvents()
+        val newTime = _historyState.value.safeCast<HistoryState.History>()?.events?.firstOrNull {
+            it is EventUiModel.EventTxUiModel
+        }?.safeCast<EventUiModel.EventTxUiModel>()?.timestamp
+        return newTime != null && newTime > curTime
+    }
+
     override suspend fun onMoreHistoryEventsRequested() {
         if (mutex.isLocked) return
         mutex.withLock {
@@ -125,6 +136,9 @@ class TransactionHistoryHandlerImpl @Inject constructor(
             tokenIdFilter = tokenId
             if (historyEvents.isEmpty()) {
                 _historyState.emit(HistoryState.Loading)
+            }
+            _historyState.value.safeCast<HistoryState.History>()?.let { history ->
+                _historyState.emit(history.copy(pullToRefresh = true))
             }
             val events = reloadHistoryEvents()
             _historyState.emit(events)
@@ -174,9 +188,10 @@ class TransactionHistoryHandlerImpl @Inject constructor(
             }
         } else {
             HistoryState.History(
-                historyEndReached,
-                insertHistoryTimeSeparators(historyEvents),
-                hasError
+                endReached = historyEndReached,
+                events = insertHistoryTimeSeparators(historyEvents),
+                hasErrorLoadingNew = hasError,
+                pullToRefresh = false,
             )
         }
     }

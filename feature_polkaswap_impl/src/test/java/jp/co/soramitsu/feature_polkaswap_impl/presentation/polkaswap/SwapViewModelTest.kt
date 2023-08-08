@@ -38,26 +38,29 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
-import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
+import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.test_data.PolkaswapTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import jp.co.soramitsu.test_shared.getOrAwaitValue
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flow
@@ -76,10 +79,16 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.atMost
+import org.mockito.kotlin.times
 import java.math.BigDecimal
+import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
 @ExperimentalCoroutinesApi
+@OptIn(ExperimentalStdlibApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class SwapViewModelTest {
 
@@ -92,6 +101,9 @@ class SwapViewModelTest {
 
     @Mock
     private lateinit var assetsInteractor: AssetsInteractor
+
+    @Mock
+    private lateinit var coroutineManager: CoroutineManager
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
@@ -131,14 +143,30 @@ class SwapViewModelTest {
     private suspend fun initViewModel(
         xorBalance: BigDecimal = BigDecimal.ONE,
         valBalance: BigDecimal = BigDecimal.ONE,
-        pswapBalance: BigDecimal = BigDecimal.ONE
-    ) {
+        pswapBalance: BigDecimal = BigDecimal.ONE,
+        firstTokenId: String? = null,
+        secondTokenId: String? = null,
+    ) = runTest {
         assets = listOf(
             TestAssets.xorAsset(xorBalance),
             TestAssets.valAsset(valBalance),
             TestAssets.pswapAsset(pswapBalance)
         )
         given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(assets))
+        given(
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = any(),
+                secondaryTokenAmount = any(),
+                networkFeeInXor = any()
+            )
+        ).willReturn(false)
+
+        given(
+            coroutineManager.io
+        ).willReturn(this.coroutineContext[CoroutineDispatcher]!!)
+
         setUpAfterViewModelInit()
         viewModel = SwapViewModel(
             assetsInteractor,
@@ -148,8 +176,10 @@ class SwapViewModelTest {
             resourceManager,
             mainRouter,
             assetsRouter,
-            TestAssets.xorAsset().token.id,
-            "",
+            coroutineManager,
+            firstTokenId ?: TestAssets.xorAsset().token.id,
+            secondTokenId ?: "",
+            isLaunchedFromSoraCard = false
         )
     }
 
@@ -365,4 +395,113 @@ class SwapViewModelTest {
         assertEquals(assetsListItems.last().tokenId, viewModel.swapMainState.tokenFromState?.token?.id)
         assertEquals(assetsListItems[1].tokenId, viewModel.swapMainState.tokenToState?.token?.id)
     }
+
+    @Test
+    fun `WHEN user enters amount starting with XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            initViewModel(
+                firstTokenId = PolkaswapTestData.XOR_ASSET.token.id,
+                secondTokenId = PolkaswapTestData.VAL_ASSET.token.id
+            )
+
+            advanceUntilIdle()
+
+            viewModel.onFromAmountChange(BigDecimal.ONE)
+
+            advanceUntilIdle()
+
+            kVerify(
+                assetsInteractor,
+                atLeastOnce()
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = PolkaswapTestData.XOR_ASSET.token,
+                primaryTokenAmount = BigDecimal.ONE,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
+                secondaryTokenAmount = BigDecimal.ZERO,
+                networkFeeInXor = networkFee
+            )
+
+            viewModel.onToAmountChange(BigDecimal.ONE)
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                times(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = PolkaswapTestData.XOR_ASSET.token,
+                primaryTokenAmount = BigDecimal.ONE,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
+                secondaryTokenAmount = BigDecimal.ONE,
+                networkFeeInXor = networkFee
+            )
+
+            viewModel.fromAssetSelected(TestAssets.pswapAsset().token.id)
+
+            advanceUntilIdle()
+
+            viewModel.onFromAmountChange(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                atMost(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = TestAssets.pswapAsset().token,
+                primaryTokenAmount = BigDecimal.TEN,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
+                secondaryTokenAmount = BigDecimal.ONE,
+                networkFeeInXor = networkFee
+            )
+        }
+
+    @Test
+    fun `WHEN user enters amount starting without XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            initViewModel(
+                firstTokenId = TestAssets.pswapAsset().token.id,
+                secondTokenId = TestAssets.valAsset().token.id
+            )
+
+            advanceUntilIdle()
+
+            viewModel.onFromAmountChange(BigDecimal.ONE)
+
+            advanceUntilIdle()
+
+            viewModel.onToAmountChange(BigDecimal.ONE)
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                atMost(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = any(),
+                secondaryTokenAmount = any(),
+                networkFeeInXor = any()
+            )
+
+            viewModel.fromAssetSelected(TestAssets.xorAsset().token.id)
+
+            advanceUntilIdle()
+
+            viewModel.onFromAmountChange(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            kVerify(
+                mock = assetsInteractor,
+                times(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = TestAssets.xorAsset().token,
+                primaryTokenAmount = BigDecimal.TEN,
+                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
+                secondaryTokenAmount = BigDecimal.ONE,
+                networkFeeInXor = networkFee
+            )
+        }
 }

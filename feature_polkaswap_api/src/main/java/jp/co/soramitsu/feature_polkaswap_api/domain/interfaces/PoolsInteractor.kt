@@ -37,20 +37,22 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.LiquidityDetails
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.common_wallet.domain.model.PoolData
 import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.flow.Flow
 
 interface PoolsInteractor : PolkaswapInteractor {
 
-    fun subscribePoolsCache(): Flow<List<PoolData>>
+    fun subscribePoolsCacheOfCurAccount(): Flow<List<CommonUserPoolData>>
+    fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<CommonUserPoolData>>
 
-    suspend fun getPoolsCache(): List<PoolData>
+    suspend fun getRewardToken(): Token
 
-    fun subscribePoolCache(tokenFromId: String, tokenToId: String): Flow<PoolData?>
+    suspend fun getPoolsCacheOfCurAccount(): List<CommonUserPoolData>
 
-    fun subscribePoolsCacheOfAccount(account: SoraAccount): Flow<List<PoolData>>
+    fun subscribePoolCacheOfCurAccount(tokenFromId: String, tokenToId: String): Flow<CommonPoolData?>
 
     fun subscribeReservesCache(
         baseTokenId: String,

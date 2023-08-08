@@ -99,7 +99,7 @@ object TestTransactions {
             "blockHash",
             BigDecimal.ONE,
             TransactionStatus.COMMITTED,
-            1673918013,
+            2679918013,
         ),
         BigDecimal.TEN,
         "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
@@ -109,16 +109,16 @@ object TestTransactions {
 
     val sendFailedTx = Transaction.Transfer(
         TransactionBase(
-            "txHash",
-            "blockHash",
+            "txHash2",
+            "blockHash2",
             BigDecimal.ONE,
             TransactionStatus.REJECTED,
-            1673918013,
+            1679918013,
         ),
-        BigDecimal.TEN,
+        BigDecimal.ONE,
         "cnRuoXdU9t5bv5EQAiXT2gQozAvrVawqZkT2AQS1Msr8T8ZZu",
         TransactionTransferType.OUTGOING,
-        TestTokens.valToken
+        TestTokens.valToken,
     )
 
     val sendPendingTx = Transaction.Transfer(

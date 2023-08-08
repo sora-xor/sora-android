@@ -34,24 +34,20 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
 import io.mockk.mockkObject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.ResourceManager
-import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
+import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.SoraCardTestData
-import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -60,7 +56,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -71,6 +67,7 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
+import java.math.BigDecimal
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -84,13 +81,10 @@ class GetSoraCardViewModelTest {
     var mainCoroutineRule = MainCoroutineRule()
 
     @Mock
-    private lateinit var assetsInteractor: AssetsInteractor
+    private lateinit var soraCardInteractor: SoraCardInteractor
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
-
-    @Mock
-    private lateinit var blockExplorerManager: BlockExplorerManager
 
     @Mock
     private lateinit var assetsRouter: AssetsRouter
@@ -114,27 +108,31 @@ class GetSoraCardViewModelTest {
     private lateinit var connectionManager: ConnectionManager
 
     @Before
-    fun setUp() = runTest {
-        given(assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId))
-            .willReturn(flowOf(TestAssets.xorAsset(balance = Big100)))
-        given(blockExplorerManager.getXorPerEurRatio()).willReturn(2.34)
+     fun setUp() = runTest {
         given(walletInteractor.subscribeSoraCardInfo()).willReturn(flowOf(SoraCardTestData.SORA_CARD_INFO))
         given(connectionManager.connectionState).willReturn(flowOf(true))
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
 
+        given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(flowOf(
+            SoraCardAvailabilityInfo(
+                xorBalance = BigDecimal.ONE,
+                enoughXor = true,
+            )
+        ))
+
         viewModel = GetSoraCardViewModel(
-            assetsInteractor,
             assetsRouter,
             walletInteractor,
-            blockExplorerManager,
             walletRouter,
             mainRouter,
             polkaswapRouter,
             resourceManager,
-            NumbersFormatter(),
             connectionManager,
+            soraCardInteractor,
+            shouldStartSignIn = false,
+            shouldStartSignUp = false
         )
     }
 
@@ -149,7 +147,7 @@ class GetSoraCardViewModelTest {
     fun `init EXPECT subscribe fee asset balance`() = runTest {
         advanceUntilIdle()
 
-        verify(assetsInteractor).subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
+        verify(soraCardInteractor).subscribeToSoraCardAvailabilityFlow()
     }
 
     @Test
@@ -160,34 +158,12 @@ class GetSoraCardViewModelTest {
     }
 
     @Test
-    fun `enable sora card EXPECT set up launcher`() {
+    fun `enable sora card EXPECT set up launcher`() = runTest{
+        advanceUntilIdle()
+
         viewModel.onEnableCard()
 
-        assertEquals(
-            SoraCardTestData.registrationLauncher,
-            viewModel.launchSoraCardRegistration.value
-        )
-    }
-
-    @Test
-    fun `on already have card EXPECT set up launcher`() {
-        viewModel.onAlreadyHaveCard()
-
-        assertEquals(SoraCardTestData.signInLauncher, viewModel.launchSoraCardSignIn.value)
-    }
-
-    @Test
-    fun `on get more xor EXPECT get more xor alert state is true`() {
-        viewModel.onGetMoreXor()
-
-        assertTrue(viewModel.state.value.getMorXorAlert)
-    }
-
-    @Test
-    fun `on dismiss get more xor alert EXPECT get more xor alert state is false`() {
-        viewModel.onDismissGetMoreXorAlert()
-
-        assertFalse(viewModel.state.value.getMorXorAlert)
+        assertNotNull(viewModel.launchSoraCardRegistration.value)
     }
 
     @Test
@@ -208,7 +184,6 @@ class GetSoraCardViewModelTest {
     fun `updateSoraCardInfo EXPECT update data`() = runTest {
         viewModel.updateSoraCardInfo(
             accessToken = "accessToken",
-            refreshToken = "refreshToken",
             accessTokenExpirationTime = Long.MAX_VALUE,
             kycStatus = "kycStatus"
         )
@@ -216,7 +191,6 @@ class GetSoraCardViewModelTest {
 
         verify(walletInteractor).updateSoraCardInfo(
             accessToken = "accessToken",
-            refreshToken = "refreshToken",
             accessTokenExpirationTime = Long.MAX_VALUE,
             kycStatus = "kycStatus"
         )

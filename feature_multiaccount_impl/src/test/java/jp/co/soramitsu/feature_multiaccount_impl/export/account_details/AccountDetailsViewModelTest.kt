@@ -32,13 +32,22 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.export.account_details
 
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.navigation.NavController
+import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.models.BackupAccountType
+import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.backup.domain.models.Json
+import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
+import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsViewModel
@@ -47,6 +56,8 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -62,6 +73,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.verifyNoMoreInteractions
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -86,20 +98,38 @@ class AccountDetailsViewModelTest {
     @Mock
     private lateinit var resourceManager: ResourceManager
 
+    @Mock
+    private lateinit var coroutineManager: CoroutineManager
+
+    @Mock
+    private lateinit var backupService: BackupService
+
+    @Mock
+    private lateinit var navController: NavController
+
+    @Mock
+    private lateinit var accountResultLauncher: ActivityResultLauncher<Intent>
+
     private lateinit var accountDetailsViewModel: AccountDetailsViewModel
 
     private val account = SoraAccount("address", "accountName")
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
         given(multiAccInteractor.getSoraAccount(account.substrateAddress)).willReturn(account)
         given(multiAccInteractor.getMnemonic(account)).willReturn("mne mo nic")
+        given(coroutineManager.io).willReturn(this.coroutineContext[CoroutineDispatcher])
+        given(coroutineManager.main).willReturn(Dispatchers.Main)
+        given(backupService.isAccountBackedUp("address")).willReturn(true)
 
         accountDetailsViewModel = AccountDetailsViewModel(
             multiAccInteractor,
             mainRouter,
             resourceManager,
             copy,
+            backupService,
+            coroutineManager,
             account.substrateAddress,
         )
     }
@@ -118,7 +148,9 @@ class AccountDetailsViewModelTest {
                     leadingIcon = R.drawable.ic_input_pencil_24,
                 ),
                 true,
-                "address",
+                false,
+                true,
+                "address"
             ),
             state,
         )
@@ -165,6 +197,8 @@ class AccountDetailsViewModelTest {
                 leadingIcon = R.drawable.ic_input_pencil_24,
             ),
             true,
+            false,
+            true,
             "address",
         )
 
@@ -183,5 +217,78 @@ class AccountDetailsViewModelTest {
 
         advanceUntilIdle()
         verify(multiAccInteractor).updateName(account.substrateAddress, "Foo Ba")
+    }
+
+    @Test
+    fun `onBackupPasswordClicked() called`() = runTest {
+        val password = "password"
+        given(multiAccInteractor.getMnemonic(account.substrateAddress)).willReturn("mne mo nic")
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
+
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        advanceUntilIdle()
+        accountDetailsViewModel.onBackupPasswordChanged(TextFieldValue(password))
+        accountDetailsViewModel.onBackupPasswordConfirmationChanged(TextFieldValue(password))
+
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
+
+        val decryptedBackupAccount =
+            DecryptedBackupAccount(
+                name = "accountName",
+                address = "address",
+                mnemonicPhrase = "mne mo nic",
+                cryptoType = CryptoType.SR25519,
+                backupAccountType = listOf(
+                    BackupAccountType.PASSPHRASE,
+                ),
+                seed = Seed(),
+                json = Json()
+            )
+
+        accountDetailsViewModel.onBackupPasswordClicked()
+        advanceUntilIdle()
+
+        verify(backupService).saveBackupAccount(decryptedBackupAccount, password)
+        val popEvent = accountDetailsViewModel.navigationPop.getOrAwaitValue()
+        assertEquals(Unit, popEvent)
+        assertTrue(
+            accountDetailsViewModel.accountDetailsScreenState.value?.isBackupAvailable ?: false
+        )
+    }
+
+    @Test
+    fun `onBackupClicked() called when authorize fails`() = runTest {
+        given(backupService.authorize(accountResultLauncher)).willReturn(false)
+
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        advanceUntilIdle()
+
+        verify(backupService).authorize(accountResultLauncher)
+        verify(backupService).isAccountBackedUp(account.substrateAddress)
+        verifyNoMoreInteractions(backupService)
+    }
+
+    @Test
+    fun `onBackupClicked() called when backup exists`() = runTest {
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(true)
+
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        advanceUntilIdle()
+
+        assertTrue(accountDetailsViewModel.deleteDialogState.value ?: false)
+    }
+
+    @Test
+    fun `onBackupClicked() called when backup doesn't exists`() = runTest {
+        given(backupService.authorize(accountResultLauncher)).willReturn(true)
+        given(backupService.isAccountBackedUp(account.substrateAddress)).willReturn(false)
+
+        accountDetailsViewModel.onBackupClicked(accountResultLauncher)
+        advanceUntilIdle()
+
+        val navEvent = accountDetailsViewModel.navEvent.getOrAwaitValue()
+        assertEquals("jp.co.soramitsu.feature_multiaccount_impl.BackupAccount", navEvent.first)
     }
 }

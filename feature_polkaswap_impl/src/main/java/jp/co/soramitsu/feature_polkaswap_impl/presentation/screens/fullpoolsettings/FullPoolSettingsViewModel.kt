@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolSettingsState
@@ -74,32 +75,32 @@ class FullPoolSettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val pools = poolsInteractor.getPoolsCache()
+            val pools: List<CommonUserPoolData> = poolsInteractor.getPoolsCacheOfCurAccount()
 
             curPoolList.clear()
             symbol = pools.fiatSymbol
             val mapped = pools.map { poolData ->
                 PoolSettingsState(
-                    id = poolData.baseToken.id to poolData.token.id,
-                    token1Icon = poolData.baseToken.iconUri(),
-                    token2Icon = poolData.token.iconUri(),
+                    id = poolData.basic.baseToken.id to poolData.basic.targetToken.id,
+                    token1Icon = poolData.basic.baseToken.iconUri(),
+                    token2Icon = poolData.basic.targetToken.iconUri(),
                     tokenName = "%s-%s".format(
-                        poolData.baseToken.symbol,
-                        poolData.token.symbol
+                        poolData.basic.baseToken.symbol,
+                        poolData.basic.targetToken.symbol,
                     ),
                     assetAmount = "%s - %s".format(
-                        poolData.baseToken.printBalance(
-                            poolData.basePooled,
+                        poolData.basic.baseToken.printBalance(
+                            poolData.user.basePooled,
                             numbersFormatter,
                             AssetHolder.ACTIVITY_LIST_ROUNDING
                         ),
-                        poolData.token.printBalance(
-                            poolData.secondPooled,
+                        poolData.basic.targetToken.printBalance(
+                            poolData.user.targetPooled,
                             numbersFormatter,
                             AssetHolder.ACTIVITY_LIST_ROUNDING
                         ),
                     ),
-                    favorite = poolData.favorite,
+                    favorite = poolData.user.favorite,
                     fiat = poolData.printFiat()?.first ?: 0.0
                 )
             }

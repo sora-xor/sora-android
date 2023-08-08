@@ -39,9 +39,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import java.math.BigDecimal
-import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.AssetAmountInputState
@@ -56,7 +57,6 @@ import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
-import jp.co.soramitsu.common_wallet.domain.QrCodeDecoder
 import jp.co.soramitsu.common_wallet.domain.model.QrException
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
@@ -66,14 +66,12 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenScreenState
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QRCodeScannerScreenState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
@@ -82,20 +80,26 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@HiltViewModel
-class QRCodeFlowViewModel @Inject constructor(
+class QRCodeFlowViewModel @AssistedInject constructor(
     private val interactor: AssetsInteractor,
     private val qrCodeInteractor: QrCodeInteractor,
     private val coroutineManager: CoroutineManager,
     private val qrCodeGenerator: QrCodeGenerator,
-    private var qrCodeDecoder: QrCodeDecoder,
     private val avatarGenerator: AccountAvatarGenerator,
     private val clipboardManager: ClipboardManager,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
     private val fileManager: FileManager,
-    private val walletRouter: WalletRouter
+    private val walletRouter: WalletRouter,
+    @Assisted("IS_LAUNCHED_FROM_SORA_CARD") val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
+
+    @AssistedFactory
+    interface AssistedQRCodeFlowViewModelFactory {
+        fun create(
+            @Assisted("IS_LAUNCHED_FROM_SORA_CARD") isLaunchedFromSoraCard: Boolean
+        ): QRCodeFlowViewModel
+    }
 
     private var currentTokenId: String? = null
 
@@ -111,13 +115,6 @@ class QRCodeFlowViewModel @Inject constructor(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 
-    private val _mutableQrCodeDecodedSharedFlow = MutableSharedFlow<String>(
-        replay = 1,
-        extraBufferCapacity = 0,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
-    val qrCodeDecodedSharedFlow: SharedFlow<String> = _mutableQrCodeDecodedSharedFlow
-
     private val _shareQrCodeLiveData = SingleLiveEvent<Pair<Uri, String>>()
     val shareQrCodeEvent: LiveData<Pair<Uri, String>> = _shareQrCodeLiveData
 
@@ -131,13 +128,6 @@ class QRCodeFlowViewModel @Inject constructor(
         )
     )
         private set
-
-    var qrCodeScannerScreenState by mutableStateOf(
-        QRCodeScannerScreenState(
-            screenStatus = ScreenStatus.READY_TO_RENDER,
-            throwable = null
-        )
-    )
 
     var requestTokenByQrScreenState by mutableStateOf(
         RequestTokenScreenState(
@@ -307,25 +297,6 @@ class QRCodeFlowViewModel @Inject constructor(
     }
 
     /* Receive Token Screen End */
-
-    /* Scan Qr Code Screen Begin */
-
-    fun decodeScannedQrCodeUri(uri: Uri) {
-        viewModelScope.launch(coroutineManager.io) {
-            try {
-                val decodedResult = qrCodeDecoder.decodeQrFromUri(uri)
-
-                _mutableQrCodeDecodedSharedFlow.tryEmit(decodedResult)
-            } catch (e: Exception) {
-                qrCodeScannerScreenState = qrCodeScannerScreenState.copy(
-                    screenStatus = ScreenStatus.ERROR,
-                    throwable = e
-                )
-            }
-        }
-    }
-
-    /* Scan Qr Code Screen End */
 
     /* Request Token Screen Begin */
 

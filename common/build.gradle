@@ -16,11 +16,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY")
-        buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN")
-        buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL")
-        buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME")
-        buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD")
+        buildConfigField "String", "GOOGLE_API_TOKEN",  readSecretInQuotes("GOOGLE_TOKEN")
     }
 
     buildTypes {
@@ -57,6 +53,13 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_DEBUG")
+
+            buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_TEST")
+            buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD_TEST")
         }
 
         soralution {
@@ -64,6 +67,13 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_DEBUG")
+
+            buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_TEST")
+            buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD_TEST")
         }
 
         tsting {
@@ -71,6 +81,13 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_DEBUG")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_DEBUG")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_DEBUG")
+
+            buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_TEST")
+            buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_TEST")
+            buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD_TEST")
         }
 
         production {
@@ -78,6 +95,13 @@ android {
 
             buildConfigField "String", "X1_ENDPOINT_URL", readSecretInQuotes("X1_ENDPOINT_URL_RELEASE")
             buildConfigField "String", "X1_WIDGET_ID", readSecretInQuotes("X1_WIDGET_ID_RELEASE")
+            buildConfigField "String", "SORACARD_BACKEND_URL", readSecretInQuotes("SORA_BACKEND_RELEASE")
+
+            buildConfigField "String", "SORA_CARD_API_KEY", readSecretInQuotes("SORA_CARD_API_KEY_PROD")
+            buildConfigField "String", "SORA_CARD_DOMAIN",  readSecretInQuotes("SORA_CARD_DOMAIN_PROD")
+            buildConfigField "String", "SORA_CARD_KYC_ENDPOINT_URL",  readSecretInQuotes("SORA_CARD_KYC_ENDPOINT_URL_PROD")
+            buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_PROD")
+            buildConfigField "String", "SORA_CARD_KYC_PASSWORD",  readSecretInQuotes("SORA_CARD_KYC_PASSWORD_PROD")
         }
     }
 }
@@ -122,10 +146,13 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
+    implementation sharedFeaturesBackupDep
+    implementation sharedUtilsDep
+
     implementation gsonDep
 
-    implementation platform(firebaseBomDep)
-    implementation crashlyticsDep
+    implementation platform(googleFirebaseBomDep)
+    implementation googleCrashlyticsDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
@@ -135,10 +162,6 @@ dependencies {
 
     implementation coilDep
     implementation coilComposeDep
-
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
 
     implementation composeActivityDep
     implementation composeUiDep

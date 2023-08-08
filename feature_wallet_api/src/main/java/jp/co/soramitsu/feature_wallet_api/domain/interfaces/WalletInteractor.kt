@@ -56,16 +56,13 @@ interface WalletInteractor {
 
     suspend fun updateSoraCardInfo(
         accessToken: String,
-        refreshToken: String,
         accessTokenExpirationTime: Long,
         kycStatus: String
     )
 
+    suspend fun deleteSoraCardInfo()
+
     fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
 
-    suspend fun getSoraCardInfo(): SoraCardInformation?
-
     suspend fun updateSoraCardKycStatus(kycStatus: String)
-
-    fun pollSoraCardStatusIfPending(): Flow<String?>
 }

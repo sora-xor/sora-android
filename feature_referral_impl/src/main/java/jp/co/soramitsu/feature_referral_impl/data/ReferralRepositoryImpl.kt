@@ -125,6 +125,7 @@ class ReferralRepositoryImpl @Inject constructor(
         from: String,
         amount: BigDecimal,
         token: Token,
+        fee: BigDecimal,
     ): Transaction.ReferralUnbond {
         val mapped = mapBalance(amount, token.precision)
         val currentTime = Date().time
@@ -140,7 +141,7 @@ class ReferralRepositoryImpl @Inject constructor(
             TransactionBase(
                 result.txHash,
                 result.blockHash,
-                BigDecimal.ZERO,
+                fee,
                 if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
                 currentTime
             ),
@@ -153,7 +154,8 @@ class ReferralRepositoryImpl @Inject constructor(
         keypair: Sr25519Keypair,
         from: String,
         amount: BigDecimal,
-        token: Token
+        token: Token,
+        fee: BigDecimal,
     ): Transaction.ReferralBond {
         val mapped = mapBalance(amount, token.precision)
         val currentTime = Date().time
@@ -169,7 +171,7 @@ class ReferralRepositoryImpl @Inject constructor(
             TransactionBase(
                 result.txHash,
                 result.blockHash,
-                BigDecimal.ZERO,
+                fee,
                 if (result.success) TransactionStatus.COMMITTED else TransactionStatus.REJECTED,
                 currentTime
             ),

@@ -32,6 +32,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
+import androidx.annotation.StringRes
+import jp.co.soramitsu.common.R
+
 const val ASSETS_HUB_NAME = "assets"
 const val POOLS_HUB_NAME = "pools"
 const val GET_SORA_CARD_HUB_NAME = "get sora card"
@@ -44,10 +47,25 @@ data class CardHub(
     val collapsed: Boolean,
 )
 
-enum class CardHubType(val hubName: String, val order: Int, val boundToAccount: Boolean) {
-    GET_SORA_CARD(GET_SORA_CARD_HUB_NAME, order = 0, boundToAccount = false),
-    BUY_XOR_TOKEN(BUY_XOR_TOKEN_HUB_NAME, order = 1, boundToAccount = false),
+enum class CardHubType(
+    val hubName: String,
+    val order: Int,
+    val boundToAccount: Boolean,
+    @StringRes val userName: Int
+) {
+    GET_SORA_CARD(
+        GET_SORA_CARD_HUB_NAME,
+        order = 0,
+        boundToAccount = false,
+        R.string.more_menu_sora_card_title,
+    ),
+    BUY_XOR_TOKEN(
+        BUY_XOR_TOKEN_HUB_NAME,
+        order = 1,
+        boundToAccount = false,
+        R.string.common_buy_xor,
+    ),
 
-    ASSETS(ASSETS_HUB_NAME, order = 0, boundToAccount = true),
-    POOLS(POOLS_HUB_NAME, order = 1, boundToAccount = true),
+    ASSETS(ASSETS_HUB_NAME, order = 0, boundToAccount = true, R.string.liquid_assets),
+    POOLS(POOLS_HUB_NAME, order = 1, boundToAccount = true, R.string.pooled_assets),
 }

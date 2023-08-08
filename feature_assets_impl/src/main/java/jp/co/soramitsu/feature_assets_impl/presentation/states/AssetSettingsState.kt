@@ -32,16 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.states
 
-import android.net.Uri
+import jp.co.soramitsu.common.domain.Token
 
 data class AssetSettingsState(
-    val id: String,
-    val tokenIcon: Uri,
-    val tokenName: String,
+    val token: Token,
     val assetAmount: String,
     val symbol: String,
     val favorite: Boolean,
     val visible: Boolean,
-    val hideAllowed: Boolean,
     val fiat: Double?,
 )

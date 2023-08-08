@@ -79,6 +79,7 @@ import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest
 import jp.co.soramitsu.sora.substrate.request.FeeCalculationRequest2
 import jp.co.soramitsu.sora.substrate.request.FinalizedHeadRequest
 import jp.co.soramitsu.sora.substrate.request.NextAccountIndexRequest
+import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.request.StateKeysPaged
 import jp.co.soramitsu.sora.substrate.request.StateQueryStorageAt
 import jp.co.soramitsu.sora.substrate.response.ChainHeaderResponse
@@ -111,6 +112,18 @@ class SubstrateCalls @Inject constructor(
         const val IN_BLOCK = "inBlock"
         const val DEFAULT_ASSETS_PAGE_SIZE = 100
     }
+
+    suspend fun getStorageHex(storageKey: String): String? =
+        socketService.executeAsync(
+            request = GetStorageRequest(listOf(storageKey)),
+            mapper = pojo<String>(),
+        ).result
+
+    suspend fun getStateKeys(partialKey: String): List<String> =
+        socketService.executeAsync(
+            request = StateKeys(listOf(partialKey)),
+            mapper = pojoList<String>(),
+        ).result ?: emptyList()
 
     suspend fun fetchXORBalances(
         accountId: String,
@@ -347,8 +360,10 @@ class SubstrateCalls @Inject constructor(
                         subscriptionId,
                         mapped?.getValue(finalizedKey) as String
                     )
+
                 mapped?.containsKey(FINALITY_TIMEOUT) ?: false ->
                     ExtrinsicStatusResponse.ExtrinsicStatusFinalityTimeout(subscriptionId)
+
                 else -> ExtrinsicStatusResponse.ExtrinsicStatusPending(subscriptionId)
             }
             hash to statusResponse
@@ -460,14 +475,20 @@ class SubstrateCalls @Inject constructor(
         result = runCatching {
             val request = FeeCalculationRequest(extrinsic)
             val feeResponse =
-                socketService.executeAsync(request = request, mapper = pojo<FeeResponse>().nonNull())
+                socketService.executeAsync(
+                    request = request,
+                    mapper = pojo<FeeResponse>().nonNull()
+                )
             feeResponse.partialFee
         }.getOrNull()
         if (result == null) {
             result = runCatching {
                 val request = FeeCalculationRequest2(extrinsic)
                 val feeResponse =
-                    socketService.executeAsync(request = request, mapper = pojo<FeeResponse2>().nonNull())
+                    socketService.executeAsync(
+                        request = request,
+                        mapper = pojo<FeeResponse2>().nonNull()
+                    )
                 feeResponse.inclusionFee.sum
             }.getOrNull()
         }

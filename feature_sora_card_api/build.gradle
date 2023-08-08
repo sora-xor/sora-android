@@ -52,9 +52,13 @@ android {
 }
 
 dependencies {
+    implementation project(":common")
 
     implementation kotlinxSerializationJsonDep
 
     implementation daggerDep
     kapt daggerKaptDep
+    api(soraCardDep) {
+        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
+    }
 }

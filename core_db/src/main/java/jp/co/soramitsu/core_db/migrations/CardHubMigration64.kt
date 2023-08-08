@@ -130,16 +130,18 @@ val migration_CardHub_63_64 = object : Migration(63, 64) {
             getString(getColumnIndex("substrateAddress"))
         }
         addresses.forEach { address ->
-            CardHubType.values().forEachIndexed { index, type ->
-                val values = ContentValues().apply {
-                    put("cardId", type.hubName)
-                    put("accountAddress", address)
-                    put("visibility", true)
-                    put("collapsed", false)
-                    put("sortOrder", index)
+            CardHubType.values()
+                .filter { it.boundToAccount }
+                .forEachIndexed { index, type ->
+                    val values = ContentValues().apply {
+                        put("cardId", type.hubName)
+                        put("accountAddress", address)
+                        put("visibility", true)
+                        put("collapsed", false)
+                        put("sortOrder", index)
+                    }
+                    database.insert("cardsHub", SQLiteDatabase.CONFLICT_REPLACE, values)
                 }
-                database.insert("cardsHub", SQLiteDatabase.CONFLICT_REPLACE, values)
-            }
         }
 
         database.setTransactionSuccessful()

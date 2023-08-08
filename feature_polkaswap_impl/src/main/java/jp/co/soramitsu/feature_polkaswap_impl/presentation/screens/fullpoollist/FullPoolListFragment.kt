@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -61,8 +62,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common.presentation.compose.components.BasicSearchBar
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -91,14 +95,20 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
             ) {
-                BasicSearchBar(
-                    placeholder = getString(R.string.pooled_assets),
-                    action = getString(R.string.common_edit),
-                    onNavigate = viewModel::onNavIcon,
-                    onClear = {
-                        viewModel.searchAssets("")
-                    },
+                SoramitsuToolbar(
+                    state = SoramitsuToolbarState(
+                        basic = BasicToolbarState(
+                            title = "",
+                            navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
+                            actionLabel = R.string.common_edit,
+                        ),
+                        type = SoramitsuToolbarType.Small(),
+                    ),
+                    backgroundColor = MaterialTheme.customColors.bgSurface,
+                    elevation = 0.dp,
                     onAction = viewModel::onAction,
+                    onNavigate = viewModel::onNavIcon,
+                    searchInitial = "",
                     onSearch = viewModel::searchAssets,
                 )
                 val state = viewModel.state

@@ -220,7 +220,7 @@ class ReferralViewModel @Inject constructor(
             .catch { onError(it) }
             .distinctUntilChanged()
             .onEach { asset ->
-                xorBalance = asset.balance.transferable
+                xorBalance = asset?.balance?.transferable ?: BigDecimal.ZERO
                 reCalcOnChange(currentDestination)
             }
             .launchIn(viewModelScope)
@@ -378,6 +378,25 @@ class ReferralViewModel @Inject constructor(
                     balance = feeToken.formatBalance(xorBalance)
                 )
             )
+
+        updateTransactionReminderWarningVisibility()
+    }
+
+    private suspend fun updateTransactionReminderWarningVisibility() {
+        val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+            primaryToken = feeToken(),
+            primaryTokenAmount = calcInvitationsAmount(referralScreenState.bondState.invitationsCount),
+            secondaryToken = null,
+            secondaryTokenAmount = null,
+            networkFeeInXor = extrinsicFee.orZero()
+        )
+
+        referralScreenState = referralScreenState.copy(
+            bondState = referralScreenState.bondState.copy(
+                shouldTransactionReminderInsufficientWarningBeShown = result,
+                transactionFeeToken = feeToken().symbol
+            )
+        )
     }
 
     private fun calcInvitationsCount(): Int {

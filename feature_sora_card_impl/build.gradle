@@ -62,8 +62,6 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     implementation project(":common")
     implementation project(":feature_assets_api")
     implementation project(":feature_sora_card_api")
@@ -72,6 +70,7 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":sorasubstrate")
     implementation project(":core_di")
+    implementation project(":feature_account_api")
 
     implementation kotlinxSerializationJsonDep
 
@@ -90,10 +89,9 @@ dependencies {
     implementation navigationUiDep
 
     implementation uiCoreDep
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
     implementation xNetworkingDep
+
+    implementation timberDep
 
     implementation composeUiDep
     implementation composeThemeAdapterDep

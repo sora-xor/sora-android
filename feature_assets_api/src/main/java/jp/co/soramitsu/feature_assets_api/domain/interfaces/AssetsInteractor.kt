@@ -43,6 +43,14 @@ interface AssetsInteractor {
 
     suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal?
 
+    suspend fun isEnoughXorLeftAfterTransaction(
+        primaryToken: Token,
+        primaryTokenAmount: BigDecimal,
+        secondaryToken: Token?,
+        secondaryTokenAmount: BigDecimal?,
+        networkFeeInXor: BigDecimal
+    ): Boolean
+
     suspend fun getAccountName(): String
 
     suspend fun getAssetOrThrow(assetId: String): Asset
@@ -68,7 +76,7 @@ interface AssetsInteractor {
         fee: BigDecimal
     ): String
 
-    fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset>
+    fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?>
 
     fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
 
@@ -86,7 +94,5 @@ interface AssetsInteractor {
 
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
-    suspend fun updateBalancesVisibleAssets()
-
-    suspend fun updateWhitelistBalances(update: Boolean)
+    suspend fun updateWhitelistBalances()
 }

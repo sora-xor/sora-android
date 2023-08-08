@@ -46,7 +46,9 @@ import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapExtrinsicRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.sora.substrate.models.WithDesired
@@ -68,6 +70,8 @@ class SwapInteractorImpl(
     private val userRepository: UserRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val polkaswapRepository: PolkaswapRepository,
+    private val polkaswapExtrinsicRepository: PolkaswapExtrinsicRepository,
+    private val polkaswapSubscriptionRepository: PolkaswapSubscriptionRepository,
     private val transactionBuilder: TransactionBuilder,
 ) : PolkaswapInteractorImpl(polkaswapRepository), SwapInteractor {
 
@@ -80,7 +84,7 @@ class SwapInteractorImpl(
     override suspend fun fetchSwapNetworkFee(feeToken: Token): BigDecimal {
         return swapNetworkFee ?: (
             (
-                polkaswapRepository.calcSwapNetworkFee(
+                polkaswapExtrinsicRepository.calcSwapNetworkFee(
                     feeToken,
                     userRepository.getCurSoraAccount().substrateAddress,
                 ) ?: BigDecimal.ZERO
@@ -104,7 +108,7 @@ class SwapInteractorImpl(
             if (it.value.contains(selectedSwapMarket.value)) it.key else null
         }
         val quotes = dexs.mapNotNull {
-            polkaswapRepository.getSwapQuote(
+            polkaswapSubscriptionRepository.getSwapQuote(
                 tokenFrom.id,
                 tokenTo.id,
                 amount,
@@ -196,44 +200,44 @@ class SwapInteractorImpl(
                     if (!dexs.hasToken(tfrom) && !dexs.hasToken(tto)) {
                         dexs.forEach { dex ->
                             flows.add(
-                                polkaswapRepository.observePoolXYKReserves(dex.tokenId, tfrom)
+                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, tfrom)
                             )
                             flows.add(
-                                polkaswapRepository.observePoolXYKReserves(dex.tokenId, tto)
+                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, tto)
                             )
                         }
                     } else if (dexs.hasToken(tfrom) && dexs.hasToken(tto)) {
                         flows.add(
-                            polkaswapRepository.observePoolXYKReserves(tto, tfrom)
+                            polkaswapSubscriptionRepository.observePoolXYKReserves(tto, tfrom)
                         )
                         flows.add(
-                            polkaswapRepository.observePoolXYKReserves(tfrom, tto)
+                            polkaswapSubscriptionRepository.observePoolXYKReserves(tfrom, tto)
                         )
                     } else {
                         val (inDex, inNot) = if (dexs.hasToken(tfrom)) tfrom to tto else tto to tfrom
                         flows.add(
-                            polkaswapRepository.observePoolXYKReserves(inDex, inNot)
+                            polkaswapSubscriptionRepository.observePoolXYKReserves(inDex, inNot)
                         )
                         dexs.filter { dex ->
                             dex.tokenId != inDex
                         }.forEach { dex ->
                             flows.add(
-                                polkaswapRepository.observePoolXYKReserves(dex.tokenId, inDex)
+                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, inDex)
                             )
                             flows.add(
-                                polkaswapRepository.observePoolXYKReserves(dex.tokenId, inNot)
+                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, inNot)
                             )
                         }
                     }
                     flows.add(
-                        polkaswapRepository.observePoolXYKReserves(
+                        polkaswapSubscriptionRepository.observePoolXYKReserves(
                             it.first.first,
                             it.first.second
                         )
                     )
                 }
                 if (it.second == Market.TBC || it.second == Market.SMART) {
-                    flows.add(polkaswapRepository.observePoolTBCReserves(it.first.first))
+                    flows.add(polkaswapSubscriptionRepository.observePoolTBCReserves(it.first.first))
                 }
                 flows.merge()
             }.debounce(500)
@@ -243,13 +247,13 @@ class SwapInteractorImpl(
         poolReservesFlowToken.value = tokenId1 to tokenId2
         val allBaseDexs = getPoolDexList()
         val swapsAvailable = allBaseDexs.map {
-            polkaswapRepository.isSwapAvailable(tokenId1, tokenId2, it.dexId)
+            polkaswapSubscriptionRepository.isSwapAvailable(tokenId1, tokenId2, it.dexId)
         }
         if (swapsAvailable.none { it }) return null
         availableMarkets.clear()
         allBaseDexs.forEachIndexed { index, poolDex ->
             availableMarkets[poolDex] =
-                if (swapsAvailable[index]) polkaswapRepository.getAvailableSources(
+                if (swapsAvailable[index]) polkaswapSubscriptionRepository.getAvailableSources(
                     tokenId1,
                     tokenId2,
                     poolDex.dexId
@@ -292,7 +296,7 @@ class SwapInteractorImpl(
     ): String {
         val soraAccount = userRepository.getCurSoraAccount()
         val keypair = credentialsRepository.retrieveKeyPair(soraAccount)
-        val result = polkaswapRepository.observeSwap(
+        val result = polkaswapExtrinsicRepository.observeSwap(
             tokenInput,
             tokenOutput,
             keypair,

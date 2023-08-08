@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
 
+import android.graphics.drawable.Drawable
+import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 
@@ -51,6 +53,10 @@ data class RecoveryAccountNameState(
     val accountNameInputState: InputTextState = InputTextState()
 )
 
+data class TutorialScreenState(
+    val isGoogleSigninLoading: Boolean = false
+)
+
 data class TermsAndPrivacyState(
     val title: Int,
     val webViewState: WebViewState
@@ -59,6 +65,31 @@ data class TermsAndPrivacyState(
 data class CreateAccountState(
     val accountNameInputState: InputTextState = InputTextState(),
     val btnEnabled: Boolean = true,
+)
+
+data class CreateBackupPasswordState(
+    val password: InputTextState = InputTextState(),
+    val passwordConfirmation: InputTextState = InputTextState(),
+    val warningIsSelected: Boolean = false,
+    val setPasswordButtonIsEnabled: Boolean = false,
+    val isLoading: Boolean = false
+)
+
+data class ImportAccountListScreenState(
+    val accountList: List<BackupAccountMetaWithIcon> = emptyList()
+)
+
+data class ImportAccountPasswordState(
+    val selectedAccount: BackupAccountMetaWithIcon? = null,
+    val passwordInput: InputTextState = InputTextState(),
+    val isImportMoreAvailable: Boolean = false,
+    val isContinueButtonEnabled: Boolean = false,
+    val isLoading: Boolean = false,
+)
+
+data class BackupAccountMetaWithIcon(
+    val backupAccountMeta: BackupAccountMeta,
+    val icon: Drawable?,
 )
 
 data class MnemonicConfirmationState(

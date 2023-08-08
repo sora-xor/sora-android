@@ -37,12 +37,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -59,6 +64,7 @@ import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetwork
 import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.util.ext.testTagAsId
+import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -91,6 +97,10 @@ internal fun SwapMainScreen(
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {
+            val focus1 = remember { FocusRequester() }
+            val focus2 = remember { FocusRequester() }
+            val focusPosition1 = remember { mutableStateOf(false) }
+            val focusPosition2 = remember { mutableStateOf(false) }
             val (token1, token2, arrow) = createRefs()
             AssetAmountInput(
                 modifier = Modifier.constrainAs(token1) {
@@ -100,7 +110,11 @@ internal fun SwapMainScreen(
                 state = state.tokenFromState,
                 onAmountChange = onAmountChangeFrom,
                 onSelectToken = onSelectFrom,
-                onFocusChange = onFocusChangeFrom,
+                onFocusChange = {
+                    focusPosition1.value = it
+                    onFocusChangeFrom.invoke(it)
+                },
+                focusRequester = focus1,
             )
             AssetAmountInput(
                 modifier = Modifier.constrainAs(token2) {
@@ -110,11 +124,22 @@ internal fun SwapMainScreen(
                 state = state.tokenToState,
                 onAmountChange = onAmountChangeTo,
                 onSelectToken = onSelectTo,
-                onFocusChange = onFocusChangeTo,
+                onFocusChange = {
+                    focusPosition2.value = it
+                    onFocusChangeTo.invoke(it)
+                },
+                focusRequester = focus2,
             )
             Icon(
                 modifier = Modifier
-                    .clickable { onTokenSwapClick() }
+                    .clickable {
+                        onTokenSwapClick()
+                        if (focusPosition1.value) {
+                            focus2.requestFocus()
+                        } else if (focusPosition2.value) {
+                            focus1.requestFocus()
+                        }
+                    }
                     .size(size = Dimens.x3)
                     .constrainAs(arrow) {
                         top.linkTo(token1.bottom, (-8).dp)
@@ -134,6 +159,16 @@ internal fun SwapMainScreen(
             onMarketClick = onMarketClick,
             onSlippageClick = onSlippageClick,
         )
+        if (state.details.shouldTransactionReminderInsufficientWarningBeShown) {
+            Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
+            WarningTextCard(
+                title = stringResource(id = R.string.common_title_warning),
+                text = stringResource(
+                    id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
+                    formatArgs = arrayOf(state.details.transactionFeeToken, state.details.transactionFee)
+                )
+            )
+        }
         Spacer(modifier = Modifier.size(Dimens.x2))
         LoaderWrapper(
             modifier = Modifier.fillMaxWidth(),

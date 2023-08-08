@@ -38,6 +38,7 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
@@ -45,20 +46,23 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.equalTo
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData.LIQUIDITY_DATA
 import jp.co.soramitsu.test_data.PolkaswapTestData.LIQUIDITY_DETAILS
-import jp.co.soramitsu.test_data.PolkaswapTestData.TEST_ASSET
+import jp.co.soramitsu.test_data.PolkaswapTestData.VAL_ASSET
 import jp.co.soramitsu.test_data.PolkaswapTestData.XOR_ASSET
+import jp.co.soramitsu.test_data.PolkaswapTestData.XSTXAU_ASSET
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flowOf
@@ -78,7 +82,10 @@ import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.times
 import java.math.BigDecimal
+import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
 @ExperimentalCoroutinesApi
@@ -108,6 +115,9 @@ class AddLiquidityViewModelTest {
     private lateinit var assetsRouter: AssetsRouter
 
     @Mock
+    private lateinit var coroutineManager: CoroutineManager
+
+    @Mock
     private lateinit var router: WalletRouter
 
     private val mockedUri = Mockito.mock(Uri::class.java)
@@ -117,26 +127,29 @@ class AddLiquidityViewModelTest {
 
     private lateinit var viewModel: LiquidityAddViewModel
 
-    private fun setUpViewModel(secondTokenId: String?) {
+    private fun setUpViewModel(
+        secondTokenId: String?,
+        firstTokenId: String? = null,
+    ) {
         viewModel = LiquidityAddViewModel(
-                assetsInteractor,
-                assetsRouter,
-                router,
-                mainRouter,
-                walletInteractor,
-                poolsInteractor,
-                NumbersFormatter(),
-                resourceManager,
-                TestTokens.xorToken.id,
-                secondTokenId,
+            assetsInteractor,
+            assetsRouter,
+            router,
+            mainRouter,
+            walletInteractor,
+            poolsInteractor,
+            NumbersFormatter(),
+            resourceManager,
+            coroutineManager,
+            firstTokenId ?: TestTokens.xorToken.id,
+            secondTokenId,
         )
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
         mockkObject(FirebaseWrapper)
-//        mockkStatic(SpannableString::valueOf)
-//        every { SpannableString.valueOf(any()) } returns SpannableString("")
         mockkStatic(Uri::parse)
         every { Uri.parse(any()) } returns mockedUri
         mockkStatic(Token::iconUri)
@@ -145,7 +158,16 @@ class AddLiquidityViewModelTest {
         every { TestTokens.pswapToken.iconUri() } returns mockedUri
         every { TestTokens.xstusdToken.iconUri() } returns mockedUri
         every { TestTokens.xstToken.iconUri() } returns mockedUri
-        given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(
+            assetsInteractor.isEnoughXorLeftAfterTransaction(
+                primaryToken = any(),
+                primaryTokenAmount = any(),
+                secondaryToken = anyOrNull(),
+                secondaryTokenAmount = anyOrNull(),
+                networkFeeInXor = any()
+            )
+        ).willReturn(false)
+        given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(LIQUIDITY_DATA))
         given(
             poolsInteractor.calcLiquidityDetails(
@@ -169,7 +191,8 @@ class AddLiquidityViewModelTest {
                     TestTokens.xorToken.id,
                     TestTokens.xorToken.symbol
                 ),
-                PoolDex(1,
+                PoolDex(
+                    1,
                     TestTokens.xstusdToken.id,
                     TestTokens.xstusdToken.symbol,
                 )
@@ -179,11 +202,16 @@ class AddLiquidityViewModelTest {
             flowOf(
                 listOf(
                     XOR_ASSET,
-                    TEST_ASSET
+                    VAL_ASSET,
+                    XSTXAU_ASSET,
+                    TestAssets.xstusdAsset(BigDecimal.ONE),
+                    TestAssets.pswapAsset(BigDecimal.TEN),
+                    TestAssets.xstAsset(BigDecimal.TEN),
                 )
             )
         )
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
+        given(coroutineManager.io).willReturn(this.coroutineContext[CoroutineDispatcher])
 
         given(resourceManager.getString(R.string.common_supply)).willReturn("Supply")
         given(resourceManager.getString(R.string.common_confirm)).willReturn("Confirm")
@@ -206,9 +234,9 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `init viewModel with both tokens EXPECT initial button state text`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
         setUpViewModel(TestTokens.valToken.id)
         advanceUntilIdle()
@@ -219,14 +247,14 @@ class AddLiquidityViewModelTest {
     fun `choose token clicked EXPECT navigate to asset list screen`() = runTest {
         setUpViewModel(null)
         advanceUntilIdle()
-        //viewModel.setTokensFromArgs(XOR_ASSET.token, null)
         viewModel.onToken2Click()
         advanceUntilIdle()
-
-//        verify(router).showSelectToken(
-//            AssetListMode.SELECT_FOR_LIQUIDITY,
-//            SubstrateOptionsProvider.feeAssetId
-//        )
+        assertEquals(4, viewModel.addState.selectSearchAssetState?.fullList?.size)
+        viewModel.onToken1Change(TestTokens.xstusdToken.id)
+        advanceUntilIdle()
+        viewModel.onToken2Click()
+        advanceUntilIdle()
+        assertEquals(2, viewModel.addState.selectSearchAssetState?.fullList?.size)
     }
 
     @Test
@@ -249,11 +277,11 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `amount to changed EXPECT update toAssetAmount`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
         viewModel.onAmount2Change(BigDecimal("110.34"))
         advanceUntilIdle()
@@ -262,28 +290,28 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `set tokens from args EXPECT update visible assets`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
-        verify(poolsInteractor).isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id)
-        verify(poolsInteractor).isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id)
-        verify(poolsInteractor).subscribeReservesCache(XOR_ASSET.token.id, TEST_ASSET.token.id)
+        verify(poolsInteractor).isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id)
+        verify(poolsInteractor).isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id)
+        verify(poolsInteractor).subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id)
     }
 
     @Test
     fun `set tokens from args EXPECT update toToken`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
-        assertEquals(TEST_ASSET.token, viewModel.addState.assetState2?.token)
+        assertEquals(VAL_ASSET.token, viewModel.addState.assetState2?.token)
     }
 
     @Test
@@ -296,11 +324,11 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `option selected and INPUT desired EXPECT update amountFrom value`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
         viewModel.onAmount1Focused()
         advanceUntilIdle()
@@ -312,11 +340,11 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `option selected and OUTPUT desired  EXPECT update amountTo value`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
         viewModel.onAmount2Focused()
         advanceUntilIdle()
@@ -328,22 +356,22 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `pair is not exists EXPECT pairNotExists is true`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(false))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(false))
-        given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(null))
         given(
             poolsInteractor.getLiquidityData(
                 XOR_ASSET.token,
-                TEST_ASSET.token,
+                VAL_ASSET.token,
                 enabled = false,
                 presented = false
             )
         )
             .willReturn(LiquidityData())
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
         val pair = viewModel.addState.pairNotExist
@@ -352,11 +380,11 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `pair is exists EXPECT pairNotExists is false`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
         val pair = viewModel.addState.pairNotExist
@@ -365,11 +393,11 @@ class AddLiquidityViewModelTest {
 
     @Test
     fun `assets balance are zero EXPECT clean up liquidity details`() = runTest {
-        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairEnabled(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, TEST_ASSET.token.id))
+        given(poolsInteractor.isPairPresentedInNetwork(XOR_ASSET.token.id, VAL_ASSET.token.id))
             .willReturn(flowOf(true))
-        setUpViewModel(TEST_ASSET.token.id)
+        setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
         viewModel.onAmount1Change(BigDecimal("110.34"))
@@ -377,4 +405,52 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         assertEquals("1", viewModel.addState.prices.pair1Value)
     }
+
+    @Test
+    fun `WHEN user enters amount including one XOR EXPECT transaction reminder is checked`() =
+        runTest {
+            given(
+                poolsInteractor.isPairEnabled(
+                    inputAssetId = XOR_ASSET.token.id,
+                    outputAssetId = VAL_ASSET.token.id
+                )
+            ).willReturn(
+                flowOf(
+                    true
+                )
+            )
+
+            given(
+                poolsInteractor.isPairPresentedInNetwork(
+                    baseTokenId = XOR_ASSET.token.id,
+                    tokenId = VAL_ASSET.token.id
+                )
+            ).willReturn(
+                flowOf(
+                    true
+                )
+            )
+
+            setUpViewModel(
+                firstTokenId = XOR_ASSET.token.id,
+                secondTokenId = VAL_ASSET.token.id
+            )
+
+            advanceUntilIdle()
+
+            viewModel.onAmount1Change(BigDecimal.TEN)
+
+            advanceUntilIdle()
+
+            kVerify(
+                assetsInteractor,
+                times(1)
+            ).isEnoughXorLeftAfterTransaction(
+                primaryToken = XOR_ASSET.token,
+                primaryTokenAmount = BigDecimal.TEN,
+                secondaryToken = null,
+                secondaryTokenAmount = null,
+                networkFeeInXor = LIQUIDITY_DETAILS.networkFee
+            )
+        }
 }

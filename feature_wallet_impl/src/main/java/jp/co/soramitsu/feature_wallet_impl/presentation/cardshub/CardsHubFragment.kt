@@ -47,13 +47,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -63,8 +66,10 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsC
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
-import jp.co.soramitsu.oauth.base.sdk.signin.SoraCardSignInContract
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
+import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
@@ -73,23 +78,8 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
     override val viewModel: CardsHubViewModel by viewModels()
 
     private val soraCardSignIn = registerForActivityResult(
-        SoraCardSignInContract()
-    ) { result ->
-        when (result) {
-            is SoraCardResult.Failure -> {
-            }
-            is SoraCardResult.Success -> {
-                viewModel.updateSoraCardInfo(
-                    result.accessToken,
-                    result.refreshToken,
-                    result.accessTokenExpirationTime,
-                    result.status.toString(),
-                )
-            }
-            is SoraCardResult.Canceled -> {
-            }
-        }
-    }
+        SoraCardContract()
+    ) { viewModel.handleSoraCardResult(it) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -176,6 +166,17 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                         }
                         Spacer(modifier = Modifier.size(size = 16.dp))
                     }
+
+                    if (state.cards.isNotEmpty())
+                        BleachedButton(
+                            modifier = Modifier
+                                .padding(bottom = Dimens.x4)
+                                .align(Alignment.CenterHorizontally),
+                            size = Size.Small,
+                            order = Order.SECONDARY,
+                            text = stringResource(id = R.string.edit_view),
+                            onClick = { viewModel.onEditViewClick() }
+                        )
                 }
             }
         }

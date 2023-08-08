@@ -64,6 +64,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation project(":android-foundation")
     implementation project(":common")
     implementation project(':common_wallet')
     implementation project(":core_db")
@@ -103,13 +104,13 @@ dependencies {
     implementation runtimeKtxDep
     implementation fragmentKtxDep
 
-    implementation runtimePermissionsDep
+    implementation permissionsAccompanistDep
+    implementation permissionsRuntimeDep
 
     implementation daggerDep
     kapt daggerKaptDep
     implementation hiltWorkManagerDep
     kapt hiltWorkManagerKaptDep
-    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     implementation gsonDep
 
@@ -120,10 +121,6 @@ dependencies {
     implementation roomKtxDep
 
     implementation uiCoreDep
-
-    implementation(soraCardDep) {
-        exclude group: "com.paywings.onboarding.kyc.android-libs", module: "java-websocket-lib"
-    }
 
     implementation composeUiDep
     implementation composeThemeAdapterDep

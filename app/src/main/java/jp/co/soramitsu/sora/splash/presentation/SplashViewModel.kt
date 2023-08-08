@@ -54,6 +54,8 @@ class SplashViewModel @Inject constructor(
     private val _runtimeInitiated = MutableLiveData<Boolean>()
     val runtimeInitiated: LiveData<Boolean> = _runtimeInitiated
 
+    val loadingTextVisiblity = SingleLiveEvent<Unit>()
+
     val showMainScreen = SingleLiveEvent<Unit>()
     val showOnBoardingScreen = SingleLiveEvent<OnboardingState>()
     val showOnBoardingScreenViaInviteLink = SingleLiveEvent<Unit>()
@@ -64,6 +66,12 @@ class SplashViewModel @Inject constructor(
             tryCatch {
                 delay(500)
                 _runtimeInitiated.value = true
+            }
+        }
+        viewModelScope.launch {
+            tryCatch {
+                delay(5000)
+                loadingTextVisiblity.trigger()
             }
         }
         viewModelScope.launch {
