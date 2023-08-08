@@ -33,11 +33,11 @@ data class SoraCardIBANCardState(
 ) {
 
     val headlineText: Text = Text.StringRes(
-        id = R.string.common_refresh
+        id = R.string.sora_card_iban_headline
     )
 
     val actionIcon: Image = Image.ResImage(
-        id = R.drawable.ic_close
+        id = R.drawable.ic_rectangular_arrow_up
     )
 
     val ibanText: Text = Text.SimpleText(
@@ -81,7 +81,8 @@ fun SoraCardIBANCard(
                         .clickable { onActionClick.invoke() }
                         .wrapContentSize(),
                     painter = soraCardIBANCardState.actionIcon.retrievePainter(),
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = MaterialTheme.customColors.fgSecondary
                 )
             }
             Text(

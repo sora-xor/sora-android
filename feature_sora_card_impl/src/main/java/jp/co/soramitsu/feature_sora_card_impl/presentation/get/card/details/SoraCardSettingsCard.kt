@@ -60,7 +60,7 @@ data class SoraCardSettingsCardState(
 ) {
 
     val headlineText: Text = Text.StringRes(
-        id = R.string.common_refresh
+        id = R.string.sora_card_settings_headline
     )
 
     val settings: List<ListTileState> = soraCardSettingsOptions.map {
@@ -69,7 +69,7 @@ data class SoraCardSettingsCardState(
                 ListTileState(
                     variant = ListTileVariant.TITLE_NAVIGATION_HINT,
                     flag = ListTileFlag.WARNING,
-                    title = Text.StringRes(id = R.string.common_refresh),
+                    title = Text.StringRes(id = R.string.sora_card_option_logout),
                     icon = Image.ResImage(id = R.drawable.ic_arrow_right)
                 )
         }
@@ -80,7 +80,7 @@ data class SoraCardSettingsCardState(
 @Composable
 fun SoraCardSettingsCard(
     state: SoraCardSettingsCardState,
-    onItemClick: () -> Unit
+    onItemClick: (position: Int) -> Unit
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
@@ -103,7 +103,7 @@ fun SoraCardSettingsCard(
             repeat(state.settings.size) {
                 ListTileView(
                     listTileState = state.settings[it],
-                    onItemClick = onItemClick
+                    onItemClick = remember { { onItemClick.invoke(it) } }
                 )
             }
         }
@@ -117,6 +117,6 @@ private fun PreviewSoraCardSettingsCard() {
         state = SoraCardSettingsCardState(
             soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
         ),
-        onItemClick = {}
+        onItemClick = { _ -> }
     )
 }

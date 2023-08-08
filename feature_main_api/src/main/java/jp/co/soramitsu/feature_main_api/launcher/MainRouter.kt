@@ -94,4 +94,6 @@ interface MainRouter {
     fun showWebView(title: String, url: String)
 
     fun showGetSoraCard(shouldStartSignIn: Boolean = false, shouldStartSignUp: Boolean = false)
+
+    fun showSoraCardDetails()
 }

@@ -48,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
@@ -79,7 +80,7 @@ data class SoraCardMainSoraContentCardState(
 
     val showDetailsText: Text
         get() = Text.StringRes(
-            id = R.string.details_get_more_xor
+            id = R.string.show_more
         )
 
     val soraCardText: Text
@@ -92,31 +93,36 @@ data class SoraCardMainSoraContentCardState(
             text = "0"
         )
 
+    val soraCardManagementComingSoonText: Text
+        get() = Text.StringRes(
+            id = R.string.sora_card_details_card_management_coming_soon
+        )
+
     val menuState: List<IconButtonMenuState>
         get() = soraCardMenuActions.map {
             when(it) {
                 SoraCardMenuAction.TOP_UP ->
                     IconButtonMenuState(
-                        image = Image.ResImage(id = R.drawable.ic_refresh_24),
-                        text = Text.SimpleText(text = "Refresh"),
+                        image = Image.ResImage(id = R.drawable.ic_new_arrow_down_24),
+                        text = Text.StringRes(id = R.string.sora_card_action_top_up),
                         isEnabled = isCardEnabled
                     )
                 SoraCardMenuAction.TRANSFER ->
                     IconButtonMenuState(
-                        image = Image.ResImage(id = R.drawable.ic_refresh_24),
-                        text = Text.SimpleText(text = "Refresh"),
+                        image = Image.ResImage(id = R.drawable.ic_new_arrow_up_24),
+                        text = Text.StringRes(id = R.string.sora_card_action_transfer),
                         isEnabled = isCardEnabled
                     )
                 SoraCardMenuAction.EXCHANGE ->
                     IconButtonMenuState(
                         image = Image.ResImage(id = R.drawable.ic_refresh_24),
-                        text = Text.SimpleText(text = "Refresh"),
+                        text = Text.StringRes(id = R.string.sora_card_action_exchange),
                         isEnabled = isCardEnabled
                     )
                 SoraCardMenuAction.FREEZE ->
                     IconButtonMenuState(
-                        image = Image.ResImage(id = R.drawable.ic_refresh_24),
-                        text = Text.SimpleText(text = "Refresh"),
+                        image = Image.ResImage(id = R.drawable.ic_snow_flake),
+                        text = Text.StringRes(id = R.string.sora_card_action_freeze),
                         isEnabled = isCardEnabled
                     )
             }
@@ -150,39 +156,47 @@ fun SoraCardMainSoraContentCard(
                     contentDescription = "",
                     contentScale = ContentScale.FillWidth
                 )
-                BleachedButton(
-                    modifier = Modifier
-                        .wrapContentSize()
-                        .align(Alignment.BottomEnd)
-                        .padding(Dimens.x1_5),
-                    enabled = soraCardMainSoraContentCardState.isCardEnabled,
-                    shape = CircleShape,
-                    size = Size.Small,
-                    order = Order.SECONDARY,
-                    text = soraCardMainSoraContentCardState.showDetailsText.retrieveString(),
-                    onClick = onShowMoreClick
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = Dimens.x2
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = soraCardMainSoraContentCardState.soraCardText.retrieveString(),
-                    style = MaterialTheme.customTypography.headline2,
-                    color = MaterialTheme.customColors.fgPrimary
-                )
                 if (soraCardMainSoraContentCardState.isCardEnabled)
+                    BleachedButton(
+                        modifier = Modifier
+                            .wrapContentSize()
+                            .align(Alignment.BottomEnd)
+                            .padding(Dimens.x1_5),
+                        shape = CircleShape,
+                        size = Size.Small,
+                        order = Order.SECONDARY,
+                        text = soraCardMainSoraContentCardState.showDetailsText.retrieveString(),
+                        onClick = onShowMoreClick
+                    )
+            }
+            if (soraCardMainSoraContentCardState.isCardEnabled)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = Dimens.x2
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = soraCardMainSoraContentCardState.soraCardBalanceText.retrieveString(),
+                        text = soraCardMainSoraContentCardState.soraCardText.retrieveString(),
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary
                     )
-            }
+                        Text(
+                            text = soraCardMainSoraContentCardState.soraCardBalanceText.retrieveString(),
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgPrimary
+                        )
+                }
+            else
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = soraCardMainSoraContentCardState.soraCardManagementComingSoonText.retrieveString(),
+                    style = MaterialTheme.customTypography.textS,
+                    color = MaterialTheme.customColors.fgSecondary,
+                    textAlign = TextAlign.Center
+                )
             IconButtonMenu(
                 iconButtonMenuStates = soraCardMainSoraContentCardState.menuState,
                 onButtonClick = onIconButtonClick

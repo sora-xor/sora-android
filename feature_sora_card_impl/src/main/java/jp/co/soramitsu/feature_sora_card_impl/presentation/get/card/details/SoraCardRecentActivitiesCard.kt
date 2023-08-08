@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
@@ -52,14 +53,16 @@ import jp.co.soramitsu.common.R
 
 data class SoraCardRecentActivity(
     val t: String
-)
+) {
+    /* implementation will be added in further releases */
+}
 
 data class SoraCardRecentActivitiesCardState(
     val data: List<SoraCardRecentActivity>
 ) {
 
-    val headlineText: Text = Text.SimpleText(
-        text = "Title"
+    val headlineText: Text = Text.StringRes(
+        id = R.string.asset_details_recent_activity
     )
 
     val visibleListTileCount: Int = data.size
@@ -82,8 +85,8 @@ data class SoraCardRecentActivitiesCardState(
 @Composable
 fun SoraCardRecentActivitiesCard(
     soraCardRecentActivitiesCardState: SoraCardRecentActivitiesCardState,
+    onListTileClick: (position: Int) -> Unit,
     onShowMoreClick: () -> Unit,
-    onListTileClick: () -> Unit
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
@@ -108,7 +111,7 @@ fun SoraCardRecentActivitiesCard(
             ) {
                 ListTileView(
                     listTileState = soraCardRecentActivitiesCardState.recentActivitiesState[it],
-                    onItemClick = onListTileClick
+                    onItemClick = remember { { onListTileClick.invoke(it) } }
                 )
             }
             Text(
@@ -136,7 +139,7 @@ private fun PreviewRecentActivitiesCard() {
                 )
             )
         ),
+        onListTileClick = { _ -> },
         onShowMoreClick = {},
-        onListTileClick = {}
     )
 }

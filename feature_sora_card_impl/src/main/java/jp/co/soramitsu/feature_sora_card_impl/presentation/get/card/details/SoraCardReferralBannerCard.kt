@@ -70,11 +70,11 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 class SoraCardReferralBannerCardState {
 
     val headlineText: Text = Text.StringRes(
-        id = R.string.sora_card_title
+        id = R.string.sora_card_referral_headline
     )
 
     val referAndEarnText: Text = Text.StringRes(
-        id = R.string.common_buy_xor
+        id = R.string.sora_card_refer_and_earn_action
     )
 
     val backgroundImage: Image = Image.ResImage(

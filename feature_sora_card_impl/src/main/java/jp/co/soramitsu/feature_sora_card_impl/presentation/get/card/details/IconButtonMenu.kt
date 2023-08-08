@@ -39,11 +39,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AmountCardIcon
 
 data class IconButtonMenuState(
     val image: Image.ResImage,
-    val text: Text.SimpleText,
+    val text: Text,
     val isEnabled: Boolean
 )
 
@@ -59,7 +60,7 @@ fun IconButtonMenu(
         repeat(iconButtonMenuStates.size) {
             AmountCardIcon(
                 res = iconButtonMenuStates[it].image.id,
-                text = iconButtonMenuStates[it].text.text,
+                text = iconButtonMenuStates[it].text.retrieveString(),
                 isEnabled = iconButtonMenuStates[it].isEnabled,
                 onClick = { onButtonClick.invoke(it) }
             )
