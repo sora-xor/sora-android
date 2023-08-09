@@ -5,10 +5,6 @@
     app:startDestination="@id/getSoraCardFragment">
 
     <fragment
-        android:id="@+id/soraCardDetailsFragment"
-        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details.SoraCardDetailsFragment" />
-
-    <fragment
         android:id="@+id/getSoraCardFragment"
         android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.GetSoraCardFragment" />
 

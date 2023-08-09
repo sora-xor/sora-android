@@ -90,7 +90,7 @@ data class SoraCardMainSoraContentCardState(
 
     val soraCardBalanceText: Text
         get() = Text.SimpleText(
-            text = "0"
+            text = "$balance"
         )
 
     val soraCardManagementComingSoonText: Text
@@ -100,7 +100,7 @@ data class SoraCardMainSoraContentCardState(
 
     val menuState: List<IconButtonMenuState>
         get() = soraCardMenuActions.map {
-            when(it) {
+            when (it) {
                 SoraCardMenuAction.TOP_UP ->
                     IconButtonMenuState(
                         image = Image.ResImage(id = R.drawable.ic_new_arrow_down_24),
@@ -127,7 +127,6 @@ data class SoraCardMainSoraContentCardState(
                     )
             }
         }
-
 }
 
 @Composable
@@ -183,11 +182,11 @@ fun SoraCardMainSoraContentCard(
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary
                     )
-                        Text(
-                            text = soraCardMainSoraContentCardState.soraCardBalanceText.retrieveString(),
-                            style = MaterialTheme.customTypography.headline2,
-                            color = MaterialTheme.customColors.fgPrimary
-                        )
+                    Text(
+                        text = soraCardMainSoraContentCardState.soraCardBalanceText.retrieveString(),
+                        style = MaterialTheme.customTypography.headline2,
+                        color = MaterialTheme.customColors.fgPrimary
+                    )
                 }
             else
                 Text(

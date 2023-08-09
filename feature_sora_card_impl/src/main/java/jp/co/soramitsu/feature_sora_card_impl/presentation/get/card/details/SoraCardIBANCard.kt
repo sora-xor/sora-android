@@ -18,15 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
 
 data class SoraCardIBANCardState(
     val iban: String
@@ -43,7 +43,6 @@ data class SoraCardIBANCardState(
     val ibanText: Text = Text.SimpleText(
         text = iban
     )
-    
 }
 
 @Composable

@@ -64,7 +64,7 @@ data class SoraCardSettingsCardState(
     )
 
     val settings: List<ListTileState> = soraCardSettingsOptions.map {
-        when(it) {
+        when (it) {
             SoraCardSettingsOption.LOG_OUT ->
                 ListTileState(
                     variant = ListTileVariant.TITLE_NAVIGATION_HINT,
@@ -74,7 +74,6 @@ data class SoraCardSettingsCardState(
                 )
         }
     }
-
 }
 
 @Composable

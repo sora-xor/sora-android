@@ -43,19 +43,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.message
-import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import com.vanpra.composematerialdialogs.title
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardDetailsScreenState(
     val soraCardMainSoraContentCardState: SoraCardMainSoraContentCardState,

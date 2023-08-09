@@ -338,6 +338,8 @@ class CardsHubViewModel @Inject constructor(
             if (card.kycStatus == null) {
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
+            } else if (card.cardInfo?.kycStatus == SoraCardCommonVerification.Successful.toString()) {
+                mainRouter.showSoraCardDetails()
             } else {
                 currentSoraCardContractData?.let { contractData ->
                     _launchSoraCardSignIn.value = contractData

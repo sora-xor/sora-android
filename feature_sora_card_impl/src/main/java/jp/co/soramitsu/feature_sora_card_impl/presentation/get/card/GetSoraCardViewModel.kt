@@ -130,8 +130,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
             .onEach {
                 state.value = state.value.copy(soraCardInfo = it)
 
-                if (it?.kycStatus == SoraCardCommonVerification.Successful.toString())
-                    mainRouter.showSoraCardDetails() else startRequiredContract()
+                startRequiredContract()
             }.launchIn(viewModelScope)
     }
 

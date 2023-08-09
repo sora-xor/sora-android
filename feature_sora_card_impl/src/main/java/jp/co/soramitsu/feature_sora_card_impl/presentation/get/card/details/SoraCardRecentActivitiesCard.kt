@@ -43,13 +43,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
-import jp.co.soramitsu.common.R
 
 data class SoraCardRecentActivity(
     val t: String

@@ -5,17 +5,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import jp.co.soramitsu.oauth.feature.session.domain.UserSessionRepository
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
-import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltViewModel
-class SoraCardDetailsViewModel @Inject constructor(): BaseViewModel() {
+class SoraCardDetailsViewModel @Inject constructor(
+    private val userSessionRepository: UserSessionRepository,
+    private val walletInteractor: WalletInteractor
+) : BaseViewModel() {
 
     private val _soraCardLogOutDialogState = MutableLiveData<Unit>()
     val soraCardLogOutDialogState: LiveData<Unit> = _soraCardLogOutDialogState
@@ -79,13 +85,20 @@ class SoraCardDetailsViewModel @Inject constructor(): BaseViewModel() {
         val settings = soraCardDetailsScreenState.soraCardSettingsCard
             ?.soraCardSettingsOptions ?: return
 
-        when(settings[position]) {
+        when (settings[position]) {
             SoraCardSettingsOption.LOG_OUT -> _soraCardLogOutDialogState.value = Unit
         }
     }
 
     fun onSoraCardLogOutClick() {
-        // TODO add log out functionality
+        viewModelScope.launch {
+            tryCatch {
+                userSessionRepository.logOutUser()
+                walletInteractor.deleteSoraCardInfo()
+            }
+        }.invokeOnCompletion {
+            if (it == null)
+                onNavIcon()
+        }
     }
-
 }

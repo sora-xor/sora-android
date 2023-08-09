@@ -6,10 +6,10 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.remember
-import com.google.accompanist.navigation.animation.composable
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.composable
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.message
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
@@ -23,7 +23,7 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @AndroidEntryPoint
-class SoraCardDetailsFragment: SoraBaseFragment<SoraCardDetailsViewModel>() {
+class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
 
     override val viewModel: SoraCardDetailsViewModel by viewModels()
 
@@ -86,5 +86,4 @@ class SoraCardDetailsFragment: SoraBaseFragment<SoraCardDetailsViewModel>() {
             )
         }
     }
-
 }
