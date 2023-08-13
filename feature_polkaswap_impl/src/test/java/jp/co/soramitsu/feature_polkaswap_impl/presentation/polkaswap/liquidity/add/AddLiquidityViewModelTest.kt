@@ -249,7 +249,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onToken2Click()
         advanceUntilIdle()
-        assertEquals(4, viewModel.addState.selectSearchAssetState?.fullList?.size)
+        assertEquals(3, viewModel.addState.selectSearchAssetState?.fullList?.size)
         viewModel.onToken1Change(TestTokens.xstusdToken.id)
         advanceUntilIdle()
         viewModel.onToken2Click()

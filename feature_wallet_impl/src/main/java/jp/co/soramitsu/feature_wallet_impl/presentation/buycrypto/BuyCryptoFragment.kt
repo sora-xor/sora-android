@@ -37,6 +37,7 @@ import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -73,8 +74,9 @@ class BuyCryptoFragment : SoraBaseFragment<BuyCryptoViewModel>() {
         navController: NavHostController
     ) {
         composable(route = theOnlyRoute) {
+            val state = viewModel.state.collectAsStateWithLifecycle()
             BuyCryptoScreen(
-                state = viewModel.state,
+                state = state.value,
                 onPageFinished = viewModel::onPageFinished,
                 onReceivedError = viewModel::onReceivedError,
                 onAlertCloseClick = viewModel::onAlertCloseClick
