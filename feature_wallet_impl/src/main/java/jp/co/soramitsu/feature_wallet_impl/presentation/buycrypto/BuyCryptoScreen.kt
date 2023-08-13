@@ -38,6 +38,7 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -61,6 +62,7 @@ import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
@@ -68,11 +70,11 @@ fun BuyCryptoScreen(
     state: BuyCryptoState,
     onPageFinished: () -> Unit,
     onReceivedError: (error: WebResourceResponse?) -> Unit,
-    onAlertCloseClick: () -> Unit
+    onAlertCloseClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -120,6 +122,7 @@ private fun PaymentWidgetUnavailableAlert(onCloseClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight()
+            .background(MaterialTheme.customColors.bgPage)
             .padding(horizontal = Dimens.x2)
     ) {
         Image(
