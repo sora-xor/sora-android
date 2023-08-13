@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.domain
 
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertTrue

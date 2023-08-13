@@ -33,7 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_main_impl.domain
 
 import javax.inject.Inject
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 
 class InvitationInteractor @Inject constructor(
     private val soraConfigManager: SoraConfigManager,

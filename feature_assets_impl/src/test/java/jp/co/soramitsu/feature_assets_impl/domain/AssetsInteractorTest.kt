@@ -40,14 +40,12 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
@@ -225,7 +223,9 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN no xor token is supplied and balance equals network fee`() =
         runTest {
-            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(
+                BigDecimal.ONE
+            )
 
             val result = interactor.isEnoughXorLeftAfterTransaction(
                 primaryToken = oneToken(),
@@ -244,7 +244,9 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is supplied and balance equals network fee`() =
         runTest {
-            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(
+                BigDecimal.ONE
+            )
 
             val xorToken = Token(
                 id = SubstrateOptionsProvider.feeAssetId,
@@ -275,7 +277,9 @@ class AssetsInteractorTest {
     @Test
     fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is produced and balance equals network fee`() =
         runTest {
-            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(BigDecimal.ONE)
+            coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(
+                BigDecimal.ONE
+            )
 
             val xorToken = Token(
                 id = SubstrateOptionsProvider.feeAssetId,
@@ -315,7 +319,7 @@ class AssetsInteractorTest {
     )
 
     private fun assetList() = listOf(
-        Asset(oneToken(), true, 1, assetBalance(), true),
+        Asset(oneToken(), true, 1, TestAssets.balance(BigDecimal.ZERO), true),
     )
 
     private fun oneToken() = Token(
@@ -328,15 +332,5 @@ class AssetsInteractorTest {
         null,
         null,
         null,
-    )
-
-    private fun assetBalance() = AssetBalance(
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE
     )
 }

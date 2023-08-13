@@ -50,16 +50,13 @@ import jp.co.soramitsu.shared_utils.wsrpc.logging.Logger
 import jp.co.soramitsu.shared_utils.wsrpc.recovery.ConstantReconnectStrategy
 import jp.co.soramitsu.shared_utils.wsrpc.recovery.Reconnector
 import jp.co.soramitsu.shared_utils.wsrpc.request.RequestExecutor
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
 import jp.co.soramitsu.sora.substrate.substrate.WsConnectionManager
 import jp.co.soramitsu.sora.substrate.substrate.WsLogger
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
-import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigProvider
 import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWallet
 import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
 
@@ -74,32 +71,6 @@ class SubstrateModule {
     @Provides
     @Singleton
     fun provideWsSocketLogger(): Logger = WsLogger()
-
-    @Singleton
-    @Provides
-    fun provideSoraWalletBlockExplorerInfo(
-        client: SoramitsuNetworkClient,
-        soraRemoteConfigBuilder: SoraRemoteConfigBuilder,
-    ): SoraWalletBlockExplorerInfo {
-        return SoraWalletBlockExplorerInfo(
-            networkClient = client,
-            soraRemoteConfigBuilder = soraRemoteConfigBuilder,
-        )
-    }
-
-    @Singleton
-    @Provides
-    fun provideSoraRemoteConfigBuilder(
-        client: SoramitsuNetworkClient,
-        @ApplicationContext context: Context,
-    ): SoraRemoteConfigBuilder {
-        return SoraRemoteConfigProvider(
-            context = context,
-            client = client,
-            commonUrl = SubstrateOptionsProvider.configCommon,
-            mobileUrl = SubstrateOptionsProvider.configMobile,
-        ).provide()
-    }
 
     @Singleton
     @Provides

@@ -47,11 +47,12 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_impl.TestData
 import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalletDatasource
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.TestRuntimeProvider
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
@@ -224,28 +225,28 @@ class WalletRepositoryTest {
             oneToken(),
             true,
             1,
-            assetBalance(),
+            TestAssets.balance(BigDecimal.ZERO),
             true,
         ),
         Asset(
             oneToken2(),
             true,
             2,
-            assetBalance(),
+            TestAssets.balance(BigDecimal.ZERO),
             true,
         ),
         Asset(
             oneToken3(),
             true,
             3,
-            assetBalance(),
+            TestAssets.balance(BigDecimal.ZERO),
             true,
         ),
         Asset(
             oneToken4(),
             true,
             4,
-            assetBalance(),
+            TestAssets.balance(BigDecimal.ZERO),
             true,
         )
     )
@@ -318,15 +319,5 @@ class WalletRepositoryTest {
         null,
         null,
         "$",
-    )
-
-    private fun assetBalance() = AssetBalance(
-        BigDecimal.ZERO,
-        BigDecimal.ZERO,
-        BigDecimal.ZERO,
-        BigDecimal.ZERO,
-        BigDecimal.ZERO,
-        BigDecimal.ZERO,
-        BigDecimal.ZERO
     )
 }

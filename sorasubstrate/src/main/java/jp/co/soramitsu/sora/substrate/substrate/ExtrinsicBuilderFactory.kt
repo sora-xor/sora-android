@@ -37,6 +37,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.removeHexPrefix
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.shared_utils.encrypt.EncryptionType
 import jp.co.soramitsu.shared_utils.encrypt.MultiChainEncryption
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
@@ -46,7 +47,6 @@ import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.generics.Era
 import jp.co.soramitsu.shared_utils.runtime.extrinsic.ExtrinsicBuilder
 import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 

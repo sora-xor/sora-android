@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.sora.substrate.blockexplorer
+package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import androidx.room.withTransaction
 import java.math.BigInteger
@@ -44,7 +44,6 @@ import jp.co.soramitsu.common.domain.fiatChange
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.sora.substrate.models.SoraCoin
 import jp.co.soramitsu.xnetworking.common.Utils.toDoubleNan
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
