@@ -45,6 +45,7 @@ import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.SubstrateKeypairFactory
 import jp.co.soramitsu.shared_utils.encrypt.mnemonic.Mnemonic
@@ -52,7 +53,6 @@ import jp.co.soramitsu.shared_utils.encrypt.mnemonic.MnemonicCreator
 import jp.co.soramitsu.shared_utils.encrypt.seed.substrate.SubstrateSeedFactory
 import jp.co.soramitsu.shared_utils.extensions.fromHex
 import jp.co.soramitsu.shared_utils.extensions.toHexString
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
@@ -62,7 +62,7 @@ class CredentialsRepositoryImpl constructor(
     private val cryptoAssistant: CryptoAssistant,
     private val runtimeManager: RuntimeManager,
     private val jsonSeedEncoder: JsonAccountsEncoder,
-    private val soraConfigManager: SoraConfigManager,
+    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
 ) : CredentialsRepository {
 
     private val irohaCash = mutableMapOf<String, IrohaData>()

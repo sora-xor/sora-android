@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.util.ext.isZero
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
@@ -51,7 +52,6 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow

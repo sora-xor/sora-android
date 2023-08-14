@@ -53,7 +53,7 @@ import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityI
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.common.model.KycStatus
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull

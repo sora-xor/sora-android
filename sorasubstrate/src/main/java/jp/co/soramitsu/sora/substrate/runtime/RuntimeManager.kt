@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.shared_utils.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.shared_utils.runtime.definitions.TypeDefinitionsTree
@@ -65,7 +66,6 @@ import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
 import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.chain.RuntimeVersion
 import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.chain.RuntimeVersionRequest
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -86,7 +86,7 @@ class RuntimeManager @Inject constructor(
     private val socketService: SocketService,
     private val networkClient: SoramitsuNetworkClient,
     private val coroutineManager: CoroutineManager,
-    private val soraConfigManager: SoraConfigManager,
+    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
 ) {
 
     private val mutex = Mutex()

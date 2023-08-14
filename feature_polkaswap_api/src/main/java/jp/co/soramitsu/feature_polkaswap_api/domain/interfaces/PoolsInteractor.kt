@@ -40,7 +40,7 @@ import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.domain.model.CommonPoolData
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import kotlinx.coroutines.flow.Flow
 
 interface PoolsInteractor : PolkaswapInteractor {
@@ -81,7 +81,7 @@ interface PoolsInteractor : PolkaswapInteractor {
         desired: WithDesired,
         slippageTolerance: Double,
         pairEnabled: Boolean,
-        pairPresented: Boolean
+        pairPresented: Boolean,
     ): LiquidityDetails
 
     suspend fun observeAddLiquidity(
