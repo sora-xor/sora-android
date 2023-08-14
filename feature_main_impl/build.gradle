@@ -93,6 +93,11 @@ dependencies {
     implementation navigationUiDep
     implementation insetterDep
 
+    implementation googlePlayServiceAuth
+    implementation googleApiServicesDrive
+    implementation sharedFeaturesBackupDep
+    implementation sharedFeaturesModelsDep
+    
     implementation composeUiDep
     implementation composeThemeAdapterDep
     implementation composeFoundationDep

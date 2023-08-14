@@ -206,8 +206,8 @@ dependencies {
     implementation coroutineAndroidDep
     implementation coroutineDep
 
-    implementation platform(firebaseBomDep)
-    implementation crashlyticsDep
+    implementation platform(googleFirebaseBomDep)
+    implementation googleCrashlyticsDep
 
     implementation xNetworkingDep
     implementation webSocketLibDep

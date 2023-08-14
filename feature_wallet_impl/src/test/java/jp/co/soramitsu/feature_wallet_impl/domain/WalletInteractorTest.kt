@@ -39,9 +39,7 @@ import io.mockk.mockkStatic
 import jp.co.soramitsu.common.account.IrohaData
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.OptionsProvider
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -50,8 +48,6 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.BlockEntry
 import jp.co.soramitsu.sora.substrate.models.BlockResponse
@@ -63,19 +59,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito.anyString
 import org.mockito.BDDMockito.given
-import org.mockito.BDDMockito.`when`
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
 import java.math.BigDecimal
 
 @RunWith(MockitoJUnitRunner::class)
@@ -106,9 +98,6 @@ class WalletInteractorTest {
 
     @Mock
     private lateinit var builder: TransactionBuilder
-
-    @Mock
-    private lateinit var kycRepository: KycRepository
 
     private lateinit var interactor: WalletInteractor
 
@@ -178,81 +167,81 @@ class WalletInteractorTest {
         assertEquals(true, interactor.migrate())
     }
 
-    @Ignore
-    @Test
-    fun `poll while pending EXPECT polling is continued until status is not changed`() =
-        runTest {
-            `when`(walletRepository.getSoraCardInfo())
-                .thenReturn(
-                    SoraCardInformation(
-                        accessToken = "accessToken",
-                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
-                        kycStatus = "${SoraCardCommonVerification.Pending}"
-                    )
-                )
-                .thenReturn(
-                    SoraCardInformation(
-                        accessToken = "accessToken",
-                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
-                        kycStatus = "${SoraCardCommonVerification.Successful}"
-                    )
-                )
-
-            given(kycRepository.getKycLastFinalStatus(any()))
-                .willReturn(
-                    Result.success(SoraCardCommonVerification.Successful)
-                )
-
-            verify(walletRepository, times(2))
-                .getSoraCardInfo()
-            verify(kycRepository, times(1))
-                .getKycLastFinalStatus(any())
-            verify(walletRepository, times(1))
-                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
-        }
-
-    @Ignore
-    @Test
-    fun `poll with exception EXPECT polling is continued until status is not changed`() =
-        runTest {
-            `when`(walletRepository.getSoraCardInfo())
-                .thenReturn(
-                    SoraCardInformation(
-                        accessToken = "accessToken",
-                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
-                        kycStatus = "${SoraCardCommonVerification.Pending}"
-                    )
-                )
-                .thenReturn(
-                    SoraCardInformation(
-                        accessToken = "accessToken",
-                        accessTokenExpirationTime = System.currentTimeMillis() + 1_500,
-                        kycStatus = "${SoraCardCommonVerification.Pending}"
-                    )
-                )
-                .thenReturn(
-                    SoraCardInformation(
-                        accessToken = "accessToken",
-                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
-                        kycStatus = "${SoraCardCommonVerification.Successful}"
-                    )
-                )
-
-            `when`(kycRepository.getKycLastFinalStatus(any()))
-                .thenReturn(
-                    Result.failure(RuntimeException())
-                )
-                .thenReturn(
-                    Result.success(SoraCardCommonVerification.Successful)
-                )
-
-            verify(walletRepository, times(3))
-                .getSoraCardInfo()
-            verify(kycRepository, times(2))
-                .getKycLastFinalStatus(any())
-            verify(walletRepository, times(1))
-                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
-        }
+//    @Ignore
+//    @Test
+//    fun `poll while pending EXPECT polling is continued until status is not changed`() =
+//        runTest {
+//            `when`(walletRepository.getSoraCardInfo())
+//                .thenReturn(
+//                    SoraCardInformation(
+//                        accessToken = "accessToken",
+//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
+//                        kycStatus = "${SoraCardCommonVerification.Pending}"
+//                    )
+//                )
+//                .thenReturn(
+//                    SoraCardInformation(
+//                        accessToken = "accessToken",
+//                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
+//                        kycStatus = "${SoraCardCommonVerification.Successful}"
+//                    )
+//                )
+//
+//            given(kycRepository.getKycLastFinalStatus(any()))
+//                .willReturn(
+//                    Result.success(SoraCardCommonVerification.Successful)
+//                )
+//
+//            verify(walletRepository, times(2))
+//                .getSoraCardInfo()
+//            verify(kycRepository, times(1))
+//                .getKycLastFinalStatus(any())
+//            verify(walletRepository, times(1))
+//                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
+//        }
+//
+//    @Ignore
+//    @Test
+//    fun `poll with exception EXPECT polling is continued until status is not changed`() =
+//        runTest {
+//            `when`(walletRepository.getSoraCardInfo())
+//                .thenReturn(
+//                    SoraCardInformation(
+//                        accessToken = "accessToken",
+//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_000,
+//                        kycStatus = "${SoraCardCommonVerification.Pending}"
+//                    )
+//                )
+//                .thenReturn(
+//                    SoraCardInformation(
+//                        accessToken = "accessToken",
+//                        accessTokenExpirationTime = System.currentTimeMillis() + 1_500,
+//                        kycStatus = "${SoraCardCommonVerification.Pending}"
+//                    )
+//                )
+//                .thenReturn(
+//                    SoraCardInformation(
+//                        accessToken = "accessToken",
+//                        accessTokenExpirationTime = System.currentTimeMillis() + 31_000,
+//                        kycStatus = "${SoraCardCommonVerification.Successful}"
+//                    )
+//                )
+//
+//            `when`(kycRepository.getKycLastFinalStatus(any()))
+//                .thenReturn(
+//                    Result.failure(RuntimeException())
+//                )
+//                .thenReturn(
+//                    Result.success(SoraCardCommonVerification.Successful)
+//                )
+//
+//            verify(walletRepository, times(3))
+//                .getSoraCardInfo()
+//            verify(kycRepository, times(2))
+//                .getKycLastFinalStatus(any())
+//            verify(walletRepository, times(1))
+//                .updateSoraCardKycStatus(SoraCardCommonVerification.Successful.toString())
+//        }
 
     private fun accountList() = listOf(
         "use","contact1","contact2",

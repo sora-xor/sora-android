@@ -319,7 +319,7 @@ class AssetsInteractorTest {
     )
 
     private fun assetList() = listOf(
-        Asset(oneToken(), true, 1, TestAssets.balance(BigDecimal.ZERO), true),
+        Asset(oneToken(), true, 1, TestAssets.balance(BigDecimal.ONE), true),
     )
 
     private fun oneToken() = Token(

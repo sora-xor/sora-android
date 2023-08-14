@@ -176,6 +176,18 @@ class CommonModule {
 
     @Singleton
     @Provides
+    fun provideSoraWalletBlockExplorerInfo(
+        client: SoramitsuNetworkClient,
+        soraRemoteConfigBuilder: SoraRemoteConfigBuilder,
+    ): SoraWalletBlockExplorerInfo {
+        return SoraWalletBlockExplorerInfo(
+            networkClient = client,
+            soraRemoteConfigBuilder = soraRemoteConfigBuilder,
+        )
+    }
+
+    @Singleton
+    @Provides
     fun provideSoraRemoteConfigBuilder(
         client: SoramitsuNetworkClient,
         @ApplicationContext context: Context,
@@ -186,18 +198,6 @@ class CommonModule {
             commonUrl = OptionsProvider.configCommon,
             mobileUrl = OptionsProvider.configMobile,
         ).provide()
-    }
-
-    @Singleton
-    @Provides
-    fun provideSoraWalletBlockExplorerInfo(
-        client: SoramitsuNetworkClient,
-        soraRemoteConfigBuilder: SoraRemoteConfigBuilder,
-    ): SoraWalletBlockExplorerInfo {
-        return SoraWalletBlockExplorerInfo(
-            networkClient = client,
-            soraRemoteConfigBuilder = soraRemoteConfigBuilder,
-        )
     }
 
     @Singleton

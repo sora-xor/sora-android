@@ -100,7 +100,7 @@ class PolkaswapFormulasTest {
                 RESERVES_SECOND,
                 PRECISION_FIRST,
                 PRECISION_SECOND,
-                WithDesired.INPUT
+                WithDesired.INPUT,
             )
         )
     }

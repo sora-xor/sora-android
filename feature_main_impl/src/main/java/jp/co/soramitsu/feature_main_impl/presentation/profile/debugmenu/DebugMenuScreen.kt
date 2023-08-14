@@ -58,7 +58,7 @@ internal fun DebugMenuScreen(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = Dimens.x1),
-        verticalArrangement = Arrangement.spacedBy(Dimens.x1)
+        verticalArrangement = Arrangement.spacedBy(Dimens.x1),
     ) {
         items(
             items = state.settings
@@ -67,10 +67,10 @@ internal fun DebugMenuScreen(
                 modifier = Modifier.padding(
                     horizontal = Dimens.x1
                 ).fillMaxSize(),
-                innerPadding = PaddingValues(Dimens.x2)
+                innerPadding = PaddingValues(Dimens.x1)
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().wrapContentHeight()
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
                 ) {
                     Text(
                         text = item.name,

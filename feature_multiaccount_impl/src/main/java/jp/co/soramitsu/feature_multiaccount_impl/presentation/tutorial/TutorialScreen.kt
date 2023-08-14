@@ -66,8 +66,8 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.TutorialScreenState
-import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
+import jp.co.soramitsu.ui_core.component.button.OutlinedButton
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -257,7 +257,6 @@ private fun TutorialButtons(
                     painter = painterResource(id = R.drawable.ic_google_white),
                     contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
                 )
-
                 Text(
                     style = MaterialTheme.customTypography.buttonM,
                     text = stringResource(id = R.string.onboarding_continue_with_google)
@@ -265,7 +264,7 @@ private fun TutorialButtons(
             }
         }
 
-        FilledButton(
+        OutlinedButton(
             modifier = Modifier
                 .testTagAsId("CreateNewAccount")
                 .padding(top = Dimens.x1)
