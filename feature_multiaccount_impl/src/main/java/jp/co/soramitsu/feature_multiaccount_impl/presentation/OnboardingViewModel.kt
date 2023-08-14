@@ -474,7 +474,7 @@ class OnboardingViewModel @Inject constructor(
 
     fun onRecoveryClicked(navController: NavController, index: Int) {
         _recoveryState.value = when (index) {
-            0 -> {
+            2 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromMnemonic
                 errorMessageCode = ResponseCode.MNEMONIC_IS_NOT_VALID
@@ -488,7 +488,7 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
-            1 -> {
+            2 -> {
                 isValidMethod = multiaccountInteractor::isRawSeedValid
                 recoverSoraAccountMethod = multiaccountInteractor::recoverSoraAccountFromRawSeed
                 errorMessageCode = ResponseCode.RAW_SEED_IS_NOT_VALID
@@ -597,7 +597,7 @@ class OnboardingViewModel @Inject constructor(
                                     cryptoType = CryptoType.SR25519,
                                     backupAccountType = listOf(
                                         BackupAccountType.JSON,
-                                        BackupAccountType.PASSHRASE,
+                                        BackupAccountType.PASSPHRASE,
                                         BackupAccountType.SEED
                                     ),
                                     seed = seed,
@@ -721,7 +721,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSHRASE)) {
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE)) {
             decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
                 val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
 

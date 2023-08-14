@@ -276,7 +276,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
                             val backupAccounts = mutableListOf<BackupAccountType>()
                             if (passphrase.isNotEmpty()) {
-                                backupAccounts.add(BackupAccountType.PASSHRASE)
+                                backupAccounts.add(BackupAccountType.PASSPHRASE)
                             }
                             if (!seed.substrateSeed.isNullOrEmpty()) {
                                 backupAccounts.add(BackupAccountType.SEED)
