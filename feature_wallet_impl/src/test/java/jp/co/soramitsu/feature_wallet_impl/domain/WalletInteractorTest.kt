@@ -58,6 +58,7 @@ import jp.co.soramitsu.sora.substrate.models.BlockResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.extrinsicHash
+import jp.co.soramitsu.test_data.TestAssets
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -258,7 +259,7 @@ class WalletInteractorTest {
     )
 
     private fun assetList() = listOf(
-        Asset(oneToken(), true, 1, assetBalance(), true),
+        Asset(oneToken(), true, 1, TestAssets.balance(BigDecimal.ONE), true),
     )
 
     private fun oneToken() = Token(
@@ -271,15 +272,5 @@ class WalletInteractorTest {
         null,
         null,
         null,
-    )
-
-    private fun assetBalance() = AssetBalance(
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE
     )
 }

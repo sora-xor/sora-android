@@ -30,9 +30,16 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.sora.substrate.models
+package jp.co.soramitsu.common_wallet.data
 
-enum class WithDesired(val backString: String) {
-    INPUT("WithDesiredInput"),
-    OUTPUT("WithDesiredOutput")
-}
+import java.math.BigInteger
+
+data class XorBalanceDto(
+    val free: BigInteger,
+    val reserved: BigInteger,
+    val miscFrozen: BigInteger,
+    val feeFrozen: BigInteger,
+    val bonded: BigInteger,
+    val redeemable: BigInteger,
+    val unbonding: BigInteger
+)

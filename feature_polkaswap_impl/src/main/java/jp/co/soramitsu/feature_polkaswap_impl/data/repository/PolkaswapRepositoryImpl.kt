@@ -47,11 +47,11 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocal
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocalNullable
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapRepository
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.PoolLocalMapper
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.debounce

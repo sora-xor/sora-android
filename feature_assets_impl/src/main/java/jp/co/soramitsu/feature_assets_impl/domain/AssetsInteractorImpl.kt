@@ -43,10 +43,10 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.orZero
+import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder

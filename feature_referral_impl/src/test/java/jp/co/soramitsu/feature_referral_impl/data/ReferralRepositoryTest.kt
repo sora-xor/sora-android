@@ -42,14 +42,13 @@ import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
-import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerRewardsInfo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList

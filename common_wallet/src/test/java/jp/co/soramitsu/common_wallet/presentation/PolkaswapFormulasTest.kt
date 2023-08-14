@@ -36,8 +36,8 @@ import jp.co.soramitsu.common.util.ext.Big100
 import java.math.BigDecimal
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

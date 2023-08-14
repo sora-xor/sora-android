@@ -34,7 +34,6 @@ package jp.co.soramitsu.sora.substrate.runtime
 
 import java.math.BigInteger
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.shared_utils.encrypt.EncryptionType
 import jp.co.soramitsu.shared_utils.extensions.fromHex
@@ -55,8 +54,6 @@ object SubstrateOptionsProvider {
     const val xstTokenId = "0x0200090000000000000000000000000000000000000000000000000000000000"
     const val xstusdTokenId = "0x0200080000000000000000000000000000000000000000000000000000000000"
     const val ethTokenId = "0x0200070000000000000000000000000000000000000000000000000000000000"
-    const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
-    const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
 }
 
 fun String.mapAssetId() = this.fromHex().mapAssetId()

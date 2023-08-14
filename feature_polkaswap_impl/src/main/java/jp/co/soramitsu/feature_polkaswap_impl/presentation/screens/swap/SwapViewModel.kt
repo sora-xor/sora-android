@@ -66,6 +66,7 @@ import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common.util.ext.nullZero
 import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
@@ -78,7 +79,6 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState

@@ -48,14 +48,15 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
+import jp.co.soramitsu.common_wallet.data.XorAssetBalance
+import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
@@ -182,25 +183,7 @@ class AssetsRepositoryImpl @Inject constructor(
 
     override suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance {
         return substrateCalls.fetchXORBalances(address).let {
-            val locked = it.miscFrozen.max(it.feeFrozen)
-            val transferable = mapBalance(it.free - locked, precision)
-            val frozen = mapBalance(it.bonded + it.reserved + locked, precision)
-            val total = mapBalance(it.free + it.reserved + it.bonded, precision)
-            val bonded = mapBalance(it.bonded, precision)
-            val reserved = mapBalance(it.reserved, precision)
-            val redeemable = mapBalance(it.redeemable, precision)
-            val unbonding = mapBalance(it.unbonding, precision)
-
-            XorAssetBalance(
-                transferable,
-                frozen,
-                total,
-                mapBalance(locked, precision),
-                bonded,
-                reserved,
-                redeemable,
-                unbonding
-            )
+            BalanceWrapper.mapXorBalance(it, precision)
         }
     }
 
@@ -426,8 +409,7 @@ class AssetsRepositoryImpl @Inject constructor(
         assetIdList: List<String>
     ): List<BigInteger> {
         val xorBalance = substrateCalls.fetchXORBalances(address)
-        val locked = xorBalance.miscFrozen.max(xorBalance.feeFrozen)
-        val transferable = xorBalance.free - locked
+        val transferable = BalanceWrapper.calcTransferable(dto = xorBalance)
         val xorIndex = assetIdList.indexOf(SubstrateOptionsProvider.feeAssetId)
 
         val balances = substrateCalls.fetchBalances(

@@ -2,6 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-parcelize'
 apply from: '../tests.gradle'
 
 android {
@@ -68,7 +69,6 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_di")
-    implementation project(":core_db")
     implementation project(":sorasubstrate")
     implementation project(":feature_assets_api")
     implementation project(":feature_blockexplorer_api")
@@ -105,9 +105,6 @@ dependencies {
     debugImplementation composeToolingDep
 
     implementation accompanistNavAnimationDep
-
-    implementation roomDep
-    implementation roomKtxDep
 
     implementation timberDep
     implementation sharedUtilsDep
