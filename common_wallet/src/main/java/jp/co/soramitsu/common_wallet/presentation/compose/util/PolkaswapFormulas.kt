@@ -37,7 +37,7 @@ import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.common.util.ext.safeDivide
-import jp.co.soramitsu.sora.substrate.models.WithDesired
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 
 object PolkaswapFormulas {
 
@@ -66,7 +66,7 @@ object PolkaswapFormulas {
         reservesSecond: BigDecimal,
         precisionFirst: Int,
         precisionSecond: Int,
-        desired: WithDesired
+        desired: WithDesired,
     ): BigDecimal {
         return if (desired == WithDesired.INPUT) {
             baseAmount.multiply(reservesSecond).safeDivide(reservesFirst, precisionSecond)

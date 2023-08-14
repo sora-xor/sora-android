@@ -55,11 +55,9 @@ android {
 dependencies {
 
     implementation project(":common")
+    implementation project(":common_wallet")
+    implementation project(":feature_blockexplorer_api")
     implementation project(":soracrypro")
-    implementation project(":core_db")
-
-    implementation roomDep
-    implementation roomKtxDep
 
     implementation xNetworkingDep
     implementation gsonDep

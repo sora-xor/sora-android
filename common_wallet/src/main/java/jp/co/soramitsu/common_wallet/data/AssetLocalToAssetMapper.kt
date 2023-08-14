@@ -35,18 +35,18 @@ package jp.co.soramitsu.common_wallet.data
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.WhitelistTokensManager
+import jp.co.soramitsu.common_wallet.domain.BalanceWrapper
 import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
 import jp.co.soramitsu.core_db.model.TokenFiatLocal
 import jp.co.soramitsu.core_db.model.TokenWithFiatLocal
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 
 @Singleton
 class AssetLocalToAssetMapper @Inject constructor(
     private val whitelistTokensManager: WhitelistTokensManager,
-    private val soraConfigManager: SoraConfigManager,
+    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
 ) {
 
     suspend fun map(token: TokenFiatLocal): Token {
@@ -75,15 +75,7 @@ class AssetLocalToAssetMapper @Inject constructor(
         requireNotNull(assetLocal)
         return Asset(
             token = map(TokenWithFiatLocal(asset.token, asset.price)),
-            balance = AssetBalance(
-                assetLocal.free - assetLocal.miscFrozen.max(assetLocal.feeFrozen),
-                assetLocal.reserved,
-                assetLocal.miscFrozen,
-                assetLocal.feeFrozen,
-                assetLocal.bonded,
-                assetLocal.redeemable,
-                assetLocal.unbonding,
-            ),
+            balance = BalanceWrapper.mapLocalBalance(assetLocal),
             position = assetLocal.position,
             favorite = assetLocal.displayAsset,
             visibility = assetLocal.visibility,

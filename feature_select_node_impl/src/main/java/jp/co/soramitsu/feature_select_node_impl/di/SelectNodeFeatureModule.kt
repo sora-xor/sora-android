@@ -39,11 +39,11 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
 import jp.co.soramitsu.feature_select_node_impl.NodeManagerImpl
 import jp.co.soramitsu.feature_select_node_impl.data.SelectNodeRepositoryImpl
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.FlowPreview
 
@@ -63,7 +63,7 @@ class SelectNodeFeatureModule {
         selectNodeRepository: SelectNodeRepository,
         coroutineManager: CoroutineManager,
         appDatabase: AppDatabase,
-        soraConfigManager: SoraConfigManager,
+        soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
     ): NodeManager = NodeManagerImpl(
         connectionManager = connectionManager,
         selectNodeRepository = selectNodeRepository,

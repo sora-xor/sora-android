@@ -47,6 +47,7 @@ import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsViewModel
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens.pswapToken
 import jp.co.soramitsu.test_data.TestTokens.valToken
 import jp.co.soramitsu.test_data.TestTokens.xorToken
@@ -514,75 +515,35 @@ class AssetSettingsViewModelTest {
             xorToken,
             visibility[0],
             1,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
             valToken,
             visibility[1],
             2,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
             pswapToken,
             visibility[2],
             3,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
             xstusdToken,
             visibility[3],
             4,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true
         ),
         Asset(
             xstToken,
             visibility[4],
             5,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -599,15 +560,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[5],
             6,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -624,15 +577,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[6],
             7,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -649,15 +594,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[7],
             8,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -674,15 +611,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[8],
             9,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         )
     )

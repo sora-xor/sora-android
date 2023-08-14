@@ -63,6 +63,7 @@ import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.interfaces.WithProgress
@@ -84,6 +85,9 @@ import jp.co.soramitsu.shared_utils.encrypt.json.JsonSeedEncoder
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
+import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
+import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigProvider
 import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
 import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
 
@@ -169,6 +173,32 @@ class CommonModule {
     @Provides
     fun provideSoramitsuNetworkClient(): SoramitsuNetworkClient =
         SoramitsuNetworkClient(logging = BuildConfig.DEBUG)
+
+    @Singleton
+    @Provides
+    fun provideSoraWalletBlockExplorerInfo(
+        client: SoramitsuNetworkClient,
+        soraRemoteConfigBuilder: SoraRemoteConfigBuilder,
+    ): SoraWalletBlockExplorerInfo {
+        return SoraWalletBlockExplorerInfo(
+            networkClient = client,
+            soraRemoteConfigBuilder = soraRemoteConfigBuilder,
+        )
+    }
+
+    @Singleton
+    @Provides
+    fun provideSoraRemoteConfigBuilder(
+        client: SoramitsuNetworkClient,
+        @ApplicationContext context: Context,
+    ): SoraRemoteConfigBuilder {
+        return SoraRemoteConfigProvider(
+            context = context,
+            client = client,
+            commonUrl = OptionsProvider.configCommon,
+            mobileUrl = OptionsProvider.configMobile,
+        ).provide()
+    }
 
     @Singleton
     @Provides

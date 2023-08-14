@@ -47,7 +47,6 @@ import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
@@ -315,7 +314,7 @@ class AssetsInteractorTest {
     )
 
     private fun assetList() = listOf(
-        Asset(oneToken(), true, 1, assetBalance(), true),
+        Asset(oneToken(), true, 1, TestAssets.balance(BigDecimal.ONE), true),
     )
 
     private fun oneToken() = Token(
@@ -328,15 +327,5 @@ class AssetsInteractorTest {
         null,
         null,
         null,
-    )
-
-    private fun assetBalance() = AssetBalance(
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE,
-        BigDecimal.ONE
     )
 }

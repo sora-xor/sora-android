@@ -34,7 +34,7 @@ package jp.co.soramitsu.feature_polkaswap_impl.data.repository
 
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.UserPoolJoinedLocalNullable
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

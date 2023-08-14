@@ -35,8 +35,8 @@ package jp.co.soramitsu.feature_polkaswap_api.domain.interfaces
 import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import kotlinx.coroutines.flow.Flow
 
 interface SwapInteractor {
