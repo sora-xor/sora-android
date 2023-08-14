@@ -534,6 +534,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     .filter { asset ->
                         if (addToken1 == SubstrateOptionsProvider.xstusdTokenId) {
                             asset.token.id != SubstrateOptionsProvider.xstTokenId
+                        } else if (addToken1 == SubstrateOptionsProvider.feeAssetId) {
+                            asset.token.id != SubstrateOptionsProvider.xstusdTokenId
                         } else {
                             true
                         }
