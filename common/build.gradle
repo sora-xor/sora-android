@@ -59,7 +59,7 @@ android {
             buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_TEST")
             buildConfigField "String", "SORA_CARD_KYC_PASSWORD", readSecretInQuotes("SORA_CARD_KYC_PASSWORD_TEST")
 
-            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("GOOGLE_TOKEN_TEST")
+            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_TEST")
         }
 
         soralution {
@@ -75,7 +75,7 @@ android {
             buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_TEST")
             buildConfigField "String", "SORA_CARD_KYC_PASSWORD", readSecretInQuotes("SORA_CARD_KYC_PASSWORD_TEST")
 
-            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("GOOGLE_TOKEN_TEST")
+            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_TEST")
         }
 
         tsting {
@@ -91,7 +91,7 @@ android {
             buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_TEST")
             buildConfigField "String", "SORA_CARD_KYC_PASSWORD", readSecretInQuotes("SORA_CARD_KYC_PASSWORD_TEST")
 
-            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("GOOGLE_TOKEN_TEST")
+            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_TEST")
         }
 
         production {
@@ -107,7 +107,7 @@ android {
             buildConfigField "String", "SORA_CARD_KYC_USERNAME", readSecretInQuotes("SORA_CARD_KYC_USERNAME_PROD")
             buildConfigField "String", "SORA_CARD_KYC_PASSWORD", readSecretInQuotes("SORA_CARD_KYC_PASSWORD_PROD")
 
-            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("GOOGLE_TOKEN_PROD")
+            buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_PROD")
         }
     }
 }
