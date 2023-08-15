@@ -36,6 +36,7 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -130,6 +131,15 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             }
         }
 
+    private val consentHandlerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } else {
+                viewModel.onConsentSuccess(navController)
+            }
+        }
+
     override val viewModel: OnboardingViewModel by viewModels()
 
     @Inject
@@ -138,6 +148,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     override fun onToolbarNavigation() {
         val pop = navController.popBackStack()
         if (!pop) finish()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel.consentExceptionHandler.observe(this) {
+            consentHandlerLauncher.launch(it)
+        }
     }
 
     @OptIn(
@@ -239,17 +257,16 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             title(text = stringResource(id = R.string.recovery_source_type))
                             listItems(
                                 listOf(
-//                                    stringResource(id = R.string.common_google),
+                                    stringResource(id = R.string.common_google),
                                     stringResource(id = R.string.common_passphrase_title),
                                     stringResource(id = R.string.common_raw_seed)
                                 ),
                                 onClick = { index, _ ->
-//                                    if (index == 0) {
-//                                        viewModel.onGoogleSignin(navController, launcher)
-//                                    } else {
-//                                        viewModel.onRecoveryClicked(navController, index)
-//                                    }
-                                    viewModel.onRecoveryClicked(navController, index)
+                                    if (index == 0) {
+                                        viewModel.onGoogleSignin(navController, launcher)
+                                    } else {
+                                        viewModel.onRecoveryClicked(navController, index)
+                                    }
                                 }
                             )
                         }

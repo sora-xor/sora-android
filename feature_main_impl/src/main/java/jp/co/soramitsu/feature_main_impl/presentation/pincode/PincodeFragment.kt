@@ -41,6 +41,9 @@ import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -212,14 +215,16 @@ class PincodeFragment : SoraBaseFragment<PinCodeViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
-            PincodeScreen(
-                pinCodeScreenState = viewModel.state,
-                onNumClick = viewModel::pinCodeNumberClicked,
-                onBiometricClick = fingerprintWrapper::toggleScanner,
-                onDeleteClick = viewModel::pinCodeDeleteClicked,
-                onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
-                onSwitchNode = viewModel::onSwitchNode,
-            )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                PincodeScreen(
+                    pinCodeScreenState = viewModel.state,
+                    onNumClick = viewModel::pinCodeNumberClicked,
+                    onBiometricClick = fingerprintWrapper::toggleScanner,
+                    onDeleteClick = viewModel::pinCodeDeleteClicked,
+                    onWrongPinAnimationEnd = viewModel::onWrongPinAnimationEnd,
+                    onSwitchNode = viewModel::onSwitchNode,
+                )
+            }
         }
     }
 }

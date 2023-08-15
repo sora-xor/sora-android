@@ -70,7 +70,7 @@ fun BuyCryptoScreen(
     state: BuyCryptoState,
     onPageFinished: () -> Unit,
     onReceivedError: (error: WebResourceResponse?) -> Unit,
-    onAlertCloseClick: () -> Unit
+    onAlertCloseClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),

@@ -61,7 +61,7 @@ object SoraCardTestData {
         isEnoughXorAvailable = false,
         isIssuancePaid = false,
         userAvailableXorAmount = 0.0,
-        soraBackEndUrl = BuildConfig.SORACARD_BACKEND_URL,
+        soraBackEndUrl = "soracard backend",
     )
 
     val SORA_CARD_INFO = SoraCardInformation(
@@ -88,7 +88,7 @@ object SoraCardTestData {
         isIssuancePaid = false,
         client = "test android client",
         userAvailableXorAmount = 0.0,
-        soraBackEndUrl = BuildConfig.SORACARD_BACKEND_URL,
+        soraBackEndUrl = "soracard backend",
     )
 
     val signInLauncher = SoraCardContractData(
@@ -109,6 +109,6 @@ object SoraCardTestData {
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
         userAvailableXorAmount = 0.0,
-        soraBackEndUrl = BuildConfig.SORACARD_BACKEND_URL,
+        soraBackEndUrl = "soracard backend",
     )
 }

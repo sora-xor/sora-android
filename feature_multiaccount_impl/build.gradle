@@ -94,8 +94,8 @@ dependencies {
     implementation coilComposeDep
 
     implementation lifecycleProcessDep
-    implementation 'com.google.android.gms:play-services-auth:20.5.0'
-    implementation  "com.google.apis:google-api-services-drive:v3-rev136-1.25.0"
+    implementation googlePlayServiceAuth
+    implementation googleApiServicesDrive
 
     kapt lifecycleKaptDep
 

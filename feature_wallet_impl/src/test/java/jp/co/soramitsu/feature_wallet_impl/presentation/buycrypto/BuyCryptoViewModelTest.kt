@@ -37,17 +37,13 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import java.util.UUID
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
-import jp.co.soramitsu.feature_wallet_api.domain.model.PaymentOrder
-import jp.co.soramitsu.feature_wallet_api.domain.model.PaymentOrderInfo
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -58,8 +54,8 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import java.util.UUID
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(MockitoJUnitRunner::class)

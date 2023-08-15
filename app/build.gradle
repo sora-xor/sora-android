@@ -142,9 +142,9 @@ hilt {
 
 play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
-    track = "beta"
+    track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "96 (3.2.0.0)"
+    releaseName = "3.2.0 - UX Improvements"
 }
 
 dependencies {
@@ -206,8 +206,8 @@ dependencies {
     implementation coroutineAndroidDep
     implementation coroutineDep
 
-    implementation platform(firebaseBomDep)
-    implementation crashlyticsDep
+    implementation platform(googleFirebaseBomDep)
+    implementation googleCrashlyticsDep
 
     implementation xNetworkingDep
     implementation webSocketLibDep

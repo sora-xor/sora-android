@@ -81,7 +81,7 @@ interface PoolsInteractor : PolkaswapInteractor {
         desired: WithDesired,
         slippageTolerance: Double,
         pairEnabled: Boolean,
-        pairPresented: Boolean
+        pairPresented: Boolean,
     ): LiquidityDetails
 
     suspend fun observeAddLiquidity(
