@@ -38,9 +38,9 @@ import jp.co.soramitsu.common.domain.ChainNode
 import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.NodeLocal
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
 import jp.co.soramitsu.feature_select_node_impl.compareWithUrl
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -49,7 +49,7 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
     private val converter: NodeConverter,
     private val calls: SubstrateCalls,
-    private val soraConfigManager: SoraConfigManager,
+    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
 ) : SelectNodeRepository {
 
     override suspend fun fetchDefaultNodes(): List<ChainNode> =

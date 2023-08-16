@@ -36,6 +36,11 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 
+enum class WithDesired(val backString: String) {
+    INPUT("WithDesiredInput"),
+    OUTPUT("WithDesiredOutput")
+}
+
 data class BasicPoolData(
     val baseToken: Token,
     val targetToken: Token,

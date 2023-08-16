@@ -30,16 +30,15 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.data.network.dto
+package jp.co.soramitsu.feature_blockexplorer_api.data
 
-import java.math.BigInteger
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
-data class XorBalanceDto(
-    val free: BigInteger,
-    val reserved: BigInteger,
-    val miscFrozen: BigInteger,
-    val feeFrozen: BigInteger,
-    val bonded: BigInteger,
-    val redeemable: BigInteger,
-    val unbonding: BigInteger
+@Serializable
+data class SoraCoin(
+    @SerialName("pair") val pair: String,
+    @SerialName("price") val price: String,
+    @SerialName("source") val source: String,
+    @SerialName("update_time") val update_time: Long,
 )
