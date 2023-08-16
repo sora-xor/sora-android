@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_sora_card_api.domain
 
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
+import jp.co.soramitsu.oauth.common.model.IbanAccountResponse
 import kotlinx.coroutines.flow.Flow
 
 interface SoraCardInteractor {
@@ -40,4 +41,8 @@ interface SoraCardInteractor {
     fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
 
     fun pollSoraCardStatusIfPending(): Flow<String?>
+
+    suspend fun fetchUserIbanAccount(): List<IbanAccountResponse>
+
+    suspend fun logOutFromSoraCard()
 }

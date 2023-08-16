@@ -78,7 +78,7 @@ class SoraCardReferralBannerCardState {
     )
 
     val backgroundImage: Image = Image.ResImage(
-        id = R.drawable.ic_banner_sora_card_referral
+        id = R.drawable.sora_card_referral_banner
     )
 }
 

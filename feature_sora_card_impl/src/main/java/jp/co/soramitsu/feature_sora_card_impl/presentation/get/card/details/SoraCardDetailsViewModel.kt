@@ -10,8 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.oauth.feature.session.domain.UserSessionRepository
+import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -19,8 +18,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SoraCardDetailsViewModel @Inject constructor(
-    private val userSessionRepository: UserSessionRepository,
-    private val walletInteractor: WalletInteractor
+    private val soraCardInteractor: SoraCardInteractor
 ) : BaseViewModel() {
 
     private val _soraCardLogOutDialogState = MutableLiveData<Unit>()
@@ -29,12 +27,9 @@ class SoraCardDetailsViewModel @Inject constructor(
     var soraCardDetailsScreenState: SoraCardDetailsScreenState by mutableStateOf(
         value = SoraCardDetailsScreenState(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-                balance = 3644.50f,
+                balance = 0f,
                 isCardEnabled = false,
                 soraCardMenuActions = SoraCardMenuAction.values().toList()
-            ),
-            soraCardIBANCardState = SoraCardIBANCardState(
-                iban = "LT61 3250 0467 7252 5583"
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
                 soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
@@ -51,6 +46,17 @@ class SoraCardDetailsViewModel @Inject constructor(
                 navIcon = R.drawable.ic_cross,
             )
         )
+
+        viewModelScope.launch {
+            tryCatch {
+                soraCardInteractor.fetchUserIbanAccount()
+                    .firstOrNull()?.run {
+                        soraCardDetailsScreenState = soraCardDetailsScreenState.copy(
+                            soraCardIBANCardState = SoraCardIBANCardState(iban)
+                        )
+                    }
+            }
+        }
     }
 
     fun onShowSoraCardDetailsClick() {
@@ -93,8 +99,7 @@ class SoraCardDetailsViewModel @Inject constructor(
     fun onSoraCardLogOutClick() {
         viewModelScope.launch {
             tryCatch {
-                userSessionRepository.logOutUser()
-                walletInteractor.deleteSoraCardInfo()
+                soraCardInteractor.logOutFromSoraCard()
             }
         }.invokeOnCompletion {
             if (it == null)

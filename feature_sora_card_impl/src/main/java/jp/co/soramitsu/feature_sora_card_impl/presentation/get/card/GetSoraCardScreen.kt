@@ -102,7 +102,7 @@ fun GetSoraCardScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
-                    text = stringResource(R.string.details_enough_xor_desription),
+                    text = stringResource(jp.co.soramitsu.oauth.R.string.details_description),
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 
