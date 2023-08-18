@@ -103,24 +103,28 @@ data class SoraCardMainSoraContentCardState(
             when (it) {
                 SoraCardMenuAction.TOP_UP ->
                     IconButtonMenuState(
+                        testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_new_arrow_down_24),
                         text = Text.StringRes(id = R.string.sora_card_action_top_up),
                         isEnabled = isCardEnabled
                     )
                 SoraCardMenuAction.TRANSFER ->
                     IconButtonMenuState(
+                        testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_new_arrow_up_24),
                         text = Text.StringRes(id = R.string.sora_card_action_transfer),
                         isEnabled = isCardEnabled
                     )
                 SoraCardMenuAction.EXCHANGE ->
                     IconButtonMenuState(
+                        testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_refresh_24),
                         text = Text.StringRes(id = R.string.sora_card_action_exchange),
                         isEnabled = isCardEnabled
                     )
                 SoraCardMenuAction.FREEZE ->
                     IconButtonMenuState(
+                        testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_snow_flake),
                         text = Text.StringRes(id = R.string.sora_card_action_freeze),
                         isEnabled = isCardEnabled

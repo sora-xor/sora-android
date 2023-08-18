@@ -52,6 +52,7 @@ import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -67,6 +68,7 @@ enum class ListTileFlag {
 }
 
 data class ListTileState(
+    val testTagId: String? = null,
     private val variant: ListTileVariant,
     private val flag: ListTileFlag,
     private val title: Text,
@@ -106,12 +108,13 @@ fun ListTileView(
 ) {
     // TODO Extract to UI lib
 
-    val colorInUse = remember {
+    val colorInUse = remember(listTileState) {
         Color(listTileState.paletteColor)
     }
 
     Row(
         modifier = Modifier
+            .run { if (listTileState.testTagId == null) this else testTagAsId(listTileState.testTagId) }
             .clickable { onItemClick.invoke() }
             .fillMaxWidth()
             .padding(

@@ -52,7 +52,7 @@ class SoraCardDetailsViewModel @Inject constructor(
                 soraCardInteractor.fetchUserIbanAccount()
                     .firstOrNull()?.run {
                         soraCardDetailsScreenState = soraCardDetailsScreenState.copy(
-                            soraCardIBANCardState = SoraCardIBANCardState(iban)
+                            soraCardIBANCardState = SoraCardIBANCardState(iban, false)
                         )
                     }
             }

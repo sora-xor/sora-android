@@ -67,6 +67,7 @@ data class SoraCardSettingsCardState(
         when (it) {
             SoraCardSettingsOption.LOG_OUT ->
                 ListTileState(
+                    testTagId = it.toString(),
                     variant = ListTileVariant.TITLE_NAVIGATION_HINT,
                     flag = ListTileFlag.WARNING,
                     title = Text.StringRes(id = R.string.sora_card_option_logout),

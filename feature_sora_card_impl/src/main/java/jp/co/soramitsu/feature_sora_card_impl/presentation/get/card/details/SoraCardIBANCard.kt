@@ -29,7 +29,8 @@ import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardIBANCardState(
-    val iban: String
+    val iban: String,
+    val isActionButtonEnabled: Boolean
 ) {
 
     val headlineText: Text = Text.StringRes(
@@ -75,14 +76,15 @@ fun SoraCardIBANCard(
                     color = MaterialTheme.customColors.fgPrimary,
                     textAlign = TextAlign.Center
                 )
-                Icon(
-                    modifier = Modifier
-                        .clickable { onActionClick.invoke() }
-                        .wrapContentSize(),
-                    painter = soraCardIBANCardState.actionIcon.retrievePainter(),
-                    contentDescription = null,
-                    tint = MaterialTheme.customColors.fgSecondary
-                )
+                if (soraCardIBANCardState.isActionButtonEnabled)
+                    Icon(
+                        modifier = Modifier
+                            .clickable { onActionClick.invoke() }
+                            .wrapContentSize(),
+                        painter = soraCardIBANCardState.actionIcon.retrievePainter(),
+                        contentDescription = null,
+                        tint = MaterialTheme.customColors.fgSecondary
+                    )
             }
             Text(
                 modifier = Modifier
@@ -101,7 +103,8 @@ fun SoraCardIBANCard(
 private fun PreviewSoraCardIBANCard() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
-            iban = "LT61 3250 0467 7252 5583"
+            iban = "LT61 3250 0467 7252 5583",
+            isActionButtonEnabled = false
         ),
         onActionClick = {}
     )
