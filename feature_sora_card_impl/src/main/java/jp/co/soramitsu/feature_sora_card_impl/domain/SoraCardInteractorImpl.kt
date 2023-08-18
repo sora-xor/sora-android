@@ -42,12 +42,13 @@ import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.greaterThan
 import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.common.domain.KycRepository
+import jp.co.soramitsu.oauth.common.model.IbanAccountResponse
+import jp.co.soramitsu.oauth.feature.session.domain.UserSessionRepository
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -62,6 +63,7 @@ class SoraCardInteractorImpl @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
     private val walletRepository: WalletRepository,
     private val kycRepository: KycRepository,
+    private val userSessionRepository: UserSessionRepository,
 ) : SoraCardInteractor {
 
     private var xorToEuro: Double? = null
@@ -154,6 +156,27 @@ class SoraCardInteractorImpl @Inject constructor(
         xorToEuro ?: blockExplorerManager.getXorPerEurRatio().also {
             xorToEuro = it
         }
+
+    override suspend fun fetchUserIbanAccount(): List<IbanAccountResponse> =
+        with(walletRepository.getSoraCardInfo()) {
+            val currentTimeInSeconds =
+                TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
+
+            if (this == null ||
+                accessTokenExpirationTime < currentTimeInSeconds
+            ) return@with emptyList()
+
+            return@with kycRepository.getUserIbanAccount(accessToken)
+                .map { wrapper ->
+                    /* Sorting DESC by creation date to get the first IBAN being the latest */
+                    wrapper.ibans.sortedByDescending { it.createdDate }
+                }.getOrElse { emptyList() }
+        }
+
+    override suspend fun logOutFromSoraCard() {
+        userSessionRepository.logOutUser()
+        walletRepository.deleteSoraCardInfo()
+    }
 
     private companion object {
         val KYC_REAL_REQUIRED_BALANCE: BigDecimal = BigDecimal.valueOf(95)

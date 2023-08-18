@@ -34,11 +34,13 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
@@ -78,7 +80,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -202,7 +203,8 @@ class CardsHubViewModelTest {
             SoraCardAvailabilityInfo()
         )
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
-        every { mainRouter.showGetSoraCard(any()) } returns Unit
+        every { mainRouter.showGetSoraCard(any()) } just Runs
+        every { mainRouter.showSoraCardDetails() } just Runs
         every { resourceManager.getString(R.string.sora_card_verification_in_progress) } returns "in progress"
         every { resourceManager.getString(R.string.sora_card_verification_successful) } returns "success"
         every { resourceManager.getString(R.string.sora_card_verification_rejected) } returns "rejected"
@@ -277,9 +279,6 @@ class CardsHubViewModelTest {
         advanceUntilIdle()
         cardsHubViewModel.onCardStateClicked()
         advanceUntilIdle()
-        assertEquals(
-            SoraCardTestData.SORA_CARD_CONTRACT_DATA,
-            cardsHubViewModel.launchSoraCardSignIn.value
-        )
+        verify { mainRouter.showSoraCardDetails() }
     }
 }

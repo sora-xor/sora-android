@@ -128,6 +128,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
             .distinctUntilChanged()
             .onEach {
                 state.value = state.value.copy(soraCardInfo = it)
+
                 startRequiredContract()
             }.launchIn(viewModelScope)
     }

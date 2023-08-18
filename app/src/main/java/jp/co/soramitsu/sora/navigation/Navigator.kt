@@ -406,6 +406,10 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         )
     }
 
+    override fun showSoraCardDetails() {
+        navController?.navigate(R.id.soraCardDetailsFragment)
+    }
+
     override fun showSelectNode() {
         navController?.navigate(
             R.id.select_node_nav_graph

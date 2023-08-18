@@ -167,6 +167,8 @@ class ProfileViewModel @Inject constructor(
     fun showSoraCard() {
         if (soraCardInfo == null || isKycStatusAvailable()) {
             router.showGetSoraCard()
+        } else if (soraCardInfo?.kycStatus == SoraCardCommonVerification.Successful.toString()) {
+            router.showSoraCardDetails()
         } else {
             showCardState()
         }

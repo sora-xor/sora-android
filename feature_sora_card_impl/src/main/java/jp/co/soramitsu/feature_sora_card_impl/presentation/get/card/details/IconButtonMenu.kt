@@ -30,70 +30,40 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_main_api.launcher
+package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
 
-import androidx.navigation.NavController
-import jp.co.soramitsu.feature_main_api.domain.model.PinCodeAction
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
+import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AmountCardIcon
 
-interface MainRouter {
+data class IconButtonMenuState(
+    val image: Image.ResImage,
+    val text: Text,
+    val isEnabled: Boolean
+)
 
-    fun attachNavController(navController: NavController)
-
-    fun detachNavController(navController: NavController)
-
-    fun showPin(action: PinCodeAction)
-
-    fun showLoginSecurity()
-
-    fun showPinForLogout(address: String)
-
-    fun showPinForBackup(action: PinCodeAction, addresses: List<String>)
-
-    fun showFlexibleUpdateScreen()
-
-    fun popBackStack()
-
-    fun popBackStackToAccountList()
-
-    fun popBackStackToAccountDetails()
-
-    fun showSelectLanguage()
-
-    fun showAppSettings()
-
-    fun showInformation()
-
-    fun showDebugMenu()
-
-    fun currentDestinationIsPincode(): Boolean
-
-    fun currentDestinationIsClaimFragment(): Boolean
-
-    fun currentDestinationIsPinCheckNeeded(): Boolean
-
-    fun showProfile()
-
-    fun showClaim()
-
-    fun showAccountList()
-
-    fun showExportPassphraseProtection(address: String)
-
-    fun showExportSeedProtection(address: String)
-
-    fun showExportJSONProtection(addresses: List<String>)
-
-    fun showBackupPassphrase(address: String)
-
-    fun showBackupSeed(address: String)
-
-    fun showBackupJson(addresses: List<String>)
-
-    fun showAccountDetails(address: String)
-
-    fun showWebView(title: String, url: String)
-
-    fun showGetSoraCard(shouldStartSignIn: Boolean = false, shouldStartSignUp: Boolean = false)
-
-    fun showSoraCardDetails()
+@Composable
+fun IconButtonMenu(
+    iconButtonMenuStates: List<IconButtonMenuState>,
+    onButtonClick: (position: Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        repeat(iconButtonMenuStates.size) {
+            AmountCardIcon(
+                res = iconButtonMenuStates[it].image.id,
+                text = iconButtonMenuStates[it].text.retrieveString(),
+                isEnabled = iconButtonMenuStates[it].isEnabled,
+                onClick = { onButtonClick.invoke(it) }
+            )
+        }
+    }
 }
