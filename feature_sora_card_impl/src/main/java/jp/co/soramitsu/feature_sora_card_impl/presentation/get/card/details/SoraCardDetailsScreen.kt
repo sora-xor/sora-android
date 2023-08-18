@@ -153,7 +153,8 @@ private fun PreviewSoraCardDetailsScreen() {
                     data = listOf()
                 ),
                 soraCardIBANCardState = SoraCardIBANCardState(
-                    iban = "LT61 3250 0467 7252 5583"
+                    iban = "LT61 3250 0467 7252 5583",
+                    isActionButtonEnabled = false
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
                     soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
