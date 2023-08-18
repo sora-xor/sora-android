@@ -481,6 +481,7 @@
   <string name="sora_card_action_transfer">Transfer</string>
   <string name="sora_card_already_have_card">Ya tengo una tarjeta </string>
   <string name="sora_card_annual_service_fee">Cuota anual de servicio 0 €</string>
+  <string name="sora_card_banner_title_card_info">Card info</string>
   <string name="sora_card_blacklisted_countires_title">Excluidos de solicitud</string>
   <string name="sora_card_blacklisted_countires_warning">Residentes de algunos países no pueden solicitar la Tarjeta SORA en este momento</string>
   <string name="sora_card_buy_xor_with_eur">Comprar XOR con EUR</string>

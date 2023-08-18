@@ -475,6 +475,7 @@
   <string name="sora_card_action_transfer">Transfer</string>
   <string name="sora_card_already_have_card">すでにカードを持っている</string>
   <string name="sora_card_annual_service_fee">年間サービス料€0</string>
+  <string name="sora_card_banner_title_card_info">Card info</string>
   <string name="sora_card_blacklisted_countires_title">適用除外</string>
   <string name="sora_card_blacklisted_countires_warning">現時点では、特定の国の居住者はSORAカードを申請できません</string>
   <string name="sora_card_buy_xor_with_eur">EURでXORを買う</string>
