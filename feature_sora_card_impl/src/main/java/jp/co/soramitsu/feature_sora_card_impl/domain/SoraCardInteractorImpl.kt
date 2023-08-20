@@ -35,13 +35,15 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.compareByTransferable
+import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.greaterThan
 import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
@@ -57,10 +59,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 class SoraCardInteractorImpl @Inject constructor(
-    private val blockExplorerManager:
-    jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager,
+    private val blockExplorerManager: BlockExplorerManager,
     private val formatter: NumbersFormatter,
     private val assetsInteractor: AssetsInteractor,
+    private val poolsInteractor: PoolsInteractor,
     private val walletRepository: WalletRepository,
     private val kycRepository: KycRepository,
     private val userSessionRepository: UserSessionRepository,
@@ -98,10 +100,18 @@ class SoraCardInteractorImpl @Inject constructor(
 
     override fun subscribeToSoraCardAvailabilityFlow() =
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
-            .distinctUntilChanged(::compareByTransferable)
+            .distinctUntilChanged(::compareByTotal)
             .map { asset ->
                 val xorEuroLocal = getXorEuro()
                 if (asset != null && xorEuroLocal != null) {
+                    val pools = poolsInteractor.getPoolsCacheOfCurAccount()
+                        .filter { poolData ->
+                            poolData.basic.baseToken.id == SubstrateOptionsProvider.feeAssetId
+                        }
+                    val poolsSum = pools.sumOf { poolData ->
+                        poolData.user.basePooled
+                    }
+                    val totalPoolBalance = asset.balance.total.plus(poolsSum)
                     try {
                         val xorRequiredBalanceWithBacklash =
                             KYC_REQUIRED_BALANCE_WITH_BACKLASH.divideBy(
@@ -112,13 +122,13 @@ class SoraCardInteractorImpl @Inject constructor(
                         val xorRealRequiredBalance =
                             KYC_REAL_REQUIRED_BALANCE.divideBy(BigDecimal.valueOf(xorEuroLocal))
                         val xorBalanceInEur =
-                            asset.balance.transferable.multiply(BigDecimal.valueOf(xorEuroLocal))
+                            totalPoolBalance.multiply(BigDecimal.valueOf(xorEuroLocal))
 
                         val needInXor =
-                            if (asset.balance.transferable.greaterThan(xorRealRequiredBalance)) {
+                            if (totalPoolBalance.greaterThan(xorRealRequiredBalance)) {
                                 BigDecimal.ZERO
                             } else {
-                                xorRequiredBalanceWithBacklash.minus(asset.balance.transferable)
+                                xorRequiredBalanceWithBacklash.minus(totalPoolBalance)
                             }
 
                         val needInEur =
@@ -129,17 +139,17 @@ class SoraCardInteractorImpl @Inject constructor(
                             }
 
                         SoraCardAvailabilityInfo(
-                            xorBalance = asset.balance.transferable,
-                            enoughXor = asset.balance.transferable.greaterThan(
+                            xorBalance = totalPoolBalance,
+                            enoughXor = totalPoolBalance.greaterThan(
                                 xorRealRequiredBalance
                             ),
-                            percent = asset.balance.transferable.safeDivide(xorRealRequiredBalance),
+                            percent = totalPoolBalance.safeDivide(xorRealRequiredBalance),
                             needInXor = formatter.formatBigDecimal(needInXor, 5),
                             needInEur = formatter.formatBigDecimal(needInEur, 2),
                             xorRatioAvailable = true
                         )
                     } catch (t: Throwable) {
-                        errorInfoState(asset.balance.transferable)
+                        errorInfoState(totalPoolBalance)
                     }
                 } else {
                     errorInfoState(BigDecimal.ZERO)

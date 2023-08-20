@@ -49,7 +49,7 @@ internal class SelectNodeRepositoryImpl @Inject constructor(
     private val db: AppDatabase,
     private val converter: NodeConverter,
     private val calls: SubstrateCalls,
-    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+    private val soraConfigManager: SoraConfigManager,
 ) : SelectNodeRepository {
 
     override suspend fun fetchDefaultNodes(): List<ChainNode> =

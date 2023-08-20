@@ -109,7 +109,7 @@ class BlockExplorerManager @Inject constructor(
 
     suspend fun getXorPerEurRatio(): Double? = runCatching {
         val json = networkClient.get(FlavorOptionsProvider.xorEuroUrl)
-        val soraCoin = Json.decodeFromString<jp.co.soramitsu.feature_blockexplorer_api.data.SoraCoin>(serializer(), json)
+        val soraCoin = Json.decodeFromString<SoraCoin>(serializer(), json)
         soraCoin.price.toDoubleNan()
     }.getOrNull()
 

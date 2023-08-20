@@ -63,7 +63,7 @@ class SelectNodeFeatureModule {
         selectNodeRepository: SelectNodeRepository,
         coroutineManager: CoroutineManager,
         appDatabase: AppDatabase,
-        soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+        soraConfigManager: SoraConfigManager,
     ): NodeManager = NodeManagerImpl(
         connectionManager = connectionManager,
         selectNodeRepository = selectNodeRepository,

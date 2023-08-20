@@ -257,7 +257,6 @@ private fun TutorialButtons(
                     painter = painterResource(id = R.drawable.ic_google_white),
                     contentDescription = stringResource(id = R.string.onboarding_continue_with_google)
                 )
-
                 Text(
                     style = MaterialTheme.customTypography.buttonM,
                     text = stringResource(id = R.string.onboarding_continue_with_google)

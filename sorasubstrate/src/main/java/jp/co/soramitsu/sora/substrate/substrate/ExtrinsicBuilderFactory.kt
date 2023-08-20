@@ -54,7 +54,7 @@ import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 class ExtrinsicBuilderFactory @Inject constructor(
     private val calls: SubstrateCalls,
     private val runtimeManager: RuntimeManager,
-    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+    private val soraConfigManager: SoraConfigManager,
 ) {
 
     suspend fun create(
