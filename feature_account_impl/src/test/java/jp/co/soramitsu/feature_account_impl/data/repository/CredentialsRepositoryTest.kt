@@ -95,7 +95,7 @@ class CredentialsRepositoryTest {
     lateinit var runtimeManager: RuntimeManager
 
     @MockK
-    lateinit var soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+    lateinit var soraConfigManager: SoraConfigManager
 
     @MockK
     lateinit var jsonAccountsEncoder: JsonAccountsEncoder

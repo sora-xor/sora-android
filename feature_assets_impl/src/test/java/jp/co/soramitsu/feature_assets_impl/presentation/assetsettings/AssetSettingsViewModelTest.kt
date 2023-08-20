@@ -38,15 +38,14 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
-import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsViewModel
+import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens.pswapToken
 import jp.co.soramitsu.test_data.TestTokens.valToken
@@ -618,12 +617,12 @@ class AssetSettingsViewModelTest {
 
     private fun mapModels(list: List<Asset>) = list.map {
         AssetSettingsState(
-                it.token,
-                it.token.printBalance(it.balance.transferable, nf, 8),
-                it.token.symbol,
-                it.favorite,
-                it.visibility,
-                fiat = 0.0,
+            it.token,
+            it.token.printBalance(it.balance.transferable, nf, 8),
+            it.token.symbol,
+            it.favorite,
+            it.visibility,
+            fiat = 0.0,
         )
     }
 }

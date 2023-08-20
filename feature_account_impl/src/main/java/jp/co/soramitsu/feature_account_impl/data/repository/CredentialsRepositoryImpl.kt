@@ -62,7 +62,7 @@ class CredentialsRepositoryImpl constructor(
     private val cryptoAssistant: CryptoAssistant,
     private val runtimeManager: RuntimeManager,
     private val jsonSeedEncoder: JsonAccountsEncoder,
-    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+    private val soraConfigManager: SoraConfigManager,
 ) : CredentialsRepository {
 
     private val irohaCash = mutableMapOf<String, IrohaData>()

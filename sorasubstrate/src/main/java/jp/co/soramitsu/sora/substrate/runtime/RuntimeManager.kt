@@ -86,7 +86,7 @@ class RuntimeManager @Inject constructor(
     private val socketService: SocketService,
     private val networkClient: SoramitsuNetworkClient,
     private val coroutineManager: CoroutineManager,
-    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+    private val soraConfigManager: SoraConfigManager,
 ) {
 
     private val mutex = Mutex()
