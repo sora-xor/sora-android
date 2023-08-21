@@ -144,7 +144,7 @@ play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
     track = "beta"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.3.0 - SORA Card"
+    releaseName = "3.3.0.1 - SORA Card"
 }
 
 dependencies {
