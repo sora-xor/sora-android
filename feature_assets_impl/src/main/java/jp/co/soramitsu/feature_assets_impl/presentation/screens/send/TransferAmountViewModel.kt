@@ -199,7 +199,7 @@ class TransferAmountViewModel @AssistedInject constructor(
             if (this == null)
                 return@with
 
-            val result = interactor.isEnoughXorLeftAfterTransaction(
+            val result = interactor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = token,
                 primaryTokenAmount = amount,
                 secondaryToken = null,
@@ -238,6 +238,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         ),
                     )
                 }
+
                 SendRoutes.selectToken -> {
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
@@ -245,6 +246,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         )
                     )
                 }
+
                 else -> {
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
@@ -336,6 +338,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             feeAsset.balance.transferable < fee -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -345,6 +348,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             curAsset.balance.transferable < amount -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -354,6 +358,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable < amount + fee) -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -363,6 +368,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable - amount - fee < SubstrateOptionsProvider.existentialDeposit.toBigDecimal()) -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -372,6 +378,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             else -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(

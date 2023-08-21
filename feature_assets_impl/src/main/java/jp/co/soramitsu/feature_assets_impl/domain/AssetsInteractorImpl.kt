@@ -78,14 +78,16 @@ class AssetsInteractorImpl constructor(
         }
     }
 
-    override suspend fun isEnoughXorLeftAfterTransaction(
+    override suspend fun isNotEnoughXorLeftAfterTransaction(
         primaryToken: Token,
         primaryTokenAmount: BigDecimal,
         secondaryToken: Token?,
         secondaryTokenAmount: BigDecimal?,
-        networkFeeInXor: BigDecimal
+        networkFeeInXor: BigDecimal,
+        isUnbonding: Boolean,
     ): Boolean {
-        val xorAssetBalanceAmount = getAssetOrThrow(SubstrateOptionsProvider.feeAssetId).balance.transferable
+        val xorAssetBalanceAmount =
+            getAssetOrThrow(SubstrateOptionsProvider.feeAssetId).balance.transferable
 
         if (primaryToken.id != SubstrateOptionsProvider.feeAssetId &&
             secondaryToken?.id != SubstrateOptionsProvider.feeAssetId
@@ -94,8 +96,13 @@ class AssetsInteractorImpl constructor(
         }
 
         if (primaryToken.id == SubstrateOptionsProvider.feeAssetId) {
-            return xorAssetBalanceAmount.minus(primaryTokenAmount)
-                .minus(networkFeeInXor) <= networkFeeInXor
+            return if (isUnbonding) {
+                xorAssetBalanceAmount.plus(primaryTokenAmount)
+                    .minus(networkFeeInXor) <= networkFeeInXor
+            } else {
+                xorAssetBalanceAmount.minus(primaryTokenAmount)
+                    .minus(networkFeeInXor) <= networkFeeInXor
+            }
         }
 
         return xorAssetBalanceAmount.plus(secondaryTokenAmount.orZero())

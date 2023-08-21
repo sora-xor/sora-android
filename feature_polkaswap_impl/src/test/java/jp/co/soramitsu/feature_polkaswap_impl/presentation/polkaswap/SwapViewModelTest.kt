@@ -154,12 +154,13 @@ class SwapViewModelTest {
         )
         given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(assets))
         given(
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = any(),
                 primaryTokenAmount = any(),
                 secondaryToken = any(),
                 secondaryTokenAmount = any(),
-                networkFeeInXor = any()
+                networkFeeInXor = any(),
+                isUnbonding = any()
             )
         ).willReturn(false)
 
@@ -413,12 +414,13 @@ class SwapViewModelTest {
             kVerify(
                 assetsInteractor,
                 atLeastOnce()
-            ).isEnoughXorLeftAfterTransaction(
+            ).isNotEnoughXorLeftAfterTransaction(
                 primaryToken = PolkaswapTestData.XOR_ASSET.token,
                 primaryTokenAmount = BigDecimal.ONE,
                 secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ZERO,
-                networkFeeInXor = networkFee
+                networkFeeInXor = networkFee,
+                isUnbonding = false
             )
 
             viewModel.onToAmountChange(BigDecimal.ONE)
@@ -428,12 +430,13 @@ class SwapViewModelTest {
             kVerify(
                 mock = assetsInteractor,
                 times(1)
-            ).isEnoughXorLeftAfterTransaction(
+            ).isNotEnoughXorLeftAfterTransaction(
                 primaryToken = PolkaswapTestData.XOR_ASSET.token,
                 primaryTokenAmount = BigDecimal.ONE,
                 secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
-                networkFeeInXor = networkFee
+                networkFeeInXor = networkFee,
+                isUnbonding = false
             )
 
             viewModel.fromAssetSelected(TestAssets.pswapAsset().token.id)
@@ -447,12 +450,13 @@ class SwapViewModelTest {
             kVerify(
                 mock = assetsInteractor,
                 atMost(1)
-            ).isEnoughXorLeftAfterTransaction(
+            ).isNotEnoughXorLeftAfterTransaction(
                 primaryToken = TestAssets.pswapAsset().token,
                 primaryTokenAmount = BigDecimal.TEN,
                 secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
-                networkFeeInXor = networkFee
+                networkFeeInXor = networkFee,
+                isUnbonding = false
             )
         }
 
@@ -477,12 +481,13 @@ class SwapViewModelTest {
             kVerify(
                 mock = assetsInteractor,
                 atMost(1)
-            ).isEnoughXorLeftAfterTransaction(
+            ).isNotEnoughXorLeftAfterTransaction(
                 primaryToken = any(),
                 primaryTokenAmount = any(),
                 secondaryToken = any(),
                 secondaryTokenAmount = any(),
-                networkFeeInXor = any()
+                networkFeeInXor = any(),
+                isUnbonding = any()
             )
 
             viewModel.fromAssetSelected(TestAssets.xorAsset().token.id)
@@ -496,12 +501,13 @@ class SwapViewModelTest {
             kVerify(
                 mock = assetsInteractor,
                 times(1)
-            ).isEnoughXorLeftAfterTransaction(
+            ).isNotEnoughXorLeftAfterTransaction(
                 primaryToken = TestAssets.xorAsset().token,
                 primaryTokenAmount = BigDecimal.TEN,
                 secondaryToken = PolkaswapTestData.VAL_ASSET.token,
                 secondaryTokenAmount = BigDecimal.ONE,
-                networkFeeInXor = networkFee
+                networkFeeInXor = networkFee,
+                isUnbonding = false
             )
         }
 }
