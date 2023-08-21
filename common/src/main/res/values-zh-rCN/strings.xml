@@ -475,10 +475,11 @@
   <string name="sora_card_action_transfer">转账</string>
   <string name="sora_card_already_have_card">我已经有一张卡了</string>
   <string name="sora_card_annual_service_fee">年服务费€0</string>
+  <string name="sora_card_banner_title_card_info">Card info</string>
   <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
   <string name="sora_card_blacklisted_countires_warning">来自某些国家的居民目前无法申请SORA卡。</string>
   <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
-  <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
+  <string name="sora_card_details_card_management_coming_soon">即将推出卡片管理功能</string>
   <string name="sora_card_details_title">卡片详情</string>
   <string name="sora_card_free_card_issuance">免费发卡</string>
   <string name="sora_card_free_card_issuance_conditions_euro">或 20 欧元的申请费</string>
@@ -488,7 +489,7 @@
   <string name="sora_card_log_in_or_sign_up">登录或注册</string>
   <string name="sora_card_no_more_free_tries">没有更多的免费尝试</string>
   <string name="sora_card_option_logout">退出 SORA 卡</string>
-  <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
+  <string name="sora_card_option_logout_description">您即将退出 SORA Card。您仍然可以使用 SORA Card 独立应用程序，但余额将不再在 SORA 钱包中可用。</string>
   <string name="sora_card_refer_and_earn_action">推荐并赚取</string>
   <string name="sora_card_referral_headline">推荐SORA卡。\n获得20欧元奖金。</string>
   <string name="sora_card_see_details">查看详情</string>

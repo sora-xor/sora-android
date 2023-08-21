@@ -486,6 +486,7 @@
   <string name="sora_card_action_transfer">Transfer</string>
   <string name="sora_card_already_have_card">I already have a card</string>
   <string name="sora_card_annual_service_fee">€0 annual service fee</string>
+  <string name="sora_card_banner_title_card_info">Card info</string>
   <string name="sora_card_blacklisted_countires_title">Excluded of application</string>
   <string name="sora_card_blacklisted_countires_warning">Residents from certain countries can not apply for SORA Card at this moment</string>
   <string name="sora_card_buy_xor_with_eur">Buy XOR with EUR</string>

@@ -1,4 +1,4 @@
-package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
+package jp.co.soramitsu.common.view
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -45,7 +45,7 @@ fun AmountCardIcon(
         Box(modifier = Modifier.size(Size.Large)) {
             BleachedButton(
                 modifier = reusableButtonModifier,
-                shape = CircleShape,
+                shape = RoundedCornerShape(49),
                 enabled = isEnabled,
                 size = Size.Large,
                 order = Order.TERTIARY,

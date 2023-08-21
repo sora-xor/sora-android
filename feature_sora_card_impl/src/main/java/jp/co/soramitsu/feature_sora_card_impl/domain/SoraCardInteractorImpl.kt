@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
@@ -47,6 +48,7 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
+import jp.co.soramitsu.oauth.base.sdk.InMemoryRepo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.oauth.common.model.IbanAccountResponse
@@ -66,6 +68,7 @@ class SoraCardInteractorImpl @Inject constructor(
     private val walletRepository: WalletRepository,
     private val kycRepository: KycRepository,
     private val userSessionRepository: UserSessionRepository,
+    private val inMemoryRepo: InMemoryRepo
 ) : SoraCardInteractor {
 
     private var xorToEuro: Double? = null
@@ -175,6 +178,8 @@ class SoraCardInteractorImpl @Inject constructor(
             if (this == null ||
                 accessTokenExpirationTime < currentTimeInSeconds
             ) return@with emptyList()
+
+            inMemoryRepo.soraBackEndUrl = BuildConfig.SORACARD_BACKEND_URL
 
             return@with kycRepository.getUserIbanAccount(accessToken)
                 .map { wrapper ->

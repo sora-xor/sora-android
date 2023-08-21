@@ -40,7 +40,7 @@ import androidx.compose.ui.Modifier
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AmountCardIcon
+import jp.co.soramitsu.common.view.AmountCardIcon
 
 data class IconButtonMenuState(
     val testTagId: String? = null,
