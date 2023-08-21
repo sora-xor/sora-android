@@ -218,7 +218,7 @@ class SwapViewModel @AssistedInject constructor(
         ),
     )
 
-    init {
+    fun initialize() {
         _toolbarState.value = mainToolbarState
 
         swapInteractor.getPolkaswapDisclaimerVisibility()
