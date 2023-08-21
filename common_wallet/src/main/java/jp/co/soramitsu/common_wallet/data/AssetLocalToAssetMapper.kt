@@ -46,7 +46,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 @Singleton
 class AssetLocalToAssetMapper @Inject constructor(
     private val whitelistTokensManager: WhitelistTokensManager,
-    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+    private val soraConfigManager: SoraConfigManager,
 ) {
 
     suspend fun map(token: TokenFiatLocal): Token {

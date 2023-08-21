@@ -59,7 +59,7 @@ internal class NodeManagerImpl(
     private val coroutineManager: CoroutineManager,
     private val autoSwitch: Boolean,
     appDatabase: AppDatabase,
-    private val soraConfigManager: jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager,
+    private val soraConfigManager: SoraConfigManager,
 ) : NodeManager {
 
     private companion object {

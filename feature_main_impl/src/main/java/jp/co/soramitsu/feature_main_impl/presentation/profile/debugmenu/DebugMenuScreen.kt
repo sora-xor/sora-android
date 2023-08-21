@@ -98,7 +98,7 @@ internal class SettingOption(
 private fun PreviewOptions() {
     val settingsList: List<SettingOption> = mutableListOf<SettingOption>().apply {
         add(SettingOption(name = "User ID", value = "_ID"))
-        add(SettingOption(name = "Device Name", value = "Some Device"))
+        add(SettingOption(name = "Device Name", value = "Some Device Very Big Value Text More And More Letters"))
     }
 
     DebugMenuScreen(DebugMenuScreenState(settings = settingsList))
