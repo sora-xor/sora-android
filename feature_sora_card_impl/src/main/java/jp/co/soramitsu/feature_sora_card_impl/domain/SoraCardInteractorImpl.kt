@@ -35,7 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
@@ -179,7 +179,7 @@ class SoraCardInteractorImpl @Inject constructor(
                 accessTokenExpirationTime < currentTimeInSeconds
             ) return@with emptyList()
 
-            inMemoryRepo.soraBackEndUrl = BuildConfig.SORACARD_BACKEND_URL
+            inMemoryRepo.soraBackEndUrl = BuildConfigWrapper.getSoraCardBackEndUrl()
 
             return@with kycRepository.getUserIbanAccount(accessToken)
                 .map { wrapper ->
