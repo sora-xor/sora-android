@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -108,7 +109,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                val state = viewModel.state
+                val state = viewModel.state.collectAsStateWithLifecycle().value
                 TopBar(
                     account = state.curAccount,
                     onAccountClick = viewModel::onAccountClick,

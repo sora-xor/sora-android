@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.domain
 
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
@@ -104,28 +103,5 @@ class WalletInteractorImpl(
 
     override suspend fun getFeeToken(): Token {
         return requireNotNull(assetsRepository.getToken(SubstrateOptionsProvider.feeAssetId))
-    }
-
-    override suspend fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String,
-    ) {
-        walletRepository.updateSoraCardInfo(
-            accessToken,
-            accessTokenExpirationTime,
-            kycStatus,
-        )
-    }
-
-    override suspend fun deleteSoraCardInfo() {
-        walletRepository.deleteSoraCardInfo()
-    }
-
-    override fun subscribeSoraCardInfo(): Flow<SoraCardInformation?> =
-        walletRepository.subscribeSoraCardInfo()
-
-    override suspend fun updateSoraCardKycStatus(kycStatus: String) {
-        walletRepository.updateSoraCardKycStatus(kycStatus)
     }
 }

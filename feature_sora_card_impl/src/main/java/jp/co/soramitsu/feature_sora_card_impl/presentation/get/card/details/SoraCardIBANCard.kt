@@ -13,7 +13,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -30,7 +29,6 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardIBANCardState(
     val iban: String,
-    val isActionButtonEnabled: Boolean
 ) {
 
     val headlineText: Text = Text.StringRes(
@@ -49,11 +47,12 @@ data class SoraCardIBANCardState(
 @Composable
 fun SoraCardIBANCard(
     soraCardIBANCardState: SoraCardIBANCardState,
-    onActionClick: () -> Unit
+    onShareClick: () -> Unit,
+    onCardClick: () -> Unit,
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
-        onClick = remember { { /* DO NOTHING */ } }
+        onClick = onCardClick,
     ) {
         Column(
             modifier = Modifier
@@ -76,10 +75,10 @@ fun SoraCardIBANCard(
                     color = MaterialTheme.customColors.fgPrimary,
                     textAlign = TextAlign.Center
                 )
-                if (soraCardIBANCardState.isActionButtonEnabled)
+                if (soraCardIBANCardState.iban.isNotEmpty())
                     Icon(
                         modifier = Modifier
-                            .clickable { onActionClick.invoke() }
+                            .clickable(onClick = onShareClick)
                             .wrapContentSize(),
                         painter = soraCardIBANCardState.actionIcon.retrievePainter(),
                         contentDescription = null,
@@ -104,8 +103,8 @@ private fun PreviewSoraCardIBANCard() {
     SoraCardIBANCard(
         soraCardIBANCardState = SoraCardIBANCardState(
             iban = "LT61 3250 0467 7252 5583",
-            isActionButtonEnabled = false
         ),
-        onActionClick = {}
+        onShareClick = {},
+        onCardClick = {},
     )
 }

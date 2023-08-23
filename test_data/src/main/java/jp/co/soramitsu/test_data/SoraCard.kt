@@ -34,23 +34,22 @@ package jp.co.soramitsu.test_data
 
 import java.util.Locale
 import jp.co.soramitsu.common.BuildConfig
-import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.common.util.BuildUtils
-import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.oauth.base.sdk.SoraCardEnvironmentType
 import jp.co.soramitsu.oauth.base.sdk.SoraCardKycCredentials
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardBasicContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 
 object SoraCardTestData {
 
-    val SORA_CARD_CONTRACT_DATA = SoraCardContractData(
-        locale = Locale.ENGLISH,
+    private val SORA_CARD_BASIC_CONTRACT = SoraCardBasicContractData(
         apiKey = BuildConfig.SORA_CARD_API_KEY,
         domain = BuildConfig.SORA_CARD_DOMAIN,
-        environment = when {
-            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
-            else -> SoraCardEnvironmentType.TEST
-        },
+        environment = SoraCardEnvironmentType.TEST,
+    )
+
+    val SORA_CARD_CONTRACT_DATA = SoraCardContractData(
+        basic = SORA_CARD_BASIC_CONTRACT,
+        locale = Locale.ENGLISH,
         client = "test android client",
         kycCredentials = SoraCardKycCredentials(
             endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
@@ -64,25 +63,14 @@ object SoraCardTestData {
         soraBackEndUrl = "soracard backend",
     )
 
-    val SORA_CARD_INFO = SoraCardInformation(
-        accessToken = "accessToken",
-        accessTokenExpirationTime = Long.MAX_VALUE,
-        kycStatus = "Successful",
-    )
-
     val registrationLauncher = SoraCardContractData(
+        basic = SORA_CARD_BASIC_CONTRACT,
         locale = Locale.ENGLISH,
-        apiKey = BuildConfig.SORA_CARD_API_KEY,
-        domain = BuildConfig.SORA_CARD_DOMAIN,
         kycCredentials = SoraCardKycCredentials(
             endpointUrl = BuildConfig.SORA_CARD_KYC_ENDPOINT_URL,
             username = BuildConfig.SORA_CARD_KYC_USERNAME,
             password = BuildConfig.SORA_CARD_KYC_PASSWORD,
         ),
-        environment = when {
-            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
-            else -> SoraCardEnvironmentType.TEST
-        },
         areAttemptsPaidSuccessfully = false,
         isEnoughXorAvailable = false,
         isIssuancePaid = false,
@@ -92,13 +80,8 @@ object SoraCardTestData {
     )
 
     val signInLauncher = SoraCardContractData(
+        basic = SORA_CARD_BASIC_CONTRACT,
         locale = Locale.ENGLISH,
-        apiKey = BuildConfig.SORA_CARD_API_KEY,
-        domain = BuildConfig.SORA_CARD_DOMAIN,
-        environment = when {
-            BuildUtils.isFlavors(Flavor.PROD) -> SoraCardEnvironmentType.PRODUCTION
-            else -> SoraCardEnvironmentType.TEST
-        },
         areAttemptsPaidSuccessfully = false,
         isEnoughXorAvailable = false,
         isIssuancePaid = false,

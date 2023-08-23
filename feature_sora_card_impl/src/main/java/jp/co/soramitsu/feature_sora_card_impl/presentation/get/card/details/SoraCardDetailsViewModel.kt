@@ -9,7 +9,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -18,11 +21,20 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class SoraCardDetailsViewModel @Inject constructor(
-    private val soraCardInteractor: SoraCardInteractor
+    private val soraCardInteractor: SoraCardInteractor,
+    private val clipboardManager: ClipboardManager,
 ) : BaseViewModel() {
 
     private val _soraCardLogOutDialogState = MutableLiveData<Unit>()
     val soraCardLogOutDialogState: LiveData<Unit> = _soraCardLogOutDialogState
+
+    private val _copiedAddressEvent = SingleLiveEvent<Unit>()
+    val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
+
+    private val _shareLinkEvent = SingleLiveEvent<String>()
+    val shareLinkEvent: LiveData<String> = _shareLinkEvent
+
+    private var ibanCache: String? = null
 
     var soraCardDetailsScreenState: SoraCardDetailsScreenState by mutableStateOf(
         value = SoraCardDetailsScreenState(
@@ -50,10 +62,14 @@ class SoraCardDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 soraCardInteractor.fetchUserIbanAccount()
-                    .firstOrNull()?.run {
+                    .onSuccess { iban ->
+                        ibanCache = iban
                         soraCardDetailsScreenState = soraCardDetailsScreenState.copy(
-                            soraCardIBANCardState = SoraCardIBANCardState(iban, false)
+                            soraCardIBANCardState = SoraCardIBANCardState(iban)
                         )
+                    }
+                    .onFailure {
+                        onError(it)
                     }
             }
         }
@@ -83,8 +99,17 @@ class SoraCardDetailsViewModel @Inject constructor(
         /* Functionality will be added in further releases */
     }
 
-    fun onIbanCardActionClick() {
-        /* Functionality will be added in further releases */
+    fun onIbanCardShareClick() {
+        ibanCache?.let {
+            _shareLinkEvent.value = it
+        }
+    }
+
+    fun onIbanCardClick() {
+        ibanCache?.let {
+            clipboardManager.addToClipboard("iban", it)
+            _copiedAddressEvent.trigger()
+        }
     }
 
     fun onSettingsOptionClick(position: Int) {

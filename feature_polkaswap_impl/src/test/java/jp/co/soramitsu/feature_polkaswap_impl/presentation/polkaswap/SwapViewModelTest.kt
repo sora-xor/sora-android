@@ -219,12 +219,12 @@ class SwapViewModelTest {
         initViewModel()
         advanceUntilIdle()
         val buttonState = ButtonState(text = "Choose token", enabled = false, loading = false)
-        viewModel.swapMainState.slippage.let {
+        viewModel.swapMainState.value.slippage.let {
             assertEquals(0.5, it, 0.1)
         }
         viewModel.navigationDisclaimerEvent.getOrAwaitValue()
 
-        assertEquals(buttonState, viewModel.swapMainState.swapButtonState)
+        assertEquals(buttonState, viewModel.swapMainState.value.swapButtonState)
     }
 
     @Test
@@ -236,13 +236,13 @@ class SwapViewModelTest {
 
         viewModel.fromAssetSelected(fromAsset.tokenId)
         advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.tokenFromState?.token, assets[0].token)
-        assertFalse(viewModel.swapMainState.swapButtonState.enabled)
+        assertEquals(viewModel.swapMainState.value.tokenFromState?.token, assets[0].token)
+        assertFalse(viewModel.swapMainState.value.swapButtonState.enabled)
 
         viewModel.toAssetSelected(toAsset.tokenId)
         advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.tokenToState?.token, assets[1].token)
-        assertFalse(viewModel.swapMainState.swapButtonState.enabled)
+        assertEquals(viewModel.swapMainState.value.tokenToState?.token, assets[1].token)
+        assertFalse(viewModel.swapMainState.value.swapButtonState.enabled)
     }
 
     @Test
@@ -251,15 +251,15 @@ class SwapViewModelTest {
         advanceUntilIdle()
         viewModel.fromCardClicked()
         advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.selectSearchAssetState?.fullList, assetsListItems)
+        assertEquals(viewModel.swapMainState.value.selectSearchAssetState?.fullList, assetsListItems)
         viewModel.fromAssetSelected(assetsListItems[0].tokenId)
 
         viewModel.toCardClicked()
         assertEquals(
             SelectSearchAssetState(
                 filter = "",
-                fullList = assetsListItems.filter { it.tokenId != viewModel.swapMainState.tokenFromState?.token?.id }),
-            viewModel.swapMainState.selectSearchAssetState,
+                fullList = assetsListItems.filter { it.tokenId != viewModel.swapMainState.value.tokenFromState?.token?.id }),
+            viewModel.swapMainState.value.selectSearchAssetState,
         )
     }
 
@@ -317,8 +317,8 @@ class SwapViewModelTest {
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(100)
         advanceUntilIdle()
-        assertEquals(BigDecimal.ONE, viewModel.swapMainState.tokenFromState?.amount)
-        val btn = viewModel.swapMainState.swapButtonState
+        assertEquals(BigDecimal.ONE, viewModel.swapMainState.value.tokenFromState?.amount)
+        val btn = viewModel.swapMainState.value.swapButtonState
         assertEquals("Insufficient balance", btn.text)
         assertEquals(false, btn.enabled)
     }
@@ -332,7 +332,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(100)
-        assertEquals(BigDecimal(90.0), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(90.0), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -344,7 +344,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(50.0).setScale(19), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(50.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -356,7 +356,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(8.0).setScale(19), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(8.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -368,7 +368,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(25).setScale(19), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(25).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -380,7 +380,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(100)
-        assertEquals(BigDecimal(100.0), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(100.0), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -392,8 +392,8 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.onTokensSwapClick()
-        assertEquals(assetsListItems.last().tokenId, viewModel.swapMainState.tokenFromState?.token?.id)
-        assertEquals(assetsListItems[1].tokenId, viewModel.swapMainState.tokenToState?.token?.id)
+        assertEquals(assetsListItems.last().tokenId, viewModel.swapMainState.value.tokenFromState?.token?.id)
+        assertEquals(assetsListItems[1].tokenId, viewModel.swapMainState.value.tokenToState?.token?.id)
     }
 
     @Test

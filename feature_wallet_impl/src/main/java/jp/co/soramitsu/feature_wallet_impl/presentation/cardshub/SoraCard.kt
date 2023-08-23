@@ -84,17 +84,18 @@ fun SoraCard(
         CardStateButton(
             modifier = Modifier
                 .wrapContentWidth().run {
-                    if (state.kycStatus != stringResource(id = R.string.sora_card_verification_successful))
+                    if (state.success.not())
                         padding(bottom = Dimens.x3) else padding(all = Dimens.x1)
                 }.run {
-                    if (state.kycStatus != stringResource(id = R.string.sora_card_verification_successful))
+                    if (state.success.not())
                         align(Alignment.BottomCenter) else align(Alignment.BottomEnd)
                 },
             kycStatus = state.kycStatus,
-            onCardStateClicked = onCardStateClicked
+            success = state.success,
+            onCardStateClicked = onCardStateClicked,
         )
 
-        if (state.kycStatus != stringResource(id = R.string.sora_card_verification_successful))
+        if (state.success.not())
             BleachedButton(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -113,6 +114,7 @@ fun SoraCard(
 private fun CardStateButton(
     modifier: Modifier = Modifier,
     kycStatus: String?,
+    success: Boolean,
     onCardStateClicked: () -> Unit
 ) {
     if (kycStatus == null) {
@@ -125,14 +127,14 @@ private fun CardStateButton(
             text = stringResource(R.string.sora_card_see_details),
         )
     } else {
-        if (kycStatus != stringResource(id = R.string.sora_card_verification_successful))
+        if (success.not())
             TonalButton(
                 modifier = modifier
                     .testTagAsId("SoraCardButton"),
                 size = Size.Large,
                 order = Order.TERTIARY,
                 onClick = onCardStateClicked,
-                text = kycStatus
+                text = kycStatus,
             )
         else
             BleachedButton(
@@ -151,7 +153,7 @@ private fun CardStateButton(
 private fun PreviewSoraCard() {
     SoraCard(
         modifier = Modifier.fillMaxWidth(),
-        state = SoraCardState(kycStatus = null),
+        state = SoraCardState(kycStatus = "", success = true, visible = true),
         onCloseClicked = {},
         onCardStateClicked = {}
     )

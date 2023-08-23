@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.domain.CardHub
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -62,20 +61,6 @@ interface WalletRepository {
     fun subscribeVisibleCardsHubList(address: String): Flow<List<CardHub>>
 
     fun subscribeVisibleGlobalCardsHubList(): Flow<List<CardHub>>
-
-    fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
-
-    suspend fun getSoraCardInfo(): SoraCardInformation?
-
-    suspend fun updateSoraCardKycStatus(kycStatus: String)
-
-    suspend fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    )
-
-    suspend fun deleteSoraCardInfo()
 
     suspend fun updateCardVisibilityOnGlobalCardsHub(cardId: String, visible: Boolean)
 
