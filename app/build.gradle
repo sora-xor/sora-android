@@ -152,6 +152,7 @@ dependencies {
     implementation project(":android-foundation")
     implementation project(":common")
     implementation project(":core_db")
+    implementation project(":demeter")
     implementation project(":feature_assets_api")
     implementation project(":feature_assets_impl")
     implementation project(":feature_main_api")

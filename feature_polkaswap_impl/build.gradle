@@ -68,6 +68,7 @@ dependencies {
     implementation project(':common_wallet')
     implementation project(":core_db")
     implementation project(":core_di")
+    implementation project(":demeter")
     implementation project(":feature_assets_api")
     implementation project(":feature_polkaswap_api")
     implementation project(":feature_wallet_api")

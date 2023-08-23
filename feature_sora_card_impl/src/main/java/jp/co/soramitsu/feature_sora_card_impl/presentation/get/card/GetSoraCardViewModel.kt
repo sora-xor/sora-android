@@ -49,7 +49,6 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
@@ -57,20 +56,17 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 
 class GetSoraCardViewModel @AssistedInject constructor(
     private val assetsRouter: AssetsRouter,
-    private val walletInteractor: WalletInteractor,
     private val walletRouter: WalletRouter,
     private val mainRouter: MainRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val resourceManager: ResourceManager,
     connectionManager: ConnectionManager,
-    soraCardInteractor: SoraCardInteractor,
+    private val soraCardInteractor: SoraCardInteractor,
     @Assisted("SHOULD_START_SIGN_IN") val shouldStartSignIn: Boolean,
     @Assisted("SHOULD_START_SIGN_UP") val shouldStartSignUp: Boolean
 ) : BaseViewModel() {
@@ -96,23 +92,16 @@ class GetSoraCardViewModel @AssistedInject constructor(
             title = R.string.get_sora_card_title,
         )
 
-        soraCardInteractor.subscribeToSoraCardAvailabilityFlow().onEach {
-            currentSoraCardContractData = createSoraCardContract(
-                userAvailableXorAmount = it.xorBalance.toDouble(),
-                isEnoughXorAvailable = it.enoughXor,
-            )
-
-            state.value = state.value.copy(
-                xorBalance = it.xorBalance,
-                enoughXor = it.enoughXor,
-                percent = it.percent,
-                needInXor = it.needInXor,
-                needInEur = it.needInEur,
-                xorRatioAvailable = it.xorRatioAvailable,
-            )
-        }.launchIn(viewModelScope)
-
-        subscribeSoraCardInfo()
+        soraCardInteractor.subscribeToSoraCardAvailabilityFlow()
+            .onEach {
+                currentSoraCardContractData = createSoraCardContract(
+                    userAvailableXorAmount = it.xorBalance.toDouble(),
+                    isEnoughXorAvailable = it.enoughXor,
+                )
+                state.value = state.value.copy(
+                    xorRatioAvailable = it.xorRatioAvailable,
+                )
+            }.launchIn(viewModelScope)
 
         connectionManager.connectionState
             .catch { onError(it) }
@@ -120,25 +109,6 @@ class GetSoraCardViewModel @AssistedInject constructor(
                 state.value = state.value.copy(connection = it)
             }
             .launchIn(viewModelScope)
-    }
-
-    private fun subscribeSoraCardInfo() {
-        walletInteractor.subscribeSoraCardInfo()
-            .catch { onError(it) }
-            .distinctUntilChanged()
-            .onEach {
-                state.value = state.value.copy(soraCardInfo = it)
-
-                startRequiredContract()
-            }.launchIn(viewModelScope)
-    }
-
-    private fun startRequiredContract() {
-        if (shouldStartSignIn)
-            onAlreadyHaveCard()
-        else if (shouldStartSignUp)
-            onEnableCard()
-        else { /* DO NOTHING */ }
     }
 
     fun handleSoraCardResult(soraCardResult: SoraCardResult) {
@@ -151,53 +121,22 @@ class GetSoraCardViewModel @AssistedInject constructor(
                 }
             }
             is SoraCardResult.Success -> {
-                viewModelScope.launch {
-                    walletInteractor.updateSoraCardInfo(
-                        accessToken = soraCardResult.accessToken,
-                        accessTokenExpirationTime = soraCardResult.accessTokenExpirationTime,
-                        kycStatus = soraCardResult.status.toString()
-                    )
-                }
+                soraCardInteractor.setStatus(soraCardResult.status)
             }
             is SoraCardResult.Failure -> {
-                viewModelScope.launch {
-                    walletInteractor.updateSoraCardKycStatus(
-                        kycStatus = soraCardResult.status.toString()
-                    )
-                }
+                soraCardInteractor.setStatus(soraCardResult.status)
             }
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
-                viewModelScope.launch {
-                    walletInteractor.deleteSoraCardInfo()
-                }
+                soraCardInteractor.setLogout()
             }
         }
+        mainRouter.popBackStack()
     }
 
     fun onEnableCard() {
         currentSoraCardContractData?.let {
             _launchSoraCardRegistration.value = it
-        }
-    }
-
-    private fun onAlreadyHaveCard() {
-        currentSoraCardContractData?.let {
-            _launchSoraCardRegistration.value = it
-        }
-    }
-
-    fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    ) {
-        viewModelScope.launch {
-            walletInteractor.updateSoraCardInfo(
-                accessToken,
-                accessTokenExpirationTime,
-                kycStatus
-            )
         }
     }
 

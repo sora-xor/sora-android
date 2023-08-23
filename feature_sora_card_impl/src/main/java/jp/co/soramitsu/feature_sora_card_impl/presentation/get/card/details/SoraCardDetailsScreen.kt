@@ -66,7 +66,8 @@ fun SoraCardDetailsScreen(
     onCloseReferralBannerClick: () -> Unit,
     onRecentActivityClick: (position: Int) -> Unit,
     onShowMoreRecentActivitiesClick: () -> Unit,
-    onIbanCardActionClick: () -> Unit,
+    onIbanCardShareClick: () -> Unit,
+    onIbanCardClick: () -> Unit,
     onSettingsOptionClick: (position: Int) -> Unit
 ) {
     LazyColumn(
@@ -108,7 +109,8 @@ fun SoraCardDetailsScreen(
             item {
                 SoraCardIBANCard(
                     soraCardIBANCardState = state,
-                    onActionClick = onIbanCardActionClick
+                    onShareClick = onIbanCardShareClick,
+                    onCardClick = onIbanCardClick,
                 )
             }
         }
@@ -154,7 +156,6 @@ private fun PreviewSoraCardDetailsScreen() {
                 ),
                 soraCardIBANCardState = SoraCardIBANCardState(
                     iban = "LT61 3250 0467 7252 5583",
-                    isActionButtonEnabled = false
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
                     soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
@@ -166,7 +167,8 @@ private fun PreviewSoraCardDetailsScreen() {
             onCloseReferralBannerClick = {},
             onShowMoreRecentActivitiesClick = {},
             onRecentActivityClick = { _ -> },
-            onIbanCardActionClick = {},
+            onIbanCardShareClick = {},
+            onIbanCardClick = {},
             onSettingsOptionClick = { _ -> }
         )
     }

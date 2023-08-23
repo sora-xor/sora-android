@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_api.domain.interfaces
 
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import kotlinx.coroutines.flow.Flow
@@ -53,16 +52,4 @@ interface WalletInteractor {
     suspend fun getContacts(query: String): List<String>?
 
     suspend fun getSoraAccounts(): List<SoraAccount>
-
-    suspend fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    )
-
-    suspend fun deleteSoraCardInfo()
-
-    fun subscribeSoraCardInfo(): Flow<SoraCardInformation?>
-
-    suspend fun updateSoraCardKycStatus(kycStatus: String)
 }

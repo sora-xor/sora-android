@@ -2,6 +2,7 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.material.MaterialTheme
@@ -15,6 +16,7 @@ import com.vanpra.composematerialdialogs.message
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import com.vanpra.composematerialdialogs.title
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.androidfoundation.intent.ShareUtil.shareText
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
@@ -30,6 +32,14 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as BottomBarController).hideBottomBar()
         super.onViewCreated(view, savedInstanceState)
+        viewModel.copiedAddressEvent.observe {
+            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        }
+        viewModel.shareLinkEvent.observe { share ->
+            context?.let { c ->
+                shareText(c, getString(R.string.common_share), share)
+            }
+        }
     }
 
     @OptIn(ExperimentalAnimationApi::class)
@@ -40,6 +50,8 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
         composable(theOnlyRoute) {
             val materialDialogState = rememberMaterialDialogState()
 
+            viewModel.soraCardLogOutDialogState.observe {
+            }
             viewModel.soraCardLogOutDialogState.observe(viewLifecycleOwner) {
                 materialDialogState.show()
             }
@@ -52,7 +64,8 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                 onCloseReferralBannerClick = viewModel::onCloseReferralBannerClick,
                 onShowMoreRecentActivitiesClick = viewModel::onShowMoreRecentActivitiesClick,
                 onRecentActivityClick = viewModel::onRecentActivityClick,
-                onIbanCardActionClick = viewModel::onIbanCardActionClick,
+                onIbanCardShareClick = viewModel::onIbanCardShareClick,
+                onIbanCardClick = viewModel::onIbanCardClick,
                 onSettingsOptionClick = viewModel::onSettingsOptionClick
             )
 

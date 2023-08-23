@@ -64,26 +64,21 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
-import jp.co.soramitsu.test_data.SoraCardTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -103,9 +98,6 @@ class CardsHubViewModelTest {
 
     @MockK
     private lateinit var assetsInteractor: AssetsInteractor
-
-    @MockK
-    private lateinit var walletInteractor: WalletInteractor
 
     @MockK
     private lateinit var poolsInteractor: PoolsInteractor
@@ -198,10 +190,8 @@ class CardsHubViewModelTest {
                         )
                     )
                 }
-        coEvery { walletInteractor.updateSoraCardInfo(any(), any(), any()) } returns Unit
-        every { cardsHubInteractorImpl.subscribeSoraCardInfo() } returns flowOf(SoraCardTestData.SORA_CARD_INFO)
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every { soraCardInteractor.pollSoraCardStatusIfPending() } returns flowOf("")
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(null)
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
             SoraCardAvailabilityInfo()
         )
@@ -214,7 +204,6 @@ class CardsHubViewModelTest {
         every { resourceManager.getString(R.string.sora_card_verification_failed) } returns "failed"
         cardsHubViewModel = CardsHubViewModel(
             assetsInteractor,
-            walletInteractor,
             poolsInteractor,
             cardsHubInteractorImpl,
             numbersFormatter,
@@ -226,7 +215,6 @@ class CardsHubViewModelTest {
             polkaswapRouter,
             connectionManager,
             soraCardInteractor,
-            coroutineManager,
         )
     }
 
@@ -261,32 +249,10 @@ class CardsHubViewModelTest {
     }
 
     @Test
-    fun `call updateSoraCardInfo EXPECT update data via interactor`() = runTest {
-        cardsHubViewModel.updateSoraCardInfo(
-            accessToken = "accessToken",
-            accessTokenExpirationTime = Long.MAX_VALUE,
-            kycStatus = "Completed"
-        )
-        advanceUntilIdle()
-        coVerify {
-            walletInteractor.updateSoraCardInfo(
-                accessToken = "accessToken",
-                accessTokenExpirationTime = Long.MAX_VALUE,
-                kycStatus = "Completed",
-            )
-        }
-    }
-
-    @Test
-    @Ignore
     fun `call onCardStateClicked EXPECT induce launchSoraCard event`() = runTest {
         advanceUntilIdle()
         cardsHubViewModel.onCardStateClicked()
         advanceUntilIdle()
-        val liveData = cardsHubViewModel.launchSoraCardSignIn.getOrAwaitValue()
-        assertEquals(
-            SoraCardTestData.SORA_CARD_CONTRACT_DATA,
-            liveData,
-        )
+        verify { mainRouter.showGetSoraCard(any(), any()) }
     }
 }
