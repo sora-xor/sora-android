@@ -341,7 +341,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
                     poolDataUsable?.let {
-                        amount2 = if (amount <= it.user.targetPooled) amount else it.user.targetPooled
+                        amount2 =
+                            if (amount <= it.user.targetPooled) amount else it.user.targetPooled
                         amount1 =
                             PolkaswapFormulas.calculateOneAmountFromAnother(
                                 amount2,
@@ -689,7 +690,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             if (assetState1 == null)
                 return@with
 
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+            val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = assetState1.token,
                 primaryTokenAmount = assetState1.amount,
                 secondaryToken = null,

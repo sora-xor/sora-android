@@ -43,12 +43,13 @@ interface AssetsInteractor {
 
     suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal?
 
-    suspend fun isEnoughXorLeftAfterTransaction(
+    suspend fun isNotEnoughXorLeftAfterTransaction(
         primaryToken: Token,
         primaryTokenAmount: BigDecimal,
         secondaryToken: Token?,
         secondaryTokenAmount: BigDecimal?,
-        networkFeeInXor: BigDecimal
+        networkFeeInXor: BigDecimal,
+        isUnbonding: Boolean = false
     ): Boolean
 
     suspend fun getAccountName(): String

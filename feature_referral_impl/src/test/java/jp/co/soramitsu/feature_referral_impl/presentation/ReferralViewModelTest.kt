@@ -136,7 +136,8 @@ class ReferralViewModelTest {
         coEvery { interactor.updateReferrals() } returns Unit
         every { assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId) } returns assetFlow
         coEvery {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                any(),
                 any(),
                 any(),
                 any(),
@@ -252,7 +253,8 @@ class ReferralViewModelTest {
         referralViewModel.onBondPlus()
         advanceUntilIdle()
         coVerify(atLeast = 1) {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                any(),
                 any(),
                 any(),
                 any(),
@@ -263,7 +265,8 @@ class ReferralViewModelTest {
         referralViewModel.onBondMinus()
         advanceUntilIdle()
         coVerify(atLeast = 1) {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                any(),
                 any(),
                 any(),
                 any(),

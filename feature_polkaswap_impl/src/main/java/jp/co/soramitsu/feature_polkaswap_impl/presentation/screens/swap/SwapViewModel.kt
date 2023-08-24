@@ -32,8 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -472,7 +470,7 @@ class SwapViewModel @AssistedInject constructor(
         with(_swapMainState.value) {
             if (tokenFromState == null || tokenToState == null)
                 return@with
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+            val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = tokenFromState.token,
                 primaryTokenAmount = tokenFromState.amount,
                 secondaryToken = tokenToState.token,
@@ -565,6 +563,7 @@ class SwapViewModel @AssistedInject constructor(
             _swapMainState.value.tokenFromState == null || _swapMainState.value.tokenToState == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
+
             availableMarkets.isEmpty() -> {
                 resourceManager.getString(R.string.polkaswap_pool_not_created) to false
             }
@@ -574,17 +573,21 @@ class SwapViewModel @AssistedInject constructor(
             _swapMainState.value.tokenToState != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
+
             ok?.isEmpty() == true -> {
                 resourceManager.getString(R.string.review) to true
             }
+
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
             }
+
             swapDetails == null -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_liqudity)
                     .format("") to false
             }
+
             else -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
@@ -595,10 +598,12 @@ class SwapViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
             }
+
             swapDetails == null -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_liqudity)
                     .format("") to false
             }
+
             else -> {
                 resourceManager.getString(R.string.common_confirm) to true
             }
@@ -656,9 +661,11 @@ class SwapViewModel @AssistedInject constructor(
                                 null -> {
                                     ""
                                 }
+
                                 fromAsset.token -> {
                                     fromAsset.token.symbol
                                 }
+
                                 else -> {
                                     feeAsset.token.symbol
                                 }
@@ -883,7 +890,8 @@ class SwapViewModel @AssistedInject constructor(
             if (desired == WithDesired.INPUT) _swapMainState.value.tokenToState?.token else _swapMainState.value.tokenFromState?.token
         val minmax = swapDetails?.minmax
         if (token != null && minmax != null) {
-            val minmaxText = "\n${token.printBalance(minmax, numbersFormatter, AssetHolder.ROUNDING)}\n"
+            val minmaxText =
+                "\n${token.printBalance(minmax, numbersFormatter, AssetHolder.ROUNDING)}\n"
             val desc =
                 (
                     if (desired == WithDesired.INPUT)
