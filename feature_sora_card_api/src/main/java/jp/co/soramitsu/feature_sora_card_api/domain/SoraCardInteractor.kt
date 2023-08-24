@@ -40,7 +40,9 @@ interface SoraCardInteractor {
 
     fun subscribeToSoraCardAvailabilityFlow(): Flow<SoraCardAvailabilityInfo>
 
-    fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification?>
+    fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification>
+
+    suspend fun checkSoraCardPending()
 
     fun setStatus(status: SoraCardCommonVerification)
     fun setLogout()

@@ -111,8 +111,6 @@ dependencies {
     implementation navigationComposeDep
     implementation accompanistNavAnimationDep
 
-    implementation composeMaterialDialogDep
-
     implementation daggerDep
     kapt daggerKaptDep
 

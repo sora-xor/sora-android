@@ -151,7 +151,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `init succesfull`() = runTest {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(null)
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.state.let {
@@ -162,7 +162,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(null)
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -181,7 +181,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(null)
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         profileViewModel.showBuyCrypto()
         verify { assetsRouter.showBuyCrypto(any()) }

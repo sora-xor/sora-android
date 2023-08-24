@@ -44,6 +44,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.runs
 import io.mockk.verify
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
@@ -67,6 +68,7 @@ import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityI
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
 import jp.co.soramitsu.test_data.TestAssets
@@ -191,10 +193,11 @@ class CardsHubViewModelTest {
                     )
                 }
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(null)
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
             SoraCardAvailabilityInfo()
         )
+        coEvery { soraCardInteractor.checkSoraCardPending() } just runs
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
         every { mainRouter.showGetSoraCard(any()) } just Runs
         every { mainRouter.showSoraCardDetails() } just Runs
@@ -215,6 +218,7 @@ class CardsHubViewModelTest {
             polkaswapRouter,
             connectionManager,
             soraCardInteractor,
+            coroutineManager,
         )
     }
 

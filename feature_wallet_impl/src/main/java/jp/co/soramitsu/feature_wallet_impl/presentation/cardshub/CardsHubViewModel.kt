@@ -40,6 +40,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.fiatSum
 import jp.co.soramitsu.common.domain.fiatSymbol
 import jp.co.soramitsu.common.domain.formatFiatAmount
@@ -87,6 +88,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
@@ -102,6 +105,7 @@ class CardsHubViewModel @Inject constructor(
     private val polkaswapRouter: PolkaswapRouter,
     private val connectionManager: ConnectionManager,
     private val soraCardInteractor: SoraCardInteractor,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel(), WithProgress by progress {
 
     private val _state = MutableStateFlow(
@@ -119,6 +123,11 @@ class CardsHubViewModel @Inject constructor(
     private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
+        viewModelScope.launch {
+            withContext(coroutineManager.io) {
+                soraCardInteractor.checkSoraCardPending()
+            }
+        }
         viewModelScope.launch {
             cardsHubInteractorImpl
                 .subscribeVisibleCardsHubList()
@@ -145,6 +154,7 @@ class CardsHubViewModel @Inject constructor(
                             CardHubType.GET_SORA_CARD -> {
                                 soraCardInteractor.subscribeSoraCardStatus().map { status ->
                                     val mapped = mapKycStatus(status)
+                                    Timber.e("hub $status $mapped")
                                     cardHub to listOf(
                                         SoraCardState(
                                             visible = cardHub.visibility,
@@ -186,21 +196,24 @@ class CardsHubViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun mapKycStatus(kycStatus: SoraCardCommonVerification?): Pair<String?, Boolean> {
-        if (kycStatus == null) return null to false
+    private fun mapKycStatus(kycStatus: SoraCardCommonVerification): Pair<String?, Boolean> {
         return when (kycStatus) {
             SoraCardCommonVerification.Failed -> {
                 resourceManager.getString(R.string.sora_card_verification_failed) to false
             }
+
             SoraCardCommonVerification.Rejected -> {
                 resourceManager.getString(R.string.sora_card_verification_rejected) to false
             }
+
             SoraCardCommonVerification.Pending -> {
                 resourceManager.getString(R.string.sora_card_verification_in_progress) to false
             }
+
             SoraCardCommonVerification.Successful -> {
                 resourceManager.getString(R.string.sora_card_verification_successful) to true
             }
+
             SoraCardCommonVerification.NotFound -> {
                 null to false
             }
@@ -216,12 +229,15 @@ class CardsHubViewModel @Inject constructor(
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }
             }
+
             is SoraCardResult.Success -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Failure -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
                 soraCardInteractor.setLogout()
@@ -254,7 +270,11 @@ class CardsHubViewModel @Inject constructor(
         return data.map {
             when (it.first.cardType) {
                 CardHubType.ASSETS -> mapAssetsCard(it.first.collapsed, it.second as List<Asset>)
-                CardHubType.POOLS -> mapPoolsCard(it.first.collapsed, it.second as List<CommonUserPoolData>)
+                CardHubType.POOLS -> mapPoolsCard(
+                    it.first.collapsed,
+                    it.second as List<CommonUserPoolData>
+                )
+
                 CardHubType.GET_SORA_CARD -> (it.second as List<SoraCardState>).first()
                 CardHubType.BUY_XOR_TOKEN -> (it.second as List<BuyXorState>).first()
             }

@@ -96,7 +96,7 @@ class ProfileViewModel @Inject constructor(
 
     private var currentSoraCardContractData: SoraCardContractData? = null
 
-    private var soraCardInfo: SoraCardCommonVerification? = null
+    private var soraCardInfo: SoraCardCommonVerification = SoraCardCommonVerification.NotFound
         set(value) {
             val soraCardStatusStringRes =
                 when (value) {
@@ -161,7 +161,7 @@ class ProfileViewModel @Inject constructor(
 
     fun showSoraCard() {
         when (soraCardInfo) {
-            null -> {
+            SoraCardCommonVerification.NotFound -> {
                 router.showGetSoraCard()
             }
 

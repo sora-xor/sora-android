@@ -88,8 +88,6 @@ dependencies {
 
     implementation uiCoreDep
 
-    implementation composeMaterialDialogDep
-
     implementation coilDep
     implementation coilComposeDep
 
@@ -110,6 +108,7 @@ dependencies {
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeActivityDep
+    implementation composeLifecycleDep
     implementation composeViewModelDep
     implementation composeToolingPreviewDep
     implementation composeConstraintLayoutDep
