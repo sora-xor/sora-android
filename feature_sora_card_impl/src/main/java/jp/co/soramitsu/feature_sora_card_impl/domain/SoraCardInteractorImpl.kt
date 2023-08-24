@@ -49,15 +49,11 @@ import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flattenMerge
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
@@ -73,21 +69,21 @@ internal class SoraCardInteractorImpl @Inject constructor(
 
     private var xorToEuro: Double? = null
 
-    private val _soraCardStatus = MutableStateFlow<SoraCardCommonVerification?>(null)
+    private val _soraCardStatus = MutableStateFlow(SoraCardCommonVerification.NotFound)
 
-    @OptIn(FlowPreview::class)
-    override fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification?> =
-        flowOf(_soraCardStatus.asStateFlow(), pendingFlow).flattenMerge().flowOn(coroutineManager.io)
+    override fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification> =
+        _soraCardStatus.asStateFlow()
 
-    private val pendingFlow: Flow<SoraCardCommonVerification?> = flow {
+    override suspend fun checkSoraCardPending() {
         var isLoopInProgress = true
         while (isLoopInProgress) {
-            val status = soraCardClientProxy.getKycStatus().getOrNull()
-            emit(status)
+            val status = soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
+            _soraCardStatus.value = status
             if (status != SoraCardCommonVerification.Pending) {
                 isLoopInProgress = false
+            } else {
+                delay(POLLING_PERIOD_IN_MILLIS)
             }
-            delay(POLLING_PERIOD_IN_MILLIS)
         }
     }
 
@@ -96,7 +92,7 @@ internal class SoraCardInteractorImpl @Inject constructor(
     }
 
     override fun setLogout() {
-        _soraCardStatus.value = null
+        _soraCardStatus.value = SoraCardCommonVerification.NotFound
     }
 
     override fun subscribeToSoraCardAvailabilityFlow() =

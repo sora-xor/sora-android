@@ -221,6 +221,11 @@ class AssetsInteractorImpl constructor(
         assetsRepository.updateAssetPositions(assetPositions, curAccount)
     }
 
+    override suspend fun updateBalanceVisibleAssets() {
+        val soraAccount = userRepository.getCurSoraAccount()
+        assetsRepository.updateBalancesVisibleAssets(soraAccount.substrateAddress)
+    }
+
     override suspend fun updateWhitelistBalances() {
         val soraAccount = userRepository.getCurSoraAccount()
         assetsRepository.updateWhitelistBalances(soraAccount.substrateAddress)

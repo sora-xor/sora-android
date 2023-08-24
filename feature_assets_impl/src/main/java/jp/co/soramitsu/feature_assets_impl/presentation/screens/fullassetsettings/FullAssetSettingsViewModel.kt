@@ -196,6 +196,7 @@ class FullAssetSettingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             updatePositions()
+            assetsInteractor.updateBalanceVisibleAssets()
             assetsRouter.popBackStackFragment()
         }
     }

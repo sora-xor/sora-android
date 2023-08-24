@@ -84,7 +84,6 @@ fun SoraCardSettingsCard(
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
-        onClick = remember { { /* DO NOTHING */ } }
     ) {
         Column(
             modifier = Modifier

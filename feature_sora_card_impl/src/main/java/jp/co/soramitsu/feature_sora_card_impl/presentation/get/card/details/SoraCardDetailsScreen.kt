@@ -54,7 +54,8 @@ data class SoraCardDetailsScreenState(
     val soraCardReferralBannerCardState: SoraCardReferralBannerCardState? = null,
     val soraCardRecentActivitiesCardState: SoraCardRecentActivitiesCardState? = null,
     val soraCardIBANCardState: SoraCardIBANCardState? = null,
-    val soraCardSettingsCard: SoraCardSettingsCardState? = null
+    val soraCardSettingsCard: SoraCardSettingsCardState? = null,
+    val logoutDialog: Boolean,
 )
 
 @Composable
@@ -159,7 +160,8 @@ private fun PreviewSoraCardDetailsScreen() {
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
                     soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
-                )
+                ),
+                logoutDialog = false,
             ),
             onShowSoraCardDetailsClick = {},
             onSoraCardMenuActionClick = { _ -> },
