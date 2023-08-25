@@ -38,8 +38,8 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.domain.fiatChange
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
@@ -108,7 +108,7 @@ class BlockExplorerManager @Inject constructor(
     }
 
     suspend fun getXorPerEurRatio(): Double? = runCatching {
-        val json = networkClient.get(FlavorOptionsProvider.xorEuroUrl)
+        val json = networkClient.get(BuildConfigWrapper.soraCardEuroRateUrl)
         val soraCoin = Json.decodeFromString<SoraCoin>(serializer(), json)
         soraCoin.price.toDoubleNan()
     }.getOrNull()

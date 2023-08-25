@@ -32,7 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.data.repository.datasource
 
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.feature_wallet_api.data.BuyCryptoDataSource
 import jp.co.soramitsu.feature_wallet_api.domain.model.PaymentOrder
 import jp.co.soramitsu.feature_wallet_api.domain.model.PaymentOrderInfo
@@ -74,7 +74,7 @@ class BuyCryptoDataSourceImpl(
     }
 
     private val paymentOrderWebSocket: WebSocket = WebSocket(
-        url = FlavorOptionsProvider.wssX1StatusUrl,
+        url = BuildConfigWrapper.soraCardX1StatusUrl,
         listener = webSocketListener,
         json = json,
         logging = false,
