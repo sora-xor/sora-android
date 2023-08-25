@@ -142,9 +142,9 @@ hilt {
 
 play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
-    track = "beta"
+    track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.3.0.2 - SORA Card"
+    releaseName = "3.4.0.0 - Explore Ecosystem"
 }
 
 dependencies {
