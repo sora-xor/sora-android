@@ -515,7 +515,7 @@
   <string name="status_successful">Confirmée</string>
   <string name="status_title">Statut</string>
   <string name="succesfully_imported_account_title">Vous avez importé votre compte avec succès</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Votre solde sera en deçà de %s après cette transaction. Vous ne pourrez plus payer les frais de transaction du réseau pour une autre transaction.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Assurez-vous qu’il vous reste %s après cette transaction. Sinon, vous ne pourrez pas effectuer une autre transaction.</string>
   <string name="switch_node">Changer de nœud</string>
   <string name="system_appearance">Apparence du système</string>
   <string name="tabbar_parliament_title">Parlement</string>

@@ -160,12 +160,8 @@ class AddLiquidityViewModelTest {
         every { TestTokens.xstToken.iconUri() } returns mockedUri
         given(
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = anyOrNull(),
-                secondaryTokenAmount = anyOrNull(),
                 networkFeeInXor = any(),
-                isUnbonding = any()
+                xorChange = any(),
             )
         ).willReturn(false)
         given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
@@ -447,12 +443,8 @@ class AddLiquidityViewModelTest {
                 assetsInteractor,
                 times(1)
             ).isNotEnoughXorLeftAfterTransaction(
-                primaryToken = XOR_ASSET.token,
-                primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
+                xorChange = BigDecimal.TEN,
                 networkFeeInXor = LIQUIDITY_DETAILS.networkFee,
-                isUnbonding = false
             )
         }
 }

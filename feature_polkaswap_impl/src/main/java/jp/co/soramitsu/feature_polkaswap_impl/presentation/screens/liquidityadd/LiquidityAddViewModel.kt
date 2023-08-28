@@ -193,7 +193,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
             ),
             selectSearchAssetState = null,
             shouldTransactionReminderInsufficientWarningBeShown = false,
-            transactionFeeToken = ""
         )
     )
 
@@ -488,16 +487,12 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 return@with
 
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = assetState1.token,
-                primaryTokenAmount = assetState1.amount,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = networkFee
+                networkFeeInXor = networkFee,
+                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) assetState1.amount else null,
             )
 
             addState = addState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeToken().symbol
             )
         }
 

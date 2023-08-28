@@ -152,10 +152,9 @@ internal fun LiquidityRemoveScreen(
                 color = Color.Transparent
             )
             WarningTextCard(
-                title = stringResource(id = R.string.common_title_warning),
                 text = stringResource(
                     id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
-                    formatArgs = arrayOf(state.transactionFeeToken, state.prices.fee)
+                    formatArgs = arrayOf(state.prices.fee)
                 )
             )
         }
@@ -269,7 +268,6 @@ private fun PreviewLiquidityRemoveScreen() {
                         ),
                     ),
                     shouldTransactionReminderInsufficientWarningBeShown = true,
-                    transactionFeeToken = "",
                     poolInFarming = true,
                 ),
             )

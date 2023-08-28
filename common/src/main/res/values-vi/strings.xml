@@ -475,7 +475,7 @@
   <string name="sora_card_action_transfer">Chuyển</string>
   <string name="sora_card_already_have_card">Tôi đã có thẻ</string>
   <string name="sora_card_annual_service_fee">Phí dịch vụ hàng năm € 0</string>
-  <string name="sora_card_banner_title_card_info">Card info</string>
+  <string name="sora_card_banner_title_card_info">Thông tin thẻ</string>
   <string name="sora_card_blacklisted_countires_title">Không bao gồm ứng dụng</string>
   <string name="sora_card_blacklisted_countires_warning">Cư dân từ một số quốc gia không thể đăng ký Thẻ SORA tại thời điểm này</string>
   <string name="sora_card_buy_xor_with_eur">Mua XOR bằng EUR</string>
@@ -509,7 +509,7 @@
   <string name="status_successful">Thành công</string>
   <string name="status_title">Trạng thái</string>
   <string name="succesfully_imported_account_title">Bạn đã nhập thành công một tài khoản</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Số dư %s của bạn sẽ ít hơn %s sau giao dịch này. Bạn sẽ không thể thanh toán phí mạng cho một giao dịch khác.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Đảm bảo rằng bạn còn %s sau giao dịch này. Nếu không, bạn sẽ không thể thực hiện một giao dịch khác.</string>
   <string name="switch_node">Chuyển node</string>
   <string name="system_appearance">Hệ thống hiển thị</string>
   <string name="tabbar_parliament_title">Nghị viện</string>

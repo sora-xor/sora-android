@@ -475,7 +475,7 @@
   <string name="sora_card_action_transfer">转账</string>
   <string name="sora_card_already_have_card">我已经有一张卡了</string>
   <string name="sora_card_annual_service_fee">年服务费€0</string>
-  <string name="sora_card_banner_title_card_info">Card info</string>
+  <string name="sora_card_banner_title_card_info">卡片信息</string>
   <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
   <string name="sora_card_blacklisted_countires_warning">来自某些国家的居民目前无法申请SORA卡。</string>
   <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
@@ -509,7 +509,7 @@
   <string name="status_successful">成功的</string>
   <string name="status_title">状态</string>
   <string name="succesfully_imported_account_title">您已成功导入一个账户</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">此次交易后，您的%s余额将少于%s。您将无法支付另一笔交易的网络费用。</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">确保在此事务之后还剩下 %s。否则，您将无法进行其他交易。</string>
   <string name="switch_node">切换节点</string>
   <string name="system_appearance">系统外观</string>
   <string name="tabbar_parliament_title">议会</string>

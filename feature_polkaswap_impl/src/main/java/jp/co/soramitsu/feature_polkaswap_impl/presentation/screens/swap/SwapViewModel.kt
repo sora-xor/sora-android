@@ -90,9 +90,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -152,7 +150,6 @@ class SwapViewModel @AssistedInject constructor(
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
     private var networkFee: BigDecimal? = null
-    private var hasXorReminderWarningBeenChecked = false
 
     private val _swapMainState = MutableStateFlow(
         SwapMainState(
@@ -356,6 +353,7 @@ class SwapViewModel @AssistedInject constructor(
                     }
                     recalcDetails()
                     toggleSwapButtonStatus()
+                    updateTransactionReminderWarningVisibility()
                     resetLoading()
                 }
         }
@@ -385,18 +383,6 @@ class SwapViewModel @AssistedInject constructor(
                     }
                 }
         }
-
-        merge(fromAmountFlow, toAmountFlow)
-            .filter {
-                _swapMainState.value.tokenFromState?.token?.id == SubstrateOptionsProvider.feeAssetId ||
-                    _swapMainState.value.tokenToState?.token?.id == SubstrateOptionsProvider.feeAssetId ||
-                    !hasXorReminderWarningBeenChecked
-            }.onEach {
-                updateTransactionReminderWarningVisibility()
-                hasXorReminderWarningBeenChecked = true
-            }
-            .flowOn(coroutineManager.io)
-            .launchIn(viewModelScope)
     }
 
     fun onDisclaimerClose() {
@@ -472,18 +458,19 @@ class SwapViewModel @AssistedInject constructor(
         with(_swapMainState.value) {
             if (tokenFromState == null || tokenToState == null)
                 return@with
+            val change = if (tokenFromState.token.id == SubstrateOptionsProvider.feeAssetId) {
+                tokenFromState.amount
+            } else if (tokenToState.token.id == SubstrateOptionsProvider.feeAssetId) {
+                -tokenToState.amount
+            } else { null }
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = tokenFromState.token,
-                primaryTokenAmount = tokenFromState.amount,
-                secondaryToken = tokenToState.token,
-                secondaryTokenAmount = tokenToState.amount,
-                networkFeeInXor = networkFee.orZero()
+                networkFeeInXor = networkFee.orZero(),
+                xorChange = change,
             )
 
             _swapMainState.value = _swapMainState.value.copy(
                 details = details.copy(
-                    shouldTransactionReminderInsufficientWarningBeShown = result,
-                    transactionFeeToken = feeToken().symbol
+                    shouldTransactionReminderInsufficientWarningBeShown = result && swapButtonState.enabled,
                 )
             )
         }
@@ -492,14 +479,12 @@ class SwapViewModel @AssistedInject constructor(
         assetsList.find { it.token.id == tokenId }?.let {
             toAndFromAssetsSelected(null, it.token)
         }
-        hasXorReminderWarningBeenChecked = false
     }
 
     fun toAssetSelected(tokenId: String) {
         assetsList.find { it.token.id == tokenId }?.let {
             toAndFromAssetsSelected(it.token, null)
         }
-        hasXorReminderWarningBeenChecked = false
     }
 
     fun onMarketSelected(market: Market) {
@@ -521,9 +506,6 @@ class SwapViewModel @AssistedInject constructor(
         )
         setSwapButtonLoading(true)
         onChangedProperty.set(property.newReloadMarkets(false))
-        viewModelScope.launch {
-            updateTransactionReminderWarningVisibility()
-        }
     }
 
     private fun toAndFromAssetsSelected(to: Token?, from: Token?) {

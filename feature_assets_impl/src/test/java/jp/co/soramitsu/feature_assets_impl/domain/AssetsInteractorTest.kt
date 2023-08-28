@@ -228,12 +228,8 @@ class AssetsInteractorTest {
             )
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = oneToken(),
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = oneToken(),
-                secondaryTokenAmount = BigDecimal(1),
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1),
-                isUnbonding = false
             )
 
             Assert.assertEquals(
@@ -262,10 +258,7 @@ class AssetsInteractorTest {
             )
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = xorToken,
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = oneToken(),
-                secondaryTokenAmount = BigDecimal(1),
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1)
             )
 
@@ -295,12 +288,8 @@ class AssetsInteractorTest {
             )
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = oneToken(),
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = xorToken,
-                secondaryTokenAmount = BigDecimal(1),
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1),
-                isUnbonding = false
             )
 
             Assert.assertEquals(true, result)

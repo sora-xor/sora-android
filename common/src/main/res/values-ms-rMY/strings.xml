@@ -509,7 +509,7 @@
   <string name="status_successful">Berjaya</string>
   <string name="status_title">Status</string>
   <string name="succesfully_imported_account_title">Anda telah berjaya mengimport akaun</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Baki %s anda akan kurang daripada %s selepas transaksi ini. Anda tidak akan dapat membayar yuran rangkaian untuk transaksi lain.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Pastikan anda mempunyai %s yang tersisa selepas transaksi ini. Jika tidak, anda tidak akan dapat melakukan transaksi lain.</string>
   <string name="switch_node">Tukar nod</string>
   <string name="system_appearance">Penampilan sistem</string>
   <string name="tabbar_parliament_title">Parlimen</string>

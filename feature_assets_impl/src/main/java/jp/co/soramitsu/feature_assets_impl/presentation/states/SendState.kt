@@ -47,5 +47,4 @@ internal data class SendState(
     val feeLoading: Boolean = true,
     val selectSearchAssetState: SelectSearchAssetState = SelectSearchAssetState("", emptyList()),
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean = false,
-    val transactionFeeToken: String = ""
 )
