@@ -34,14 +34,17 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.wallet
 
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.runs
 import io.mockk.verify
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
@@ -62,26 +65,22 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.feature_wallet_impl.presentation.cardshub.CardsHubViewModel
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.test_data.PolkaswapTestData.POOL_DATA
-import jp.co.soramitsu.test_data.SoraCardTestData
 import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
-import jp.co.soramitsu.test_shared.getOrAwaitValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -101,9 +100,6 @@ class CardsHubViewModelTest {
 
     @MockK
     private lateinit var assetsInteractor: AssetsInteractor
-
-    @MockK
-    private lateinit var walletInteractor: WalletInteractor
 
     @MockK
     private lateinit var poolsInteractor: PoolsInteractor
@@ -196,22 +192,21 @@ class CardsHubViewModelTest {
                         )
                     )
                 }
-        coEvery { walletInteractor.updateSoraCardInfo(any(), any(), any()) } returns Unit
-        every { cardsHubInteractorImpl.subscribeSoraCardInfo() } returns flowOf(SoraCardTestData.SORA_CARD_INFO)
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        every { soraCardInteractor.pollSoraCardStatusIfPending() } returns flowOf("")
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         every { soraCardInteractor.subscribeToSoraCardAvailabilityFlow() } returns flowOf(
             SoraCardAvailabilityInfo()
         )
+        coEvery { soraCardInteractor.checkSoraCardPending() } just runs
         every { assetsRouter.showBuyCrypto(any()) } returns Unit
-        every { mainRouter.showGetSoraCard(any()) } returns Unit
+        every { mainRouter.showGetSoraCard(any()) } just Runs
+        every { mainRouter.showSoraCardDetails() } just Runs
         every { resourceManager.getString(R.string.sora_card_verification_in_progress) } returns "in progress"
         every { resourceManager.getString(R.string.sora_card_verification_successful) } returns "success"
         every { resourceManager.getString(R.string.sora_card_verification_rejected) } returns "rejected"
         every { resourceManager.getString(R.string.sora_card_verification_failed) } returns "failed"
         cardsHubViewModel = CardsHubViewModel(
             assetsInteractor,
-            walletInteractor,
             poolsInteractor,
             cardsHubInteractorImpl,
             numbersFormatter,
@@ -245,7 +240,7 @@ class CardsHubViewModelTest {
         }
     }
 
-    @Test()
+    @Test
     fun `call remove buy xor token card EXPECT change card visibility`() = runTest {
         cardsHubViewModel.onRemoveBuyXorToken()
         advanceUntilIdle()
@@ -258,32 +253,10 @@ class CardsHubViewModelTest {
     }
 
     @Test
-    fun `call updateSoraCardInfo EXPECT update data via interactor`() = runTest {
-        cardsHubViewModel.updateSoraCardInfo(
-            accessToken = "accessToken",
-            accessTokenExpirationTime = Long.MAX_VALUE,
-            kycStatus = "Completed"
-        )
-        advanceUntilIdle()
-        coVerify {
-            walletInteractor.updateSoraCardInfo(
-                accessToken = "accessToken",
-                accessTokenExpirationTime = Long.MAX_VALUE,
-                kycStatus = "Completed",
-            )
-        }
-    }
-
-    @Test
-    @Ignore
     fun `call onCardStateClicked EXPECT induce launchSoraCard event`() = runTest {
         advanceUntilIdle()
         cardsHubViewModel.onCardStateClicked()
         advanceUntilIdle()
-        val liveData = cardsHubViewModel.launchSoraCardSignIn.getOrAwaitValue()
-        assertEquals(
-            SoraCardTestData.SORA_CARD_CONTRACT_DATA,
-            liveData,
-        )
+        verify { mainRouter.showGetSoraCard(any(), any()) }
     }
 }

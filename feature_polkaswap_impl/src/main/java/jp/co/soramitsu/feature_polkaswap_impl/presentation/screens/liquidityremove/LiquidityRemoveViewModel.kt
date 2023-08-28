@@ -55,10 +55,10 @@ import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
-import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemovePricesState
@@ -341,7 +341,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 .debounce(ViewHelper.debounce)
                 .collectLatest { amount ->
                     poolDataUsable?.let {
-                        amount2 = if (amount <= it.user.targetPooled) amount else it.user.targetPooled
+                        amount2 =
+                            if (amount <= it.user.targetPooled) amount else it.user.targetPooled
                         amount1 =
                             PolkaswapFormulas.calculateOneAmountFromAnother(
                                 amount2,
@@ -689,7 +690,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
             if (assetState1 == null)
                 return@with
 
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+            val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = assetState1.token,
                 primaryTokenAmount = assetState1.amount,
                 secondaryToken = null,

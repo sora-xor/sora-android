@@ -47,14 +47,12 @@ import jp.co.soramitsu.common.domain.CardHubType
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.resourses.Language
 import jp.co.soramitsu.common.resourses.LanguagesHolder
-import jp.co.soramitsu.common.util.DeviceParamsProvider
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.AccountDao
 import jp.co.soramitsu.core_db.dao.CardsHubDao
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
-import jp.co.soramitsu.core_db.dao.SoraCardDao
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserDatasource
@@ -105,12 +103,6 @@ class UserRepositoryTest {
     lateinit var globalCardsHubDao: GlobalCardsHubDao
 
     @MockK
-    lateinit var soraCardDao: SoraCardDao
-
-    @MockK
-    lateinit var deviceParamsProvider: DeviceParamsProvider
-
-    @MockK
     lateinit var coroutineManager: CoroutineManager
 
     @MockK
@@ -133,7 +125,6 @@ class UserRepositoryTest {
         every { db.referralsDao() } returns referralsDao
         every { db.nodeDao() } returns nodeDao
         every { db.globalCardsHubDao() } returns globalCardsHubDao
-        every { db.soraCardDao() } returns soraCardDao
         coEvery { accountDao.getAccount(accountAddress) } returns SoraAccountLocal(
             accountAddress,
             accountName,
@@ -376,7 +367,6 @@ class UserRepositoryTest {
         coEvery { nodeDao.clearTable() } returns Unit
         coEvery { globalCardsHubDao.clearTable() } returns Unit
         coEvery { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) } returns Unit
-        coEvery { soraCardDao.clearTable() } returns Unit
         coEvery { globalCardsHubDao.count() } returns 0
         every { db.clearAllTables() } returns Unit
         mockkStatic("androidx.room.RoomDatabaseKt")
@@ -388,7 +378,6 @@ class UserRepositoryTest {
         coVerify { nodeDao.clearTable() }
         coVerify { globalCardsHubDao.clearTable() }
         coVerify { globalCardsHubDao.insert(TestData.DEFAULT_GLOBAL_CARDS) }
-        coVerify { soraCardDao.clearTable() }
         coVerify { referralsDao.clearTable() }
         coVerify { accountDao.clearAll() }
         coVerify { userDatasource.clearAllData() }

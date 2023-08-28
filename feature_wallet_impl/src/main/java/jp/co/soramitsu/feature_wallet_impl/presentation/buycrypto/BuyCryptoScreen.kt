@@ -107,7 +107,10 @@ fun BuyCryptoScreen(
         )
 
         if (state.showAlert) {
-            PaymentWidgetUnavailableAlert(onAlertCloseClick)
+            PaymentWidgetUnavailableAlert(
+                state.alertCode,
+                onAlertCloseClick,
+            )
         }
 
         if (state.loading) {
@@ -117,7 +120,10 @@ fun BuyCryptoScreen(
 }
 
 @Composable
-private fun PaymentWidgetUnavailableAlert(onCloseClick: () -> Unit) {
+private fun PaymentWidgetUnavailableAlert(
+    alertCode: Int?,
+    onCloseClick: () -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,7 +142,7 @@ private fun PaymentWidgetUnavailableAlert(onCloseClick: () -> Unit) {
                 .fillMaxWidth()
                 .padding(top = Dimens.x3),
             style = MaterialTheme.customTypography.headline1.copy(textAlign = TextAlign.Center),
-            text = stringResource(id = SoraCardR.string.payment_widget_unavailable_message),
+            text = "%s (%d)".format(stringResource(id = SoraCardR.string.payment_widget_unavailable_message), alertCode ?: 0),
         )
         Text(
             modifier = Modifier
@@ -160,5 +166,5 @@ private fun PaymentWidgetUnavailableAlert(onCloseClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun PreviewAlert() {
-    PaymentWidgetUnavailableAlert {}
+    PaymentWidgetUnavailableAlert(123, {})
 }

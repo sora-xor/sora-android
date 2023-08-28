@@ -39,7 +39,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
-import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityremove.LiquidityRemoveViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -105,7 +105,7 @@ class RemoveLiquidityViewModelTest {
     private lateinit var router: WalletRouter
 
     @Mock
-    private lateinit var demeterFarmingInteractor: DemeterFarmingInteractor
+    private lateinit var demeterFarmingInteractor: jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 
     private lateinit var viewModel: LiquidityRemoveViewModel
 
@@ -163,12 +163,13 @@ class RemoveLiquidityViewModelTest {
         given(walletInteractor.getFeeToken()).willReturn(TestTokens.xorToken)
 
         given(
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = any(),
                 primaryTokenAmount = any(),
                 secondaryToken = anyOrNull(),
                 secondaryTokenAmount = anyOrNull(),
-                networkFeeInXor = any()
+                networkFeeInXor = any(),
+                isUnbonding = any()
             )
         ).willReturn(false)
     }
@@ -264,12 +265,13 @@ class RemoveLiquidityViewModelTest {
             verify(
                 mock = assetsInteractor,
                 mode = times(1)
-            ).isEnoughXorLeftAfterTransaction(
+            ).isNotEnoughXorLeftAfterTransaction(
                 primaryToken = TestTokens.xorToken,
                 primaryTokenAmount = BigDecimal.ONE, // is not TEN due to basePooled in POOL_DATA
                 secondaryToken = null,
                 secondaryTokenAmount = null,
-                networkFeeInXor = NETWORK_FEE
+                networkFeeInXor = NETWORK_FEE,
+                isUnbonding = false
             )
         }
 }

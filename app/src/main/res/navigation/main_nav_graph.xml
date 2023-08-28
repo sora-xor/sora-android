@@ -73,6 +73,10 @@
         android:id="@+id/editCardsHub"
         android:name="jp.co.soramitsu.feature_wallet_impl.presentation.editcardshub.EditCardsHubFragment" />
 
+    <fragment
+        android:id="@+id/soraCardDetailsFragment"
+        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details.SoraCardDetailsFragment" />
+
     <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />
     <include app:graph="@navigation/wallet_nav_graph" />

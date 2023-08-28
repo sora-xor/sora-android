@@ -356,12 +356,15 @@ class ReferralViewModel @Inject constructor(
             REFERRER_INPUT -> {
                 interactor.isLinkOrAddressOk(currentEnteredReferrerLink.orEmpty()).first
             }
+
             BOND_XOR -> {
                 validateFeePayment(bondFee + calcInvitationsAmount(bondInvitationsCount))
             }
+
             UNBOND_XOR -> {
                 validateFeePayment(bondFee)
             }
+
             else -> true
         }
 
@@ -379,16 +382,17 @@ class ReferralViewModel @Inject constructor(
                 )
             )
 
-        updateTransactionReminderWarningVisibility()
+        updateTransactionReminderWarningVisibility(route == UNBOND_XOR)
     }
 
-    private suspend fun updateTransactionReminderWarningVisibility() {
-        val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+    private suspend fun updateTransactionReminderWarningVisibility(isUnbonding: Boolean) {
+        val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
             primaryToken = feeToken(),
             primaryTokenAmount = calcInvitationsAmount(referralScreenState.bondState.invitationsCount),
             secondaryToken = null,
             secondaryTokenAmount = null,
-            networkFeeInXor = extrinsicFee.orZero()
+            networkFeeInXor = extrinsicFee.orZero(),
+            isUnbonding = isUnbonding
         )
 
         referralScreenState = referralScreenState.copy(
@@ -506,6 +510,7 @@ class ReferralViewModel @Inject constructor(
             "", REFERRAL_PROGRAM, WELCOME_PAGE -> {
                 router.popBackStack()
             }
+
             else -> {
                 super.onBackPressed()
             }

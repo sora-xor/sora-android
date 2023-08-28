@@ -43,11 +43,9 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
-import jp.co.soramitsu.test_data.SoraCardTestData
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -84,9 +82,6 @@ class GetSoraCardViewModelTest {
     private lateinit var soraCardInteractor: SoraCardInteractor
 
     @Mock
-    private lateinit var walletInteractor: WalletInteractor
-
-    @Mock
     private lateinit var assetsRouter: AssetsRouter
 
     @Mock
@@ -109,7 +104,6 @@ class GetSoraCardViewModelTest {
 
     @Before
      fun setUp() = runTest {
-        given(walletInteractor.subscribeSoraCardInfo()).willReturn(flowOf(SoraCardTestData.SORA_CARD_INFO))
         given(connectionManager.connectionState).willReturn(flowOf(true))
 
         mockkObject(OptionsProvider)
@@ -124,7 +118,6 @@ class GetSoraCardViewModelTest {
 
         viewModel = GetSoraCardViewModel(
             assetsRouter,
-            walletInteractor,
             walletRouter,
             mainRouter,
             polkaswapRouter,
@@ -151,13 +144,6 @@ class GetSoraCardViewModelTest {
     }
 
     @Test
-    fun `init EXPECT subscribe sora card info`() = runTest {
-        advanceUntilIdle()
-
-        verify(walletInteractor).subscribeSoraCardInfo()
-    }
-
-    @Test
     fun `enable sora card EXPECT set up launcher`() = runTest{
         advanceUntilIdle()
 
@@ -178,22 +164,6 @@ class GetSoraCardViewModelTest {
         viewModel.onSwap()
 
         verify(polkaswapRouter).showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
-    }
-
-    @Test
-    fun `updateSoraCardInfo EXPECT update data`() = runTest {
-        viewModel.updateSoraCardInfo(
-            accessToken = "accessToken",
-            accessTokenExpirationTime = Long.MAX_VALUE,
-            kycStatus = "kycStatus"
-        )
-        advanceUntilIdle()
-
-        verify(walletInteractor).updateSoraCardInfo(
-            accessToken = "accessToken",
-            accessTokenExpirationTime = Long.MAX_VALUE,
-            kycStatus = "kycStatus"
-        )
     }
 
     @Test

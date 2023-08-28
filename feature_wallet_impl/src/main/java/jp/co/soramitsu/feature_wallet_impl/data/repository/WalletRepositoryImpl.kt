@@ -35,15 +35,12 @@ package jp.co.soramitsu.feature_wallet_impl.data.repository
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.core_db.AppDatabase
-import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletDatasource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.feature_wallet_api.domain.model.MigrationStatus
 import jp.co.soramitsu.feature_wallet_impl.data.mappers.CardsHubMapper
-import jp.co.soramitsu.feature_wallet_impl.data.mappers.SoraCardInfoMapper
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.shared_utils.runtime.metadata.storage
@@ -137,44 +134,6 @@ class WalletRepositoryImpl @Inject constructor(
                 }
             }
         }
-    }
-
-    override fun subscribeSoraCardInfo(): Flow<SoraCardInformation?> {
-        return db.soraCardDao().observeSoraCardInfo(SORA_CARD_ID).map {
-            it?.let {
-                SoraCardInfoMapper.map(it)
-            }
-        }
-    }
-
-    override suspend fun getSoraCardInfo(): SoraCardInformation? {
-        return db.soraCardDao().getSoraCardInfo(SORA_CARD_ID)?.let {
-            SoraCardInfoMapper.map(it)
-        }
-    }
-
-    override suspend fun updateSoraCardKycStatus(kycStatus: String) {
-        db.soraCardDao().updateKycStatus(SORA_CARD_ID, kycStatus)
-    }
-
-    override suspend fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    ) {
-        db.soraCardDao().insert(
-            SoraCardInfoLocal(
-                id = SORA_CARD_ID,
-                accessToken = accessToken,
-                refreshToken = "",
-                accessTokenExpirationTime = accessTokenExpirationTime,
-                kycStatus = kycStatus
-            )
-        )
-    }
-
-    override suspend fun deleteSoraCardInfo() {
-        db.soraCardDao().clearTable()
     }
 
     override suspend fun updateCardVisibilityOnGlobalCardsHub(cardId: String, visible: Boolean) {

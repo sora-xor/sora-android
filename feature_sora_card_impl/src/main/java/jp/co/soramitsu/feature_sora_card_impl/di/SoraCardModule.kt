@@ -42,7 +42,7 @@ import jp.co.soramitsu.feature_sora_card_impl.domain.SoraCardInteractorImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface SoraCardModule {
+internal interface SoraCardModule {
 
     @Binds
     @Singleton

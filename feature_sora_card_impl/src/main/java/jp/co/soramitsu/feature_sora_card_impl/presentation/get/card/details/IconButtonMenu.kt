@@ -30,14 +30,42 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.domain
+package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
 
-import java.math.BigDecimal
-import jp.co.soramitsu.common.domain.Token
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
+import jp.co.soramitsu.common.view.AmountCardIcon
 
-data class DemeterFarmingPool(
-    val tokenBase: Token,
-    val tokenTarget: Token,
-    val tokenReward: Token,
-    val amount: BigDecimal,
+data class IconButtonMenuState(
+    val testTagId: String? = null,
+    val image: Image.ResImage,
+    val text: Text,
+    val isEnabled: Boolean
 )
+
+@Composable
+fun IconButtonMenu(
+    iconButtonMenuStates: List<IconButtonMenuState>,
+    onButtonClick: (position: Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        repeat(iconButtonMenuStates.size) {
+            AmountCardIcon(
+                testTagId = iconButtonMenuStates[it].testTagId,
+                res = iconButtonMenuStates[it].image.id,
+                text = iconButtonMenuStates[it].text.retrieveString(),
+                isEnabled = iconButtonMenuStates[it].isEnabled,
+                onClick = { onButtonClick.invoke(it) }
+            )
+        }
+    }
+}
