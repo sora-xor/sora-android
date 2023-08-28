@@ -30,30 +30,14 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.core_db.dao
+package jp.co.soramitsu.demeter.domain
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
-import kotlinx.coroutines.flow.Flow
+import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.Token
 
-@Dao
-interface SoraCardDao {
-
-    @Query("select * from soraCard where :id = id")
-    fun observeSoraCardInfo(id: String): Flow<SoraCardInfoLocal?>
-
-    @Query("select * from soraCard where :id = id")
-    suspend fun getSoraCardInfo(id: String): SoraCardInfoLocal?
-
-    @Query("update soraCard set kycStatus=:kycStatus where :id = id")
-    suspend fun updateKycStatus(id: String, kycStatus: String)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(soraCardInfoLocal: SoraCardInfoLocal)
-
-    @Query("delete from soraCard")
-    suspend fun clearTable()
-}
+data class DemeterFarmingPool(
+    val tokenBase: Token,
+    val tokenTarget: Token,
+    val tokenReward: Token,
+    val amount: BigDecimal,
+)

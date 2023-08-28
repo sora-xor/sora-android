@@ -487,7 +487,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             if (assetState1 == null)
                 return@with
 
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
+            val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 primaryToken = assetState1.token,
                 primaryTokenAmount = assetState1.amount,
                 secondaryToken = null,

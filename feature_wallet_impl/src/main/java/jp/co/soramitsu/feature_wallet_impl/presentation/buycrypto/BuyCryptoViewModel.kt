@@ -86,7 +86,6 @@ class BuyCryptoViewModel @AssistedInject constructor(
     fun onPageFinished() {
         _state.value = _state.value.copy(
             loading = false,
-            showAlert = false,
         )
     }
 
@@ -95,14 +94,14 @@ class BuyCryptoViewModel @AssistedInject constructor(
         val reasonPhrase = errorResponse?.reasonPhrase
         val message = errorResponse?.let { statusCode?.toString().orEmpty() + reasonPhrase }
         FirebaseWrapper.log("X1 [$message]")
-        showWidgetUnavailableAlert()
+        showWidgetUnavailableAlert(statusCode)
     }
 
     fun onAlertCloseClick() {
         mainRouter.popBackStack()
     }
 
-    private fun showWidgetUnavailableAlert() {
+    private fun showWidgetUnavailableAlert(code: Int?) {
         _toolbarState.value?.let {
             _toolbarState.value = it.copy(
                 basic = it.basic.copy(
@@ -115,6 +114,7 @@ class BuyCryptoViewModel @AssistedInject constructor(
         _state.value = _state.value.copy(
             loading = false,
             showAlert = true,
+            alertCode = code,
         )
     }
 

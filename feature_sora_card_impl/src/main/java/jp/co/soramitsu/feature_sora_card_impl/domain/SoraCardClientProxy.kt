@@ -30,18 +30,33 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.core_db.model
+package jp.co.soramitsu.feature_sora_card_impl.domain
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+import jp.co.soramitsu.common.config.BuildConfigWrapper
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardBasicContract
+import jp.co.soramitsu.oauth.clients.ClientsFacade
 
-@Entity(
-    tableName = "soraCard"
-)
-data class SoraCardInfoLocal(
-    @PrimaryKey val id: String,
-    val accessToken: String,
-    val refreshToken: String,
-    val accessTokenExpirationTime: Long,
-    val kycStatus: String
-)
+@Singleton
+internal class SoraCardClientProxy @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val clientsFacade: ClientsFacade,
+) {
+
+    init {
+        clientsFacade.init(
+            createSoraCardBasicContract(),
+            context,
+            BuildConfigWrapper.getSoraCardBackEndUrl(),
+        )
+    }
+
+    suspend fun getKycStatus() = clientsFacade.getKycStatus()
+
+    suspend fun getIBAN() = clientsFacade.getIBAN()
+
+    suspend fun logout() = clientsFacade.logout()
+}

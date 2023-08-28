@@ -166,6 +166,9 @@ interface AssetDao {
     @Update
     suspend fun updateTokenList(tokens: List<TokenLocal>)
 
+    @Query("select * from tokens where id=:tokenId")
+    suspend fun getTokenLocal(tokenId: String): TokenLocal
+
     @Query(
         """
         $joinFiatToken where tokens.id in (:ids)        

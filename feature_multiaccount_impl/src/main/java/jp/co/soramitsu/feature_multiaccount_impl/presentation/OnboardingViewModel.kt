@@ -81,6 +81,8 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -100,6 +102,9 @@ class OnboardingViewModel @Inject constructor(
 
     private val _tutorialScreenState = MutableLiveData(TutorialScreenState())
     val tutorialScreenState: LiveData<TutorialScreenState> = _tutorialScreenState
+
+    private val _recoveryDialog = MutableStateFlow(false)
+    val recoveryDialog = _recoveryDialog.asStateFlow()
 
     private val _createBackupPasswordState = MutableLiveData<CreateBackupPasswordState>()
     val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
@@ -338,10 +343,19 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    fun onRecoverySourceDismiss() {
+        _recoveryDialog.value = false
+    }
+
+    fun onRecoveryDialogShow() {
+        _recoveryDialog.value = true
+    }
+
     fun onGoogleSignin(
         navController: NavController,
         launcher: ActivityResultLauncher<Intent>
     ) {
+        _recoveryDialog.value = false
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
@@ -478,6 +492,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onRecoveryClicked(navController: NavController, index: Int) {
+        _recoveryDialog.value = false
         _recoveryState.value = when (index) {
             1 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid

@@ -45,21 +45,20 @@ buildscript {
             composeCompiler        : '1.4.6',
             composeConstraintLayout: '1.1.0-alpha05',
             uiCore                 : '0.1.0',
-            soraCard               : '0.1.29',
+            soraCard               : '0.1.33',
             lazySodium             : '5.0.2',
             jna                    : '5.8.0',
             accompanist            : '0.30.1',
             xserializationjson     : '1.5.0',
-            composeMaterialDialog  : '0.9.0',
             ktor                   : '2.3.1'
     ]
 
     ext {
-        // soralution 102 3.2.0.5 2023.08.11
-        // sora dae 98 3.3.0.0 2023.08.18
+        // soralution 106 3.4.0.0 2023.08.25
+        // sora dae 99 3.3.0.1 2023.08.28
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 98)
-        appVersionName = '3.3.0.0'
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 99)
+        appVersionName = '3.3.0.1'
 
         compileVersion = 33
         minVersion = 24
@@ -149,8 +148,6 @@ buildscript {
         coilComposeDep = "io.coil-kt:coil-compose:$versions.coil"
 
         web3jDep = "org.web3j:core:$versions.web3j"
-
-        composeMaterialDialogDep = "io.github.vanpra.compose-material-dialogs:core:$versions.composeMaterialDialog"
 
         permissionsAccompanistDep = "com.google.accompanist:accompanist-permissions:$versions.accompanist"
         permissionsRuntimeDep = "com.guolindev.permissionx:permissionx:1.7.1"

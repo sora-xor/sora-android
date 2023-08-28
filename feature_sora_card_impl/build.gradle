@@ -62,8 +62,10 @@ android {
 }
 
 dependencies {
+    implementation project(":android-foundation")
     implementation project(":common")
     implementation project(":common_wallet")
+    implementation project(":demeter")
     implementation project(":feature_assets_api")
     implementation project(":feature_sora_card_api")
     implementation project(":feature_polkaswap_api")

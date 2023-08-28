@@ -122,7 +122,8 @@ class TransferAmountViewModelTest {
         every { resourceManager.getString(R.string.error_transaction_fee_title) } returns "Not enough funds"
         every { avatarGenerator.createAvatar(any(), any()) } returns drawable
         coEvery {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                any(),
                 any(),
                 any(),
                 any(),
@@ -207,12 +208,13 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.ONE)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                     primaryToken = PolkaswapTestData.XOR_ASSET.token,
                     primaryTokenAmount = BigDecimal.ONE,
                     secondaryToken = null,
                     secondaryTokenAmount = null,
-                    networkFeeInXor = networkFee
+                    networkFeeInXor = networkFee,
+                    isUnbonding = false
                 )
             }
             transferAmountViewModel.onTokenChange(PolkaswapTestData.VAL_ASSET.token.id)
@@ -220,12 +222,13 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.TEN)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                     primaryToken = PolkaswapTestData.VAL_ASSET.token,
                     primaryTokenAmount = BigDecimal.TEN,
                     secondaryToken = null,
                     secondaryTokenAmount = null,
-                    networkFeeInXor = networkFee
+                    networkFeeInXor = networkFee,
+                    isUnbonding = false
                 )
             }
         }
@@ -241,12 +244,13 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.ONE)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                     primaryToken = any(),
                     primaryTokenAmount = any(),
                     secondaryToken = any(),
                     secondaryTokenAmount = any(),
-                    networkFeeInXor = any()
+                    networkFeeInXor = any(),
+                    isUnbonding = any()
                 )
             }
             transferAmountViewModel.onTokenChange(PolkaswapTestData.XOR_ASSET.token.id)
@@ -254,12 +258,13 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.TEN)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                     primaryToken = PolkaswapTestData.XOR_ASSET.token,
                     primaryTokenAmount = BigDecimal.TEN,
                     secondaryToken = null,
                     secondaryTokenAmount = null,
-                    networkFeeInXor = networkFee
+                    networkFeeInXor = networkFee,
+                    isUnbonding = false
                 )
             }
         }

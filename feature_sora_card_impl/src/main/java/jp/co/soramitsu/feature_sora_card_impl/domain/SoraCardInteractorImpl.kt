@@ -33,66 +33,66 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_sora_card_impl.domain
 
 import java.math.BigDecimal
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.greaterThan
 import jp.co.soramitsu.common.util.ext.safeDivide
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
-import jp.co.soramitsu.oauth.common.domain.KycRepository
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
-class SoraCardInteractorImpl @Inject constructor(
+internal class SoraCardInteractorImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val formatter: NumbersFormatter,
     private val assetsInteractor: AssetsInteractor,
     private val poolsInteractor: PoolsInteractor,
-    private val walletRepository: WalletRepository,
-    private val kycRepository: KycRepository,
+    private val soraCardClientProxy: SoraCardClientProxy,
+    private val demeterFarmingInteractor: DemeterFarmingInteractor,
+    private val coroutineManager: CoroutineManager,
 ) : SoraCardInteractor {
 
     private var xorToEuro: Double? = null
 
-    override fun pollSoraCardStatusIfPending(): Flow<String?> = flow {
-        val pendingStatusString = SoraCardCommonVerification.Pending.toString()
+    private val _soraCardStatus = MutableStateFlow(SoraCardCommonVerification.NotFound)
 
+    override fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification> =
+        _soraCardStatus.asStateFlow()
+
+    override suspend fun checkSoraCardPending() {
         var isLoopInProgress = true
-        var currentTimeInSeconds: Long
-
         while (isLoopInProgress) {
-            currentTimeInSeconds =
-                TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
-
-            with(walletRepository.getSoraCardInfo()) {
-                if (this == null ||
-                    kycStatus != pendingStatusString ||
-                    accessTokenExpirationTime < currentTimeInSeconds
-                ) {
-                    emit(this?.kycStatus)
-                    isLoopInProgress = false
-                    return@with
-                }
-
+            val status = soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
+            _soraCardStatus.value = status
+            if (status != SoraCardCommonVerification.Pending) {
+                isLoopInProgress = false
+            } else {
                 delay(POLLING_PERIOD_IN_MILLIS)
-
-                kycRepository.getKycLastFinalStatus(accessToken).getOrNull()
-                    ?.also { walletRepository.updateSoraCardKycStatus(it.toString()) }
             }
         }
+    }
+
+    override fun setStatus(status: SoraCardCommonVerification) {
+        _soraCardStatus.value = status
+    }
+
+    override fun setLogout() {
+        _soraCardStatus.value = SoraCardCommonVerification.NotFound
     }
 
     override fun subscribeToSoraCardAvailabilityFlow() =
@@ -108,7 +108,8 @@ class SoraCardInteractorImpl @Inject constructor(
                     val poolsSum = pools.sumOf { poolData ->
                         poolData.user.basePooled
                     }
-                    val totalPoolBalance = asset.balance.total.plus(poolsSum)
+                    val demeterStakedFarmed = demeterFarmingInteractor.getStakedFarmedBalanceOfAsset(SubstrateOptionsProvider.feeAssetId)
+                    val totalPoolBalance = asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
                     try {
                         val xorRequiredBalanceWithBacklash =
                             KYC_REQUIRED_BALANCE_WITH_BACKLASH.divideBy(
@@ -151,7 +152,7 @@ class SoraCardInteractorImpl @Inject constructor(
                 } else {
                     errorInfoState(BigDecimal.ZERO)
                 }
-            }
+            }.flowOn(coroutineManager.io)
 
     private fun errorInfoState(balance: BigDecimal) = SoraCardAvailabilityInfo(
         xorBalance = balance,
@@ -163,6 +164,17 @@ class SoraCardInteractorImpl @Inject constructor(
         xorToEuro ?: blockExplorerManager.getXorPerEurRatio().also {
             xorToEuro = it
         }
+
+    override suspend fun fetchUserIbanAccount(): Result<String> =
+        soraCardClientProxy.getIBAN().mapCatching { wrapper ->
+            val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
+            sorted.first().iban
+        }
+
+    override suspend fun logOutFromSoraCard() {
+        soraCardClientProxy.logout()
+        setLogout()
+    }
 
     private companion object {
         val KYC_REAL_REQUIRED_BALANCE: BigDecimal = BigDecimal.valueOf(95)
