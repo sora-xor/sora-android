@@ -44,7 +44,6 @@ import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
-import jp.co.soramitsu.feature_ecosystem_impl.presentation.start.StartScreen
 
 @AndroidEntryPoint
 class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
@@ -71,17 +70,17 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         composable(
             route = ExploreRoutes.START,
         ) {
-//            DiscoverScreen(
-//                onAddLiquidityClicked = viewModel::onPoolPlus,
-//                scrollState = scrollState,
-//            )
-            StartScreen(
+            DiscoverScreen(
+                onAddLiquidityClicked = viewModel::onPoolPlus,
                 scrollState = scrollState,
-                onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
-                onPoolShowMore = { navController.navigate(ExploreRoutes.ALL_POOLS) },
-                onTokenClicked = viewModel::onTokenClicked,
-                onPoolClicked = viewModel::onPoolClicked,
             )
+//            StartScreen(
+//                scrollState = scrollState,
+//                onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
+//                onPoolShowMore = { navController.navigate(ExploreRoutes.ALL_POOLS) },
+//                onTokenClicked = viewModel::onTokenClicked,
+//                onPoolClicked = viewModel::onPoolClicked,
+//            )
         }
         composable(
             route = ExploreRoutes.ALL_CURRENCIES,
