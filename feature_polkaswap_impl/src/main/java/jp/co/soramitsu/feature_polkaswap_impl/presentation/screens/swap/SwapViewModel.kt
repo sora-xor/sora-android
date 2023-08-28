@@ -350,11 +350,13 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
-                    if (it.reloadMarkets) getMarkets()
+                    if (it.reloadMarkets) {
+                        getMarkets()
+                        property.reset()
+                    }
                     recalcDetails()
                     toggleSwapButtonStatus()
                     resetLoading()
-                    property.reset()
                 }
         }
         viewModelScope.launch {
