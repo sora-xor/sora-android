@@ -338,8 +338,12 @@
   <string name="polkaswap_input_estimated">入力は推定です。最大で%s売らないと、取引は元に戻ります</string>
   <string name="polkaswap_insufficient_balance">%s 残高不足</string>
   <string name="polkaswap_insufficient_liqudity">流動性不足</string>
-  <string name="polkaswap_liqudity_fee">LP手数料</string>
-  <string name="polkaswap_liqudity_fee_info">各取引の一部は、インセンティブとして流動性プロバイダー(LP)に送られます</string>
+  <string name="polkaswap_liquidity_fee">LP手数料</string>
+  <string name="polkaswap_liquidity_fee_info">各取引の一部は、インセンティブとして流動性プロバイダー(LP)に送られます</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
+  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">市場</string>
   <string name="polkaswap_market_smart_description">SMART流動性ルーティングは、利用可能なすべての市場から最良の価格オプションだけ組み合わせることで、あらゆる取引の最良の価格を保証します。XYKプールや他のプールが利用される場合より資産価格が手頃であれば、可能な限りトークン・ボンディング・カーブ(TBC)が流動性のために使用されます</string>
   <string name="polkaswap_market_tbc_description">TBC — トークン・ボンディング・カーブ(一次市場)からのみ購入します。 XYKプール(二次市場)に比べて価格が不利になる可能性もありますが、既得の報酬から受け取る価値が、時間の経過とともにはるかに有利になる可能性があります</string>
@@ -475,6 +479,7 @@
   <string name="sora_card_action_transfer">Transfer</string>
   <string name="sora_card_already_have_card">すでにカードを持っている</string>
   <string name="sora_card_annual_service_fee">年間サービス料€0</string>
+  <string name="sora_card_banner_title_card_info">Card info</string>
   <string name="sora_card_blacklisted_countires_title">適用除外</string>
   <string name="sora_card_blacklisted_countires_warning">現時点では、特定の国の居住者はSORAカードを申請できません</string>
   <string name="sora_card_buy_xor_with_eur">EURでXORを買う</string>
@@ -508,7 +513,7 @@
   <string name="status_successful">成功</string>
   <string name="status_title">ステータス</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">システム外観</string>
   <string name="tabbar_parliament_title">議会</string>

@@ -338,8 +338,12 @@
   <string name="polkaswap_input_estimated">输入是估计的。您将卖出最大的%s，否则交易将被取消。</string>
   <string name="polkaswap_insufficient_balance">%s余额不足</string>
   <string name="polkaswap_insufficient_liqudity">流动性不足</string>
-  <string name="polkaswap_liqudity_fee">流动性提供者费用</string>
-  <string name="polkaswap_liqudity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
+  <string name="polkaswap_liquidity_fee">流动性提供者费用</string>
+  <string name="polkaswap_liquidity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
+  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">市场</string>
   <string name="polkaswap_market_smart_description">智能流动性路由通过从所有可用市场中仅选择最佳价格选项，确保任何交易的最佳价格。如果可用，将使用代币绑定曲线（TBC）提供流动性，只要资产价格比其他来源更实惠，否则将使用XYK池。</string>
   <string name="polkaswap_market_tbc_description">TBC - 仅从代币绑定曲线（一级市场）购买。价格可能会比XYK池（二级市场）不利，但随着时间的推移，从归属奖励中获得的价值可能会更有利。</string>
@@ -475,10 +479,11 @@
   <string name="sora_card_action_transfer">转账</string>
   <string name="sora_card_already_have_card">我已经有一张卡了</string>
   <string name="sora_card_annual_service_fee">年服务费€0</string>
+  <string name="sora_card_banner_title_card_info">卡片信息</string>
   <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
   <string name="sora_card_blacklisted_countires_warning">来自某些国家的居民目前无法申请SORA卡。</string>
   <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
-  <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
+  <string name="sora_card_details_card_management_coming_soon">即将推出卡片管理功能</string>
   <string name="sora_card_details_title">卡片详情</string>
   <string name="sora_card_free_card_issuance">免费发卡</string>
   <string name="sora_card_free_card_issuance_conditions_euro">或 20 欧元的申请费</string>
@@ -488,7 +493,7 @@
   <string name="sora_card_log_in_or_sign_up">登录或注册</string>
   <string name="sora_card_no_more_free_tries">没有更多的免费尝试</string>
   <string name="sora_card_option_logout">退出 SORA 卡</string>
-  <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
+  <string name="sora_card_option_logout_description">您即将退出 SORA Card。您仍然可以使用 SORA Card 独立应用程序，但余额将不再在 SORA 钱包中可用。</string>
   <string name="sora_card_refer_and_earn_action">推荐并赚取</string>
   <string name="sora_card_referral_headline">推荐SORA卡。\n获得20欧元奖金。</string>
   <string name="sora_card_see_details">查看详情</string>
@@ -508,7 +513,7 @@
   <string name="status_successful">成功的</string>
   <string name="status_title">状态</string>
   <string name="succesfully_imported_account_title">您已成功导入一个账户</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">此次交易后，您的%s余额将少于%s。您将无法支付另一笔交易的网络费用。</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">确保在此事务之后还剩下 %s。否则，您将无法进行其他交易。</string>
   <string name="switch_node">切换节点</string>
   <string name="system_appearance">系统外观</string>
   <string name="tabbar_parliament_title">议会</string>

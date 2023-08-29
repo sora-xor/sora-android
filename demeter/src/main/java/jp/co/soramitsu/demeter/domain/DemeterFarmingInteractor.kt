@@ -30,19 +30,28 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.domain
+package jp.co.soramitsu.demeter.domain
 
+import java.math.BigDecimal
+import jp.co.soramitsu.demeter.data.DemeterFarmingRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_polkaswap_impl.data.repository.DemeterFarmingRepository
 
 interface DemeterFarmingInteractor {
     suspend fun getFarmedPools(): List<DemeterFarmingPool>?
+
+    suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal
 }
 
 internal class DemeterFarmingInteractorImpl(
     private val demeterFarmingRepository: DemeterFarmingRepository,
     private val userRepository: UserRepository,
 ) : DemeterFarmingInteractor {
+
+    override suspend fun getStakedFarmedBalanceOfAsset(tokenId: String): BigDecimal =
+        demeterFarmingRepository.getStakedFarmedAmountOfAsset(
+            userRepository.getCurSoraAccount().substrateAddress,
+            tokenId,
+        )
 
     override suspend fun getFarmedPools(): List<DemeterFarmingPool>? =
         demeterFarmingRepository.getFarmedPools(userRepository.getCurSoraAccount().substrateAddress)

@@ -48,12 +48,12 @@ import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
 import jp.co.soramitsu.core_db.dao.NodeDao
 import jp.co.soramitsu.core_db.dao.PoolDao
 import jp.co.soramitsu.core_db.dao.ReferralsDao
-import jp.co.soramitsu.core_db.dao.SoraCardDao
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_63_64
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_65_66
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_66_67
 import jp.co.soramitsu.core_db.migrations.migration_PoolOrderReservesAccount_64_65
 import jp.co.soramitsu.core_db.migrations.migration_PoolsTables_69_70
+import jp.co.soramitsu.core_db.migrations.migration_addReferralCardHub_71_72
 import jp.co.soramitsu.core_db.migrations.migration_poolsBaseToken_61_62
 import jp.co.soramitsu.core_db.migrations.migration_reorderBaseToken_62_63
 import jp.co.soramitsu.core_db.model.AssetLocal
@@ -65,13 +65,12 @@ import jp.co.soramitsu.core_db.model.NodeLocal
 import jp.co.soramitsu.core_db.model.PoolBaseTokenLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.core_db.model.SoraAccountLocal
-import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.core_db.model.UserPoolLocal
 
 @TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 70,
+    version = 72,
     entities = [
         AssetLocal::class,
         TokenLocal::class,
@@ -84,7 +83,6 @@ import jp.co.soramitsu.core_db.model.UserPoolLocal
         NodeLocal::class,
         CardHubLocal::class,
         GlobalCardHubLocal::class,
-        SoraCardInfoLocal::class,
     ],
     exportSchema = true,
     autoMigrations = [
@@ -93,6 +91,7 @@ import jp.co.soramitsu.core_db.model.UserPoolLocal
         AutoMigration(from = 60, to = 61),
         AutoMigration(from = 67, to = 68),
         AutoMigration(from = 68, to = 69, spec = AppDatabase.AutoMigrationSpecTo69::class),
+        AutoMigration(from = 70, to = 71, spec = AppDatabase.AutoMigrationSpecTo71::class),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -121,6 +120,7 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(migration_CardHub_65_66)
                 .addMigrations(migration_CardHub_66_67)
                 .addMigrations(migration_PoolsTables_69_70)
+                .addMigrations(migration_addReferralCardHub_71_72)
                 .build()
         }
     }
@@ -139,8 +139,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun globalCardsHubDao(): GlobalCardsHubDao
 
-    abstract fun soraCardDao(): SoraCardDao
-
     @DeleteTable.Entries(
         DeleteTable(tableName = "extrinsics"),
         DeleteTable(tableName = "extrinsic_params")
@@ -151,6 +149,11 @@ abstract class AppDatabase : RoomDatabase() {
         DeleteTable(tableName = "fiatCurrencies"),
     )
     class AutoMigrationSpecTo69 : AutoMigrationSpec
+
+    @DeleteTable.Entries(
+        DeleteTable(tableName = "soraCard"),
+    )
+    class AutoMigrationSpecTo71 : AutoMigrationSpec
 }
 
 private val destructiveMigrationFromList = IntArray(43) { i -> i + 15 }

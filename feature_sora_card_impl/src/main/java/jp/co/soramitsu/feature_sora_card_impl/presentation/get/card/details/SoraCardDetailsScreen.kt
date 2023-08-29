@@ -54,7 +54,8 @@ data class SoraCardDetailsScreenState(
     val soraCardReferralBannerCardState: SoraCardReferralBannerCardState? = null,
     val soraCardRecentActivitiesCardState: SoraCardRecentActivitiesCardState? = null,
     val soraCardIBANCardState: SoraCardIBANCardState? = null,
-    val soraCardSettingsCard: SoraCardSettingsCardState? = null
+    val soraCardSettingsCard: SoraCardSettingsCardState? = null,
+    val logoutDialog: Boolean,
 )
 
 @Composable
@@ -66,7 +67,8 @@ fun SoraCardDetailsScreen(
     onCloseReferralBannerClick: () -> Unit,
     onRecentActivityClick: (position: Int) -> Unit,
     onShowMoreRecentActivitiesClick: () -> Unit,
-    onIbanCardActionClick: () -> Unit,
+    onIbanCardShareClick: () -> Unit,
+    onIbanCardClick: () -> Unit,
     onSettingsOptionClick: (position: Int) -> Unit
 ) {
     LazyColumn(
@@ -108,7 +110,8 @@ fun SoraCardDetailsScreen(
             item {
                 SoraCardIBANCard(
                     soraCardIBANCardState = state,
-                    onActionClick = onIbanCardActionClick
+                    onShareClick = onIbanCardShareClick,
+                    onCardClick = onIbanCardClick,
                 )
             }
         }
@@ -154,11 +157,11 @@ private fun PreviewSoraCardDetailsScreen() {
                 ),
                 soraCardIBANCardState = SoraCardIBANCardState(
                     iban = "LT61 3250 0467 7252 5583",
-                    isActionButtonEnabled = false
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
                     soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
-                )
+                ),
+                logoutDialog = false,
             ),
             onShowSoraCardDetailsClick = {},
             onSoraCardMenuActionClick = { _ -> },
@@ -166,7 +169,8 @@ private fun PreviewSoraCardDetailsScreen() {
             onCloseReferralBannerClick = {},
             onShowMoreRecentActivitiesClick = {},
             onRecentActivityClick = { _ -> },
-            onIbanCardActionClick = {},
+            onIbanCardShareClick = {},
+            onIbanCardClick = {},
             onSettingsOptionClick = { _ -> }
         )
     }

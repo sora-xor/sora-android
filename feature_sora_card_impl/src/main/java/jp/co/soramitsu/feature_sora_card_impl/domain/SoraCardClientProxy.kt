@@ -30,14 +30,33 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.domain
+package jp.co.soramitsu.feature_sora_card_impl.domain
 
-import java.math.BigDecimal
-import jp.co.soramitsu.common.domain.Token
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+import jp.co.soramitsu.common.config.BuildConfigWrapper
+import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardBasicContract
+import jp.co.soramitsu.oauth.clients.ClientsFacade
 
-data class DemeterFarmingPool(
-    val tokenBase: Token,
-    val tokenTarget: Token,
-    val tokenReward: Token,
-    val amount: BigDecimal,
-)
+@Singleton
+internal class SoraCardClientProxy @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val clientsFacade: ClientsFacade,
+) {
+
+    init {
+        clientsFacade.init(
+            createSoraCardBasicContract(),
+            context,
+            BuildConfigWrapper.getSoraCardBackEndUrl(),
+        )
+    }
+
+    suspend fun getKycStatus() = clientsFacade.getKycStatus()
+
+    suspend fun getIBAN() = clientsFacade.getIBAN()
+
+    suspend fun logout() = clientsFacade.logout()
+}

@@ -30,18 +30,27 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.core_db.model
+package jp.co.soramitsu.core_db.migrations
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import jp.co.soramitsu.common.domain.CardHubType
 
-@Entity(
-    tableName = "soraCard"
-)
-data class SoraCardInfoLocal(
-    @PrimaryKey val id: String,
-    val accessToken: String,
-    val refreshToken: String,
-    val accessTokenExpirationTime: Long,
-    val kycStatus: String
-)
+val migration_addReferralCardHub_71_72 = object : Migration(71, 72) {
+
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        val type = CardHubType.REFERRAL_SYSTEM
+        val globalCardValues = ContentValues().apply {
+            put("cardId", type.hubName)
+            put("visibility", 1)
+            put("sortOrder", type.order)
+            put("collapsed", 0)
+        }
+        database.insert("globalCardsHub", SQLiteDatabase.CONFLICT_REPLACE, globalCardValues)
+        database.setTransactionSuccessful()
+        database.endTransaction()
+    }
+}

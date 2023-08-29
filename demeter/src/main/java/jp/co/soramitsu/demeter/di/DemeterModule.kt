@@ -30,18 +30,50 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.data.mappers
+package jp.co.soramitsu.demeter.di
 
-import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.core_db.model.SoraCardInfoLocal
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
+import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.demeter.data.DemeterFarmingRepository
+import jp.co.soramitsu.demeter.data.DemeterFarmingRepositoryImpl
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractorImpl
+import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
+import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 
-object SoraCardInfoMapper {
+@Module
+@InstallIn(SingletonComponent::class)
+object DemeterFarmingModule {
 
-    fun map(infoLocal: SoraCardInfoLocal): SoraCardInformation {
-        return SoraCardInformation(
-            accessToken = infoLocal.accessToken,
-            accessTokenExpirationTime = infoLocal.accessTokenExpirationTime,
-            kycStatus = infoLocal.kycStatus,
+    @Provides
+    fun provideDemeterFarmingRepository(
+        substrateCalls: SubstrateCalls,
+        runtimeManager: RuntimeManager,
+        soraConfigManager: SoraConfigManager,
+        mapper: AssetLocalToAssetMapper,
+        db: AppDatabase,
+    ): DemeterFarmingRepository =
+        DemeterFarmingRepositoryImpl(
+            substrateCalls = substrateCalls,
+            runtimeManager = runtimeManager,
+            soraConfigManager = soraConfigManager,
+            assetLocalToAssetMapper = mapper,
+            db = db,
         )
-    }
+
+    @Provides
+    fun provideDemeterFarmingInteractor(
+        demeterFarmingRepository: DemeterFarmingRepository,
+        userRepository: UserRepository,
+    ): DemeterFarmingInteractor =
+        DemeterFarmingInteractorImpl(
+            demeterFarmingRepository = demeterFarmingRepository,
+            userRepository = userRepository,
+        )
 }

@@ -221,18 +221,15 @@ class AssetsInteractorTest {
     }
 
     @Test
-    fun `CHECK isEnoughXorLeftAfterTransaction WHEN no xor token is supplied and balance equals network fee`() =
+    fun `CHECK isNotEnoughXorLeftAfterTransaction WHEN no xor token is supplied and balance equals network fee`() =
         runTest {
             coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(
                 BigDecimal.ONE
             )
 
-            val result = interactor.isEnoughXorLeftAfterTransaction(
-                primaryToken = oneToken(),
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = oneToken(),
-                secondaryTokenAmount = BigDecimal(1),
-                networkFeeInXor = BigDecimal(1)
+            val result = interactor.isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal(1),
+                networkFeeInXor = BigDecimal(1),
             )
 
             Assert.assertEquals(
@@ -242,7 +239,7 @@ class AssetsInteractorTest {
         }
 
     @Test
-    fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is supplied and balance equals network fee`() =
+    fun `CHECK isNotEnoughXorLeftAfterTransaction WHEN xor token is supplied and balance equals network fee`() =
         runTest {
             coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(
                 BigDecimal.ONE
@@ -260,11 +257,8 @@ class AssetsInteractorTest {
                 fiatSymbol = null
             )
 
-            val result = interactor.isEnoughXorLeftAfterTransaction(
-                primaryToken = xorToken,
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = oneToken(),
-                secondaryTokenAmount = BigDecimal(1),
+            val result = interactor.isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1)
             )
 
@@ -275,7 +269,7 @@ class AssetsInteractorTest {
         }
 
     @Test
-    fun `CHECK isEnoughXorLeftAfterTransaction WHEN xor token is produced and balance equals network fee`() =
+    fun `CHECK isNotEnoughXorLeftAfterTransaction WHEN xor token is produced and balance equals network fee`() =
         runTest {
             coEvery { assetsRepository.getAsset(any(), any()) } returns TestAssets.xorAsset(
                 BigDecimal.ONE
@@ -293,12 +287,9 @@ class AssetsInteractorTest {
                 fiatSymbol = null
             )
 
-            val result = interactor.isEnoughXorLeftAfterTransaction(
-                primaryToken = oneToken(),
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = xorToken,
-                secondaryTokenAmount = BigDecimal(1),
-                networkFeeInXor = BigDecimal(1)
+            val result = interactor.isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal(1),
+                networkFeeInXor = BigDecimal(1),
             )
 
             Assert.assertEquals(true, result)

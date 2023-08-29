@@ -30,15 +30,16 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.data.repository
+package jp.co.soramitsu.demeter.data
 
+import java.math.BigDecimal
 import java.math.BigInteger
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
+import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingPool
 import jp.co.soramitsu.shared_utils.extensions.toHexString
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
@@ -51,9 +52,18 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 
-internal interface DemeterFarmingRepository {
+interface DemeterFarmingRepository {
     suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>?
+    suspend fun getStakedFarmedAmountOfAsset(address: String, tokenId: String): BigDecimal
 }
+
+private class DemeterStorage(
+    val base: String,
+    val pool: String,
+    val reward: String,
+    val farm: Boolean,
+    val amount: BigInteger,
+)
 
 internal class DemeterFarmingRepositoryImpl(
     private val substrateCalls: SubstrateCalls,
@@ -63,16 +73,51 @@ internal class DemeterFarmingRepositoryImpl(
     private val db: AppDatabase,
 ) : DemeterFarmingRepository {
 
+    override suspend fun getStakedFarmedAmountOfAsset(
+        address: String,
+        tokenId: String
+    ): BigDecimal {
+        val token = db.assetDao().getTokenLocal(tokenId)
+        val amount = getDemeter(address)
+            ?.filter {
+                it.farm.not() && it.base == tokenId && it.pool == tokenId
+            }
+            ?.sumOf { it.amount }
+        return amount?.let { mapBalance(it, token.precision) } ?: BigDecimal.ZERO
+    }
+
     override suspend fun getFarmedPools(soraAccountAddress: String): List<DemeterFarmingPool>? {
+        val selectedCurrency = soraConfigManager.getSelectedCurrency()
+        return getDemeter(soraAccountAddress)
+            ?.filter { it.farm }
+            ?.map {
+                val baseTokenMapped = assetLocalToAssetMapper.map(
+                    tokenLocal = db.assetDao().getToken(it.base, selectedCurrency.code)
+                )
+                val poolTokenMapped = assetLocalToAssetMapper.map(
+                    tokenLocal = db.assetDao().getToken(it.pool, selectedCurrency.code)
+                )
+                val rewardTokenMapped = assetLocalToAssetMapper.map(
+                    tokenLocal = db.assetDao().getToken(it.reward, selectedCurrency.code)
+                )
+                DemeterFarmingPool(
+                    tokenBase = baseTokenMapped,
+                    tokenTarget = poolTokenMapped,
+                    tokenReward = rewardTokenMapped,
+                    amount = mapBalance(it.amount, baseTokenMapped.precision),
+                )
+            }
+    }
+
+    private suspend fun getDemeter(address: String): List<DemeterStorage>? {
         val storage =
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.DEMETER_FARMING.palletName)
                 .storage(Storage.USER_INFOS.storageName)
         val storageKey = storage.storageKey(
             runtimeManager.getRuntimeSnapshot(),
-            soraAccountAddress.toAccountId(),
+            address.toAccountId(),
         )
         return substrateCalls.getStorageHex(storageKey)?.let { hex ->
-            val selectedCurrency = soraConfigManager.getSelectedCurrency()
             storage.type.value
                 ?.fromHex(runtimeManager.getRuntimeSnapshot(), hex)
                 ?.safeCast<List<*>>()
@@ -92,21 +137,13 @@ internal class DemeterFarmingRepositoryImpl(
                         }?.toByteArray()?.toHexString(true)
                     val isFarm = instance.get<Boolean>("isFarm")
                     val pooled = instance.get<BigInteger>("pooledTokens")
-                    if (isFarm == true && baseToken != null && poolToken != null && rewardToken != null && pooled != null) {
-                        val baseTokenMapped = assetLocalToAssetMapper.map(
-                            tokenLocal = db.assetDao().getToken(baseToken, selectedCurrency.code)
-                        )
-                        val poolTokenMapped = assetLocalToAssetMapper.map(
-                            tokenLocal = db.assetDao().getToken(poolToken, selectedCurrency.code)
-                        )
-                        val rewardTokenMapped = assetLocalToAssetMapper.map(
-                            tokenLocal = db.assetDao().getToken(rewardToken, selectedCurrency.code)
-                        )
-                        DemeterFarmingPool(
-                            tokenBase = baseTokenMapped,
-                            tokenTarget = poolTokenMapped,
-                            tokenReward = rewardTokenMapped,
-                            amount = mapBalance(pooled, baseTokenMapped.precision),
+                    if (isFarm != null && baseToken != null && poolToken != null && rewardToken != null && pooled != null) {
+                        DemeterStorage(
+                            base = baseToken,
+                            pool = poolToken,
+                            reward = rewardToken,
+                            farm = isFarm,
+                            amount = pooled,
                         )
                     } else {
                         null
