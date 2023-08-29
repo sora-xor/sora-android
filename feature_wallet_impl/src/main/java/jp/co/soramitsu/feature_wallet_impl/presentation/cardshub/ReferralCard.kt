@@ -33,52 +33,130 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.ui_core.component.button.BleachedButton
+import jp.co.soramitsu.ui_core.component.button.FilledButton
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-fun ReferralCard() {
+fun ReferralCard(
+    onStartClicked: () -> Unit,
+    onCloseCard: () -> Unit,
+) {
+    ContentCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onStartClicked,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                ReferralContent(
+                    modifier = Modifier.weight(3f),
+                    onStartClicked = onStartClicked,
+                )
+
+                Image(
+                    modifier = Modifier.weight(2f),
+                    painter = painterResource(R.drawable.image_friends),
+                    contentDescription = null,
+                )
+            }
+
+            BleachedButton(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .align(Alignment.TopEnd)
+                    .padding(Dimens.x1),
+                size = Size.ExtraSmall,
+                order = Order.TERTIARY,
+                shape = CircleShape,
+                onClick = onCloseCard,
+                leftIcon = painterResource(R.drawable.ic_cross),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReferralContent(
+    modifier: Modifier = Modifier,
+    onStartClicked: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .padding(
+                top = Dimens.x2,
+                bottom = Dimens.x3,
+                start = Dimens.x3,
+                end = Dimens.x3,
+            ),
+        verticalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = stringResource(R.string.settings_invite_title),
+            style = MaterialTheme.customTypography.headline2,
+            color = MaterialTheme.customColors.fgPrimary,
+        )
+
+        Text(
+            modifier = Modifier.padding(top = Dimens.x1),
+            text = stringResource(R.string.referral_title),
+            style = MaterialTheme.customTypography.paragraphXS,
+            color = MaterialTheme.customColors.fgPrimary,
+        )
+
+        FilledButton(
+            modifier = Modifier
+                .wrapContentWidth()
+                .padding(top = Dimens.x2),
+            text = stringResource(R.string.referral_start_inviting),
+            size = Size.ExtraSmall,
+            order = Order.PRIMARY,
+            onClick = onStartClicked,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewReferralCard() {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            // .wrapContentHeight()
-            // .height(IntrinsicSize.Min)
-            .background(Color.White, shape = RoundedCornerShape(10.dp))
-            .padding(horizontal = Dimens.x2)
+            .fillMaxSize()
+            .padding(Dimens.x3)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(vertical = Dimens.x1)
-                .align(alignment = Alignment.TopStart)
-                .wrapContentSize()
-        ) {
-            Text(text = "Invite friends")
-            Text(text = "Get 10% of your")
-            Text(text = "Start inviting")
-        }
-        Image(
-            painter = painterResource(id = R.drawable.image_friends),
-            modifier = Modifier
-                .height(120.dp)
-                .align(alignment = Alignment.TopEnd)
-                .offset(x = (0).dp, y = (-20).dp),
-            contentDescription = null
+        ReferralCard(
+            onCloseCard = {},
+            onStartClicked = {},
         )
     }
 }

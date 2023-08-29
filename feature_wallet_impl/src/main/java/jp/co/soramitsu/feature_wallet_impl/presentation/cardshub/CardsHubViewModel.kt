@@ -57,6 +57,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
@@ -66,6 +67,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
@@ -101,6 +103,7 @@ class CardsHubViewModel @Inject constructor(
     private val router: WalletRouter,
     private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
+    private val referralRouter: ReferralRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val connectionManager: ConnectionManager,
     private val soraCardInteractor: SoraCardInteractor,
@@ -160,6 +163,14 @@ class CardsHubViewModel @Inject constructor(
                                             success = mapped.second,
                                         )
                                     )
+                                }
+                            }
+
+                            CardHubType.REFERRAL_SYSTEM -> {
+                                flow {
+                                    emit(listOf(ReferralState(visible = cardHub.visibility)))
+                                }.map {
+                                    cardHub to it
                                 }
                             }
 
@@ -275,6 +286,7 @@ class CardsHubViewModel @Inject constructor(
 
                 CardHubType.GET_SORA_CARD -> (it.second as List<SoraCardState>).first()
                 CardHubType.BUY_XOR_TOKEN -> (it.second as List<BuyXorState>).first()
+                CardHubType.REFERRAL_SYSTEM -> (it.second as List<ReferralState>).first()
             }
         }
     }
@@ -340,7 +352,7 @@ class CardsHubViewModel @Inject constructor(
         viewModelScope.launch {
             cardsHubInteractorImpl.updateCardVisibilityOnCardHub(
                 CardHubType.GET_SORA_CARD.hubName,
-                visible = false
+                visible = false,
             )
         }
     }
@@ -352,6 +364,19 @@ class CardsHubViewModel @Inject constructor(
                 visible = false
             )
         }
+    }
+
+    fun onRemoveReferralCard() {
+        viewModelScope.launch {
+            cardsHubInteractorImpl.updateCardVisibilityOnCardHub(
+                CardHubType.REFERRAL_SYSTEM.hubName,
+                visible = false,
+            )
+        }
+    }
+
+    fun onStartReferral() {
+        referralRouter.showReferrals()
     }
 
     fun onBuyCrypto() {

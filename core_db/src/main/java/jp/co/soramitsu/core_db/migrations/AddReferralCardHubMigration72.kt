@@ -30,49 +30,27 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.domain
+package jp.co.soramitsu.core_db.migrations
 
-import androidx.annotation.StringRes
-import jp.co.soramitsu.common.R
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import jp.co.soramitsu.common.domain.CardHubType
 
-const val ASSETS_HUB_NAME = "assets"
-const val POOLS_HUB_NAME = "pools"
-const val GET_SORA_CARD_HUB_NAME = "get sora card"
-const val BUY_XOR_TOKEN_HUB_NAME = "buy xor token"
-const val REFERRAL_SYSTEM_HUB_NAME = "referral system"
+val migration_addReferralCardHub_71_72 = object : Migration(71, 72) {
 
-data class CardHub(
-    val cardType: CardHubType,
-    val visibility: Boolean,
-    val sortOrder: Int,
-    val collapsed: Boolean,
-)
-
-enum class CardHubType(
-    val hubName: String,
-    val order: Int,
-    val boundToAccount: Boolean,
-    @StringRes val userName: Int
-) {
-    GET_SORA_CARD(
-        GET_SORA_CARD_HUB_NAME,
-        order = 0,
-        boundToAccount = false,
-        R.string.more_menu_sora_card_title,
-    ),
-    BUY_XOR_TOKEN(
-        BUY_XOR_TOKEN_HUB_NAME,
-        order = 1,
-        boundToAccount = false,
-        R.string.common_buy_xor,
-    ),
-    REFERRAL_SYSTEM(
-        REFERRAL_SYSTEM_HUB_NAME,
-        order = 2,
-        boundToAccount = false,
-        R.string.referral_toolbar_title,
-    ),
-
-    ASSETS(ASSETS_HUB_NAME, order = 0, boundToAccount = true, R.string.liquid_assets),
-    POOLS(POOLS_HUB_NAME, order = 1, boundToAccount = true, R.string.pooled_assets),
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        val type = CardHubType.REFERRAL_SYSTEM
+        val globalCardValues = ContentValues().apply {
+            put("cardId", type.hubName)
+            put("visibility", 1)
+            put("sortOrder", type.order)
+            put("collapsed", 0)
+        }
+        database.insert("globalCardsHub", SQLiteDatabase.CONFLICT_REPLACE, globalCardValues)
+        database.setTransactionSuccessful()
+        database.endTransaction()
+    }
 }

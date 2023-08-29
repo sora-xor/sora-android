@@ -53,6 +53,7 @@ import jp.co.soramitsu.core_db.migrations.migration_CardHub_65_66
 import jp.co.soramitsu.core_db.migrations.migration_CardHub_66_67
 import jp.co.soramitsu.core_db.migrations.migration_PoolOrderReservesAccount_64_65
 import jp.co.soramitsu.core_db.migrations.migration_PoolsTables_69_70
+import jp.co.soramitsu.core_db.migrations.migration_addReferralCardHub_71_72
 import jp.co.soramitsu.core_db.migrations.migration_poolsBaseToken_61_62
 import jp.co.soramitsu.core_db.migrations.migration_reorderBaseToken_62_63
 import jp.co.soramitsu.core_db.model.AssetLocal
@@ -69,7 +70,7 @@ import jp.co.soramitsu.core_db.model.UserPoolLocal
 
 @TypeConverters(BigDecimalNullableConverter::class)
 @Database(
-    version = 71,
+    version = 72,
     entities = [
         AssetLocal::class,
         TokenLocal::class,
@@ -119,6 +120,7 @@ abstract class AppDatabase : RoomDatabase() {
                 .addMigrations(migration_CardHub_65_66)
                 .addMigrations(migration_CardHub_66_67)
                 .addMigrations(migration_PoolsTables_69_70)
+                .addMigrations(migration_addReferralCardHub_71_72)
                 .build()
         }
     }
