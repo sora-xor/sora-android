@@ -340,6 +340,9 @@
   <string name="polkaswap_insufficient_liqudity">Không đủ thanh khoản</string>
   <string name="polkaswap_liqudity_fee">Phí thanh khoản</string>
   <string name="polkaswap_liqudity_fee_info">Một phần của mỗi giao dịch được chuyển đến các nhà cung cấp thanh khoản như một biện pháp khuyến khích.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Thị trường</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing đảm bảo giá tốt nhất cho giao dịch bất kỳ bằng cách kết hợp mức giá tốt nhất hiện có trên thị trường. Khi thuận lợi, Token Bonding Curve (TBC) sẽ được dùng để tạo thanh khoản miễn là giá của tài sản hợp lý hơn các nguồn khác như pool (XYK).</string>
   <string name="polkaswap_market_tbc_description">TBC - chỉ mua từ Token Bonding Curve (Primary Market). Giá có thể trở nên bất lợi so với XYK pool (Secondary Market), nhưng về lâu dài giá trị nhận được từ phần thưởng có thể lớn hơn nhiều.</string>

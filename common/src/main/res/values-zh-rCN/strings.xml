@@ -340,6 +340,9 @@
   <string name="polkaswap_insufficient_liqudity">流动性不足</string>
   <string name="polkaswap_liqudity_fee">流动性提供者费用</string>
   <string name="polkaswap_liqudity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">市场</string>
   <string name="polkaswap_market_smart_description">智能流动性路由通过从所有可用市场中仅选择最佳价格选项，确保任何交易的最佳价格。如果可用，将使用代币绑定曲线（TBC）提供流动性，只要资产价格比其他来源更实惠，否则将使用XYK池。</string>
   <string name="polkaswap_market_tbc_description">TBC - 仅从代币绑定曲线（一级市场）购买。价格可能会比XYK池（二级市场）不利，但随着时间的推移，从归属奖励中获得的价值可能会更有利。</string>

@@ -341,6 +341,9 @@
   <string name="polkaswap_insufficient_liqudity">نقدینگی ناکافی</string>
   <string name="polkaswap_liqudity_fee">هزینه LP</string>
   <string name="polkaswap_liqudity_fee_info">بخشی از هر معامله  به عنوان مشوق پروتکل به ارائه دهندگان نقدینگی می‌رسد.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">بازار</string>
   <string name="polkaswap_market_smart_description">مسیریابی نقدینگی SMART با ترکیب بهترین گزینه‌های قیمت از همه بازارهای موجود، بهترین قیمت را برای هر معامله تضمین می‌کند. در صورت امکان Token Bonding Curve (TBC) برای نقدینگی استفاده خواهد شد تا زمانی که قیمت دارایی مقرون به صرفه‌تر از منابع دیگر باشد، که در این حالت از استخر XYK استفاده می‌شود.</string>
   <string name="polkaswap_market_tbc_description">TBC - خرید فقط از Token Bonfing Curve (بازار اولیه). ممکن است قیمت در مقایسه با مخزن XYK (بازار ثانویه) نامطلوب تر باشد، اما ارزش دریافتی از پاداش‌های اختصاص داده شده ممکن است در طول زمان بسیار مطلوب تر شود.</string>

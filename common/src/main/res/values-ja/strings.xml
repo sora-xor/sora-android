@@ -340,6 +340,9 @@
   <string name="polkaswap_insufficient_liqudity">流動性不足</string>
   <string name="polkaswap_liqudity_fee">LP手数料</string>
   <string name="polkaswap_liqudity_fee_info">各取引の一部は、インセンティブとして流動性プロバイダー(LP)に送られます</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">市場</string>
   <string name="polkaswap_market_smart_description">SMART流動性ルーティングは、利用可能なすべての市場から最良の価格オプションだけ組み合わせることで、あらゆる取引の最良の価格を保証します。XYKプールや他のプールが利用される場合より資産価格が手頃であれば、可能な限りトークン・ボンディング・カーブ(TBC)が流動性のために使用されます</string>
   <string name="polkaswap_market_tbc_description">TBC — トークン・ボンディング・カーブ(一次市場)からのみ購入します。 XYKプール(二次市場)に比べて価格が不利になる可能性もありますが、既得の報酬から受け取る価値が、時間の経過とともにはるかに有利になる可能性があります</string>

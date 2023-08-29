@@ -341,6 +341,9 @@
   <string name="polkaswap_insufficient_liqudity">Liquidez insuficiente</string>
   <string name="polkaswap_liqudity_fee">Taxa de LP</string>
   <string name="polkaswap_liqudity_fee_info">Uma porção de cada transação vai para os provedores de liquidez, como incentivo do protocolo.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Mercado</string>
   <string name="polkaswap_market_smart_description">O roteamento de liquidez SMART assegura o melhor preço para qualquer transação, combinando apenas as melhores opções de preços de todos os mercados acessíveis. Quando disponível, a Curva Agregadora de Tokens  (TBC) será usada para liquidez, desde que o preço do ativo seja mais económico do que o de outras fontes, que utilizam a pool XYK.</string>
   <string name="polkaswap_market_tbc_description">TBC - compra apenas a partir da Curva Agregadora de Tokens (Mercado Primário). Há a possibilidade de o preço se tornar desfavorável em comparação com a pool XYK (Mercado Secundário), mas o valor das recompensas recebido pode vir a revelar-se muito mais favorável ao longo do tempo.</string>

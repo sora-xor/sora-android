@@ -52,6 +52,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
+import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.test_data.PolkaswapTestData
@@ -300,6 +301,7 @@ class SwapViewModelTest {
                 networkFee,
                 PoolDex(0, assetsListItems.first().tokenId, assetsListItems.last().tokenId),
                 null,
+                SwapFeeMode.NON_SYNTHETIC,
             )
         )
         advanceUntilIdle()
