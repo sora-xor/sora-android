@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,44 +62,41 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 fun BuyXorCard(
-    visible: Boolean,
     onCloseCard: () -> Unit,
     onBuyXorClicked: () -> Unit,
 ) {
-    AnimatedVisibility(visible = visible) {
-        ContentCard(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onBuyXorClicked,
+    ContentCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onBuyXorClicked,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    BuyXorContent(onBuyXorClicked = onBuyXorClicked)
+                BuyXorContent(onBuyXorClicked = onBuyXorClicked)
 
-                    Image(
-                        painter = painterResource(R.drawable.ic_buy_xor_banner_sora),
-                        contentDescription = null
-                    )
-                }
-
-                BleachedButton(
-                    modifier = Modifier
-                        .wrapContentWidth()
-                        .align(Alignment.TopEnd)
-                        .padding(Dimens.x1),
-                    size = Size.ExtraSmall,
-                    order = Order.TERTIARY,
-                    shape = CircleShape,
-                    onClick = onCloseCard,
-                    leftIcon = painterResource(R.drawable.ic_cross),
+                Image(
+                    painter = painterResource(R.drawable.ic_buy_xor_banner_sora),
+                    contentDescription = null
                 )
             }
+
+            BleachedButton(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .align(Alignment.TopEnd)
+                    .padding(Dimens.x1),
+                size = Size.ExtraSmall,
+                order = Order.TERTIARY,
+                shape = CircleShape,
+                onClick = onCloseCard,
+                leftIcon = painterResource(R.drawable.ic_cross),
+            )
         }
     }
 }
@@ -153,7 +149,6 @@ private fun PreviewBuyXorCard() {
             .padding(Dimens.x3)
     ) {
         BuyXorCard(
-            visible = true,
             onCloseCard = {},
             onBuyXorClicked = {}
         )
