@@ -219,8 +219,8 @@ internal fun SwapMainScreen(
         if (state.details.lpFee.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))
             DetailsItem(
-                text = stringResource(id = R.string.polkaswap_liqudity_fee),
-                hint = stringResource(id = R.string.polkaswap_liqudity_fee_info),
+                text = stringResource(id = state.details.lpFeeTitle),
+                hint = stringResource(id = state.details.lpFeeHint),
                 value1 = state.details.lpFee,
             )
         }

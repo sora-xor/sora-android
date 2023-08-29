@@ -343,6 +343,9 @@
   <string name="polkaswap_insufficient_liqudity">אין מספיק נזילות</string>
   <string name="polkaswap_liqudity_fee">עמלת מאגר נזילות</string>
   <string name="polkaswap_liqudity_fee_info">חלק מכל עסקה הולך לספקי נזילות כתמריץ פרוטוקול.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">שוק</string>
   <string name="polkaswap_market_smart_description">ניתוב נזילות SMART מבטיח את המחיר הטוב ביותר לכל טרנזקציה  על ידי שילוב אפשרויות המחיר הטובות ביותר בלבד מכל השווקים הזמינים. כאשר זמין, עקומת צירוף הטוקנים (TBC) תשמש לנזילות כל עוד מחיר הנכס משתלם יותר מאשר ממקורות אחרים, שעליהם מנוצל מאגר XYK.</string>
   <string name="polkaswap_market_tbc_description">TBC - קנייה רק מעקומת צירוף הטוקנים (השוק העיקרי). קיימת אפשרות שהמחיר יכול להפוך לבלתי משתלם בהשוואה למאגר XYK (שוק משני), אך הערך המתקבל מהתגמולים המוענקים לאורך זמן עשוי להתברר כמשתלם הרבה יותר לטווח ארוך.</string>

@@ -341,6 +341,9 @@
   <string name="polkaswap_insufficient_liqudity">Yetersiz likidite</string>
   <string name="polkaswap_liqudity_fee">LP Ücreti</string>
   <string name="polkaswap_liqudity_fee_info">Her takasın bir kısmı protokol teşviki olarak likidite sağlayıcılarına gider.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Piyasa</string>
   <string name="polkaswap_market_smart_description">SMART likidite yönlendirmesi, mevcut piyasalardaki en iyi fiyat oranlarını birleştirerek herhangi bir işlem için en iyi fiyatı bulur. Mevcut olduğunda, fiyat, XYK havuzunun kullanıldığı diğer kaynaklardan daha uygun olduğu sürece Token Tahvil Eğrisi (TBC), likidite için kullanılacaktır.</string>
   <string name="polkaswap_market_tbc_description">TBC — sadece Token Tahvil Eğrisinden (Birincil Piyasadan) satın alınması. Fiyat, XYK havuzuna (İkincil Piyasaya) göre daha olumsuz olabilir, ama bir süre sonra kilidi açılan ödüllerden gelen değer, daha olumlu olabilir.</string>

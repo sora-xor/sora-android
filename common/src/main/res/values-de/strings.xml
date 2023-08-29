@@ -341,6 +341,9 @@
   <string name="polkaswap_insufficient_liqudity">Unzureichende Liquidität</string>
   <string name="polkaswap_liqudity_fee">LP-Gebühr</string>
   <string name="polkaswap_liqudity_fee_info">Ein Teil jeder Trade geht als Protokollanreiz an die Liquiditätsanbieter.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Markt</string>
   <string name="polkaswap_market_smart_description">SMART Liquiditätsrouting gewährleistet den besten Preis für jede Transaktion, indem es nur die besten Preisoptionen aus allen verfügbaren Märkten kombiniert. Wenn verfügbar, wird die Token Bonding Curve (TBC) für die Liquidität verwendet, solange der Preis des Assets günstiger ist als aus anderen Quellen, auf die der XYK-Pool zurückgreift.</string>
   <string name="polkaswap_market_tbc_description">TBC - Kauf nur von der Token Bonding Curve (Primärmarkt). Es besteht die Möglichkeit, dass der Preis im Vergleich zum XYK-Pool (Sekundärmarkt) ungünstig werden kann, aber der Wert, den man durch die verstärkten Rewards erhält, könnte sich im Laufe der Zeit als viel günstiger erweisen.</string>

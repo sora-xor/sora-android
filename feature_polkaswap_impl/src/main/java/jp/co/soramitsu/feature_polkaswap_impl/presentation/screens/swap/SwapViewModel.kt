@@ -73,6 +73,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
+import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -763,42 +764,49 @@ class SwapViewModel @AssistedInject constructor(
                     minmaxToken = _swapMainState.value.tokenFromState?.token
                     maxMinToken = _swapMainState.value.tokenToState?.token
                 }
+                val (title, desc) = when (details.feeMode) {
+                    SwapFeeMode.SYNTHETIC -> R.string.polkaswap_liquidity_synthetic_fee to R.string.polkaswap_liqudity_fee_info
+                    SwapFeeMode.NON_SYNTHETIC -> R.string.polkaswap_liqudity_fee to R.string.polkaswap_liqudity_fee_info
+                    SwapFeeMode.BOTH -> R.string.polkaswap_liquidity_total_fee to R.string.polkaswap_liquidity_total_fee_desc
+                }
                 _swapMainState.value = _swapMainState.value.copy(
                     details = _swapMainState.value.details.copy(
                         transactionFee = feeToken().printBalance(
                             details.networkFee,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ),
                         transactionFeeFiat = feeToken().printFiat(
                             details.networkFee,
-                            numbersFormatter
+                            numbersFormatter,
                         ),
                         priceFromTo = p1,
                         priceFromToTitle = "%s / %s".format(
                             maxMinToken?.symbol.orEmpty(),
-                            minmaxToken?.symbol.orEmpty()
+                            minmaxToken?.symbol.orEmpty(),
                         ),
                         priceToFrom = p2,
                         priceToFromTitle = "%s / %s".format(
                             minmaxToken?.symbol.orEmpty(),
-                            maxMinToken?.symbol.orEmpty()
+                            maxMinToken?.symbol.orEmpty(),
                         ),
                         lpFee = feeToken().printBalance(
                             details.liquidityFee,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ),
                         minmaxTitle = minmaxTitle,
                         minmaxHint = minmaxHint,
                         minmaxValue = minmaxToken?.printBalance(
                             details.minmax,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ).orEmpty(),
                         minmaxValueFiat = minmaxToken?.printFiat(details.minmax, numbersFormatter)
                             .orEmpty(),
                         route = details.swapRoute?.joinToString("->").orEmpty(),
+                        lpFeeTitle = title,
+                        lpFeeHint = desc,
                     )
                 )
             }

@@ -341,6 +341,9 @@
   <string name="polkaswap_insufficient_liqudity">Onvoldoende liquiditeit</string>
   <string name="polkaswap_liqudity_fee">LP Vergoeding</string>
   <string name="polkaswap_liqudity_fee_info">Een deel van elke transactie gaat naar liquiditeitsverschaffers als aanmoediging van het protocol.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Markt</string>
   <string name="polkaswap_market_smart_description">SMART liquiditeitsroutering zorgt voor de beste prijs voor elke transactie door alleen de beste prijsopties uit alle beschikbare markten te combineren. Indien beschikbaar, zal de Token Bonding Curve (TBC) worden gebruikt voor liquiditeit zolang de activaprijs betaalbaarder is dan uit andere bronnen, waarop de XYK-pool wordt gebruikt.</string>
   <string name="polkaswap_market_tbc_description">TBC - alleen kopen van de Token Bonding Curve (primaire markt). Er is een mogelijkheid dat de prijs ongunstig kan worden in vergelijking met de XYK-pool (secundaire markt), maar de waarde die wordt ontvangen van de gevestigde beloningen kan in de loop van de tijd veel gunstiger blijken te zijn.</string>

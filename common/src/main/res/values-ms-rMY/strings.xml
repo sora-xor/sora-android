@@ -340,6 +340,9 @@
   <string name="polkaswap_insufficient_liqudity">Kecairan tidak mencukupi</string>
   <string name="polkaswap_liqudity_fee">Bayaran LP</string>
   <string name="polkaswap_liqudity_fee_info">Sebahagian daripada setiap dagangan diberikan kepada penyedia kecairan sebagai insentif protokol.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Pasaran</string>
   <string name="polkaswap_market_smart_description">Penghalaan kecairan SMART memastikan harga terbaik untuk sebarang transaksi dengan menggabungkan hanya pilihan harga terbaik dari semua pasaran yang ada. Apabila tersedia, Token Bonding Curve (TBC) akan digunakan untuk kecairan selagi harga aset lebih berpatutan daripada sumber lain, di mana kolam XYK digunakan.</string>
   <string name="polkaswap_market_tbc_description">TBC — membeli hanya daripada Lengkung Ikatan Token (Pasaran Utama). Terdapat kemungkinan bahawa harga boleh menjadi tidak menguntungkan berbanding dengan kolam XYK (Pasaran Sekunder), tetapi nilai yang diterima daripada ganjaran terletak hak mungkin berubah menjadi lebih baik dari masa ke masa.</string>

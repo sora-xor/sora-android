@@ -345,6 +345,9 @@
   <string name="polkaswap_insufficient_liqudity">سيولة غير كافية</string>
   <string name="polkaswap_liqudity_fee">رسوم حوض السيولة</string>
   <string name="polkaswap_liqudity_fee_info">يذهب جزء من كل صفقة إلى موفري السيولة كحوافز للبروتوكول.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">سوق</string>
   <string name="polkaswap_market_smart_description">يضمن توجيه السيولة SMART أفضل سعر لأي معاملة من خلال الجمع بين أفضل خيارات الأسعار فقط من جميع الأسواق المتاحة. عند توفرها ، سيتم استخدام Token Bonding Curve (TBC) للسيولة طالما أن سعر الأصل في المتناول أكثر من أي مصادر أخرى ، حيث يتم استخدام مجمع XYK.</string>
   <string name="polkaswap_market_tbc_description">TBC - الشراء فقط من منحنى الترابط المميز (السوق الأولية). هناك احتمال أن يصبح السعر غير مغري مقارنة بتجمع XYK (السوق الثانوية) ، ولكن القيمة المستلمة من المكافآت المكتسبة قد تكون أكثر ملاءمة بمرور الوقت.</string>

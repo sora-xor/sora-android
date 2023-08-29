@@ -341,6 +341,9 @@
   <string name="polkaswap_insufficient_liqudity">Riittämätön likviditeetti</string>
   <string name="polkaswap_liqudity_fee">LP-maksu</string>
   <string name="polkaswap_liqudity_fee_info">Osa jokaisesta kaupasta menee likviditeetin tarjoajille protokollakannustimena.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Market</string>
   <string name="polkaswap_market_smart_description">SMART likviditeetin reititys varmistaa parhaan hinnan jokaiselle tapahtumalle, yhdistämällä vain parhaat hintavaihtoehdot kaikilta saatavilla olevilta markkinoilta. Token Bonding Curvea (TBC) käytetään mahdollisuuksien mukaan likviditeettiin niin kauan kun resurssien hinta on edullisempi kuin muista lähteistä, jolloin taas hyödynnetään XYK-poolia.</string>
   <string name="polkaswap_market_tbc_description">TBC – ostaminen vain Token Bonding Curvesta (ensisijainen markkina). On mahdollista, että hinnasta tulee epäedullinen verrattuna XYK-pooliin (toissijainen markkina), mutta saavutetuista palkkioista saatu arvo saattaa osoittautua paljon edullisemmaksi ajan myötä.</string>

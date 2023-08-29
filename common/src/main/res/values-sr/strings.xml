@@ -342,6 +342,9 @@
   <string name="polkaswap_insufficient_liqudity">Недовољна ликвидност</string>
   <string name="polkaswap_liqudity_fee">Naknada za likvidnost</string>
   <string name="polkaswap_liqudity_fee_info">Deo svake transakcije ide provajderima likvidnosti kao protokolarni podsticaj.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
+  <string name="polkaswap_liquidity_total_fee">Total fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
   <string name="polkaswap_market">Tržište</string>
   <string name="polkaswap_market_smart_description">СМАРТ усмеравање ликвидности обезбеђује најбољу цену за било коју трансакцију комбиновањем само најбољих опција цена са свих доступних тржишта. Када је доступна, крива везивања токена (ТБЦ) ће се користити за ликвидност све док је цена средства приступачнија него из других извора, на основу којих се користи КСИК фонд.</string>
   <string name="polkaswap_market_tbc_description">ТБЦ — куповина само са криве везивања токена (примарно тржиште). Постоји могућност да цена може постати неповољнија у поређењу са КСИК фондом (секундарно тржиште), али вредност добијена од стечених награда може се временом показати много повољнијом.</string>

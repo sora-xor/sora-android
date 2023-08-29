@@ -52,6 +52,8 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
+import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -80,6 +82,7 @@ class SwapInteractorImpl(
     private var poolReservesFlowToken = MutableStateFlow<Pair<String, String>?>(null)
     private val availableMarkets = mutableMapOf<PoolDex, List<Market>>()
     private var swapNetworkFee: BigDecimal? = null
+    private val syntheticRegex = SubstrateOptionsProvider.syntheticTokenRegex.toRegex()
 
     override suspend fun fetchSwapNetworkFee(feeToken: Token): BigDecimal {
         return swapNetworkFee ?: (
@@ -151,7 +154,16 @@ class SwapInteractorImpl(
             swapQuote.first.route?.mapNotNull {
                 assetsRepository.getToken(it)?.symbol
             },
+            getFeeMode(swapQuote.first.route),
         )
+    }
+
+    private fun getFeeMode(ids: List<String>?): SwapFeeMode {
+        if (ids == null) return SwapFeeMode.NON_SYNTHETIC
+        val withoutxst = ids.filter { it != SubstrateOptionsProvider.xstTokenId }
+        if (withoutxst.all { it.matches(syntheticRegex) }) return SwapFeeMode.SYNTHETIC
+        if (withoutxst.all { it.matches(syntheticRegex).not() }) return SwapFeeMode.NON_SYNTHETIC
+        return SwapFeeMode.BOTH
     }
 
     override fun setSwapMarket(market: Market) {
