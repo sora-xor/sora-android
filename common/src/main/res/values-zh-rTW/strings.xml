@@ -338,11 +338,12 @@
   <string name="polkaswap_input_estimated">输入是估計的。您将賣出最大的 %s , 否則交易将被取消。</string>
   <string name="polkaswap_insufficient_balance">%s餘額不足</string>
   <string name="polkaswap_insufficient_liqudity">流動性不足</string>
-  <string name="polkaswap_liqudity_fee">LP費用</string>
-  <string name="polkaswap_liqudity_fee_info">每筆交易的一部分 作為協議激勵流向流動性提供者。</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
-  <string name="polkaswap_liquidity_total_fee">Total fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
+  <string name="polkaswap_liquidity_fee">LP費用</string>
+  <string name="polkaswap_liquidity_fee_info">每筆交易的一部分 作為協議激勵流向流動性提供者。</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
+  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">市場</string>
   <string name="polkaswap_market_smart_description">SMART 流動性路由通過僅結合所有可用市場的最佳價格選項來確保任何交易的最佳價格。如果可用，代幣綁定曲線 (TBC) 將用於流動性，只要資產價格比使用 XYK 池的其他來源更實惠。</string>
   <string name="polkaswap_market_tbc_description">TBC — 僅從 Token Bonding Curve（一級市場）購買。與 XYK 池（二級市場）相比，價格有可能變得不利，但隨著時間的推移，從既得獎勵中獲得的價值可能會變得更加有利。</string>

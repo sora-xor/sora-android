@@ -85,8 +85,8 @@ fun defaultSwapDetailsState() =
         priceToFromTitle = "",
         priceToFrom = "",
         lpFee = "",
-        lpFeeTitle = R.string.polkaswap_liqudity_fee,
-        lpFeeHint = R.string.polkaswap_liqudity_fee_info,
+        lpFeeTitle = R.string.polkaswap_liquidity_fee,
+        lpFeeHint = R.string.polkaswap_liquidity_fee_info,
         route = "",
         shouldTransactionReminderInsufficientWarningBeShown = false,
     )

@@ -765,8 +765,8 @@ class SwapViewModel @AssistedInject constructor(
                     maxMinToken = _swapMainState.value.tokenToState?.token
                 }
                 val (title, desc) = when (details.feeMode) {
-                    SwapFeeMode.SYNTHETIC -> R.string.polkaswap_liquidity_synthetic_fee to R.string.polkaswap_liqudity_fee_info
-                    SwapFeeMode.NON_SYNTHETIC -> R.string.polkaswap_liqudity_fee to R.string.polkaswap_liqudity_fee_info
+                    SwapFeeMode.SYNTHETIC -> R.string.polkaswap_liquidity_synthetic_fee to R.string.polkaswap_liquidity_synthetic_fee_desc
+                    SwapFeeMode.NON_SYNTHETIC -> R.string.polkaswap_liquidity_fee to R.string.polkaswap_liquidity_fee_info
                     SwapFeeMode.BOTH -> R.string.polkaswap_liquidity_total_fee to R.string.polkaswap_liquidity_total_fee_desc
                 }
                 _swapMainState.value = _swapMainState.value.copy(
