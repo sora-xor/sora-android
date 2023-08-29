@@ -339,9 +339,10 @@
   <string name="polkaswap_input_estimated">Giriş hesablanır. Maksimum %s satacaqsınız və ya əməliyyat geri qaytarılacaq.</string>
   <string name="polkaswap_insufficient_balance">Balans kifayət deyil</string>
   <string name="polkaswap_insufficient_liqudity">Qeyri-kifayət qədər likvidlik</string>
-  <string name="polkaswap_liqudity_fee">LP haqqı</string>
-  <string name="polkaswap_liqudity_fee_info">Hər bir ticarətin bir hissəsi protokol təşviqi olaraq likvidlik təminatçılarına keçir.</string>
+  <string name="polkaswap_liquidity_fee">LP haqqı</string>
+  <string name="polkaswap_liquidity_fee_info">Hər bir ticarətin bir hissəsi protokol təşviqi olaraq likvidlik təminatçılarına keçir.</string>
   <string name="polkaswap_liquidity_synthetic_fee">Sintetik token haqqı</string>
+  <string name="polkaswap_liquidity_synthetic_fee_desc">Sintetik ödəniş sintetik aktiv haqqı və qabaqcadan qaçmağın qarşısını almaq üçün dinamik ödənişdən ibarətdir. Sintetik aktivin haqqı aktivin qeydiyyatı zamanı müəyyən edilir və istənilən vaxt idarəetmə vasitəsilə dəyişdirilə bilər. Dinamik ödəniş oracle qiymətindəki faiz dəyişikliyinə əsaslanır.</string>
   <string name="polkaswap_liquidity_total_fee">Ümumi ödəniş</string>
   <string name="polkaswap_liquidity_total_fee_desc">Ümumi ödəniş ödənişdən ibarətdir</string>
   <string name="polkaswap_market">Bazar</string>

@@ -338,11 +338,12 @@
   <string name="polkaswap_input_estimated">Masukan diperkirakan. Anda akan menjual maksimum %s atau transaksi akan dibatalkan.</string>
   <string name="polkaswap_insufficient_balance">Saldo %s tidak mencukupi</string>
   <string name="polkaswap_insufficient_liqudity">Likuiditas tidak mencukupi</string>
-  <string name="polkaswap_liqudity_fee">Biaya LP</string>
-  <string name="polkaswap_liqudity_fee_info">Sebagian dari setiap perdagangan diberikan kepada penyedia likuiditas sebagai insentif protokol.</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
-  <string name="polkaswap_liquidity_total_fee">Total fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
+  <string name="polkaswap_liquidity_fee">Biaya LP</string>
+  <string name="polkaswap_liquidity_fee_info">Sebagian dari setiap perdagangan diberikan kepada penyedia likuiditas sebagai insentif protokol.</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
+  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Pasar</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
   <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>

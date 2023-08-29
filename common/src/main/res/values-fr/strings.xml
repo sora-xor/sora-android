@@ -339,11 +339,12 @@
   <string name="polkaswap_input_estimated">Le montant à fournir est estimé. Vous vendrez au maximum %s ou la transaction sera annulée.</string>
   <string name="polkaswap_insufficient_balance">Solde %s insuffisant</string>
   <string name="polkaswap_insufficient_liqudity">Liquidité insuffisante</string>
-  <string name="polkaswap_liqudity_fee">Frais de LP</string>
-  <string name="polkaswap_liqudity_fee_info">Une partie de chaque transaction est reversée aux fournisseurs de liquidités à titre d\'incitation de la part du protocole</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic token fee</string>
-  <string name="polkaswap_liquidity_total_fee">Total fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Total fee consists on fee</string>
+  <string name="polkaswap_liquidity_fee">Frais de LP</string>
+  <string name="polkaswap_liquidity_fee_info">Une partie de chaque transaction est reversée aux fournisseurs de liquidités à titre d\'incitation de la part du protocole</string>
+  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
+  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Marché</string>
   <string name="polkaswap_market_smart_description">Le routage de la liquidité SMART garantit le meilleur prix pour toute transaction en combinant uniquement les meilleures options de prix de tous les marchés disponibles. Lorsqu\'elle est disponible, la courbe de liaison de jeton (TBC) sera utilisée pour la liquidité tant que le prix de l\'actif est plus abordable que celui des autres sources, sur lesquelles le pool XYK est utilisé.</string>
   <string name="polkaswap_market_tbc_description">TBC - achat uniquement à partir de la courbe de liaison de jeton (marché primaire). Il est possible que le prix devienne défavorable par rapport au pool XYK (marché secondaire), mais la valeur reçue des récompenses acquises pourrait s\'avérer beaucoup plus favorable au fil du temps.</string>
