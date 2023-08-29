@@ -161,7 +161,6 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 ),
             ),
             shouldTransactionReminderInsufficientWarningBeShown = false,
-            transactionFeeToken = "",
             poolInFarming = poolInFarming,
         )
     )
@@ -691,16 +690,12 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 return@with
 
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = assetState1.token,
-                primaryTokenAmount = assetState1.amount,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = networkFee.orZero()
+                networkFeeInXor = networkFee.orZero(),
+                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) -assetState1.amount else null,
             )
 
             removeState = removeState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeToken().symbol
             )
         }
 

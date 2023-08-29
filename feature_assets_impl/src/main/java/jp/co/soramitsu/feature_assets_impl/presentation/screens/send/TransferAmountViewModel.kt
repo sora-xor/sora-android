@@ -200,16 +200,12 @@ class TransferAmountViewModel @AssistedInject constructor(
                 return@with
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = token,
-                primaryTokenAmount = amount,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = fee.orZero()
+                networkFeeInXor = fee.orZero(),
+                xorChange = if (token.id == SubstrateOptionsProvider.feeAssetId) amount else null,
             )
 
             sendState = sendState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeAsset?.token?.symbol ?: ""
             )
         }
 

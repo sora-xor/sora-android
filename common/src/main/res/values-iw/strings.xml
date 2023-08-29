@@ -527,7 +527,7 @@
   <string name="status_successful">מוצלח</string>
   <string name="status_title">סטטוס</string>
   <string name="succesfully_imported_account_title">ייבאת חשבון בהצלחה</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">היתרה שלך ב %s תהיה פחות מ- %s לאחר הטרנזקציה הזו. לא תוכל לשלם עבור עמלת הרשת עבור טרנזקציה נוספת.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">ודא שנותרו לך %s לאחר עסקה זו. אחרת, לא תוכל לבצע עסקה אחרת.</string>
   <string name="switch_node">החלף צומת</string>
   <string name="system_appearance">מראה חיצוני של המערכת</string>
   <string name="tabbar_parliament_title">פרלמנט</string>

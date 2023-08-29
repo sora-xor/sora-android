@@ -164,12 +164,8 @@ class RemoveLiquidityViewModelTest {
 
         given(
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = anyOrNull(),
-                secondaryTokenAmount = anyOrNull(),
                 networkFeeInXor = any(),
-                isUnbonding = any()
+                xorChange = any(),
             )
         ).willReturn(false)
     }
@@ -266,12 +262,8 @@ class RemoveLiquidityViewModelTest {
                 mock = assetsInteractor,
                 mode = times(1)
             ).isNotEnoughXorLeftAfterTransaction(
-                primaryToken = TestTokens.xorToken,
-                primaryTokenAmount = BigDecimal.ONE, // is not TEN due to basePooled in POOL_DATA
-                secondaryToken = null,
-                secondaryTokenAmount = null,
+                xorChange = -BigDecimal.ONE, // is not TEN due to basePooled in POOL_DATA
                 networkFeeInXor = NETWORK_FEE,
-                isUnbonding = false
             )
         }
 }

@@ -125,10 +125,6 @@ class TransferAmountViewModelTest {
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 any(),
                 any(),
-                any(),
-                any(),
-                any(),
-                any()
             )
         } returns false
         coEvery {
@@ -209,12 +205,8 @@ class TransferAmountViewModelTest {
             advanceUntilIdle()
             coVerify(atMost = 1) {
                 assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.XOR_ASSET.token,
-                    primaryTokenAmount = BigDecimal.ONE,
-                    secondaryToken = null,
-                    secondaryTokenAmount = null,
+                    xorChange = BigDecimal.ONE,
                     networkFeeInXor = networkFee,
-                    isUnbonding = false
                 )
             }
             transferAmountViewModel.onTokenChange(PolkaswapTestData.VAL_ASSET.token.id)
@@ -223,12 +215,7 @@ class TransferAmountViewModelTest {
             advanceUntilIdle()
             coVerify(atMost = 1) {
                 assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.VAL_ASSET.token,
-                    primaryTokenAmount = BigDecimal.TEN,
-                    secondaryToken = null,
-                    secondaryTokenAmount = null,
                     networkFeeInXor = networkFee,
-                    isUnbonding = false
                 )
             }
         }
@@ -245,12 +232,7 @@ class TransferAmountViewModelTest {
             advanceUntilIdle()
             coVerify(atMost = 1) {
                 assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                    primaryToken = any(),
-                    primaryTokenAmount = any(),
-                    secondaryToken = any(),
-                    secondaryTokenAmount = any(),
                     networkFeeInXor = any(),
-                    isUnbonding = any()
                 )
             }
             transferAmountViewModel.onTokenChange(PolkaswapTestData.XOR_ASSET.token.id)
@@ -259,12 +241,8 @@ class TransferAmountViewModelTest {
             advanceUntilIdle()
             coVerify(atMost = 1) {
                 assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.XOR_ASSET.token,
-                    primaryTokenAmount = BigDecimal.TEN,
-                    secondaryToken = null,
-                    secondaryTokenAmount = null,
+                    xorChange = BigDecimal.TEN,
                     networkFeeInXor = networkFee,
-                    isUnbonding = false
                 )
             }
         }

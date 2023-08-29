@@ -68,7 +68,6 @@ data class SwapDetailsState(
     val lpFee: String,
     val route: String,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    val transactionFeeToken: String
 )
 
 fun defaultSwapDetailsState() =
@@ -86,5 +85,4 @@ fun defaultSwapDetailsState() =
         lpFee = "",
         route = "",
         shouldTransactionReminderInsufficientWarningBeShown = false,
-        transactionFeeToken = ""
     )

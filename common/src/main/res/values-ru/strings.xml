@@ -533,7 +533,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
   <string name="succesfully_imported_account_title">Вы успешно импортировали учетную запись</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">После этой транзакции ваш баланс %s будет меньше, чем %s. Вы не сможете оплатить комиссию сети за другую транзакцию.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Убедитесь, что у вас останется %s после этой транзакции. Иначе вы не сможете оплатить комиссию сети за другую транзакцию.</string>
   <string name="switch_node">Переключить ноду</string>
   <string name="system_appearance">Внешний вид системы</string>
   <string name="tabbar_parliament_title">Парламент</string>

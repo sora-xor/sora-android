@@ -89,7 +89,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
@@ -154,7 +153,6 @@ class CardsHubViewModel @Inject constructor(
                             CardHubType.GET_SORA_CARD -> {
                                 soraCardInteractor.subscribeSoraCardStatus().map { status ->
                                     val mapped = mapKycStatus(status)
-                                    Timber.e("hub $status $mapped")
                                     cardHub to listOf(
                                         SoraCardState(
                                             visible = cardHub.visibility,

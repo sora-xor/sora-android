@@ -32,9 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_referral_impl.presentation
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -69,6 +66,8 @@ import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.wrappedtext.WrappedTextState
 import kotlin.math.truncate
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -101,8 +100,8 @@ class ReferralViewModel @Inject constructor(
 
     private var referralsState: ReferralsCardState = ReferralsCardState()
         set(value) {
-            referralScreenState = referralScreenState.copy(
-                referralInvitationsCardState = referralScreenState.referralInvitationsCardState.copy(
+            _referralScreenState.value = _referralScreenState.value.copy(
+                referralInvitationsCardState = _referralScreenState.value.referralInvitationsCardState.copy(
                     referrals = value
                 )
             )
@@ -112,8 +111,8 @@ class ReferralViewModel @Inject constructor(
     private val _shareLinkEvent = SingleLiveEvent<String>()
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
 
-    internal var referralScreenState by mutableStateOf(emptyState)
-        private set
+    private val _referralScreenState = MutableStateFlow(emptyState)
+    val referralScreenState = _referralScreenState.asStateFlow()
 
     private var referrer: String? = null
 
@@ -140,7 +139,7 @@ class ReferralViewModel @Inject constructor(
                 referrerBalance = it.orZero()
                 val feeToken = feeToken()
                 val invitationsCount = calcInvitationsCount()
-                referralScreenState =
+                _referralScreenState.value =
                     if (currentDestination == ReferralFeatureRoutes.WELCOME_PROGRESS) {
                         ReferralProgramState(
                             common = ReferralCommonState(
@@ -178,8 +177,8 @@ class ReferralViewModel @Inject constructor(
                             )
                         )
                     } else {
-                        referralScreenState.copy(
-                            referralInvitationsCardState = referralScreenState.referralInvitationsCardState.copy(
+                        _referralScreenState.value.copy(
+                            referralInvitationsCardState = _referralScreenState.value.referralInvitationsCardState.copy(
                                 title = if (invitationsCount > 0) {
                                     resourceManager.getString(R.string.referral_invitaion_link_title)
                                 } else {
@@ -192,7 +191,7 @@ class ReferralViewModel @Inject constructor(
                     }
                 if (currentDestination == ReferralFeatureRoutes.WELCOME_PROGRESS) {
                     _navEvent.value =
-                        if (referralScreenState.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
+                        if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
                 }
             }
             .launchIn(viewModelScope)
@@ -202,8 +201,8 @@ class ReferralViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { newValue ->
                 referrer = newValue.ifEmpty { null }
-                referralScreenState =
-                    referralScreenState.copy(common = referralScreenState.common.copy(referrer = referrer))
+                _referralScreenState.value =
+                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(referrer = referrer))
             }
             .launchIn(viewModelScope)
 
@@ -247,7 +246,7 @@ class ReferralViewModel @Inject constructor(
 
     fun onShareLink() {
         _shareLinkEvent.value =
-            referralScreenState.referralInvitationsCardState.wrappedTextState.text
+            _referralScreenState.value.referralInvitationsCardState.wrappedTextState.text
     }
 
     fun onBondMinus() {
@@ -307,8 +306,8 @@ class ReferralViewModel @Inject constructor(
     fun onBondButtonClick() {
         viewModelScope.launch {
             tryCatch {
-                referralScreenState =
-                    referralScreenState.copy(common = referralScreenState.common.copy(progress = true))
+                _referralScreenState.value =
+                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
                 val result = interactor.observeBond(calcInvitationsAmount(bondInvitationsCount))
                 assetsRouter.showTxDetails(result)
                 _navEvent.value = REFERRAL_PROGRAM to singleTopTrue
@@ -319,8 +318,8 @@ class ReferralViewModel @Inject constructor(
     fun onUnbondButtonClick() {
         viewModelScope.launch {
             tryCatch {
-                referralScreenState =
-                    referralScreenState.copy(common = referralScreenState.common.copy(progress = true))
+                _referralScreenState.value =
+                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
                 val result = interactor.observeUnbond(
                     calcInvitationsAmount(bondInvitationsCount),
                 )
@@ -335,15 +334,15 @@ class ReferralViewModel @Inject constructor(
         viewModelScope.launch {
             tryCatch {
                 val input =
-                    referralScreenState.referrerInputState.value.text
-                referralScreenState =
-                    referralScreenState.copy(common = referralScreenState.common.copy(progress = true))
+                    _referralScreenState.value.referrerInputState.value.text
+                _referralScreenState.value =
+                    _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
                 val referrerOk = interactor.isLinkOrAddressOk(input)
                 val result = interactor.observeSetReferrer(referrerOk.second)
 
                 assetsRouter.showTxDetails(result)
                 _navEvent.value =
-                    if (referralScreenState.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
+                    if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
             }
         }
     }
@@ -369,13 +368,13 @@ class ReferralViewModel @Inject constructor(
         }
 
         val amount = calcInvitationsAmount(feeToken, bondInvitationsCount)
-        referralScreenState =
-            referralScreenState.copy(
-                common = referralScreenState.common.copy(
+        _referralScreenState.value =
+            _referralScreenState.value.copy(
+                common = _referralScreenState.value.common.copy(
                     progress = false,
                     activate = buttonActiveValidation
                 ),
-                bondState = referralScreenState.bondState.copy(
+                bondState = _referralScreenState.value.bondState.copy(
                     invitationsCount = bondInvitationsCount,
                     invitationsAmount = amount,
                     balance = feeToken.formatBalance(xorBalance)
@@ -387,18 +386,15 @@ class ReferralViewModel @Inject constructor(
 
     private suspend fun updateTransactionReminderWarningVisibility(isUnbonding: Boolean) {
         val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-            primaryToken = feeToken(),
-            primaryTokenAmount = calcInvitationsAmount(referralScreenState.bondState.invitationsCount),
-            secondaryToken = null,
-            secondaryTokenAmount = null,
+            xorChange = calcInvitationsAmount(_referralScreenState.value.bondState.invitationsCount).let {
+                if (isUnbonding) -it else it
+            },
             networkFeeInXor = extrinsicFee.orZero(),
-            isUnbonding = isUnbonding
         )
 
-        referralScreenState = referralScreenState.copy(
-            bondState = referralScreenState.bondState.copy(
+        _referralScreenState.value = _referralScreenState.value.copy(
+            bondState = _referralScreenState.value.bondState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeToken().symbol
             )
         )
     }
@@ -474,13 +470,13 @@ class ReferralViewModel @Inject constructor(
     fun onReferrerInputChange(textValue: TextFieldValue) {
         currentEnteredReferrerLink = textValue.text
         viewModelScope.launch {
-            referralScreenState = referralScreenState.copy(
-                common = referralScreenState.common.copy(
+            _referralScreenState.value = _referralScreenState.value.copy(
+                common = _referralScreenState.value.common.copy(
                     activate = interactor.isLinkOrAddressOk(
                         textValue.text
                     ).first
                 ),
-                referrerInputState = referralScreenState.referrerInputState.copy(
+                referrerInputState = _referralScreenState.value.referrerInputState.copy(
                     value = textValue
                 ),
             )
@@ -488,8 +484,8 @@ class ReferralViewModel @Inject constructor(
     }
 
     fun openReferrerInput() {
-        referralScreenState = referralScreenState.copy(
-            referrerInputState = referralScreenState.referrerInputState.copy(
+        _referralScreenState.value = _referralScreenState.value.copy(
+            referrerInputState = _referralScreenState.value.referrerInputState.copy(
                 value = TextFieldValue()
             ),
         )
