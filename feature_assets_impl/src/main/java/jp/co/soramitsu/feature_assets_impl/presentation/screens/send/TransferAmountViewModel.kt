@@ -143,7 +143,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                                 calcTransactionFee(asset)
                             }
                         }
-                    sendState.input?.amount?.let {
+                    sendState.input?.initialAmount?.let {
                         checkEnteredAmount(it)
                     }
                 }
@@ -171,7 +171,6 @@ class TransferAmountViewModel @AssistedInject constructor(
                     input = AssetAmountInputState(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
-                        amount = initialSendAmount?.toBigDecimalOrNull() ?: BigDecimal.ZERO,
                         initialAmount = initialSendAmount?.toBigDecimalOrNull(),
                         amountFiat = "",
                         enabled = false,
@@ -185,7 +184,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
                         amountFiat = asset.token.printFiat(
-                            sendState.input?.amount.orZero(),
+                            sendState.input?.initialAmount.orZero(),
                             numbersFormatter
                         ),
                     )
@@ -201,7 +200,7 @@ class TransferAmountViewModel @AssistedInject constructor(
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = fee.orZero(),
-                xorChange = if (token.id == SubstrateOptionsProvider.feeAssetId) amount else null,
+                xorChange = if (token.id == SubstrateOptionsProvider.feeAssetId) initialAmount else null,
             )
 
             sendState = sendState.copy(
@@ -212,7 +211,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun onTokenChange(tokenId: String) {
         curTokenId = tokenId
         updateCurAsset()
-        sendState.input?.amount?.let {
+        sendState.input?.initialAmount?.let {
             checkEnteredAmount(it)
         }
         hasXorReminderWarningBeenChecked = false
@@ -230,7 +229,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     sendState = sendState.copy(
                         input = sendState.input?.copy(
                             readOnly = false,
-                            initialAmount = sendState.input?.amount?.nullZero()
+                            initialAmount = sendState.input?.initialAmount?.nullZero()
                         ),
                     )
                 }
@@ -292,7 +291,7 @@ class TransferAmountViewModel @AssistedInject constructor(
 
     fun onConfirmClick() {
         val curAsset = curAsset ?: return
-        val amount = sendState.input?.amount ?: return
+        val amount = sendState.input?.initialAmount ?: return
         val fee = fee ?: return
         viewModelScope.launch {
             sendState = sendState.copy(
@@ -390,7 +389,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun onReviewClick() {
         sendState = sendState.copy(
             input = sendState.input?.copy(
-                initialAmount = sendState.input?.amount.orZero()
+                initialAmount = sendState.input?.initialAmount.orZero()
             )
         )
     }
@@ -398,7 +397,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun amountChanged(value: BigDecimal) {
         sendState = sendState.copy(
             input = sendState.input?.copy(
-                amount = value,
+                initialAmount = value,
                 amountFiat = sendState.input?.token?.printFiat(
                     value,
                     numbersFormatter
@@ -421,7 +420,6 @@ class TransferAmountViewModel @AssistedInject constructor(
         }
         sendState = sendState.copy(
             input = sendState.input?.copy(
-                amount = amount,
                 initialAmount = amount,
                 amountFiat = sendState.input?.token?.printFiat(
                     amount,

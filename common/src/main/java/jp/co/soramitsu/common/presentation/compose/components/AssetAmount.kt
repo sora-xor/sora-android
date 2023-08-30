@@ -68,6 +68,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
@@ -215,7 +216,6 @@ val previewAssetAmountInputState = AssetAmountInputState(
     token = previewToken,
     balance = "10.234 ($2.234.23)",
     amountFiat = "$2.342.12",
-    amount = BigDecimal.ZERO,
     initialAmount = null,
     enabled = true,
     error = false,
@@ -236,7 +236,6 @@ private fun PreviewAssetAmountInput() {
         val state = remember { mutableStateOf(previewAssetAmountInputState) }
         Button(onClick = {
             state.value = state.value.copy(
-                amount = bb.value,
                 initialAmount = bb.value,
             )
             bb.value = bb.value.plus(BigDecimal.ONE)
@@ -248,14 +247,14 @@ private fun PreviewAssetAmountInput() {
             state = state.value,
             onAmountChange = {
                 state.value = state.value.copy(
-                    amount = it,
+                    initialAmount = it,
                 )
             },
             onSelectToken = {},
             onFocusChange = {},
         )
         Spacer(modifier = Modifier.size(10.dp))
-        Text(text = state.value.amount.toPlainString())
+        Text(text = state.value.initialAmount.orZero().toPlainString())
         AssetAmountInput(
             modifier = Modifier,
             state = previewAssetAmountInputState,

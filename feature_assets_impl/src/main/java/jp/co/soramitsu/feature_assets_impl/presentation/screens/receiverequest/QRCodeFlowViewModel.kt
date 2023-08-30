@@ -191,10 +191,9 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                         nf = numbersFormatter,
                         precision = DEFAULT_TOKEN_PRINT_PRECISION
                     ),
-                    amount = BigDecimal.ZERO,
                     initialAmount = null,
                     amountFiat = "",
-                    enabled = false,
+                    enabled = true,
                 )
             )
         }.catch {
@@ -303,7 +302,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
     fun onRequestAmountChange(amount: BigDecimal) {
         requestTokenByQrScreenState = requestTokenByQrScreenState.copy(
             assetAmountInputState = requestTokenByQrScreenState.assetAmountInputState?.copy(
-                amount = amount,
+                initialAmount = amount,
                 amountFiat = requestTokenByQrScreenState.assetAmountInputState?.token?.printFiat(
                     amount,
                     numbersFormatter
@@ -427,7 +426,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                                 tokenId = requestTokenByQrScreenState.assetAmountInputState
                                     ?.token?.id,
                                 amount = requestTokenByQrScreenState.assetAmountInputState
-                                    ?.amount.toString()
+                                    ?.initialAmount.toString()
                             )
                         )
                     }
@@ -444,7 +443,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                     assetAmountInputState = requestTokenByQrScreenState
                         .assetAmountInputState?.copy(
                             initialAmount = requestTokenByQrScreenState
-                                .assetAmountInputState?.amount,
+                                .assetAmountInputState?.initialAmount,
                             enabled = false,
                             readOnly = true
                         )
