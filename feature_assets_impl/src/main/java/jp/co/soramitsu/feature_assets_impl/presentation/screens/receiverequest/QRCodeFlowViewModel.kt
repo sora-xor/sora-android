@@ -191,10 +191,9 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                         nf = numbersFormatter,
                         precision = DEFAULT_TOKEN_PRINT_PRECISION
                     ),
-                    amount = BigDecimal.ZERO,
-                    initialAmount = null,
+                    amount = null,
                     amountFiat = "",
-                    enabled = false,
+                    enabled = true,
                 )
             )
         }.catch {
@@ -443,7 +442,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                         .untransformedUserAddress,
                     assetAmountInputState = requestTokenByQrScreenState
                         .assetAmountInputState?.copy(
-                            initialAmount = requestTokenByQrScreenState
+                            amount = requestTokenByQrScreenState
                                 .assetAmountInputState?.amount,
                             enabled = false,
                             readOnly = true

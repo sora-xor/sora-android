@@ -171,8 +171,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     input = AssetAmountInputState(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
-                        amount = initialSendAmount?.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                        initialAmount = initialSendAmount?.toBigDecimalOrNull(),
+                        amount = initialSendAmount?.toBigDecimalOrNull(),
                         amountFiat = "",
                         enabled = false,
                         error = false,
@@ -230,7 +229,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     sendState = sendState.copy(
                         input = sendState.input?.copy(
                             readOnly = false,
-                            initialAmount = sendState.input?.amount?.nullZero()
+                            amount = sendState.input?.amount?.nullZero()
                         ),
                     )
                 }
@@ -390,7 +389,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun onReviewClick() {
         sendState = sendState.copy(
             input = sendState.input?.copy(
-                initialAmount = sendState.input?.amount.orZero()
+                amount = sendState.input?.amount.orZero()
             )
         )
     }
@@ -422,7 +421,6 @@ class TransferAmountViewModel @AssistedInject constructor(
         sendState = sendState.copy(
             input = sendState.input?.copy(
                 amount = amount,
-                initialAmount = amount,
                 amountFiat = sendState.input?.token?.printFiat(
                     amount,
                     numbersFormatter

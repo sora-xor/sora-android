@@ -37,8 +37,7 @@ import java.math.BigDecimal
 data class AssetAmountInputState(
     val token: Token,
     val balance: String,
-    val amount: BigDecimal,
-    val initialAmount: BigDecimal? = null,
+    val amount: BigDecimal? = null,
     val amountFiat: String,
     val enabled: Boolean,
     val readOnly: Boolean = false,
