@@ -160,9 +160,11 @@ class SwapInteractorImpl(
 
     private fun getFeeMode(ids: List<String>?): SwapFeeMode {
         if (ids == null) return SwapFeeMode.NON_SYNTHETIC
-        val withoutxst = ids.filter { it != SubstrateOptionsProvider.xstTokenId }
-        if (withoutxst.all { it.matches(syntheticRegex) }) return SwapFeeMode.SYNTHETIC
-        if (withoutxst.all { it.matches(syntheticRegex).not() }) return SwapFeeMode.NON_SYNTHETIC
+        if (ids.all { it.matches(syntheticRegex).not() }) return SwapFeeMode.NON_SYNTHETIC
+        if (ids.all {
+                it.matches(syntheticRegex) || it == SubstrateOptionsProvider.xstTokenId || it == SubstrateOptionsProvider.xstusdTokenId
+            }
+        ) return SwapFeeMode.SYNTHETIC
         return SwapFeeMode.BOTH
     }
 
