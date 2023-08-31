@@ -621,7 +621,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         shareOfPool = newPoolShare,
                     )
                 )
-                if (amount1.compareTo(removeState.assetState1?.initialAmount) != 0) {
+                if (amount1.compareTo(removeState.assetState1?.initialAmount.orZero()) != 0) {
                     removeState = removeState.copy(
                         assetState1 = removeState.assetState1?.copy(
                             initialAmount = amount1,
@@ -632,7 +632,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         )
                     )
                 }
-                if (amount2.compareTo(removeState.assetState2?.initialAmount) != 0) {
+                if (amount2.compareTo(removeState.assetState2?.initialAmount.orZero()) != 0) {
                     removeState = removeState.copy(
                         assetState2 = removeState.assetState2?.copy(
                             initialAmount = amount2,

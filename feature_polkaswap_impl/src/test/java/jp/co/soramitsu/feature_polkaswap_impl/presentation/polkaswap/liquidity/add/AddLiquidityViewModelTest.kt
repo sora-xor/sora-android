@@ -269,7 +269,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onAmount1Change(BigDecimal("110.34"))
         advanceUntilIdle()
-        assertEquals(BigDecimal("110.34"), viewModel.addState.assetState1?.amount)
+        assertEquals(BigDecimal("110.34"), viewModel.addState.assetState1?.initialAmount)
     }
 
     @Test
@@ -282,7 +282,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onAmount2Change(BigDecimal("110.34"))
         advanceUntilIdle()
-        assertEquals(BigDecimal("110.34"), viewModel.addState.assetState2?.amount)
+        assertEquals(BigDecimal("110.34"), viewModel.addState.assetState2?.initialAmount)
     }
 
     @Test
@@ -332,7 +332,7 @@ class AddLiquidityViewModelTest {
         viewModel.optionSelected(50)
         advanceUntilIdle()
 
-        assertTrue(viewModel.addState.assetState1?.amount?.equalTo(BigDecimal(0.5)) == true)
+        assertTrue(viewModel.addState.assetState1?.initialAmount?.equalTo(BigDecimal(0.5)) == true)
     }
 
     @Test
@@ -348,7 +348,7 @@ class AddLiquidityViewModelTest {
         viewModel.optionSelected(50)
         advanceUntilIdle()
 
-        assertTrue(viewModel.addState.assetState2?.amount?.equalTo(BigDecimal(0.5)) == true)
+        assertTrue(viewModel.addState.assetState2?.initialAmount?.equalTo(BigDecimal(0.5)) == true)
     }
 
     @Test
