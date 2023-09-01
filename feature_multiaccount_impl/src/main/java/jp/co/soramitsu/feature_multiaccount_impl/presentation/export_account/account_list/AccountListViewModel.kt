@@ -37,14 +37,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
@@ -59,8 +58,7 @@ class AccountListViewModel @Inject constructor(
     private val interactor: MultiaccountInteractor,
     private val avatarGenerator: AccountAvatarGenerator,
     private val router: MainRouter,
-    private val clipboardManager: ClipboardManager,
-    private val resourceManager: ResourceManager
+    private val clipboardManager: BasicClipboardManager,
 ) : BaseViewModel() {
 
     private val _accountListScreenState = MutableLiveData<AccountListScreenState>()
@@ -68,9 +66,6 @@ class AccountListViewModel @Inject constructor(
 
     private val _showOnboardingFlowEvent = SingleLiveEvent<Unit>()
     val showOnboardingFlowEvent: LiveData<Unit> = _showOnboardingFlowEvent
-
-    private val _copiedAddressEvent = SingleLiveEvent<Unit>()
-    val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
 
     private var toolbarActionModeEnabled = false
 
@@ -116,8 +111,8 @@ class AccountListViewModel @Inject constructor(
     }
 
     fun onAccountLongClicked(address: String) {
-        clipboardManager.addToClipboard("address", address)
-        _copiedAddressEvent.trigger()
+        clipboardManager.addToClipboard(address)
+        copiedToast.trigger()
     }
 
     fun onAccountSelected(address: String) {

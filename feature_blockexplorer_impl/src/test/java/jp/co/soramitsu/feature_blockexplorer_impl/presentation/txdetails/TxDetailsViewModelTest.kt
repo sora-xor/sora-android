@@ -41,12 +41,12 @@ import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
@@ -97,7 +97,7 @@ class TxDetailsViewModelTest {
     private lateinit var transactionHistoryHandler: TransactionHistoryHandler
 
     @MockK
-    private lateinit var clipboardManager: ClipboardManager
+    private lateinit var clipboardManager: BasicClipboardManager
 
     @MockK
     private lateinit var resourceManager: ResourceManager
@@ -139,7 +139,7 @@ class TxDetailsViewModelTest {
                 DateTimeFormatter.DD_MMM_YYYY_HH_MM
             )
         } returns date
-        every { clipboardManager.addToClipboard("copy item", any()) } returns Unit
+        every { clipboardManager.addToClipboard(any()) } returns Unit
 
         viewModel = TxDetailsViewModel(
             assetsInteractor,
@@ -574,6 +574,6 @@ class TxDetailsViewModelTest {
         val copyText = "text"
         viewModel.onCopyClicked(copyText)
 
-        verify { clipboardManager.addToClipboard("copy item", copyText) }
+        verify { clipboardManager.addToClipboard(copyText) }
     }
 }

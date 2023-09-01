@@ -222,7 +222,6 @@ internal fun PoolDetailsScreen(
                     text = stringResource(
                         id = R.string.polkaswap_farming_unstake_to_remove,
                     ),
-                    maxLines = 1,
                 )
             }
         }

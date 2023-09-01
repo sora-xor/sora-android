@@ -72,6 +72,7 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddSt
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -153,8 +154,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
-
-    private val syntheticRegex = SubstrateOptionsProvider.syntheticTokenRegex.toRegex()
 
     var addState by mutableStateOf(
         LiquidityAddState(
@@ -524,7 +523,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val curBase = bases.find { it.tokenId == addToken1 }
                 val list = assets
                     .filter { asset ->
-                        asset.token.id.matches(syntheticRegex).not()
+                        asset.token.id.isSynthetic().not()
                     }
                     .filter { asset ->
                         if (addToken1 == SubstrateOptionsProvider.xstusdTokenId) {

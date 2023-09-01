@@ -38,6 +38,7 @@ import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.mapBalance
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
@@ -53,18 +54,28 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapQuote
 import jp.co.soramitsu.feature_polkaswap_impl.data.mappers.SwapMarketMapper
 import jp.co.soramitsu.shared_utils.extensions.fromHex
 import jp.co.soramitsu.shared_utils.extensions.toHexString
+import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
 import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.shared_utils.runtime.metadata.storage
 import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
 import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.shared_utils.wsrpc.SocketService
+import jp.co.soramitsu.shared_utils.wsrpc.executeAsync
+import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
+import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
+import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojoList
+import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.storage.GetStorageRequest
+import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
+import jp.co.soramitsu.sora.substrate.runtime.mapToToken
 import jp.co.soramitsu.sora.substrate.runtime.poolTBCReserves
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
 import jp.co.soramitsu.sora.substrate.runtime.reservesKeyToken
+import jp.co.soramitsu.sora.substrate.runtime.takeInt32
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import kotlinx.coroutines.flow.Flow
@@ -82,13 +93,46 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
     private val substrateCalls: SubstrateCalls,
     private val blockExplorerManager: BlockExplorerManager,
     private val runtimeManager: RuntimeManager,
+    private val socketService: SocketService,
 ) : PolkaswapSubscriptionRepository,
     PolkaswapBasicRepositoryImpl(db, blockExplorerManager) {
 
+    private suspend fun getPoolBaseTokens(): List<Pair<Int, String>> {
+        val metadataStorage =
+            runtimeManager.getRuntimeSnapshot().metadata
+                .module(Pallete.DEX_MANAGER.palletName)
+                .storage(Storage.DEX_INFOS.storageName)
+        val partialKey = metadataStorage.storageKey()
+        return runCatching {
+            socketService.executeAsync(
+                request = StateKeys(listOf(partialKey)),
+                mapper = pojoList<String>().nonNull()
+            ).let { storageKeys ->
+                storageKeys.mapNotNull { storageKey ->
+                    socketService.executeAsync(
+                        request = GetStorageRequest(listOf(storageKey)),
+                        mapper = pojo<String>().nonNull(),
+                    )
+                        .let { storage ->
+                            val storageType = metadataStorage.type.value!!
+                            val storageRawData =
+                                storageType.fromHex(runtimeManager.getRuntimeSnapshot(), storage)
+                            (storageRawData as? Struct.Instance)?.let { instance ->
+                                instance.mapToToken("baseAssetId")?.let { token ->
+                                    storageKey.takeInt32() to token
+                                }
+                            }
+                        }
+                }
+            }
+        }
+            .onFailure(FirebaseWrapper::recordException)
+            .getOrThrow()
+    }
+
     override suspend fun updateAccountPools(address: String) {
         blockExplorerManager.updatePoolsSbApy()
-        // pool base tokens
-        val baseTokens = wsConnection.getPoolBaseTokens()
+        val baseTokens = getPoolBaseTokens()
         db.withTransaction {
             db.poolDao().clearPoolBaseTokens()
             db.poolDao().insertPoolBaseTokens(

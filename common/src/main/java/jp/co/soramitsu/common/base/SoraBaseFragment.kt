@@ -33,10 +33,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.base
 
 import android.annotation.SuppressLint
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
@@ -70,6 +72,7 @@ import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.DebounceClickHandler
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -88,6 +91,15 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     override fun onResume() {
         super.onResume()
         activity?.safeCast<BarsColorhandler>()?.setColor(backgroundColor())
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        if (BuildUtils.sdkAtLeast(Build.VERSION_CODES.TIRAMISU).not()) {
+            viewModel.copiedToast.observe {
+                Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
