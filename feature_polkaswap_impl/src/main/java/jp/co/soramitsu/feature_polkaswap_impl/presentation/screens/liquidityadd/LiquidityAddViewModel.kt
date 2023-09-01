@@ -56,6 +56,7 @@ import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common.util.ext.nullZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
@@ -70,8 +71,8 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddPr
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -154,8 +155,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
 
-    private val syntheticRegex = SubstrateOptionsProvider.syntheticTokenRegex.toRegex()
-
     var addState by mutableStateOf(
         LiquidityAddState(
             btnState = ButtonState(
@@ -193,7 +192,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
             ),
             selectSearchAssetState = null,
             shouldTransactionReminderInsufficientWarningBeShown = false,
-            transactionFeeToken = ""
         )
     )
 
@@ -487,17 +485,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
             if (assetState1 == null)
                 return@with
 
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
-                primaryToken = assetState1.token,
-                primaryTokenAmount = assetState1.amount,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = networkFee
+            val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = networkFee,
+                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) assetState1.amount else null,
             )
 
             addState = addState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeToken().symbol
             )
         }
 
@@ -529,11 +523,13 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val curBase = bases.find { it.tokenId == addToken1 }
                 val list = assets
                     .filter { asset ->
-                        asset.token.id.matches(syntheticRegex).not()
+                        asset.token.id.isSynthetic().not()
                     }
                     .filter { asset ->
                         if (addToken1 == SubstrateOptionsProvider.xstusdTokenId) {
                             asset.token.id != SubstrateOptionsProvider.xstTokenId
+                        } else if (addToken1 == SubstrateOptionsProvider.feeAssetId) {
+                            asset.token.id != SubstrateOptionsProvider.xstusdTokenId
                         } else {
                             true
                         }

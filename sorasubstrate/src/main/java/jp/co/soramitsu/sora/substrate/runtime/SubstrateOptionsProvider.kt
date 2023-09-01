@@ -34,20 +34,23 @@ package jp.co.soramitsu.sora.substrate.runtime
 
 import java.math.BigInteger
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.domain.FlavorOptionsProvider
 import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.shared_utils.encrypt.EncryptionType
 import jp.co.soramitsu.shared_utils.extensions.fromHex
+import jp.co.soramitsu.shared_utils.extensions.toHexString
 import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.shared_utils.runtime.metadata.module
 import jp.co.soramitsu.shared_utils.runtime.metadata.storage
 import jp.co.soramitsu.shared_utils.runtime.metadata.storageKey
+import jp.co.soramitsu.shared_utils.scale.dataType.uint32
 import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider.syntheticTokenRegex
+import jp.co.soramitsu.sora.substrate.substrate.fromHex
 
 object SubstrateOptionsProvider {
     const val mortalEraLength = 64
-    const val syntheticTokenRegex = "0[xX]03[0-9a-fA-F]+"
+    val syntheticTokenRegex = "0[xX]03[0-9a-fA-F]+".toRegex()
     val encryptionType = EncryptionType.SR25519
     val existentialDeposit: BigInteger = BigInteger.ZERO
     const val feeAssetId = "0x0200000000000000000000000000000000000000000000000000000000000000"
@@ -55,14 +58,31 @@ object SubstrateOptionsProvider {
     const val xstTokenId = "0x0200090000000000000000000000000000000000000000000000000000000000"
     const val xstusdTokenId = "0x0200080000000000000000000000000000000000000000000000000000000000"
     const val ethTokenId = "0x0200070000000000000000000000000000000000000000000000000000000000"
-    const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
-    const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
 }
+
+fun String.isSynthetic(): Boolean = this.matches(syntheticTokenRegex)
+
+fun Struct.Instance.getTokenId() = get<List<*>>("code")
+    ?.map { (it as BigInteger).toByte() }
+    ?.toByteArray()
+
+fun Struct.Instance.mapToToken(field: String) =
+    this.get<Struct.Instance>(field)?.getTokenId()?.toHexString(true)
+
+fun String.mapCodeToken() = Struct.Instance(
+    mapOf("code" to this.mapAssetId())
+)
+
+fun ByteArray.mapCodeToken() = Struct.Instance(
+    mapOf("code" to this.mapAssetId())
+)
 
 fun String.mapAssetId() = this.fromHex().mapAssetId()
 fun ByteArray.mapAssetId() = this.toList().map { it.toInt().toBigInteger() }
 
 fun String.assetIdFromKey() = this.takeLast(64).addHexPrefix()
+
+fun String.takeInt32() = uint32.fromHex(this.takeLast(8)).toInt()
 fun Any.createAsset(id: String): TokenInfoDto? =
     (this as? List<*>)?.let {
         val s = (it[0] as? ByteArray)?.toString(Charsets.UTF_8)
@@ -83,11 +103,7 @@ fun RuntimeSnapshot.poolTBCReserves(tokenId: ByteArray): String =
         .storage(Storage.RESERVES_COLLATERAL.storageName)
         .storageKey(
             this,
-            Struct.Instance(
-                mapOf(
-                    "code" to tokenId.mapAssetId()
-                )
-            )
+            tokenId.mapCodeToken(),
         )
 
 fun RuntimeSnapshot.reservesKey(baseTokenId: String, tokenId: ByteArray): String =
@@ -95,16 +111,8 @@ fun RuntimeSnapshot.reservesKey(baseTokenId: String, tokenId: ByteArray): String
         .storage(Storage.RESERVES.storageName)
         .storageKey(
             this,
-            Struct.Instance(
-                mapOf(
-                    "code" to baseTokenId.mapAssetId()
-                )
-            ),
-            Struct.Instance(
-                mapOf(
-                    "code" to tokenId.mapAssetId()
-                )
-            )
+            baseTokenId.mapCodeToken(),
+            tokenId.mapCodeToken(),
         )
 
 fun RuntimeSnapshot.reservesKeyToken(baseTokenId: String): String =
@@ -112,11 +120,7 @@ fun RuntimeSnapshot.reservesKeyToken(baseTokenId: String): String =
         .storage(Storage.RESERVES.storageName)
         .storageKey(
             this,
-            Struct.Instance(
-                mapOf(
-                    "code" to baseTokenId.mapAssetId()
-                )
-            ),
+            baseTokenId.mapCodeToken(),
         )
 
 enum class Pallete(val palletName: String) {

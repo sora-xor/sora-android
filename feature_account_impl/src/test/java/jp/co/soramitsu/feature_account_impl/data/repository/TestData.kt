@@ -60,13 +60,19 @@ object TestData {
             cardId = CardHubType.GET_SORA_CARD.hubName,
             visibility = true,
             sortOrder = CardHubType.GET_SORA_CARD.order,
-            collapsed = false
+            collapsed = false,
         ),
         GlobalCardHubLocal(
             cardId = CardHubType.BUY_XOR_TOKEN.hubName,
             visibility = true,
             sortOrder = CardHubType.BUY_XOR_TOKEN.order,
-            collapsed = false
+            collapsed = false,
+        ),
+        GlobalCardHubLocal(
+            cardId = CardHubType.REFERRAL_SYSTEM.hubName,
+            visibility = true,
+            sortOrder = CardHubType.REFERRAL_SYSTEM.order,
+            collapsed = false,
         )
     )
 }

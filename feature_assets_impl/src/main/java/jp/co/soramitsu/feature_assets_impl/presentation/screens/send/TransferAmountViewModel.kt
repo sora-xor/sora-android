@@ -41,6 +41,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.Asset
@@ -52,7 +53,6 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.isZero
@@ -81,7 +81,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     private val walletRouter: WalletRouter,
     private val assetsRouter: AssetsRouter,
     private val numbersFormatter: NumbersFormatter,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val resourceManager: ResourceManager,
     avatarGenerator: AccountAvatarGenerator,
     @Assisted("recipientId") private val recipientId: String,
@@ -98,8 +98,6 @@ class TransferAmountViewModel @AssistedInject constructor(
         ): TransferAmountViewModel
     }
 
-    private val _copiedAddressEvent = SingleLiveEvent<Unit>()
-    val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
     private val _transactionSuccessEvent = SingleLiveEvent<Unit>()
     val transactionSuccessEvent: LiveData<Unit> = _transactionSuccessEvent
 
@@ -199,17 +197,13 @@ class TransferAmountViewModel @AssistedInject constructor(
             if (this == null)
                 return@with
 
-            val result = interactor.isEnoughXorLeftAfterTransaction(
-                primaryToken = token,
-                primaryTokenAmount = amount,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = fee.orZero()
+            val result = interactor.isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = fee.orZero(),
+                xorChange = if (token.id == SubstrateOptionsProvider.feeAssetId) amount else null,
             )
 
             sendState = sendState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeAsset?.token?.symbol ?: ""
             )
         }
 
@@ -238,6 +232,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         ),
                     )
                 }
+
                 SendRoutes.selectToken -> {
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
@@ -245,6 +240,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         )
                     )
                 }
+
                 else -> {
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
@@ -288,8 +284,8 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     fun copyAddress() {
-        clipboardManager.addToClipboard("Address", recipientId)
-        _copiedAddressEvent.trigger()
+        clipboardManager.addToClipboard(recipientId)
+        copiedToast.trigger()
     }
 
     fun onConfirmClick() {
@@ -336,6 +332,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             feeAsset.balance.transferable < fee -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -345,6 +342,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             curAsset.balance.transferable < amount -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -354,6 +352,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable < amount + fee) -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -363,6 +362,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable - amount - fee < SubstrateOptionsProvider.existentialDeposit.toBigDecimal()) -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(
@@ -372,6 +372,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     reviewEnabled = false,
                 )
             }
+
             else -> {
                 sendState = sendState.copy(
                     input = sendState.input?.copy(

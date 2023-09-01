@@ -66,9 +66,10 @@ data class SwapDetailsState(
     val priceToFromTitle: String,
     val priceToFrom: String,
     val lpFee: String,
+    @StringRes val lpFeeTitle: Int,
+    @StringRes val lpFeeHint: Int,
     val route: String,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    val transactionFeeToken: String
 )
 
 fun defaultSwapDetailsState() =
@@ -84,7 +85,8 @@ fun defaultSwapDetailsState() =
         priceToFromTitle = "",
         priceToFrom = "",
         lpFee = "",
+        lpFeeTitle = R.string.polkaswap_liquidity_fee,
+        lpFeeHint = R.string.polkaswap_liquidity_fee_info,
         route = "",
         shouldTransactionReminderInsufficientWarningBeShown = false,
-        transactionFeeToken = ""
     )

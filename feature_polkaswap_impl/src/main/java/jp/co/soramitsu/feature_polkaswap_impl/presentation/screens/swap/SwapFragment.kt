@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -110,7 +111,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
         }
         composable(SwapRoutes.confirm) {
             SwapConfirmScreen(
-                state = viewModel.swapMainState,
+                state = viewModel.swapMainState.collectAsStateWithLifecycle().value,
                 onConfirmClick = viewModel::onConfirmClicked,
             )
         }
@@ -138,7 +139,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                 }
             }
             val type = requireNotNull(it.arguments?.getString(SwapRoutes.selectTokenParamName))
-            val state = viewModel.swapMainState.selectSearchAssetState
+            val state = viewModel.swapMainState.collectAsStateWithLifecycle().value.selectSearchAssetState
             if (state != null) {
                 SelectSearchTokenScreen(
                     state = state,
@@ -152,7 +153,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                 viewModel.onMarketSelected(it)
                 navController.popBackStack()
             }
-            val state = viewModel.swapMainState.selectMarketState
+            val state = viewModel.swapMainState.collectAsStateWithLifecycle().value.selectMarketState
             if (state != null) {
                 SwapMarketsScreen(
                     selected = state.first,
@@ -168,7 +169,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             }
             val state = viewModel.swapMainState
             SwapSlippageScreen(
-                value = state.slippage,
+                value = state.collectAsStateWithLifecycle().value.slippage,
                 onDone = { debounceClickHandler.debounceClick { onSlippageEntered(it) } },
             )
         }
@@ -210,7 +211,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             ) {
                 val swapState = viewModel.swapMainState
                 SwapMainScreen(
-                    state = swapState,
+                    state = swapState.collectAsStateWithLifecycle().value,
                     onSlippageClick = onSlippageClick,
                     onSelectFrom = onFromAssetClick,
                     onSelectTo = onToAssetClick,

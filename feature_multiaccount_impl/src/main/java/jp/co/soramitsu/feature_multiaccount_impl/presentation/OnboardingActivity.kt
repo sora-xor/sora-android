@@ -36,14 +36,19 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.MaterialTheme
@@ -55,15 +60,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
-import com.vanpra.composematerialdialogs.MaterialDialog
-import com.vanpra.composematerialdialogs.listItems
-import com.vanpra.composematerialdialogs.rememberMaterialDialogState
-import com.vanpra.composematerialdialogs.title
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -84,6 +87,9 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.import_account_lis
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.mnemonic_confirmation.MnemonicConfirmationScreen
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TermsAndPrivacyEnum
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.tutorial.TutorialScreen
+import jp.co.soramitsu.ui_core.component.button.properties.Order
+import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -130,6 +136,15 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             }
         }
 
+    private val consentHandlerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } else {
+                viewModel.onConsentSuccess(navController)
+            }
+        }
+
     override val viewModel: OnboardingViewModel by viewModels()
 
     @Inject
@@ -138,6 +153,14 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     override fun onToolbarNavigation() {
         val pop = navController.popBackStack()
         if (!pop) finish()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        viewModel.consentExceptionHandler.observe(this) {
+            consentHandlerLauncher.launch(it)
+        }
     }
 
     @OptIn(
@@ -207,7 +230,68 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             animatedComposable(
                 route = OnboardingFeatureRoutes.TUTORIAL
             ) {
-                val dialogState = rememberMaterialDialogState()
+                val recoveryDialog = viewModel.recoveryDialog.collectAsStateWithLifecycle()
+                if (recoveryDialog.value) {
+                    AlertDialog(
+                        onDismissRequest = viewModel::onRecoverySourceDismiss,
+                        text = {
+                            Text(
+                                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                                text = stringResource(id = R.string.recovery_source_type),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.customTypography.headline2,
+                                color = MaterialTheme.customColors.fgPrimary,
+                            )
+                        },
+                        buttons = {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(Dimens.x1),
+                                verticalArrangement = Arrangement.spacedBy(Dimens.x1),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                jp.co.soramitsu.ui_core.component.button.TextButton(
+                                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                                    size = Size.Small,
+                                    order = Order.TERTIARY,
+                                    text = stringResource(id = R.string.common_google),
+                                    onClick = {
+                                        viewModel.onGoogleSignin(
+                                            navController,
+                                            launcher
+                                        )
+                                    },
+                                )
+                                jp.co.soramitsu.ui_core.component.button.TextButton(
+                                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                                    size = Size.Small,
+                                    order = Order.TERTIARY,
+                                    text = stringResource(id = R.string.common_passphrase_title),
+                                    onClick = {
+                                        viewModel.onRecoveryClicked(
+                                            navController,
+                                            1
+                                        )
+                                    },
+                                )
+                                jp.co.soramitsu.ui_core.component.button.TextButton(
+                                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                                    size = Size.Small,
+                                    order = Order.TERTIARY,
+                                    text = stringResource(id = R.string.common_raw_seed),
+                                    onClick = {
+                                        viewModel.onRecoveryClicked(
+                                            navController,
+                                            2
+                                        )
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }
 
                 viewModel.tutorialScreenState.observeAsState().value?.let {
                     Box(
@@ -216,7 +300,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                         TutorialScreen(
                             state = it,
                             onCreateAccount = { viewModel.onCreateAccountClicked(navController) },
-                            onImportAccount = { dialogState.show() },
+                            onImportAccount = viewModel::onRecoveryDialogShow,
                             onGoogleSignin = {
                                 debounceClickHandler.debounceClick {
                                     viewModel.onGoogleSignin(
@@ -237,28 +321,6 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                                 }
                             }
                         )
-
-                        MaterialDialog(
-                            backgroundColor = MaterialTheme.customColors.bgSurface,
-                            dialogState = dialogState
-                        ) {
-                            title(text = stringResource(id = R.string.recovery_source_type))
-                            listItems(
-                                listOf(
-                                    stringResource(id = R.string.common_google),
-                                    stringResource(id = R.string.common_passphrase_title),
-                                    stringResource(id = R.string.common_raw_seed)
-                                ),
-                                onClick = { index, _ ->
-                                    if (index == 0) {
-                                        viewModel.onGoogleSignin(navController, launcher)
-                                    } else {
-                                        viewModel.onRecoveryClicked(navController, index)
-                                    }
-                                    viewModel.onRecoveryClicked(navController, index)
-                                }
-                            )
-                        }
                     }
                 }
             }

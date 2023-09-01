@@ -39,7 +39,6 @@ import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
@@ -120,13 +119,17 @@ fun mapAssetsToCardState(
 }
 
 data class SoraCardState(
-    val cardInfo: SoraCardInformation? = null,
-    val kycStatus: String? = null,
-    val visible: Boolean = false
+    val success: Boolean,
+    val kycStatus: String?,
+    val visible: Boolean = false,
 ) : CardState
 
 data class BuyXorState(
-    val visible: Boolean = false
+    val visible: Boolean = false,
+) : CardState
+
+data class ReferralState(
+    val visible: Boolean = false,
 ) : CardState
 
 class FavoritePoolsCardState(

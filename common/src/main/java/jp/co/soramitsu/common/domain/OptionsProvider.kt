@@ -38,6 +38,8 @@ object OptionsProvider {
     var CURRENT_VERSION_CODE: Int = 0
     var CURRENT_VERSION_NAME: String = ""
     var APPLICATION_ID: String = ""
+    const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
+    const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
     val fileProviderAuthority: String get() = "$APPLICATION_ID.soraFileProvider"
     val header: String by lazy {
         "$APPLICATION_ID/$CURRENT_VERSION_NAME/$CURRENT_VERSION_CODE/${BuildConfig.BUILD_TYPE}/${BuildConfig.FLAVOR}"
@@ -58,7 +60,7 @@ object OptionsProvider {
     const val twitterLink = "https://twitter.com/sora_xor"
     const val youtubeLink = "https://youtube.com/sora_xor"
     const val instagramLink = "https://instagram.com/sora_xor"
-    const val mediumLink = "https://medium.com/sora_xor"
+    const val mediumLink = "https://medium.com/sora-xor"
     const val wikiLink = "https://wiki.sora.org"
     const val soraCardBlackList = "https://soracard.com/blacklist/"
 }

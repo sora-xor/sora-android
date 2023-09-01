@@ -71,6 +71,10 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         composable(
             route = ExploreRoutes.START,
         ) {
+//            DiscoverScreen(
+//                onAddLiquidityClicked = viewModel::onPoolPlus,
+//                scrollState = scrollState,
+//            )
             StartScreen(
                 scrollState = scrollState,
                 onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },

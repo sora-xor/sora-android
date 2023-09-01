@@ -74,10 +74,11 @@ data class AssetBalance(
     val feeFrozen: BigDecimal,
     val bonded: BigDecimal,
     val redeemable: BigDecimal,
-    val unbonding: BigDecimal
+    val unbonding: BigDecimal,
+    val total: BigDecimal,
 ) : Parcelable
 
-fun createAssetBalance(b: BigDecimal = BigDecimal.ZERO) = AssetBalance(b, b, b, b, b, b, b)
+fun createAssetBalance(b: BigDecimal = BigDecimal.ZERO) = AssetBalance(b, b, b, b, b, b, b, b)
 
 @Parcelize
 data class Token(
@@ -120,6 +121,14 @@ fun compareByTransferable(old: Asset?, new: Asset?): Boolean = if (old == null &
     false
 } else {
     old.token.id == new.token.id && old.balance.transferable.equalTo(new.balance.transferable)
+}
+
+fun compareByTotal(old: Asset?, new: Asset?): Boolean = if (old == null && new == null) {
+    true
+} else if (old == null || new == null) {
+    false
+} else {
+    old.token.id == new.token.id && old.balance.total.equalTo(new.balance.total)
 }
 
 fun List<Token>.getByIdOrEmpty(id: String): Token =

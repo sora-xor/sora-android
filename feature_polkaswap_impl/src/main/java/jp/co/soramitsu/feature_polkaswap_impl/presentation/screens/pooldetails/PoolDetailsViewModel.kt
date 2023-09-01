@@ -47,9 +47,9 @@ import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
-import jp.co.soramitsu.feature_polkaswap_impl.domain.DemeterFarmingInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsDemeterState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolDetailsState
 import jp.co.soramitsu.ui_core.component.toolbar.Action

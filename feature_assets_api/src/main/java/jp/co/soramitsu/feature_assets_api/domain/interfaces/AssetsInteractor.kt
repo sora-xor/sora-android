@@ -36,19 +36,16 @@ import java.math.BigDecimal
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
+import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import kotlinx.coroutines.flow.Flow
 
 interface AssetsInteractor {
 
     suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal?
 
-    suspend fun isEnoughXorLeftAfterTransaction(
-        primaryToken: Token,
-        primaryTokenAmount: BigDecimal,
-        secondaryToken: Token?,
-        secondaryTokenAmount: BigDecimal?,
-        networkFeeInXor: BigDecimal
+    suspend fun isNotEnoughXorLeftAfterTransaction(
+        networkFeeInXor: BigDecimal,
+        xorChange: BigDecimal? = null,
     ): Boolean
 
     suspend fun getAccountName(): String
@@ -95,4 +92,6 @@ interface AssetsInteractor {
     suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
 
     suspend fun updateWhitelistBalances()
+
+    suspend fun updateBalanceVisibleAssets()
 }

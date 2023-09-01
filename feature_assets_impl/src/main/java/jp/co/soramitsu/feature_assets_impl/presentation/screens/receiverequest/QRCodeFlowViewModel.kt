@@ -43,6 +43,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.AssetAmountInputState
@@ -53,7 +54,6 @@ import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
@@ -86,7 +86,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
     private val coroutineManager: CoroutineManager,
     private val qrCodeGenerator: QrCodeGenerator,
     private val avatarGenerator: AccountAvatarGenerator,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val numbersFormatter: NumbersFormatter,
     private val resourceManager: ResourceManager,
     private val fileManager: FileManager,
@@ -250,7 +250,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
 
     fun onUserAddressClickInReceiveScreen() {
         receiveTokenScreenState.untransformedUserAddress?.let {
-            clipboardManager.addToClipboard("Address", it)
+            clipboardManager.addToClipboard(it)
         }
     }
 
@@ -336,7 +336,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
 
     fun onUserAddressClickInRequestConfirmScreen() {
         requestTokenByQrScreenState.untransformedUserAddress?.let {
-            clipboardManager.addToClipboard("Address", it)
+            clipboardManager.addToClipboard(it)
         }
     }
 

@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.di.modules
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Color
 import android.os.Build
@@ -51,6 +52,7 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -63,12 +65,12 @@ import jp.co.soramitsu.common.delegate.WithProgressImpl
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.PushHandler
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.CryptoAssistant
@@ -84,6 +86,9 @@ import jp.co.soramitsu.shared_utils.encrypt.json.JsonSeedEncoder
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
+import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
+import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigProvider
 import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
 import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
 
@@ -169,6 +174,32 @@ class CommonModule {
     @Provides
     fun provideSoramitsuNetworkClient(): SoramitsuNetworkClient =
         SoramitsuNetworkClient(logging = BuildConfig.DEBUG)
+
+    @Singleton
+    @Provides
+    fun provideSoraWalletBlockExplorerInfo(
+        client: SoramitsuNetworkClient,
+        soraRemoteConfigBuilder: SoraRemoteConfigBuilder,
+    ): SoraWalletBlockExplorerInfo {
+        return SoraWalletBlockExplorerInfo(
+            networkClient = client,
+            soraRemoteConfigBuilder = soraRemoteConfigBuilder,
+        )
+    }
+
+    @Singleton
+    @Provides
+    fun provideSoraRemoteConfigBuilder(
+        client: SoramitsuNetworkClient,
+        @ApplicationContext context: Context,
+    ): SoraRemoteConfigBuilder {
+        return SoraRemoteConfigProvider(
+            context = context,
+            client = client,
+            commonUrl = OptionsProvider.configCommon,
+            mobileUrl = OptionsProvider.configMobile,
+        ).provide()
+    }
 
     @Singleton
     @Provides
@@ -263,8 +294,8 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideClipBoardManager(@ApplicationContext context: Context): ClipboardManager {
-        return ClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
+    fun provideClipBoardManager(@ApplicationContext context: Context): BasicClipboardManager {
+        return BasicClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
     }
 
     @Provides

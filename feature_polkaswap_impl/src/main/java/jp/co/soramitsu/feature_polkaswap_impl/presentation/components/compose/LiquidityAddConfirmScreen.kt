@@ -290,7 +290,6 @@ private fun PreviewLiquidityRemoveConfirmScreen() {
                 ),
             ),
             shouldTransactionReminderInsufficientWarningBeShown = true,
-            transactionFeeToken = "",
             poolInFarming = false,
         ),
         onConfirmClick = {},

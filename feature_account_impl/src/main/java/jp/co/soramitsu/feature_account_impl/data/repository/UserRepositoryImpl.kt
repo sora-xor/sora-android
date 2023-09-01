@@ -179,7 +179,6 @@ class UserRepositoryImpl(
             db.accountDao().clearAll()
             db.referralsDao().clearTable()
             db.nodeDao().clearTable()
-            db.soraCardDao().clearTable()
             db.globalCardsHubDao().clearTable()
             defaultGlobalCards()
         }

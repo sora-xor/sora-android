@@ -43,10 +43,10 @@ import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.Flavor
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.orZero
+import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
 import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
@@ -78,28 +78,14 @@ class AssetsInteractorImpl constructor(
         }
     }
 
-    override suspend fun isEnoughXorLeftAfterTransaction(
-        primaryToken: Token,
-        primaryTokenAmount: BigDecimal,
-        secondaryToken: Token?,
-        secondaryTokenAmount: BigDecimal?,
-        networkFeeInXor: BigDecimal
+    override suspend fun isNotEnoughXorLeftAfterTransaction(
+        networkFeeInXor: BigDecimal,
+        xorChange: BigDecimal?,
     ): Boolean {
-        val xorAssetBalanceAmount = getAssetOrThrow(SubstrateOptionsProvider.feeAssetId).balance.transferable
+        val xorAssetBalanceAmount =
+            getAssetOrThrow(SubstrateOptionsProvider.feeAssetId).balance.transferable
 
-        if (primaryToken.id != SubstrateOptionsProvider.feeAssetId &&
-            secondaryToken?.id != SubstrateOptionsProvider.feeAssetId
-        ) {
-            return xorAssetBalanceAmount.minus(networkFeeInXor) <= networkFeeInXor
-        }
-
-        if (primaryToken.id == SubstrateOptionsProvider.feeAssetId) {
-            return xorAssetBalanceAmount.minus(primaryTokenAmount)
-                .minus(networkFeeInXor) <= networkFeeInXor
-        }
-
-        return xorAssetBalanceAmount.plus(secondaryTokenAmount.orZero())
-            .minus(networkFeeInXor) <= networkFeeInXor
+        return xorAssetBalanceAmount.minus(xorChange.orZero()).minus(networkFeeInXor) <= networkFeeInXor
     }
 
     override suspend fun getAccountName(): String = userRepository.getCurSoraAccount().accountName
@@ -219,6 +205,11 @@ class AssetsInteractorImpl constructor(
     override suspend fun updateAssetPositions(assetPositions: Map<String, Int>) {
         val curAccount = userRepository.getCurSoraAccount()
         assetsRepository.updateAssetPositions(assetPositions, curAccount)
+    }
+
+    override suspend fun updateBalanceVisibleAssets() {
+        val soraAccount = userRepository.getCurSoraAccount()
+        assetsRepository.updateBalancesVisibleAssets(soraAccount.substrateAddress)
     }
 
     override suspend fun updateWhitelistBalances() {

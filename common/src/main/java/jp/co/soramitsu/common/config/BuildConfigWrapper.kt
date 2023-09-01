@@ -41,4 +41,13 @@ object BuildConfigWrapper {
 
     fun getX1WidgetId(): String =
         BuildConfig.X1_WIDGET_ID
+
+    fun getSoraCardBackEndUrl(): String =
+        BuildConfig.SORACARD_BACKEND_URL.let { url ->
+            if (url.endsWith("/")) url else "$url/"
+        }
+
+    val soraCardEuroRateUrl: String = getSoraCardBackEndUrl() + "prices/xor_euro"
+
+    val soraCardX1StatusUrl: String = getSoraCardBackEndUrl().replace("https", "wss", true) + "ws/x1-payment-status"
 }

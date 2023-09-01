@@ -134,10 +134,9 @@ fun ReferralBondXor(
                     color = Color.Transparent
                 )
                 WarningTextCard(
-                    title = stringResource(id = R.string.common_title_warning),
                     text = stringResource(
                         id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
-                        formatArgs = arrayOf(state.transactionFeeToken, common.extrinsicFee)
+                        formatArgs = arrayOf(common.extrinsicFee)
                     )
                 )
             }
@@ -224,10 +223,9 @@ fun ReferralUnbondXor(
                     color = Color.Transparent
                 )
                 WarningTextCard(
-                    title = stringResource(id = R.string.common_title_warning),
                     text = stringResource(
                         id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
-                        formatArgs = arrayOf(state.transactionFeeToken, common.extrinsicFee)
+                        formatArgs = arrayOf(common.extrinsicFee)
                     )
                 )
             }

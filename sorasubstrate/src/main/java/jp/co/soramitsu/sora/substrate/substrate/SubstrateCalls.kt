@@ -37,11 +37,11 @@ import java.math.BigInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.data.network.dto.TokenInfoDto
-import jp.co.soramitsu.common.data.network.dto.XorBalanceDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.ext.removeHexPrefix
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.sumByBigInteger
+import jp.co.soramitsu.common_wallet.data.XorBalanceDto
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
@@ -91,7 +91,7 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.createAsset
-import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
+import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
@@ -300,9 +300,7 @@ class SubstrateCalls @Inject constructor(
                 storage.storageKey(
                     runtimeManager.getRuntimeSnapshot(),
                     accountId.toAccountId(),
-                    Struct.Instance(
-                        mapOf("code" to assetId.mapAssetId())
-                    )
+                    assetId.mapCodeToken(),
                 )
             }
             val request = StateQueryStorageAt(listOf(storageKeys))

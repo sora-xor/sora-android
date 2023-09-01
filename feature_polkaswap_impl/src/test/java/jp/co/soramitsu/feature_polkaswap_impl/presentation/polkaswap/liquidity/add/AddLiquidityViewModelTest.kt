@@ -159,12 +159,9 @@ class AddLiquidityViewModelTest {
         every { TestTokens.xstusdToken.iconUri() } returns mockedUri
         every { TestTokens.xstToken.iconUri() } returns mockedUri
         given(
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = anyOrNull(),
-                secondaryTokenAmount = anyOrNull(),
-                networkFeeInXor = any()
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = any(),
+                xorChange = any(),
             )
         ).willReturn(false)
         given(poolsInteractor.subscribeReservesCache(XOR_ASSET.token.id, VAL_ASSET.token.id))
@@ -249,7 +246,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onToken2Click()
         advanceUntilIdle()
-        assertEquals(4, viewModel.addState.selectSearchAssetState?.fullList?.size)
+        assertEquals(3, viewModel.addState.selectSearchAssetState?.fullList?.size)
         viewModel.onToken1Change(TestTokens.xstusdToken.id)
         advanceUntilIdle()
         viewModel.onToken2Click()
@@ -445,12 +442,9 @@ class AddLiquidityViewModelTest {
             kVerify(
                 assetsInteractor,
                 times(1)
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = XOR_ASSET.token,
-                primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = LIQUIDITY_DETAILS.networkFee
+            ).isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal.TEN,
+                networkFeeInXor = LIQUIDITY_DETAILS.networkFee,
             )
         }
 }

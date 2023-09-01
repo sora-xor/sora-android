@@ -37,6 +37,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.navigation.NavController
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
@@ -45,7 +46,6 @@ import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -93,7 +93,7 @@ class AccountDetailsViewModelTest {
     private lateinit var mainRouter: MainRouter
 
     @Mock
-    private lateinit var copy: ClipboardManager
+    private lateinit var copy: BasicClipboardManager
 
     @Mock
     private lateinit var resourceManager: ResourceManager
@@ -240,7 +240,7 @@ class AccountDetailsViewModelTest {
                 mnemonicPhrase = "mne mo nic",
                 cryptoType = CryptoType.SR25519,
                 backupAccountType = listOf(
-                    BackupAccountType.PASSHRASE,
+                    BackupAccountType.PASSPHRASE,
                 ),
                 seed = Seed(),
                 json = Json()

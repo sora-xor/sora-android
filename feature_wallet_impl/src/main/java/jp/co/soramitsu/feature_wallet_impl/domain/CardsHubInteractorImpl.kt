@@ -37,7 +37,6 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CardHub
 import jp.co.soramitsu.common.domain.CardHubType
-import jp.co.soramitsu.common.domain.SoraCardInformation
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -68,17 +67,18 @@ class CardsHubInteractorImpl @Inject constructor(
     suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean) {
         when (cardId) {
             CardHubType.GET_SORA_CARD.hubName,
+            CardHubType.REFERRAL_SYSTEM.hubName,
             CardHubType.BUY_XOR_TOKEN.hubName -> {
                 walletRepository.updateCardVisibilityOnGlobalCardsHub(
                     cardId = cardId,
-                    visible = visible
+                    visible = visible,
                 )
             }
             CardHubType.ASSETS.hubName,
             CardHubType.POOLS.hubName -> {
                 walletRepository.updateCardVisibilityOnCardsHub(
                     cardId = cardId,
-                    visible = visible
+                    visible = visible,
                 )
             }
         }
@@ -87,7 +87,4 @@ class CardsHubInteractorImpl @Inject constructor(
     suspend fun updateCardCollapsedStateOnCardHub(cardId: String, collapsed: Boolean) {
         walletRepository.updateCardCollapsedState(cardId, collapsed)
     }
-
-    fun subscribeSoraCardInfo(): Flow<SoraCardInformation?> =
-        walletRepository.subscribeSoraCardInfo()
 }
