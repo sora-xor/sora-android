@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
@@ -48,7 +47,6 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -73,10 +71,6 @@ class TxDetailsFragment : SoraBaseFragment<TxDetailsViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-
-        viewModel.copyEvent.observe {
-            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
     }
 
     @OptIn(ExperimentalAnimationApi::class)

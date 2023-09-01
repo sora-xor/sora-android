@@ -91,7 +91,7 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
 import jp.co.soramitsu.sora.substrate.runtime.createAsset
-import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
+import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.firstOrNull
@@ -300,9 +300,7 @@ class SubstrateCalls @Inject constructor(
                 storage.storageKey(
                     runtimeManager.getRuntimeSnapshot(),
                     accountId.toAccountId(),
-                    Struct.Instance(
-                        mapOf("code" to assetId.mapAssetId())
-                    )
+                    assetId.mapCodeToken(),
                 )
             }
             val request = StateQueryStorageAt(listOf(storageKeys))

@@ -42,6 +42,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.SocketException
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.backup.domain.exceptions.AuthConsentException
 import jp.co.soramitsu.backup.domain.exceptions.FileNotFoundException
@@ -58,7 +59,6 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.core.models.CryptoType
@@ -78,7 +78,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
     private val resourceManager: ResourceManager,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val backupService: BackupService,
     private val coroutineManager: CoroutineManager,
     @Assisted("address") private val address: String,
@@ -90,9 +90,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
             @Assisted("address") address: String
         ): AccountDetailsViewModel
     }
-
-    private val _copyEvent = SingleLiveEvent<Unit>()
-    val copyEvent: LiveData<Unit> = _copyEvent
 
     private val _accountDetailsScreenState = MutableLiveData(
         AccountDetailsScreenState(
@@ -195,8 +192,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onAddressCopy() {
-        clipboardManager.addToClipboard("address", address)
-        _copyEvent.trigger()
+        clipboardManager.addToClipboard(address)
+        copiedToast.trigger()
     }
 
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {

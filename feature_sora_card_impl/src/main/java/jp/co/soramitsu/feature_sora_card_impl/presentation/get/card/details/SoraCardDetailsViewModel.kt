@@ -36,11 +36,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -52,11 +52,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SoraCardDetailsViewModel @Inject constructor(
     private val soraCardInteractor: SoraCardInteractor,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
 ) : BaseViewModel() {
-
-    private val _copiedAddressEvent = SingleLiveEvent<Unit>()
-    val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
 
     private val _shareLinkEvent = SingleLiveEvent<String>()
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
@@ -135,8 +132,8 @@ class SoraCardDetailsViewModel @Inject constructor(
 
     fun onIbanCardClick() {
         ibanCache?.let {
-            clipboardManager.addToClipboard("iban", it)
-            _copiedAddressEvent.trigger()
+            clipboardManager.addToClipboard(it)
+            copiedToast.trigger()
         }
     }
 

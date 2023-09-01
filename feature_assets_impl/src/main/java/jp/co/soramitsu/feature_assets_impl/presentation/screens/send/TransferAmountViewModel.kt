@@ -41,6 +41,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.Asset
@@ -52,7 +53,6 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.isZero
@@ -81,7 +81,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     private val walletRouter: WalletRouter,
     private val assetsRouter: AssetsRouter,
     private val numbersFormatter: NumbersFormatter,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val resourceManager: ResourceManager,
     avatarGenerator: AccountAvatarGenerator,
     @Assisted("recipientId") private val recipientId: String,
@@ -98,8 +98,6 @@ class TransferAmountViewModel @AssistedInject constructor(
         ): TransferAmountViewModel
     }
 
-    private val _copiedAddressEvent = SingleLiveEvent<Unit>()
-    val copiedAddressEvent: LiveData<Unit> = _copiedAddressEvent
     private val _transactionSuccessEvent = SingleLiveEvent<Unit>()
     val transactionSuccessEvent: LiveData<Unit> = _transactionSuccessEvent
 
@@ -286,8 +284,8 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     fun copyAddress() {
-        clipboardManager.addToClipboard("Address", recipientId)
-        _copiedAddressEvent.trigger()
+        clipboardManager.addToClipboard(recipientId)
+        copiedToast.trigger()
     }
 
     fun onConfirmClick() {
