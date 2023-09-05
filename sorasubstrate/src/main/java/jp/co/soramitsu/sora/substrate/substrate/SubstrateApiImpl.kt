@@ -35,7 +35,6 @@ package jp.co.soramitsu.sora.substrate.substrate
 import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
-import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.shared_utils.extensions.fromHex
 import jp.co.soramitsu.shared_utils.extensions.toHexString
@@ -276,31 +275,6 @@ class SubstrateApiImpl @Inject constructor(
             ),
             mapper = pojoList<String>().nonNull(),
         )
-
-    override suspend fun getSwapFees(
-        tokenId1: String,
-        tokenId2: String,
-        amount: BigInteger,
-        swapVariant: String,
-        market: List<String>,
-        filter: String,
-        dexId: Int,
-    ): SwapFeeDto? =
-        socketService.executeAsync(
-            request = RuntimeRequest(
-                "liquidityProxy_quote",
-                listOf(
-                    dexId,
-                    tokenId1,
-                    tokenId2,
-                    amount.toString(),
-                    swapVariant,
-                    market,
-                    filter
-                )
-            ),
-            mapper = pojo<SwapFeeDto>(),
-        ).result
 
     override suspend fun isPairEnabled(
         inputAssetId: String,

@@ -86,12 +86,12 @@ private fun ColumnScope.AllCurrenciesInternal(
             basic = BasicToolbarState(
                 title = R.string.common_currencies,
                 navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
+                searchValue = state.filter,
             ),
             type = SoramitsuToolbarType.Small(),
         ),
         elevation = 0.dp,
         onNavigate = onNavIconClicked,
-        searchInitial = state.filter,
         onSearch = onSearch,
     )
     ContentCardEndless(

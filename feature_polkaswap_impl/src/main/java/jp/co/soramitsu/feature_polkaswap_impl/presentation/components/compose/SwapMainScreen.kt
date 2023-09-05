@@ -219,8 +219,8 @@ internal fun SwapMainScreen(
         if (state.details.lpFee.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))
             DetailsItem(
-                text = stringResource(id = state.details.lpFeeTitle),
-                hint = stringResource(id = state.details.lpFeeHint),
+                text = stringResource(id = R.string.polkaswap_liquidity_total_fee),
+                hint = stringResource(id = R.string.polkaswap_liquidity_total_fee_desc),
                 value1 = state.details.lpFee,
             )
         }
@@ -236,7 +236,6 @@ private fun PreviewSwapMainScreen() {
                 tokenFromState = previewAssetAmountInputState,
                 tokenToState = previewAssetAmountInputState,
                 slippage = 0.2,
-                selectSearchAssetState = null,
                 market = Market.SMART,
                 selectMarketState = null,
                 details = defaultSwapDetailsState(),

@@ -115,7 +115,7 @@ class GetSoraCardViewModel @AssistedInject constructor(
         when (soraCardResult) {
             is SoraCardResult.NavigateTo -> {
                 when (soraCardResult.screen) {
-                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow(isLaunchedFromSoraCard = true)
+                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow()
                     OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }

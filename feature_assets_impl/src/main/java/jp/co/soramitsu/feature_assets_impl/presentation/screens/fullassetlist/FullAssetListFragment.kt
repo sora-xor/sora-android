@@ -110,6 +110,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                             title = "",
                             navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
                             actionLabel = R.string.common_edit,
+                            searchValue = "",
                         ),
                         type = SoramitsuToolbarType.Small(),
                     ),
@@ -117,7 +118,6 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                     elevation = 0.dp,
                     onAction = viewModel::onAction,
                     onNavigate = viewModel::onNavIcon,
-                    searchInitial = "",
                     onSearch = viewModel::searchAssets,
                 )
                 val state = viewModel.state

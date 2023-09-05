@@ -76,6 +76,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun LiquidityAddScreen(
     state: LiquidityAddState,
+    slippage: Double,
     onFocusChange1: (Boolean) -> Unit,
     onFocusChange2: (Boolean) -> Unit,
     onAmountChange1: (BigDecimal) -> Unit,
@@ -141,7 +142,7 @@ internal fun LiquidityAddScreen(
             horizontalArrangement = Arrangement.Center,
         ) {
             MarketSelector(
-                value = "${state.slippage}%",
+                value = "$slippage%",
                 description = stringResource(id = R.string.slippage),
                 onClick = onSlippageClick,
             )
@@ -262,7 +263,6 @@ private fun PreviewLiquidityRemoveScreen() {
                     loading = false,
                 ),
                 pairNotExist = true,
-                slippage = 0.3,
                 hintVisible = false,
                 estimated = LiquidityAddEstimatedState(
                     token1 = "XOR",
@@ -290,11 +290,11 @@ private fun PreviewLiquidityRemoveScreen() {
                         loading = false,
                     ),
                 ),
-                selectSearchAssetState = null,
                 shouldTransactionReminderInsufficientWarningBeShown = true,
             ),
             onSelect1 = {},
             onSelect2 = {},
+            slippage = 0.34,
         )
     }
 }

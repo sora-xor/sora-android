@@ -66,7 +66,6 @@
   <string name="common_activity">活动</string>
   <string name="common_and">和</string>
   <string name="common_app_version">应用程序版本</string>
-  <string name="common_apy">年收益率</string>
   <string name="common_arab">阿拉伯语</string>
   <string name="common_azerbaijani">阿塞拜疆语</string>
   <string name="common_back">返回</string>
@@ -340,10 +339,8 @@
   <string name="polkaswap_insufficient_liqudity">流动性不足</string>
   <string name="polkaswap_liquidity_fee">流动性提供者费用</string>
   <string name="polkaswap_liquidity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
-  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
+  <string name="polkaswap_liquidity_total_fee">兑换费用</string>
+  <string name="polkaswap_liquidity_total_fee_desc">你的兑换涉及到合成费用和流动性提供者费用。\n当兑换通过合成资产的XST流动性来源时，会计算合成费用；而当兑换通过流动性池时，则会计算流动性提供者费用。</string>
   <string name="polkaswap_market">市场</string>
   <string name="polkaswap_market_smart_description">智能流动性路由通过从所有可用市场中仅选择最佳价格选项，确保任何交易的最佳价格。如果可用，将使用代币绑定曲线（TBC）提供流动性，只要资产价格比其他来源更实惠，否则将使用XYK池。</string>
   <string name="polkaswap_market_tbc_description">TBC - 仅从代币绑定曲线（一级市场）购买。价格可能会比XYK池（二级市场）不利，但随着时间的推移，从归属奖励中获得的价值可能会更有利。</string>
@@ -364,9 +361,6 @@
   <string name="polkaswap_smart">智能模式</string>
   <string name="polkaswap_swap_title">兑换</string>
   <string name="polkaswap_swapped">已兑换</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">战略红利APY</string>
   <string name="pool_button_remove">移除</string>
   <string name="pool_details">流动池详情</string>
   <string name="pool_liquidity_placeholder">您还没有任何生效的流动池。\n赶快来增加流动性以赚取奖励哦</string>

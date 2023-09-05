@@ -193,6 +193,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                                 onNavClick = { debounceClickHandler.debounceClick(::onNavClicked) },
                                 onActionClick = viewModel::onAction,
                                 onMenuItemClick = viewModel::onMenuItem,
+                                onSearch = viewModel::onToolbarSearch,
                             )
                         }
                     ) { padding ->

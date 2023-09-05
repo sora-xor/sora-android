@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
@@ -67,11 +68,9 @@ import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmount
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
-import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCardState
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -84,19 +83,8 @@ data class RequestTokenScreenState(
     val untransformedUserName: String?,
     val untransformedAvatarDrawable: Drawable?,
     val untransformedUserAddress: String?,
-    val assetAmountInputState: AssetAmountInputState?
+    val assetAmountInputState: AssetAmountInputState?,
 ) {
-
-    val loadableContentCardState by lazy {
-        LoadableContentCardState(
-            screenStatus = screenStatus
-        )
-    }
-
-    val recipientAddressTitle: Text =
-        Text.StringRes(
-            id = R.string.recipient_address
-        )
 
     val recipientAddressHeader: Text
         get() {
@@ -110,7 +98,7 @@ data class RequestTokenScreenState(
             )
         }
 
-    val recipientAddressAvatar: Image
+    private val recipientAddressAvatar: Image
         get() {
             if (untransformedAvatarDrawable == null)
                 return Image.ResImage(
@@ -146,10 +134,6 @@ data class RequestTokenScreenState(
         screenStatus === ScreenStatus.READY_TO_RENDER &&
             untransformedUserAddress != null &&
             untransformedAvatarDrawable != null
-
-    val createQRRequestButtonIcon: Int = R.drawable.ic_chevron_right_24
-
-    val createQRRequestButtonText: Text = Text.StringRes(id = R.string.common_create_qr_request)
 }
 
 @Composable
@@ -162,7 +146,6 @@ fun RequestTokenScreen(
     onUserAddressClick: () -> Unit,
     onAmountChanged: (BigDecimal) -> Unit,
     onTokenSelect: () -> Unit,
-    onFocusChange: (Boolean) -> Unit,
     onCreateRequestClick: () -> Unit,
     onTryAgainClick: () -> Unit
 ) {
@@ -197,7 +180,7 @@ fun RequestTokenScreen(
                 .wrapContentHeight(),
             innerPadding = PaddingValues(Dimens.x3),
             cornerRadius = Dimens.x4,
-            state = state.loadableContentCardState,
+            state = state.screenStatus,
             onTryAgainClick = onTryAgainClick
         ) {
             Column(
@@ -209,9 +192,7 @@ fun RequestTokenScreen(
                     modifier = Modifier
                         .wrapContentHeight()
                         .fillMaxWidth(),
-                    text = state.recipientAddressTitle
-                        .retrieveString()
-                        .uppercase(),
+                    text = stringResource(id = R.string.recipient_address).uppercase(),
                     style = MaterialTheme.customTypography.headline4,
                     color = MaterialTheme.customColors.fgSecondary,
                 )
@@ -232,7 +213,7 @@ fun RequestTokenScreen(
             focusRequester = focusRequester,
             onAmountChange = onAmountChanged,
             onSelectToken = onTokenSelect,
-            onFocusChange = onFocusChange,
+            onFocusChange = {},
         )
         FilledButton(
             modifier = Modifier
@@ -242,7 +223,7 @@ fun RequestTokenScreen(
                 ),
             size = Size.Large,
             order = Order.PRIMARY,
-            text = state.createQRRequestButtonText.retrieveString(),
+            text = stringResource(id = R.string.common_create_qr_request),
             enabled = state.isCreateQRRequestEnabled,
             onClick = onCreateRequestClick
         )
@@ -267,7 +248,6 @@ private fun PreviewRequestTokenScreen() {
         onUserAddressClick = {},
         onAmountChanged = {},
         onTokenSelect = {},
-        onFocusChange = {},
         onCreateRequestClick = {},
         onTryAgainClick = {},
     )

@@ -234,12 +234,11 @@ class Navigator :
         navController?.popBackStack()
     }
 
-    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean, isLaunchedFromSoraCard: Boolean) {
+    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {
         navController?.navigate(
             R.id.qrCodeFlow,
             QRCodeFlowFragment.createBundle(
                 shouldNavigateToScanner = shouldNavigateToScannerDirectly,
-                isLaunchedFromSoraCard = isLaunchedFromSoraCard
             )
         )
     }
