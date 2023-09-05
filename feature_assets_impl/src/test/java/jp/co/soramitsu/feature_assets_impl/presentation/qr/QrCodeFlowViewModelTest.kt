@@ -43,18 +43,18 @@ import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common.util.ext.Big100
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.QrCodeInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.TestAssets
@@ -109,7 +109,7 @@ class QrCodeFlowViewModelTest {
     private lateinit var avatarGenerator: AccountAvatarGenerator
 
     @MockK
-    private lateinit var clipboardManager: ClipboardManager
+    private lateinit var clipboardManager: BasicClipboardManager
 
     @MockK
     private lateinit var resourceManager: ResourceManager

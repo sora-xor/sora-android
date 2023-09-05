@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.send
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
@@ -189,9 +188,6 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as BottomBarController).hideBottomBar()
-        viewModel.copiedAddressEvent.observe {
-            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
         viewModel.transactionSuccessEvent.observe {
             activity?.let {
                 ToastDialog(

@@ -36,7 +36,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
@@ -74,10 +73,6 @@ class AccountListFragment : SoraBaseFragment<AccountListViewModel>() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        viewModel.copiedAddressEvent.observe {
-            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
-
         viewModel.showOnboardingFlowEvent.observe {
             (requireActivity() as OnboardingNavigator).showOnboardingFlow()
         }

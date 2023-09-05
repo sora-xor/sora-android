@@ -78,8 +78,6 @@ interface SubstrateApi {
         address: String
     ): List<Pair<String, List<ByteArray>>>
 
-    suspend fun getPoolBaseTokens(): List<Pair<Int, String>>
-
     suspend fun isPairEnabled(
         inputAssetId: String,
         outputAssetId: String,

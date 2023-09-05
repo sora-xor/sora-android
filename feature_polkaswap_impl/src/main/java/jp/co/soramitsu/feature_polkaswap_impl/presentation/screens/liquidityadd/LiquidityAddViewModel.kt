@@ -62,8 +62,8 @@ import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearc
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddConfirmState
@@ -73,6 +73,7 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddSt
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -154,8 +155,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
-
-    private val syntheticRegex = SubstrateOptionsProvider.syntheticTokenRegex.toRegex()
 
     var addState by mutableStateOf(
         LiquidityAddState(
@@ -523,7 +522,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val curBase = bases.find { it.tokenId == addToken1 }
                 val list = assets
                     .filter { asset ->
-                        asset.token.id.matches(syntheticRegex).not()
+                        asset.token.id.isSynthetic().not()
                     }
                     .filter { asset ->
                         if (addToken1 == SubstrateOptionsProvider.xstusdTokenId) {

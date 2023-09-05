@@ -40,7 +40,6 @@ import jp.co.soramitsu.common_wallet.data.AssetLocalToAssetMapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.demeter.domain.DemeterFarmingPool
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.shared_utils.extensions.toHexString
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromHex
 import jp.co.soramitsu.shared_utils.runtime.metadata.module
@@ -50,6 +49,7 @@ import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
+import jp.co.soramitsu.sora.substrate.runtime.mapToToken
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 
 interface DemeterFarmingRepository {
@@ -123,18 +123,9 @@ internal class DemeterFarmingRepositoryImpl(
                 ?.safeCast<List<*>>()
                 ?.filterIsInstance<Struct.Instance>()
                 ?.mapNotNull { instance ->
-                    val baseToken = instance.get<Struct.Instance>("baseAsset")
-                        ?.get<List<*>>("code")?.map {
-                            (it as BigInteger).toByte()
-                        }?.toByteArray()?.toHexString(true)
-                    val poolToken = instance.get<Struct.Instance>("poolAsset")
-                        ?.get<List<*>>("code")?.map {
-                            (it as BigInteger).toByte()
-                        }?.toByteArray()?.toHexString(true)
-                    val rewardToken = instance.get<Struct.Instance>("rewardAsset")
-                        ?.get<List<*>>("code")?.map {
-                            (it as BigInteger).toByte()
-                        }?.toByteArray()?.toHexString(true)
+                    val baseToken = instance.mapToToken("baseAsset")
+                    val poolToken = instance.mapToToken("poolAsset")
+                    val rewardToken = instance.mapToToken("rewardAsset")
                     val isFarm = instance.get<Boolean>("isFarm")
                     val pooled = instance.get<BigInteger>("pooledTokens")
                     if (isFarm != null && baseToken != null && poolToken != null && rewardToken != null && pooled != null) {

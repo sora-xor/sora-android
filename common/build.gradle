@@ -114,6 +114,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(":android-foundation")
     implementation project(":soracrypro")
 
     implementation activityKtxDep

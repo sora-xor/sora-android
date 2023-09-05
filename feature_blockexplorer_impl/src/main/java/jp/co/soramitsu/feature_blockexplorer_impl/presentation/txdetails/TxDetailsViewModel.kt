@@ -35,25 +35,23 @@ package jp.co.soramitsu.feature_blockexplorer_impl.presentation.txdetails
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import java.util.Date
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsItem
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails.BasicTxDetailsState
@@ -77,7 +75,7 @@ class TxDetailsViewModel @AssistedInject constructor(
     private val assetsInteractor: AssetsInteractor,
     private val walletInteractor: WalletInteractor,
     private val transactionHistoryHandler: TransactionHistoryHandler,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val resourceManager: ResourceManager,
     private val dateTimeFormatter: DateTimeFormatter,
     private val numbersFormatter: NumbersFormatter,
@@ -88,9 +86,6 @@ class TxDetailsViewModel @AssistedInject constructor(
     interface TxDetailsViewModelFactory {
         fun create(txHash: String): TxDetailsViewModel
     }
-
-    private val _copyEvent = SingleLiveEvent<Unit>()
-    val copyEvent: LiveData<Unit> = _copyEvent
 
     internal var txDetailsScreenState by mutableStateOf(emptyTxDetailsState)
         private set
@@ -391,7 +386,7 @@ class TxDetailsViewModel @AssistedInject constructor(
     }
 
     fun onCopyClicked(text: String) {
-        clipboardManager.addToClipboard("copy item", text)
-        _copyEvent.trigger()
+        clipboardManager.addToClipboard(text)
+        copiedToast.trigger()
     }
 }

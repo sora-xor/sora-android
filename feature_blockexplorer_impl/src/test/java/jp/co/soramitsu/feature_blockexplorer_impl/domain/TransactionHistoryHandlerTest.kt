@@ -51,7 +51,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.util.ext.unsafeCast
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler

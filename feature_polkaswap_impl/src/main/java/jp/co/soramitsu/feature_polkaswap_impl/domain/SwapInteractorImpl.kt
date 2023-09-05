@@ -43,7 +43,7 @@ import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -54,6 +54,7 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
 import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -82,7 +83,6 @@ class SwapInteractorImpl(
     private var poolReservesFlowToken = MutableStateFlow<Pair<String, String>?>(null)
     private val availableMarkets = mutableMapOf<PoolDex, List<Market>>()
     private var swapNetworkFee: BigDecimal? = null
-    private val syntheticRegex = SubstrateOptionsProvider.syntheticTokenRegex.toRegex()
 
     override suspend fun fetchSwapNetworkFee(feeToken: Token): BigDecimal {
         return swapNetworkFee ?: (
@@ -159,13 +159,15 @@ class SwapInteractorImpl(
     }
 
     private fun getFeeMode(ids: List<String>?): SwapFeeMode {
-        if (ids == null) return SwapFeeMode.NON_SYNTHETIC
-        if (ids.all { it.matches(syntheticRegex).not() }) return SwapFeeMode.NON_SYNTHETIC
-        if (ids.all {
-                it.matches(syntheticRegex) || it == SubstrateOptionsProvider.xstTokenId || it == SubstrateOptionsProvider.xstusdTokenId
-            }
-        ) return SwapFeeMode.SYNTHETIC
-        return SwapFeeMode.BOTH
+        fun String.isExtraSynthetic() = this.isSynthetic() || this == SubstrateOptionsProvider.xstusdTokenId
+        return when {
+            ids == null -> SwapFeeMode.NON_SYNTHETIC
+            ids.all {
+                it.isExtraSynthetic() || it == SubstrateOptionsProvider.xstTokenId
+            } -> SwapFeeMode.SYNTHETIC
+            ids.all { it.isExtraSynthetic().not() } -> SwapFeeMode.NON_SYNTHETIC
+            else -> SwapFeeMode.BOTH
+        }
     }
 
     override fun setSwapMarket(market: Market) {
