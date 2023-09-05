@@ -42,7 +42,7 @@ import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.setValueIfNew
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager

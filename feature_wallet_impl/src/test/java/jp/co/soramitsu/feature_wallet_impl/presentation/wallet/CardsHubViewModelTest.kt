@@ -58,8 +58,8 @@ import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter

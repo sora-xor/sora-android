@@ -68,8 +68,8 @@ import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearc
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
@@ -90,7 +90,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

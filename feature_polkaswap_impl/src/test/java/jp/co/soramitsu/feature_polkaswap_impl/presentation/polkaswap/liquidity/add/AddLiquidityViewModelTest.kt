@@ -47,8 +47,8 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
@@ -82,7 +82,6 @@ import org.mockito.Mockito
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.times
 import java.math.BigDecimal
 import org.mockito.kotlin.verify as kVerify

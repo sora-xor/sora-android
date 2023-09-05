@@ -42,8 +42,8 @@ import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsViewModel
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
 import jp.co.soramitsu.test_data.TestAssets

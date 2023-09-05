@@ -36,8 +36,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
