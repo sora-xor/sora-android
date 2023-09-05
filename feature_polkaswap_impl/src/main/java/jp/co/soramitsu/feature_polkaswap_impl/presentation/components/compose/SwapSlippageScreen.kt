@@ -84,7 +84,7 @@ internal fun SwapSlippageScreen(
     value: Double,
     onDone: (Double) -> Unit,
 ) {
-    var curDouble by remember { mutableStateOf(value) }
+    var currentValueLocalStorage by remember { mutableStateOf(value) }
     val desc = remember { mutableStateOf<String?>(null) }
 
     val frontrun = stringResource(id = R.string.polkaswap_slippage_frontrun)
@@ -118,6 +118,9 @@ internal fun SwapSlippageScreen(
                     desc.value = null
                 }
             }
+
+            // Store inputted value as Double in local storage
+            currentValueLocalStorage = valueAsDouble
         }
     }
 
@@ -158,14 +161,15 @@ internal fun SwapSlippageScreen(
                     BasicNumberInput(
                         modifier = Modifier,
                         textStyle = MaterialTheme.customTypography.textM,
-                        initial = value.toBigDecimal(),
+                        initial = value.toBigDecimal(), // input value is used; no locally stored data!!!
                         precision = 2,
                         enabled = true,
                         visualTransformation = visualTransformation,
                         onValueChanged = onValueChangeDecorator,
                         onKeyboardDone = remember {
                             {
-                                onDone(curDouble.coerceIn(min, max))
+                                // Get locally stored value and make coerceIn
+                                onDone(currentValueLocalStorage.coerceIn(min, max))
                             }
                         }
                     )
@@ -195,7 +199,8 @@ internal fun SwapSlippageScreen(
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.common_done),
                     onClick = {
-                        onDone(curDouble.coerceIn(min, max))
+                        // Get locally stored value and make coerceIn
+                        onDone(currentValueLocalStorage.coerceIn(min, max))
                     },
                 )
             }
