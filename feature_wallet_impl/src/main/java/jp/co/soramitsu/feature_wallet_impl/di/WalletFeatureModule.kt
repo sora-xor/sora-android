@@ -43,7 +43,7 @@ import jp.co.soramitsu.common.domain.POOLS_HUB_NAME
 import jp.co.soramitsu.common.domain.SingleFeatureStorageManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_wallet_api.data.BuyCryptoDataSource
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository

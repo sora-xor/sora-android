@@ -58,8 +58,8 @@ import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardState
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FrozenXorDetailsModel
 import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardState

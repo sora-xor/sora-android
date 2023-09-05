@@ -30,68 +30,99 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_assets_api.domain.interfaces
+package jp.co.soramitsu.feature_assets_api.data
 
 import java.math.BigDecimal
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
+import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import kotlinx.coroutines.flow.Flow
 
-interface AssetsInteractor {
+interface AssetsRepository {
 
-    suspend fun calcTransactionFee(to: String, token: Token, amount: BigDecimal): BigDecimal?
+    suspend fun addFakeBalance(
+        keypair: Sr25519Keypair,
+        soraAccount: SoraAccount,
+        assetIds: List<String>
+    )
 
-    suspend fun isNotEnoughXorLeftAfterTransaction(
-        networkFeeInXor: BigDecimal,
-        xorChange: BigDecimal? = null,
-    ): Boolean
+    suspend fun calcTransactionFee(
+        from: String,
+        to: String,
+        token: Token,
+        amount: BigDecimal
+    ): BigDecimal?
 
-    suspend fun getAccountName(): String
+    suspend fun displayAssets(assetIds: List<String>, soraAccount: SoraAccount)
 
-    suspend fun getAssetOrThrow(assetId: String): Asset
+    suspend fun getAsset(assetId: String, address: String): Asset?
 
-    suspend fun getCurSoraAccount(): SoraAccount
+    suspend fun getAssetsFavorite(address: String,): List<Asset>
 
-    suspend fun getPublicKeyHex(withPrefix: Boolean = false): String
+    suspend fun getAssetsVisible(
+        address: String,
+    ): List<Asset>
 
-    suspend fun getVisibleAssets(): List<Asset>
+    suspend fun getAssetsWhitelist(address: String): List<Asset>
 
-    suspend fun getWhitelistAssets(): List<Asset>
+    suspend fun getToken(tokenId: String): Token?
 
-    suspend fun getXorBalance(precision: Int): XorAssetBalance
+    suspend fun getXORBalance(address: String, precision: Int): XorAssetBalance
 
-    fun flowCurSoraAccount(): Flow<SoraAccount>
+    suspend fun hideAssets(assetIds: List<String>, soraAccount: SoraAccount)
 
     suspend fun isWhitelistedToken(tokenId: String): Boolean
 
     suspend fun observeTransfer(
+        keypair: Sr25519Keypair,
+        from: String,
         to: String,
         token: Token,
         amount: BigDecimal,
         fee: BigDecimal
-    ): String
+    ): ExtrinsicSubmitStatus
 
-    fun subscribeAssetOfCurAccount(tokenId: String): Flow<Asset?>
+    fun subscribeAsset(
+        address: String,
+        tokenId: String,
+    ): Flow<Asset?>
 
-    fun subscribeAssetsActiveOfCurAccount(): Flow<List<Asset>>
+    fun subscribeAssetsActive(
+        address: String
+    ): Flow<List<Asset>>
 
-    fun subscribeAssetsFavoriteOfAccount(soraAccount: SoraAccount): Flow<List<Asset>>
+    fun subscribeAssetsFavorite(
+        address: String
+    ): Flow<List<Asset>>
 
-    fun subscribeAssetsVisibleOfCurAccount(): Flow<List<Asset>>
+    fun subscribeAssetsVisible(
+        address: String
+    ): Flow<List<Asset>>
 
-    suspend fun toggleVisibilityOfToken(tokenId: String, visibility: Boolean)
+    suspend fun toggleVisibilityOfToken(
+        tokenId: String,
+        visibility: Boolean,
+        soraAccount: SoraAccount
+    )
 
-    suspend fun tokenFavoriteOff(assetIds: List<String>)
+    suspend fun tokensList(): List<Token>
 
-    suspend fun tokenFavoriteOn(assetIds: List<String>)
+    fun subscribeTokensList(): Flow<List<Token>>
 
-    suspend fun transfer(to: String, token: Token, amount: BigDecimal): Result<String>
+    suspend fun transfer(
+        keypair: Sr25519Keypair,
+        from: String,
+        to: String,
+        token: Token,
+        amount: BigDecimal
+    ): Result<String>
 
-    suspend fun updateAssetPositions(assetPositions: Map<String, Int>)
+    suspend fun updateAssetPositions(assetPositions: Map<String, Int>, soraAccount: SoraAccount)
 
-    suspend fun updateWhitelistBalances()
+    suspend fun updateBalancesVisibleAssets(address: String)
 
-    suspend fun updateBalanceVisibleAssets()
+    suspend fun updateWhitelistBalances(address: String)
 }
