@@ -48,7 +48,7 @@ interface WalletRouter {
 
     fun returnToAddLiquidity(tokenFrom: Token? = null, tokenTo: Token? = null)
 
-    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false, isLaunchedFromSoraCard: Boolean = false)
+    fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean = false)
 
     fun openEditCardsHub()
 }

@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation.states
 
 import android.graphics.drawable.Drawable
 import jp.co.soramitsu.common.domain.AssetAmountInputState
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 
 internal data class SendState(
     val address: String,
@@ -45,6 +44,6 @@ internal data class SendState(
     val fee: String = "",
     val feeFiat: String = "",
     val feeLoading: Boolean = true,
-    val selectSearchAssetState: SelectSearchAssetState = SelectSearchAssetState("", emptyList()),
+    val searchFilter: String = "",
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean = false,
 )

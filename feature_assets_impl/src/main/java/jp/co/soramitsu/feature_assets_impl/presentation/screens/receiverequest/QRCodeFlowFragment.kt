@@ -39,19 +39,18 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import com.journeyapps.barcodescanner.ScanOptions
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
-import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.QrCodeMainScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity
@@ -60,17 +59,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.ScanTextCon
 @AndroidEntryPoint
 class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
 
-    @Inject
-    lateinit var vmf: QRCodeFlowViewModel.AssistedQRCodeFlowViewModelFactory
-
-    override val viewModel: QRCodeFlowViewModel by viewModels {
-        CustomViewModelFactory {
-            vmf.create(
-                isLaunchedFromSoraCard = requireArguments()
-                    .getBoolean(IS_LAUNCHED_FROM_SORA_CARD)
-            )
-        }
-    }
+    override val viewModel: QRCodeFlowViewModel by viewModels()
 
     private val barcodeScanOptions by lazy {
         ScanOptions()
@@ -88,8 +77,8 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
         }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        (activity as BottomBarController).hideBottomBar()
         super.onViewCreated(view, savedInstanceState)
+        (activity as BottomBarController).hideBottomBar()
 
         parseFragmentArguments()
 
@@ -120,10 +109,12 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
         navController: NavHostController
     ) {
         composable(route = QRCodeFlowRoute.MainScreen.route) {
+            val qrState = viewModel.receiveTokenByQrScreenState.collectAsStateWithLifecycle()
+            val screenState = viewModel.requestTokenScreenState.collectAsStateWithLifecycle()
             QrCodeMainScreen(
                 scrollState = scrollState,
-                receiveTokenByQrScreenState = viewModel.receiveTokenScreenState,
-                requestTokenScreenState = viewModel.requestTokenByQrScreenState,
+                receiveTokenByQrScreenState = qrState.value,
+                requestTokenScreenState = screenState.value,
                 receiveToken_onUserAddressClick = viewModel::onUserAddressClickInReceiveScreen,
                 receiveToken_onScanQrClick = {
                     PermissionX.init(this@QRCodeFlowFragment)
@@ -141,49 +132,46 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
                 requestToken_onTokenSelect = {
                     navController.navigate(QRCodeFlowRoute.SelectToken.route)
                 },
-                requestToken_onFocusChange = viewModel::onFocusChange,
                 requestToken_onCreateRequestClick = {
                     viewModel.onLoadRequestConfirmScreenDataAgainClick()
                     navController.navigate(QRCodeFlowRoute.ConfirmRequestByQRCode.route)
                 },
-                requestToken_onTryAgainClick = viewModel::onLoadRequestScreenDataClick
+                requestToken_onTryAgainClick = viewModel::onLoadRequestScreenDataClick,
             )
         }
 
         composable(route = QRCodeFlowRoute.SelectToken.route) {
+            val filter = viewModel.selectTokenScreenState.collectAsStateWithLifecycle()
             SelectSearchTokenScreen(
-                state = viewModel.selectTokenScreenState,
                 scrollState = scrollState,
                 onAssetSelect = {
                     viewModel.onSelectToken(it)
                     navController.popBackStack()
                 },
+                filter = filter.value,
             )
         }
 
         composable(route = QRCodeFlowRoute.ConfirmRequestByQRCode.route) {
+            val state = viewModel.requestTokenConfirmScreenState.collectAsStateWithLifecycle()
             RequestTokenConfirmScreen(
                 scrollState = scrollState,
-                state = viewModel.requestTokenConfirmScreenState,
+                state = state.value,
                 onUserAddressClick = viewModel::onUserAddressClickInRequestConfirmScreen,
-                onFocusChange = viewModel::onFocusChange,
                 onShareCodeClick = viewModel::onShareQrCodeInRequestConfirmScreen,
-                onTryAgainClick = viewModel::onLoadRequestConfirmScreenDataAgainClick
+                onTryAgainClick = viewModel::onLoadRequestConfirmScreenDataAgainClick,
             )
         }
     }
 
     companion object {
 
-        const val IS_LAUNCHED_FROM_SORA_CARD = "is_launched_from_sora_card"
         const val NAVIGATE_TO_SCANNER_DIRECTLY_KEY = "navigate_to_scanner_activity"
 
         fun createBundle(
             shouldNavigateToScanner: Boolean = false,
-            isLaunchedFromSoraCard: Boolean = false
         ) = Bundle().apply {
             putBoolean(NAVIGATE_TO_SCANNER_DIRECTLY_KEY, shouldNavigateToScanner)
-            putBoolean(IS_LAUNCHED_FROM_SORA_CARD, isLaunchedFromSoraCard)
         }
     }
 }

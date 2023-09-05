@@ -66,7 +66,6 @@
   <string name="common_activity">履歴</string>
   <string name="common_and">と</string>
   <string name="common_app_version">アプリのバージョン</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">アラビア語</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">戻る</string>
@@ -340,8 +339,6 @@
   <string name="polkaswap_insufficient_liqudity">流動性不足</string>
   <string name="polkaswap_liquidity_fee">LP手数料</string>
   <string name="polkaswap_liquidity_fee_info">各取引の一部は、インセンティブとして流動性プロバイダー(LP)に送られます</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
   <string name="polkaswap_liquidity_total_fee">Swap fee</string>
   <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">市場</string>
@@ -364,9 +361,6 @@
   <string name="polkaswap_smart">SMART</string>
   <string name="polkaswap_swap_title">スワップ</string>
   <string name="polkaswap_swapped">スワップ済み</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">戦略的ボーナスAPY(年収率)</string>
   <string name="pool_button_remove">削除</string>
   <string name="pool_details">プールの詳細</string>
   <string name="pool_liquidity_placeholder">アクティブなプールがまだありません。\n流動性を追加して報酬を獲得してください</string>

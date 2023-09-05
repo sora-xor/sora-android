@@ -66,7 +66,6 @@
   <string name="common_activity">Activity</string>
   <string name="common_and">og</string>
   <string name="common_app_version">App version</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Arabisk</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
@@ -341,8 +340,6 @@
   <string name="polkaswap_insufficient_liqudity">Utilstrekkelig likviditet</string>
   <string name="polkaswap_liquidity_fee">LP -avgift</string>
   <string name="polkaswap_liquidity_fee_info">En del av hver handel går til likviditetsleverandører som et protokollinsentiv.</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
   <string name="polkaswap_liquidity_total_fee">Swap fee</string>
   <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Marked</string>
@@ -365,9 +362,6 @@
   <string name="polkaswap_smart">Smart</string>
   <string name="polkaswap_swap_title">Bytte</string>
   <string name="polkaswap_swapped">Byttet</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>

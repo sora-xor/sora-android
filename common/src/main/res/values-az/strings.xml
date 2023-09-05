@@ -66,7 +66,6 @@
   <string name="common_activity">Fəaliyyət</string>
   <string name="common_and">və</string>
   <string name="common_app_version">Proqram versiyası</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Ərəb dili</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Geri</string>
@@ -341,8 +340,6 @@
   <string name="polkaswap_insufficient_liqudity">Qeyri-kifayət qədər likvidlik</string>
   <string name="polkaswap_liquidity_fee">LP haqqı</string>
   <string name="polkaswap_liquidity_fee_info">Hər bir ticarətin bir hissəsi protokol təşviqi olaraq likvidlik təminatçılarına keçir.</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Sintetik token haqqı</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">Sintetik ödəniş sintetik aktiv haqqı və qabaqcadan qaçmağın qarşısını almaq üçün dinamik ödənişdən ibarətdir. Sintetik aktivin haqqı aktivin qeydiyyatı zamanı müəyyən edilir və istənilən vaxt idarəetmə vasitəsilə dəyişdirilə bilər. Dinamik ödəniş oracle qiymətindəki faiz dəyişikliyinə əsaslanır.</string>
   <string name="polkaswap_liquidity_total_fee">Ümumi ödəniş</string>
   <string name="polkaswap_liquidity_total_fee_desc">Ümumi ödəniş ödənişdən ibarətdir</string>
   <string name="polkaswap_market">Bazar</string>
@@ -365,9 +362,6 @@
   <string name="polkaswap_smart">Ağıllı</string>
   <string name="polkaswap_swap_title">Mübadilə edin</string>
   <string name="polkaswap_swapped">Dəyişdirildi</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strateji bonus apy</string>
   <string name="pool_button_remove">Sil</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">Likvidliyiniz burada görünəcək</string>

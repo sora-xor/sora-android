@@ -233,7 +233,7 @@ class CardsHubViewModel @Inject constructor(
         when (soraCardResult) {
             is SoraCardResult.NavigateTo -> {
                 when (soraCardResult.screen) {
-                    OutwardsScreen.DEPOSIT -> router.openQrCodeFlow(isLaunchedFromSoraCard = true)
+                    OutwardsScreen.DEPOSIT -> router.openQrCodeFlow()
                     OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }

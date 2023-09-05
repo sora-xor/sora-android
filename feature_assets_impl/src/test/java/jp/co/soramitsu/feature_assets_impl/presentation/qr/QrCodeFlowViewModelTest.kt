@@ -150,7 +150,6 @@ class QrCodeFlowViewModelTest {
             resourceManager = resourceManager,
             fileManager = fileManager,
             walletRouter = walletRouter,
-            isLaunchedFromSoraCard = false,
         )
     }
 
@@ -161,33 +160,33 @@ class QrCodeFlowViewModelTest {
             viewModel.onLoadRequestConfirmScreenDataAgainClick()
             advanceUntilIdle()
             Assert.assertEquals(
-                viewModel.requestTokenByQrScreenState.recipientAddressHeader,
-                viewModel.requestTokenConfirmScreenState.userAddressTitle
+                viewModel.requestTokenScreenState.value.recipientAddressHeader,
+                viewModel.requestTokenConfirmScreenState.value.userAddressTitle
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenByQrScreenState.recipientAddressBody,
-                viewModel.requestTokenConfirmScreenState.userAddressBody
+                viewModel.requestTokenScreenState.value.recipientAddressBody,
+                viewModel.requestTokenConfirmScreenState.value.userAddressBody
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenByQrScreenState.assetAmountInputState?.token?.id,
-                viewModel.requestTokenConfirmScreenState.assetAmountInputState?.token?.id
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.token?.id,
+                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.token?.id
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenByQrScreenState.assetAmountInputState?.amount,
-                viewModel.requestTokenConfirmScreenState.assetAmountInputState?.amount
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.amount,
+                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.amount
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenByQrScreenState.assetAmountInputState?.amountFiat,
-                viewModel.requestTokenConfirmScreenState.assetAmountInputState?.amountFiat
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.amountFiat,
+                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.amountFiat
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenByQrScreenState.assetAmountInputState?.amount,
-                viewModel.requestTokenConfirmScreenState.assetAmountInputState?.initialAmount
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.amount,
+                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.initialAmount
             )
         }
 
@@ -212,7 +211,7 @@ class QrCodeFlowViewModelTest {
             advanceUntilIdle()
             Assert.assertEquals(
                 assetInUse.token.id,
-                viewModel.requestTokenByQrScreenState.assetAmountInputState?.token?.id
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.token?.id
             )
         }
 

@@ -101,6 +101,7 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                             title = "",
                             navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
                             actionLabel = R.string.common_done,
+                            searchValue = "",
                         ),
                         type = SoramitsuToolbarType.Small(),
                     ),
@@ -108,7 +109,6 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                     elevation = 0.dp,
                     onAction = viewModel::onCloseClick,
                     onNavigate = viewModel::onCloseClick,
-                    searchInitial = "",
                     onSearch = {
                         viewModel.searchAssets(it)
                         itemTouchHelperCallback.isDraggable = it.isBlank()

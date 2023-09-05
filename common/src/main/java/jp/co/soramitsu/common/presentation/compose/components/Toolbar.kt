@@ -91,6 +91,7 @@ fun Toolbar(
     onNavClick: (() -> Unit)? = null,
     onActionClick: (() -> Unit)? = null,
     onMenuItemClick: ((Action) -> Unit)? = null,
+    onSearch: ((String) -> Unit)? = null,
 ) {
     if (toolbarState != null && toolbarState.basic.visibility) {
         val elevation = remember(scrollState) {
@@ -111,6 +112,7 @@ fun Toolbar(
             onNavigate = onNavClick,
             onAction = onActionClick,
             onMenuItemClicked = onMenuItemClick,
+            onSearch = onSearch,
         )
     }
 }

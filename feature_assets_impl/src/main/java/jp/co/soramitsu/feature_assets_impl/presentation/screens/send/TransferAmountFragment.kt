@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -55,8 +56,8 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.view.ToastDialog
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendConfirmScreen
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.send.SendScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -110,7 +111,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                     .fillMaxSize()
                     .padding(horizontal = Dimens.x2)
             ) {
-                val state = viewModel.sendState
+                val state = viewModel.sendState.collectAsStateWithLifecycle().value
                 SendConfirmScreen(
                     address = state.address,
                     icon = state.icon,
@@ -126,10 +127,11 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
             }
         }
         composable(SendRoutes.selectToken) {
+            val state = viewModel.sendState.collectAsStateWithLifecycle().value
             SelectSearchTokenScreen(
-                state = viewModel.sendState.selectSearchAssetState,
                 scrollState = scrollState,
                 onAssetSelect = onTokenChange,
+                filter = state.searchFilter,
             )
         }
         composable(
@@ -158,7 +160,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
                         .padding(top = Dimens.x1)
                         .fillMaxSize()
                 ) {
-                    val state = viewModel.sendState
+                    val state = viewModel.sendState.collectAsStateWithLifecycle().value
                     SendScreen(
                         address = state.address,
                         icon = state.icon,
