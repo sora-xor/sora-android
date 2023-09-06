@@ -52,19 +52,13 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapReposito
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscriptionRepository
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
 import kotlin.math.max
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.flow
 
 @ExperimentalCoroutinesApi
 class SwapInteractorImpl(
@@ -154,20 +148,7 @@ class SwapInteractorImpl(
             swapQuote.first.route?.mapNotNull {
                 assetsRepository.getToken(it)?.symbol
             },
-            getFeeMode(swapQuote.first.route),
         )
-    }
-
-    private fun getFeeMode(ids: List<String>?): SwapFeeMode {
-        fun String.isExtraSynthetic() = this.isSynthetic() || this == SubstrateOptionsProvider.xstusdTokenId
-        return when {
-            ids == null -> SwapFeeMode.NON_SYNTHETIC
-            ids.all {
-                it.isExtraSynthetic() || it == SubstrateOptionsProvider.xstTokenId
-            } -> SwapFeeMode.SYNTHETIC
-            ids.all { it.isExtraSynthetic().not() } -> SwapFeeMode.NON_SYNTHETIC
-            else -> SwapFeeMode.BOTH
-        }
     }
 
     override fun setSwapMarket(market: Market) {
@@ -203,61 +184,68 @@ class SwapInteractorImpl(
     override fun observeSwap(): Flow<Boolean> =
         swapResult.observe()
 
-    override fun observePoolReserves(): Flow<String> {
-        return poolReservesFlowToken.asStateFlow().filterNotNull()
-            .combine(selectedSwapMarket.asStateFlow().filterNotNull()) { tokens, market ->
-                tokens to market
-            }.flatMapLatest {
-                val flows = mutableListOf<Flow<String>>()
-                if (it.second == Market.XYK || it.second == Market.SMART) {
-                    val tfrom = it.first.first
-                    val tto = it.first.second
-                    val dexs = getPoolDexList()
-                    if (!dexs.hasToken(tfrom) && !dexs.hasToken(tto)) {
-                        dexs.forEach { dex ->
-                            flows.add(
-                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, tfrom)
-                            )
-                            flows.add(
-                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, tto)
-                            )
-                        }
-                    } else if (dexs.hasToken(tfrom) && dexs.hasToken(tto)) {
-                        flows.add(
-                            polkaswapSubscriptionRepository.observePoolXYKReserves(tto, tfrom)
-                        )
-                        flows.add(
-                            polkaswapSubscriptionRepository.observePoolXYKReserves(tfrom, tto)
-                        )
-                    } else {
-                        val (inDex, inNot) = if (dexs.hasToken(tfrom)) tfrom to tto else tto to tfrom
-                        flows.add(
-                            polkaswapSubscriptionRepository.observePoolXYKReserves(inDex, inNot)
-                        )
-                        dexs.filter { dex ->
-                            dex.tokenId != inDex
-                        }.forEach { dex ->
-                            flows.add(
-                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, inDex)
-                            )
-                            flows.add(
-                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, inNot)
-                            )
-                        }
-                    }
-                    flows.add(
-                        polkaswapSubscriptionRepository.observePoolXYKReserves(
-                            it.first.first,
-                            it.first.second
-                        )
-                    )
-                }
-                if (it.second == Market.TBC || it.second == Market.SMART) {
-                    flows.add(polkaswapSubscriptionRepository.observePoolTBCReserves(it.first.first))
-                }
-                flows.merge()
-            }.debounce(500)
+    override fun observePoolReserves(): Flow<String> = flow {
+        while (true) {
+            emit("observePoolReserves")
+            delay(5000)
+        }
     }
+
+//    override fun observePoolReserves(): Flow<String> {
+//        return poolReservesFlowToken.asStateFlow().filterNotNull()
+//            .combine(selectedSwapMarket.asStateFlow().filterNotNull()) { tokens, market ->
+//                tokens to market
+//            }.flatMapLatest { (tokens, market) ->
+//                val flows = mutableListOf<Flow<String>>()
+//                if (market == Market.XYK || market == Market.SMART) {
+//                    val tfrom = tokens.first
+//                    val tto = tokens.second
+//                    val dexs = getPoolDexList()
+//                    if (!dexs.hasToken(tfrom) && !dexs.hasToken(tto)) {
+//                        dexs.forEach { dex ->
+//                            flows.add(
+//                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, tfrom)
+//                            )
+//                            flows.add(
+//                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, tto)
+//                            )
+//                        }
+//                    } else if (dexs.hasToken(tfrom) && dexs.hasToken(tto)) {
+//                        flows.add(
+//                            polkaswapSubscriptionRepository.observePoolXYKReserves(tto, tfrom)
+//                        )
+//                        flows.add(
+//                            polkaswapSubscriptionRepository.observePoolXYKReserves(tfrom, tto)
+//                        )
+//                    } else {
+//                        val (inDex, inNot) = if (dexs.hasToken(tfrom)) tfrom to tto else tto to tfrom
+//                        flows.add(
+//                            polkaswapSubscriptionRepository.observePoolXYKReserves(inDex, inNot)
+//                        )
+//                        dexs.filter { dex ->
+//                            dex.tokenId != inDex
+//                        }.forEach { dex ->
+//                            flows.add(
+//                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, inDex)
+//                            )
+//                            flows.add(
+//                                polkaswapSubscriptionRepository.observePoolXYKReserves(dex.tokenId, inNot)
+//                            )
+//                        }
+//                    }
+//                    flows.add(
+//                        polkaswapSubscriptionRepository.observePoolXYKReserves(
+//                            tokens.first,
+//                            tokens.second
+//                        )
+//                    )
+//                }
+//                if (market == Market.TBC || market == Market.SMART) {
+//                    flows.add(polkaswapSubscriptionRepository.observePoolTBCReserves(tokens.first))
+//                }
+//                flows.merge()
+//            }.debounce(500)
+//    }
 
     override suspend fun fetchAvailableSources(tokenId1: String, tokenId2: String): Set<Market>? {
         poolReservesFlowToken.value = tokenId1 to tokenId2

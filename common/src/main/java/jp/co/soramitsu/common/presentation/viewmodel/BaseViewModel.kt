@@ -116,6 +116,8 @@ open class BaseViewModel : ViewModel() {
 
     open fun onMenuItem(action: Action) = Unit
 
+    open fun onToolbarSearch(value: String) = Unit
+
     open fun onAction() = Unit
 
     suspend fun tryCatchFinally(finally: () -> Unit, block: suspend () -> Unit) {

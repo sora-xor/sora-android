@@ -73,7 +73,6 @@ fun QrCodeMainScreen(
     requestToken_onUserAddressClick: () -> Unit,
     requestToken_onAmountChanged: (BigDecimal) -> Unit,
     requestToken_onTokenSelect: () -> Unit,
-    requestToken_onFocusChange: (Boolean) -> Unit,
     requestToken_onCreateRequestClick: () -> Unit,
     requestToken_onTryAgainClick: () -> Unit,
 ) {
@@ -137,9 +136,8 @@ fun QrCodeMainScreen(
                         onUserAddressClick = requestToken_onUserAddressClick,
                         onAmountChanged = requestToken_onAmountChanged,
                         onTokenSelect = requestToken_onTokenSelect,
-                        onFocusChange = requestToken_onFocusChange,
                         onCreateRequestClick = requestToken_onCreateRequestClick,
-                        onTryAgainClick = requestToken_onTryAgainClick
+                        onTryAgainClick = requestToken_onTryAgainClick,
                     )
                 }
             }
@@ -173,7 +171,6 @@ private fun PreviewQrCodeMainScreen() {
         requestToken_onUserAddressClick = {},
         requestToken_onAmountChanged = {},
         requestToken_onTokenSelect = {},
-        requestToken_onFocusChange = {},
         requestToken_onCreateRequestClick = {},
         requestToken_onTryAgainClick = {}
     )

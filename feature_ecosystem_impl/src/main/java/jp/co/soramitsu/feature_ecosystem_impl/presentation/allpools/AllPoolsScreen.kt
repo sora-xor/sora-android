@@ -92,12 +92,12 @@ private fun ColumnScope.AllPoolsInternal(
                 title = R.string.discovery_polkaswap_pools,
                 menu = listOf(Action.Plus()),
                 navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
+                searchValue = state.filter,
             ),
             type = SoramitsuToolbarType.Small(),
         ),
         elevation = 0.dp,
         onNavigate = onNavIconClicked,
-        searchInitial = state.filter,
         onSearch = onSearch,
         onMenuItemClicked = { onPoolPlus.invoke() },
     )

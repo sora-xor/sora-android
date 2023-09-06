@@ -66,7 +66,6 @@
   <string name="common_activity">Activity</string>
   <string name="common_and">ve</string>
   <string name="common_app_version">Uygulama sürümü</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Arapça</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
@@ -341,8 +340,6 @@
   <string name="polkaswap_insufficient_liqudity">Yetersiz likidite</string>
   <string name="polkaswap_liquidity_fee">LP Ücreti</string>
   <string name="polkaswap_liquidity_fee_info">Her takasın bir kısmı protokol teşviki olarak likidite sağlayıcılarına gider.</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
   <string name="polkaswap_liquidity_total_fee">Swap fee</string>
   <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Piyasa</string>
@@ -365,9 +362,6 @@
   <string name="polkaswap_smart">Akıllı</string>
   <string name="polkaswap_swap_title">Takas</string>
   <string name="polkaswap_swapped">Takas edildi</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Önemli bonus faizi</string>
   <string name="pool_button_remove">Kaldır</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">Henüz aktif havuzlarınız yok.\nÖdül kazanmak için likidite ekleyin</string>
@@ -444,6 +438,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">Search assets</string>
+  <string name="search_empty_state">Arama sonucu bulunamadı</string>
   <string name="select_account_address">Hesap adresini ara</string>
   <string name="select_account_address_1">Yeni bir adres arayın veya ekleyin</string>
   <string name="select_account_import">Select account to import</string>

@@ -32,9 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.send
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -59,7 +56,6 @@ import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.nullZero
 import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
-import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
@@ -67,6 +63,7 @@ import jp.co.soramitsu.feature_assets_impl.presentation.states.SendState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
@@ -110,12 +107,13 @@ class TransferAmountViewModel @AssistedInject constructor(
     private var curTokenId: String = assetId
     private var hasXorReminderWarningBeenChecked = false
 
-    internal var sendState by mutableStateOf(
+    private val _sendState = MutableStateFlow(
         SendState(
             address = recipientId,
             icon = avatarGenerator.createAvatar(recipientId, 40),
         )
     )
+    internal val sendState = _sendState.asStateFlow()
 
     override fun startScreen(): String = SendRoutes.start
 
@@ -129,11 +127,6 @@ class TransferAmountViewModel @AssistedInject constructor(
                 .collectLatest { list ->
                     assetsList.clear()
                     assetsList.addAll(list)
-                    sendState = sendState.copy(
-                        selectSearchAssetState = sendState.selectSearchAssetState.copy(
-                            fullList = mapAssetsToCardState(list, numbersFormatter)
-                        )
-                    )
                     updateCurAsset()
                     feeAsset = list.find { it.token.id == SubstrateOptionsProvider.feeAssetId }
                         ?.also { asset ->
@@ -141,7 +134,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                                 calcTransactionFee(asset)
                             }
                         }
-                    sendState.input?.initialAmount?.let {
+                    _sendState.value.input?.initialAmount?.let {
                         checkEnteredAmount(it)
                     }
                 }
@@ -153,7 +146,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                 .onEach { amount ->
                     checkEnteredAmount(amount)
                 }.filter {
-                    sendState.input?.token?.id == SubstrateOptionsProvider.feeAssetId ||
+                    _sendState.value.input?.token?.id == SubstrateOptionsProvider.feeAssetId ||
                         !hasXorReminderWarningBeenChecked
                 }.onEach {
                     updateTransactionReminderWarningVisibility()
@@ -164,8 +157,8 @@ class TransferAmountViewModel @AssistedInject constructor(
 
     private fun updateCurAsset() {
         curAsset = assetsList.find { it.token.id == curTokenId }?.also { asset ->
-            if (sendState.input == null) {
-                sendState = sendState.copy(
+            if (_sendState.value.input == null) {
+                _sendState.value = _sendState.value.copy(
                     input = AssetAmountInputState(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
@@ -177,12 +170,12 @@ class TransferAmountViewModel @AssistedInject constructor(
                     )
                 )
             } else {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
                         amountFiat = asset.token.printFiat(
-                            sendState.input?.initialAmount.orZero(),
+                            _sendState.value.input?.initialAmount.orZero(),
                             numbersFormatter
                         ),
                     )
@@ -192,7 +185,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     private suspend fun updateTransactionReminderWarningVisibility() =
-        with(sendState.input) {
+        with(_sendState.value.input) {
             if (this == null)
                 return@with
 
@@ -201,7 +194,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                 xorChange = if (token.id == SubstrateOptionsProvider.feeAssetId) initialAmount else null,
             )
 
-            sendState = sendState.copy(
+            _sendState.value = _sendState.value.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
             )
         }
@@ -209,10 +202,18 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun onTokenChange(tokenId: String) {
         curTokenId = tokenId
         updateCurAsset()
-        sendState.input?.initialAmount?.let {
+        _sendState.value.input?.initialAmount?.let {
             checkEnteredAmount(it)
         }
         hasXorReminderWarningBeenChecked = false
+    }
+
+    override fun onToolbarSearch(value: String) {
+        _sendState.value = _sendState.value.copy(
+            searchFilter = _sendState.value.searchFilter.copy(
+                filter = value,
+            ),
+        )
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {
@@ -222,12 +223,13 @@ class TransferAmountViewModel @AssistedInject constructor(
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
                             title = R.string.common_enter_amount,
+                            searchEnabled = false,
                         )
                     )
-                    sendState = sendState.copy(
-                        input = sendState.input?.copy(
+                    _sendState.value = _sendState.value.copy(
+                        input = _sendState.value.input?.copy(
                             readOnly = false,
-                            initialAmount = sendState.input?.initialAmount?.nullZero()
+                            initialAmount = _sendState.value.input?.initialAmount?.nullZero()
                         ),
                     )
                 }
@@ -236,6 +238,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
                             title = R.string.choose_token,
+                            searchEnabled = true,
+                            searchValue = _sendState.value.searchFilter.filter,
                         )
                     )
                 }
@@ -244,10 +248,11 @@ class TransferAmountViewModel @AssistedInject constructor(
                     _toolbarState.value = state.copy(
                         basic = state.basic.copy(
                             title = R.string.confirm_sending,
+                            searchEnabled = false,
                         )
                     )
-                    sendState = sendState.copy(
-                        input = sendState.input?.copy(
+                    _sendState.value = _sendState.value.copy(
+                        input = _sendState.value.input?.copy(
                             readOnly = true,
                         ),
                     )
@@ -270,11 +275,11 @@ class TransferAmountViewModel @AssistedInject constructor(
             recipientId, feeAsset.token, BigDecimal.ONE,
         ).also {
             if (it != null) {
-                sendState = sendState.copy(
+                _sendState.value = _sendState.value.copy(
                     feeLoading = false,
                     fee = feeAsset.token.printBalance(it, numbersFormatter, AssetHolder.ROUNDING),
                     feeFiat = feeAsset.token.printFiat(it, numbersFormatter),
-                    input = sendState.input?.copy(
+                    input = _sendState.value.input?.copy(
                         enabled = true,
                     ),
                 )
@@ -289,10 +294,10 @@ class TransferAmountViewModel @AssistedInject constructor(
 
     fun onConfirmClick() {
         val curAsset = curAsset ?: return
-        val amount = sendState.input?.initialAmount ?: return
+        val amount = _sendState.value.input?.initialAmount ?: return
         val fee = fee ?: return
         viewModelScope.launch {
-            sendState = sendState.copy(
+            _sendState.value = _sendState.value.copy(
                 inProgress = true
             )
             var success = ""
@@ -307,7 +312,7 @@ class TransferAmountViewModel @AssistedInject constructor(
             } catch (t: Throwable) {
                 onError(t)
             } finally {
-                sendState = sendState.copy(
+                _sendState.value = _sendState.value.copy(
                     inProgress = false
                 )
                 if (success.isNotEmpty())
@@ -323,8 +328,8 @@ class TransferAmountViewModel @AssistedInject constructor(
         val curAsset = curAsset ?: return
         when {
             amount.isZero() -> {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         error = false,
                         errorHint = "",
                     ),
@@ -333,8 +338,8 @@ class TransferAmountViewModel @AssistedInject constructor(
             }
 
             feeAsset.balance.transferable < fee -> {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         error = true,
                         errorHint = resourceManager.getString(R.string.error_transaction_fee_title),
                     ),
@@ -343,8 +348,8 @@ class TransferAmountViewModel @AssistedInject constructor(
             }
 
             curAsset.balance.transferable < amount -> {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         error = true,
                         errorHint = resourceManager.getString(R.string.amount_error_no_funds),
                     ),
@@ -353,8 +358,8 @@ class TransferAmountViewModel @AssistedInject constructor(
             }
 
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable < amount + fee) -> {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         error = true,
                         errorHint = resourceManager.getString(R.string.amount_error_no_funds),
                     ),
@@ -363,8 +368,8 @@ class TransferAmountViewModel @AssistedInject constructor(
             }
 
             (curAsset.token.id == feeAsset.token.id) && (curAsset.balance.transferable - amount - fee < SubstrateOptionsProvider.existentialDeposit.toBigDecimal()) -> {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         error = true,
                         errorHint = resourceManager.getString(R.string.wallet_send_existential_warning_message),
                     ),
@@ -373,8 +378,8 @@ class TransferAmountViewModel @AssistedInject constructor(
             }
 
             else -> {
-                sendState = sendState.copy(
-                    input = sendState.input?.copy(
+                _sendState.value = _sendState.value.copy(
+                    input = _sendState.value.input?.copy(
                         error = false,
                         errorHint = "",
                     ),
@@ -385,18 +390,18 @@ class TransferAmountViewModel @AssistedInject constructor(
     }
 
     fun onReviewClick() {
-        sendState = sendState.copy(
-            input = sendState.input?.copy(
-                initialAmount = sendState.input?.initialAmount.orZero()
+        _sendState.value = _sendState.value.copy(
+            input = _sendState.value.input?.copy(
+                initialAmount = _sendState.value.input?.initialAmount.orZero()
             )
         )
     }
 
     fun amountChanged(value: BigDecimal) {
-        sendState = sendState.copy(
-            input = sendState.input?.copy(
+        _sendState.value = _sendState.value.copy(
+            input = _sendState.value.input?.copy(
                 initialAmount = value,
-                amountFiat = sendState.input?.token?.printFiat(
+                amountFiat = _sendState.value.input?.token?.printFiat(
                     value,
                     numbersFormatter
                 ).orEmpty()
@@ -416,10 +421,10 @@ class TransferAmountViewModel @AssistedInject constructor(
         if (curAsset.token.id == SubstrateOptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
             amount = subtractFee(amount, curAsset.balance.transferable, fee)
         }
-        sendState = sendState.copy(
-            input = sendState.input?.copy(
+        _sendState.value = _sendState.value.copy(
+            input = _sendState.value.input?.copy(
                 initialAmount = amount,
-                amountFiat = sendState.input?.token?.printFiat(
+                amountFiat = _sendState.value.input?.token?.printFiat(
                     amount,
                     numbersFormatter
                 ).orEmpty()

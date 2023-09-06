@@ -46,7 +46,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
@@ -64,16 +63,14 @@ import jp.co.soramitsu.common.util.ext.nullZero
 import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -104,7 +101,6 @@ class SwapViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
-    private val coroutineManager: CoroutineManager,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
     @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
@@ -156,7 +152,6 @@ class SwapViewModel @AssistedInject constructor(
             tokenFromState = null,
             tokenToState = null,
             slippage = 0.5,
-            selectSearchAssetState = null,
             market = Market.SMART,
             selectMarketState = null,
             details = defaultSwapDetailsState(),
@@ -176,6 +171,9 @@ class SwapViewModel @AssistedInject constructor(
     )
     val swapMainState = _swapMainState.asStateFlow()
 
+    private val _swapTokensFilter = MutableStateFlow(emptySearchTokenFilter)
+    val swapTokensFilter = _swapTokensFilter.asStateFlow()
+
     private var amountFromPrev: BigDecimal = BigDecimal.ZERO
     private var amountToPrev: BigDecimal = BigDecimal.ZERO
     private val amountFrom: BigDecimal
@@ -184,6 +182,12 @@ class SwapViewModel @AssistedInject constructor(
         get() = _swapMainState.value.tokenToState?.initialAmount.orZero()
 
     override fun startScreen(): String = SwapRoutes.start
+
+    override fun onToolbarSearch(value: String) {
+        _swapTokensFilter.value = _swapTokensFilter.value.copy(
+            filter = value,
+        )
+    }
 
     override fun onCurrentDestinationChanged(curDest: String) {
         _toolbarState.value?.let { state ->
@@ -196,6 +200,8 @@ class SwapViewModel @AssistedInject constructor(
                         SwapRoutes.selectToken -> R.string.common_choose_asset
                         else -> ""
                     },
+                    searchEnabled = curDest == SwapRoutes.selectToken,
+                    searchValue = if (curDest == SwapRoutes.selectToken) _swapTokensFilter.value.filter else ""
                 )
             )
         }
@@ -415,13 +421,6 @@ class SwapViewModel @AssistedInject constructor(
     fun fromCardClicked() {
         if (assetsList.isNotEmpty()) {
             _swapMainState.value = _swapMainState.value.copy(
-                selectSearchAssetState = SelectSearchAssetState(
-                    filter = "",
-                    fullList = mapAssetsToCardState(
-                        assetsList.filter { it.token.id != _swapMainState.value.tokenToState?.token?.id.orEmpty() },
-                        numbersFormatter
-                    )
-                ),
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
                 ),
@@ -435,13 +434,6 @@ class SwapViewModel @AssistedInject constructor(
     fun toCardClicked() {
         if (assetsList.isNotEmpty()) {
             _swapMainState.value = _swapMainState.value.copy(
-                selectSearchAssetState = SelectSearchAssetState(
-                    filter = "",
-                    fullList = mapAssetsToCardState(
-                        assetsList.filter { it.token.id != _swapMainState.value.tokenFromState?.token?.id.orEmpty() },
-                        numbersFormatter
-                    )
-                ),
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
                 ),
@@ -757,11 +749,6 @@ class SwapViewModel @AssistedInject constructor(
                     minmaxToken = _swapMainState.value.tokenFromState?.token
                     maxMinToken = _swapMainState.value.tokenToState?.token
                 }
-                val (title, desc) = when (details.feeMode) {
-                    SwapFeeMode.SYNTHETIC -> R.string.polkaswap_liquidity_synthetic_fee to R.string.polkaswap_liquidity_synthetic_fee_desc
-                    SwapFeeMode.NON_SYNTHETIC -> R.string.polkaswap_liquidity_fee to R.string.polkaswap_liquidity_fee_info
-                    SwapFeeMode.BOTH -> R.string.polkaswap_liquidity_total_fee to R.string.polkaswap_liquidity_total_fee_desc
-                }
                 _swapMainState.value = _swapMainState.value.copy(
                     details = _swapMainState.value.details.copy(
                         transactionFee = feeToken().printBalance(
@@ -798,8 +785,6 @@ class SwapViewModel @AssistedInject constructor(
                         minmaxValueFiat = minmaxToken?.printFiat(details.minmax, numbersFormatter)
                             .orEmpty(),
                         route = details.swapRoute?.joinToString("->").orEmpty(),
-                        lpFeeTitle = title,
-                        lpFeeHint = desc,
                     )
                 )
             }
