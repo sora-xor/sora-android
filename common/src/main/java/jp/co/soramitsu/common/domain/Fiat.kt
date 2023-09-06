@@ -62,7 +62,7 @@ fun fiatChange(curValue: Double?, newValue: Double): Double =
     if (curValue == null || curValue == 0.0) {
         0.0
     } else {
-        newValue / curValue - 1
+        (newValue / curValue) - 1
     }
 
 fun Token.calcFiat(amount: BigDecimal): Double? = fiatPrice?.let {
