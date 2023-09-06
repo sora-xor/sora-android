@@ -125,10 +125,9 @@ object PolkaswapFormulas {
         amount: BigDecimal,
         percentage: Double,
         precision: Int,
-    ): BigDecimal {
-        return if (percentage == 100.0) amount else amount.safeDivide(Big100, precision)
-            .multiply(percentage.toBigDecimal())
-    }
+    ): BigDecimal = if (percentage == 100.0) amount else
+        amount.multiply(percentage.toBigDecimal())
+            .safeDivide(Big100, precision)
 
     fun calculateOneAmountFromAnother(
         amount: BigDecimal,

@@ -338,7 +338,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(50.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.initialAmount)
+        assertEquals(BigDecimal(50.0).setScale(18), viewModel.swapMainState.value.tokenFromState?.initialAmount)
     }
 
     @Test
@@ -350,7 +350,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(8.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.initialAmount)
+        assertEquals(BigDecimal(8.0).setScale(18), viewModel.swapMainState.value.tokenFromState?.initialAmount)
     }
 
     @Test
@@ -362,7 +362,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(25).setScale(19), viewModel.swapMainState.value.tokenFromState?.initialAmount)
+        assertEquals(BigDecimal(25).setScale(18), viewModel.swapMainState.value.tokenFromState?.initialAmount)
     }
 
     @Test
