@@ -508,7 +508,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
-                        initialAmount = _addState.value.assetState1?.amount?.nullZero(),
+                        initialAmount = _addState.value.assetState1?.initialAmount?.nullZero(),
                     ),
                     assetState2 = _addState.value.assetState2?.copy(
                         initialAmount = _addState.value.assetState2?.initialAmount?.nullZero(),
@@ -549,7 +549,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
-                        initialAmount = _addState.value.assetState1?.amount?.nullZero(),
+                        initialAmount = _addState.value.assetState1?.initialAmount?.nullZero(),
                     ),
                     assetState2 = _addState.value.assetState2?.copy(
                         initialAmount = _addState.value.assetState2?.initialAmount?.nullZero(),
