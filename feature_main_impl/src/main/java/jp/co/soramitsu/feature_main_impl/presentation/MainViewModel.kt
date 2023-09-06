@@ -114,6 +114,13 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
+        viewModelScope.launch {
+            withContext(coroutineManager.io) {
+                assetsInteractor.getTokensList().map { it.id }.also { tokens ->
+                    blockExplorerManager.getTokensLiquidity(tokens)
+                }
+            }
+        }
     }
 
     fun showPinFragment() {

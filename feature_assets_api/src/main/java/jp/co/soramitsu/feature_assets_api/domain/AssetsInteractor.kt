@@ -66,6 +66,8 @@ interface AssetsInteractor {
 
     suspend fun isWhitelistedToken(tokenId: String): Boolean
 
+    suspend fun getTokensList(): List<Token>
+
     suspend fun observeTransfer(
         to: String,
         token: Token,

@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_blockexplorer_api.data
 
 import androidx.room.withTransaction
 import java.math.BigInteger
-import java.util.Date
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -60,10 +59,6 @@ class BlockExplorerManager @Inject constructor(
     private val soraConfigManager: SoraConfigManager,
 ) {
 
-    companion object {
-        private val fiatChangeUpdatePeriod = TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS)
-    }
-
     private val tempApy = mutableListOf<SbApyInfo>()
 
     private var assetsInfo: List<Pair<String, BigInteger>>? = null
@@ -77,10 +72,23 @@ class BlockExplorerManager @Inject constructor(
             assetsInfo = it
         }
 
-    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> =
-        info.getAssetsInfo(tokenIds).map {
-            it.tokenId to BigInteger(it.liquidity)
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> {
+        val selected = soraConfigManager.getSelectedCurrency()
+        val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
+        val yesterdayHour = yesterday()
+        val resultList = mutableListOf<Pair<String, BigInteger>>()
+        val fiats = mutableListOf<FiatTokenPriceLocal>()
+        info.getAssetsInfo(tokenIds, yesterdayHour).forEach { assetInfo ->
+            val dbValue = tokens.find { it.tokenIdFiat == assetInfo.tokenId }
+            val delta = assetInfo.hourDelta
+            if (dbValue != null && delta != null) {
+                fiats.add(dbValue.copy(fiatPricePrevH = delta, fiatPricePrevHTime = yesterdayHour))
+            }
+            resultList.add(assetInfo.tokenId to BigInteger(assetInfo.liquidity))
         }
+        db.assetDao().insertFiatPrice(fiats)
+        return resultList
+    }
 
     suspend fun updatePoolsSbApy() {
         updateSbApyInternal()
@@ -133,36 +141,50 @@ class BlockExplorerManager @Inject constructor(
     private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) {
         val selected = soraConfigManager.getSelectedCurrency()
         val tokens = db.assetDao().getTokensWithFiatOfCurrency(selected.code)
+
         val prices = fiatData.mapNotNull { apy ->
             val dbValue = tokens.find { it.token.id == apy.id }
             val apyRate = apy.priceUsd
             if (dbValue != null && apyRate != null) {
-                val change = fiatChange(dbValue.price?.fiatPricePrevD, apyRate)
-                val now = Date().time
-                val replace = dbValue.price?.let { price ->
-                    now > price.fiatPricePrevHTime + fiatChangeUpdatePeriod
-                } ?: true
-                FiatTokenPriceLocal(
-                    dbValue.token.id,
-                    selected.code,
-                    apyRate,
-                    now,
-                    if (replace) dbValue.price?.fiatPrice
-                        ?: apyRate else dbValue.price?.fiatPricePrevH ?: apyRate,
-                    if (replace) dbValue.price?.fiatPriceTime
-                        ?: now else dbValue.price?.fiatPricePrevHTime ?: now,
-                    if (replace) dbValue.price?.fiatPricePrevH
-                        ?: apyRate else dbValue.price?.fiatPricePrevD ?: apyRate,
-                    if (replace) dbValue.price?.fiatPricePrevHTime
-                        ?: now else dbValue.price?.fiatPricePrevDTime ?: now,
-                    change,
-                )
+                val dbPrice = dbValue.price
+                if (dbPrice != null) {
+                    val change = fiatChange(dbPrice.fiatPricePrevH, apyRate)
+                    FiatTokenPriceLocal(
+                        dbPrice.tokenIdFiat,
+                        selected.code,
+                        apyRate,
+                        nowInSecond(),
+                        dbPrice.fiatPricePrevH,
+                        dbPrice.fiatPricePrevHTime,
+                        dbPrice.fiatPricePrevD,
+                        dbPrice.fiatPricePrevDTime,
+                        change,
+                    )
+                } else {
+                    FiatTokenPriceLocal(
+                        tokenIdFiat = dbValue.token.id,
+                        selected.code,
+                        apyRate,
+                        nowInSecond(),
+                        0.0,
+                        0,
+                        0.0,
+                        0,
+                        null,
+                    )
+                }
             } else {
                 null
             }
         }
         db.assetDao().insertFiatPrice(prices)
     }
+
+    private fun nowInSecond() =
+        TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+
+    private fun yesterday() =
+        TimeUnit.SECONDS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS) - 24 * 60 * 60
 
     private class FiatInfo(val id: String, val priceUsd: Double? = null)
 }
