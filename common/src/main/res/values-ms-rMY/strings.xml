@@ -432,6 +432,7 @@
   <string name="route">Laluan</string>
   <string name="scan_qr_show_my_qr">Tunjukkan kod QR saya</string>
   <string name="search_assets">Cari aset</string>
+  <string name="search_empty_state">Tiada hasil carian</string>
   <string name="select_account_address">Cari alamat akaun</string>
   <string name="select_account_address_1">Cari atau tambah alamat baharu</string>
   <string name="select_account_import">Pilih akaun untuk diimport</string>

@@ -432,6 +432,7 @@
   <string name="route">ルート</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">アセットの検索</string>
+  <string name="search_empty_state">検索結果が存在しません</string>
   <string name="select_account_address">アカウントのアドレスを検索</string>
   <string name="select_account_address_1">検索または新規アドレスを追加</string>
   <string name="select_account_import">Select account to import</string>

@@ -148,7 +148,7 @@ class QRCodeFlowFragment : SoraBaseFragment<QRCodeFlowViewModel>() {
                     viewModel.onSelectToken(it)
                     navController.popBackStack()
                 },
-                filter = filter.value,
+                searchTokenFilter = filter.value,
             )
         }
 

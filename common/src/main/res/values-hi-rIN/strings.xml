@@ -438,6 +438,7 @@
   <string name="route">मार्ग</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">संपत्ति खोजें</string>
+  <string name="search_empty_state">खोजने पर कोई परिणाम नहीं मिला</string>
   <string name="select_account_address">खाता पता खोजें\n</string>
   <string name="select_account_address_1">नया पता खोजें या जोड़ें</string>
   <string name="select_account_import">Select account to import</string>

@@ -56,7 +56,7 @@ class SelectSearchTokenViewModel @Inject constructor(
     private val _state = MutableStateFlow(SelectSearchAssetState(emptyList()))
     val state = _state.asStateFlow()
 
-    private var filter: String = ""
+    private var searchTokenFilter = emptySearchTokenFilter
     private val assets = mutableListOf<Asset>()
 
     init {
@@ -73,21 +73,28 @@ class SelectSearchTokenViewModel @Inject constructor(
         }
     }
 
-    fun onFilterChange(value: String) {
-        filter = value
+    fun onFilterChange(value: SearchTokenFilter) {
+        searchTokenFilter = value
         reCalcFilter()
     }
 
+    private val tokenFilterInclude: (Asset) -> Boolean = {
+        searchTokenFilter.tokenIds.contains(it.token.id)
+    }
+
     private fun reCalcFilter() {
-        val curFilter = filter.lowercase()
-        val list = if (curFilter.isBlank()) {
-            mapAssetsToCardState(assets, numbersFormatter)
+        val tokensFiltered =
+            if (searchTokenFilter.tokenIds.isEmpty()) assets
+            else assets.filter(tokenFilterInclude)
+        val curFilterValue = searchTokenFilter.filter.lowercase()
+        val list = if (curFilterValue.isBlank()) {
+            mapAssetsToCardState(tokensFiltered, numbersFormatter)
         } else {
             buildList {
                 addAll(
                     mapAssetsToCardState(
-                        assets.filter {
-                            it.token.isMatchFilter(curFilter)
+                        tokensFiltered.filter {
+                            it.token.isMatchFilter(curFilterValue)
                         },
                         numbersFormatter
                     )

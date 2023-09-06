@@ -438,6 +438,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">Assets zoeken</string>
+  <string name="search_empty_state">Geen resultaten gevonden</string>
   <string name="select_account_address">Accountadres zoeken</string>
   <string name="select_account_address_1">Zoek of voeg een nieuw adres toe</string>
   <string name="select_account_import">Select account to import</string>

@@ -432,6 +432,7 @@
   <string name="route">路径</string>
   <string name="scan_qr_show_my_qr">显示我的二维码</string>
   <string name="search_assets">搜索资产</string>
+  <string name="search_empty_state">无搜索结果</string>
   <string name="select_account_address">搜索账户地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
   <string name="select_account_import">选择要导入的账户</string>

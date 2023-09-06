@@ -211,7 +211,9 @@ class TransferAmountViewModel @AssistedInject constructor(
 
     override fun onToolbarSearch(value: String) {
         _sendState.value = _sendState.value.copy(
-            searchFilter = value,
+            searchFilter = _sendState.value.searchFilter.copy(
+                filter = value,
+            ),
         )
     }
 
@@ -238,7 +240,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         basic = state.basic.copy(
                             title = R.string.choose_token,
                             searchEnabled = true,
-                            searchValue = _sendState.value.searchFilter,
+                            searchValue = _sendState.value.searchFilter.filter,
                         )
                     )
                 }

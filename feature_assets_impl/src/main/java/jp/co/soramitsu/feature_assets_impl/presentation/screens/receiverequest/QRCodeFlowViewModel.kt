@@ -57,6 +57,7 @@ import jp.co.soramitsu.common_wallet.domain.model.QrException
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat.getAssetBalanceText
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenScreenState
@@ -123,7 +124,7 @@ class QRCodeFlowViewModel @Inject constructor(
     )
     val requestTokenScreenState = _requestTokenScreenState.asStateFlow()
 
-    private val _selectTokenScreenState = MutableStateFlow("")
+    private val _selectTokenScreenState = MutableStateFlow(emptySearchTokenFilter)
     val selectTokenScreenState = _selectTokenScreenState.asStateFlow()
 
     private val _requestTokenConfirmScreenState = MutableStateFlow(
@@ -204,7 +205,9 @@ class QRCodeFlowViewModel @Inject constructor(
     override fun startScreen(): String = QRCodeFlowRoute.MainScreen.route
 
     override fun onToolbarSearch(value: String) {
-        _selectTokenScreenState.value = value
+        _selectTokenScreenState.value = _selectTokenScreenState.value.copy(
+            filter = value,
+        )
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {
@@ -219,7 +222,7 @@ class QRCodeFlowViewModel @Inject constructor(
                         else -> ""
                     },
                     searchEnabled = curDest == QRCodeFlowRoute.SelectToken.route,
-                    searchValue = if (curDest == QRCodeFlowRoute.SelectToken.route) _selectTokenScreenState.value else "",
+                    searchValue = if (curDest == QRCodeFlowRoute.SelectToken.route) _selectTokenScreenState.value.filter else "",
                 )
             )
         }
