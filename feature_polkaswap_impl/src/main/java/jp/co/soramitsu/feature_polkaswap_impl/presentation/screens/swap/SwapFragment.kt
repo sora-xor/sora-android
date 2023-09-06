@@ -138,7 +138,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             SelectSearchTokenScreen(
                 scrollState = scrollState,
                 onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
-                filter = state.value,
+                searchTokenFilter = state.value,
             )
         }
         composable(SwapRoutes.markets) {

@@ -32,8 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -60,6 +58,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddEstimatedState
@@ -151,7 +150,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private var pairEnabled: Boolean = true
     private var pairPresented: Boolean = true
 
-    private val _searchTokenFilter = MutableStateFlow("")
+    private val _searchTokenFilter = MutableStateFlow(emptySearchTokenFilter)
     val searchTokenFilter = _searchTokenFilter.asStateFlow()
 
     private val _stateSlippage = MutableStateFlow(0.5)
@@ -269,7 +268,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     }
 
     override fun onToolbarSearch(value: String) {
-        _searchTokenFilter.value = value
+        _searchTokenFilter.value = _searchTokenFilter.value.copy(filter = value)
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {
@@ -287,8 +286,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         LiquidityAddRoutes.start -> R.drawable.ic_settings_info
                         else -> R.drawable.ic_arrow_left
                     },
+                    menu = if (curDest == LiquidityAddRoutes.selectToken) emptyList() else listOf(Action.Close()),
                     searchEnabled = curDest == LiquidityAddRoutes.selectToken,
-                    searchValue = if (curDest == LiquidityAddRoutes.selectToken) _searchTokenFilter.value else "",
+                    searchValue = if (curDest == LiquidityAddRoutes.selectToken) _searchTokenFilter.value.filter else "",
                 ),
             )
         }
@@ -515,6 +515,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         initialAmount = _addState.value.assetState2?.amount?.nullZero(),
                     ),
                 )
+                _searchTokenFilter.value = _searchTokenFilter.value.copy(
+                    tokenIds = list.map { it.token.id },
+                )
             }
         }
     }
@@ -552,6 +555,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     assetState2 = _addState.value.assetState2?.copy(
                         initialAmount = _addState.value.assetState2?.amount?.nullZero(),
                     ),
+                )
+                _searchTokenFilter.value = _searchTokenFilter.value.copy(
+                    tokenIds = list.map { it.token.id },
                 )
             }
         }

@@ -33,41 +33,58 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.previewAssetItemCardStateList
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SelectSearchAssetState(
     val list: List<AssetItemCardState>,
 )
 
+data class SearchTokenFilter(
+    val filter: String,
+    val tokenIds: List<String>,
+)
+
+val emptySearchTokenFilter = SearchTokenFilter("", emptyList())
+
 @Composable
 fun SelectSearchTokenScreen(
     scrollState: ScrollState,
-    filter: String,
+    searchTokenFilter: SearchTokenFilter,
     viewModel: SelectSearchTokenViewModel = hiltViewModel(),
     onAssetSelect: (String) -> Unit,
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
-    LaunchedEffect(filter) {
-        viewModel.onFilterChange(filter)
+    LaunchedEffect(searchTokenFilter) {
+        viewModel.onFilterChange(searchTokenFilter)
     }
     SelectSearchTokenCard(
         scrollState = scrollState,
@@ -88,19 +105,31 @@ private fun SelectSearchTokenCard(
             .fillMaxSize(),
         innerPadding = PaddingValues(top = Dimens.x3),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
-            state.list.forEachIndexed { index, assetState ->
-                AssetItem(
-                    assetState = assetState,
-                    testTag = "${assetState.tokenSymbol}Element",
-                    onClick = onAssetSelect,
+        if (state.list.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    modifier = Modifier.wrapContentSize(),
+                    text = stringResource(id = R.string.search_empty_state),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.customTypography.paragraphM,
+                    color = MaterialTheme.customColors.fgSecondary,
                 )
-                if (index < state.list.lastIndex) {
-                    Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x1))
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+            ) {
+                state.list.forEachIndexed { index, assetState ->
+                    AssetItem(
+                        assetState = assetState,
+                        testTag = "${assetState.tokenSymbol}Element",
+                        onClick = onAssetSelect,
+                    )
+                    if (index < state.list.lastIndex) {
+                        Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x1))
+                    }
                 }
             }
         }
@@ -109,11 +138,23 @@ private fun SelectSearchTokenCard(
 
 @Composable
 @Preview
-private fun PreviewSelectSearchTokenCard() {
+private fun PreviewSelectSearchTokenCard1() {
     SelectSearchTokenCard(
         scrollState = rememberScrollState(),
         state = SelectSearchAssetState(
             list = previewAssetItemCardStateList,
+        ),
+        onAssetSelect = {},
+    )
+}
+
+@Composable
+@Preview
+private fun PreviewSelectSearchTokenCard2() {
+    SelectSearchTokenCard(
+        scrollState = rememberScrollState(),
+        state = SelectSearchAssetState(
+            list = emptyList(),
         ),
         onAssetSelect = {},
     )

@@ -438,6 +438,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Afficher mon code QR</string>
   <string name="search_assets">Rechercher des actifs</string>
+  <string name="search_empty_state">Aucun résultat trouvé</string>
   <string name="select_account_address">Recherche de l\'adresse du compte</string>
   <string name="select_account_address_1">Chercher ou ajouter une nouvelle adresse</string>
   <string name="select_account_import">Sélectionnez un compte à importer</string>

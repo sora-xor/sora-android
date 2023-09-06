@@ -131,7 +131,7 @@ class TransferAmountFragment : SoraBaseFragment<TransferAmountViewModel>() {
             SelectSearchTokenScreen(
                 scrollState = scrollState,
                 onAssetSelect = onTokenChange,
-                filter = state.searchFilter,
+                searchTokenFilter = state.searchFilter,
             )
         }
         composable(

@@ -121,7 +121,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
             SelectSearchTokenScreen(
                 scrollState = scrollState,
                 onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
-                filter = state.value,
+                searchTokenFilter = state.value,
             )
         }
         composable(LiquidityAddRoutes.slippage) {

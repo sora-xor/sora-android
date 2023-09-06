@@ -67,6 +67,7 @@ import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
@@ -170,7 +171,7 @@ class SwapViewModel @AssistedInject constructor(
     )
     val swapMainState = _swapMainState.asStateFlow()
 
-    private val _swapTokensFilter = MutableStateFlow("")
+    private val _swapTokensFilter = MutableStateFlow(emptySearchTokenFilter)
     val swapTokensFilter = _swapTokensFilter.asStateFlow()
 
     private var amountFromPrev: BigDecimal = BigDecimal.ZERO
@@ -183,7 +184,9 @@ class SwapViewModel @AssistedInject constructor(
     override fun startScreen(): String = SwapRoutes.start
 
     override fun onToolbarSearch(value: String) {
-        _swapTokensFilter.value = value
+        _swapTokensFilter.value = _swapTokensFilter.value.copy(
+            filter = value,
+        )
     }
 
     override fun onCurrentDestinationChanged(curDest: String) {
@@ -198,7 +201,7 @@ class SwapViewModel @AssistedInject constructor(
                         else -> ""
                     },
                     searchEnabled = curDest == SwapRoutes.selectToken,
-                    searchValue = if (curDest == SwapRoutes.selectToken) _swapTokensFilter.value else ""
+                    searchValue = if (curDest == SwapRoutes.selectToken) _swapTokensFilter.value.filter else ""
                 )
             )
         }
