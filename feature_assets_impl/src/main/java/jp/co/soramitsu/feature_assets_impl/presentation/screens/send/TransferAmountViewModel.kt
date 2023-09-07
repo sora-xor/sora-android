@@ -62,6 +62,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.SendState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
@@ -167,6 +168,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         enabled = false,
                         error = false,
                         errorHint = "",
+                        defaultCursorPosition = DefaultCursorPosition.END
                     )
                 )
             } else {
@@ -178,6 +180,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                             _sendState.value.input?.initialAmount.orZero(),
                             numbersFormatter
                         ),
+                        defaultCursorPosition = DefaultCursorPosition.END
                     )
                 )
             }
@@ -229,7 +232,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                     _sendState.value = _sendState.value.copy(
                         input = _sendState.value.input?.copy(
                             readOnly = false,
-                            initialAmount = _sendState.value.input?.initialAmount?.nullZero()
+                            initialAmount = _sendState.value.input?.initialAmount?.nullZero(),
+                            defaultCursorPosition = DefaultCursorPosition.END
                         ),
                     )
                 }
@@ -392,7 +396,8 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun onReviewClick() {
         _sendState.value = _sendState.value.copy(
             input = _sendState.value.input?.copy(
-                initialAmount = _sendState.value.input?.initialAmount.orZero()
+                initialAmount = _sendState.value.input?.initialAmount.orZero(),
+                defaultCursorPosition = DefaultCursorPosition.START
             )
         )
     }
@@ -404,7 +409,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                 amountFiat = _sendState.value.input?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                defaultCursorPosition = DefaultCursorPosition.END
             )
         )
         enteredFlow.value = value
@@ -427,7 +433,8 @@ class TransferAmountViewModel @AssistedInject constructor(
                 amountFiat = _sendState.value.input?.token?.printFiat(
                     amount,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                defaultCursorPosition = DefaultCursorPosition.START
             )
         )
         enteredFlow.value = amount

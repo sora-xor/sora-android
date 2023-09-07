@@ -75,6 +75,7 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
@@ -399,9 +400,11 @@ class SwapViewModel @AssistedInject constructor(
         _swapMainState.value = _swapMainState.value.copy(
             tokenFromState = _swapMainState.value.tokenFromState?.copy(
                 initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
+                defaultCursorPosition = DefaultCursorPosition.END
             ),
             tokenToState = _swapMainState.value.tokenToState?.copy(
                 initialAmount = _swapMainState.value.tokenToState?.initialAmount?.nullZero(),
+                defaultCursorPosition = DefaultCursorPosition.END
             ),
         )
     }
@@ -411,9 +414,11 @@ class SwapViewModel @AssistedInject constructor(
             selectMarketState = _swapMainState.value.market to availableMarkets,
             tokenFromState = _swapMainState.value.tokenFromState?.copy(
                 initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
+                defaultCursorPosition = DefaultCursorPosition.END
             ),
             tokenToState = _swapMainState.value.tokenToState?.copy(
                 initialAmount = _swapMainState.value.tokenToState?.initialAmount?.nullZero(),
+                defaultCursorPosition = DefaultCursorPosition.END
             ),
         )
     }
@@ -423,9 +428,11 @@ class SwapViewModel @AssistedInject constructor(
             _swapMainState.value = _swapMainState.value.copy(
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
+                    defaultCursorPosition = DefaultCursorPosition.END
                 ),
                 tokenToState = _swapMainState.value.tokenToState?.copy(
                     initialAmount = _swapMainState.value.tokenToState?.initialAmount?.nullZero(),
+                    defaultCursorPosition = DefaultCursorPosition.END
                 ),
             )
         }
@@ -436,9 +443,11 @@ class SwapViewModel @AssistedInject constructor(
             _swapMainState.value = _swapMainState.value.copy(
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
+                    defaultCursorPosition = DefaultCursorPosition.END
                 ),
                 tokenToState = _swapMainState.value.tokenToState?.copy(
                     initialAmount = _swapMainState.value.tokenToState?.initialAmount?.nullZero(),
+                    defaultCursorPosition = DefaultCursorPosition.END
                 ),
             )
         }
@@ -488,10 +497,12 @@ class SwapViewModel @AssistedInject constructor(
         desired = if (desired == WithDesired.INPUT) WithDesired.OUTPUT else WithDesired.INPUT
         _swapMainState.value = _swapMainState.value.copy(
             tokenFromState = _swapMainState.value.tokenToState?.copy(
-                initialAmount = _swapMainState.value.tokenToState?.initialAmount?.nullZero()
+                initialAmount = _swapMainState.value.tokenToState?.initialAmount?.nullZero(),
+                defaultCursorPosition = DefaultCursorPosition.END
             ),
             tokenToState = _swapMainState.value.tokenFromState?.copy(
-                initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero()
+                initialAmount = _swapMainState.value.tokenFromState?.initialAmount?.nullZero(),
+                defaultCursorPosition = DefaultCursorPosition.END
             ),
         )
         setSwapButtonLoading(true)
@@ -804,12 +815,16 @@ class SwapViewModel @AssistedInject constructor(
 
     fun onFromAmountChange(value: BigDecimal) {
         _swapMainState.value = _swapMainState.value.copy(
+            tokenToState = _swapMainState.value.tokenToState?.copy(
+                defaultCursorPosition = DefaultCursorPosition.START
+            ),
             tokenFromState = _swapMainState.value.tokenFromState?.copy(
                 initialAmount = value,
                 amountFiat = _swapMainState.value.tokenFromState?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                defaultCursorPosition = DefaultCursorPosition.START
             )
         )
         fromAmountOnEach()
@@ -960,9 +975,13 @@ class SwapViewModel @AssistedInject constructor(
                 amount = subtractFee(amount, transferable, networkFee)
             }
             _swapMainState.value = _swapMainState.value.copy(
+                tokenToState = _swapMainState.value.tokenToState?.copy(
+                    defaultCursorPosition = DefaultCursorPosition.START
+                ),
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     amountFiat = fromAsset.token.printFiat(amount, numbersFormatter),
                     initialAmount = amount,
+                    defaultCursorPosition = DefaultCursorPosition.START
                 )
             )
             desired = WithDesired.INPUT

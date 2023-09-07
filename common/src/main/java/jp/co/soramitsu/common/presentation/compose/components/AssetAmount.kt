@@ -72,6 +72,7 @@ import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
+import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -158,6 +159,7 @@ fun AssetAmountInput(
                     textStyle = MaterialTheme.customTypography.displayS.copy(textAlign = TextAlign.End),
                     enabled = state?.let { it.enabled && !it.readOnly } ?: false,
                     precision = state?.token?.precision ?: OptionsProvider.defaultScale,
+                    defaultCursorPosition = state?.defaultCursorPosition ?: DefaultCursorPosition.END,
                     initial = state?.initialAmount,
                     onValueChanged = onAmountChange,
                     focusRequester = focusRequester,
