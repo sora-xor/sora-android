@@ -45,8 +45,8 @@ import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryRepository
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transaction
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBase
@@ -228,12 +228,8 @@ class AssetsInteractorTest {
             )
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = oneToken(),
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = oneToken(),
-                secondaryTokenAmount = BigDecimal(1),
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1),
-                isUnbonding = false
             )
 
             Assert.assertEquals(
@@ -262,10 +258,7 @@ class AssetsInteractorTest {
             )
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = xorToken,
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = oneToken(),
-                secondaryTokenAmount = BigDecimal(1),
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1)
             )
 
@@ -295,12 +288,8 @@ class AssetsInteractorTest {
             )
 
             val result = interactor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = oneToken(),
-                primaryTokenAmount = BigDecimal(1),
-                secondaryToken = xorToken,
-                secondaryTokenAmount = BigDecimal(1),
+                xorChange = BigDecimal(1),
                 networkFeeInXor = BigDecimal(1),
-                isUnbonding = false
             )
 
             Assert.assertEquals(true, result)

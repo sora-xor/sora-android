@@ -51,5 +51,9 @@
     <string name="asset_pswap_fullname" translatable="false">PSWAP</string>
     <string name="common_json" translatable="false">JSON</string>
     <string name="common_google" translatable="false">Google</string>
+    <string name="polkaswap_apy" translatable="false">APY</string>
+    <string name="polkaswap_xyk" translatable="false">XYK</string>
+    <string name="polkaswap_tbc" translatable="false">TBC</string>
+    <string name="pool_apy_title" translatable="false">SB APY</string>
     <string name="common_empty_string" translatable="false" />
 </resources>

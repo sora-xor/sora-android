@@ -34,11 +34,10 @@ package jp.co.soramitsu.feature_multiaccount_impl.export.account_list
 
 import android.graphics.drawable.PictureDrawable
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
-import jp.co.soramitsu.common.resourses.ClipboardManager
-import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list.AccountListViewModel
@@ -90,10 +89,7 @@ class AccountListViewModelTest {
     private lateinit var drawable: PictureDrawable
 
     @Mock
-    private lateinit var clipboardManager: ClipboardManager
-
-    @Mock
-    private lateinit var resourceManager: ResourceManager
+    private lateinit var clipboardManager: BasicClipboardManager
 
     private lateinit var accountListViewModel: AccountListViewModel
 
@@ -131,7 +127,6 @@ class AccountListViewModelTest {
             avatarGenerator,
             mainRouter,
             clipboardManager,
-            resourceManager
         )
     }
 
@@ -174,8 +169,7 @@ class AccountListViewModelTest {
 
         accountListViewModel.onAccountLongClicked(address)
 
-        verify(clipboardManager).addToClipboard("address", address)
-        assertEquals(accountListViewModel.copiedAddressEvent.value, Unit)
+        verify(clipboardManager).addToClipboard(address)
     }
 
     @Test

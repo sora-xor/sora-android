@@ -85,6 +85,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun LiquidityAddConfirmScreen(
     state: LiquidityAddState,
+    slippage: Double,
     onConfirmClick: () -> Unit,
 ) {
     Column(
@@ -195,7 +196,7 @@ internal fun LiquidityAddConfirmScreen(
                     horizontalArrangement = Arrangement.Center,
                 ) {
                     MarketSelector(
-                        value = "${state.slippage}%",
+                        value = "$slippage%",
                         description = stringResource(id = R.string.slippage),
                         onClick = {},
                     )
@@ -288,7 +289,6 @@ private fun PreviewLiquidityRemoveConfirmScreen() {
                 ),
             ),
             shouldTransactionReminderInsufficientWarningBeShown = true,
-            transactionFeeToken = "",
             poolInFarming = false,
         ),
         onConfirmClick = {},

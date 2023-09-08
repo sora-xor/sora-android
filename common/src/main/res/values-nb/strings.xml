@@ -66,7 +66,6 @@
   <string name="common_activity">Activity</string>
   <string name="common_and">og</string>
   <string name="common_app_version">App version</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Arabisk</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Back</string>
@@ -339,8 +338,10 @@
   <string name="polkaswap_input_estimated">Inndata er estimert. Du vil selge maksimalt %s eller transaksjonen vil gå tilbake.</string>
   <string name="polkaswap_insufficient_balance">Utilstrekkelig saldo %s</string>
   <string name="polkaswap_insufficient_liqudity">Utilstrekkelig likviditet</string>
-  <string name="polkaswap_liqudity_fee">LP -avgift</string>
-  <string name="polkaswap_liqudity_fee_info">En del av hver handel går til likviditetsleverandører som et protokollinsentiv.</string>
+  <string name="polkaswap_liquidity_fee">LP -avgift</string>
+  <string name="polkaswap_liquidity_fee_info">En del av hver handel går til likviditetsleverandører som et protokollinsentiv.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Marked</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing ensures the best price for any transaction by combining only the best price options from all available markets. When available, Token Bonding Curve (TBC) will be used for liquidity as long as the asset price is more affordable than from other sources, upon which the XYK pool is utilized.</string>
   <string name="polkaswap_market_tbc_description">TBC — buying only from the Token Bonding Curve (Primary Market). There is a possibility that the price can become unfavorable compared to the XYK pool (Secondary Market), but the value received from the vested rewards might turn out to be much more favorable over time.</string>
@@ -361,9 +362,6 @@
   <string name="polkaswap_smart">Smart</string>
   <string name="polkaswap_swap_title">Bytte</string>
   <string name="polkaswap_swapped">Byttet</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_remove">Remove</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">You don\'t have any active pools yet.\nAdd liquidity to earn rewards</string>
@@ -440,6 +438,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">Search assets</string>
+  <string name="search_empty_state">Ingen søkeresultater</string>
   <string name="select_account_address">Søk etter kontoadresse</string>
   <string name="select_account_address_1">Search or add a new address</string>
   <string name="select_account_import">Select account to import</string>
@@ -515,7 +514,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Status</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Parlamentet</string>

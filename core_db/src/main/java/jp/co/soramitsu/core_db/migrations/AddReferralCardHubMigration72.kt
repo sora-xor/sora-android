@@ -30,52 +30,27 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.base
+package jp.co.soramitsu.core_db.migrations
 
-import android.os.Bundle
-import android.view.View
-import androidx.annotation.LayoutRes
-import androidx.appcompat.app.AlertDialog
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import jp.co.soramitsu.common.domain.CardHubType
 
-abstract class BaseFragment<T : BaseViewModel>(@LayoutRes layoutRes: Int) : Fragment(layoutRes) {
+val migration_addReferralCardHub_71_72 = object : Migration(71, 72) {
 
-    abstract val viewModel: T
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        viewModel.errorLiveData.observe {
-            AlertDialog.Builder(requireActivity())
-                .setTitle(R.string.common_error_general_title)
-                .setMessage(it)
-                .setPositiveButton(android.R.string.ok) { _, _ -> }
-                .show()
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        val type = CardHubType.REFERRAL_SYSTEM
+        val globalCardValues = ContentValues().apply {
+            put("cardId", type.hubName)
+            put("visibility", 1)
+            put("sortOrder", type.order)
+            put("collapsed", 0)
         }
-        viewModel.alertDialogLiveData.observe {
-            AlertDialog.Builder(requireActivity())
-                .setTitle(it.first)
-                .setMessage(it.second)
-                .setPositiveButton(android.R.string.ok) { _, _ -> }
-                .show()
-        }
-
-        viewModel.errorFromResourceLiveData.observe {
-            showErrorFromResponse(it.first, it.second)
-        }
-    }
-
-    protected fun showErrorFromResponse(title: Int, messageResId: Int) {
-        AlertDialog.Builder(requireActivity())
-            .setTitle(title)
-            .setMessage(messageResId)
-            .setPositiveButton(android.R.string.ok) { _, _ -> }
-            .show()
-    }
-
-    fun <V> LiveData<V>.observe(observer: (V) -> Unit) {
-        observe(viewLifecycleOwner, observer)
+        database.insert("globalCardsHub", SQLiteDatabase.CONFLICT_REPLACE, globalCardValues)
+        database.setTransactionSuccessful()
+        database.endTransaction()
     }
 }

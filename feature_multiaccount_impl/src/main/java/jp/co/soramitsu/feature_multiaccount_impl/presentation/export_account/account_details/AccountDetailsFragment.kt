@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.ac
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
@@ -97,10 +96,6 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.copyEvent.observe {
-            Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
-
         viewModel.consentExceptionHandler.observe {
             consentHandlerLauncher.launch(it)
         }

@@ -37,7 +37,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.explore.ExploreViewModel
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.test_shared.MainCoroutineRule

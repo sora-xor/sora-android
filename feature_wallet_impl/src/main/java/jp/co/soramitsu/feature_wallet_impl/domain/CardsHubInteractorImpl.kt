@@ -67,17 +67,18 @@ class CardsHubInteractorImpl @Inject constructor(
     suspend fun updateCardVisibilityOnCardHub(cardId: String, visible: Boolean) {
         when (cardId) {
             CardHubType.GET_SORA_CARD.hubName,
+            CardHubType.REFERRAL_SYSTEM.hubName,
             CardHubType.BUY_XOR_TOKEN.hubName -> {
                 walletRepository.updateCardVisibilityOnGlobalCardsHub(
                     cardId = cardId,
-                    visible = visible
+                    visible = visible,
                 )
             }
             CardHubType.ASSETS.hubName,
             CardHubType.POOLS.hubName -> {
                 walletRepository.updateCardVisibilityOnCardsHub(
                     cardId = cardId,
-                    visible = visible
+                    visible = visible,
                 )
             }
         }

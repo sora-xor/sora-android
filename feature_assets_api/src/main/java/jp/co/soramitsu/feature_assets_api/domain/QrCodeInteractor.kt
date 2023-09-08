@@ -30,17 +30,19 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.resourses
+package jp.co.soramitsu.feature_assets_api.domain
 
-import android.content.ClipData
-import android.content.ClipboardManager
+interface QrCodeInteractor {
 
-class ClipboardManager(
-    private val clipboardManager: ClipboardManager
-) {
+    suspend fun createQrInput(
+        userAddress: String,
+        userPublicKey: String,
+        userName: String,
+        tokenId: String? = null,
+        amount: String? = null
+    ): String
 
-    fun addToClipboard(label: String, text: String) {
-        val clip = ClipData.newPlainText(label, text)
-        clipboardManager.setPrimaryClip(clip)
-    }
+    suspend fun processQrResult(
+        qrCodeDecodingResult: String
+    ): Triple<String, String, String?>
 }

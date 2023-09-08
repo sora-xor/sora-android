@@ -66,7 +66,6 @@
   <string name="common_activity">Активность</string>
   <string name="common_and">и</string>
   <string name="common_app_version">Версия приложения</string>
-  <string name="common_apy">ГПД</string>
   <string name="common_arab">Арабский</string>
   <string name="common_azerbaijani">Азербайджанский</string>
   <string name="common_back">Назад</string>
@@ -342,8 +341,10 @@
   <string name="polkaswap_input_estimated">Оценочная сумма. Максимально будет продано %s или транзакция будет отменена.</string>
   <string name="polkaswap_insufficient_balance">Недостаточный баланс %s</string>
   <string name="polkaswap_insufficient_liqudity">Недостаточная ликвидность</string>
-  <string name="polkaswap_liqudity_fee">Комиссия LP</string>
-  <string name="polkaswap_liqudity_fee_info">Часть каждой сделки является награждением для поставщиков ликвидности.</string>
+  <string name="polkaswap_liquidity_fee">Комиссия LP</string>
+  <string name="polkaswap_liquidity_fee_info">Часть каждой сделки является награждением для поставщиков ликвидности.</string>
+  <string name="polkaswap_liquidity_total_fee">Комиссия обмена</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Ваш своп включает в себя как синтетическую комиссию, так и комиссию LP.\nСинтетическая комиссия учитывается, когда обмен проходит через источник ликвидности XST для синтетических активов, а комиссия LP - когда своп проходит через пулы ликвидности.</string>
   <string name="polkaswap_market">Рынок</string>
   <string name="polkaswap_market_smart_description">Маршрутизация ликвидности SMART обеспечивает лучшую цену для любой транзакции, комбинируя только лучшие варианты цены со всех доступных рынков. При наличии TBC будет использоваться для обеспечения ликвидности до тех пор, пока цена актива будет более доступной, чем из других источников, на которых используется пул XYK.</string>
   <string name="polkaswap_market_tbc_description">TBC(Token Bonding Curve)  — покупка только по кривой связывания токенов (первичный рынок). Есть вероятность того, что цена может стать невыгодной по сравнению с пулом XYK (вторичный рынок), но ценность, полученная от закрепленных вознаграждений, со временем может оказаться гораздо более выгодной.</string>
@@ -364,9 +365,6 @@
   <string name="polkaswap_smart">Smart</string>
   <string name="polkaswap_swap_title">Обмен</string>
   <string name="polkaswap_swapped">Продано</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strategic bonus apy</string>
   <string name="pool_button_remove">Забрать</string>
   <string name="pool_details">Информация о пуле</string>
   <string name="pool_liquidity_placeholder">У вас пока нет активных пулов.\nДобавьте ликвидность, чтобы получить вознаграждение</string>
@@ -458,6 +456,7 @@
   <string name="route">Путь</string>
   <string name="scan_qr_show_my_qr">Показать мой QR-код</string>
   <string name="search_assets">Поиск ассетов</string>
+  <string name="search_empty_state">Нет результатов</string>
   <string name="select_account_address">Поиск адреса</string>
   <string name="select_account_address_1">Поиск или добавление нового адреса</string>
   <string name="select_account_import">Выберите аккаунт для импорта</string>
@@ -533,7 +532,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
   <string name="succesfully_imported_account_title">Вы успешно импортировали учетную запись</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">После этой транзакции ваш баланс %s будет меньше, чем %s. Вы не сможете оплатить комиссию сети за другую транзакцию.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Убедитесь, что у вас останется %s после этой транзакции. Иначе вы не сможете оплатить комиссию сети за другую транзакцию.</string>
   <string name="switch_node">Переключить ноду</string>
   <string name="system_appearance">Внешний вид системы</string>
   <string name="tabbar_parliament_title">Парламент</string>

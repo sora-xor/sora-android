@@ -66,7 +66,6 @@
   <string name="common_activity">Aktivnost</string>
   <string name="common_and">и</string>
   <string name="common_app_version">Верзија апликације</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Арапски</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Nazad</string>
@@ -340,8 +339,10 @@
   <string name="polkaswap_input_estimated">Улаз је процењен. Продаћете максимум %s или ће трансакција бити отказана.</string>
   <string name="polkaswap_insufficient_balance">Nedovoljan balans</string>
   <string name="polkaswap_insufficient_liqudity">Недовољна ликвидност</string>
-  <string name="polkaswap_liqudity_fee">Naknada za likvidnost</string>
-  <string name="polkaswap_liqudity_fee_info">Deo svake transakcije ide provajderima likvidnosti kao protokolarni podsticaj.</string>
+  <string name="polkaswap_liquidity_fee">Naknada za likvidnost</string>
+  <string name="polkaswap_liquidity_fee_info">Deo svake transakcije ide provajderima likvidnosti kao protokolarni podsticaj.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Tržište</string>
   <string name="polkaswap_market_smart_description">СМАРТ усмеравање ликвидности обезбеђује најбољу цену за било коју трансакцију комбиновањем само најбољих опција цена са свих доступних тржишта. Када је доступна, крива везивања токена (ТБЦ) ће се користити за ликвидност све док је цена средства приступачнија него из других извора, на основу којих се користи КСИК фонд.</string>
   <string name="polkaswap_market_tbc_description">ТБЦ — куповина само са криве везивања токена (примарно тржиште). Постоји могућност да цена може постати неповољнија у поређењу са КСИК фондом (секундарно тржиште), али вредност добијена од стечених награда може се временом показати много повољнијом.</string>
@@ -362,9 +363,6 @@
   <string name="polkaswap_smart">Pametan</string>
   <string name="polkaswap_swap_title">Zameni</string>
   <string name="polkaswap_swapped">Заменио</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Стратешки бонус апи</string>
   <string name="pool_button_remove">Уклони</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">Још увек немате активних пула. Додајте ликвидност да бисте зарадили награде</string>
@@ -445,6 +443,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">Search assets</string>
+  <string name="search_empty_state">Нема резултата претраге</string>
   <string name="select_account_address">Претражите адресу налога</string>
   <string name="select_account_address_1">Претражите или додајте нову адресу</string>
   <string name="select_account_import">Select account to import</string>
@@ -520,7 +519,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Парламент</string>

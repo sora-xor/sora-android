@@ -43,7 +43,7 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.BuildUtils
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
@@ -181,7 +181,7 @@ class ProfileViewModel @Inject constructor(
         when (soraCardResult) {
             is SoraCardResult.NavigateTo -> {
                 when (soraCardResult.screen) {
-                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow(isLaunchedFromSoraCard = true)
+                    OutwardsScreen.DEPOSIT -> walletRouter.openQrCodeFlow()
                     OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }

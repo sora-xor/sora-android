@@ -35,7 +35,7 @@ package jp.co.soramitsu.feature_ecosystem_impl.domain
 import jp.co.soramitsu.common.util.ext.compareNullDesc
 import jp.co.soramitsu.common.util.ext.multiplyNullable
 import jp.co.soramitsu.common.util.mapBalance
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

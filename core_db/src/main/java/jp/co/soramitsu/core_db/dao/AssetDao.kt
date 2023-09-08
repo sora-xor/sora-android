@@ -220,4 +220,10 @@ interface AssetDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFiatPrice(prices: List<FiatTokenPriceLocal>)
+
+    @Query("select * from fiatTokenPrices where currencyId=:isoCode")
+    suspend fun getFiatTokenPriceLocal(isoCode: String): List<FiatTokenPriceLocal>
+
+    @Query("update fiatTokenPrices set fiatPrice=:fiat, fiatPriceTime=:time where tokenIdFiat=:tokenId and currencyId=:isoCode")
+    suspend fun updateFiatValueOfToken(tokenId: String, isoCode: String, fiat: Double, time: Long)
 }

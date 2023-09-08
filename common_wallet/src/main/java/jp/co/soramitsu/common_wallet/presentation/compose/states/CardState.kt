@@ -125,7 +125,11 @@ data class SoraCardState(
 ) : CardState
 
 data class BuyXorState(
-    val visible: Boolean = false
+    val visible: Boolean = false,
+) : CardState
+
+data class ReferralState(
+    val visible: Boolean = false,
 ) : CardState
 
 class FavoritePoolsCardState(

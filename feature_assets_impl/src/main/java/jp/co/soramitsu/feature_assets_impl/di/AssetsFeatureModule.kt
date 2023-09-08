@@ -40,9 +40,9 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.QrCodeInteractor
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
 import jp.co.soramitsu.feature_assets_impl.data.AssetsRepositoryImpl
 import jp.co.soramitsu.feature_assets_impl.domain.AssetsInteractorImpl
 import jp.co.soramitsu.feature_assets_impl.domain.QrCodeInteractorImpl

@@ -58,7 +58,6 @@ import jp.co.soramitsu.common.presentation.compose.components.previewAssetAmount
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
-import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCardState
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
@@ -79,12 +78,6 @@ data class RequestTokenConfirmScreenState(
     val untransformedUserAddress: String?,
     val assetAmountInputState: AssetAmountInputState?
 ) {
-
-    val loadableContentCardState by lazy {
-        LoadableContentCardState(
-            screenStatus = screenStatus
-        )
-    }
 
     val qrCodeImage: Image
         get() {
@@ -152,7 +145,6 @@ fun RequestTokenConfirmScreen(
     scrollState: ScrollState,
     state: RequestTokenConfirmScreenState,
     onUserAddressClick: () -> Unit,
-    onFocusChange: (Boolean) -> Unit,
     onShareCodeClick: () -> Unit,
     onTryAgainClick: () -> Unit
 ) {
@@ -172,7 +164,7 @@ fun RequestTokenConfirmScreen(
                 all = Dimens.x1_5
             ),
             cornerRadius = Dimens.x4,
-            state = state.loadableContentCardState,
+            state = state.screenStatus,
             contentWhenLoaded = {
                 Image(
                     painter = state.qrCodeImage.retrievePainter(),
@@ -188,7 +180,7 @@ fun RequestTokenConfirmScreen(
                 all = Dimens.x1_5
             ),
             cornerRadius = Dimens.x4,
-            state = state.loadableContentCardState,
+            state = state.screenStatus,
             onTryAgainClick = onTryAgainClick
         ) {
             ListTile(
@@ -204,7 +196,7 @@ fun RequestTokenConfirmScreen(
             modifier = Modifier.fillMaxWidth(),
             innerPadding = PaddingValues(vertical = Dimens.x1),
             cornerRadius = Dimens.x4,
-            state = state.loadableContentCardState,
+            state = state.screenStatus,
             onTryAgainClick = onTryAgainClick
         ) {
             Column {
@@ -225,7 +217,7 @@ fun RequestTokenConfirmScreen(
                     state = state.assetAmountInputState,
                     onAmountChange = { /* No ability to change amount while confirming */ },
                     onSelectToken = { /* No ability to reselect token while confirming */ },
-                    onFocusChange = onFocusChange,
+                    onFocusChange = {},
                 )
             }
         }
@@ -256,7 +248,6 @@ fun PreviewRequestTokenConfirmScreen() {
             assetAmountInputState = previewAssetAmountInputState
         ),
         onUserAddressClick = {},
-        onFocusChange = {},
         onShareCodeClick = {},
         onTryAgainClick = {},
     )

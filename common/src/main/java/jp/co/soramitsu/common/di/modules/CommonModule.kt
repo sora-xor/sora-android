@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.di.modules
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Color
 import android.os.Build
@@ -51,6 +52,7 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -69,7 +71,6 @@ import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.interfaces.WithProgress
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.io.FileManagerImpl
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.LanguagesHolder
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.CryptoAssistant
@@ -293,8 +294,8 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideClipBoardManager(@ApplicationContext context: Context): ClipboardManager {
-        return ClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager)
+    fun provideClipBoardManager(@ApplicationContext context: Context): BasicClipboardManager {
+        return BasicClipboardManager(context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
     }
 
     @Provides

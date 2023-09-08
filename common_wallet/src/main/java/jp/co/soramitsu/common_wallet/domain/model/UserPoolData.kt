@@ -71,8 +71,8 @@ private fun printFiatInternal(basic: BasicPoolData, user: UserPoolData?): Pair<D
     val f1 = basic.baseToken.calcFiat(user.basePooled)
     val f2 = basic.targetToken.calcFiat(user.targetPooled)
     if (f1 == null || f2 == null) return null
-    val change1 = basic.baseToken.fiatPriceChange ?: return null
-    val change2 = basic.targetToken.fiatPriceChange ?: return null
+    val change1 = basic.baseToken.fiatPriceChange ?: 0.0
+    val change2 = basic.targetToken.fiatPriceChange ?: 0.0
     val price1 = basic.baseToken.fiatPrice ?: return null
     val price2 = basic.targetToken.fiatPrice ?: return null
     val newPoolFiat = f1 + f2
