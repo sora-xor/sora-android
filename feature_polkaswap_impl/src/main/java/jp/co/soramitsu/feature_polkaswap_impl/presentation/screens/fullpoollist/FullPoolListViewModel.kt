@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoollist
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +49,12 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.FullPoolListState
+import jp.co.soramitsu.ui_core.R
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -66,15 +70,25 @@ class FullPoolListViewModel @Inject constructor(
     private val allPools = mutableListOf<CommonUserPoolData>()
     private val filter = MutableStateFlow("")
 
-    internal var state by mutableStateOf(
+    private val _state = MutableStateFlow(
         FullPoolListState(
             "",
             PoolsListState(emptyList())
         )
     )
-        private set
+    internal val state = _state.asStateFlow()
 
     init {
+        _toolbarState.value = SoramitsuToolbarState(
+            type = SoramitsuToolbarType.Small(),
+            basic = BasicToolbarState(
+                title = "",
+                navIcon = R.drawable.ic_cross_24,
+                visibility = true,
+                searchEnabled = true,
+                actionLabel = jp.co.soramitsu.common.R.string.common_edit,
+            ),
+        )
         viewModelScope.launch {
             poolsInteractor.subscribePoolsCacheOfCurAccount()
                 .catch { onError(it) }
@@ -93,11 +107,15 @@ class FullPoolListViewModel @Inject constructor(
         }
     }
 
+    override fun onToolbarSearch(value: String) {
+        filter.value = value
+    }
+
     private fun calcState(filter: String) {
         val filtered =
             if (filter.isBlank()) allPools else allPools.filter { it.basic.isFilterMatch(filter) }
         val data = mapPoolsData(filtered, numbersFormatter)
-        state = state.copy(
+        _state.value = _state.value.copy(
             list = data.first,
             fiatSum = formatFiatAmount(
                 data.second,
@@ -105,10 +123,6 @@ class FullPoolListViewModel @Inject constructor(
                 numbersFormatter,
             ),
         )
-    }
-
-    fun searchAssets(search: String) {
-        filter.value = search
     }
 
     override fun onAction() {

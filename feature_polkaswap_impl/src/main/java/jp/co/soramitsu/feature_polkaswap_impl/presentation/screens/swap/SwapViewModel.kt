@@ -422,6 +422,12 @@ class SwapViewModel @AssistedInject constructor(
 
     fun fromCardClicked() {
         if (assetsList.isNotEmpty()) {
+            val filtered = assetsList.filter {
+                it.token.id != _swapMainState.value.tokenToState?.token?.id.orEmpty()
+            }
+            _swapTokensFilter.value = _swapTokensFilter.value.copy(
+                tokenIds = filtered.map { it.token.id }
+            )
             _swapMainState.value = _swapMainState.value.copy(
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
@@ -435,6 +441,12 @@ class SwapViewModel @AssistedInject constructor(
 
     fun toCardClicked() {
         if (assetsList.isNotEmpty()) {
+            val filtered = assetsList.filter {
+                it.token.id != _swapMainState.value.tokenFromState?.token?.id.orEmpty()
+            }
+            _swapTokensFilter.value = _swapTokensFilter.value.copy(
+                tokenIds = filtered.map { it.token.id }
+            )
             _swapMainState.value = _swapMainState.value.copy(
                 tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero(),

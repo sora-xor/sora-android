@@ -156,11 +156,9 @@ private fun DiscoverScreenPreview() {
                 previewAssetItemCardStateList.mapIndexed { i, a ->
                     i.toString() to a
                 },
-                "",
             ),
             EcoSystemPoolsState(
                 previewBasicPoolListItemState,
-                "",
             ),
             {}, {}, {}, {},
         )

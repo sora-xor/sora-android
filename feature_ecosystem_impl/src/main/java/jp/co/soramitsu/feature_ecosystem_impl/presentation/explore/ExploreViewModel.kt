@@ -34,12 +34,19 @@ package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.ui_core.component.toolbar.Action
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 class ExploreViewModel @Inject constructor(
@@ -47,7 +54,72 @@ class ExploreViewModel @Inject constructor(
     private val assetsRouter: AssetsRouter,
 ) : BaseViewModel() {
 
+    private val _searchState = MutableStateFlow("")
+    val searchState = _searchState.asStateFlow()
+
+    init {
+        _toolbarState.value = SoramitsuToolbarState(
+            type = SoramitsuToolbarType.Small(),
+            basic = BasicToolbarState(
+                title = "",
+                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_arrow_left,
+                visibility = false,
+                searchEnabled = false,
+            ),
+        )
+    }
+
     override fun startScreen(): String = ExploreRoutes.START
+
+    override fun onMenuItem(action: Action) {
+        when (action) {
+            is Action.Plus -> {
+                onPoolPlus()
+            }
+            else -> {}
+        }
+    }
+
+    override fun onCurrentDestinationChanged(curDest: String) {
+        _toolbarState.value?.let { state ->
+            when (curDest) {
+                ExploreRoutes.ALL_POOLS -> {
+                    _toolbarState.value = state.copy(
+                        basic = state.basic.copy(
+                            visibility = true,
+                            title = R.string.discovery_polkaswap_pools,
+                            searchEnabled = true,
+                            searchValue = _searchState.value,
+                            menu = listOf(Action.Plus()),
+                        )
+                    )
+                }
+                ExploreRoutes.ALL_CURRENCIES -> {
+                    _toolbarState.value = state.copy(
+                        basic = state.basic.copy(
+                            visibility = true,
+                            title = R.string.common_currencies,
+                            searchEnabled = true,
+                            searchValue = _searchState.value,
+                            menu = emptyList(),
+                        )
+                    )
+                }
+                else -> {
+                    _toolbarState.value = state.copy(
+                        basic = state.basic.copy(
+                            visibility = false,
+                            searchEnabled = false,
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onToolbarSearch(value: String) {
+        _searchState.value = value
+    }
 
     fun onTokenClicked(tokenId: String) {
         assetsRouter.showAssetDetails(tokenId)
@@ -57,7 +129,7 @@ class ExploreViewModel @Inject constructor(
         polkaswapRouter.showPoolDetails(pool)
     }
 
-    fun onPoolPlus() {
+    private fun onPoolPlus() {
         polkaswapRouter.showAddLiquidity(SubstrateOptionsProvider.feeAssetId)
     }
 }

@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.fullpoolsettings
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -51,6 +50,12 @@ import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.PoolSettingsState
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
+import jp.co.soramitsu.ui_core.R
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -66,14 +71,28 @@ class FullPoolSettingsViewModel @Inject constructor(
     private val _assetPositions = MutableLiveData<Pair<Int, Int>>()
     val assetPositions: LiveData<Pair<Int, Int>> = _assetPositions
 
+    private val _dragList = MutableLiveData<Boolean>()
+    val dragList: LiveData<Boolean> = _dragList
+
     private val curPoolList = mutableListOf<PoolSettingsState>()
     private var positions = mutableListOf<StringPair>()
     private var curFilter: String = ""
     private var symbol: String = ""
 
-    internal var fiatSum by mutableStateOf("")
+    private val _fiatSum = MutableStateFlow("")
+    internal val fiatSum = _fiatSum.asStateFlow()
 
     init {
+        _toolbarState.value = SoramitsuToolbarState(
+            type = SoramitsuToolbarType.Small(),
+            basic = BasicToolbarState(
+                title = "",
+                navIcon = R.drawable.ic_cross_24,
+                visibility = true,
+                searchEnabled = true,
+                actionLabel = jp.co.soramitsu.common.R.string.common_done,
+            ),
+        )
         viewModelScope.launch {
             val pools: List<CommonUserPoolData> = poolsInteractor.getPoolsCacheOfCurAccount()
 
@@ -85,6 +104,10 @@ class FullPoolSettingsViewModel @Inject constructor(
                     token1Icon = poolData.basic.baseToken.iconUri(),
                     token2Icon = poolData.basic.targetToken.iconUri(),
                     tokenName = "%s-%s".format(
+                        poolData.basic.baseToken.name,
+                        poolData.basic.targetToken.name,
+                    ),
+                    tokenSymbol = "%s-%s".format(
                         poolData.basic.baseToken.symbol,
                         poolData.basic.targetToken.symbol,
                     ),
@@ -119,6 +142,7 @@ class FullPoolSettingsViewModel @Inject constructor(
                 addAll(
                     curPoolList.filter {
                         it.tokenName.lowercase().contains(filter) ||
+                            it.tokenSymbol.lowercase().contains(filter) ||
                             it.assetAmount.lowercase().contains(filter) ||
                             it.id.first.lowercase().contains(filter) ||
                             it.id.second.lowercase().contains(filter)
@@ -128,14 +152,15 @@ class FullPoolSettingsViewModel @Inject constructor(
         }
 
         _settingsState.value = list
-        fiatSum = if (list.isNotEmpty())
+        _fiatSum.value = if (list.isNotEmpty())
             list.map { it.fiat }.reduce { acc, d -> acc + d }.let {
                 formatFiatAmount(it, symbol, numbersFormatter)
             } else ""
     }
 
-    fun searchAssets(filter: String) {
-        curFilter = filter
+    override fun onToolbarSearch(value: String) {
+        _dragList.value = value.isBlank()
+        curFilter = value
         filterAndUpdateAssetsList()
     }
 
@@ -163,7 +188,11 @@ class FullPoolSettingsViewModel @Inject constructor(
         return true
     }
 
-    fun onCloseClick() {
+    override fun onAction() {
+        walletRouter.popBackStackFragment()
+    }
+
+    override fun onNavIcon() {
         walletRouter.popBackStackFragment()
     }
 

@@ -88,7 +88,6 @@ internal class AllPoolsViewModel @Inject constructor(
             }
             EcoSystemPoolsState(
                 pools = mappedEnumerated,
-                filter = pair.second,
             )
         }
         .flowOn(coroutineManager.io)
