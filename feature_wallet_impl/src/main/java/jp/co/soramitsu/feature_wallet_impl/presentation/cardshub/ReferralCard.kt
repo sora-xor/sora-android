@@ -32,131 +32,24 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.FilledButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
-import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 fun ReferralCard(
     onStartClicked: () -> Unit,
     onCloseCard: () -> Unit,
 ) {
-    ContentCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onStartClicked,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            ConstraintLayout(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-            ) {
-                val (ref, image) = createRefs()
-                ReferralContent(
-                    modifier = Modifier
-                        .constrainAs(ref) {
-                            top.linkTo(parent.top)
-                            start.linkTo(parent.start)
-                        },
-                    onStartClicked = onStartClicked,
-                )
-
-                Image(
-                    modifier = Modifier.constrainAs(image) {
-                        start.linkTo(ref.end)
-                        top.linkTo(parent.top)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(ref.bottom)
-                        width = Dimension.fillToConstraints
-                        height = Dimension.fillToConstraints
-                    },
-                    contentScale = ContentScale.Fit,
-                    alignment = Alignment.CenterEnd,
-                    painter = painterResource(R.drawable.image_friends),
-                    contentDescription = null,
-                )
-            }
-
-            BleachedButton(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .align(Alignment.TopEnd)
-                    .padding(Dimens.x1),
-                size = Size.ExtraSmall,
-                order = Order.TERTIARY,
-                shape = CircleShape,
-                onClick = onCloseCard,
-                leftIcon = painterResource(R.drawable.ic_cross),
-            )
-        }
-    }
-}
-
-@Composable
-private fun ReferralContent(
-    modifier: Modifier = Modifier,
-    onStartClicked: () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .padding(
-                top = Dimens.x2,
-                bottom = Dimens.x2,
-                start = Dimens.x3,
-            )
-            .wrapContentHeight(),
-    ) {
-        Text(
-            text = stringResource(R.string.settings_invite_title),
-            style = MaterialTheme.customTypography.headline2,
-            color = MaterialTheme.customColors.fgPrimary,
-        )
-
-        Text(
-            modifier = Modifier.padding(top = Dimens.x1),
-            text = stringResource(R.string.referral_title),
-            style = MaterialTheme.customTypography.paragraphXS,
-            color = MaterialTheme.customColors.fgPrimary,
-        )
-
-        FilledButton(
-            modifier = Modifier
-                .wrapContentWidth()
-                .padding(top = Dimens.x1_5),
-            text = stringResource(R.string.referral_start_inviting),
-            size = Size.ExtraSmall,
-            order = Order.PRIMARY,
-            onClick = onStartClicked,
-        )
-    }
+    BasicBannerCard(
+        imageContent = R.drawable.image_friends,
+        title = stringResource(id = R.string.settings_invite_title),
+        description = stringResource(id = R.string.referral_title),
+        button = stringResource(id = R.string.referral_start_inviting),
+        onButtonClicked = onStartClicked,
+        onCloseCard = onCloseCard,
+    )
 }
 
 @Preview
