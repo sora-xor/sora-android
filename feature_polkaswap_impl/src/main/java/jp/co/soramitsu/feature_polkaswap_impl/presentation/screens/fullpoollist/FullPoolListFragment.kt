@@ -48,12 +48,13 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -63,10 +64,6 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
-import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -76,6 +73,9 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
 
     override val viewModel: FullPoolListViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
+
+    @Composable
+    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -95,23 +95,7 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
             ) {
-                SoramitsuToolbar(
-                    state = SoramitsuToolbarState(
-                        basic = BasicToolbarState(
-                            title = "",
-                            navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
-                            actionLabel = R.string.common_edit,
-                            searchValue = "",
-                        ),
-                        type = SoramitsuToolbarType.Small(),
-                    ),
-                    backgroundColor = MaterialTheme.customColors.bgSurface,
-                    elevation = 0.dp,
-                    onAction = viewModel::onAction,
-                    onNavigate = viewModel::onNavIcon,
-                    onSearch = viewModel::searchAssets,
-                )
-                val state = viewModel.state
+                val state = viewModel.state.collectAsStateWithLifecycle()
                 Row(
                     modifier = Modifier
                         .padding(
@@ -133,7 +117,7 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                     )
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = state.fiatSum,
+                        text = state.value.fiatSum,
                         textAlign = TextAlign.End,
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
@@ -145,7 +129,7 @@ class FullPoolListFragment : SoraBaseFragment<FullPoolListViewModel>() {
                         .verticalScroll(scrollState)
                 ) {
                     PoolsList(
-                        cardState = state.list,
+                        cardState = state.value.list,
                         onPoolClick = viewModel::onPoolClick,
                     )
                 }

@@ -55,13 +55,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -72,10 +73,6 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common_wallet.presentation.compose.components.AssetItem
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetslist.CommonAssetsList
-import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -85,6 +82,9 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
 
     override val viewModel: FullAssetListViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
+
+    @Composable
+    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -104,23 +104,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
             ) {
-                SoramitsuToolbar(
-                    state = SoramitsuToolbarState(
-                        basic = BasicToolbarState(
-                            title = "",
-                            navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
-                            actionLabel = R.string.common_edit,
-                            searchValue = "",
-                        ),
-                        type = SoramitsuToolbarType.Small(),
-                    ),
-                    backgroundColor = MaterialTheme.customColors.bgSurface,
-                    elevation = 0.dp,
-                    onAction = viewModel::onAction,
-                    onNavigate = viewModel::onNavIcon,
-                    onSearch = viewModel::searchAssets,
-                )
-                val state = viewModel.state
+                val state = viewModel.state.collectAsStateWithLifecycle()
                 Row(
                     modifier = Modifier
                         .padding(
@@ -142,7 +126,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                     )
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = state.fiatSum,
+                        text = state.value.fiatSum,
                         textAlign = TextAlign.End,
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
@@ -154,7 +138,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                         .fillMaxSize()
                 ) {
                     androidx.compose.animation.AnimatedVisibility(
-                        visible = state.searchMode.not(),
+                        visible = state.value.searchMode.not(),
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
@@ -164,24 +148,24 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                                 .verticalScroll(scrollState),
                         ) {
                             CommonAssetsList(
-                                state = state,
+                                state = state.value,
                                 onAssetClick = viewModel::onAssetClick,
                             )
                         }
                     }
                     androidx.compose.animation.AnimatedVisibility(
-                        visible = state.searchMode,
+                        visible = state.value.searchMode,
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
                         val listState = rememberLazyListState()
                         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                             items(
-                                count = state.topList.size + state.bottomList.size + 1,
+                                count = state.value.topList.size + state.value.bottomList.size + 1,
                                 key = null,
-                                contentType = { p -> if (p == state.topList.size) 0 else 1 },
+                                contentType = { p -> if (p == state.value.topList.size) 0 else 1 },
                             ) { position ->
-                                if (position == state.topList.size) {
+                                if (position == state.value.topList.size) {
                                     Text(
                                         text = stringResource(id = R.string.global_results).uppercase(),
                                         style = MaterialTheme.customTypography.headline4,
@@ -189,7 +173,7 @@ class FullAssetListFragment : SoraBaseFragment<FullAssetListViewModel>() {
                                     )
                                 } else {
                                     val item =
-                                        if (position < state.topList.size) state.topList[position] else state.bottomList[position - state.topList.size - 1]
+                                        if (position < state.value.topList.size) state.value.topList[position] else state.value.bottomList[position - state.value.topList.size - 1]
                                     AssetItem(
                                         assetState = item,
                                         testTag = "",

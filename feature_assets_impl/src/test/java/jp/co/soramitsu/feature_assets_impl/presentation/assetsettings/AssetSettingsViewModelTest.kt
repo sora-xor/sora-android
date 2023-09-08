@@ -146,7 +146,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[6])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("token2_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 5, 6)
@@ -168,7 +168,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[2])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("0x0200050000000000000000000000000000000000000000000000000000000000"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -193,7 +193,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[5])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 5, 6)
@@ -221,7 +221,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -241,7 +241,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 5, 6)
@@ -269,7 +269,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.mapIndexed { index, s -> s to index }.toMap()
         verify(assetsInteractor).updateAssetPositions(map)
@@ -283,7 +283,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[6])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token2_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -304,7 +304,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[7])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token3_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 7, 8)
@@ -328,7 +328,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[7])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token3_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 7, 8)
@@ -356,7 +356,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.mapIndexed { index, s -> s to index }.toMap()
         verify(assetsInteractor).updateAssetPositions(map)
@@ -391,7 +391,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.mapIndexed { index, s -> s to index }.toMap()
         verify(assetsInteractor).updateAssetPositions(map)
@@ -411,7 +411,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[6])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token2_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 7, 8)
@@ -446,7 +446,7 @@ class AssetSettingsViewModelTest {
     @Test
     fun `click back`() = runTest {
         setUpStartList()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -454,7 +454,7 @@ class AssetSettingsViewModelTest {
     @Test
     fun `click done`() = runTest {
         setUpStartList()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -465,7 +465,7 @@ class AssetSettingsViewModelTest {
         val mappedModels = mapModels(list)
         viewModel.onFavoriteClick(mappedModels[0])
         advanceUntilIdle()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -478,7 +478,7 @@ class AssetSettingsViewModelTest {
         advanceUntilIdle()
         viewModel.onFavoriteClick(mappedModels[1])
         advanceUntilIdle()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
