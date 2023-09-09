@@ -46,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import dagger.hilt.android.AndroidEntryPoint
@@ -90,7 +91,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         ) {
             FooWrapper(scrollState) {
                 ReferralWelcomePageScreen(
-                    state = viewModel.referralScreenState,
+                    state = viewModel.referralScreenState.collectAsStateWithLifecycle().value,
                     onStartInviting = {
                         viewModel.openBond()
                         navController.navigate(ReferralFeatureRoutes.BOND_XOR)
@@ -108,7 +109,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         ) {
             FooWrapper(scrollState) {
                 ReferralProgramPage(
-                    state = viewModel.referralScreenState,
+                    state = viewModel.referralScreenState.collectAsStateWithLifecycle().value,
                     onGetMoreInvitations = {
                         viewModel.openBond()
                         navController.navigate(ReferralFeatureRoutes.BOND_XOR)
@@ -133,9 +134,10 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
             route = ReferralFeatureRoutes.BOND_XOR
         ) {
             FooWrapper(scrollState) {
+                val state = viewModel.referralScreenState.collectAsStateWithLifecycle().value
                 ReferralBondXor(
-                    common = viewModel.referralScreenState.common,
-                    state = viewModel.referralScreenState.bondState,
+                    common = state.common,
+                    state = state.bondState,
                     onBondInvitationsCountChange = { viewModel.onBondValueChange(it) },
                     onBondMinus = { viewModel.onBondMinus() },
                     onBondPlus = { viewModel.onBondPlus() },
@@ -148,9 +150,10 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
             route = ReferralFeatureRoutes.UNBOND_XOR
         ) {
             FooWrapper(scrollState) {
+                val state = viewModel.referralScreenState.collectAsStateWithLifecycle().value
                 ReferralUnbondXor(
-                    common = viewModel.referralScreenState.common,
-                    state = viewModel.referralScreenState.bondState,
+                    common = state.common,
+                    state = state.bondState,
                     onUnbondInvitationsCountChange = { viewModel.onUnbondValueChange(it) },
                     onUnbondMinus = { viewModel.onUnbondMinus() },
                     onUnbondPlus = { viewModel.onUnbondPlus() },
@@ -164,8 +167,8 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         ) {
             FooWrapper(scrollState) {
                 ReferrerInput(
-                    common = viewModel.referralScreenState.common,
-                    state = viewModel.referralScreenState.referrerInputState,
+                    common = viewModel.referralScreenState.collectAsStateWithLifecycle().value.common,
+                    state = viewModel.referralScreenState.collectAsStateWithLifecycle().value.referrerInputState,
                     onActivateReferrerClicked = {
                         viewModel.onActivateLinkClick()
                     },
@@ -178,10 +181,11 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
             route = ReferralFeatureRoutes.REFERRER_FILLED
         ) {
             FooWrapper(scrollState) {
+                val state = viewModel.referralScreenState.collectAsStateWithLifecycle().value
                 ReferrerFilled(
-                    state = viewModel.referralScreenState.common,
+                    state = state.common,
                     onCloseClicked = {
-                        if (viewModel.referralScreenState.isInitialized()) {
+                        if (state.isInitialized()) {
                             navController.popBackStack(
                                 ReferralFeatureRoutes.REFERRAL_PROGRAM,
                                 false

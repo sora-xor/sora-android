@@ -38,13 +38,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 
 data class SwapMainState(
     val tokenFromState: AssetAmountInputState?,
     val tokenToState: AssetAmountInputState?,
     val slippage: Double,
-    val selectSearchAssetState: SelectSearchAssetState?,
     val market: Market,
     val selectMarketState: Pair<Market, List<Market>>?,
     val details: SwapDetailsState,
@@ -68,7 +66,6 @@ data class SwapDetailsState(
     val lpFee: String,
     val route: String,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    val transactionFeeToken: String
 )
 
 fun defaultSwapDetailsState() =
@@ -86,5 +83,4 @@ fun defaultSwapDetailsState() =
         lpFee = "",
         route = "",
         shouldTransactionReminderInsufficientWarningBeShown = false,
-        transactionFeeToken = ""
     )

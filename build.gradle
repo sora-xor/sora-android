@@ -39,13 +39,13 @@ buildscript {
             insetter               : '0.6.0',
             truth                  : '1.1.5',
             lottie                 : '4.2.0',
-            xNetworking            : '0.0.60',
+            xNetworking            : '0.0.61',
             compose                : '1.4.3',
             composeMaterial        : '1.4.3',
             composeCompiler        : '1.4.6',
             composeConstraintLayout: '1.1.0-alpha05',
-            uiCore                 : '0.1.0',
-            soraCard               : '0.1.33',
+            uiCore                 : '0.1.2',
+            soraCard               : '0.1.40',
             lazySodium             : '5.0.2',
             jna                    : '5.8.0',
             accompanist            : '0.30.1',
@@ -54,11 +54,11 @@ buildscript {
     ]
 
     ext {
-        // soralution 106 3.4.0.0 2023.08.25
-        // sora dae 99 3.3.0.1 2023.08.28
+        // soralution 107 3.4.0.1 2023.09.08
+        // sora dae 100 3.3.0.1 2023.09.08
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 99)
-        appVersionName = '3.3.0.1'
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 100)
+        appVersionName = '3.3.0.2'
 
         compileVersion = 33
         minVersion = 24

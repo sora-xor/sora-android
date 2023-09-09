@@ -52,6 +52,7 @@ open class BaseViewModel : ViewModel() {
     val errorFromResourceLiveData = SingleLiveEvent<Pair<Int, Int>>()
     val alertDialogLiveData = SingleLiveEvent<Pair<String, String>>()
     val snackBarLiveData = SingleLiveEvent<SnackBarState>()
+    val copiedToast = SingleLiveEvent<Unit>()
 
     protected val _toolbarState = MutableLiveData<SoramitsuToolbarState>()
     val toolbarState: LiveData<SoramitsuToolbarState> = _toolbarState
@@ -114,6 +115,8 @@ open class BaseViewModel : ViewModel() {
     }
 
     open fun onMenuItem(action: Action) = Unit
+
+    open fun onToolbarSearch(value: String) = Unit
 
     open fun onAction() = Unit
 

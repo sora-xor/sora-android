@@ -66,7 +66,6 @@
   <string name="common_activity">活动</string>
   <string name="common_and">和</string>
   <string name="common_app_version">应用程序版本</string>
-  <string name="common_apy">年收益率</string>
   <string name="common_arab">阿拉伯语</string>
   <string name="common_azerbaijani">阿塞拜疆语</string>
   <string name="common_back">返回</string>
@@ -338,8 +337,10 @@
   <string name="polkaswap_input_estimated">输入是估计的。您将卖出最大的%s，否则交易将被取消。</string>
   <string name="polkaswap_insufficient_balance">%s余额不足</string>
   <string name="polkaswap_insufficient_liqudity">流动性不足</string>
-  <string name="polkaswap_liqudity_fee">流动性提供者费用</string>
-  <string name="polkaswap_liqudity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
+  <string name="polkaswap_liquidity_fee">流动性提供者费用</string>
+  <string name="polkaswap_liquidity_fee_info">每笔交易的一部分作为协议激励奖励流动性提供者。</string>
+  <string name="polkaswap_liquidity_total_fee">兑换费用</string>
+  <string name="polkaswap_liquidity_total_fee_desc">你的兑换涉及到合成费用和流动性提供者费用。\n当兑换通过合成资产的XST流动性来源时，会计算合成费用；而当兑换通过流动性池时，则会计算流动性提供者费用。</string>
   <string name="polkaswap_market">市场</string>
   <string name="polkaswap_market_smart_description">智能流动性路由通过从所有可用市场中仅选择最佳价格选项，确保任何交易的最佳价格。如果可用，将使用代币绑定曲线（TBC）提供流动性，只要资产价格比其他来源更实惠，否则将使用XYK池。</string>
   <string name="polkaswap_market_tbc_description">TBC - 仅从代币绑定曲线（一级市场）购买。价格可能会比XYK池（二级市场）不利，但随着时间的推移，从归属奖励中获得的价值可能会更有利。</string>
@@ -360,9 +361,6 @@
   <string name="polkaswap_smart">智能模式</string>
   <string name="polkaswap_swap_title">兑换</string>
   <string name="polkaswap_swapped">已兑换</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">战略红利APY</string>
   <string name="pool_button_remove">移除</string>
   <string name="pool_details">流动池详情</string>
   <string name="pool_liquidity_placeholder">您还没有任何生效的流动池。\n赶快来增加流动性以赚取奖励哦</string>
@@ -434,6 +432,7 @@
   <string name="route">路径</string>
   <string name="scan_qr_show_my_qr">显示我的二维码</string>
   <string name="search_assets">搜索资产</string>
+  <string name="search_empty_state">无搜索结果</string>
   <string name="select_account_address">搜索账户地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
   <string name="select_account_import">选择要导入的账户</string>
@@ -475,7 +474,7 @@
   <string name="sora_card_action_transfer">转账</string>
   <string name="sora_card_already_have_card">我已经有一张卡了</string>
   <string name="sora_card_annual_service_fee">年服务费€0</string>
-  <string name="sora_card_banner_title_card_info">Card info</string>
+  <string name="sora_card_banner_title_card_info">卡片信息</string>
   <string name="sora_card_blacklisted_countires_title">应用程序排除</string>
   <string name="sora_card_blacklisted_countires_warning">来自某些国家的居民目前无法申请SORA卡。</string>
   <string name="sora_card_buy_xor_with_eur">用欧元购买XOR</string>
@@ -509,7 +508,7 @@
   <string name="status_successful">成功的</string>
   <string name="status_title">状态</string>
   <string name="succesfully_imported_account_title">您已成功导入一个账户</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">此次交易后，您的%s余额将少于%s。您将无法支付另一笔交易的网络费用。</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">确保在此事务之后还剩下 %s。否则，您将无法进行其他交易。</string>
   <string name="switch_node">切换节点</string>
   <string name="system_appearance">系统外观</string>
   <string name="tabbar_parliament_title">议会</string>

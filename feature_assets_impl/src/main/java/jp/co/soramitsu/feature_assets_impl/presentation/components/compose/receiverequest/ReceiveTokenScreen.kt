@@ -49,17 +49,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTile
 import jp.co.soramitsu.common.presentation.compose.uikit.molecules.ListTileState
 import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCard
-import jp.co.soramitsu.common.presentation.compose.uikit.organisms.LoadableContentCardState
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -71,14 +71,8 @@ data class ReceiveTokenByQrScreenState(
     val untransformedQrBitmap: Bitmap?,
     val untransformedUserName: String?,
     val untransformedAvatarDrawable: Drawable?,
-    val untransformedUserAddress: String?
+    val untransformedUserAddress: String?,
 ) {
-
-    val loadableContentCardState by lazy {
-        LoadableContentCardState(
-            screenStatus = screenStatus
-        )
-    }
 
     val qrCodeImage: Image
         get() {
@@ -132,12 +126,6 @@ data class ReceiveTokenByQrScreenState(
         screenStatus === ScreenStatus.READY_TO_RENDER &&
             untransformedUserAddress != null &&
             untransformedAvatarDrawable != null
-
-    val shareQRCodeButtonIcon: Image = Image.ResImage(id = R.drawable.ic_new_arrow_up_24)
-
-    val shareQRCodeButtonText: Text = Text.StringRes(id = R.string.common_share)
-
-    val scanQRCodeButtonText: Text = Text.StringRes(id = R.string.commom_scan_qr)
 }
 
 @Composable
@@ -169,7 +157,7 @@ fun ReceiveTokenByQrScreen(
                     all = Dimens.x1_5
                 ),
                 cornerRadius = Dimens.x4,
-                state = state.loadableContentCardState,
+                state = state.screenStatus,
                 contentWhenLoaded = {
                     Image(
                         painter = state.qrCodeImage.retrievePainter(),
@@ -185,7 +173,7 @@ fun ReceiveTokenByQrScreen(
                     all = Dimens.x1_5
                 ),
                 cornerRadius = Dimens.x4,
-                state = state.loadableContentCardState,
+                state = state.screenStatus,
                 onTryAgainClick = onTryAgainClick
             ) {
                 ListTile(
@@ -202,9 +190,9 @@ fun ReceiveTokenByQrScreen(
                     .fillMaxWidth(),
                 size = Size.Large,
                 order = Order.SECONDARY,
-                leftIcon = state.shareQRCodeButtonIcon.retrievePainter(),
+                leftIcon = painterResource(id = R.drawable.ic_new_arrow_up_24),
                 enabled = state.isShareQRCodeEnabled,
-                text = state.shareQRCodeButtonText.retrieveString(),
+                text = stringResource(id = R.string.common_share),
                 onClick = onShareCodeClick
             )
         }
@@ -214,7 +202,7 @@ fun ReceiveTokenByQrScreen(
                 .align(Alignment.BottomCenter),
             size = Size.Large,
             order = Order.SECONDARY,
-            text = state.scanQRCodeButtonText.retrieveString(),
+            text = stringResource(id = R.string.commom_scan_qr),
             onClick = onScanQrClick
         )
     }

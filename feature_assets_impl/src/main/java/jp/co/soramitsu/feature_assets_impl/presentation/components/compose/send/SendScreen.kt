@@ -87,7 +87,6 @@ internal fun SendScreen(
     feeLoading: Boolean,
     reviewEnabled: Boolean,
     shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    transactionFeeToken: String
 ) {
     SendScreenAddress(
         address = address,
@@ -119,10 +118,9 @@ internal fun SendScreen(
             color = Color.Transparent
         )
         WarningTextCard(
-            title = stringResource(id = R.string.common_title_warning),
             text = stringResource(
                 id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
-                formatArgs = arrayOf(transactionFeeToken, feeAmount)
+                formatArgs = arrayOf(feeAmount),
             )
         )
     }
@@ -238,7 +236,6 @@ private fun PreviewSendScreen() {
             feeLoading = true,
             reviewEnabled = false,
             shouldTransactionReminderInsufficientWarningBeShown = true,
-            transactionFeeToken = ""
         )
     }
 }

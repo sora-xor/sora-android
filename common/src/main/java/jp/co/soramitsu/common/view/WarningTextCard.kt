@@ -32,9 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.view
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -80,13 +78,6 @@ fun WarningTextCard(
                 shape = shape,
             )
             .clip(shape)
-            .border(
-                border = BorderStroke(
-                    1.dp,
-                    main,
-                ),
-                shape = shape
-            )
             .padding(
                 vertical = Dimens.x2,
                 horizontal = Dimens.x3,

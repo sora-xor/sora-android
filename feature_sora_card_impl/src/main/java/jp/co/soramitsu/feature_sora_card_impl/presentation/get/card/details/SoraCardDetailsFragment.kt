@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -70,9 +69,6 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         (activity as BottomBarController).hideBottomBar()
         super.onViewCreated(view, savedInstanceState)
-        viewModel.copiedAddressEvent.observe {
-            Toast.makeText(requireContext(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
         viewModel.shareLinkEvent.observe { share ->
             context?.let { c ->
                 shareText(c, getString(R.string.common_share), share)

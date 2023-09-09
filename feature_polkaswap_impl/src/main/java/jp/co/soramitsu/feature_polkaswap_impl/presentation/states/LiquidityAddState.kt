@@ -34,21 +34,17 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
 
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 
 data class LiquidityAddState(
     val btnState: ButtonState,
-    val slippage: Double,
     val assetState1: AssetAmountInputState?,
     val assetState2: AssetAmountInputState?,
     val estimated: LiquidityAddEstimatedState,
     val prices: LiquidityAddPricesState,
     val confirm: LiquidityAddConfirmState,
     val pairNotExist: Boolean? = null,
-    val selectSearchAssetState: SelectSearchAssetState?,
     val hintVisible: Boolean,
     val shouldTransactionReminderInsufficientWarningBeShown: Boolean,
-    val transactionFeeToken: String
 )
 
 data class LiquidityAddConfirmState(

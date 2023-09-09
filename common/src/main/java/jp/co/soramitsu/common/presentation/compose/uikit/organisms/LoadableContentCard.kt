@@ -49,40 +49,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
-
-data class LoadableContentCardState(
-    val screenStatus: ScreenStatus
-) {
-    val isLoading: Boolean = screenStatus === ScreenStatus.LOADING
-
-    val isErrorCaught: Boolean = screenStatus === ScreenStatus.ERROR
-
-    val errorImage: Image = Image.ResImage(
-        id = R.drawable.ic_error_80
-    )
-
-    val errorText: Text = Text.StringRes(
-        id = R.string.common_error_general_title
-    )
-}
 
 @Composable
 fun LoadableContentCard(
     modifier: Modifier,
     innerPadding: PaddingValues,
     cornerRadius: Dp,
-    state: LoadableContentCardState,
+    state: ScreenStatus,
     onTryAgainClick: () -> Unit,
     contentWhenLoaded: @Composable () -> Unit,
 ) {
@@ -91,8 +73,8 @@ fun LoadableContentCard(
         innerPadding = innerPadding,
         cornerRadius = cornerRadius
     ) {
-        when {
-            state.isLoading -> {
+        when (state) {
+            ScreenStatus.LOADING -> {
                 Box {
                     CircularProgressIndicator(
                         modifier = Modifier
@@ -101,13 +83,13 @@ fun LoadableContentCard(
                     )
                 }
             }
-            state.isErrorCaught -> {
+            ScreenStatus.ERROR -> {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = state.errorImage.retrievePainter(),
+                        painter = painterResource(id = R.drawable.ic_error_80),
                         contentDescription = null
                     )
                     Divider(
@@ -118,7 +100,7 @@ fun LoadableContentCard(
                         modifier = Modifier.clickable {
                             onTryAgainClick.invoke()
                         },
-                        text = state.errorText.retrieveString(),
+                        text = stringResource(id = R.string.common_error_general_title),
                     )
                 }
             }
@@ -139,9 +121,7 @@ private fun PreviewLoadableContentCard_LOADING() {
         innerPadding = PaddingValues(
             all = Dimens.x3
         ),
-        state = LoadableContentCardState(
-            screenStatus = ScreenStatus.LOADING
-        ),
+        state = ScreenStatus.LOADING,
         cornerRadius = Dimens.x4,
         contentWhenLoaded = {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -166,9 +146,7 @@ private fun PreviewLoadableContentCard_READY_TO_RENDER() {
             all = Dimens.x3
         ),
         cornerRadius = Dimens.x4,
-        state = LoadableContentCardState(
-            screenStatus = ScreenStatus.READY_TO_RENDER
-        ),
+        state = ScreenStatus.READY_TO_RENDER,
         contentWhenLoaded = {
             Box(modifier = Modifier.fillMaxSize()) {
                 Text(
@@ -191,9 +169,7 @@ private fun PreviewLoadableContentCard_ERROR() {
         innerPadding = PaddingValues(
             all = Dimens.x3
         ),
-        state = LoadableContentCardState(
-            screenStatus = ScreenStatus.ERROR
-        ),
+        state = ScreenStatus.ERROR,
         cornerRadius = Dimens.x4,
         contentWhenLoaded = {
             Box(modifier = Modifier.fillMaxSize()) {

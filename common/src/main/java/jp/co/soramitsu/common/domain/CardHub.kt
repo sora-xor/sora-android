@@ -39,6 +39,7 @@ const val ASSETS_HUB_NAME = "assets"
 const val POOLS_HUB_NAME = "pools"
 const val GET_SORA_CARD_HUB_NAME = "get sora card"
 const val BUY_XOR_TOKEN_HUB_NAME = "buy xor token"
+const val REFERRAL_SYSTEM_HUB_NAME = "referral system"
 
 data class CardHub(
     val cardType: CardHubType,
@@ -64,6 +65,12 @@ enum class CardHubType(
         order = 1,
         boundToAccount = false,
         R.string.common_buy_xor,
+    ),
+    REFERRAL_SYSTEM(
+        REFERRAL_SYSTEM_HUB_NAME,
+        order = 2,
+        boundToAccount = false,
+        R.string.referral_toolbar_title,
     ),
 
     ASSETS(ASSETS_HUB_NAME, order = 0, boundToAccount = true, R.string.liquid_assets),

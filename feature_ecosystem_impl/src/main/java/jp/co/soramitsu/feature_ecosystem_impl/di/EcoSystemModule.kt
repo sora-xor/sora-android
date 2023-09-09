@@ -38,7 +38,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.scopes.ViewModelScoped
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractor
 import jp.co.soramitsu.feature_ecosystem_impl.domain.EcoSystemPoolsInteractorImpl

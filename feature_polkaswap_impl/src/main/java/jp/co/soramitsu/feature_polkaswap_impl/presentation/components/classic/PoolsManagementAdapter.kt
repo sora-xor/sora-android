@@ -85,7 +85,7 @@ class PoolViewHolder(
     fun bind(asset: PoolSettingsState) {
         assetIcon.load(asset.token1Icon)
         asset2Icon.load(asset.token2Icon)
-        title.text = asset.tokenName
+        title.text = asset.tokenSymbol
         amount.text = asset.assetAmount
 
         favoriteIcon.setImageResource(if (asset.favorite) R.drawable.ic_favorite_enabled else R.drawable.ic_favorite_disabled)

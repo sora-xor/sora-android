@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
@@ -56,7 +55,6 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
@@ -174,11 +172,7 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        (activity as BottomBarController).hideBottomBar()
-        viewModel.copyEvent.observe {
-            Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
-
         super.onViewCreated(view, savedInstanceState)
+        (activity as BottomBarController).hideBottomBar()
     }
 }

@@ -66,7 +66,6 @@
   <string name="common_activity">Aktiviti</string>
   <string name="common_and">dan</string>
   <string name="common_app_version">Versi aplikasi</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Arab</string>
   <string name="common_azerbaijani">Azerbaijan</string>
   <string name="common_back">Kembali</string>
@@ -338,8 +337,10 @@
   <string name="polkaswap_input_estimated">Input dianggarkan. Anda akan menjual maksimum %s atau transaksi akan kembali.</string>
   <string name="polkaswap_insufficient_balance">Baki %s tidak mencukupi</string>
   <string name="polkaswap_insufficient_liqudity">Kecairan tidak mencukupi</string>
-  <string name="polkaswap_liqudity_fee">Bayaran LP</string>
-  <string name="polkaswap_liqudity_fee_info">Sebahagian daripada setiap dagangan diberikan kepada penyedia kecairan sebagai insentif protokol.</string>
+  <string name="polkaswap_liquidity_fee">Bayaran LP</string>
+  <string name="polkaswap_liquidity_fee_info">Sebahagian daripada setiap dagangan diberikan kepada penyedia kecairan sebagai insentif protokol.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Pasaran</string>
   <string name="polkaswap_market_smart_description">Penghalaan kecairan SMART memastikan harga terbaik untuk sebarang transaksi dengan menggabungkan hanya pilihan harga terbaik dari semua pasaran yang ada. Apabila tersedia, Token Bonding Curve (TBC) akan digunakan untuk kecairan selagi harga aset lebih berpatutan daripada sumber lain, di mana kolam XYK digunakan.</string>
   <string name="polkaswap_market_tbc_description">TBC — membeli hanya daripada Lengkung Ikatan Token (Pasaran Utama). Terdapat kemungkinan bahawa harga boleh menjadi tidak menguntungkan berbanding dengan kolam XYK (Pasaran Sekunder), tetapi nilai yang diterima daripada ganjaran terletak hak mungkin berubah menjadi lebih baik dari masa ke masa.</string>
@@ -360,9 +361,6 @@
   <string name="polkaswap_smart">Pintar</string>
   <string name="polkaswap_swap_title">Tukar</string>
   <string name="polkaswap_swapped">Ditukar</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Bonus strategik apy</string>
   <string name="pool_button_remove">Buang</string>
   <string name="pool_details">Butiran kolam</string>
   <string name="pool_liquidity_placeholder">Kecairan anda akan muncul di sini</string>
@@ -434,6 +432,7 @@
   <string name="route">Laluan</string>
   <string name="scan_qr_show_my_qr">Tunjukkan kod QR saya</string>
   <string name="search_assets">Cari aset</string>
+  <string name="search_empty_state">Tiada hasil carian</string>
   <string name="select_account_address">Cari alamat akaun</string>
   <string name="select_account_address_1">Cari atau tambah alamat baharu</string>
   <string name="select_account_import">Pilih akaun untuk diimport</string>
@@ -509,7 +508,7 @@
   <string name="status_successful">Berjaya</string>
   <string name="status_title">Status</string>
   <string name="succesfully_imported_account_title">Anda telah berjaya mengimport akaun</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Baki %s anda akan kurang daripada %s selepas transaksi ini. Anda tidak akan dapat membayar yuran rangkaian untuk transaksi lain.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Pastikan anda mempunyai %s yang tersisa selepas transaksi ini. Jika tidak, anda tidak akan dapat melakukan transaksi lain.</string>
   <string name="switch_node">Tukar nod</string>
   <string name="system_appearance">Penampilan sistem</string>
   <string name="tabbar_parliament_title">Parlimen</string>

@@ -30,63 +30,77 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_blockexplorer_impl.presentation.screen
+package jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken
 
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.domain.Asset
+import jp.co.soramitsu.common.domain.isMatchFilter
+import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class ActivitiesViewModel @Inject constructor(
-    private val assetsInteractor: AssetsInteractor,
-    private val assetsRouter: AssetsRouter,
-    private val walletInteractor: WalletInteractor,
-    private val transactionHistoryHandler: TransactionHistoryHandler,
-    private val mainRouter: MainRouter,
-) : BaseViewModel() {
+class SelectSearchTokenViewModel @Inject constructor(
+    private val interactor: AssetsInteractor,
+    private val numbersFormatter: NumbersFormatter,
+) : ViewModel() {
 
-    val historyState = transactionHistoryHandler.historyState
+    private val _state = MutableStateFlow(SelectSearchAssetState(emptyList()))
+    val state = _state.asStateFlow()
+
+    private var searchTokenFilter = emptySearchTokenFilter
+    private val assets = mutableListOf<Asset>()
 
     init {
         viewModelScope.launch {
-            assetsInteractor.flowCurSoraAccount()
-                .catch { onError(it) }
+            interactor.subscribeAssetsActiveOfCurAccount()
+                .catch {
+                    // todo add
+                }
                 .collectLatest {
-                    refresh()
+                    assets.clear()
+                    assets.addAll(it)
+                    reCalcFilter()
                 }
         }
-        transactionHistoryHandler.flowLocalTransactions()
-            .catch { onError(it) }
-            .onEach {
-                transactionHistoryHandler.refreshHistoryEvents()
+    }
+
+    fun onFilterChange(value: SearchTokenFilter) {
+        searchTokenFilter = value
+        reCalcFilter()
+    }
+
+    private val tokenFilterInclude: (Asset) -> Boolean = {
+        searchTokenFilter.tokenIds.contains(it.token.id)
+    }
+
+    private fun reCalcFilter() {
+        val tokensFiltered =
+            if (searchTokenFilter.tokenIds.isEmpty()) assets
+            else assets.filter(tokenFilterInclude)
+        val curFilterValue = searchTokenFilter.filter.lowercase()
+        val list = if (curFilterValue.isBlank()) {
+            mapAssetsToCardState(tokensFiltered, numbersFormatter)
+        } else {
+            buildList {
+                addAll(
+                    mapAssetsToCardState(
+                        tokensFiltered.filter {
+                            it.token.isMatchFilter(curFilterValue)
+                        },
+                        numbersFormatter
+                    )
+                )
             }
-            .launchIn(viewModelScope)
-    }
-
-    fun onTxHistoryItemClick(txHash: String) {
-        assetsRouter.showTxDetails(txHash)
-    }
-
-    fun onMoreHistoryEventsRequested() {
-        viewModelScope.launch {
-            transactionHistoryHandler.onMoreHistoryEventsRequested()
         }
-    }
-
-    fun refresh() {
-        viewModelScope.launch {
-            transactionHistoryHandler.refreshHistoryEvents()
-        }
+        _state.value = _state.value.copy(list = list)
     }
 }

@@ -66,7 +66,6 @@
   <string name="common_activity">Activity</string>
   <string name="common_and">ja</string>
   <string name="common_app_version">Sovelluksen versio</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Arab</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Takaisin</string>
@@ -339,8 +338,10 @@
   <string name="polkaswap_input_estimated">Syöte on arvioitu. Myyt enintään %s tai kauppa palautuu.</string>
   <string name="polkaswap_insufficient_balance">Riittämätön %s saldo</string>
   <string name="polkaswap_insufficient_liqudity">Riittämätön likviditeetti</string>
-  <string name="polkaswap_liqudity_fee">LP-maksu</string>
-  <string name="polkaswap_liqudity_fee_info">Osa jokaisesta kaupasta menee likviditeetin tarjoajille protokollakannustimena.</string>
+  <string name="polkaswap_liquidity_fee">LP-maksu</string>
+  <string name="polkaswap_liquidity_fee_info">Osa jokaisesta kaupasta menee likviditeetin tarjoajille protokollakannustimena.</string>
+  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">Market</string>
   <string name="polkaswap_market_smart_description">SMART likviditeetin reititys varmistaa parhaan hinnan jokaiselle tapahtumalle, yhdistämällä vain parhaat hintavaihtoehdot kaikilta saatavilla olevilta markkinoilta. Token Bonding Curvea (TBC) käytetään mahdollisuuksien mukaan likviditeettiin niin kauan kun resurssien hinta on edullisempi kuin muista lähteistä, jolloin taas hyödynnetään XYK-poolia.</string>
   <string name="polkaswap_market_tbc_description">TBC – ostaminen vain Token Bonding Curvesta (ensisijainen markkina). On mahdollista, että hinnasta tulee epäedullinen verrattuna XYK-pooliin (toissijainen markkina), mutta saavutetuista palkkioista saatu arvo saattaa osoittautua paljon edullisemmaksi ajan myötä.</string>
@@ -361,9 +362,6 @@
   <string name="polkaswap_smart">Smart</string>
   <string name="polkaswap_swap_title">Swap</string>
   <string name="polkaswap_swapped">Swapped</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Strateginen bonus apy</string>
   <string name="pool_button_remove">Poista</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">Likviditeettisi näkyy täällä</string>
@@ -440,6 +438,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">Search assets</string>
+  <string name="search_empty_state">Ei hakutuloksia</string>
   <string name="select_account_address">Hae tilin osoite</string>
   <string name="select_account_address_1">Hae tai lisää uusi osoite</string>
   <string name="select_account_import">Select account to import</string>
@@ -515,7 +514,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Tila</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Your %s balance will be less than %s after this transaction. You won’t be able to pay for the network fee for another transaction.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
   <string name="tabbar_parliament_title">Parlamentti</string>

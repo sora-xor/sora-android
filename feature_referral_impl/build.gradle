@@ -93,6 +93,7 @@ dependencies {
     implementation composeMaterialDep
     implementation composeAnimationDep
     implementation composeActivityDep
+    implementation composeLifecycleDep
     implementation composeViewModelDep
     implementation composeToolingPreviewDep
     implementation composeLiveDataDep

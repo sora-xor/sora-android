@@ -56,8 +56,8 @@ import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveConfirmState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityRemoveEstimatedState
@@ -161,7 +161,6 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 ),
             ),
             shouldTransactionReminderInsufficientWarningBeShown = false,
-            transactionFeeToken = "",
             poolInFarming = poolInFarming,
         )
     )
@@ -691,16 +690,12 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                 return@with
 
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
-                primaryToken = assetState1.token,
-                primaryTokenAmount = assetState1.amount,
-                secondaryToken = null,
-                secondaryTokenAmount = null,
-                networkFeeInXor = networkFee.orZero()
+                networkFeeInXor = networkFee.orZero(),
+                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) -assetState1.amount else null,
             )
 
             removeState = removeState.copy(
                 shouldTransactionReminderInsufficientWarningBeShown = result,
-                transactionFeeToken = feeToken().symbol
             )
         }
 

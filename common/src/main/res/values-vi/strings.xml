@@ -66,7 +66,6 @@
   <string name="common_activity">Hoạt động</string>
   <string name="common_and">và</string>
   <string name="common_app_version">Phiên bản ứng dụng</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Tiếng Ả Rập</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Trở lại</string>
@@ -338,8 +337,10 @@
   <string name="polkaswap_input_estimated">Dự tính đầu vào. Bạn sẽ bán tối đa %s hoặc giao dịch sẽ hoàn tác.</string>
   <string name="polkaswap_insufficient_balance">Số dư không đủ %s</string>
   <string name="polkaswap_insufficient_liqudity">Không đủ thanh khoản</string>
-  <string name="polkaswap_liqudity_fee">Phí thanh khoản</string>
-  <string name="polkaswap_liqudity_fee_info">Một phần của mỗi giao dịch được chuyển đến các nhà cung cấp thanh khoản như một biện pháp khuyến khích.</string>
+  <string name="polkaswap_liquidity_fee">Phí thanh khoản</string>
+  <string name="polkaswap_liquidity_fee_info">Một phần của mỗi giao dịch được chuyển đến các nhà cung cấp thanh khoản như một biện pháp khuyến khích.</string>
+  <string name="polkaswap_liquidity_total_fee">Phí hoán đổi</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Hoán đổi của bạn bao gồm cả phí Tổng hợp và phí LP.\n Phí tổng hợp được tính khi hoán đổi đi qua nguồn thanh khoản XST cho tài sản tổng hợp và phí LP khi hoán đổi đi qua nhóm thanh khoản.</string>
   <string name="polkaswap_market">Thị trường</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing đảm bảo giá tốt nhất cho giao dịch bất kỳ bằng cách kết hợp mức giá tốt nhất hiện có trên thị trường. Khi thuận lợi, Token Bonding Curve (TBC) sẽ được dùng để tạo thanh khoản miễn là giá của tài sản hợp lý hơn các nguồn khác như pool (XYK).</string>
   <string name="polkaswap_market_tbc_description">TBC - chỉ mua từ Token Bonding Curve (Primary Market). Giá có thể trở nên bất lợi so với XYK pool (Secondary Market), nhưng về lâu dài giá trị nhận được từ phần thưởng có thể lớn hơn nhiều.</string>
@@ -360,9 +361,6 @@
   <string name="polkaswap_smart">Thông minh</string>
   <string name="polkaswap_swap_title">Đổi</string>
   <string name="polkaswap_swapped">Đã hoán đổi</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Apy tiền thưởng chiến lược</string>
   <string name="pool_button_remove">Rút</string>
   <string name="pool_details">Chi tiết Pool</string>
   <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
@@ -434,6 +432,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
   <string name="search_assets">Tìm kiếm tài sản</string>
+  <string name="search_empty_state">Không có kết quả tìm kiếm</string>
   <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>
@@ -475,7 +474,7 @@
   <string name="sora_card_action_transfer">Chuyển</string>
   <string name="sora_card_already_have_card">Tôi đã có thẻ</string>
   <string name="sora_card_annual_service_fee">Phí dịch vụ hàng năm € 0</string>
-  <string name="sora_card_banner_title_card_info">Card info</string>
+  <string name="sora_card_banner_title_card_info">Thông tin thẻ</string>
   <string name="sora_card_blacklisted_countires_title">Không bao gồm ứng dụng</string>
   <string name="sora_card_blacklisted_countires_warning">Cư dân từ một số quốc gia không thể đăng ký Thẻ SORA tại thời điểm này</string>
   <string name="sora_card_buy_xor_with_eur">Mua XOR bằng EUR</string>
@@ -509,7 +508,7 @@
   <string name="status_successful">Thành công</string>
   <string name="status_title">Trạng thái</string>
   <string name="succesfully_imported_account_title">Bạn đã nhập thành công một tài khoản</string>
-  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small" formatted="false">Số dư %s của bạn sẽ ít hơn %s sau giao dịch này. Bạn sẽ không thể thanh toán phí mạng cho một giao dịch khác.</string>
+  <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Đảm bảo rằng bạn còn %s sau giao dịch này. Nếu không, bạn sẽ không thể thực hiện một giao dịch khác.</string>
   <string name="switch_node">Chuyển node</string>
   <string name="system_appearance">Hệ thống hiển thị</string>
   <string name="tabbar_parliament_title">Nghị viện</string>
