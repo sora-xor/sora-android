@@ -53,6 +53,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.zxing.client.android.Intents
 import com.journeyapps.barcodescanner.CaptureManager
 import dagger.hilt.android.AndroidEntryPoint
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.feature_assets_impl.databinding.QrCodeScannerLayoutBinding
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.scan.QrCodeScannerScreen
@@ -131,10 +132,9 @@ class QRCodeScannerActivity : AppCompatActivity() {
             setContent {
                 MaterialTheme {
                     QrCodeScannerScreen(
-                        state = viewModel.qrCodeScannerScreenState,
                         onNavIconClick = ::finish,
                         onUploadFromGalleryClick = ::selectQrFromGallery,
-                        onShowUserQrClick = ::finish
+                        onShowUserQrClick = ::finish,
                     )
                 }
             }
@@ -158,7 +158,7 @@ class QRCodeScannerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(state = Lifecycle.State.STARTED) {
                 snapshotFlow { viewModel.qrCodeScannerScreenState }.collectLatest { state ->
-                    if (state.isErrorTextVisible) {
+                    if (state.screenStatus == ScreenStatus.ERROR) {
                         Toast.makeText(
                             this@QRCodeScannerActivity,
                             state.errorText.retrieveString(

@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -49,6 +48,12 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
+import jp.co.soramitsu.ui_core.R
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -61,15 +66,30 @@ class FullAssetSettingsViewModel @Inject constructor(
     private val _settingsState = MutableLiveData<List<AssetSettingsState>>()
     val settingsState: LiveData<List<AssetSettingsState>> = _settingsState
 
+    private val _dragList = MutableLiveData<Boolean>()
+    val dragList: LiveData<Boolean> = _dragList
+
     private val curAssetList = mutableListOf<AssetSettingsState>()
     private var positions = mutableListOf<String>()
     private var curFilter: String = ""
     private val tokensToMove = mutableListOf<Pair<String, Boolean>>()
     private var symbol: String = ""
 
-    internal var fiatSum by mutableStateOf("")
+    private val _fiatSum = MutableStateFlow("")
+    val fiatSum = _fiatSum.asStateFlow()
 
     init {
+        _toolbarState.value = SoramitsuToolbarState(
+            basic = BasicToolbarState(
+                title = "",
+                navIcon = R.drawable.ic_cross_24,
+                actionLabel = jp.co.soramitsu.common.R.string.common_done,
+                searchValue = "",
+                searchEnabled = true,
+            ),
+            type = SoramitsuToolbarType.Small(),
+        )
+
         viewModelScope.launch {
             curAssetList.clear()
             curAssetList.addAll(
@@ -97,6 +117,20 @@ class FullAssetSettingsViewModel @Inject constructor(
         }
     }
 
+    override fun onToolbarSearch(value: String) {
+        _dragList.value = value.isBlank()
+        curFilter = value
+        filterAndUpdateAssetsList()
+    }
+
+    override fun onAction() {
+        onCloseClick()
+    }
+
+    override fun onNavIcon() {
+        onCloseClick()
+    }
+
     private fun filterAndUpdateAssetsList() {
         val filter = curFilter.lowercase()
         val list = if (filter.isBlank()) {
@@ -111,15 +145,10 @@ class FullAssetSettingsViewModel @Inject constructor(
             }
         }
         _settingsState.value = list
-        fiatSum = if (list.isNotEmpty())
+        _fiatSum.value = if (list.isNotEmpty())
             list.map { it.fiat ?: 0.0 }.reduce { acc, d -> acc + d }.let {
                 formatFiatAmount(it, symbol, numbersFormatter)
             } else ""
-    }
-
-    fun searchAssets(filter: String) {
-        curFilter = filter
-        filterAndUpdateAssetsList()
     }
 
     fun onFavoriteClick(asset: AssetSettingsState) {
@@ -176,7 +205,7 @@ class FullAssetSettingsViewModel @Inject constructor(
         }
     }
 
-    fun onCloseClick() {
+    private fun onCloseClick() {
         val unknownVisibleCount =
             curAssetList.count { it.favorite && !AssetHolder.isKnownAsset(it.token.id) }
         val position = AssetHolder.knownCount() + unknownVisibleCount

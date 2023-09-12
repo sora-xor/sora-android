@@ -33,7 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetlist
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,7 +48,12 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCard
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FullAssetListState
+import jp.co.soramitsu.ui_core.R
+import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
+import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -68,10 +72,20 @@ class FullAssetListViewModel @Inject constructor(
     private val visAssets = mutableListOf<Asset>()
     private val filter = MutableStateFlow("")
 
-    var state by mutableStateOf(FullAssetListState(false, "", emptyList(), emptyList()))
-        private set
+    private val _state = MutableStateFlow(FullAssetListState(false, "", emptyList(), emptyList()))
+    val state = _state.asStateFlow()
 
     init {
+        _toolbarState.value = SoramitsuToolbarState(
+            basic = BasicToolbarState(
+                title = "",
+                navIcon = R.drawable.ic_cross_24,
+                actionLabel = jp.co.soramitsu.common.R.string.common_edit,
+                searchValue = "",
+                searchEnabled = true,
+            ),
+            type = SoramitsuToolbarType.Small(),
+        )
         viewModelScope.launch {
             allAssets.addAll(assetsInteractor.getWhitelistAssets())
             launch {
@@ -92,6 +106,10 @@ class FullAssetListViewModel @Inject constructor(
         }
     }
 
+    override fun onToolbarSearch(value: String) {
+        filter.value = value
+    }
+
     private fun calcState(filter: String) {
         val idMap = visAssets.map { t -> t.token.id }
         val excluded = allAssets.filter { it.token.id !in idMap }
@@ -101,7 +119,7 @@ class FullAssetListViewModel @Inject constructor(
             val group = visAssets.groupBy {
                 (it.fiat ?: 0.0) >= thresholdBalance
             }
-            state = state.copy(
+            _state.value = _state.value.copy(
                 searchMode = false,
                 topList = mapAssetsToCardState(
                     group[true] ?: emptyList(),
@@ -122,7 +140,7 @@ class FullAssetListViewModel @Inject constructor(
             val bottomFilter = invisibleAssets.filter { it.token.isMatchFilter(filter) }
             val topSum = topFilter.fiatSum()
             val bottomSum = bottomFilter.fiatSum()
-            state = state.copy(
+            _state.value = _state.value.copy(
                 searchMode = true,
                 topList = mapAssetsToCardState(topFilter, numbersFormatter),
                 bottomList = mapAssetsToCardState(bottomFilter, numbersFormatter),
@@ -133,10 +151,6 @@ class FullAssetListViewModel @Inject constructor(
                 ),
             )
         }
-    }
-
-    fun searchAssets(search: String) {
-        filter.value = search
     }
 
     override fun onAction() {

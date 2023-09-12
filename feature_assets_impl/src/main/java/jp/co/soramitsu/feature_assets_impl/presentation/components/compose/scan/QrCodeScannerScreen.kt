@@ -49,14 +49,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.ScreenStatus
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -71,15 +71,6 @@ data class QRCodeScannerScreenState(
     val screenStatus: ScreenStatus,
     val throwable: Throwable?
 ) {
-
-    val toolbarTitleText: Text = Text.StringRes(id = R.string.common_scan_qr)
-
-    val uploadFromGalleryButtonText: Text = Text.StringRes(id = R.string.common_upload_from_library)
-
-    val showMyQrButtonText: Text = Text.StringRes(id = R.string.scan_qr_show_my_qr)
-
-    val isErrorTextVisible: Boolean = screenStatus === ScreenStatus.ERROR
-
     val errorText: Text
         get() = throwable?.message?.let {
             Text.SimpleText(it)
@@ -88,7 +79,6 @@ data class QRCodeScannerScreenState(
 
 @Composable
 fun QrCodeScannerScreen(
-    state: QRCodeScannerScreenState,
     onNavIconClick: () -> Unit,
     onUploadFromGalleryClick: () -> Unit,
     onShowUserQrClick: () -> Unit
@@ -122,14 +112,14 @@ fun QrCodeScannerScreen(
             SoramitsuToolbar(
                 state = SoramitsuToolbarState(
                     basic = BasicToolbarState(
-                        title = state.toolbarTitleText.retrieveString(),
+                        title = R.string.common_scan_qr,
                         navIcon = R.drawable.ic_close,
                     ),
                     type = SoramitsuToolbarType.SmallCentered()
                 ),
                 backgroundColor = blurCameraBackground,
-                elevation = Dp(0f),
-                onNavigate = onNavIconClick
+                elevation = 0.dp,
+                onNavigate = onNavIconClick,
             )
         }
 
@@ -262,7 +252,7 @@ fun QrCodeScannerScreen(
                 ),
             size = Size.Large,
             order = Order.SECONDARY,
-            text = state.uploadFromGalleryButtonText.retrieveString(),
+            text = stringResource(id = R.string.common_upload_from_library),
             onClick = onUploadFromGalleryClick
         )
 
@@ -283,7 +273,7 @@ fun QrCodeScannerScreen(
                 ),
             size = Size.Large,
             order = Order.SECONDARY,
-            text = state.showMyQrButtonText.retrieveString(),
+            text = stringResource(id = R.string.scan_qr_show_my_qr),
             onClick = onShowUserQrClick
         )
     }
@@ -301,10 +291,6 @@ private fun PreviewQrCodeScannerScreen() {
             contentDescription = ""
         )
         QrCodeScannerScreen(
-            state = QRCodeScannerScreenState(
-                screenStatus = ScreenStatus.READY_TO_RENDER,
-                throwable = null
-            ),
             onNavIconClick = {},
             onUploadFromGalleryClick = {},
             onShowUserQrClick = {}

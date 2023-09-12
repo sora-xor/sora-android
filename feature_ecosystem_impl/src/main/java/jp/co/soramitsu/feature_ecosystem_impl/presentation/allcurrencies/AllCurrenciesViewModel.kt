@@ -83,7 +83,7 @@ internal class AllCurrenciesViewModel @Inject constructor(
                 val indexInAll = positions?.get(it.second.tokenId).orEmpty()
                 indexInAll to it.second
             }
-            EcoSystemTokensState(mappedEnumerated, pair.second)
+            EcoSystemTokensState(mappedEnumerated)
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)

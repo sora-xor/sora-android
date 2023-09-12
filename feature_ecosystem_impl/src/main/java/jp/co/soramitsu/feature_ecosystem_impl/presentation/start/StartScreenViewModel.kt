@@ -80,7 +80,7 @@ internal class StartScreenViewModel @Inject constructor(
             )
         }
         .map {
-            EcoSystemTokensState(ecoSystemMapper.mapEcoSystemTokens(it), "")
+            EcoSystemTokensState(ecoSystemMapper.mapEcoSystemTokens(it))
         }
         .flowOn(coroutineManager.io)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialEcoSystemTokensState)
@@ -97,7 +97,6 @@ internal class StartScreenViewModel @Inject constructor(
         .map {
             EcoSystemPoolsState(
                 pools = ecoSystemMapper.mapEcoSystemPools(it),
-                filter = "",
             )
         }
         .flowOn(coroutineManager.io)
