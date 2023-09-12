@@ -159,8 +159,8 @@ fun AssetAmountInput(
                     textStyle = MaterialTheme.customTypography.displayS.copy(textAlign = TextAlign.End),
                     enabled = state?.let { it.enabled && !it.readOnly } ?: false,
                     precision = state?.token?.precision ?: OptionsProvider.defaultScale,
-                    defaultCursorPosition = state?.defaultCursorPosition ?: DefaultCursorPosition.END,
-                    initial = state?.initialAmount,
+                    defaultCursorPosition = DefaultCursorPosition.START,
+                    initial = state?.amount,
                     onValueChanged = onAmountChange,
                     focusRequester = focusRequester,
                     textFieldColors = TextFieldDefaults.textFieldColors(
@@ -218,7 +218,7 @@ val previewAssetAmountInputState = AssetAmountInputState(
     token = previewToken,
     balance = "10.234 ($2.234.23)",
     amountFiat = "$2.342.12",
-    initialAmount = null,
+    amount = null,
     enabled = true,
     error = false,
     errorHint = "",
@@ -238,7 +238,7 @@ private fun PreviewAssetAmountInput() {
         val state = remember { mutableStateOf(previewAssetAmountInputState) }
         Button(onClick = {
             state.value = state.value.copy(
-                initialAmount = bb.value,
+                amount = bb.value,
             )
             bb.value = bb.value.plus(BigDecimal.ONE)
         }) {
@@ -249,14 +249,14 @@ private fun PreviewAssetAmountInput() {
             state = state.value,
             onAmountChange = {
                 state.value = state.value.copy(
-                    initialAmount = it,
+                    amount = it,
                 )
             },
             onSelectToken = {},
             onFocusChange = {},
         )
         Spacer(modifier = Modifier.size(10.dp))
-        Text(text = state.value.initialAmount.orZero().toPlainString())
+        Text(text = state.value.amount.orZero().toPlainString())
         AssetAmountInput(
             modifier = Modifier,
             state = previewAssetAmountInputState,

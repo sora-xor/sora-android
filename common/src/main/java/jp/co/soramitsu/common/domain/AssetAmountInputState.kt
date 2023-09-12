@@ -33,16 +33,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.domain
 
 import java.math.BigDecimal
-import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 
 data class AssetAmountInputState(
     val token: Token,
     val balance: String,
-    val initialAmount: BigDecimal? = null,
+    val amount: BigDecimal? = null,
     val amountFiat: String,
     val enabled: Boolean,
     val readOnly: Boolean = false,
     val error: Boolean = false,
-    val errorHint: String = "",
-    val defaultCursorPosition: DefaultCursorPosition = DefaultCursorPosition.END
+    val errorHint: String = ""
 )

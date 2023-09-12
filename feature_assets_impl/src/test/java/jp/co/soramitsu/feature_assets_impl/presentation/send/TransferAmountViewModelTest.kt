@@ -154,7 +154,7 @@ class TransferAmountViewModelTest {
         transferAmountViewModel.optionSelected(75)
         advanceUntilIdle()
         val state = transferAmountViewModel.sendState
-        assertTrue(state.value.input?.initialAmount?.equalTo(BigDecimal.valueOf(3)) == true)
+        assertTrue(state.value.input?.amount?.equalTo(BigDecimal.valueOf(3)) == true)
     }
 
     @Test
@@ -164,7 +164,7 @@ class TransferAmountViewModelTest {
         transferAmountViewModel.optionSelected(75)
         advanceUntilIdle()
         val state = transferAmountViewModel.sendState
-        assertTrue(state.value.input?.initialAmount?.equalTo(BigDecimal.valueOf(0.000075)) == true)
+        assertTrue(state.value.input?.amount?.equalTo(BigDecimal.valueOf(0.000075)) == true)
     }
 
     private fun initViewModel(

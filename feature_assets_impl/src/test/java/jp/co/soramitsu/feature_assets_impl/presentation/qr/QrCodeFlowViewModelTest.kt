@@ -175,8 +175,8 @@ class QrCodeFlowViewModelTest {
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenScreenState.value.assetAmountInputState?.initialAmount,
-                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.initialAmount
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.amount,
+                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.amount
             )
 
             Assert.assertEquals(
@@ -185,8 +185,8 @@ class QrCodeFlowViewModelTest {
             )
 
             Assert.assertEquals(
-                viewModel.requestTokenScreenState.value.assetAmountInputState?.initialAmount,
-                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.initialAmount
+                viewModel.requestTokenScreenState.value.assetAmountInputState?.amount,
+                viewModel.requestTokenConfirmScreenState.value.assetAmountInputState?.amount
             )
         }
 

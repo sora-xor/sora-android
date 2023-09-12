@@ -117,14 +117,14 @@ internal fun SwapConfirmScreen(
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
                             icon = state.tokenFromState?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.tokenFromState?.initialAmount?.toPlainString().orEmpty(),
+                            amount = state.tokenFromState?.amount?.toPlainString().orEmpty(),
                             amountFiat = state.tokenFromState?.amountFiat.orEmpty(),
                         )
                         Divider(color = Color.Transparent, modifier = Modifier.width(Dimens.x1))
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
                             icon = state.tokenToState?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.tokenToState?.initialAmount?.toPlainString().orEmpty(),
+                            amount = state.tokenToState?.amount?.toPlainString().orEmpty(),
                             amountFiat = state.tokenToState?.amountFiat.orEmpty(),
                         )
                     }

@@ -116,14 +116,14 @@ internal fun LiquidityRemoveConfirmScreen(
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
                             icon = state.assetState1?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.assetState1?.initialAmount?.toPlainString().orEmpty(),
+                            amount = state.assetState1?.amount?.toPlainString().orEmpty(),
                             amountFiat = state.assetState1?.amountFiat.orEmpty(),
                         )
                         Divider(color = Color.Transparent, modifier = Modifier.width(Dimens.x1))
                         SwapAmountSquare(
                             modifier = Modifier.weight(1f),
                             icon = state.assetState2?.token?.iconUri() ?: DEFAULT_ICON_URI,
-                            amount = state.assetState2?.initialAmount?.toPlainString().orEmpty(),
+                            amount = state.assetState2?.amount?.toPlainString().orEmpty(),
                             amountFiat = state.assetState2?.amountFiat.orEmpty(),
                         )
                     }

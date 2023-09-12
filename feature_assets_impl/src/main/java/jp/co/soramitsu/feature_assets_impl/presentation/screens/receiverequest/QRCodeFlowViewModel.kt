@@ -163,7 +163,7 @@ class QRCodeFlowViewModel @Inject constructor(
                         nf = numbersFormatter,
                         precision = DEFAULT_TOKEN_PRINT_PRECISION,
                     ),
-                    initialAmount = null,
+                    amount = null,
                     amountFiat = "",
                     enabled = true,
                 ) else _requestTokenScreenState.value.assetAmountInputState!!.copy(
@@ -283,7 +283,7 @@ class QRCodeFlowViewModel @Inject constructor(
     fun onRequestAmountChange(amount: BigDecimal) {
         _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
             assetAmountInputState = _requestTokenScreenState.value.assetAmountInputState?.copy(
-                initialAmount = amount,
+                amount = amount,
                 amountFiat = _requestTokenScreenState.value.assetAmountInputState?.token?.printFiat(
                     amount,
                     numbersFormatter
@@ -380,7 +380,7 @@ class QRCodeFlowViewModel @Inject constructor(
                 _requestTokenScreenState.value.assetAmountInputState?.let { assetAmountInputState ->
                     _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
                         assetAmountInputState = assetAmountInputState.copy(
-                            initialAmount = assetAmountInputState.initialAmount,
+                            amount = assetAmountInputState.amount,
                         )
                     )
                 }
@@ -400,7 +400,7 @@ class QRCodeFlowViewModel @Inject constructor(
                                 tokenId = _requestTokenScreenState.value.assetAmountInputState
                                     ?.token?.id,
                                 amount = _requestTokenScreenState.value.assetAmountInputState
-                                    ?.initialAmount.toString()
+                                    ?.amount.toString()
                             )
                         )
                     }
@@ -416,8 +416,8 @@ class QRCodeFlowViewModel @Inject constructor(
                         .untransformedUserAddress,
                     assetAmountInputState = _requestTokenScreenState.value
                         .assetAmountInputState?.copy(
-                            initialAmount = _requestTokenScreenState.value
-                                .assetAmountInputState?.initialAmount,
+                            amount = _requestTokenScreenState.value
+                                .assetAmountInputState?.amount,
                             enabled = false,
                             readOnly = true,
                         )

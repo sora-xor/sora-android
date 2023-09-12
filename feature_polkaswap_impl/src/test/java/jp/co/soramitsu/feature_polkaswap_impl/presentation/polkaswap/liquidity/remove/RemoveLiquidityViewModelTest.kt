@@ -197,8 +197,8 @@ class RemoveLiquidityViewModelTest {
         viewModel.onAmount1Change(BigDecimal(0.5))
         advanceUntilIdle()
 
-        assertEquals(BigDecimal(0.5), viewModel.removeState.assetState1?.initialAmount)
-        assertEquals(BigDecimal(0.5), viewModel.removeState.assetState2?.initialAmount)
+        assertEquals(BigDecimal(0.5), viewModel.removeState.assetState1?.amount)
+        assertEquals(BigDecimal(0.5), viewModel.removeState.assetState2?.amount)
         assertEquals("Remove", viewModel.removeState.btnState.text)
         assertTrue(viewModel.removeState.btnState.enabled)
     }
@@ -212,8 +212,8 @@ class RemoveLiquidityViewModelTest {
         viewModel.onAmount2Change(BigDecimal("0.35"))
         advanceUntilIdle()
 
-        assertEquals(BigDecimal("0.35"), viewModel.removeState.assetState1?.initialAmount)
-        assertEquals(BigDecimal("0.35"), viewModel.removeState.assetState2?.initialAmount)
+        assertEquals(BigDecimal("0.35"), viewModel.removeState.assetState1?.amount)
+        assertEquals(BigDecimal("0.35"), viewModel.removeState.assetState2?.amount)
         assertTrue(viewModel.removeState.btnState.enabled)
     }
 

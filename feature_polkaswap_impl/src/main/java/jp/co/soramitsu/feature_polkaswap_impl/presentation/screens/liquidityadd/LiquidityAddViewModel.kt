@@ -69,7 +69,6 @@ import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
-import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -401,7 +400,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     if (desired == WithDesired.INPUT) {
                         _addState.value = _addState.value.copy(
                             assetState2 = _addState.value.assetState2?.copy(
-                                initialAmount = it,
+                                amount = it,
                                 amountFiat = _addState.value.assetState2?.token?.printFiat(
                                     it,
                                     numbersFormatter
@@ -413,7 +412,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     } else {
                         _addState.value = _addState.value.copy(
                             assetState1 = _addState.value.assetState1?.copy(
-                                initialAmount = it,
+                                amount = it,
                                 amountFiat = _addState.value.assetState1?.token?.printFiat(
                                     it,
                                     numbersFormatter
@@ -494,7 +493,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
 
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = networkFee,
-                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) assetState1.initialAmount else null,
+                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) assetState1.amount else null,
             )
 
             _addState.value = _addState.value.copy(
@@ -509,12 +508,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
-                        initialAmount = _addState.value.assetState1?.initialAmount?.nullZero(),
-                        defaultCursorPosition = DefaultCursorPosition.END
+                        amount = _addState.value.assetState1?.amount?.nullZero()
                     ),
                     assetState2 = _addState.value.assetState2?.copy(
-                        initialAmount = _addState.value.assetState2?.initialAmount?.nullZero(),
-                        defaultCursorPosition = DefaultCursorPosition.END
+                        amount = _addState.value.assetState2?.amount?.nullZero()
                     ),
                 )
                 _searchTokenFilter.value = _searchTokenFilter.value.copy(
@@ -552,12 +549,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
-                        initialAmount = _addState.value.assetState1?.initialAmount?.nullZero(),
-                        defaultCursorPosition = DefaultCursorPosition.END
+                        amount = _addState.value.assetState1?.amount?.nullZero()
                     ),
                     assetState2 = _addState.value.assetState2?.copy(
-                        initialAmount = _addState.value.assetState2?.initialAmount?.nullZero(),
-                        defaultCursorPosition = DefaultCursorPosition.END
+                        amount = _addState.value.assetState2?.amount?.nullZero()
                     ),
                 )
                 _searchTokenFilter.value = _searchTokenFilter.value.copy(
@@ -575,11 +570,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 assetState1 = state.copy(
                     token = a.token,
                     balance = getAssetBalanceText(a),
-                    amountFiat = a.token.printFiat(state.initialAmount.orZero(), numbersFormatter),
-                    defaultCursorPosition = DefaultCursorPosition.END
-                ),
-                assetState2 = _addState.value.assetState2?.copy(
-                    defaultCursorPosition = DefaultCursorPosition.END
+                    amountFiat = a.token.printFiat(state.amount.orZero(), numbersFormatter)
                 ),
             )
             hasXorReminderWarningBeenChecked = false
@@ -592,14 +583,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
         val a = assets.first { t -> t.token.id == id }
         val state = _addState.value.assetState2
         _addState.value = _addState.value.copy(
-            assetState1 = _addState.value.assetState1?.copy(
-                defaultCursorPosition = DefaultCursorPosition.END
-            ),
             assetState2 = state?.copy(
                 token = a.token,
                 balance = getAssetBalanceText(a),
-                amountFiat = a.token.printFiat(state.initialAmount.orZero(), numbersFormatter),
-                defaultCursorPosition = DefaultCursorPosition.END
+                amountFiat = a.token.printFiat(state.amount.orZero(), numbersFormatter)
             )
                 ?: buildInitialAssetState(a),
         )
@@ -624,24 +611,16 @@ class LiquidityAddViewModel @AssistedInject constructor(
             _addState.value = _addState.value.copy(
                 assetState1 = _addState.value.assetState1?.copy(
                     balance = getAssetBalanceText(asset),
-                    token = asset.token,
-                    defaultCursorPosition = DefaultCursorPosition.END
-                ),
-                assetState2 = _addState.value.assetState2?.copy(
-                    defaultCursorPosition = DefaultCursorPosition.END
+                    token = asset.token
                 )
             )
         }
         assets.find { it.token.id == addToken2 }?.let { asset ->
             balance2 = asset.balance.transferable
             _addState.value = _addState.value.copy(
-                assetState1 = _addState.value.assetState1?.copy(
-                    defaultCursorPosition = DefaultCursorPosition.END
-                ),
                 assetState2 = _addState.value.assetState2?.copy(
                     balance = getAssetBalanceText(asset),
                     token = asset.token,
-                    defaultCursorPosition = DefaultCursorPosition.END
                 )
             )
         }
@@ -736,12 +715,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onSlippageClick() {
         _addState.value = _addState.value.copy(
             assetState1 = _addState.value.assetState1?.copy(
-                initialAmount = _addState.value.assetState1?.initialAmount?.nullZero(),
-                defaultCursorPosition = DefaultCursorPosition.END
+                amount = _addState.value.assetState1?.amount?.nullZero(),
             ),
             assetState2 = _addState.value.assetState2?.copy(
-                initialAmount = _addState.value.assetState2?.initialAmount?.nullZero(),
-                defaultCursorPosition = DefaultCursorPosition.END
+                amount = _addState.value.assetState2?.amount?.nullZero(),
             ),
         )
     }
@@ -754,32 +731,24 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onAmount1Change(value: BigDecimal) {
         _addState.value = _addState.value.copy(
             assetState1 = _addState.value.assetState1?.copy(
-                initialAmount = value,
+                amount = value,
                 amountFiat = _addState.value.assetState1?.token?.printFiat(
                     value,
                     numbersFormatter
                 ).orEmpty(),
-                defaultCursorPosition = DefaultCursorPosition.END
             ),
-            assetState2 = _addState.value.assetState2?.copy(
-                defaultCursorPosition = DefaultCursorPosition.END
-            )
         )
         amount1Flow.value = value
     }
 
     fun onAmount2Change(value: BigDecimal) {
         _addState.value = _addState.value.copy(
-            assetState1 = _addState.value.assetState1?.copy(
-                defaultCursorPosition = DefaultCursorPosition.END
-            ),
             assetState2 = _addState.value.assetState2?.copy(
-                initialAmount = value,
+                amount = value,
                 amountFiat = _addState.value.assetState2?.token?.printFiat(
                     value,
                     numbersFormatter
                 ).orEmpty(),
-                defaultCursorPosition = DefaultCursorPosition.END
             )
         )
         amount2Flow.value = value
@@ -813,11 +782,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             _addState.value = _addState.value.copy(
                 assetState1 = _addState.value.assetState1?.copy(
                     amountFiat = tokenFrom.printFiat(amount, numbersFormatter),
-                    initialAmount = amount,
-                    defaultCursorPosition = DefaultCursorPosition.START
-                ),
-                assetState2 = _addState.value.assetState2?.copy(
-                    defaultCursorPosition = DefaultCursorPosition.START
+                    amount = amount,
                 )
             )
             amount1Flow.value = amount
@@ -829,13 +794,9 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     tokenTo.precision
                 )
             _addState.value = _addState.value.copy(
-                assetState1 = _addState.value.assetState1?.copy(
-                    defaultCursorPosition = DefaultCursorPosition.START
-                ),
                 assetState2 = _addState.value.assetState2?.copy(
                     amountFiat = tokenTo.printFiat(amount, numbersFormatter),
-                    initialAmount = amount,
-                    defaultCursorPosition = DefaultCursorPosition.START
+                    amount = amount,
                 )
             )
             amount2Flow.value = amount
@@ -914,7 +875,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private fun buildInitialAssetState(a: Asset) = AssetAmountInputState(
         token = a.token,
         balance = getAssetBalanceText(a),
-        initialAmount = null,
+        amount = null,
         amountFiat = "",
         enabled = true,
     )
