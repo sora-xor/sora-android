@@ -40,6 +40,7 @@ import javax.inject.Singleton
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.fiatChange
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
@@ -72,7 +73,7 @@ class BlockExplorerManager @Inject constructor(
             assetsInfo = it
         }
 
-    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> {
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> = runCatching {
         val selected = soraConfigManager.getSelectedCurrency()
         val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
         val yesterdayHour = yesterday()
@@ -87,7 +88,10 @@ class BlockExplorerManager @Inject constructor(
             resultList.add(assetInfo.tokenId to BigInteger(assetInfo.liquidity))
         }
         db.assetDao().insertFiatPrice(fiats)
-        return resultList
+        resultList
+    }.getOrElse {
+        FirebaseWrapper.recordException(it)
+        emptyList()
     }
 
     suspend fun updatePoolsSbApy() {
@@ -112,6 +116,9 @@ class BlockExplorerManager @Inject constructor(
                     db.referralsDao().clearTable()
                     db.referralsDao().insertReferrals(it)
                 }
+            }
+            .onFailure {
+                FirebaseWrapper.recordException(it)
             }
     }
 

@@ -51,6 +51,7 @@ import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.isZero
 import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common.util.ext.nullZero
+import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
@@ -400,7 +401,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         _addState.value = _addState.value.copy(
                             assetState2 = _addState.value.assetState2?.copy(
                                 amount = it,
-                                initialAmount = it,
                                 amountFiat = _addState.value.assetState2?.token?.printFiat(
                                     it,
                                     numbersFormatter
@@ -413,7 +413,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
                         _addState.value = _addState.value.copy(
                             assetState1 = _addState.value.assetState1?.copy(
                                 amount = it,
-                                initialAmount = it,
                                 amountFiat = _addState.value.assetState1?.token?.printFiat(
                                     it,
                                     numbersFormatter
@@ -509,10 +508,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val list = assets.filter { it.token.id in bases && it.token.id != addToken2 }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
-                        initialAmount = _addState.value.assetState1?.amount?.nullZero(),
+                        amount = _addState.value.assetState1?.amount?.nullZero()
                     ),
                     assetState2 = _addState.value.assetState2?.copy(
-                        initialAmount = _addState.value.assetState2?.amount?.nullZero(),
+                        amount = _addState.value.assetState2?.amount?.nullZero()
                     ),
                 )
                 _searchTokenFilter.value = _searchTokenFilter.value.copy(
@@ -550,10 +549,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
                     }
                 _addState.value = _addState.value.copy(
                     assetState1 = _addState.value.assetState1?.copy(
-                        initialAmount = _addState.value.assetState1?.amount?.nullZero(),
+                        amount = _addState.value.assetState1?.amount?.nullZero()
                     ),
                     assetState2 = _addState.value.assetState2?.copy(
-                        initialAmount = _addState.value.assetState2?.amount?.nullZero(),
+                        amount = _addState.value.assetState2?.amount?.nullZero()
                     ),
                 )
                 _searchTokenFilter.value = _searchTokenFilter.value.copy(
@@ -571,7 +570,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 assetState1 = state.copy(
                     token = a.token,
                     balance = getAssetBalanceText(a),
-                    amountFiat = a.token.printFiat(state.amount, numbersFormatter),
+                    amountFiat = a.token.printFiat(state.amount.orZero(), numbersFormatter)
                 ),
             )
             hasXorReminderWarningBeenChecked = false
@@ -587,7 +586,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             assetState2 = state?.copy(
                 token = a.token,
                 balance = getAssetBalanceText(a),
-                amountFiat = a.token.printFiat(state.amount, numbersFormatter),
+                amountFiat = a.token.printFiat(state.amount.orZero(), numbersFormatter)
             )
                 ?: buildInitialAssetState(a),
         )
@@ -612,7 +611,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
             _addState.value = _addState.value.copy(
                 assetState1 = _addState.value.assetState1?.copy(
                     balance = getAssetBalanceText(asset),
-                    token = asset.token,
+                    token = asset.token
                 )
             )
         }
@@ -716,10 +715,10 @@ class LiquidityAddViewModel @AssistedInject constructor(
     fun onSlippageClick() {
         _addState.value = _addState.value.copy(
             assetState1 = _addState.value.assetState1?.copy(
-                initialAmount = _addState.value.assetState1?.amount?.nullZero(),
+                amount = _addState.value.assetState1?.amount?.nullZero(),
             ),
             assetState2 = _addState.value.assetState2?.copy(
-                initialAmount = _addState.value.assetState2?.amount?.nullZero(),
+                amount = _addState.value.assetState2?.amount?.nullZero(),
             ),
         )
     }
@@ -736,8 +735,8 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 amountFiat = _addState.value.assetState1?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
-            )
+                ).orEmpty(),
+            ),
         )
         amount1Flow.value = value
     }
@@ -749,7 +748,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 amountFiat = _addState.value.assetState2?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
             )
         )
         amount2Flow.value = value
@@ -784,7 +783,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 assetState1 = _addState.value.assetState1?.copy(
                     amountFiat = tokenFrom.printFiat(amount, numbersFormatter),
                     amount = amount,
-                    initialAmount = amount,
                 )
             )
             amount1Flow.value = amount
@@ -799,7 +797,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 assetState2 = _addState.value.assetState2?.copy(
                     amountFiat = tokenTo.printFiat(amount, numbersFormatter),
                     amount = amount,
-                    initialAmount = amount,
                 )
             )
             amount2Flow.value = amount
@@ -878,8 +875,7 @@ class LiquidityAddViewModel @AssistedInject constructor(
     private fun buildInitialAssetState(a: Asset) = AssetAmountInputState(
         token = a.token,
         balance = getAssetBalanceText(a),
-        amount = BigDecimal.ZERO,
-        initialAmount = null,
+        amount = null,
         amountFiat = "",
         enabled = true,
     )

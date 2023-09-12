@@ -39,7 +39,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -49,7 +48,6 @@ import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor

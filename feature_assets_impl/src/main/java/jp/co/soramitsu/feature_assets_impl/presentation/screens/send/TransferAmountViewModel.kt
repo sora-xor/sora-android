@@ -162,12 +162,11 @@ class TransferAmountViewModel @AssistedInject constructor(
                     input = AssetAmountInputState(
                         token = asset.token,
                         balance = getAssetBalanceText(asset),
-                        amount = initialSendAmount?.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-                        initialAmount = initialSendAmount?.toBigDecimalOrNull(),
+                        amount = initialSendAmount?.toBigDecimalOrNull(),
                         amountFiat = "",
                         enabled = false,
                         error = false,
-                        errorHint = "",
+                        errorHint = ""
                     )
                 )
             } else {
@@ -178,7 +177,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                         amountFiat = asset.token.printFiat(
                             _sendState.value.input?.amount.orZero(),
                             numbersFormatter
-                        ),
+                        )
                     )
                 )
             }
@@ -230,7 +229,7 @@ class TransferAmountViewModel @AssistedInject constructor(
                     _sendState.value = _sendState.value.copy(
                         input = _sendState.value.input?.copy(
                             readOnly = false,
-                            initialAmount = _sendState.value.input?.amount?.nullZero()
+                            amount = _sendState.value.input?.amount?.nullZero()
                         ),
                     )
                 }
@@ -393,7 +392,7 @@ class TransferAmountViewModel @AssistedInject constructor(
     fun onReviewClick() {
         _sendState.value = _sendState.value.copy(
             input = _sendState.value.input?.copy(
-                initialAmount = _sendState.value.input?.amount.orZero()
+                amount = _sendState.value.input?.amount.orZero()
             )
         )
     }
@@ -425,7 +424,6 @@ class TransferAmountViewModel @AssistedInject constructor(
         _sendState.value = _sendState.value.copy(
             input = _sendState.value.input?.copy(
                 amount = amount,
-                initialAmount = amount,
                 amountFiat = _sendState.value.input?.token?.printFiat(
                     amount,
                     numbersFormatter
