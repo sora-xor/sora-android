@@ -47,9 +47,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.common.R
@@ -85,13 +87,12 @@ fun BasicBannerCard(
                     .wrapContentHeight(),
             ) {
                 val (card, image) = createRefs()
-                val guideLine = createGuidelineFromStart(0.66f)
                 CardContent(
                     modifier = Modifier
                         .constrainAs(card) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
-                            end.linkTo(guideLine)
+                            end.linkTo(image.start)
                             width = Dimension.fillToConstraints
                             height = Dimension.wrapContent
                         },
@@ -103,15 +104,14 @@ fun BasicBannerCard(
 
                 Image(
                     modifier = Modifier.constrainAs(image) {
-                        start.linkTo(guideLine)
                         top.linkTo(parent.top)
-                        end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
-                        width = Dimension.fillToConstraints
+                        end.linkTo(parent.end)
+                        width = Dimension.value(128.dp)
                         height = Dimension.fillToConstraints
                     },
                     contentScale = ContentScale.Fit,
-                    alignment = Alignment.Center,
+                    alignment = Alignment.BottomEnd,
                     painter = painterResource(imageContent),
                     contentDescription = null,
                 )
@@ -121,7 +121,8 @@ fun BasicBannerCard(
                 modifier = Modifier
                     .wrapContentWidth()
                     .align(Alignment.TopEnd)
-                    .padding(Dimens.x1),
+                    .padding(Dimens.x1)
+                    .alpha(0.8f),
                 size = Size.ExtraSmall,
                 order = Order.TERTIARY,
                 shape = CircleShape,
@@ -147,7 +148,7 @@ private fun CardContent(
                 top = Dimens.x3,
                 bottom = Dimens.x2,
             ),
-        verticalArrangement = Arrangement.SpaceEvenly,
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = title,
@@ -181,6 +182,19 @@ private fun PreviewBasicBannerCard1() {
         imageContent = R.drawable.image_friends,
         title = "Some title of banner card, let it be longeeerr",
         description = "Long description of banner card, The quick brown fox jumps over the lazy dog, The quick brown fox jumps over the lazy dog.And I, even I Artaxerxes the king, do make a decree to all the treasurers which are beyond the river, that whatsoever Ezra the priest, the scribe of the law of the God of heaven, shall require of you, it be done speedily",
+        button = "Just button title",
+        onCloseCard = {},
+        onButtonClicked = {},
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewBasicBannerCard12() {
+    BasicBannerCard(
+        imageContent = R.drawable.image_friends,
+        title = "Some title",
+        description = "Long description of banner",
         button = "Just button title",
         onCloseCard = {},
         onButtonClicked = {},
