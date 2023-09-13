@@ -8,11 +8,13 @@ def jobParams = [
 def pipeline = new org.android.AppPipeline(steps: this,
     sonar: true,
     sonarProjectName: 'sora-passport-android',
-    sonarProjectKey: 'jp.co.soramitsu:sora-passport-android',
+    sonarProjectKey: 'sora:sora-passport-android',
     testCmd: 'ktlint clean runModuleTests jacocoTestReport',
     jobParams: jobParams,
     appPushNoti: true,
     gitUpdateSubmodule: true,
     dockerImage: 'build-tools/android-build-box-jdk11:latest',
-    gpgFiles: ['app/google-services.json'])
+    gpgFiles: ['app/google-services.json'],
+    dojoProductType: 'sora'
+    )
 pipeline.runPipeline('sora')
