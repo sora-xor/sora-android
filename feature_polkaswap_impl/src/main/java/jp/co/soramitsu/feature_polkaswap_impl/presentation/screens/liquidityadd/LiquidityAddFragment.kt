@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -58,8 +59,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.LiquidityAddScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapSlippageScreen
@@ -116,14 +117,12 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
             }
             val type =
                 requireNotNull(entry.arguments?.getString(LiquidityAddRoutes.selectTokenParamName))
-            val state = viewModel.addState.selectSearchAssetState
-            if (state != null) {
-                SelectSearchTokenScreen(
-                    state = state,
-                    scrollState = scrollState,
-                    onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
-                )
-            }
+            val state = viewModel.searchTokenFilter.collectAsStateWithLifecycle()
+            SelectSearchTokenScreen(
+                scrollState = scrollState,
+                onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
+                searchTokenFilter = state.value,
+            )
         }
         composable(LiquidityAddRoutes.slippage) {
             val onSlippageEntered: (Double) -> Unit = { f ->
@@ -131,13 +130,15 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                 navController.popBackStack()
             }
             SwapSlippageScreen(
-                value = viewModel.addState.slippage,
+                value = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
                 onDone = onSlippageEntered,
             )
         }
         composable(LiquidityAddRoutes.confirm) {
+            val state = viewModel.addState.collectAsStateWithLifecycle()
             LiquidityAddConfirmScreen(
-                state = viewModel.addState,
+                state = state.value,
+                slippage = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
                 onConfirmClick = viewModel::onConfirmClick,
             )
         }
@@ -159,7 +160,8 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                     percentageVisibility.value = f
                     viewModel.onAmount2Focused()
                 }
-                if (viewModel.addState.hintVisible) {
+                val state = viewModel.addState.collectAsStateWithLifecycle()
+                if (state.value.hintVisible) {
                     AlertDialog(
                         title = {
                             Text(
@@ -211,7 +213,8 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                     navController.navigate(LiquidityAddRoutes.confirm)
                 }
                 LiquidityAddScreen(
-                    state = viewModel.addState,
+                    state = state.value,
+                    slippage = viewModel.stateSlippage.collectAsStateWithLifecycle().value,
                     onFocusChange1 = onFocus1,
                     onFocusChange2 = onFocus2,
                     onAmountChange1 = viewModel::onAmount1Change,

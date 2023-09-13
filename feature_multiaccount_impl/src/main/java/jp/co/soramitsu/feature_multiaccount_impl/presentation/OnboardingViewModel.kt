@@ -47,6 +47,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.net.SocketException
 import javax.inject.Inject
 import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.exceptions.AuthConsentException
 import jp.co.soramitsu.backup.domain.exceptions.DecodingException
 import jp.co.soramitsu.backup.domain.exceptions.DecryptionException
 import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
@@ -62,6 +63,7 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
@@ -79,6 +81,8 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
 import kotlin.random.Random
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -98,6 +102,9 @@ class OnboardingViewModel @Inject constructor(
 
     private val _tutorialScreenState = MutableLiveData(TutorialScreenState())
     val tutorialScreenState: LiveData<TutorialScreenState> = _tutorialScreenState
+
+    private val _recoveryDialog = MutableStateFlow(false)
+    val recoveryDialog = _recoveryDialog.asStateFlow()
 
     private val _createBackupPasswordState = MutableLiveData<CreateBackupPasswordState>()
     val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
@@ -130,6 +137,9 @@ class OnboardingViewModel @Inject constructor(
 
     private val _skipDialogState = MutableLiveData(false)
     val skipDialogState = _skipDialogState
+
+    private val _consentExceptionHandler = SingleLiveEvent<Intent>()
+    val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
     private var tempAccount: SoraAccount? = null
 
@@ -333,10 +343,19 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
+    fun onRecoverySourceDismiss() {
+        _recoveryDialog.value = false
+    }
+
+    fun onRecoveryDialogShow() {
+        _recoveryDialog.value = true
+    }
+
     fun onGoogleSignin(
         navController: NavController,
         launcher: ActivityResultLauncher<Intent>
     ) {
+        _recoveryDialog.value = false
         _tutorialScreenState.value?.let {
             _tutorialScreenState.value = it.copy(isGoogleSigninLoading = true)
             viewModelScope.launch {
@@ -473,6 +492,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun onRecoveryClicked(navController: NavController, index: Int) {
+        _recoveryDialog.value = false
         _recoveryState.value = when (index) {
             1 -> {
                 isValidMethod = multiaccountInteractor::isMnemonicValid
@@ -502,13 +522,7 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
 
-            else -> RecoveryState(
-                title = R.string.recovery_enter_passphrase_title,
-                recoveryType = RecoveryType.PASSPHRASE,
-                recoveryInputState = InputTextState(
-                    label = resourceManager.getString(R.string.recovery_mnemonic_passphrase)
-                )
-            )
+            else -> null
         }
 
         navController.navigate(OnboardingFeatureRoutes.RECOVERY)
@@ -564,6 +578,10 @@ class OnboardingViewModel @Inject constructor(
                 onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: AuthConsentException) {
+                _tutorialScreenState.value =
+                    _tutorialScreenState.value?.copy(isGoogleSigninLoading = false)
+                _consentExceptionHandler.value = e.intent
             }
         }
     }
@@ -603,7 +621,7 @@ class OnboardingViewModel @Inject constructor(
                                     cryptoType = CryptoType.SR25519,
                                     backupAccountType = listOf(
                                         BackupAccountType.JSON,
-                                        BackupAccountType.PASSHRASE,
+                                        BackupAccountType.PASSPHRASE,
                                         BackupAccountType.SEED
                                     ),
                                     seed = seed,
@@ -619,6 +637,12 @@ class OnboardingViewModel @Inject constructor(
                     withContext(coroutineManager.main) {
                         _createBackupPasswordState.value =
                             createBackupPasswordState.copy(isLoading = false)
+                    }
+                } catch (e: AuthConsentException) {
+                    withContext(coroutineManager.main) {
+                        _createBackupPasswordState.value =
+                            createBackupPasswordState.copy(isLoading = false)
+                        _consentExceptionHandler.value = e.intent
                     }
                 }
             }
@@ -718,6 +742,8 @@ class OnboardingViewModel @Inject constructor(
                         onError(e)
                     } catch (e: SocketException) {
                         onError(SoraException.networkError(resourceManager, e))
+                    } catch (e: AuthConsentException) {
+                        _consentExceptionHandler.value = e.intent
                     }
                 }
                 _importAccountPasswordState.value =
@@ -727,7 +753,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     private suspend fun recoverSoraAccountFromDecryptedBackupAccount(decryptedBackupAccount: DecryptedBackupAccount): SoraAccount {
-        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSHRASE)) {
+        if (decryptedBackupAccount.backupAccountType.contains(BackupAccountType.PASSPHRASE)) {
             decryptedBackupAccount.mnemonicPhrase?.let { passphrase ->
                 val isValid = multiaccountInteractor.isMnemonicValid(passphrase)
 
@@ -780,6 +806,12 @@ class OnboardingViewModel @Inject constructor(
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
             }
+        }
+    }
+
+    fun onConsentSuccess(navController: NavController) {
+        if (currentDestination == OnboardingFeatureRoutes.TUTORIAL || currentDestination == OnboardingFeatureRoutes.PASSPHRASE) {
+            onSuccessfulGoogleSignin(navController)
         }
     }
 

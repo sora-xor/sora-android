@@ -34,9 +34,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.buycrypto
 
 import android.util.Base64
 import android.webkit.WebResourceResponse
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -44,17 +41,17 @@ import dagger.assisted.AssistedInject
 import java.util.UUID
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.config.BuildConfigWrapper
+import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.BuyCryptoRepository
-import jp.co.soramitsu.feature_wallet_api.domain.model.PaymentOrder
 import jp.co.soramitsu.oauth.R as SoraCardR
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class BuyCryptoViewModel @AssistedInject constructor(
@@ -71,8 +68,8 @@ class BuyCryptoViewModel @AssistedInject constructor(
         ): BuyCryptoViewModel
     }
 
-    var state by mutableStateOf(BuyCryptoState())
-        private set
+    private val _state = MutableStateFlow(BuyCryptoState())
+    val state = _state.asStateFlow()
 
     init {
         _toolbarState.value = SoramitsuToolbarState(
@@ -87,21 +84,24 @@ class BuyCryptoViewModel @AssistedInject constructor(
     }
 
     fun onPageFinished() {
-        state = state.copy(loading = false)
+        _state.value = _state.value.copy(
+            loading = false,
+        )
     }
 
     fun onReceivedError(errorResponse: WebResourceResponse?) {
-//        val statusCode = errorResponse?.statusCode
-//        val reasonPhrase = errorResponse?.reasonPhrase
-//        val message = errorResponse?.let { statusCode?.toString().orEmpty() + reasonPhrase }
-        showWidgetUnavailableAlert()
+        val statusCode = errorResponse?.statusCode
+        val reasonPhrase = errorResponse?.reasonPhrase
+        val message = errorResponse?.let { statusCode?.toString().orEmpty() + reasonPhrase }
+        FirebaseWrapper.log("X1 [$message]")
+        showWidgetUnavailableAlert(statusCode)
     }
 
     fun onAlertCloseClick() {
         mainRouter.popBackStack()
     }
 
-    private fun showWidgetUnavailableAlert() {
+    private fun showWidgetUnavailableAlert(code: Int?) {
         _toolbarState.value?.let {
             _toolbarState.value = it.copy(
                 basic = it.basic.copy(
@@ -111,7 +111,11 @@ class BuyCryptoViewModel @AssistedInject constructor(
                 )
             )
         }
-        state = state.copy(showAlert = true)
+        _state.value = _state.value.copy(
+            loading = false,
+            showAlert = true,
+            alertCode = code,
+        )
     }
 
     private fun setUpScript() {
@@ -119,27 +123,28 @@ class BuyCryptoViewModel @AssistedInject constructor(
         viewModelScope.launch {
             val address = userRepository.getCurSoraAccount().substrateAddress
 
-            val unencodedHtml = "<html><body>" +
+            val unEncodedHtml = "<html><body>" +
                 "<div id=\"${BuildConfigWrapper.getX1WidgetId()}\" data-address=\"${address}\" " +
                 "data-from-currency=\"EUR\" data-from-amount=\"100\" data-hide-buy-more-button=\"true\" " +
                 "data-hide-try-again-button=\"true\" data-locale=\"en\" data-payload=\"${payload}\"></div>" +
                 "<script async src=\"${BuildConfigWrapper.getX1EndpointUrl()}\"></script>" +
                 "</body></html>"
-            val encodedHtml = Base64.encodeToString(unencodedHtml.toByteArray(), Base64.NO_PADDING)
+            val encodedHtml = Base64.encodeToString(unEncodedHtml.toByteArray(), Base64.NO_PADDING)
 
-            state = state.copy(script = encodedHtml)
-
-            buyCryptoRepository.requestPaymentOrderStatus(PaymentOrder(paymentId = payload))
+            _state.value = _state.value.copy(
+                script = encodedHtml
+            )
+            // buyCryptoRepository.requestPaymentOrderStatus(PaymentOrder(paymentId = payload))
         }
-        buyCryptoRepository.subscribePaymentOrderInfo()
-            .onEach {
-                if (it.paymentId == payload && it.depositTransactionStatus == "completed") {
-                    if (isLaunchedFromSoraCard)
-                        mainRouter.showGetSoraCard(shouldStartSignIn = true)
-                    else
-                        mainRouter.popBackStack()
-                }
-            }
-            .launchIn(viewModelScope)
+//        buyCryptoRepository.subscribePaymentOrderInfo()
+//            .onEach {
+//                if (it.paymentId == payload && it.depositTransactionStatus == "completed") {
+//                    if (isLaunchedFromSoraCard)
+//                        mainRouter.showGetSoraCard(shouldStartSignIn = true)
+//                    else
+//                        mainRouter.popBackStack()
+//                }
+//            }
+//            .launchIn(viewModelScope)
     }
 }

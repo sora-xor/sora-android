@@ -38,17 +38,15 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
@@ -60,7 +58,6 @@ import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.anyNonNull
 import jp.co.soramitsu.test_shared.getOrAwaitValue
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.flow
@@ -80,15 +77,15 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.atLeast
 import org.mockito.kotlin.atLeastOnce
-import org.mockito.kotlin.atMost
 import org.mockito.kotlin.times
 import java.math.BigDecimal
 import org.mockito.kotlin.verify as kVerify
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-@OptIn(ExperimentalStdlibApi::class)
 @RunWith(MockitoJUnitRunner::class)
 class SwapViewModelTest {
 
@@ -101,9 +98,6 @@ class SwapViewModelTest {
 
     @Mock
     private lateinit var assetsInteractor: AssetsInteractor
-
-    @Mock
-    private lateinit var coroutineManager: CoroutineManager
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
@@ -154,18 +148,11 @@ class SwapViewModelTest {
         )
         given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(flowOf(assets))
         given(
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = any(),
-                secondaryTokenAmount = any(),
-                networkFeeInXor = any()
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = any(),
+                xorChange = anyOrNull(),
             )
         ).willReturn(false)
-
-        given(
-            coroutineManager.io
-        ).willReturn(this.coroutineContext[CoroutineDispatcher]!!)
 
         setUpAfterViewModelInit()
         viewModel = SwapViewModel(
@@ -176,10 +163,9 @@ class SwapViewModelTest {
             resourceManager,
             mainRouter,
             assetsRouter,
-            coroutineManager,
             firstTokenId ?: TestAssets.xorAsset().token.id,
             secondTokenId ?: "",
-            isLaunchedFromSoraCard = false
+            isLaunchedFromSoraCard = false,
         )
     }
 
@@ -219,12 +205,12 @@ class SwapViewModelTest {
         initViewModel()
         advanceUntilIdle()
         val buttonState = ButtonState(text = "Choose token", enabled = false, loading = false)
-        viewModel.swapMainState.slippage.let {
+        viewModel.swapMainState.value.slippage.let {
             assertEquals(0.5, it, 0.1)
         }
         viewModel.navigationDisclaimerEvent.getOrAwaitValue()
 
-        assertEquals(buttonState, viewModel.swapMainState.swapButtonState)
+        assertEquals(buttonState, viewModel.swapMainState.value.swapButtonState)
     }
 
     @Test
@@ -236,31 +222,13 @@ class SwapViewModelTest {
 
         viewModel.fromAssetSelected(fromAsset.tokenId)
         advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.tokenFromState?.token, assets[0].token)
-        assertFalse(viewModel.swapMainState.swapButtonState.enabled)
+        assertEquals(viewModel.swapMainState.value.tokenFromState?.token, assets[0].token)
+        assertFalse(viewModel.swapMainState.value.swapButtonState.enabled)
 
         viewModel.toAssetSelected(toAsset.tokenId)
         advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.tokenToState?.token, assets[1].token)
-        assertFalse(viewModel.swapMainState.swapButtonState.enabled)
-    }
-
-    @Test
-    fun fromAndToCardClicked() = runTest {
-        initViewModel()
-        advanceUntilIdle()
-        viewModel.fromCardClicked()
-        advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.selectSearchAssetState?.fullList, assetsListItems)
-        viewModel.fromAssetSelected(assetsListItems[0].tokenId)
-
-        viewModel.toCardClicked()
-        assertEquals(
-            SelectSearchAssetState(
-                filter = "",
-                fullList = assetsListItems.filter { it.tokenId != viewModel.swapMainState.tokenFromState?.token?.id }),
-            viewModel.swapMainState.selectSearchAssetState,
-        )
+        assertEquals(viewModel.swapMainState.value.tokenToState?.token, assets[1].token)
+        assertFalse(viewModel.swapMainState.value.swapButtonState.enabled)
     }
 
     @Test
@@ -317,8 +285,8 @@ class SwapViewModelTest {
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(100)
         advanceUntilIdle()
-        assertEquals(BigDecimal.ONE, viewModel.swapMainState.tokenFromState?.amount)
-        val btn = viewModel.swapMainState.swapButtonState
+        assertEquals(BigDecimal.ONE, viewModel.swapMainState.value.tokenFromState?.amount)
+        val btn = viewModel.swapMainState.value.swapButtonState
         assertEquals("Insufficient balance", btn.text)
         assertEquals(false, btn.enabled)
     }
@@ -332,7 +300,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(100)
-        assertEquals(BigDecimal(90.0), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(90.0), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -344,7 +312,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(50.0).setScale(19), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(50.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -356,7 +324,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(8.0).setScale(19), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(8.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -368,7 +336,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(25).setScale(19), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(25).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -380,7 +348,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(100)
-        assertEquals(BigDecimal(100.0), viewModel.swapMainState.tokenFromState?.amount)
+        assertEquals(BigDecimal(100.0), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -392,8 +360,8 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.onTokensSwapClick()
-        assertEquals(assetsListItems.last().tokenId, viewModel.swapMainState.tokenFromState?.token?.id)
-        assertEquals(assetsListItems[1].tokenId, viewModel.swapMainState.tokenToState?.token?.id)
+        assertEquals(assetsListItems.last().tokenId, viewModel.swapMainState.value.tokenFromState?.token?.id)
+        assertEquals(assetsListItems[1].tokenId, viewModel.swapMainState.value.tokenToState?.token?.id)
     }
 
     @Test
@@ -413,12 +381,9 @@ class SwapViewModelTest {
             kVerify(
                 assetsInteractor,
                 atLeastOnce()
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = PolkaswapTestData.XOR_ASSET.token,
-                primaryTokenAmount = BigDecimal.ONE,
-                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
-                secondaryTokenAmount = BigDecimal.ZERO,
-                networkFeeInXor = networkFee
+            ).isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal.ONE,
+                networkFeeInXor = networkFee,
             )
 
             viewModel.onToAmountChange(BigDecimal.ONE)
@@ -427,13 +392,10 @@ class SwapViewModelTest {
 
             kVerify(
                 mock = assetsInteractor,
-                times(1)
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = PolkaswapTestData.XOR_ASSET.token,
-                primaryTokenAmount = BigDecimal.ONE,
-                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
-                secondaryTokenAmount = BigDecimal.ONE,
-                networkFeeInXor = networkFee
+                atLeast(1)
+            ).isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal.ONE,
+                networkFeeInXor = networkFee,
             )
 
             viewModel.fromAssetSelected(TestAssets.pswapAsset().token.id)
@@ -446,13 +408,10 @@ class SwapViewModelTest {
 
             kVerify(
                 mock = assetsInteractor,
-                atMost(1)
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = TestAssets.pswapAsset().token,
-                primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
-                secondaryTokenAmount = BigDecimal.ONE,
-                networkFeeInXor = networkFee
+                atLeast(1)
+            ).isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = networkFee,
+                xorChange = null,
             )
         }
 
@@ -476,13 +435,10 @@ class SwapViewModelTest {
 
             kVerify(
                 mock = assetsInteractor,
-                atMost(1)
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = any(),
-                primaryTokenAmount = any(),
-                secondaryToken = any(),
-                secondaryTokenAmount = any(),
-                networkFeeInXor = any()
+                atLeast(1)
+            ).isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = networkFee,
+                xorChange = null,
             )
 
             viewModel.fromAssetSelected(TestAssets.xorAsset().token.id)
@@ -496,12 +452,9 @@ class SwapViewModelTest {
             kVerify(
                 mock = assetsInteractor,
                 times(1)
-            ).isEnoughXorLeftAfterTransaction(
-                primaryToken = TestAssets.xorAsset().token,
-                primaryTokenAmount = BigDecimal.TEN,
-                secondaryToken = PolkaswapTestData.VAL_ASSET.token,
-                secondaryTokenAmount = BigDecimal.ONE,
-                networkFeeInXor = networkFee
+            ).isNotEnoughXorLeftAfterTransaction(
+                xorChange = BigDecimal.TEN,
+                networkFeeInXor = networkFee,
             )
         }
 }

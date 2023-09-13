@@ -39,7 +39,9 @@ import jp.co.soramitsu.core_db.model.GlobalCardHubLocal
 
 object CardsHubMapper {
     fun map(card: CardHubLocal): CardHub? {
-        val type = CardHubType.values().find { it.hubName == card.cardId } ?: return null
+        val type = CardHubType.values()
+            .filter { it.boundToAccount }
+            .find { it.hubName == card.cardId } ?: return null
         return CardHub(
             cardType = type,
             visibility = card.visibility,
@@ -49,7 +51,9 @@ object CardsHubMapper {
     }
 
     fun map(card: GlobalCardHubLocal): CardHub? {
-        val type = CardHubType.values().find { it.hubName == card.cardId } ?: return null
+        val type = CardHubType.values()
+            .filter { it.boundToAccount.not() }
+            .find { it.hubName == card.cardId } ?: return null
         return CardHub(
             cardType = type,
             visibility = card.visibility,

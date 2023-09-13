@@ -35,12 +35,12 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigDecimal
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.formatFiatAmount
@@ -48,28 +48,26 @@ import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.formatFiatOrEmpty
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.isZero
+import jp.co.soramitsu.common_wallet.data.XorAssetBalance
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
-import jp.co.soramitsu.feature_assets_api.data.models.XorAssetBalance
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetCardState
 import jp.co.soramitsu.feature_assets_impl.presentation.states.FrozenXorDetailsModel
 import jp.co.soramitsu.feature_assets_impl.presentation.states.emptyAssetCardState
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandler
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -80,7 +78,7 @@ class AssetDetailsViewModel @AssistedInject constructor(
     private val assetsInteractor: AssetsInteractor,
     private val assetsRouter: AssetsRouter,
     private val walletRouter: WalletRouter,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val numbersFormatter: NumbersFormatter,
     private val poolsInteractor: PoolsInteractor,
     private val polkaswapRouter: PolkaswapRouter,
@@ -100,9 +98,6 @@ class AssetDetailsViewModel @AssistedInject constructor(
 
     internal var state by mutableStateOf(AssetCardState(true, emptyAssetCardState))
         private set
-
-    private val _copyEvent = SingleLiveEvent<Unit>()
-    val copyEvent: LiveData<Unit> = _copyEvent
 
     private var xorAssetBalance: XorAssetBalance? = null
 
@@ -207,8 +202,8 @@ class AssetDetailsViewModel @AssistedInject constructor(
     }
 
     fun onAssetIdClick() {
-        clipboardManager.addToClipboard("assetId", assetId)
-        _copyEvent.trigger()
+        clipboardManager.addToClipboard(assetId)
+        copiedToast.trigger()
     }
 
     fun onHistoryItemClick(txHash: String) {

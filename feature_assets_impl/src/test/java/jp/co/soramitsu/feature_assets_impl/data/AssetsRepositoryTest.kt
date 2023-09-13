@@ -42,12 +42,13 @@ import jp.co.soramitsu.core_db.dao.AssetDao
 import jp.co.soramitsu.core_db.model.AssetLocal
 import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
@@ -107,7 +108,8 @@ class AssetsRepositoryTest {
     @Before
     fun setUp() = runTest {
         BDDMockito.given(db.assetDao()).willReturn(assetDao)
-        BDDMockito.given(whitelistTokensManager.getTokenIconUri(BDDMockito.anyString())).willReturn(mockedUri)
+        BDDMockito.given(whitelistTokensManager.getTokenIconUri(BDDMockito.anyString()))
+            .willReturn(mockedUri)
         BDDMockito.given(soraConfigManager.getSelectedCurrency()).willReturn(usdFiat)
         BDDMockito.given(coroutineManager.applicationScope).willReturn(this)
         BDDMockito.given(soraConfigManager.getSelectedCurrency()).willReturn(usdFiat)
@@ -116,20 +118,29 @@ class AssetsRepositoryTest {
         BDDMockito.given(assetDao.updateTokenList(any())).willReturn(Unit)
         BDDMockito.given(substrateCalls.fetchAssetsList()).willReturn(emptyList())
         assetsRepository = AssetsRepositoryImpl(
-                db = db,
-                assetLocalToAssetMapper = AssetLocalToAssetMapper(whitelistTokensManager, soraConfigManager),
-                extrinsicManager = extrinsicManager,
-                substrateCalls = substrateCalls,
-                soraConfigManager = soraConfigManager,
-                coroutineManager = coroutineManager,
-                whitelistTokensManager
+            db = db,
+            assetLocalToAssetMapper = AssetLocalToAssetMapper(
+                whitelistTokensManager,
+                soraConfigManager
+            ),
+            extrinsicManager = extrinsicManager,
+            substrateCalls = substrateCalls,
+            soraConfigManager = soraConfigManager,
+            coroutineManager = coroutineManager,
+            whitelistTokensManager
         )
     }
 
     @Test
     fun `get assets`() = runTest {
-        BDDMockito.given(assetDao.getAssetsFavorite(BDDMockito.anyString(), BDDMockito.anyString(), BDDMockito.anyString())).willReturn(
-                assetTokenList()
+        BDDMockito.given(
+            assetDao.getAssetsFavorite(
+                BDDMockito.anyString(),
+                BDDMockito.anyString(),
+                BDDMockito.anyString()
+            )
+        ).willReturn(
+            assetTokenList()
         )
         val assets = assetsRepository.getAssetsFavorite("address")
         val expected = assetList().subList(0, 2)
@@ -142,13 +153,13 @@ class AssetsRepositoryTest {
     @Test
     fun `calc fee`() = runTest {
         BDDMockito.given(
-                extrinsicManager.calcFee(BDDMockito.anyString(), BDDMockito.anyBoolean(), any())
+            extrinsicManager.calcFee(BDDMockito.anyString(), BDDMockito.anyBoolean(), any())
         ).willReturn(BigInteger("1000000000000000000"))
         val fee = assetsRepository.calcTransactionFee(
-                "from",
-                "to",
-                TestTokens.xorToken,
-                BigDecimal.ONE
+            "from",
+            "to",
+            TestTokens.xorToken,
+            BigDecimal.ONE
         )
         Assert.assertEquals(BigDecimal("1"), fee)
     }
@@ -157,22 +168,22 @@ class AssetsRepositoryTest {
     fun `observe transfer`() = runTest {
         val key = Sr25519Keypair(byteArrayOf(1, 2), byteArrayOf(3, 4), byteArrayOf(5, 6))
         BDDMockito.given(
-                extrinsicManager.submitAndWatchExtrinsic(
-                        BDDMockito.anyString(),
-                        any(),
-                        BDDMockito.anyBoolean(),
-                        any()
-                )
+            extrinsicManager.submitAndWatchExtrinsic(
+                BDDMockito.anyString(),
+                any(),
+                BDDMockito.anyBoolean(),
+                any()
+            )
         ).willReturn(
-                ExtrinsicSubmitStatus(true, "txhash", "blockhash")
+            ExtrinsicSubmitStatus(true, "txhash", "blockhash")
         )
         val result = assetsRepository.observeTransfer(
-                key,
-                "from",
-                "to",
-                TestTokens.xorToken,
-                BigDecimal.ONE,
-                BigDecimal.ZERO
+            key,
+            "from",
+            "to",
+            TestTokens.xorToken,
+            BigDecimal.ONE,
+            BigDecimal.ZERO
         )
         Assert.assertEquals(true, result.success)
     }
@@ -188,159 +199,149 @@ class AssetsRepositoryTest {
     }
 
     private fun assetTokenList() = listOf(
-            AssetTokenWithFiatLocal(
-                    oneTokenLocal(), null, assetLocalList()[0]
-            ),
-            AssetTokenWithFiatLocal(
-                    oneTokenLocal2(), null, assetLocalList()[1]
-            )
+        AssetTokenWithFiatLocal(
+            oneTokenLocal(), null, assetLocalList()[0]
+        ),
+        AssetTokenWithFiatLocal(
+            oneTokenLocal2(), null, assetLocalList()[1]
+        )
     )
 
     private val usdFiat = SoraCurrency(
-            code = "USD",
-            name = "Dollar",
-            sign = "$",
+        code = "USD",
+        name = "Dollar",
+        sign = "$",
     )
 
     private fun assetLocalList() = listOf(
-            AssetLocal(
-                    "0x0200000000000000000000000000000000000000000000000000000000000000",
-                    "someaddress",
-                    true,
-                    1,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    true,
-            ),
-            AssetLocal(
-                    "0x0200040000000000000000000000000000000000000000000000000000000000",
-                    "someaddress",
-                    true,
-                    2,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    BigDecimal.ZERO,
-                    true,
-            ),
+        AssetLocal(
+            "0x0200000000000000000000000000000000000000000000000000000000000000",
+            "someaddress",
+            true,
+            1,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            true,
+        ),
+        AssetLocal(
+            "0x0200040000000000000000000000000000000000000000000000000000000000",
+            "someaddress",
+            true,
+            2,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            true,
+        ),
     )
 
     private fun assetList() = listOf(
-            Asset(
-                    oneToken(),
-                    true,
-                    1,
-                    assetBalance(),
-                    true,
-            ),
-            Asset(
-                    oneToken2(),
-                    true,
-                    2,
-                    assetBalance(),
-                    true,
-            ),
-            Asset(
-                    oneToken3(),
-                    true,
-                    3,
-                    assetBalance(),
-                    true,
-            ),
-            Asset(
-                    oneToken4(),
-                    true,
-                    4,
-                    assetBalance(),
-                    true,
-            )
+        Asset(
+            oneToken(),
+            true,
+            1,
+            TestAssets.balance(BigDecimal.ZERO),
+            true,
+        ),
+        Asset(
+            oneToken2(),
+            true,
+            2,
+            TestAssets.balance(BigDecimal.ZERO),
+            true,
+        ),
+        Asset(
+            oneToken3(),
+            true,
+            3,
+            TestAssets.balance(BigDecimal.ZERO),
+            true,
+        ),
+        Asset(
+            oneToken4(),
+            true,
+            4,
+            TestAssets.balance(BigDecimal.ZERO),
+            true,
+        )
     )
 
     private fun oneToken() = Token(
+        "0x0200000000000000000000000000000000000000000000000000000000000000",
+        "SORA",
+        "XOR",
+        18,
+        false,
+        mockedUri,
+        null,
+        null,
+        "$",
+    )
+
+    private fun oneTokenLocal() =
+        TokenLocal(
             "0x0200000000000000000000000000000000000000000000000000000000000000",
             "SORA",
             "XOR",
             18,
-            false,
-            mockedUri,
-            null,
-            null,
-            "$",
-    )
-
-    private fun oneTokenLocal() =
-            TokenLocal(
-                    "0x0200000000000000000000000000000000000000000000000000000000000000",
-                    "SORA",
-                    "XOR",
-                    18,
-                    true,
-                    "whitelist",
-                    false
-            )
+            true,
+            "whitelist",
+            false
+        )
 
     private fun oneToken2() = Token(
+        "0x0200040000000000000000000000000000000000000000000000000000000000",
+        "SORA Validator Token",
+        "VAL",
+        18,
+        true,
+        mockedUri,
+        null,
+        null,
+        "$",
+    )
+
+    private fun oneTokenLocal2() =
+        TokenLocal(
             "0x0200040000000000000000000000000000000000000000000000000000000000",
             "SORA Validator Token",
             "VAL",
             18,
             true,
-            mockedUri,
-            null,
-            null,
-            "$",
-    )
-
-    private fun oneTokenLocal2() =
-            TokenLocal(
-                    "0x0200040000000000000000000000000000000000000000000000000000000000",
-                    "SORA Validator Token",
-                    "VAL",
-                    18,
-                    true,
-                    "whitelist",
-                    true
-            )
+            "whitelist",
+            true
+        )
 
     private fun oneToken3() = Token(
-            "0x0200050000000000000000000000000000000000000000000000000000000000",
-            "Polkaswap",
-            "PSWAP",
-            18,
-            true,
-            mockedUri,
-            null,
-            null,
-            "$",
+        "0x0200050000000000000000000000000000000000000000000000000000000000",
+        "Polkaswap",
+        "PSWAP",
+        18,
+        true,
+        mockedUri,
+        null,
+        null,
+        "$",
     )
 
     private fun oneToken4() = Token(
-            "0x0200080000000000000000000000000000000000000000000000000000000000",
-            "SORA Synthetic USD",
-            "XSTUSD",
-            18,
-            true,
-            mockedUri,
-            null,
-            null,
-            "$",
-    )
-
-    private fun assetBalance() = AssetBalance(
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO
+        "0x0200080000000000000000000000000000000000000000000000000000000000",
+        "SORA Synthetic USD",
+        "XSTUSD",
+        18,
+        true,
+        mockedUri,
+        null,
+        null,
+        "$",
     )
 }

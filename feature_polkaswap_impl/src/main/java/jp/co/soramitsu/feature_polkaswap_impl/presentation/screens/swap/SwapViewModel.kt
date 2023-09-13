@@ -32,9 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -49,7 +46,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.AssetHolder
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.SuspendableProperty
 import jp.co.soramitsu.common.domain.Token
@@ -66,19 +62,18 @@ import jp.co.soramitsu.common.util.ext.lazyAsync
 import jp.co.soramitsu.common.util.ext.nullZero
 import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.view.ViewHelper
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.SwapMainState
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.defaultSwapDetailsState
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -87,14 +82,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -108,7 +101,6 @@ class SwapViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
-    private val coroutineManager: CoroutineManager,
     @Assisted("idfrom") private val token1Id: String,
     @Assisted("idto") private val token2Id: String,
     @Assisted("isLaunchedFromSoraCard") private val isLaunchedFromSoraCard: Boolean
@@ -121,10 +113,6 @@ class SwapViewModel @AssistedInject constructor(
             @Assisted("idto") idTo: String,
             @Assisted("isLaunchedFromSoraCard") isLaunchedFromSoraCard: Boolean
         ): SwapViewModel
-    }
-
-    companion object {
-//        const val ROUNDING_SWAP = 7
     }
 
     private val assetsList = mutableListOf<Asset>()
@@ -158,14 +146,12 @@ class SwapViewModel @AssistedInject constructor(
     private var desired: WithDesired = WithDesired.INPUT
     private var swapDetails: SwapDetails? = null
     private var networkFee: BigDecimal? = null
-    private var hasXorReminderWarningBeenChecked = false
 
-    var swapMainState by mutableStateOf(
+    private val _swapMainState = MutableStateFlow(
         SwapMainState(
             tokenFromState = null,
             tokenToState = null,
             slippage = 0.5,
-            selectSearchAssetState = null,
             market = Market.SMART,
             selectMarketState = null,
             details = defaultSwapDetailsState(),
@@ -183,16 +169,25 @@ class SwapViewModel @AssistedInject constructor(
             confirmResult = null,
         )
     )
-        private set
+    val swapMainState = _swapMainState.asStateFlow()
+
+    private val _swapTokensFilter = MutableStateFlow(emptySearchTokenFilter)
+    val swapTokensFilter = _swapTokensFilter.asStateFlow()
 
     private var amountFromPrev: BigDecimal = BigDecimal.ZERO
     private var amountToPrev: BigDecimal = BigDecimal.ZERO
     private val amountFrom: BigDecimal
-        get() = swapMainState.tokenFromState?.amount.orZero()
+        get() = _swapMainState.value.tokenFromState?.amount.orZero()
     private val amountTo: BigDecimal
-        get() = swapMainState.tokenToState?.amount.orZero()
+        get() = _swapMainState.value.tokenToState?.amount.orZero()
 
     override fun startScreen(): String = SwapRoutes.start
+
+    override fun onToolbarSearch(value: String) {
+        _swapTokensFilter.value = _swapTokensFilter.value.copy(
+            filter = value,
+        )
+    }
 
     override fun onCurrentDestinationChanged(curDest: String) {
         _toolbarState.value?.let { state ->
@@ -205,6 +200,8 @@ class SwapViewModel @AssistedInject constructor(
                         SwapRoutes.selectToken -> R.string.common_choose_asset
                         else -> ""
                     },
+                    searchEnabled = curDest == SwapRoutes.selectToken,
+                    searchValue = if (curDest == SwapRoutes.selectToken) _swapTokensFilter.value.filter else ""
                 )
             )
         }
@@ -236,7 +233,7 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
-                    swapMainState = swapMainState.copy(
+                    _swapMainState.value = _swapMainState.value.copy(
                         market = it
                     )
                     onChangedProperty.set(property.newReloadMarkets(false))
@@ -247,12 +244,12 @@ class SwapViewModel @AssistedInject constructor(
                 onError(it)
             }
             .onEach {
-                swapMainState = swapMainState.copy(
-                    tokenFromState = swapMainState.tokenFromState?.copy(
+                _swapMainState.value = _swapMainState.value.copy(
+                    tokenFromState = _swapMainState.value.tokenFromState?.copy(
                         amount = BigDecimal.ZERO,
                         amountFiat = "",
                     ),
-                    tokenToState = swapMainState.tokenToState?.copy(
+                    tokenToState = _swapMainState.value.tokenToState?.copy(
                         amount = BigDecimal.ZERO,
                         amountFiat = "",
                     ),
@@ -282,9 +279,9 @@ class SwapViewModel @AssistedInject constructor(
                 assetsList.clear()
                 assetsList.addAll(assets)
 
-                if (swapMainState.tokenFromState == null && token1Id.isNotEmpty()) {
+                if (_swapMainState.value.tokenFromState == null && token1Id.isNotEmpty()) {
                     assetsInteractor.getAssetOrThrow(token1Id).let { assetFrom ->
-                        swapMainState = swapMainState.copy(
+                        _swapMainState.value = _swapMainState.value.copy(
                             tokenFromState = AssetAmountInputState(
                                 token = assetFrom.token,
                                 balance = getAssetBalanceText(assetFrom),
@@ -297,9 +294,9 @@ class SwapViewModel @AssistedInject constructor(
                     }
                 }
 
-                if (swapMainState.tokenToState == null && token2Id.isNotEmpty()) {
+                if (_swapMainState.value.tokenToState == null && token2Id.isNotEmpty()) {
                     assetsInteractor.getAssetOrThrow(token2Id).let { assetTo ->
-                        swapMainState = swapMainState.copy(
+                        _swapMainState.value = _swapMainState.value.copy(
                             tokenToState = AssetAmountInputState(
                                 token = assetTo.token,
                                 balance = getAssetBalanceText(assetTo),
@@ -312,9 +309,9 @@ class SwapViewModel @AssistedInject constructor(
                     }
                 }
 
-                swapMainState.tokenFromState?.let { fromState ->
+                _swapMainState.value.tokenFromState?.let { fromState ->
                     assets.find { it.token.id == fromState.token.id }?.let { fromAsset ->
-                        swapMainState = swapMainState.copy(
+                        _swapMainState.value = _swapMainState.value.copy(
                             tokenFromState = fromState.copy(
                                 balance = getAssetBalanceText(fromAsset)
                             )
@@ -322,9 +319,9 @@ class SwapViewModel @AssistedInject constructor(
                     }
                 }
 
-                swapMainState.tokenToState?.let { toState ->
+                _swapMainState.value.tokenToState?.let { toState ->
                     assets.find { it.token.id == toState.token.id }?.let { toAsset ->
-                        swapMainState = swapMainState.copy(
+                        _swapMainState.value = _swapMainState.value.copy(
                             tokenToState = toState.copy(
                                 balance = getAssetBalanceText(toAsset)
                             )
@@ -356,11 +353,14 @@ class SwapViewModel @AssistedInject constructor(
                     onError(it)
                 }
                 .collectLatest {
-                    if (it.reloadMarkets) getMarkets()
+                    if (it.reloadMarkets) {
+                        getMarkets()
+                        property.reset()
+                    }
                     recalcDetails()
                     toggleSwapButtonStatus()
+                    updateTransactionReminderWarningVisibility()
                     resetLoading()
-                    property.reset()
                 }
         }
         viewModelScope.launch {
@@ -389,18 +389,6 @@ class SwapViewModel @AssistedInject constructor(
                     }
                 }
         }
-
-        merge(fromAmountFlow, toAmountFlow)
-            .filter {
-                swapMainState.tokenFromState?.token?.id == SubstrateOptionsProvider.feeAssetId ||
-                    swapMainState.tokenToState?.token?.id == SubstrateOptionsProvider.feeAssetId ||
-                    !hasXorReminderWarningBeenChecked
-            }.onEach {
-                updateTransactionReminderWarningVisibility()
-                hasXorReminderWarningBeenChecked = true
-            }
-            .flowOn(coroutineManager.io)
-            .launchIn(viewModelScope)
     }
 
     fun onDisclaimerClose() {
@@ -410,43 +398,42 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun onSlippageClick() {
-        swapMainState = swapMainState.copy(
-            tokenFromState = swapMainState.tokenFromState?.copy(
-                initialAmount = swapMainState.tokenFromState?.amount?.nullZero(),
+        _swapMainState.value = _swapMainState.value.copy(
+            tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
             ),
-            tokenToState = swapMainState.tokenToState?.copy(
-                initialAmount = swapMainState.tokenToState?.amount?.nullZero(),
+            tokenToState = _swapMainState.value.tokenToState?.copy(
+                initialAmount = _swapMainState.value.tokenToState?.amount?.nullZero(),
             ),
         )
     }
 
     fun onMarketClick() {
-        swapMainState = swapMainState.copy(
-            selectMarketState = swapMainState.market to availableMarkets,
-            tokenFromState = swapMainState.tokenFromState?.copy(
-                initialAmount = swapMainState.tokenFromState?.amount?.nullZero(),
+        _swapMainState.value = _swapMainState.value.copy(
+            selectMarketState = _swapMainState.value.market to availableMarkets,
+            tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
             ),
-            tokenToState = swapMainState.tokenToState?.copy(
-                initialAmount = swapMainState.tokenToState?.amount?.nullZero(),
+            tokenToState = _swapMainState.value.tokenToState?.copy(
+                initialAmount = _swapMainState.value.tokenToState?.amount?.nullZero(),
             ),
         )
     }
 
     fun fromCardClicked() {
         if (assetsList.isNotEmpty()) {
-            swapMainState = swapMainState.copy(
-                selectSearchAssetState = SelectSearchAssetState(
-                    filter = "",
-                    fullList = mapAssetsToCardState(
-                        assetsList.filter { it.token.id != swapMainState.tokenToState?.token?.id.orEmpty() },
-                        numbersFormatter
-                    )
+            val filtered = assetsList.filter {
+                it.token.id != _swapMainState.value.tokenToState?.token?.id.orEmpty()
+            }
+            _swapTokensFilter.value = _swapTokensFilter.value.copy(
+                tokenIds = filtered.map { it.token.id }
+            )
+            _swapMainState.value = _swapMainState.value.copy(
+                tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                    initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
                 ),
-                tokenFromState = swapMainState.tokenFromState?.copy(
-                    initialAmount = swapMainState.tokenFromState?.amount?.nullZero(),
-                ),
-                tokenToState = swapMainState.tokenToState?.copy(
-                    initialAmount = swapMainState.tokenToState?.amount?.nullZero(),
+                tokenToState = _swapMainState.value.tokenToState?.copy(
+                    initialAmount = _swapMainState.value.tokenToState?.amount?.nullZero(),
                 ),
             )
         }
@@ -454,40 +441,40 @@ class SwapViewModel @AssistedInject constructor(
 
     fun toCardClicked() {
         if (assetsList.isNotEmpty()) {
-            swapMainState = swapMainState.copy(
-                selectSearchAssetState = SelectSearchAssetState(
-                    filter = "",
-                    fullList = mapAssetsToCardState(
-                        assetsList.filter { it.token.id != swapMainState.tokenFromState?.token?.id.orEmpty() },
-                        numbersFormatter
-                    )
+            val filtered = assetsList.filter {
+                it.token.id != _swapMainState.value.tokenFromState?.token?.id.orEmpty()
+            }
+            _swapTokensFilter.value = _swapTokensFilter.value.copy(
+                tokenIds = filtered.map { it.token.id }
+            )
+            _swapMainState.value = _swapMainState.value.copy(
+                tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                    initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero(),
                 ),
-                tokenFromState = swapMainState.tokenFromState?.copy(
-                    initialAmount = swapMainState.tokenFromState?.amount?.nullZero(),
-                ),
-                tokenToState = swapMainState.tokenToState?.copy(
-                    initialAmount = swapMainState.tokenToState?.amount?.nullZero(),
+                tokenToState = _swapMainState.value.tokenToState?.copy(
+                    initialAmount = _swapMainState.value.tokenToState?.amount?.nullZero(),
                 ),
             )
         }
     }
 
     private suspend fun updateTransactionReminderWarningVisibility() =
-        with(swapMainState) {
+        with(_swapMainState.value) {
             if (tokenFromState == null || tokenToState == null)
                 return@with
-            val result = assetsInteractor.isEnoughXorLeftAfterTransaction(
-                primaryToken = tokenFromState.token,
-                primaryTokenAmount = tokenFromState.amount,
-                secondaryToken = tokenToState.token,
-                secondaryTokenAmount = tokenToState.amount,
-                networkFeeInXor = networkFee.orZero()
+            val change = if (tokenFromState.token.id == SubstrateOptionsProvider.feeAssetId) {
+                tokenFromState.amount
+            } else if (tokenToState.token.id == SubstrateOptionsProvider.feeAssetId) {
+                -tokenToState.amount
+            } else { null }
+            val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                networkFeeInXor = networkFee.orZero(),
+                xorChange = change,
             )
 
-            swapMainState = swapMainState.copy(
+            _swapMainState.value = _swapMainState.value.copy(
                 details = details.copy(
-                    shouldTransactionReminderInsufficientWarningBeShown = result,
-                    transactionFeeToken = feeToken().symbol
+                    shouldTransactionReminderInsufficientWarningBeShown = result && swapButtonState.enabled,
                 )
             )
         }
@@ -496,44 +483,39 @@ class SwapViewModel @AssistedInject constructor(
         assetsList.find { it.token.id == tokenId }?.let {
             toAndFromAssetsSelected(null, it.token)
         }
-        hasXorReminderWarningBeenChecked = false
     }
 
     fun toAssetSelected(tokenId: String) {
         assetsList.find { it.token.id == tokenId }?.let {
             toAndFromAssetsSelected(it.token, null)
         }
-        hasXorReminderWarningBeenChecked = false
     }
 
     fun onMarketSelected(market: Market) {
         swapInteractor.setSwapMarket(market)
-        swapMainState = swapMainState.copy(
+        _swapMainState.value = _swapMainState.value.copy(
             selectMarketState = null,
         )
     }
 
     fun onTokensSwapClick() {
         desired = if (desired == WithDesired.INPUT) WithDesired.OUTPUT else WithDesired.INPUT
-        swapMainState = swapMainState.copy(
-            tokenFromState = swapMainState.tokenToState?.copy(
-                initialAmount = swapMainState.tokenToState?.amount?.nullZero()
+        _swapMainState.value = _swapMainState.value.copy(
+            tokenFromState = _swapMainState.value.tokenToState?.copy(
+                initialAmount = _swapMainState.value.tokenToState?.amount?.nullZero()
             ),
-            tokenToState = swapMainState.tokenFromState?.copy(
-                initialAmount = swapMainState.tokenFromState?.amount?.nullZero()
+            tokenToState = _swapMainState.value.tokenFromState?.copy(
+                initialAmount = _swapMainState.value.tokenFromState?.amount?.nullZero()
             ),
         )
         setSwapButtonLoading(true)
         onChangedProperty.set(property.newReloadMarkets(false))
-        viewModelScope.launch {
-            updateTransactionReminderWarningVisibility()
-        }
     }
 
     private fun toAndFromAssetsSelected(to: Token?, from: Token?) {
         to?.let { token ->
             getAsset(token.id)?.let { asset ->
-                swapMainState = swapMainState.copy(
+                _swapMainState.value = _swapMainState.value.copy(
                     tokenToState = AssetAmountInputState(
                         token = token,
                         balance = getAssetBalanceText(asset),
@@ -547,14 +529,14 @@ class SwapViewModel @AssistedInject constructor(
         }
         from?.let { token ->
             getAsset(token.id)?.let { asset ->
-                swapMainState = swapMainState.copy(
+                _swapMainState.value = _swapMainState.value.copy(
                     tokenFromState = AssetAmountInputState(
                         token = token,
                         balance = getAssetBalanceText(asset),
                         amount = amountFrom,
                         initialAmount = amountFrom.nullZero(),
                         amountFiat = token.printFiat(amountFrom, numbersFormatter),
-                        enabled = swapMainState.tokenToState != null,
+                        enabled = _swapMainState.value.tokenToState != null,
                     )
                 )
             }
@@ -566,29 +548,34 @@ class SwapViewModel @AssistedInject constructor(
         val ok = isBalanceOk()
 
         val (text, enabled) = when {
-            swapMainState.tokenFromState == null || swapMainState.tokenToState == null -> {
+            _swapMainState.value.tokenFromState == null || _swapMainState.value.tokenToState == null -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
+
             availableMarkets.isEmpty() -> {
                 resourceManager.getString(R.string.polkaswap_pool_not_created) to false
             }
-            swapMainState.tokenFromState != null && amountFrom.isZero() && desired == WithDesired.INPUT -> {
+            _swapMainState.value.tokenFromState != null && amountFrom.isZero() && desired == WithDesired.INPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
-            swapMainState.tokenToState != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
+            _swapMainState.value.tokenToState != null && amountTo.isZero() && desired == WithDesired.OUTPUT -> {
                 resourceManager.getString(R.string.common_enter_amount) to false
             }
+
             ok?.isEmpty() == true -> {
                 resourceManager.getString(R.string.review) to true
             }
+
             ok?.isNotEmpty() == true -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
             }
+
             swapDetails == null -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_liqudity)
                     .format("") to false
             }
+
             else -> {
                 resourceManager.getString(R.string.choose_tokens) to false
             }
@@ -599,21 +586,23 @@ class SwapViewModel @AssistedInject constructor(
                 resourceManager.getString(R.string.polkaswap_insufficient_balance)
                     .format(ok) to false
             }
+
             swapDetails == null -> {
                 resourceManager.getString(R.string.polkaswap_insufficient_liqudity)
                     .format("") to false
             }
+
             else -> {
                 resourceManager.getString(R.string.common_confirm) to true
             }
         }
 
-        swapMainState = swapMainState.copy(
-            swapButtonState = swapMainState.swapButtonState.copy(
+        _swapMainState.value = _swapMainState.value.copy(
+            swapButtonState = _swapMainState.value.swapButtonState.copy(
                 text = text,
                 enabled = enabled,
             ),
-            confirmButtonState = swapMainState.confirmButtonState.copy(
+            confirmButtonState = _swapMainState.value.confirmButtonState.copy(
                 text = text2,
                 enabled = enabled2 && !isExtrinsicSubmitted,
             )
@@ -621,8 +610,8 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     private suspend fun getMarkets() {
-        swapMainState.tokenFromState?.let { from ->
-            swapMainState.tokenToState?.let { to ->
+        _swapMainState.value.tokenFromState?.let { from ->
+            _swapMainState.value.tokenToState?.let { to ->
                 tryCatch {
                     val m = swapInteractor.fetchAvailableSources(from.token.id, to.token.id)
                     availableMarkets.clear()
@@ -638,8 +627,8 @@ class SwapViewModel @AssistedInject constructor(
      * @return null - can't calculate, empty - ok, not empty - token symbol
      */
     private fun isBalanceOk(): String? {
-        return swapMainState.tokenFromState?.let { fromAsset ->
-            swapMainState.tokenToState?.let { toAsset ->
+        return _swapMainState.value.tokenFromState?.let { fromAsset ->
+            _swapMainState.value.tokenToState?.let { toAsset ->
                 swapDetails?.let { details ->
                     getFeeAsset()?.let { feeAsset ->
                         if (amountFrom > BigDecimal.ZERO) {
@@ -660,9 +649,11 @@ class SwapViewModel @AssistedInject constructor(
                                 null -> {
                                     ""
                                 }
+
                                 fromAsset.token -> {
                                     fromAsset.token.symbol
                                 }
+
                                 else -> {
                                     feeAsset.token.symbol
                                 }
@@ -675,8 +666,8 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     private fun setSwapButtonLoading(loading: Boolean) {
-        swapMainState = swapMainState.copy(
-            swapButtonState = swapMainState.swapButtonState.copy(
+        _swapMainState.value = _swapMainState.value.copy(
+            swapButtonState = _swapMainState.value.swapButtonState.copy(
                 loading = loading,
             ),
         )
@@ -684,21 +675,21 @@ class SwapViewModel @AssistedInject constructor(
 
     private fun resetLoading() {
         setSwapButtonLoading(false)
-        swapMainState = swapMainState.copy(
-            tokenFromState = swapMainState.tokenFromState?.copy(
-                enabled = swapMainState.tokenFromState != null && swapMainState.tokenToState != null,
+        _swapMainState.value = _swapMainState.value.copy(
+            tokenFromState = _swapMainState.value.tokenFromState?.copy(
+                enabled = _swapMainState.value.tokenFromState != null && _swapMainState.value.tokenToState != null,
             ),
         )
-        swapMainState = swapMainState.copy(
-            tokenToState = swapMainState.tokenToState?.copy(
-                enabled = swapMainState.tokenFromState != null && swapMainState.tokenToState != null,
+        _swapMainState.value = _swapMainState.value.copy(
+            tokenToState = _swapMainState.value.tokenToState?.copy(
+                enabled = _swapMainState.value.tokenFromState != null && _swapMainState.value.tokenToState != null,
             ),
         )
     }
 
     private suspend fun recalcDetails() {
-        swapMainState.tokenFromState?.let { fromAsset ->
-            swapMainState.tokenToState?.let { toAsset ->
+        _swapMainState.value.tokenFromState?.let { fromAsset ->
+            _swapMainState.value.tokenToState?.let { toAsset ->
                 val amountToCalc = if (desired == WithDesired.INPUT) amountFrom else amountTo
                 if (amountToCalc > BigDecimal.ZERO) {
                     tryCatchFinally(
@@ -710,14 +701,14 @@ class SwapViewModel @AssistedInject constructor(
                                 feeToken(),
                                 amountToCalc,
                                 desired,
-                                swapMainState.slippage,
+                                _swapMainState.value.slippage,
                             )
                             swapDetails = details
                             updateDetailsView()
                             details?.amount?.let {
                                 if (desired == WithDesired.INPUT) {
-                                    swapMainState = swapMainState.copy(
-                                        tokenToState = swapMainState.tokenToState?.copy(
+                                    _swapMainState.value = _swapMainState.value.copy(
+                                        tokenToState = _swapMainState.value.tokenToState?.copy(
                                             amountFiat = toAsset.token.printFiat(
                                                 it,
                                                 numbersFormatter
@@ -727,8 +718,8 @@ class SwapViewModel @AssistedInject constructor(
                                         )
                                     )
                                 } else {
-                                    swapMainState = swapMainState.copy(
-                                        tokenFromState = swapMainState.tokenFromState?.copy(
+                                    _swapMainState.value = _swapMainState.value.copy(
+                                        tokenFromState = _swapMainState.value.tokenFromState?.copy(
                                             amountFiat = fromAsset.token.printFiat(
                                                 it,
                                                 numbersFormatter
@@ -748,7 +739,7 @@ class SwapViewModel @AssistedInject constructor(
 
     private suspend fun updateDetailsView() {
         if (swapDetails == null) {
-            swapMainState = swapMainState.copy(
+            _swapMainState.value = _swapMainState.value.copy(
                 details = defaultSwapDetailsState()
             )
         } else {
@@ -766,48 +757,48 @@ class SwapViewModel @AssistedInject constructor(
                     p2 = per2
                     minmaxTitle = R.string.polkaswap_minimum_received
                     minmaxHint = R.string.polkaswap_minimum_received_info
-                    minmaxToken = swapMainState.tokenToState?.token
-                    maxMinToken = swapMainState.tokenFromState?.token
+                    minmaxToken = _swapMainState.value.tokenToState?.token
+                    maxMinToken = _swapMainState.value.tokenFromState?.token
                 } else {
                     p1 = per2
                     p2 = per1
                     minmaxTitle = R.string.polkaswap_maximum_sold
                     minmaxHint = R.string.polkaswap_maximum_sold_info
-                    minmaxToken = swapMainState.tokenFromState?.token
-                    maxMinToken = swapMainState.tokenToState?.token
+                    minmaxToken = _swapMainState.value.tokenFromState?.token
+                    maxMinToken = _swapMainState.value.tokenToState?.token
                 }
-                swapMainState = swapMainState.copy(
-                    details = swapMainState.details.copy(
+                _swapMainState.value = _swapMainState.value.copy(
+                    details = _swapMainState.value.details.copy(
                         transactionFee = feeToken().printBalance(
                             details.networkFee,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ),
                         transactionFeeFiat = feeToken().printFiat(
                             details.networkFee,
-                            numbersFormatter
+                            numbersFormatter,
                         ),
                         priceFromTo = p1,
                         priceFromToTitle = "%s / %s".format(
                             maxMinToken?.symbol.orEmpty(),
-                            minmaxToken?.symbol.orEmpty()
+                            minmaxToken?.symbol.orEmpty(),
                         ),
                         priceToFrom = p2,
                         priceToFromTitle = "%s / %s".format(
                             minmaxToken?.symbol.orEmpty(),
-                            maxMinToken?.symbol.orEmpty()
+                            maxMinToken?.symbol.orEmpty(),
                         ),
                         lpFee = feeToken().printBalance(
                             details.liquidityFee,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ),
                         minmaxTitle = minmaxTitle,
                         minmaxHint = minmaxHint,
                         minmaxValue = minmaxToken?.printBalance(
                             details.minmax,
                             numbersFormatter,
-                            AssetHolder.ROUNDING
+                            AssetHolder.ROUNDING,
                         ).orEmpty(),
                         minmaxValueFiat = minmaxToken?.printFiat(details.minmax, numbersFormatter)
                             .orEmpty(),
@@ -819,10 +810,10 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     private fun fromAmountOnEach() {
-        if (swapMainState.swapButtonState.loading.not()) {
+        if (_swapMainState.value.swapButtonState.loading.not()) {
             setSwapButtonLoading(true)
-            swapMainState = swapMainState.copy(
-                tokenToState = swapMainState.tokenToState?.copy(
+            _swapMainState.value = _swapMainState.value.copy(
+                tokenToState = _swapMainState.value.tokenToState?.copy(
                     enabled = false,
                 )
             )
@@ -830,10 +821,10 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun onFromAmountChange(value: BigDecimal) {
-        swapMainState = swapMainState.copy(
-            tokenFromState = swapMainState.tokenFromState?.copy(
+        _swapMainState.value = _swapMainState.value.copy(
+            tokenFromState = _swapMainState.value.tokenFromState?.copy(
                 amount = value,
-                amountFiat = swapMainState.tokenFromState?.token?.printFiat(
+                amountFiat = _swapMainState.value.tokenFromState?.token?.printFiat(
                     value,
                     numbersFormatter
                 ).orEmpty()
@@ -844,10 +835,10 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun onToAmountChange(value: BigDecimal) {
-        swapMainState = swapMainState.copy(
-            tokenToState = swapMainState.tokenToState?.copy(
+        _swapMainState.value = _swapMainState.value.copy(
+            tokenToState = _swapMainState.value.tokenToState?.copy(
                 amount = value,
-                amountFiat = swapMainState.tokenToState?.token?.printFiat(
+                amountFiat = _swapMainState.value.tokenToState?.token?.printFiat(
                     value,
                     numbersFormatter
                 ).orEmpty()
@@ -858,10 +849,10 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     private fun toAmountOnEach() {
-        if (swapMainState.swapButtonState.loading.not()) {
+        if (_swapMainState.value.swapButtonState.loading.not()) {
             setSwapButtonLoading(true)
-            swapMainState = swapMainState.copy(
-                tokenFromState = swapMainState.tokenFromState?.copy(
+            _swapMainState.value = _swapMainState.value.copy(
+                tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     enabled = false,
                 )
             )
@@ -884,10 +875,11 @@ class SwapViewModel @AssistedInject constructor(
 
     fun swapClicked() {
         val token =
-            if (desired == WithDesired.INPUT) swapMainState.tokenToState?.token else swapMainState.tokenFromState?.token
+            if (desired == WithDesired.INPUT) _swapMainState.value.tokenToState?.token else _swapMainState.value.tokenFromState?.token
         val minmax = swapDetails?.minmax
         if (token != null && minmax != null) {
-            val minmaxText = "\n${token.printBalance(minmax, numbersFormatter, AssetHolder.ROUNDING)}\n"
+            val minmaxText =
+                "\n${token.printBalance(minmax, numbersFormatter, AssetHolder.ROUNDING)}\n"
             val desc =
                 (
                     if (desired == WithDesired.INPUT)
@@ -895,7 +887,7 @@ class SwapViewModel @AssistedInject constructor(
                         resourceManager.getString(R.string.polkaswap_input_estimated)
                     ).format(minmaxText)
             val i1 = desc.indexOf(minmaxText)
-            swapMainState = swapMainState.copy(
+            _swapMainState.value = _swapMainState.value.copy(
                 confirmText = if (i1 >= 0) buildAnnotatedString {
                     append(desc.substring(0, i1))
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -918,11 +910,11 @@ class SwapViewModel @AssistedInject constructor(
     fun onConfirmClicked() {
         isExtrinsicSubmitted = true
         swapDetails?.let { details ->
-            swapMainState.tokenFromState?.let { fromState ->
-                swapMainState.tokenToState?.let { toState ->
+            _swapMainState.value.tokenFromState?.let { fromState ->
+                _swapMainState.value.tokenToState?.let { toState ->
                     viewModelScope.launch {
-                        swapMainState = swapMainState.copy(
-                            confirmButtonState = swapMainState.confirmButtonState.copy(
+                        _swapMainState.value = _swapMainState.value.copy(
+                            confirmButtonState = _swapMainState.value.confirmButtonState.copy(
                                 enabled = false,
                                 loading = true,
                             )
@@ -943,15 +935,15 @@ class SwapViewModel @AssistedInject constructor(
                         } catch (t: Throwable) {
                             onError(t)
                         } finally {
-                            swapMainState = swapMainState.copy(
-                                confirmButtonState = swapMainState.confirmButtonState.copy(
+                            _swapMainState.value = _swapMainState.value.copy(
+                                confirmButtonState = _swapMainState.value.confirmButtonState.copy(
                                     enabled = false,
                                     loading = false,
                                 ),
                                 confirmResult = swapResult.isNotEmpty(),
                             )
                             delay(500)
-                            swapMainState = swapMainState.copy(
+                            _swapMainState.value = _swapMainState.value.copy(
                                 confirmResult = null
                             )
                             if (swapResult.isNotEmpty())
@@ -969,12 +961,12 @@ class SwapViewModel @AssistedInject constructor(
     }
 
     fun slippageChanged(slippageTolerance: Double) {
-        swapMainState = swapMainState.copy(slippage = slippageTolerance)
+        _swapMainState.value = _swapMainState.value.copy(slippage = slippageTolerance)
         onChangedProperty.set(property.newReloadMarkets(false))
     }
 
     fun fromInputPercentClicked(percent: Int) {
-        swapMainState.tokenFromState?.let { fromAsset ->
+        _swapMainState.value.tokenFromState?.let { fromAsset ->
             val transferable = getTransferable(fromAsset.token.id)
             var amount = PolkaswapFormulas.calculateAmountByPercentage(
                 transferable,
@@ -985,8 +977,8 @@ class SwapViewModel @AssistedInject constructor(
             if (fromAsset.token.id == SubstrateOptionsProvider.feeAssetId && amount > BigDecimal.ZERO) {
                 amount = subtractFee(amount, transferable, networkFee)
             }
-            swapMainState = swapMainState.copy(
-                tokenFromState = swapMainState.tokenFromState?.copy(
+            _swapMainState.value = _swapMainState.value.copy(
+                tokenFromState = _swapMainState.value.tokenFromState?.copy(
                     amountFiat = fromAsset.token.printFiat(amount, numbersFormatter),
                     amount = amount,
                     initialAmount = amount,

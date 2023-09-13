@@ -33,14 +33,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.substrate.substrate
 
 import java.math.BigInteger
+import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.DictEnum
 import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
 import jp.co.soramitsu.shared_utils.runtime.extrinsic.ExtrinsicBuilder
 import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
-import jp.co.soramitsu.sora.substrate.models.WithDesired
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
-import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
+import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 
 fun ExtrinsicBuilder.setReferrer(referrer: String) =
     this.call(
@@ -66,12 +66,8 @@ fun ExtrinsicBuilder.swap(
         Method.SWAP.methodName,
         mapOf(
             "dex_id" to dexId.toBigInteger(),
-            "input_asset_id" to Struct.Instance(
-                mapOf("code" to inputAssetId.mapAssetId())
-            ),
-            "output_asset_id" to Struct.Instance(
-                mapOf("code" to outputAssetId.mapAssetId())
-            ),
+            "input_asset_id" to inputAssetId.mapCodeToken(),
+            "output_asset_id" to outputAssetId.mapCodeToken(),
             "swap_amount" to DictEnum.Entry(
                 name = desired.backString,
                 value = Struct.Instance(
@@ -120,9 +116,7 @@ fun ExtrinsicBuilder.transfer(
         Pallete.ASSETS.palletName,
         Method.TRANSFER.methodName,
         mapOf(
-            "asset_id" to Struct.Instance(
-                mapOf("code" to assetId.mapAssetId())
-            ),
+            "asset_id" to assetId.mapCodeToken(),
             "to" to to.toAccountId(),
             "amount" to amount
         )
@@ -156,12 +150,8 @@ fun ExtrinsicBuilder.removeLiquidity(
         Method.WITHDRAW_LIQUIDITY.methodName,
         mapOf(
             "dex_id" to dexId.toBigInteger(),
-            "output_asset_a" to Struct.Instance(
-                mapOf("code" to outputAssetIdA.mapAssetId())
-            ),
-            "output_asset_b" to Struct.Instance(
-                mapOf("code" to outputAssetIdB.mapAssetId())
-            ),
+            "output_asset_a" to outputAssetIdA.mapCodeToken(),
+            "output_asset_b" to outputAssetIdB.mapCodeToken(),
             "marker_asset_desired" to markerAssetDesired,
             "output_a_min" to outputAMin,
             "output_b_min" to outputBMin
@@ -177,12 +167,8 @@ fun ExtrinsicBuilder.register(
     Method.REGISTER.methodName,
     mapOf(
         "dex_id" to dexId.toBigInteger(),
-        "base_asset_id" to Struct.Instance(
-            mapOf("code" to baseAssetId.mapAssetId())
-        ),
-        "target_asset_id" to Struct.Instance(
-            mapOf("code" to targetAssetId.mapAssetId())
-        )
+        "base_asset_id" to baseAssetId.mapCodeToken(),
+        "target_asset_id" to targetAssetId.mapCodeToken(),
     )
 )
 
@@ -195,12 +181,8 @@ fun ExtrinsicBuilder.initializePool(
     Method.INITIALIZE_POOL.methodName,
     mapOf(
         "dex_id" to dexId.toBigInteger(),
-        "asset_a" to Struct.Instance(
-            mapOf("code" to baseAssetId.mapAssetId())
-        ),
-        "asset_b" to Struct.Instance(
-            mapOf("code" to targetAssetId.mapAssetId())
-        )
+        "asset_a" to baseAssetId.mapCodeToken(),
+        "asset_b" to targetAssetId.mapCodeToken(),
     )
 )
 
@@ -217,12 +199,8 @@ fun ExtrinsicBuilder.depositLiquidity(
     Method.DEPOSIT_LIQUIDITY.methodName,
     mapOf(
         "dex_id" to dexId.toBigInteger(),
-        "input_asset_a" to Struct.Instance(
-            mapOf("code" to baseAssetId.mapAssetId())
-        ),
-        "input_asset_b" to Struct.Instance(
-            mapOf("code" to targetAssetId.mapAssetId())
-        ),
+        "input_asset_a" to baseAssetId.mapCodeToken(),
+        "input_asset_b" to targetAssetId.mapCodeToken(),
         "input_a_desired" to baseAssetAmount,
         "input_b_desired" to targetAssetAmount,
         "input_a_min" to amountFromMin,
@@ -239,9 +217,7 @@ fun ExtrinsicBuilder.faucetTransfer(
         Pallete.FAUCET.palletName,
         Method.TRANSFER.methodName,
         mapOf(
-            "asset_id" to Struct.Instance(
-                mapOf("code" to assetId.mapAssetId())
-            ),
+            "asset_id" to assetId.mapCodeToken(),
             "target" to target.toAccountId(),
             "amount" to amount
         )

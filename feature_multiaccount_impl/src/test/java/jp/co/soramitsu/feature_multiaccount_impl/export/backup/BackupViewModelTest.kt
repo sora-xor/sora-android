@@ -33,12 +33,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.export.backup
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import jp.co.soramitsu.common.resourses.ClipboardManager
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.addHexPrefix
-import jp.co.soramitsu.common.R as commonR
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
-import jp.co.soramitsu.feature_multiaccount_impl.R
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupViewModel
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -58,6 +56,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.verify
+import jp.co.soramitsu.common.R as commonR
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -80,7 +79,7 @@ class BackupViewModelTest {
     private lateinit var interactor: MultiaccountInteractor
 
     @Mock
-    private lateinit var clipboardManager: ClipboardManager
+    private lateinit var clipboardManager: BasicClipboardManager
 
     private lateinit var viewModel: BackupViewModel
 
@@ -135,15 +134,15 @@ class BackupViewModelTest {
     fun backupPressedWithSeed() {
         setUp(ExportProtectionViewModel.Type.SEED)
         viewModel.backupPressed()
-        verify(clipboardManager).addToClipboard("Seed", seed.addHexPrefix())
-        viewModel.copyEvent.getOrAwaitValue()
+        verify(clipboardManager).addToClipboard(seed.addHexPrefix())
+        viewModel.copiedToast.getOrAwaitValue()
     }
 
     @Test
     fun backupPressedWithPassphrase() {
         setUp(ExportProtectionViewModel.Type.PASSPHRASE)
         viewModel.backupPressed()
-        verify(clipboardManager).addToClipboard("Mnemonic", mnemo)
-        viewModel.copyEvent.getOrAwaitValue()
+        verify(clipboardManager).addToClipboard(mnemo)
+        viewModel.copiedToast.getOrAwaitValue()
     }
 }

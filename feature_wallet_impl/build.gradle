@@ -78,6 +78,7 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":feature_blockexplorer_api")
     implementation project(":feature_polkaswap_api")
+    implementation project(":feature_referral_api")
     implementation project(":feature_sora_card_api")
 
     implementation sharedUtilsDep
@@ -112,7 +113,6 @@ dependencies {
     kapt daggerKaptDep
     implementation hiltWorkManagerDep
     kapt hiltWorkManagerKaptDep
-    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     implementation gsonDep
 

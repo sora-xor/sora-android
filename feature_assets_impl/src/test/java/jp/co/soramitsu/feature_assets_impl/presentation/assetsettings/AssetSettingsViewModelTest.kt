@@ -38,15 +38,15 @@ import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.AssetBalance
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
-import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.fullassetsettings.FullAssetSettingsViewModel
+import jp.co.soramitsu.feature_assets_impl.presentation.states.AssetSettingsState
+import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens.pswapToken
 import jp.co.soramitsu.test_data.TestTokens.valToken
 import jp.co.soramitsu.test_data.TestTokens.xorToken
@@ -146,7 +146,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[6])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("token2_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 5, 6)
@@ -168,7 +168,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[2])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("0x0200050000000000000000000000000000000000000000000000000000000000"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -193,7 +193,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[5])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 5, 6)
@@ -221,7 +221,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -241,7 +241,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 5, 6)
@@ -269,7 +269,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOn(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.mapIndexed { index, s -> s to index }.toMap()
         verify(assetsInteractor).updateAssetPositions(map)
@@ -283,7 +283,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[6])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token2_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 6, 7)
@@ -304,7 +304,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[7])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token3_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 7, 8)
@@ -328,7 +328,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[7])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token3_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 7, 8)
@@ -356,7 +356,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.mapIndexed { index, s -> s to index }.toMap()
         verify(assetsInteractor).updateAssetPositions(map)
@@ -391,7 +391,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[8])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token4_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.mapIndexed { index, s -> s to index }.toMap()
         verify(assetsInteractor).updateAssetPositions(map)
@@ -411,7 +411,7 @@ class AssetSettingsViewModelTest {
         viewModel.onFavoriteClick(mappedModels[6])
         advanceUntilIdle()
         verify(assetsInteractor).tokenFavoriteOff(listOf("token2_id"))
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         val map = list.map { it.token.id }.let {
             Collections.swap(it, 7, 8)
@@ -446,7 +446,7 @@ class AssetSettingsViewModelTest {
     @Test
     fun `click back`() = runTest {
         setUpStartList()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -454,7 +454,7 @@ class AssetSettingsViewModelTest {
     @Test
     fun `click done`() = runTest {
         setUpStartList()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -465,7 +465,7 @@ class AssetSettingsViewModelTest {
         val mappedModels = mapModels(list)
         viewModel.onFavoriteClick(mappedModels[0])
         advanceUntilIdle()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -478,7 +478,7 @@ class AssetSettingsViewModelTest {
         advanceUntilIdle()
         viewModel.onFavoriteClick(mappedModels[1])
         advanceUntilIdle()
-        viewModel.onCloseClick()
+        viewModel.onAction()
         advanceUntilIdle()
         verify(router).popBackStackFragment()
     }
@@ -514,75 +514,35 @@ class AssetSettingsViewModelTest {
             xorToken,
             visibility[0],
             1,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
             valToken,
             visibility[1],
             2,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
             pswapToken,
             visibility[2],
             3,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
             xstusdToken,
             visibility[3],
             4,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true
         ),
         Asset(
             xstToken,
             visibility[4],
             5,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -599,15 +559,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[5],
             6,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -624,15 +576,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[6],
             7,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -649,15 +593,7 @@ class AssetSettingsViewModelTest {
             ),
             visibility[7],
             8,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         ),
         Asset(
@@ -674,27 +610,19 @@ class AssetSettingsViewModelTest {
             ),
             visibility[8],
             9,
-            AssetBalance(
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE,
-                BigDecimal.ONE
-            ),
+            TestAssets.balance(BigDecimal.ONE),
             true,
         )
     )
 
     private fun mapModels(list: List<Asset>) = list.map {
         AssetSettingsState(
-                it.token,
-                it.token.printBalance(it.balance.transferable, nf, 8),
-                it.token.symbol,
-                it.favorite,
-                it.visibility,
-                fiat = 0.0,
+            it.token,
+            it.token.printBalance(it.balance.transferable, nf, 8),
+            it.token.symbol,
+            it.favorite,
+            it.visibility,
+            fiat = 0.0,
         )
     }
 }

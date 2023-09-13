@@ -166,6 +166,9 @@ interface AssetDao {
     @Update
     suspend fun updateTokenList(tokens: List<TokenLocal>)
 
+    @Query("select * from tokens where id=:tokenId")
+    suspend fun getTokenLocal(tokenId: String): TokenLocal
+
     @Query(
         """
         $joinFiatToken where tokens.id in (:ids)        
@@ -217,4 +220,10 @@ interface AssetDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFiatPrice(prices: List<FiatTokenPriceLocal>)
+
+    @Query("select * from fiatTokenPrices where currencyId=:isoCode")
+    suspend fun getFiatTokenPriceLocal(isoCode: String): List<FiatTokenPriceLocal>
+
+    @Query("update fiatTokenPrices set fiatPrice=:fiat, fiatPriceTime=:time where tokenIdFiat=:tokenId and currencyId=:isoCode")
+    suspend fun updateFiatValueOfToken(tokenId: String, isoCode: String, fiat: Double, time: Long)
 }

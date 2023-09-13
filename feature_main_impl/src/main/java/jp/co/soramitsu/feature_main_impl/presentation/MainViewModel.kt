@@ -42,11 +42,11 @@ import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.util.ext.setValueIfNew
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
@@ -111,6 +111,13 @@ class MainViewModel @Inject constructor(
                         blockExplorerManager.updateFiat()
                     }
                     delay(10000)
+                }
+            }
+        }
+        viewModelScope.launch {
+            withContext(coroutineManager.io) {
+                assetsInteractor.getTokensList().map { it.id }.also { tokens ->
+                    blockExplorerManager.getTokensLiquidity(tokens)
                 }
             }
         }

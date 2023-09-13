@@ -35,7 +35,6 @@ package jp.co.soramitsu.sora.substrate.substrate
 import java.math.BigInteger
 import javax.inject.Inject
 import jp.co.soramitsu.common.data.network.dto.PoolDataDto
-import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.shared_utils.extensions.fromHex
 import jp.co.soramitsu.shared_utils.extensions.toHexString
@@ -60,7 +59,8 @@ import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.Storage
 import jp.co.soramitsu.sora.substrate.runtime.accountPoolsKey
 import jp.co.soramitsu.sora.substrate.runtime.assetIdFromKey
-import jp.co.soramitsu.sora.substrate.runtime.mapAssetId
+import jp.co.soramitsu.sora.substrate.runtime.getTokenId
+import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
 import jp.co.soramitsu.sora.substrate.runtime.reservesKey
 
 // todo refactor it after migrate to substrate 4
@@ -68,54 +68,6 @@ class SubstrateApiImpl @Inject constructor(
     private val socketService: SocketService,
     private val runtimeManager: RuntimeManager,
 ) : SubstrateApi {
-
-    override suspend fun getPoolBaseTokens(): List<Pair<Int, String>> {
-        val metadataStorage =
-            runtimeManager.getRuntimeSnapshot().metadata
-                .module(Pallete.DEX_MANAGER.palletName)
-                .storage(Storage.DEX_INFOS.storageName)
-        val partialKey = metadataStorage.storageKey()
-        val dexIdsList = socketService.executeAsync(
-            request = RuntimeRequest(
-                "dexManager_listDEXIds",
-                emptyList(),
-            ),
-            mapper = pojoList<Int>().nonNull()
-        )
-        return runCatching {
-            socketService.executeAsync(
-                request = StateKeys(listOf(partialKey)),
-                mapper = pojoList<String>().nonNull()
-            ).let { storageKeys ->
-                storageKeys.mapIndexedNotNull { storageIndex, storageKey ->
-                    socketService.executeAsync(
-                        request = GetStorageRequest(listOf(storageKey)),
-                        mapper = pojo<String>().nonNull(),
-                    )
-                        .let { storage ->
-                            val storageType = metadataStorage.type.value!!
-                            val storageRawData =
-                                storageType.fromHex(runtimeManager.getRuntimeSnapshot(), storage)
-                            (storageRawData as? Struct.Instance)?.let { instance ->
-                                instance.get<Struct.Instance>("baseAssetId")?.let { id ->
-                                    id.get<List<*>>("code")?.let { code ->
-                                        code.map {
-                                            (it as BigInteger).toByte()
-                                        }
-                                    }?.toByteArray()?.toHexString(true)
-                                }?.let { token ->
-                                    dexIdsList.getOrNull(storageIndex)?.let { index ->
-                                        index to token
-                                    }
-                                }
-                            }
-                        }
-                }
-            }
-        }
-            .onFailure(FirebaseWrapper::recordException)
-            .getOrThrow()
-    }
 
     override suspend fun getUserPoolsTokenIdsKeys(address: String): List<String> {
         val accountPoolsKey = runtimeManager.getRuntimeSnapshot().accountPoolsKey(address)
@@ -148,11 +100,7 @@ class SubstrateApiImpl @Inject constructor(
                         val tokens: List<ByteArray> = if (storageRawData is List<*>) {
                             storageRawData.filterIsInstance<Struct.Instance>()
                                 .mapNotNull { struct ->
-                                    struct.get<List<*>>("code")?.let { code ->
-                                        code.map {
-                                            (it as BigInteger).toByte()
-                                        }
-                                    }?.toByteArray()
+                                    struct.getTokenId()
                                 }
                         } else {
                             emptyList()
@@ -224,16 +172,8 @@ class SubstrateApiImpl @Inject constructor(
             runtimeManager.getRuntimeSnapshot().metadata.module(Pallete.POOL_XYK.palletName)
                 .storage(Storage.PROPERTIES.storageName).storageKey(
                     runtimeManager.getRuntimeSnapshot(),
-                    Struct.Instance(
-                        mapOf(
-                            "code" to baseTokenId.mapAssetId()
-                        )
-                    ),
-                    Struct.Instance(
-                        mapOf(
-                            "code" to tokenId.mapAssetId()
-                        )
-                    ),
+                    baseTokenId.mapCodeToken(),
+                    tokenId.mapCodeToken(),
                 )
         return socketService.executeAsync(
             request = GetStorageRequest(listOf(storageKey)),
@@ -335,31 +275,6 @@ class SubstrateApiImpl @Inject constructor(
             ),
             mapper = pojoList<String>().nonNull(),
         )
-
-    override suspend fun getSwapFees(
-        tokenId1: String,
-        tokenId2: String,
-        amount: BigInteger,
-        swapVariant: String,
-        market: List<String>,
-        filter: String,
-        dexId: Int,
-    ): SwapFeeDto? =
-        socketService.executeAsync(
-            request = RuntimeRequest(
-                "liquidityProxy_quote",
-                listOf(
-                    dexId,
-                    tokenId1,
-                    tokenId2,
-                    amount.toString(),
-                    swapVariant,
-                    market,
-                    filter
-                )
-            ),
-            mapper = pojo<SwapFeeDto>(),
-        ).result
 
     override suspend fun isPairEnabled(
         inputAssetId: String,

@@ -162,10 +162,9 @@ internal fun SwapMainScreen(
         if (state.details.shouldTransactionReminderInsufficientWarningBeShown) {
             Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
             WarningTextCard(
-                title = stringResource(id = R.string.common_title_warning),
                 text = stringResource(
                     id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
-                    formatArgs = arrayOf(state.details.transactionFeeToken, state.details.transactionFee)
+                    formatArgs = arrayOf(state.details.transactionFee),
                 )
             )
         }
@@ -220,8 +219,8 @@ internal fun SwapMainScreen(
         if (state.details.lpFee.isNotEmpty()) {
             Spacer(modifier = Modifier.size(Dimens.x2))
             DetailsItem(
-                text = stringResource(id = R.string.polkaswap_liqudity_fee),
-                hint = stringResource(id = R.string.polkaswap_liqudity_fee_info),
+                text = stringResource(id = R.string.polkaswap_liquidity_total_fee),
+                hint = stringResource(id = R.string.polkaswap_liquidity_total_fee_desc),
                 value1 = state.details.lpFee,
             )
         }
@@ -237,7 +236,6 @@ private fun PreviewSwapMainScreen() {
                 tokenFromState = previewAssetAmountInputState,
                 tokenToState = previewAssetAmountInputState,
                 slippage = 0.2,
-                selectSearchAssetState = null,
                 market = Market.SMART,
                 selectMarketState = null,
                 details = defaultSwapDetailsState(),

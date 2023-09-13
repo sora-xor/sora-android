@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.ac
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
@@ -82,14 +81,23 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
             }
         }
 
+    private val consentHandlerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } else {
+                viewModel.onSuccessfulConsent()
+            }
+        }
+
     override val viewModel: AccountDetailsViewModel by viewModels {
         CustomViewModelFactory { vmf.create(requireArguments().address) }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.copyEvent.observe {
-            Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
+        viewModel.consentExceptionHandler.observe {
+            consentHandlerLauncher.launch(it)
         }
     }
 

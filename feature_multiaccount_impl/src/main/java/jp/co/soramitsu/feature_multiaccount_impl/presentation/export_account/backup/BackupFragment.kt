@@ -32,11 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.livedata.observeAsState
@@ -46,7 +41,6 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.presentation.args.address
@@ -83,16 +77,5 @@ class BackupFragment : SoraBaseFragment<BackupViewModel>() {
                 )
             }
         }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        viewModel.copyEvent.observe {
-            Toast.makeText(requireActivity(), R.string.common_copied, Toast.LENGTH_SHORT).show()
-        }
-        return super.onCreateView(inflater, container, savedInstanceState)
     }
 }

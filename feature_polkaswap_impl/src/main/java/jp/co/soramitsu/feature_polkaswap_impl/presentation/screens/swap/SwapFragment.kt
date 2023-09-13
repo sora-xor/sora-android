@@ -45,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -59,8 +60,8 @@ import jp.co.soramitsu.common.presentation.args.tokenFromId
 import jp.co.soramitsu.common.presentation.args.tokenToId
 import jp.co.soramitsu.common.presentation.compose.components.PercentContainer
 import jp.co.soramitsu.common.presentation.compose.components.PolkaswapDisclaimer
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchTokenScreen
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectSearchTokenScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMainScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMarketsScreen
@@ -105,7 +106,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
         }
         composable(SwapRoutes.confirm) {
             SwapConfirmScreen(
-                state = viewModel.swapMainState,
+                state = viewModel.swapMainState.collectAsStateWithLifecycle().value,
                 onConfirmClick = viewModel::onConfirmClicked,
             )
         }
@@ -133,21 +134,20 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
                 }
             }
             val type = requireNotNull(it.arguments?.getString(SwapRoutes.selectTokenParamName))
-            val state = viewModel.swapMainState.selectSearchAssetState
-            if (state != null) {
-                SelectSearchTokenScreen(
-                    state = state,
-                    scrollState = scrollState,
-                    onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
-                )
-            }
+            val state = viewModel.swapTokensFilter.collectAsStateWithLifecycle()
+            SelectSearchTokenScreen(
+                scrollState = scrollState,
+                onAssetSelect = { id -> onTokenSelected.invoke(id, type) },
+                searchTokenFilter = state.value,
+            )
         }
         composable(SwapRoutes.markets) {
             val onMarketSelected: (Market) -> Unit = {
                 viewModel.onMarketSelected(it)
                 navController.popBackStack()
             }
-            val state = viewModel.swapMainState.selectMarketState
+            val state =
+                viewModel.swapMainState.collectAsStateWithLifecycle().value.selectMarketState
             if (state != null) {
                 SwapMarketsScreen(
                     selected = state.first,
@@ -163,7 +163,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             }
             val state = viewModel.swapMainState
             SwapSlippageScreen(
-                value = state.slippage,
+                value = state.collectAsStateWithLifecycle().value.slippage,
                 onDone = { debounceClickHandler.debounceClick { onSlippageEntered(it) } },
             )
         }
@@ -205,7 +205,7 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
             ) {
                 val swapState = viewModel.swapMainState
                 SwapMainScreen(
-                    state = swapState,
+                    state = swapState.collectAsStateWithLifecycle().value,
                     onSlippageClick = onSlippageClick,
                     onSelectFrom = onFromAssetClick,
                     onSelectTo = onToAssetClick,

@@ -38,11 +38,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import jp.co.soramitsu.common.presentation.SingleLiveEvent
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.presentation.compose.components.initMediumTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.addHexPrefix
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
@@ -56,7 +55,7 @@ class BackupViewModel @AssistedInject constructor(
     private val multiAccountInteractor: MultiaccountInteractor,
     private val resourceManager: ResourceManager,
     private val mainRouter: MainRouter,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     @Assisted("type") private val type: ExportProtectionViewModel.Type,
     @Assisted("address") private val address: String
 ) : BaseViewModel() {
@@ -71,9 +70,6 @@ class BackupViewModel @AssistedInject constructor(
 
     private val _backupScreenState = MutableLiveData<BackupScreenState>()
     val backupScreenState: LiveData<BackupScreenState> = _backupScreenState
-
-    private val _copyEvent = SingleLiveEvent<Unit>()
-    val copyEvent: LiveData<Unit> = _copyEvent
 
     init {
         _toolbarState.value = initMediumTitle2("")
@@ -100,11 +96,11 @@ class BackupViewModel @AssistedInject constructor(
     fun backupPressed() {
         _backupScreenState.value?.let {
             if (it.seedString.isNotEmpty()) {
-                clipboardManager.addToClipboard("Seed", it.seedString)
+                clipboardManager.addToClipboard(it.seedString)
             } else {
-                clipboardManager.addToClipboard("Mnemonic", it.mnemonicWords.joinToString(" "))
+                clipboardManager.addToClipboard(it.mnemonicWords.joinToString(" "))
             }
-            _copyEvent.trigger()
+            copiedToast.trigger()
         }
     }
 

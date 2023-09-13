@@ -39,9 +39,8 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
 import jp.co.soramitsu.common.domain.ChainNode
-import jp.co.soramitsu.common.domain.SoraCardInformation
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_main_impl.domain.MainInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
@@ -50,10 +49,8 @@ import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
-import jp.co.soramitsu.oauth.common.model.KycStatus
-import jp.co.soramitsu.sora.substrate.blockexplorer.SoraConfigManager
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
@@ -87,13 +84,7 @@ class ProfileViewModelTest {
     private lateinit var assetsRouter: AssetsRouter
 
     @MockK
-    private lateinit var walletInteractor: WalletInteractor
-
-    @MockK
     private lateinit var polkaswapRouter: PolkaswapRouter
-
-    @MockK
-    private lateinit var assetsInteractor: AssetsInteractor
 
     @MockK
     private lateinit var soraCardInteractor: SoraCardInteractor
@@ -123,13 +114,11 @@ class ProfileViewModelTest {
             assetsRouter,
             interactor,
             polkaswapRouter,
-            walletInteractor,
             router,
             walletRouter,
             referralRouter,
             selectNodeRouter,
             soraConfigManager,
-            assetsInteractor,
             soraCardInteractor,
             nodeManager,
         )
@@ -154,14 +143,6 @@ class ProfileViewModelTest {
                         isDefault = true
                     )
                 )
-        every { walletInteractor.subscribeSoraCardInfo() } returns
-                flowOf(
-                    SoraCardInformation(
-                        "accesstoken",
-                        0,
-                        KycStatus.Failed.toString()
-                    )
-                )
         coEvery { soraConfigManager.getSoraCard() } returns true
         every { nodeManager.connectionState } returns flowOf(true)
         every { router.showGetSoraCard(any(), any()) } returns Unit
@@ -170,14 +151,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `init succesfull`() = runTest {
-        every { walletInteractor.subscribeSoraCardInfo() } returns
-            flowOf(
-                SoraCardInformation(
-                    "accesstoken",
-                    0,
-                    "",
-                )
-            )
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.state.let {
@@ -188,14 +162,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with no state EXPECT navigate to get sora card`() = runTest {
-        every { walletInteractor.subscribeSoraCardInfo() } returns
-            flowOf(
-                SoraCardInformation(
-                    "accesstoken",
-                    0,
-                    "",
-                )
-            )
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -204,6 +171,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showSoraCard with state EXPECT navigate to sora card sdk state screen`() = runTest {
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.Pending)
         initViewModel()
         advanceUntilIdle()
         profileViewModel.showSoraCard()
@@ -213,6 +181,7 @@ class ProfileViewModelTest {
 
     @Test
     fun `call showBuyCrypto EXPECT navigate to buy crypto screen`() {
+        every { soraCardInteractor.subscribeSoraCardStatus() } returns flowOf(SoraCardCommonVerification.NotFound)
         initViewModel()
         profileViewModel.showBuyCrypto()
         verify { assetsRouter.showBuyCrypto(any()) }

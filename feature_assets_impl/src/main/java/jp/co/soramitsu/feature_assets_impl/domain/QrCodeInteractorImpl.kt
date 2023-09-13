@@ -37,8 +37,8 @@ import javax.inject.Inject
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common_wallet.domain.model.QrException
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.QrCodeInteractor
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 

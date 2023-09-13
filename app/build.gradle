@@ -142,9 +142,9 @@ hilt {
 
 play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
-    track = "beta"
+    track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "97 (3.2.0.0)"
+    releaseName = "3.3.0.3 - SORA Card"
 }
 
 dependencies {
@@ -152,6 +152,7 @@ dependencies {
     implementation project(":android-foundation")
     implementation project(":common")
     implementation project(":core_db")
+    implementation project(":demeter")
     implementation project(":feature_assets_api")
     implementation project(":feature_assets_impl")
     implementation project(":feature_main_api")
@@ -206,8 +207,8 @@ dependencies {
     implementation coroutineAndroidDep
     implementation coroutineDep
 
-    implementation platform(firebaseBomDep)
-    implementation crashlyticsDep
+    implementation platform(googleFirebaseBomDep)
+    implementation googleCrashlyticsDep
 
     implementation xNetworkingDep
     implementation webSocketLibDep

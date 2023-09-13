@@ -51,7 +51,7 @@ import jp.co.soramitsu.common.presentation.compose.webview.title
 import jp.co.soramitsu.common.presentation.compose.webview.url
 import jp.co.soramitsu.common.util.BuildUtils
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails.AssetDetailsFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest.QRCodeFlowFragment
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountFragment
@@ -73,7 +73,13 @@ import jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.GetSoraCardF
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.R
 
-class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, PolkaswapRouter, AssetsRouter {
+class Navigator :
+    MainRouter,
+    WalletRouter,
+    ReferralRouter,
+    SelectNodeRouter,
+    PolkaswapRouter,
+    AssetsRouter {
 
     private var navController: NavController? = null
 
@@ -228,12 +234,11 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
         navController?.popBackStack()
     }
 
-    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean, isLaunchedFromSoraCard: Boolean) {
+    override fun openQrCodeFlow(shouldNavigateToScannerDirectly: Boolean) {
         navController?.navigate(
             R.id.qrCodeFlow,
             QRCodeFlowFragment.createBundle(
                 shouldNavigateToScanner = shouldNavigateToScannerDirectly,
-                isLaunchedFromSoraCard = isLaunchedFromSoraCard
             )
         )
     }
@@ -404,6 +409,10 @@ class Navigator : MainRouter, WalletRouter, ReferralRouter, SelectNodeRouter, Po
                 shouldStartSignUp
             )
         )
+    }
+
+    override fun showSoraCardDetails() {
+        navController?.navigate(R.id.soraCardDetailsFragment)
     }
 
     override fun showSelectNode() {

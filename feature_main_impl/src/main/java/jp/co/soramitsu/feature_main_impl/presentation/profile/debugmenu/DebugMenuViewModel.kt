@@ -32,16 +32,23 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu
 
+import android.content.Intent
 import android.os.Build
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
+import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
+import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import kotlinx.coroutines.launch
@@ -49,10 +56,14 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class DebugMenuViewModel @Inject constructor(
     private val runtimeManager: RuntimeManager,
+    private val backupService: BackupService,
 ) : BaseViewModel() {
 
     internal var state by mutableStateOf(DebugMenuScreenState(emptyList()))
         private set
+
+    private val _googleSignInEvent = SingleLiveEvent<Unit>()
+    val googleSignInEvent: LiveData<Unit> = _googleSignInEvent
 
     init {
         _toolbarState.value = initSmallTitle2(
@@ -71,12 +82,12 @@ class DebugMenuViewModel @Inject constructor(
                 add(SettingOption(name = "Arch:", value = Build.SUPPORTED_ABIS.joinToString(",")))
                 add(SettingOption(name = "Java:", value = System.getProperty("java.specification.version").orEmpty()))
                 add(SettingOption(name = "Java:", value = System.getProperty("java.vm.name").orEmpty()))
-
                 add(SettingOption(name = "Build Type:", value = BuildConfig.BUILD_TYPE))
                 add(SettingOption(name = "Build Flavor:", value = BuildConfig.FLAVOR))
 
-                add(SettingOption(name = "Sora KYS Username:", value = BuildConfig.SORA_CARD_KYC_USERNAME))
-                add(SettingOption(name = "X1 Endpoint:", value = BuildConfig.X1_ENDPOINT_URL))
+                add(SettingOption(name = "X1:", value = BuildConfig.X1_WIDGET_ID))
+                add(SettingOption(name = "X1:", value = BuildConfig.X1_ENDPOINT_URL))
+                add(SettingOption(name = "SoraCard Backend:", value = BuildConfigWrapper.getSoraCardBackEndUrl()))
             }
         )
     }
@@ -85,5 +96,16 @@ class DebugMenuViewModel @Inject constructor(
         viewModelScope.launch {
             runtimeManager.resetRuntimeVersion()
         }
+    }
+
+    fun onChangeGoogleAccount(launcher: ActivityResultLauncher<Intent>) {
+        viewModelScope.launch {
+            backupService.logout()
+            backupService.authorize(launcher)
+        }
+    }
+
+    fun onSuccessfulGoogleSignIn() {
+        _googleSignInEvent.trigger()
     }
 }

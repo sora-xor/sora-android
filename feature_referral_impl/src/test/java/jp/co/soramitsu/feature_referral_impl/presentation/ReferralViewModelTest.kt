@@ -46,8 +46,8 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_referral_impl.domain.ReferralInteractor
 import jp.co.soramitsu.feature_referral_impl.domain.model.Referral
@@ -136,12 +136,9 @@ class ReferralViewModelTest {
         coEvery { interactor.updateReferrals() } returns Unit
         every { assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId) } returns assetFlow
         coEvery {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 any(),
                 any(),
-                any(),
-                any(),
-                any()
             )
         } returns false
 
@@ -188,7 +185,7 @@ class ReferralViewModelTest {
         val actualToolbarState = referralViewModel.toolbarState.getOrAwaitValue()
         assertTrue(actualToolbarState.type is SoramitsuToolbarType.Small)
         assertEquals(R.string.referral_toolbar_title, actualToolbarState.basic.title)
-        val actualScreenState = referralViewModel.referralScreenState
+        val actualScreenState = referralViewModel.referralScreenState.value
         assertEquals("my referrer", actualScreenState.common.referrer)
         coVerify { interactor.updateReferrals() }
     }
@@ -204,20 +201,20 @@ class ReferralViewModelTest {
         assertTrue(toolbar.type is SoramitsuToolbarType.Small)
         referrerBalanceFlowEmit(BigDecimal.ZERO)
         advanceUntilIdle()
-        val state = referralViewModel.referralScreenState
+        val state = referralViewModel.referralScreenState.value
         assertNull(state.common.referrer)
         var navEvent = referralViewModel.navEvent.getOrAwaitValue()
         assertEquals(ReferralFeatureRoutes.WELCOME_PAGE, navEvent.first)
         coEvery { interactor.isLinkOrAddressOk("") } returns (false to "")
         referralViewModel.openReferrerInput()
         advanceUntilIdle()
-        assertEquals(false, referralViewModel.referralScreenState.common.activate)
-        assertEquals(false, referralViewModel.referralScreenState.common.progress)
+        assertEquals(false, referralViewModel.referralScreenState.value.common.activate)
+        assertEquals(false, referralViewModel.referralScreenState.value.common.progress)
         coEvery { interactor.isLinkOrAddressOk("cnVko") } returns (true to "cnVko")
         referralViewModel.onReferrerInputChange(TextFieldValue("cnVko"))
         advanceUntilIdle()
-        assertEquals(true, referralViewModel.referralScreenState.common.activate)
-        assertEquals("cnVko", referralViewModel.referralScreenState.referrerInputState.value.text)
+        assertEquals(true, referralViewModel.referralScreenState.value.common.activate)
+        assertEquals("cnVko", referralViewModel.referralScreenState.value.referrerInputState.value.text)
         coEvery { interactor.observeSetReferrer("cnVko") } returns "txhash"
         every { assetsRouter.showTxDetails(any(), any()) } returns Unit
         referralViewModel.onActivateLinkClick()
@@ -252,23 +249,17 @@ class ReferralViewModelTest {
         referralViewModel.onBondPlus()
         advanceUntilIdle()
         coVerify(atLeast = 1) {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 any(),
                 any(),
-                any(),
-                any(),
-                any()
             )
         }
         referralViewModel.onBondMinus()
         advanceUntilIdle()
         coVerify(atLeast = 1) {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 any(),
                 any(),
-                any(),
-                any(),
-                any()
             )
         }
     }

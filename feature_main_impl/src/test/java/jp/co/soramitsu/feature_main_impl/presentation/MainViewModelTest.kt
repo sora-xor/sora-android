@@ -43,11 +43,11 @@ import io.mockk.verify
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
@@ -105,6 +105,8 @@ class MainViewModelTest {
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
         coEvery { blockExplorerManager.updateFiat() } returns Unit
         coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
+        coEvery { assetsInteractor.getTokensList() } returns emptyList()
+        coEvery { blockExplorerManager.getTokensLiquidity(emptyList()) } returns emptyList()
         mockkObject(RepeatStrategyBuilder)
         every { RepeatStrategyBuilder.infinite() } returns object : RepeatStrategy {
             override suspend fun repeat(block: suspend () -> Unit) {

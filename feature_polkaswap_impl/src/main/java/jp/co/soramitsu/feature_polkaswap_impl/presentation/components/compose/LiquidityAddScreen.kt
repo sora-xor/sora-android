@@ -76,6 +76,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun LiquidityAddScreen(
     state: LiquidityAddState,
+    slippage: Double,
     onFocusChange1: (Boolean) -> Unit,
     onFocusChange2: (Boolean) -> Unit,
     onAmountChange1: (BigDecimal) -> Unit,
@@ -141,7 +142,7 @@ internal fun LiquidityAddScreen(
             horizontalArrangement = Arrangement.Center,
         ) {
             MarketSelector(
-                value = "${state.slippage}%",
+                value = "$slippage%",
                 description = stringResource(id = R.string.slippage),
                 onClick = onSlippageClick,
             )
@@ -153,10 +154,9 @@ internal fun LiquidityAddScreen(
                 color = Color.Transparent
             )
             WarningTextCard(
-                title = stringResource(id = R.string.common_title_warning),
                 text = stringResource(
                     id = R.string.swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small,
-                    formatArgs = arrayOf(state.transactionFeeToken, state.prices.fee)
+                    formatArgs = arrayOf(state.prices.fee),
                 )
             )
         }
@@ -263,7 +263,6 @@ private fun PreviewLiquidityRemoveScreen() {
                     loading = false,
                 ),
                 pairNotExist = true,
-                slippage = 0.3,
                 hintVisible = false,
                 estimated = LiquidityAddEstimatedState(
                     token1 = "XOR",
@@ -291,12 +290,11 @@ private fun PreviewLiquidityRemoveScreen() {
                         loading = false,
                     ),
                 ),
-                selectSearchAssetState = null,
                 shouldTransactionReminderInsufficientWarningBeShown = true,
-                transactionFeeToken = ""
             ),
             onSelect1 = {},
             onSelect2 = {},
+            slippage = 0.34,
         )
     }
 }

@@ -34,34 +34,82 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 
 import java.math.BigDecimal
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.compareByTransferable
+import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.greaterThan
 import jp.co.soramitsu.common.util.ext.safeDivide
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
+import jp.co.soramitsu.demeter.domain.DemeterFarmingInteractor
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
+import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
-import jp.co.soramitsu.sora.substrate.blockexplorer.BlockExplorerManager
+import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardCommonVerification
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
-class SoraCardInteractorImpl @Inject constructor(
+internal class SoraCardInteractorImpl @Inject constructor(
     private val blockExplorerManager: BlockExplorerManager,
     private val formatter: NumbersFormatter,
     private val assetsInteractor: AssetsInteractor,
+    private val poolsInteractor: PoolsInteractor,
+    private val soraCardClientProxy: SoraCardClientProxy,
+    private val demeterFarmingInteractor: DemeterFarmingInteractor,
+    private val coroutineManager: CoroutineManager,
 ) : SoraCardInteractor {
 
     private var xorToEuro: Double? = null
 
+    private val _soraCardStatus = MutableStateFlow(SoraCardCommonVerification.NotFound)
+
+    override fun subscribeSoraCardStatus(): Flow<SoraCardCommonVerification> =
+        _soraCardStatus.asStateFlow()
+
+    override suspend fun checkSoraCardPending() {
+        var isLoopInProgress = true
+        while (isLoopInProgress) {
+            val status = soraCardClientProxy.getKycStatus().getOrDefault(SoraCardCommonVerification.NotFound)
+            _soraCardStatus.value = status
+            if (status != SoraCardCommonVerification.Pending) {
+                isLoopInProgress = false
+            } else {
+                delay(POLLING_PERIOD_IN_MILLIS)
+            }
+        }
+    }
+
+    override fun setStatus(status: SoraCardCommonVerification) {
+        _soraCardStatus.value = status
+    }
+
+    override fun setLogout() {
+        _soraCardStatus.value = SoraCardCommonVerification.NotFound
+    }
+
     override fun subscribeToSoraCardAvailabilityFlow() =
         assetsInteractor.subscribeAssetOfCurAccount(SubstrateOptionsProvider.feeAssetId)
-            .distinctUntilChanged(::compareByTransferable)
+            .distinctUntilChanged(::compareByTotal)
             .map { asset ->
                 val xorEuroLocal = getXorEuro()
                 if (asset != null && xorEuroLocal != null) {
+                    val pools = poolsInteractor.getPoolsCacheOfCurAccount()
+                        .filter { poolData ->
+                            poolData.basic.baseToken.id == SubstrateOptionsProvider.feeAssetId
+                        }
+                    val poolsSum = pools.sumOf { poolData ->
+                        poolData.user.basePooled
+                    }
+                    val demeterStakedFarmed = demeterFarmingInteractor.getStakedFarmedBalanceOfAsset(SubstrateOptionsProvider.feeAssetId)
+                    val totalPoolBalance = asset.balance.total.plus(poolsSum).plus(demeterStakedFarmed)
                     try {
                         val xorRequiredBalanceWithBacklash =
                             KYC_REQUIRED_BALANCE_WITH_BACKLASH.divideBy(
@@ -72,13 +120,13 @@ class SoraCardInteractorImpl @Inject constructor(
                         val xorRealRequiredBalance =
                             KYC_REAL_REQUIRED_BALANCE.divideBy(BigDecimal.valueOf(xorEuroLocal))
                         val xorBalanceInEur =
-                            asset.balance.transferable.multiply(BigDecimal.valueOf(xorEuroLocal))
+                            totalPoolBalance.multiply(BigDecimal.valueOf(xorEuroLocal))
 
                         val needInXor =
-                            if (asset.balance.transferable.greaterThan(xorRealRequiredBalance)) {
+                            if (totalPoolBalance.greaterThan(xorRealRequiredBalance)) {
                                 BigDecimal.ZERO
                             } else {
-                                xorRequiredBalanceWithBacklash.minus(asset.balance.transferable)
+                                xorRequiredBalanceWithBacklash.minus(totalPoolBalance)
                             }
 
                         val needInEur =
@@ -89,22 +137,22 @@ class SoraCardInteractorImpl @Inject constructor(
                             }
 
                         SoraCardAvailabilityInfo(
-                            xorBalance = asset.balance.transferable,
-                            enoughXor = asset.balance.transferable.greaterThan(
+                            xorBalance = totalPoolBalance,
+                            enoughXor = totalPoolBalance.greaterThan(
                                 xorRealRequiredBalance
                             ),
-                            percent = asset.balance.transferable.safeDivide(xorRealRequiredBalance),
+                            percent = totalPoolBalance.safeDivide(xorRealRequiredBalance),
                             needInXor = formatter.formatBigDecimal(needInXor, 5),
                             needInEur = formatter.formatBigDecimal(needInEur, 2),
                             xorRatioAvailable = true
                         )
                     } catch (t: Throwable) {
-                        errorInfoState(asset.balance.transferable)
+                        errorInfoState(totalPoolBalance)
                     }
                 } else {
                     errorInfoState(BigDecimal.ZERO)
                 }
-            }
+            }.flowOn(coroutineManager.io)
 
     private fun errorInfoState(balance: BigDecimal) = SoraCardAvailabilityInfo(
         xorBalance = balance,
@@ -117,8 +165,20 @@ class SoraCardInteractorImpl @Inject constructor(
             xorToEuro = it
         }
 
+    override suspend fun fetchUserIbanAccount(): Result<String> =
+        soraCardClientProxy.getIBAN().mapCatching { wrapper ->
+            val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
+            sorted.first().iban
+        }
+
+    override suspend fun logOutFromSoraCard() {
+        soraCardClientProxy.logout()
+        setLogout()
+    }
+
     private companion object {
         val KYC_REAL_REQUIRED_BALANCE: BigDecimal = BigDecimal.valueOf(95)
         val KYC_REQUIRED_BALANCE_WITH_BACKLASH: BigDecimal = Big100
+        const val POLLING_PERIOD_IN_MILLIS = 30_000L
     }
 }

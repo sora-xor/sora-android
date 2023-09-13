@@ -34,7 +34,7 @@ package jp.co.soramitsu.feature_main_impl.domain.subs
 
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.SingleFeatureStorageManager
-import jp.co.soramitsu.feature_assets_api.data.interfaces.AssetsRepository
+import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach

@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
@@ -52,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.composable
@@ -64,10 +64,11 @@ import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContract
-import jp.co.soramitsu.ui_core.component.button.TonalButton
+import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -108,7 +109,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                val state = viewModel.state
+                val state = viewModel.state.collectAsStateWithLifecycle().value
                 TopBar(
                     account = state.curAccount,
                     onAccountClick = viewModel::onAccountClick,
@@ -145,22 +146,24 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                             }
 
                             is SoraCardState -> {
-                                AnimatedVisibility(
-                                    visible = cardState.visible
-                                ) {
-                                    SoraCard(
-                                        state = cardState,
-                                        onCardStateClicked = viewModel::onCardStateClicked,
-                                        onCloseClicked = viewModel::onRemoveSoraCard
-                                    )
-                                }
+                                SoraCard(
+                                    state = cardState,
+                                    onCardStateClicked = viewModel::onCardStateClicked,
+                                    onCloseClicked = viewModel::onRemoveSoraCard,
+                                )
                             }
 
                             is BuyXorState -> {
                                 BuyXorCard(
-                                    visible = cardState.visible,
                                     onBuyXorClicked = viewModel::onBuyCrypto,
-                                    onCloseCard = viewModel::onRemoveBuyXorToken
+                                    onCloseCard = viewModel::onRemoveBuyXorToken,
+                                )
+                            }
+
+                            is ReferralState -> {
+                                ReferralCard(
+                                    onStartClicked = viewModel::onStartReferral,
+                                    onCloseCard = viewModel::onRemoveReferralCard,
                                 )
                             }
                         }
@@ -168,7 +171,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     }
 
                     if (state.cards.isNotEmpty())
-                        TonalButton(
+                        BleachedButton(
                             modifier = Modifier
                                 .padding(bottom = Dimens.x4)
                                 .align(Alignment.CenterHorizontally),

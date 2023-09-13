@@ -42,16 +42,16 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.equalTo
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_assets_impl.presentation.screens.send.TransferAmountViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.test_data.PolkaswapTestData
@@ -104,7 +104,7 @@ class TransferAmountViewModelTest {
     private val mockedUri = mockk<Uri>()
 
     @MockK
-    private lateinit var clipboardManager: ClipboardManager
+    private lateinit var clipboardManager: BasicClipboardManager
 
     private val recipientId =
         "recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId"
@@ -122,12 +122,9 @@ class TransferAmountViewModelTest {
         every { resourceManager.getString(R.string.error_transaction_fee_title) } returns "Not enough funds"
         every { avatarGenerator.createAvatar(any(), any()) } returns drawable
         coEvery {
-            assetsInteractor.isEnoughXorLeftAfterTransaction(
+            assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 any(),
                 any(),
-                any(),
-                any(),
-                any()
             )
         } returns false
         coEvery {
@@ -146,7 +143,7 @@ class TransferAmountViewModelTest {
         val state = transferAmountViewModel.sendState
         assertEquals(
             "recipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientIdrecipientId",
-            state.address
+            state.value.address
         )
     }
 
@@ -157,7 +154,7 @@ class TransferAmountViewModelTest {
         transferAmountViewModel.optionSelected(75)
         advanceUntilIdle()
         val state = transferAmountViewModel.sendState
-        assertTrue(state.input?.amount?.equalTo(BigDecimal.valueOf(3)) == true)
+        assertTrue(state.value.input?.amount?.equalTo(BigDecimal.valueOf(3)) == true)
     }
 
     @Test
@@ -167,7 +164,7 @@ class TransferAmountViewModelTest {
         transferAmountViewModel.optionSelected(75)
         advanceUntilIdle()
         val state = transferAmountViewModel.sendState
-        assertTrue(state.input?.amount?.equalTo(BigDecimal.valueOf(0.000075)) == true)
+        assertTrue(state.value.input?.amount?.equalTo(BigDecimal.valueOf(0.000075)) == true)
     }
 
     private fun initViewModel(
@@ -207,12 +204,9 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.ONE)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.XOR_ASSET.token,
-                    primaryTokenAmount = BigDecimal.ONE,
-                    secondaryToken = null,
-                    secondaryTokenAmount = null,
-                    networkFeeInXor = networkFee
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                    xorChange = BigDecimal.ONE,
+                    networkFeeInXor = networkFee,
                 )
             }
             transferAmountViewModel.onTokenChange(PolkaswapTestData.VAL_ASSET.token.id)
@@ -220,12 +214,8 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.TEN)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.VAL_ASSET.token,
-                    primaryTokenAmount = BigDecimal.TEN,
-                    secondaryToken = null,
-                    secondaryTokenAmount = null,
-                    networkFeeInXor = networkFee
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                    networkFeeInXor = networkFee,
                 )
             }
         }
@@ -241,12 +231,8 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.ONE)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
-                    primaryToken = any(),
-                    primaryTokenAmount = any(),
-                    secondaryToken = any(),
-                    secondaryTokenAmount = any(),
-                    networkFeeInXor = any()
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                    networkFeeInXor = any(),
                 )
             }
             transferAmountViewModel.onTokenChange(PolkaswapTestData.XOR_ASSET.token.id)
@@ -254,12 +240,9 @@ class TransferAmountViewModelTest {
             transferAmountViewModel.amountChanged(BigDecimal.TEN)
             advanceUntilIdle()
             coVerify(atMost = 1) {
-                assetsInteractor.isEnoughXorLeftAfterTransaction(
-                    primaryToken = PolkaswapTestData.XOR_ASSET.token,
-                    primaryTokenAmount = BigDecimal.TEN,
-                    secondaryToken = null,
-                    secondaryTokenAmount = null,
-                    networkFeeInXor = networkFee
+                assetsInteractor.isNotEnoughXorLeftAfterTransaction(
+                    xorChange = BigDecimal.TEN,
+                    networkFeeInXor = networkFee,
                 )
             }
         }

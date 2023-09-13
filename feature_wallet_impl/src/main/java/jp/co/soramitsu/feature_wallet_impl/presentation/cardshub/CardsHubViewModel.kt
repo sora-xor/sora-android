@@ -32,9 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,18 +57,19 @@ import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.TitledAmountCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapPoolsData
-import jp.co.soramitsu.feature_assets_api.domain.interfaces.AssetsInteractor
-import jp.co.soramitsu.feature_assets_api.presentation.launcher.AssetsRouter
+import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
+import jp.co.soramitsu.feature_referral_api.ReferralRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.util.createSoraCardContract
-import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.feature_wallet_impl.domain.CardsHubInteractorImpl
 import jp.co.soramitsu.oauth.base.sdk.contract.OutwardsScreen
@@ -80,22 +78,23 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class CardsHubViewModel @Inject constructor(
     private val assetsInteractor: AssetsInteractor,
-    private val walletInteractor: WalletInteractor,
     private val poolsInteractor: PoolsInteractor,
     private val cardsHubInteractorImpl: CardsHubInteractorImpl,
     private val numbersFormatter: NumbersFormatter,
@@ -104,20 +103,21 @@ class CardsHubViewModel @Inject constructor(
     private val router: WalletRouter,
     private val mainRouter: MainRouter,
     private val assetsRouter: AssetsRouter,
+    private val referralRouter: ReferralRouter,
     private val polkaswapRouter: PolkaswapRouter,
     private val connectionManager: ConnectionManager,
     private val soraCardInteractor: SoraCardInteractor,
-    coroutineManager: CoroutineManager,
+    private val coroutineManager: CoroutineManager,
 ) : BaseViewModel(), WithProgress by progress {
 
-    var state by mutableStateOf(
+    private val _state = MutableStateFlow(
         CardsState(
             loading = true,
             cards = emptyList(),
             curAccount = "",
         )
     )
-        private set
+    val state = _state.asStateFlow()
 
     private val _launchSoraCardSignIn = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardSignIn: LiveData<SoraCardContractData> = _launchSoraCardSignIn
@@ -125,18 +125,18 @@ class CardsHubViewModel @Inject constructor(
     private var currentSoraCardContractData: SoraCardContractData? = null
 
     init {
-        walletInteractor.pollSoraCardStatusIfPending()
-            .flowOn(coroutineManager.io)
-            .launchIn(viewModelScope)
-
+        viewModelScope.launch {
+            withContext(coroutineManager.io) {
+                soraCardInteractor.checkSoraCardPending()
+            }
+        }
         viewModelScope.launch {
             cardsHubInteractorImpl
                 .subscribeVisibleCardsHubList()
                 .catch { onError(it) }
                 .distinctUntilChanged()
                 .flatMapLatest { data ->
-                    state =
-                        state.copy(curAccount = data.first.accountTitle())
+                    _state.value = _state.value.copy(curAccount = data.first.accountTitle())
                     val flows = data.second.filter { it.visibility }.map { cardHub ->
                         when (cardHub.cardType) {
                             CardHubType.ASSETS -> {
@@ -154,16 +154,24 @@ class CardsHubViewModel @Inject constructor(
                             }
 
                             CardHubType.GET_SORA_CARD -> {
-                                cardsHubInteractorImpl.subscribeSoraCardInfo()
-                                    .map { cardInfo ->
-                                        cardHub to listOf(
-                                            SoraCardState(
-                                                visible = cardHub.visibility,
-                                                kycStatus = cardInfo?.kycStatus?.let(::mapKycStatus),
-                                                cardInfo = cardInfo
-                                            )
+                                soraCardInteractor.subscribeSoraCardStatus().map { status ->
+                                    val mapped = mapKycStatus(status)
+                                    cardHub to listOf(
+                                        SoraCardState(
+                                            visible = cardHub.visibility,
+                                            kycStatus = mapped.first,
+                                            success = mapped.second,
                                         )
-                                    }
+                                    )
+                                }
+                            }
+
+                            CardHubType.REFERRAL_SYSTEM -> {
+                                flow {
+                                    emit(listOf(ReferralState(visible = cardHub.visibility)))
+                                }.map {
+                                    cardHub to it
+                                }
                             }
 
                             CardHubType.BUY_XOR_TOKEN -> {
@@ -182,7 +190,7 @@ class CardsHubViewModel @Inject constructor(
                     val usableCards = cards.filter {
                         it.first.cardType == CardHubType.ASSETS || it.second.isNotEmpty()
                     }
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         loading = false,
                         cards = mapCardsState(usableCards)
                     )
@@ -197,30 +205,26 @@ class CardsHubViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun mapKycStatus(kycStatus: String): String? {
-        return when (runCatching { SoraCardCommonVerification.valueOf(kycStatus) }.getOrNull()) {
-            SoraCardCommonVerification.Pending -> {
-                resourceManager.getString(R.string.sora_card_verification_in_progress)
-            }
-
-            SoraCardCommonVerification.Successful -> {
-                resourceManager.getString(R.string.sora_card_verification_successful)
+    private fun mapKycStatus(kycStatus: SoraCardCommonVerification): Pair<String?, Boolean> {
+        return when (kycStatus) {
+            SoraCardCommonVerification.Failed -> {
+                resourceManager.getString(R.string.sora_card_verification_failed) to false
             }
 
             SoraCardCommonVerification.Rejected -> {
-                resourceManager.getString(R.string.sora_card_verification_rejected)
+                resourceManager.getString(R.string.sora_card_verification_rejected) to false
             }
 
-            SoraCardCommonVerification.Failed -> {
-                resourceManager.getString(R.string.sora_card_verification_failed)
+            SoraCardCommonVerification.Pending -> {
+                resourceManager.getString(R.string.sora_card_verification_in_progress) to false
             }
 
-//            SoraCardCommonVerification.NoFreeAttempt -> {
-//                resourceManager.getString(R.string.sora_card_no_more_free_tries)
-//            }
+            SoraCardCommonVerification.Successful -> {
+                resourceManager.getString(R.string.sora_card_verification_successful) to true
+            }
 
-            else -> {
-                null
+            SoraCardCommonVerification.NotFound -> {
+                null to false
             }
         }
     }
@@ -229,32 +233,23 @@ class CardsHubViewModel @Inject constructor(
         when (soraCardResult) {
             is SoraCardResult.NavigateTo -> {
                 when (soraCardResult.screen) {
-                    OutwardsScreen.DEPOSIT -> router.openQrCodeFlow(isLaunchedFromSoraCard = true)
+                    OutwardsScreen.DEPOSIT -> router.openQrCodeFlow()
                     OutwardsScreen.SWAP -> polkaswapRouter.showSwap(tokenToId = SubstrateOptionsProvider.feeAssetId)
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }
             }
+
             is SoraCardResult.Success -> {
-                viewModelScope.launch {
-                    walletInteractor.updateSoraCardInfo(
-                        accessToken = soraCardResult.accessToken,
-                        accessTokenExpirationTime = soraCardResult.accessTokenExpirationTime,
-                        kycStatus = soraCardResult.status.toString()
-                    )
-                }
+                soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Failure -> {
-                viewModelScope.launch {
-                    walletInteractor.updateSoraCardKycStatus(
-                        kycStatus = soraCardResult.status.toString()
-                    )
-                }
+                soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
-                viewModelScope.launch {
-                    walletInteractor.deleteSoraCardInfo()
-                }
+                soraCardInteractor.setLogout()
             }
         }
     }
@@ -284,9 +279,14 @@ class CardsHubViewModel @Inject constructor(
         return data.map {
             when (it.first.cardType) {
                 CardHubType.ASSETS -> mapAssetsCard(it.first.collapsed, it.second as List<Asset>)
-                CardHubType.POOLS -> mapPoolsCard(it.first.collapsed, it.second as List<CommonUserPoolData>)
+                CardHubType.POOLS -> mapPoolsCard(
+                    it.first.collapsed,
+                    it.second as List<CommonUserPoolData>
+                )
+
                 CardHubType.GET_SORA_CARD -> (it.second as List<SoraCardState>).first()
                 CardHubType.BUY_XOR_TOKEN -> (it.second as List<BuyXorState>).first()
+                CardHubType.REFERRAL_SYSTEM -> (it.second as List<ReferralState>).first()
             }
         }
     }
@@ -334,10 +334,12 @@ class CardsHubViewModel @Inject constructor(
     }
 
     fun onCardStateClicked() {
-        state.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
+        _state.value.cards.filterIsInstance<SoraCardState>().firstOrNull()?.let { card ->
             if (card.kycStatus == null) {
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
+            } else if (card.success) {
+                mainRouter.showSoraCardDetails()
             } else {
                 currentSoraCardContractData?.let { contractData ->
                     _launchSoraCardSignIn.value = contractData
@@ -346,25 +348,11 @@ class CardsHubViewModel @Inject constructor(
         }
     }
 
-    fun updateSoraCardInfo(
-        accessToken: String,
-        accessTokenExpirationTime: Long,
-        kycStatus: String
-    ) {
-        viewModelScope.launch {
-            walletInteractor.updateSoraCardInfo(
-                accessToken,
-                accessTokenExpirationTime,
-                kycStatus
-            )
-        }
-    }
-
     fun onRemoveSoraCard() {
         viewModelScope.launch {
             cardsHubInteractorImpl.updateCardVisibilityOnCardHub(
                 CardHubType.GET_SORA_CARD.hubName,
-                visible = false
+                visible = false,
             )
         }
     }
@@ -376,6 +364,19 @@ class CardsHubViewModel @Inject constructor(
                 visible = false
             )
         }
+    }
+
+    fun onRemoveReferralCard() {
+        viewModelScope.launch {
+            cardsHubInteractorImpl.updateCardVisibilityOnCardHub(
+                CardHubType.REFERRAL_SYSTEM.hubName,
+                visible = false,
+            )
+        }
+    }
+
+    fun onStartReferral() {
+        referralRouter.showReferrals()
     }
 
     fun onBuyCrypto() {

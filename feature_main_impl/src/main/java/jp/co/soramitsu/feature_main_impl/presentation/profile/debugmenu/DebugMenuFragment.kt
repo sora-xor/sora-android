@@ -32,6 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_main_impl.presentation.profile.debugmenu
 
+import android.app.Activity
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
@@ -52,6 +59,8 @@ import com.google.accompanist.navigation.animation.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
+import jp.co.soramitsu.common.domain.ResponseCode
+import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.ext.getOsName
 import jp.co.soramitsu.common.util.ext.getSize
 
@@ -59,6 +68,27 @@ import jp.co.soramitsu.common.util.ext.getSize
 class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
 
     override val viewModel: DebugMenuViewModel by viewModels()
+
+    private val launcher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                viewModel.onError(SoraException.businessError(ResponseCode.GOOGLE_LOGIN_FAILED))
+            } else {
+                viewModel.onSuccessfulGoogleSignIn()
+            }
+        }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        viewModel.googleSignInEvent.observe {
+            Toast.makeText(requireContext(), "Google Account Changed", Toast.LENGTH_LONG).show()
+        }
+
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
 
     @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
@@ -77,11 +107,18 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
                 Text(text = "%s %d".format("Width", dm?.second ?: 0.0))
                 Text(text = "%s %d".format("Height", dm?.third ?: 0.0))
                 Text(text = activity?.getOsName().orEmpty())
+                Button(onClick = {
+                    viewModel.onChangeGoogleAccount(launcher)
+                }) {
+                    Text(text = "Change google account")
+                }
                 Button(onClick = viewModel::onResetRuntimeClick) {
                     Text(text = "Reset runtime")
                 }
                 Button(
-                    modifier = Modifier.wrapContentSize().background(color = if (pushEnabled) Color.Green else Color.Gray),
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .background(color = if (pushEnabled) Color.Green else Color.Gray),
                     onClick = {
                         if (pushEnabled) {
                             NewHistoryEventsWorker.stop(requireContext())

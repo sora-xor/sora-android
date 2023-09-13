@@ -42,7 +42,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.SocketException
+import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.backup.domain.exceptions.AuthConsentException
+import jp.co.soramitsu.backup.domain.exceptions.FileNotFoundException
 import jp.co.soramitsu.backup.domain.models.BackupAccountType
 import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
 import jp.co.soramitsu.backup.domain.models.Json
@@ -56,7 +59,6 @@ import jp.co.soramitsu.common.presentation.SingleLiveEvent
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
-import jp.co.soramitsu.common.resourses.ClipboardManager
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
 import jp.co.soramitsu.core.models.CryptoType
@@ -76,7 +78,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val interactor: MultiaccountInteractor,
     private val router: MainRouter,
     private val resourceManager: ResourceManager,
-    private val clipboardManager: ClipboardManager,
+    private val clipboardManager: BasicClipboardManager,
     private val backupService: BackupService,
     private val coroutineManager: CoroutineManager,
     @Assisted("address") private val address: String,
@@ -88,9 +90,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
             @Assisted("address") address: String
         ): AccountDetailsViewModel
     }
-
-    private val _copyEvent = SingleLiveEvent<Unit>()
-    val copyEvent: LiveData<Unit> = _copyEvent
 
     private val _accountDetailsScreenState = MutableLiveData(
         AccountDetailsScreenState(
@@ -106,11 +105,15 @@ class AccountDetailsViewModel @AssistedInject constructor(
     private val _createBackupPasswordState = MutableLiveData<CreateBackupPasswordState>()
     val createBackupPasswordState: LiveData<CreateBackupPasswordState> = _createBackupPasswordState
 
-    private val _deleteDialogState = MutableLiveData<Boolean>(false)
+    private val _deleteDialogState = MutableLiveData(false)
     val deleteDialogState: LiveData<Boolean> = _deleteDialogState
+
+    private val _consentExceptionHandler = SingleLiveEvent<Intent>()
+    val consentExceptionHandler: LiveData<Intent> = _consentExceptionHandler
 
     private val changeNameFlow = MutableStateFlow("")
     private var account: SoraAccount? = null
+    private var isFromAuthorization = false
 
     init {
         _toolbarState.value = initSmallTitle2(
@@ -189,8 +192,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
     }
 
     fun onAddressCopy() {
-        clipboardManager.addToClipboard("address", address)
-        _copyEvent.trigger()
+        clipboardManager.addToClipboard(address)
+        copiedToast.trigger()
     }
 
     fun onBackupPasswordChanged(textFieldValue: TextFieldValue) {
@@ -276,7 +279,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
 
                             val backupAccounts = mutableListOf<BackupAccountType>()
                             if (passphrase.isNotEmpty()) {
-                                backupAccounts.add(BackupAccountType.PASSHRASE)
+                                backupAccounts.add(BackupAccountType.PASSPHRASE)
                             }
                             if (!seed.substrateSeed.isNullOrEmpty()) {
                                 backupAccounts.add(BackupAccountType.SEED)
@@ -312,6 +315,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 }
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: AuthConsentException) {
+                _consentExceptionHandler.value = e.intent
             }
         }
     }
@@ -327,6 +332,10 @@ class AccountDetailsViewModel @AssistedInject constructor(
                         backupService.logout()
                     }
                     if (backupService.authorize(launcher)) {
+                        if (it.isBackupAvailable == false) {
+                            backupService.getBackupAccounts()
+                        }
+
                         if (backupService.isAccountBackedUp(address)) {
                             _deleteDialogState.value = true
                         } else {
@@ -338,6 +347,9 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 }
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: AuthConsentException) {
+                isFromAuthorization = true
+                _consentExceptionHandler.value = e.intent
             }
         }
     }
@@ -357,6 +369,14 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 )
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: AuthConsentException) {
+                _consentExceptionHandler.value = e.intent
+            } catch (e: FileNotFoundException) {
+                _accountDetailsScreenState.value =
+                    accountDetailsScreenState.value?.copy(isBackupAvailable = false)
+            } finally {
+                _accountDetailsScreenState.value =
+                    accountDetailsScreenState.value?.copy(isBackupLoading = false)
             }
         }
     }
@@ -381,8 +401,6 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 _accountDetailsScreenState.value?.let {
                     if (backupService.isAccountBackedUp(address)) {
                         backupService.deleteBackupAccount(address)
-                        _accountDetailsScreenState.value =
-                            it.copy(isBackupLoading = false)
                     } else {
                         _createBackupPasswordState.value = CreateBackupPasswordState(
                             password = InputTextState(label = resourceManager.getString(R.string.create_backup_set_password)),
@@ -393,11 +411,18 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             )
                         )
                         _navEvent.value = AccountDetailsRoutes.BACKUP_ACCOUNT to {}
-                        _accountDetailsScreenState.value = it.copy(isBackupLoading = false)
                     }
                 }
             } catch (e: SocketException) {
                 onError(SoraException.networkError(resourceManager, e))
+            } catch (e: AuthConsentException) {
+                _consentExceptionHandler.value = e.intent
+            } catch (e: FileNotFoundException) {
+                _accountDetailsScreenState.value =
+                    accountDetailsScreenState.value?.copy(isBackupAvailable = false)
+            } finally {
+                _accountDetailsScreenState.value =
+                    accountDetailsScreenState.value?.copy(isBackupLoading = false)
             }
         }
     }
@@ -420,5 +445,12 @@ class AccountDetailsViewModel @AssistedInject constructor(
             password -> R.string.create_backup_password_matched to false
             else -> R.string.create_backup_password_not_matched to true
         }
+    }
+
+    fun onSuccessfulConsent() {
+        if (isFromAuthorization) {
+            onSuccessfulGoogleSignin()
+        }
+        isFromAuthorization = false
     }
 }

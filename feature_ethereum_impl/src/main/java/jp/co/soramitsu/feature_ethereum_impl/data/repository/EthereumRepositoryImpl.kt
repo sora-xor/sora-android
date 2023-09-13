@@ -125,6 +125,7 @@ class EthereumRepositoryImpl @Inject constructor(
             BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
+            BigDecimal.ZERO,
         )
     }
 
@@ -136,6 +137,7 @@ class EthereumRepositoryImpl @Inject constructor(
             }
             .let { etherWeiConverter.fromWeiToEther(it) }
         return AssetBalance(
+            BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
             BigDecimal.ZERO,
