@@ -277,8 +277,6 @@
   <string name="invoice_scan_error_user_not_found">无法从二维码中找到用户</string>
   <string name="launch_screen_loading_title">这次加载时间稍微长了一点</string>
   <string name="liquid_assets">流动资产</string>
-  <string name="liquidity_pair_creation_description">您添加的代币比例将决定此池子的价格。一旦您对比率满意，请点击供应以进行审核。</string>
-  <string name="liquidity_pair_creation_title">您是第一个流动性提供者</string>
   <string name="logout_dialog_body">此操作将导致从该设备删除账户。在继续操作之前，请确保已备份助记词。</string>
   <string name="logout_remove_nodes_body">\n \n您的所有自定义节点也将被移除</string>
   <string name="mnemonic_confirmation_select_word_2">从你写下的清单中</string>
@@ -432,7 +430,7 @@
   <string name="route">路径</string>
   <string name="scan_qr_show_my_qr">显示我的二维码</string>
   <string name="search_assets">搜索资产</string>
-  <string name="search_empty_state">无搜索结果</string>
+  <string name="search_empty_state">没有结果</string>
   <string name="select_account_address">搜索账户地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
   <string name="select_account_import">选择要导入的账户</string>
