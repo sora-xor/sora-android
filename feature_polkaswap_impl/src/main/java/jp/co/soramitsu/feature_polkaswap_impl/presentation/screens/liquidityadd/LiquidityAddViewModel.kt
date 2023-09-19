@@ -68,7 +68,6 @@ import jp.co.soramitsu.feature_polkaswap_impl.presentation.states.LiquidityAddSt
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.sora.substrate.runtime.isSynthetic
 import jp.co.soramitsu.ui_core.component.toolbar.Action
 import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
@@ -527,18 +526,6 @@ class LiquidityAddViewModel @AssistedInject constructor(
                 val bases = poolsInteractor.getPoolDexList()
                 val curBase = bases.find { it.tokenId == addToken1 }
                 val list = assets
-                    .filter { asset ->
-                        asset.token.id.isSynthetic().not()
-                    }
-                    .filter { asset ->
-                        if (addToken1 == SubstrateOptionsProvider.xstusdTokenId) {
-                            asset.token.id != SubstrateOptionsProvider.xstTokenId
-                        } else if (addToken1 == SubstrateOptionsProvider.feeAssetId) {
-                            asset.token.id != SubstrateOptionsProvider.xstusdTokenId
-                        } else {
-                            true
-                        }
-                    }
                     .filter { asset ->
                         val inBases = bases.find { it.tokenId == asset.token.id }
                         if (inBases != null && curBase != null) {
