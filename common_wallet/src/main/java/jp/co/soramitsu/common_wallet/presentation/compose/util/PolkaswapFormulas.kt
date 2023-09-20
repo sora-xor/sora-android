@@ -45,11 +45,12 @@ object PolkaswapFormulas {
     fun calculatePooledValue(
         reserves: BigDecimal,
         poolProvidersBalance: BigDecimal,
-        totalIssuance: BigDecimal
+        totalIssuance: BigDecimal,
+        precision: Int? = OptionsProvider.defaultScale,
     ): BigDecimal =
-        reserves.multiply(poolProvidersBalance).divideBy(totalIssuance)
+        reserves.multiply(poolProvidersBalance).divideBy(totalIssuance, precision)
 
-    fun calculateShareOfPool(
+    private fun calculateShareOfPool(
         poolProvidersBalance: BigDecimal,
         totalIssuance: BigDecimal
     ): BigDecimal =
