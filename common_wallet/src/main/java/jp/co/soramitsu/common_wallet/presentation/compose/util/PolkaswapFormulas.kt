@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common_wallet.presentation.compose.util
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.equalTo
@@ -133,6 +134,6 @@ object PolkaswapFormulas {
         amount: BigDecimal,
         amountPooled: BigDecimal,
         otherPooled: BigDecimal,
-        precision: Int
-    ): BigDecimal = amount.multiply(otherPooled).safeDivide(amountPooled).safeDivide(Big100, precision)
+        precision: Int? = OptionsProvider.defaultScale,
+    ): BigDecimal = amount.multiply(otherPooled).safeDivide(amountPooled, precision)
 }

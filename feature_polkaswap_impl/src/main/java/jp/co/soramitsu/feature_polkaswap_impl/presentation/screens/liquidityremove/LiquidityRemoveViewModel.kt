@@ -320,7 +320,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                             amount1,
                             it.user.basePooled,
                             it.user.targetPooled,
-                            removeState.assetState2?.token?.precision ?: 18
+                            removeState.assetState2?.token?.precision
                         )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
@@ -346,7 +346,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                                 amount2,
                                 it.user.targetPooled,
                                 it.user.basePooled,
-                                removeState.assetState1?.token?.precision ?: 18
+                                removeState.assetState1?.token?.precision
                             )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
