@@ -128,8 +128,8 @@ class PolkaswapFormulasTest {
     fun `test estimateAddingShareOfPool`() {
         val shareOfPool = SECOND_POOLED
             .plus(TARGET_AMOUNT)
-            .safeDivide(TARGET_AMOUNT.plus(RESERVES_SECOND))
             .multiply(Big100)
+            .safeDivide(TARGET_AMOUNT.plus(RESERVES_SECOND))
 
         assertEquals(
             shareOfPool,
@@ -145,8 +145,8 @@ class PolkaswapFormulasTest {
     fun `test estimateRemovingShareOfPool`() {
         val shareOfPool = SECOND_POOLED
             .minus(TARGET_AMOUNT)
-            .safeDivide(RESERVES_SECOND.minus(TARGET_AMOUNT))
             .multiply(Big100)
+            .safeDivide(RESERVES_SECOND.minus(TARGET_AMOUNT))
 
         assertEquals(
             shareOfPool,

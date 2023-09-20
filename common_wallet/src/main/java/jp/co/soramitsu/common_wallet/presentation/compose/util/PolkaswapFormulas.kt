@@ -82,8 +82,8 @@ object PolkaswapFormulas {
     ): BigDecimal {
         return pooled
             .plus(amount)
-            .safeDivide(amount.plus(reserves))
             .multiply(Big100)
+            .safeDivide(amount.plus(reserves))
     }
 
     fun estimateRemovingShareOfPool(
@@ -92,8 +92,8 @@ object PolkaswapFormulas {
         reserves: BigDecimal
     ): BigDecimal = pooled
         .minus(amount)
-        .safeDivide(reserves.minus(amount))
         .multiply(Big100)
+        .safeDivide(reserves.minus(amount))
 
     fun calculateMinAmount(
         amount: BigDecimal,
@@ -133,5 +133,6 @@ object PolkaswapFormulas {
         amount: BigDecimal,
         amountPooled: BigDecimal,
         otherPooled: BigDecimal,
-    ): BigDecimal = amount.multiply(otherPooled).safeDivide(amountPooled)
+        precision: Int
+    ): BigDecimal = amount.multiply(otherPooled).safeDivide(amountPooled).safeDivide(Big100, precision)
 }
