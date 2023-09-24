@@ -5,6 +5,10 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -22,14 +26,13 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.VERSION_1_8
+//    }
 
     buildFeatures {
         viewBinding true
@@ -59,6 +62,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_ecosystem_impl'
 }
 
 dependencies {
@@ -123,7 +127,7 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
 
     implementation xNetworkingDep
 

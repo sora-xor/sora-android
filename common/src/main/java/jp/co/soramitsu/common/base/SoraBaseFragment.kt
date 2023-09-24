@@ -62,9 +62,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.findNavController
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.BarsColorhandler
@@ -116,7 +116,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                     val coroutineScope = rememberCoroutineScope()
                     val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
 
-                    val navController = rememberAnimatedNavController()
+                    val navController = rememberNavController()
                     LaunchedEffect(Unit) {
                         navController.addOnDestinationChangedListener { _, destination, _ ->
                             destination.route?.let {
@@ -200,7 +200,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                         BackHandler {
                             onBack()
                         }
-                        AnimatedNavHost(
+                        NavHost(
                             modifier = Modifier
                                 .padding(padding)
                                 .fillMaxSize(),

@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -14,14 +18,13 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.VERSION_1_8
+//    }
 
     buildFeatures {
         viewBinding true
@@ -58,6 +61,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_referral_impl'
 }
 
 dependencies {
@@ -99,7 +103,7 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
 
     implementation roomDep
     implementation roomKtxDep

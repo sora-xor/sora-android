@@ -3,6 +3,10 @@ apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -20,14 +24,13 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.VERSION_1_8
+//    }
 
     composeOptions {
         kotlinCompilerExtensionVersion versions.composeCompiler
@@ -57,6 +60,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.common_wallet'
 }
 
 dependencies {
@@ -118,7 +122,7 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeAnimationGraphicsDep
     implementation composeToolingPreviewDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
     debugImplementation composeToolingDep
 
     testImplementation project(":test_shared")

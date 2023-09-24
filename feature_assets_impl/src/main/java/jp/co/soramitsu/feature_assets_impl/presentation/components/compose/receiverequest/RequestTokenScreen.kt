@@ -236,7 +236,12 @@ fun RequestTokenScreen(
 private fun PreviewRequestTokenScreen() {
     RequestTokenScreen(
         index = 0,
-        pagerState = rememberPagerState(),
+        pagerState = rememberPagerState(
+            initialPage = 0,
+            initialPageOffsetFraction = 0f
+        ) {
+            2
+        },
         scrollState = rememberScrollState(),
         state = RequestTokenScreenState(
             screenStatus = ScreenStatus.READY_TO_RENDER,

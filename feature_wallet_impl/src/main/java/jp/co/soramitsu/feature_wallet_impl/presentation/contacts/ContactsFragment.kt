@@ -49,7 +49,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
