@@ -93,7 +93,7 @@ class BuyCryptoViewModel @AssistedInject constructor(
         val statusCode = errorResponse?.statusCode
         val reasonPhrase = errorResponse?.reasonPhrase
         val message = errorResponse?.let { statusCode?.toString().orEmpty() + reasonPhrase }
-        FirebaseWrapper.log("X1 [$message]")
+        FirebaseWrapper.recordException(IllegalStateException("X1 [$message]"))
         showWidgetUnavailableAlert(statusCode)
     }
 

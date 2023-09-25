@@ -36,6 +36,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
+import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
@@ -198,7 +199,7 @@ class RemoveLiquidityViewModelTest {
         advanceUntilIdle()
 
         assertEquals(BigDecimal(0.5), viewModel.removeState.assetState1?.amount)
-        assertEquals(BigDecimal(0.5), viewModel.removeState.assetState2?.amount)
+        assertTrue(viewModel.removeState.assetState2?.amount?.equalTo(BigDecimal(0.5)) == true)
         assertEquals("Remove", viewModel.removeState.btnState.text)
         assertTrue(viewModel.removeState.btnState.enabled)
     }
@@ -212,7 +213,7 @@ class RemoveLiquidityViewModelTest {
         viewModel.onAmount2Change(BigDecimal("0.35"))
         advanceUntilIdle()
 
-        assertEquals(BigDecimal("0.35"), viewModel.removeState.assetState1?.amount)
+        assertTrue(viewModel.removeState.assetState1?.amount?.equalTo(amount) == true)
         assertEquals(BigDecimal("0.35"), viewModel.removeState.assetState2?.amount)
         assertTrue(viewModel.removeState.btnState.enabled)
     }

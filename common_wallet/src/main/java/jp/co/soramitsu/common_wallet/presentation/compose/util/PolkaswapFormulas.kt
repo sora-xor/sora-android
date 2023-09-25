@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common_wallet.presentation.compose.util
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.util.ext.Big100
 import jp.co.soramitsu.common.util.ext.divideBy
 import jp.co.soramitsu.common.util.ext.equalTo
@@ -44,11 +45,12 @@ object PolkaswapFormulas {
     fun calculatePooledValue(
         reserves: BigDecimal,
         poolProvidersBalance: BigDecimal,
-        totalIssuance: BigDecimal
+        totalIssuance: BigDecimal,
+        precision: Int? = OptionsProvider.defaultScale,
     ): BigDecimal =
-        reserves.multiply(poolProvidersBalance).divideBy(totalIssuance)
+        reserves.multiply(poolProvidersBalance).divideBy(totalIssuance, precision)
 
-    fun calculateShareOfPool(
+    private fun calculateShareOfPool(
         poolProvidersBalance: BigDecimal,
         totalIssuance: BigDecimal
     ): BigDecimal =
@@ -82,8 +84,8 @@ object PolkaswapFormulas {
     ): BigDecimal {
         return pooled
             .plus(amount)
-            .safeDivide(amount.plus(reserves))
             .multiply(Big100)
+            .safeDivide(amount.plus(reserves))
     }
 
     fun estimateRemovingShareOfPool(
@@ -92,8 +94,8 @@ object PolkaswapFormulas {
         reserves: BigDecimal
     ): BigDecimal = pooled
         .minus(amount)
-        .safeDivide(reserves.minus(amount))
         .multiply(Big100)
+        .safeDivide(reserves.minus(amount))
 
     fun calculateMinAmount(
         amount: BigDecimal,
@@ -133,5 +135,6 @@ object PolkaswapFormulas {
         amount: BigDecimal,
         amountPooled: BigDecimal,
         otherPooled: BigDecimal,
-    ): BigDecimal = amount.multiply(otherPooled).safeDivide(amountPooled)
+        precision: Int? = OptionsProvider.defaultScale,
+    ): BigDecimal = amount.multiply(otherPooled).safeDivide(amountPooled, precision)
 }

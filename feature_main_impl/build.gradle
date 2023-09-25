@@ -95,9 +95,9 @@ dependencies {
 
     implementation googlePlayServiceAuth
     implementation googleApiServicesDrive
-    implementation sharedFeaturesBackupDep
+    implementation xbackupDep
     implementation sharedFeaturesModelsDep
-    
+
     implementation composeUiDep
     implementation composeThemeAdapterDep
     implementation composeFoundationDep

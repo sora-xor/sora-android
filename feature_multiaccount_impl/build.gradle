@@ -115,7 +115,7 @@ dependencies {
     implementation composeLiveDataDep
     implementation navigationComposeDep
     implementation accompanistNavAnimationDep
-    implementation sharedFeaturesBackupDep
+    implementation xbackupDep
     implementation sharedFeaturesModelsDep
     debugImplementation composeToolingDep
 

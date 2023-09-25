@@ -62,10 +62,10 @@ fun BigDecimal.nullZero(): BigDecimal? = if (this.isZero()) null else this
 
 fun BigDecimal.divideBy(
     divisor: BigDecimal,
-    scale: Int? = null
+    scale: Int? = null,
 ): BigDecimal {
     return if (scale == null) {
-        val maxScale = max(this.scale(), divisor.scale())
+        val maxScale = max(this.scale(), divisor.scale()).coerceAtMost(OptionsProvider.defaultScale)
 
         if (maxScale != 0) {
             this.divide(divisor, maxScale, RoundingMode.HALF_EVEN)
@@ -79,7 +79,7 @@ fun BigDecimal.divideBy(
 
 fun BigDecimal.safeDivide(
     divisor: BigDecimal,
-    scale: Int? = null
+    scale: Int? = null,
 ): BigDecimal {
     return if (divisor.isZero()) {
         BigDecimal.ZERO

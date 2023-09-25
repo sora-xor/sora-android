@@ -278,8 +278,6 @@
   <string name="invoice_scan_error_user_not_found">QR\'dan bir kullanıcı bulunamadı</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
-  <string name="liquidity_pair_creation_description">Eklediğiniz jetonların oranı bu havuzun fiyatını belirleyecektir. Orandan memnun kaldığınızda, incelemek için arza tıklayın.</string>
-  <string name="liquidity_pair_creation_title">İlk likidite sağlayıcısı sizsiniz</string>
   <string name="logout_dialog_body">Bu işlem, hesabın bu cihazdan silinmesine neden olur. Devam etmeden önce Anımsatıcı Dizi\'nizi yedeklediğinizden emin olun.</string>
   <string name="logout_remove_nodes_body">\n\nAll your custom nodes will be removed as well</string>
   <string name="mnemonic_confirmation_select_word_2">from the list you have written down</string>

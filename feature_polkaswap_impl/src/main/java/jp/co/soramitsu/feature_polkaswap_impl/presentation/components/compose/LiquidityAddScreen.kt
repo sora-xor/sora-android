@@ -43,7 +43,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,7 +70,6 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun LiquidityAddScreen(
@@ -147,6 +145,17 @@ internal fun LiquidityAddScreen(
                 onClick = onSlippageClick,
             )
         }
+        if (state.pairNotExist == true) {
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = Dimens.x2,
+                color = Color.Transparent
+            )
+            WarningTextCard(
+                text = stringResource(id = R.string.confirn_supply_liquidity_first_provider_warning),
+                error = false,
+            )
+        }
         if (state.shouldTransactionReminderInsufficientWarningBeShown) {
             Divider(
                 modifier = Modifier.fillMaxWidth(),
@@ -185,34 +194,6 @@ internal fun LiquidityAddScreen(
             thickness = Dimens.x2,
             color = Color.Transparent
         )
-        if (state.pairNotExist == true) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                text = stringResource(id = R.string.liquidity_pair_creation_title),
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary,
-            )
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = Dimens.x1,
-                color = Color.Transparent
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                text = stringResource(id = R.string.liquidity_pair_creation_description),
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary,
-            )
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = Dimens.x2,
-                color = Color.Transparent
-            )
-        }
         DetailsItem(
             text = stringResource(id = R.string.pool_share_title_1),
             value1 = state.estimated.shareOfPool,
