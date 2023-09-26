@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
@@ -61,6 +62,7 @@ internal fun MnemonicWordsColumn(
                     start.linkTo(parent.start)
                 },
                 text = (startNumber + index).toString(),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textL
             )
         }
@@ -78,6 +80,7 @@ internal fun MnemonicWordsColumn(
                     start.linkTo(barrier)
                 },
                 text = s,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textLBold
             )
         }

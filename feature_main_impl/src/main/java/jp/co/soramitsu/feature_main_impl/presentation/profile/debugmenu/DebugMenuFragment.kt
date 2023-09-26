@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.util.ext.getOsName
 import jp.co.soramitsu.common.util.ext.getSize
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @AndroidEntryPoint
 class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
@@ -103,17 +105,35 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
             val pushEnabled =
                 (pushState != null) && (pushState.size > 0) && ((pushState[0].state == WorkInfo.State.RUNNING) || (pushState[0].state == WorkInfo.State.ENQUEUED))
             Column(modifier = Modifier.fillMaxSize()) {
-                Text(text = "%s %.3f".format("Density", dm?.first ?: 0.0))
-                Text(text = "%s %d".format("Width", dm?.second ?: 0.0))
-                Text(text = "%s %d".format("Height", dm?.third ?: 0.0))
-                Text(text = activity?.getOsName().orEmpty())
+                Text(
+                    color = MaterialTheme.customColors.fgPrimary,
+                    text = "%s %.3f".format("Density", dm?.first ?: 0.0)
+                )
+                Text(
+                    color = MaterialTheme.customColors.fgPrimary,
+                    text = "%s %d".format("Width", dm?.second ?: 0.0)
+                )
+                Text(
+                    color = MaterialTheme.customColors.fgPrimary,
+                    text = "%s %d".format("Height", dm?.third ?: 0.0)
+                )
+                Text(
+                    color = MaterialTheme.customColors.fgPrimary,
+                    text = activity?.getOsName().orEmpty()
+                )
                 Button(onClick = {
                     viewModel.onChangeGoogleAccount(launcher)
                 }) {
-                    Text(text = "Change google account")
+                    Text(
+                        color = MaterialTheme.customColors.fgPrimary,
+                        text = "Change google account"
+                    )
                 }
                 Button(onClick = viewModel::onResetRuntimeClick) {
-                    Text(text = "Reset runtime")
+                    Text(
+                        color = MaterialTheme.customColors.fgPrimary,
+                        text = "Reset runtime"
+                    )
                 }
                 Button(
                     modifier = Modifier
@@ -127,7 +147,10 @@ class DebugMenuFragment : SoraBaseFragment<DebugMenuViewModel>() {
                         }
                     },
                     content = {
-                        Text(text = if (pushEnabled) "Disable" else "Enable")
+                        Text(
+                            color = MaterialTheme.customColors.fgPrimary,
+                            text = if (pushEnabled) "Disable" else "Enable"
+                        )
                     }
                 )
                 DebugMenuScreen(state = viewModel.state)

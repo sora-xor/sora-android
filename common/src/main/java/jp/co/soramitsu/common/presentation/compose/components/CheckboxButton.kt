@@ -88,6 +88,7 @@ fun CheckboxButton(
                 .weight(1f)
                 .padding(start = Dimens.x2),
             style = MaterialTheme.customTypography.paragraphS,
+            color = MaterialTheme.customColors.fgPrimary,
             text = text
         )
     }

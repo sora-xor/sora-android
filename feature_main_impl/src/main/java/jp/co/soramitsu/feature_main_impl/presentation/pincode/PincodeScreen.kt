@@ -90,6 +90,7 @@ internal fun PincodeScreen(
                     modifier = Modifier.padding(bottom = Dimens.x2),
                     textAlign = TextAlign.Center,
                     text = pinCodeScreenState.toolbarTitleString,
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.headline2
                 )
 

@@ -36,9 +36,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import javax.inject.Inject
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 
 class FlexibleUpdateDialog : Fragment() {
@@ -47,6 +50,9 @@ class FlexibleUpdateDialog : Fragment() {
         const val UPDATE_REPLY = "update_reply"
     }
 
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -54,7 +60,12 @@ class FlexibleUpdateDialog : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                SoraAppTheme {
+                val isDarkThemeOn =
+                    darkThemeManager.darkModeStatusFlow.collectAsState()
+
+                SoraAppTheme(
+                    darkTheme = isDarkThemeOn.value
+                ) {
                     InAppUpdateScreen(
                         onUpdate = {
                             findNavController().run {

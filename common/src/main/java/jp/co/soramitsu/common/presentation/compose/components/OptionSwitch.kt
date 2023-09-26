@@ -99,6 +99,7 @@ fun OptionSwitch(
             ) {
                 Text(
                     text = label,
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.textM,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

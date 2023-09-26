@@ -96,6 +96,7 @@ fun ReferralBondXor(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x2),
                 text = stringResource(id = R.string.referral_input_reward_title),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.headline2,
             )
 
@@ -107,6 +108,7 @@ fun ReferralBondXor(
                     id = R.string.referral_input_reward_description,
                     common.referrerFee
                 ),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 
@@ -183,6 +185,7 @@ fun ReferralUnbondXor(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x2),
                 text = stringResource(id = R.string.referral_unbond_title),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.headline2,
             )
 
@@ -194,6 +197,7 @@ fun ReferralUnbondXor(
                     id = R.string.referral_unbond_description,
                     common.referrerFee
                 ),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 
