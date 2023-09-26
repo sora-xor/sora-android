@@ -44,10 +44,7 @@ data class SwapDetails(
     val networkFee: BigDecimal,
     val dex: PoolDex,
     val swapRoute: List<String>? = null,
-    val feeMode: SwapFeeMode,
 )
-
-enum class SwapFeeMode { SYNTHETIC, NON_SYNTHETIC, BOTH }
 
 data class SwapQuote(
     val amount: BigDecimal,

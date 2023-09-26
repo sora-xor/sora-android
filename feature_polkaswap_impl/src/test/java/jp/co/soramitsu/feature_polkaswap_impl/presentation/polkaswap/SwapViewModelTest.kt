@@ -38,13 +38,11 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
-import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.presentation.compose.states.ButtonState
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetItemCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
@@ -52,7 +50,6 @@ import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.SwapInteractor
 import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapDetails
-import jp.co.soramitsu.feature_polkaswap_api.domain.model.SwapFeeMode
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap.SwapViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.test_data.PolkaswapTestData
@@ -101,9 +98,6 @@ class SwapViewModelTest {
 
     @Mock
     private lateinit var assetsInteractor: AssetsInteractor
-
-    @Mock
-    private lateinit var coroutineManager: CoroutineManager
 
     @Mock
     private lateinit var walletInteractor: WalletInteractor
@@ -169,10 +163,9 @@ class SwapViewModelTest {
             resourceManager,
             mainRouter,
             assetsRouter,
-            coroutineManager,
             firstTokenId ?: TestAssets.xorAsset().token.id,
             secondTokenId ?: "",
-            isLaunchedFromSoraCard = false
+            isLaunchedFromSoraCard = false,
         )
     }
 
@@ -239,24 +232,6 @@ class SwapViewModelTest {
     }
 
     @Test
-    fun fromAndToCardClicked() = runTest {
-        initViewModel()
-        advanceUntilIdle()
-        viewModel.fromCardClicked()
-        advanceUntilIdle()
-        assertEquals(viewModel.swapMainState.value.selectSearchAssetState?.fullList, assetsListItems)
-        viewModel.fromAssetSelected(assetsListItems[0].tokenId)
-
-        viewModel.toCardClicked()
-        assertEquals(
-            SelectSearchAssetState(
-                filter = "",
-                fullList = assetsListItems.filter { it.tokenId != viewModel.swapMainState.value.tokenFromState?.token?.id }),
-            viewModel.swapMainState.value.selectSearchAssetState,
-        )
-    }
-
-    @Test
     fun fromInputPercentCalledWithLowBalance() = runTest {
         initViewModel()
         given(
@@ -301,7 +276,6 @@ class SwapViewModelTest {
                 networkFee,
                 PoolDex(0, assetsListItems.first().tokenId, assetsListItems.last().tokenId),
                 null,
-                SwapFeeMode.NON_SYNTHETIC,
             )
         )
         advanceUntilIdle()
@@ -338,7 +312,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(50.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
+        assertEquals(BigDecimal(50.0).setScale(18), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -350,7 +324,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(8.0).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
+        assertEquals(BigDecimal(8.0).setScale(18), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test
@@ -362,7 +336,7 @@ class SwapViewModelTest {
         viewModel.toAssetSelected(assetsListItems.last().tokenId)
         advanceUntilIdle()
         viewModel.fromInputPercentClicked(50)
-        assertEquals(BigDecimal(25).setScale(19), viewModel.swapMainState.value.tokenFromState?.amount)
+        assertEquals(BigDecimal(25).setScale(18), viewModel.swapMainState.value.tokenFromState?.amount)
     }
 
     @Test

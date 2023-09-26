@@ -66,7 +66,6 @@
   <string name="common_activity">Hoạt động</string>
   <string name="common_and">và</string>
   <string name="common_app_version">Phiên bản ứng dụng</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">Tiếng Ả Rập</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">Trở lại</string>
@@ -278,8 +277,6 @@
   <string name="invoice_scan_error_user_not_found">Không thể tìm thấy người dùng từ mã QR</string>
   <string name="launch_screen_loading_title">Lần này tải lâu hơn một chút</string>
   <string name="liquid_assets">Tài sản lưu động</string>
-  <string name="liquidity_pair_creation_description">Tỷ lệ token bạn thêm vào sẽ thiết lập giá của pool này. Một khi bạn hài lòng với tỷ lệ cung cấp hãy nhấp chuột để xem xét.</string>
-  <string name="liquidity_pair_creation_title">Bạn là nhà cung cấp thanh khoản đầu tiên</string>
   <string name="logout_dialog_body">Hành động này sẽ dẫn đến việc xóa tài khoản khỏi thiết bị này. Đảm bảo rằng bạn đã sao lưu chuỗi từ khóa khôi phục của bạn trước khi tiếp tục.</string>
   <string name="logout_remove_nodes_body">\n \n Tất cả các node tùy chỉnh của bạn cũng sẽ bị xóa</string>
   <string name="mnemonic_confirmation_select_word_2">từ danh sách bạn đã viết ra</string>
@@ -340,10 +337,8 @@
   <string name="polkaswap_insufficient_liqudity">Không đủ thanh khoản</string>
   <string name="polkaswap_liquidity_fee">Phí thanh khoản</string>
   <string name="polkaswap_liquidity_fee_info">Một phần của mỗi giao dịch được chuyển đến các nhà cung cấp thanh khoản như một biện pháp khuyến khích.</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
-  <string name="polkaswap_liquidity_total_fee">Swap fee</string>
-  <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
+  <string name="polkaswap_liquidity_total_fee">Phí hoán đổi</string>
+  <string name="polkaswap_liquidity_total_fee_desc">Hoán đổi của bạn bao gồm cả phí Tổng hợp và phí LP.\n Phí tổng hợp được tính khi hoán đổi đi qua nguồn thanh khoản XST cho tài sản tổng hợp và phí LP khi hoán đổi đi qua nhóm thanh khoản.</string>
   <string name="polkaswap_market">Thị trường</string>
   <string name="polkaswap_market_smart_description">SMART liquidity routing đảm bảo giá tốt nhất cho giao dịch bất kỳ bằng cách kết hợp mức giá tốt nhất hiện có trên thị trường. Khi thuận lợi, Token Bonding Curve (TBC) sẽ được dùng để tạo thanh khoản miễn là giá của tài sản hợp lý hơn các nguồn khác như pool (XYK).</string>
   <string name="polkaswap_market_tbc_description">TBC - chỉ mua từ Token Bonding Curve (Primary Market). Giá có thể trở nên bất lợi so với XYK pool (Secondary Market), nhưng về lâu dài giá trị nhận được từ phần thưởng có thể lớn hơn nhiều.</string>
@@ -364,9 +359,6 @@
   <string name="polkaswap_smart">Thông minh</string>
   <string name="polkaswap_swap_title">Đổi</string>
   <string name="polkaswap_swapped">Đã hoán đổi</string>
-  <string name="polkaswap_tbc">TBC</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">Apy tiền thưởng chiến lược</string>
   <string name="pool_button_remove">Rút</string>
   <string name="pool_details">Chi tiết Pool</string>
   <string name="pool_liquidity_placeholder">Bạn chưa tham gia bất kỳ pool nào.\nThêm thanh khoản để kiếm phần thưởng</string>
@@ -438,6 +430,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Hiển thị mã QR của tôi</string>
   <string name="search_assets">Tìm kiếm tài sản</string>
+  <string name="search_empty_state">Không có kết quả tìm kiếm</string>
   <string name="select_account_address">Tìm kiếm địa chỉ tài khoản</string>
   <string name="select_account_address_1">Tìm kiếm hoặc thêm địa chỉ mới</string>
   <string name="select_account_import">Chọn tài khoản để nhập</string>

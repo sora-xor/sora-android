@@ -126,6 +126,10 @@ class AssetsInteractorImpl constructor(
         return assetsRepository.isWhitelistedToken(tokenId)
     }
 
+    override suspend fun getTokensList(): List<Token> {
+        return assetsRepository.tokensList()
+    }
+
     override suspend fun observeTransfer(
         to: String,
         token: Token,

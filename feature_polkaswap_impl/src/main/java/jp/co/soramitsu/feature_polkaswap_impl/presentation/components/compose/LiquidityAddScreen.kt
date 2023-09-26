@@ -43,7 +43,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,11 +70,11 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
-import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun LiquidityAddScreen(
     state: LiquidityAddState,
+    slippage: Double,
     onFocusChange1: (Boolean) -> Unit,
     onFocusChange2: (Boolean) -> Unit,
     onAmountChange1: (BigDecimal) -> Unit,
@@ -141,9 +140,20 @@ internal fun LiquidityAddScreen(
             horizontalArrangement = Arrangement.Center,
         ) {
             MarketSelector(
-                value = "${state.slippage}%",
+                value = "$slippage%",
                 description = stringResource(id = R.string.slippage),
                 onClick = onSlippageClick,
+            )
+        }
+        if (state.pairNotExist == true) {
+            Divider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = Dimens.x2,
+                color = Color.Transparent
+            )
+            WarningTextCard(
+                text = stringResource(id = R.string.confirn_supply_liquidity_first_provider_warning),
+                error = false,
             )
         }
         if (state.shouldTransactionReminderInsufficientWarningBeShown) {
@@ -184,34 +194,6 @@ internal fun LiquidityAddScreen(
             thickness = Dimens.x2,
             color = Color.Transparent
         )
-        if (state.pairNotExist == true) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                text = stringResource(id = R.string.liquidity_pair_creation_title),
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary,
-            )
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = Dimens.x1,
-                color = Color.Transparent
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                text = stringResource(id = R.string.liquidity_pair_creation_description),
-                style = MaterialTheme.customTypography.textXSBold,
-                color = MaterialTheme.customColors.fgSecondary,
-            )
-            Divider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = Dimens.x2,
-                color = Color.Transparent
-            )
-        }
         DetailsItem(
             text = stringResource(id = R.string.pool_share_title_1),
             value1 = state.estimated.shareOfPool,
@@ -262,7 +244,6 @@ private fun PreviewLiquidityRemoveScreen() {
                     loading = false,
                 ),
                 pairNotExist = true,
-                slippage = 0.3,
                 hintVisible = false,
                 estimated = LiquidityAddEstimatedState(
                     token1 = "XOR",
@@ -290,11 +271,11 @@ private fun PreviewLiquidityRemoveScreen() {
                         loading = false,
                     ),
                 ),
-                selectSearchAssetState = null,
                 shouldTransactionReminderInsufficientWarningBeShown = true,
             ),
             onSelect1 = {},
             onSelect2 = {},
+            slippage = 0.34,
         )
     }
 }

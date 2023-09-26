@@ -175,7 +175,7 @@ fun BasicPoolListItem(
             )
         }
         Text(
-            text = "%s %s".format(state.text3, stringResource(id = R.string.common_apy)),
+            text = "%s %s".format(state.text3, stringResource(id = R.string.polkaswap_apy)),
             modifier = Modifier
                 .background(
                     color = MaterialTheme.customColors.bgSurfaceVariant,

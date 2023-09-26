@@ -105,6 +105,8 @@ class MainViewModelTest {
         every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
         coEvery { blockExplorerManager.updateFiat() } returns Unit
         coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
+        coEvery { assetsInteractor.getTokensList() } returns emptyList()
+        coEvery { blockExplorerManager.getTokensLiquidity(emptyList()) } returns emptyList()
         mockkObject(RepeatStrategyBuilder)
         every { RepeatStrategyBuilder.infinite() } returns object : RepeatStrategy {
             override suspend fun repeat(block: suspend () -> Unit) {

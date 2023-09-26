@@ -34,15 +34,11 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest
 
 import android.graphics.Bitmap
 import android.net.Uri
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
+import javax.inject.Inject
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -58,11 +54,10 @@ import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.QrCodeGenerator
 import jp.co.soramitsu.common_wallet.domain.model.QrException
-import jp.co.soramitsu.common_wallet.presentation.compose.components.SelectSearchAssetState
-import jp.co.soramitsu.common_wallet.presentation.compose.states.mapAssetsToCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.util.AmountFormat.getAssetBalanceText
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.domain.QrCodeInteractor
+import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.emptySearchTokenFilter
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.ReceiveTokenByQrScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenConfirmScreenState
 import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.receiverequest.RequestTokenScreenState
@@ -72,6 +67,8 @@ import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
 import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
@@ -80,7 +77,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class QRCodeFlowViewModel @AssistedInject constructor(
+@HiltViewModel
+class QRCodeFlowViewModel @Inject constructor(
     private val interactor: AssetsInteractor,
     private val qrCodeInteractor: QrCodeInteractor,
     private val coroutineManager: CoroutineManager,
@@ -91,34 +89,20 @@ class QRCodeFlowViewModel @AssistedInject constructor(
     private val resourceManager: ResourceManager,
     private val fileManager: FileManager,
     private val walletRouter: WalletRouter,
-    @Assisted("IS_LAUNCHED_FROM_SORA_CARD") val isLaunchedFromSoraCard: Boolean
 ) : BaseViewModel() {
 
-    @AssistedFactory
-    interface AssistedQRCodeFlowViewModelFactory {
-        fun create(
-            @Assisted("IS_LAUNCHED_FROM_SORA_CARD") isLaunchedFromSoraCard: Boolean
-        ): QRCodeFlowViewModel
-    }
-
     private var currentTokenId: String? = null
-
-    private val requestAmountCacheFlow = MutableSharedFlow<BigDecimal>(
-        replay = 1,
-        extraBufferCapacity = 0,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
 
     private val requestByQrScreenReloadMutableSharedFlow = MutableSharedFlow<Unit>(
         replay = 1,
         extraBufferCapacity = 0,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
     private val _shareQrCodeLiveData = SingleLiveEvent<Pair<Uri, String>>()
     val shareQrCodeEvent: LiveData<Pair<Uri, String>> = _shareQrCodeLiveData
 
-    var receiveTokenScreenState by mutableStateOf(
+    private val _receiveTokenByQrScreenState = MutableStateFlow(
         ReceiveTokenByQrScreenState(
             screenStatus = ScreenStatus.LOADING,
             untransformedQrBitmap = null,
@@ -127,28 +111,23 @@ class QRCodeFlowViewModel @AssistedInject constructor(
             untransformedUserAddress = null
         )
     )
-        private set
+    val receiveTokenByQrScreenState = _receiveTokenByQrScreenState.asStateFlow()
 
-    var requestTokenByQrScreenState by mutableStateOf(
+    private val _requestTokenScreenState = MutableStateFlow(
         RequestTokenScreenState(
             screenStatus = ScreenStatus.LOADING,
             untransformedUserName = null,
             untransformedAvatarDrawable = null,
             untransformedUserAddress = null,
-            assetAmountInputState = null
+            assetAmountInputState = null,
         )
     )
-        private set
+    val requestTokenScreenState = _requestTokenScreenState.asStateFlow()
 
-    var selectTokenScreenState by mutableStateOf(
-        SelectSearchAssetState(
-            filter = "",
-            fullList = emptyList()
-        )
-    )
-        private set
+    private val _selectTokenScreenState = MutableStateFlow(emptySearchTokenFilter)
+    val selectTokenScreenState = _selectTokenScreenState.asStateFlow()
 
-    var requestTokenConfirmScreenState by mutableStateOf(
+    private val _requestTokenConfirmScreenState = MutableStateFlow(
         RequestTokenConfirmScreenState(
             screenStatus = ScreenStatus.LOADING,
             untransformedQrBitmap = null,
@@ -158,17 +137,10 @@ class QRCodeFlowViewModel @AssistedInject constructor(
             assetAmountInputState = null
         )
     )
-        private set
+    val requestTokenConfirmScreenState = _requestTokenConfirmScreenState.asStateFlow()
 
     private val loadRequestByQrScreenDataFlowJob = interactor.subscribeAssetsActiveOfCurAccount()
-        .onEach {
-            selectTokenScreenState = selectTokenScreenState.copy(
-                fullList = mapAssetsToCardState(
-                    assets = it,
-                    nf = numbersFormatter
-                )
-            )
-        }.combine(requestByQrScreenReloadMutableSharedFlow) { assets, _ ->
+        .combine(requestByQrScreenReloadMutableSharedFlow) { assets, _ ->
             val assetInUse = currentTokenId?.let { tokenID ->
                 assets.find { it.token.id == tokenID }
             } ?: assets.first()
@@ -177,35 +149,41 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                 accountName to substrateAddress
             }
 
-            requestTokenByQrScreenState = requestTokenByQrScreenState.copy(
+            _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
                 untransformedUserName = userName,
                 untransformedAvatarDrawable = avatarGenerator.createAvatar(
                     address = userAddress,
-                    sizeInDp = AVATAR_SIZE_IN_DP
+                    sizeInDp = AVATAR_SIZE_IN_DP,
                 ),
                 untransformedUserAddress = userAddress,
-                assetAmountInputState = AssetAmountInputState(
+                assetAmountInputState = if (_requestTokenScreenState.value.assetAmountInputState == null) AssetAmountInputState(
                     token = assetInUse.token,
                     balance = getAssetBalanceText(
                         asset = assetInUse,
                         nf = numbersFormatter,
-                        precision = DEFAULT_TOKEN_PRINT_PRECISION
+                        precision = DEFAULT_TOKEN_PRINT_PRECISION,
                     ),
-                    amount = BigDecimal.ZERO,
-                    initialAmount = null,
+                    amount = null,
                     amountFiat = "",
-                    enabled = false,
-                )
+                    enabled = true,
+                ) else _requestTokenScreenState.value.assetAmountInputState!!.copy(
+                    token = assetInUse.token,
+                    balance = getAssetBalanceText(
+                        asset = assetInUse,
+                        nf = numbersFormatter,
+                        precision = DEFAULT_TOKEN_PRINT_PRECISION,
+                    ),
+                ),
             )
         }.catch {
             onError(it)
-            requestTokenByQrScreenState =
-                requestTokenByQrScreenState.copy(
+            _requestTokenScreenState.value =
+                _requestTokenScreenState.value.copy(
                     screenStatus = ScreenStatus.ERROR
                 )
         }.onEach {
-            requestTokenByQrScreenState =
-                requestTokenByQrScreenState.copy(
+            _requestTokenScreenState.value =
+                _requestTokenScreenState.value.copy(
                     screenStatus = ScreenStatus.READY_TO_RENDER,
                 )
         }.flowOn(coroutineManager.io)
@@ -225,6 +203,12 @@ class QRCodeFlowViewModel @AssistedInject constructor(
 
     override fun startScreen(): String = QRCodeFlowRoute.MainScreen.route
 
+    override fun onToolbarSearch(value: String) {
+        _selectTokenScreenState.value = _selectTokenScreenState.value.copy(
+            filter = value,
+        )
+    }
+
     override fun onCurrentDestinationChanged(curDest: String) {
         _toolbarState.value?.let { state ->
             _toolbarState.value = state.copy(
@@ -236,6 +220,8 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                         QRCodeFlowRoute.ConfirmRequestByQRCode.route -> R.string.receive_tokens
                         else -> ""
                     },
+                    searchEnabled = curDest == QRCodeFlowRoute.SelectToken.route,
+                    searchValue = if (curDest == QRCodeFlowRoute.SelectToken.route) _selectTokenScreenState.value.filter else "",
                 )
             )
         }
@@ -246,16 +232,14 @@ class QRCodeFlowViewModel @AssistedInject constructor(
         loadRequestByQrScreenDataFlowJob.cancel()
     }
 
-    /* Receive Token Screen Begin */
-
     fun onUserAddressClickInReceiveScreen() {
-        receiveTokenScreenState.untransformedUserAddress?.let {
+        _receiveTokenByQrScreenState.value.untransformedUserAddress?.let {
             clipboardManager.addToClipboard(it)
         }
     }
 
     fun onShareQrCodeInReceiveScreen() =
-        with(receiveTokenScreenState) {
+        with(_receiveTokenByQrScreenState.value) {
             if (untransformedQrBitmap == null || untransformedUserAddress == null)
                 return@with
 
@@ -296,52 +280,35 @@ class QRCodeFlowViewModel @AssistedInject constructor(
         loadReceiveByQrCodeScreenData()
     }
 
-    /* Receive Token Screen End */
-
-    /* Request Token Screen Begin */
-
     fun onRequestAmountChange(amount: BigDecimal) {
-        requestTokenByQrScreenState = requestTokenByQrScreenState.copy(
-            assetAmountInputState = requestTokenByQrScreenState.assetAmountInputState?.copy(
+        _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
+            assetAmountInputState = _requestTokenScreenState.value.assetAmountInputState?.copy(
                 amount = amount,
-                amountFiat = requestTokenByQrScreenState.assetAmountInputState?.token?.printFiat(
+                amountFiat = _requestTokenScreenState.value.assetAmountInputState?.token?.printFiat(
                     amount,
                     numbersFormatter
                 ).orEmpty()
             )
         )
-        requestAmountCacheFlow.tryEmit(amount)
-    }
-
-    fun onFocusChange(boolean: Boolean) {
-        // Do nothing
     }
 
     fun onLoadRequestScreenDataClick() {
         requestByQrScreenReloadMutableSharedFlow.tryEmit(Unit)
     }
 
-    /* Request Token Screen End */
-
-    /* Select Token Screen Begin */
-
     fun onSelectToken(tokenId: String) {
         currentTokenId = tokenId
         requestByQrScreenReloadMutableSharedFlow.tryEmit(Unit)
     }
 
-    /* Select Token Screen End */
-
-    /* Request Token Confirm Screen Begin */
-
     fun onUserAddressClickInRequestConfirmScreen() {
-        requestTokenByQrScreenState.untransformedUserAddress?.let {
+        _requestTokenScreenState.value.untransformedUserAddress?.let {
             clipboardManager.addToClipboard(it)
         }
     }
 
     fun onShareQrCodeInRequestConfirmScreen() =
-        with(requestTokenConfirmScreenState) {
+        with(_requestTokenConfirmScreenState.value) {
             if (untransformedQrBitmap == null ||
                 untransformedUserAddress == null ||
                 assetAmountInputState?.token == null
@@ -364,8 +331,6 @@ class QRCodeFlowViewModel @AssistedInject constructor(
     fun onLoadRequestConfirmScreenDataAgainClick() {
         loadRequestConfirmScreenData()
     }
-
-    /* Request Token Confirm Screen End */
 
     private fun generateMessageForUser(
         tokenSymbol: String,
@@ -391,7 +356,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                     userName = userName
                 )
 
-                receiveTokenScreenState = receiveTokenScreenState.copy(
+                _receiveTokenByQrScreenState.value = _receiveTokenByQrScreenState.value.copy(
                     screenStatus = ScreenStatus.READY_TO_RENDER,
                     untransformedUserName = userName,
                     untransformedAvatarDrawable = avatarGenerator.createAvatar(userAddress, AVATAR_SIZE_IN_DP),
@@ -400,7 +365,7 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                 )
             } catch (e: Exception) {
                 onError(e)
-                receiveTokenScreenState = receiveTokenScreenState.copy(
+                _receiveTokenByQrScreenState.value = _receiveTokenByQrScreenState.value.copy(
                     screenStatus = ScreenStatus.ERROR,
                 )
             }
@@ -412,8 +377,16 @@ class QRCodeFlowViewModel @AssistedInject constructor(
             try {
                 val userPublicKey = interactor.getPublicKeyHex(true)
 
+                _requestTokenScreenState.value.assetAmountInputState?.let { assetAmountInputState ->
+                    _requestTokenScreenState.value = _requestTokenScreenState.value.copy(
+                        assetAmountInputState = assetAmountInputState.copy(
+                            amount = assetAmountInputState.amount,
+                        )
+                    )
+                }
+
                 val untransformedQrBitmap =
-                    requestTokenByQrScreenState.run {
+                    _requestTokenScreenState.value.run {
                         if (untransformedUserName == null || untransformedUserAddress == null)
                             return@run null
 
@@ -424,34 +397,34 @@ class QRCodeFlowViewModel @AssistedInject constructor(
                                 userAddress = untransformedUserAddress,
                                 userPublicKey = userPublicKey,
                                 userName = untransformedUserName,
-                                tokenId = requestTokenByQrScreenState.assetAmountInputState
+                                tokenId = _requestTokenScreenState.value.assetAmountInputState
                                     ?.token?.id,
-                                amount = requestTokenByQrScreenState.assetAmountInputState
+                                amount = _requestTokenScreenState.value.assetAmountInputState
                                     ?.amount.toString()
                             )
                         )
                     }
 
-                requestTokenConfirmScreenState = requestTokenConfirmScreenState.copy(
+                _requestTokenConfirmScreenState.value = _requestTokenConfirmScreenState.value.copy(
                     screenStatus = ScreenStatus.READY_TO_RENDER,
                     untransformedQrBitmap = untransformedQrBitmap,
-                    untransformedUserName = requestTokenByQrScreenState
+                    untransformedUserName = _requestTokenScreenState.value
                         .untransformedUserName,
-                    untransformedAvatarDrawable = requestTokenByQrScreenState
+                    untransformedAvatarDrawable = _requestTokenScreenState.value
                         .untransformedAvatarDrawable,
-                    untransformedUserAddress = requestTokenByQrScreenState
+                    untransformedUserAddress = _requestTokenScreenState.value
                         .untransformedUserAddress,
-                    assetAmountInputState = requestTokenByQrScreenState
+                    assetAmountInputState = _requestTokenScreenState.value
                         .assetAmountInputState?.copy(
-                            initialAmount = requestTokenByQrScreenState
+                            amount = _requestTokenScreenState.value
                                 .assetAmountInputState?.amount,
                             enabled = false,
-                            readOnly = true
+                            readOnly = true,
                         )
                 )
             } catch (e: Exception) {
                 onError(e)
-                requestTokenConfirmScreenState = requestTokenConfirmScreenState.copy(
+                _requestTokenConfirmScreenState.value = _requestTokenConfirmScreenState.value.copy(
                     screenStatus = ScreenStatus.ERROR,
                 )
             }

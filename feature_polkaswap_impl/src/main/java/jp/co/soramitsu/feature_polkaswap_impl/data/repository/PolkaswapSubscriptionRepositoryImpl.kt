@@ -36,6 +36,7 @@ import androidx.room.withTransaction
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import jp.co.soramitsu.common.data.network.dto.SwapFeeDto
 import jp.co.soramitsu.common.domain.Market
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -65,6 +66,7 @@ import jp.co.soramitsu.shared_utils.wsrpc.executeAsync
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojoList
+import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.storage.GetStorageRequest
 import jp.co.soramitsu.sora.substrate.request.StateKeys
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
@@ -259,15 +261,22 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
         feeToken: Token,
         dexId: Int,
     ): SwapQuote? {
-        return wsConnection.getSwapFees(
-            tokenId1,
-            tokenId2,
-            mapBalance(amount, feeToken.precision),
-            swapVariant.backString,
-            marketMapper.mapMarketsToStrings(markets),
-            marketMapper.mapMarketsToFilter(markets),
-            dexId,
-        )?.let {
+        val response = socketService.executeAsync(
+            request = RuntimeRequest(
+                "liquidityProxy_quote",
+                listOf(
+                    dexId,
+                    tokenId1,
+                    tokenId2,
+                    mapBalance(amount, feeToken.precision).toString(),
+                    swapVariant.backString,
+                    marketMapper.mapMarketsToStrings(markets),
+                    marketMapper.mapMarketsToFilter(markets),
+                )
+            ),
+            mapper = pojo<SwapFeeDto>(),
+        ).result
+        return response?.let {
             SwapQuote(
                 mapBalance(it.amount, feeToken.precision),
                 mapBalance(it.fee, feeToken.precision),
@@ -314,6 +323,10 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 }
             }
         }
+        val minus = db.poolDao().getBasicPools().filter { db ->
+            list.find { it.tokenIdBase == db.tokenIdBase && it.tokenIdTarget == db.tokenIdTarget } == null
+        }
+        db.poolDao().deleteBasicPools(minus)
         db.poolDao().insertBasicPools(list)
     }
 

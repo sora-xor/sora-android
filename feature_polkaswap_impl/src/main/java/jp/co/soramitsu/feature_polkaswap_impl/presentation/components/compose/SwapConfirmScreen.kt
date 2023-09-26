@@ -257,7 +257,6 @@ private fun Preview() {
                 tokenFromState = previewAssetAmountInputState,
                 tokenToState = previewAssetAmountInputState,
                 slippage = 0.5,
-                selectSearchAssetState = null,
                 market = Market.SMART,
                 selectMarketState = null,
                 details = defaultSwapDetailsState(),

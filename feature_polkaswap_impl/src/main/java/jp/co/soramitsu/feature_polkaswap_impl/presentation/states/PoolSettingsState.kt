@@ -40,6 +40,7 @@ data class PoolSettingsState(
     val token1Icon: Uri,
     val token2Icon: Uri,
     val tokenName: String,
+    val tokenSymbol: String,
     val assetAmount: String,
     val favorite: Boolean,
     val fiat: Double,

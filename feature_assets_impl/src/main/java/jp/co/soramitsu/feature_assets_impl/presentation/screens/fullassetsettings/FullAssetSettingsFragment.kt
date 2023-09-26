@@ -43,13 +43,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -63,10 +64,6 @@ import jp.co.soramitsu.common.presentation.view.WrappedRecyclerView
 import jp.co.soramitsu.common.view.CustomItemTouchHelperCallback
 import jp.co.soramitsu.common_wallet.R as polkaswapR
 import jp.co.soramitsu.feature_assets_impl.presentation.components.classic.AssetsManagementAdapter
-import jp.co.soramitsu.ui_core.component.toolbar.BasicToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbar
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarState
-import jp.co.soramitsu.ui_core.component.toolbar.SoramitsuToolbarType
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -76,6 +73,9 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
 
     override val viewModel: FullAssetSettingsViewModel by viewModels()
     override fun backgroundColor(): Int = R.attr.baseBackgroundSecond
+
+    @Composable
+    override fun backgroundColorComposable() = MaterialTheme.customColors.bgSurface
 
     private val itemTouchHelperCallback = CustomItemTouchHelperCallback { from, to ->
         viewModel.assetPositionChanged(from, to)
@@ -95,25 +95,6 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
             ) {
-                SoramitsuToolbar(
-                    state = SoramitsuToolbarState(
-                        basic = BasicToolbarState(
-                            title = "",
-                            navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross_24,
-                            actionLabel = R.string.common_done,
-                        ),
-                        type = SoramitsuToolbarType.Small(),
-                    ),
-                    backgroundColor = MaterialTheme.customColors.bgSurface,
-                    elevation = 0.dp,
-                    onAction = viewModel::onCloseClick,
-                    onNavigate = viewModel::onCloseClick,
-                    searchInitial = "",
-                    onSearch = {
-                        viewModel.searchAssets(it)
-                        itemTouchHelperCallback.isDraggable = it.isBlank()
-                    },
-                )
                 Row(
                     modifier = Modifier
                         .padding(
@@ -134,7 +115,7 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                     )
                     Text(
                         modifier = Modifier,
-                        text = viewModel.fiatSum,
+                        text = viewModel.fiatSum.collectAsStateWithLifecycle().value,
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary,
                     )
@@ -170,6 +151,9 @@ class FullAssetSettingsFragment : SoraBaseFragment<FullAssetSettingsViewModel>()
                                 viewModel::onFavoriteClick,
                                 viewModel::onVisibilityClick,
                             )
+                            viewModel.dragList.observe {
+                                itemTouchHelperCallback.isDraggable = it
+                            }
                             viewModel.settingsState.observe {
                                 (view.list.adapter as AssetsManagementAdapter).submitList(
                                     buildList {

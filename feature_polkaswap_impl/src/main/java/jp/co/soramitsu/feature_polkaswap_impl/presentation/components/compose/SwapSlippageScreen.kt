@@ -32,16 +32,17 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -50,12 +51,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import java.math.BigDecimal
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 import jp.co.soramitsu.common.R
@@ -63,10 +67,8 @@ import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
-import jp.co.soramitsu.ui_core.component.input.InputText
-import jp.co.soramitsu.ui_core.component.input.InputTextState
-import jp.co.soramitsu.ui_core.component.input.number.CurrencyGroupingVisualTransformationSuffix
-import jp.co.soramitsu.ui_core.component.input.number.onDecimalChanged
+import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
+import jp.co.soramitsu.ui_core.component.input.number.CurrencyGroupingVisualTransformation
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -82,14 +84,46 @@ internal fun SwapSlippageScreen(
     value: Double,
     onDone: (Double) -> Unit,
 ) {
-    val curValue = remember { mutableStateOf(TextFieldValue(value.toString())) }
+    var currentValueLocalStorage by remember { mutableStateOf(value) }
     val desc = remember { mutableStateOf<String?>(null) }
+
     val frontrun = stringResource(id = R.string.polkaswap_slippage_frontrun)
     val fail = stringResource(id = R.string.polkaswap_slippage_mayfail)
-    val decimalFormatSymbols = remember { DecimalFormatSymbols(Locale.getDefault()) }
+
+    val focused = remember { mutableStateOf(false) }
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
     val visualTransformation =
-        remember { CurrencyGroupingVisualTransformationSuffix(decimalFormatSymbols, '%') }
-    var curDouble by remember { mutableStateOf(value) }
+        remember(Locale.getDefault()) {
+            CurrencyGroupingVisualTransformation(
+                decimalFormatSymbols = DecimalFormatSymbols(Locale.getDefault()),
+                suffix = "%"
+            )
+        }
+
+    val onValueChangeDecorator: (BigDecimal) -> Unit = remember {
+        { valueAsBigDecimal ->
+            val valueAsDouble = valueAsBigDecimal.toDouble()
+            when {
+                valueAsDouble < minFail -> {
+                    desc.value = fail
+                }
+                valueAsDouble > maxFrontrun -> {
+                    desc.value = frontrun
+                }
+                else -> {
+                    desc.value = null
+                }
+            }
+
+            // Store inputted value as Double in local storage
+            currentValueLocalStorage = valueAsDouble
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         ContentCard(
             modifier = Modifier
@@ -103,52 +137,52 @@ internal fun SwapSlippageScreen(
                     .fillMaxWidth()
                     .wrapContentHeight()
             ) {
-                InputText(
+                Column(
                     modifier = Modifier
-                        .background(
+                        .focusRequester(focusRequester)
+                        .onFocusChanged {
+                            focused.value = it.isFocused
+                        }.border(
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (focused.value) MaterialTheme.customColors.fgPrimary
+                                else MaterialTheme.customColors.fgOutline
+                            ),
+                            shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
+                        ).background(
                             color = MaterialTheme.customColors.bgSurface,
                             shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
-                        )
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                    maxLines = 1,
-                    visualTransformation = visualTransformation,
-                    singleLine = true,
-                    state = InputTextState(value = curValue.value, descriptionText = desc.value),
-                    onValueChange = {
-                        val result = onDecimalChanged(
-                            it.text,
-                            2,
-                            decimalFormatSymbols.decimalSeparator,
-                            decimalFormatSymbols.groupingSeparator,
-                            decimalFormatSymbols.minusSign,
-                        )
-                        if (result != null) {
-                            curValue.value = it.copy(text = result.first)
-                            curDouble = result.second.toDouble()
-                            when {
-                                curDouble < minFail -> {
-                                    desc.value = fail
-                                }
-                                curDouble > maxFrontrun -> {
-                                    desc.value = frontrun
-                                }
-                                else -> {
-                                    desc.value = null
-                                }
+                        ).clip(RoundedCornerShape(MaterialTheme.borderRadius.ml))
+                        .padding(vertical = Dimens.x1_2, horizontal = Dimens.x2)
+                        .defaultMinSize(minHeight = Dimens.InputHeight)
+                        .wrapContentHeight()
+                        .fillMaxWidth(),
+                ) {
+                    BasicNumberInput(
+                        modifier = Modifier,
+                        textStyle = MaterialTheme.customTypography.textM,
+                        initial = value.toBigDecimal(), // input value is used; no locally stored data!!!
+                        precision = 2,
+                        enabled = true,
+                        visualTransformation = visualTransformation,
+                        onValueChanged = onValueChangeDecorator,
+                        onKeyboardDone = remember {
+                            {
+                                // Get locally stored value and make coerceIn
+                                onDone(currentValueLocalStorage.coerceIn(min, max))
                             }
                         }
-                    },
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            onDone(curDouble.coerceIn(min, max))
-                        }
-                    ),
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Decimal
-                    ),
-                )
+                    )
+
+                    val currentDescriptionValue = desc.value
+
+                    if (currentDescriptionValue != null)
+                        Text(
+                            text = currentDescriptionValue,
+                            color = MaterialTheme.customColors.fgSecondary,
+                            style = MaterialTheme.customTypography.textXS
+                        )
+                }
                 Text(
                     modifier = Modifier
                         .padding(Dimens.x2)
@@ -165,7 +199,8 @@ internal fun SwapSlippageScreen(
                     order = Order.PRIMARY,
                     text = stringResource(id = R.string.common_done),
                     onClick = {
-                        onDone(curDouble.coerceIn(min, max))
+                        // Get locally stored value and make coerceIn
+                        onDone(currentValueLocalStorage.coerceIn(min, max))
                     },
                 )
             }

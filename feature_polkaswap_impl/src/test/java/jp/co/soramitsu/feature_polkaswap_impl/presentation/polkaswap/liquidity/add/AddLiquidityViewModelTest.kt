@@ -39,7 +39,6 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.common.domain.PoolDex
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -49,7 +48,6 @@ import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.common_wallet.domain.model.LiquidityData
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
-import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PoolsInteractor
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.liquidityadd.LiquidityAddViewModel
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
@@ -121,9 +119,6 @@ class AddLiquidityViewModelTest {
 
     private val mockedUri = Mockito.mock(Uri::class.java)
 
-    @Mock
-    private lateinit var mainRouter: MainRouter
-
     private lateinit var viewModel: LiquidityAddViewModel
 
     private fun setUpViewModel(
@@ -134,7 +129,6 @@ class AddLiquidityViewModelTest {
             assetsInteractor,
             assetsRouter,
             router,
-            mainRouter,
             walletInteractor,
             poolsInteractor,
             NumbersFormatter(),
@@ -180,20 +174,6 @@ class AddLiquidityViewModelTest {
                 any()
             )
         ).willReturn(LIQUIDITY_DETAILS)
-        given(poolsInteractor.getPoolDexList()).willReturn(
-            listOf(
-                PoolDex(
-                    0,
-                    TestTokens.xorToken.id,
-                    TestTokens.xorToken.symbol
-                ),
-                PoolDex(
-                    1,
-                    TestTokens.xstusdToken.id,
-                    TestTokens.xstusdToken.symbol,
-                )
-            )
-        )
         given(assetsInteractor.subscribeAssetsActiveOfCurAccount()).willReturn(
             flowOf(
                 listOf(
@@ -225,7 +205,7 @@ class AddLiquidityViewModelTest {
     fun `init viewModel EXPECT initial button state text`() = runTest {
         setUpViewModel(null)
         advanceUntilIdle()
-        assertEquals("Choose tokens", viewModel.addState.btnState.text)
+        assertEquals("Choose tokens", viewModel.addState.value.btnState.text)
     }
 
     @Test
@@ -236,21 +216,7 @@ class AddLiquidityViewModelTest {
             .willReturn(flowOf(true))
         setUpViewModel(TestTokens.valToken.id)
         advanceUntilIdle()
-        assertEquals("Enter amount", viewModel.addState.btnState.text)
-    }
-
-    @Test
-    fun `choose token clicked EXPECT navigate to asset list screen`() = runTest {
-        setUpViewModel(null)
-        advanceUntilIdle()
-        viewModel.onToken2Click()
-        advanceUntilIdle()
-        assertEquals(3, viewModel.addState.selectSearchAssetState?.fullList?.size)
-        viewModel.onToken1Change(TestTokens.xstusdToken.id)
-        advanceUntilIdle()
-        viewModel.onToken2Click()
-        advanceUntilIdle()
-        assertEquals(2, viewModel.addState.selectSearchAssetState?.fullList?.size)
+        assertEquals("Enter amount", viewModel.addState.value.btnState.text)
     }
 
     @Test
@@ -259,7 +225,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.slippageChanged(1.0)
         advanceUntilIdle()
-        assertEquals(1.0, viewModel.addState.slippage, 0.01)
+        assertEquals(1.0, viewModel.stateSlippage.value, 0.01)
     }
 
     @Test
@@ -268,7 +234,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onAmount1Change(BigDecimal("110.34"))
         advanceUntilIdle()
-        assertEquals(BigDecimal("110.34"), viewModel.addState.assetState1?.amount)
+        assertEquals(BigDecimal("110.34"), viewModel.addState.value.assetState1?.amount)
     }
 
     @Test
@@ -281,7 +247,7 @@ class AddLiquidityViewModelTest {
         advanceUntilIdle()
         viewModel.onAmount2Change(BigDecimal("110.34"))
         advanceUntilIdle()
-        assertEquals(BigDecimal("110.34"), viewModel.addState.assetState2?.amount)
+        assertEquals(BigDecimal("110.34"), viewModel.addState.value.assetState2?.amount)
     }
 
     @Test
@@ -307,7 +273,7 @@ class AddLiquidityViewModelTest {
         setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
-        assertEquals(VAL_ASSET.token, viewModel.addState.assetState2?.token)
+        assertEquals(VAL_ASSET.token, viewModel.addState.value.assetState2?.token)
     }
 
     @Test
@@ -315,7 +281,7 @@ class AddLiquidityViewModelTest {
         setUpViewModel(null)
         advanceUntilIdle()
 
-        assertEquals(XOR_ASSET.token, viewModel.addState.assetState1?.token)
+        assertEquals(XOR_ASSET.token, viewModel.addState.value.assetState1?.token)
     }
 
     @Test
@@ -331,7 +297,7 @@ class AddLiquidityViewModelTest {
         viewModel.optionSelected(50)
         advanceUntilIdle()
 
-        assertTrue(viewModel.addState.assetState1?.amount?.equalTo(BigDecimal(0.5)) == true)
+        assertTrue(viewModel.addState.value.assetState1?.amount?.equalTo(BigDecimal(0.5)) == true)
     }
 
     @Test
@@ -347,7 +313,7 @@ class AddLiquidityViewModelTest {
         viewModel.optionSelected(50)
         advanceUntilIdle()
 
-        assertTrue(viewModel.addState.assetState2?.amount?.equalTo(BigDecimal(0.5)) == true)
+        assertTrue(viewModel.addState.value.assetState2?.amount?.equalTo(BigDecimal(0.5)) == true)
     }
 
     @Test
@@ -370,7 +336,7 @@ class AddLiquidityViewModelTest {
         setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
-        val pair = viewModel.addState.pairNotExist
+        val pair = viewModel.addState.value.pairNotExist
         assertTrue(pair == true)
     }
 
@@ -383,7 +349,7 @@ class AddLiquidityViewModelTest {
         setUpViewModel(VAL_ASSET.token.id)
         advanceUntilIdle()
 
-        val pair = viewModel.addState.pairNotExist
+        val pair = viewModel.addState.value.pairNotExist
         assertTrue(pair == false)
     }
 
@@ -399,7 +365,7 @@ class AddLiquidityViewModelTest {
         viewModel.onAmount1Change(BigDecimal("110.34"))
         viewModel.onAmount2Change(BigDecimal("110.34"))
         advanceUntilIdle()
-        assertEquals("1", viewModel.addState.prices.pair1Value)
+        assertEquals("1", viewModel.addState.value.prices.pair1Value)
     }
 
     @Test

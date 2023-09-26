@@ -198,8 +198,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                             assetState1 = AssetAmountInputState(
                                 token = asset1.token,
                                 balance = getAssetBalanceText(asset1),
-                                amount = BigDecimal.ZERO,
-                                initialAmount = null,
+                                amount = null,
                                 amountFiat = "",
                                 enabled = true,
                             ),
@@ -210,8 +209,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                             assetState2 = AssetAmountInputState(
                                 token = asset2.token,
                                 balance = getAssetBalanceText(asset2),
-                                amount = BigDecimal.ZERO,
-                                initialAmount = null,
+                                amount = null,
                                 amountFiat = "",
                                 enabled = true,
                             ),
@@ -322,6 +320,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                             amount1,
                             it.user.basePooled,
                             it.user.targetPooled,
+                            removeState.assetState2?.token?.precision
                         )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
@@ -346,7 +345,8 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                             PolkaswapFormulas.calculateOneAmountFromAnother(
                                 amount2,
                                 it.user.targetPooled,
-                                it.user.basePooled
+                                it.user.basePooled,
+                                removeState.assetState1?.token?.precision
                             )
                         percent = PolkaswapFormulas.calculateShareOfPoolFromAmount(
                             amount1,
@@ -428,10 +428,10 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     fun onSlippageClick() {
         removeState = removeState.copy(
             assetState1 = removeState.assetState1?.copy(
-                initialAmount = removeState.assetState1?.amount?.nullZero(),
+                amount = removeState.assetState1?.amount?.nullZero(),
             ),
             assetState2 = removeState.assetState2?.copy(
-                initialAmount = removeState.assetState2?.amount?.nullZero(),
+                amount = removeState.assetState2?.amount?.nullZero(),
             ),
         )
     }
@@ -445,11 +445,11 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     fun onAmount1Change(value: BigDecimal) {
         removeState = removeState.copy(
             assetState1 = removeState.assetState1?.copy(
-                amount = value,
                 amountFiat = removeState.assetState1?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                amount = value
             )
         )
         amount1Flow.value = value
@@ -458,11 +458,11 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
     fun onAmount2Change(value: BigDecimal) {
         removeState = removeState.copy(
             assetState2 = removeState.assetState2?.copy(
-                amount = value,
                 amountFiat = removeState.assetState2?.token?.printFiat(
                     value,
                     numbersFormatter
-                ).orEmpty()
+                ).orEmpty(),
+                amount = value
             )
         )
         amount2Flow.value = value
@@ -493,12 +493,12 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                     poolDataUsable?.let { poolData ->
                         val firstAmountMin =
                             PolkaswapFormulas.calculateMinAmount(
-                                fromToken.amount,
+                                fromToken.amount.orZero(),
                                 removeState.slippage
                             )
                         val secondAmountMin =
                             PolkaswapFormulas.calculateMinAmount(
-                                toToken.amount,
+                                toToken.amount.orZero(),
                                 removeState.slippage
                             )
                         val desired =
@@ -623,11 +623,10 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         shareOfPool = newPoolShare,
                     )
                 )
-                if (amount1.compareTo(removeState.assetState1?.amount) != 0) {
+                if (amount1.compareTo(removeState.assetState1?.amount.orZero()) != 0) {
                     removeState = removeState.copy(
                         assetState1 = removeState.assetState1?.copy(
                             amount = amount1,
-                            initialAmount = amount1,
                             amountFiat = removeState.assetState1?.token?.printFiat(
                                 amount1,
                                 numbersFormatter
@@ -635,11 +634,10 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
                         )
                     )
                 }
-                if (amount2.compareTo(removeState.assetState2?.amount) != 0) {
+                if (amount2.compareTo(removeState.assetState2?.amount.orZero()) != 0) {
                     removeState = removeState.copy(
                         assetState2 = removeState.assetState2?.copy(
                             amount = amount2,
-                            initialAmount = amount2,
                             amountFiat = removeState.assetState2?.token?.printFiat(
                                 amount2,
                                 numbersFormatter
@@ -691,7 +689,7 @@ class LiquidityRemoveViewModel @AssistedInject constructor(
 
             val result = assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = networkFee.orZero(),
-                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) -assetState1.amount else null,
+                xorChange = if (assetState1.token.id == SubstrateOptionsProvider.feeAssetId) -assetState1.amount.orZero() else null,
             )
 
             removeState = removeState.copy(

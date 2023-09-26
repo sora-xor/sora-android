@@ -66,7 +66,6 @@
   <string name="common_activity">活動</string>
   <string name="common_and">和</string>
   <string name="common_app_version">應用版本</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">阿拉伯</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">返回</string>
@@ -278,8 +277,6 @@
   <string name="invoice_scan_error_user_not_found">從二維碼中找不到用戶</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">流動資產</string>
-  <string name="liquidity_pair_creation_description">您添加的代幣比例將決定該池的價格。一旦您對價格感到滿意，請點擊供應進行審查。</string>
-  <string name="liquidity_pair_creation_title">您是第一個流動性提供者</string>
   <string name="logout_dialog_body">此操作將導致從該設備刪除帳戶。在繼續操作之前，請確保已備份密碼短語。</string>
   <string name="logout_remove_nodes_body">\n \n您的所有自定義節點也將被刪除</string>
   <string name="mnemonic_confirmation_select_word_2">from the list you have written down</string>
@@ -340,8 +337,6 @@
   <string name="polkaswap_insufficient_liqudity">流動性不足</string>
   <string name="polkaswap_liquidity_fee">LP費用</string>
   <string name="polkaswap_liquidity_fee_info">每筆交易的一部分 作為協議激勵流向流動性提供者。</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
   <string name="polkaswap_liquidity_total_fee">Swap fee</string>
   <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">市場</string>
@@ -364,9 +359,6 @@
   <string name="polkaswap_smart">智能</string>
   <string name="polkaswap_swap_title">兌換</string>
   <string name="polkaswap_swapped">已兌換</string>
-  <string name="polkaswap_tbc">待定</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">戰略紅利</string>
   <string name="pool_button_remove">消除</string>
   <string name="pool_details">Pool details</string>
   <string name="pool_liquidity_placeholder">您還沒有任何活動池。\n增加流動性以賺取獎勵</string>
@@ -439,6 +431,7 @@
   <string name="route">Route</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">搜索資產</string>
+  <string name="search_empty_state">無搜尋結果</string>
   <string name="select_account_address">搜索賬戶地址</string>
   <string name="select_account_address_1">搜索或添加新地址</string>
   <string name="select_account_import">Select account to import</string>

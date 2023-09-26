@@ -30,42 +30,66 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common_wallet.presentation.compose.components
+package jp.co.soramitsu.common.presentation.compose.components
 
-import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import jp.co.soramitsu.ui_core.component.card.ContentCard
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @Composable
-fun SelectSearchTokenScreen(
-    state: SelectSearchAssetState,
-    scrollState: ScrollState,
-    onAssetSelect: (String) -> Unit,
+fun SoraCardImage(
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = Dimens.x2)
+    Box(
+        modifier = modifier,
     ) {
-        ContentCard(
+        Image(
+            modifier = Modifier.fillMaxWidth(),
+            painter = painterResource(id = R.drawable.sora_card),
+            contentDescription = "",
+            contentScale = ContentScale.FillWidth,
+        )
+        Image(
             modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            innerPadding = PaddingValues(Dimens.x3)
-        ) {
-            SelectSearchAssetView(
-                state = state,
-                scrollState = scrollState,
-                onSelect = onAssetSelect,
-            )
-        }
+                .padding(start = Dimens.x2, top = Dimens.x2)
+                .wrapContentSize(),
+            painter = painterResource(id = R.drawable.ic_sora_on_card),
+            contentDescription = "",
+            contentScale = ContentScale.Fit,
+        )
     }
+}
+
+@Composable
+@Preview(locale = "en")
+private fun PreviewSoraCardImage1() {
+    SoraCardImage(
+        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+    )
+}
+
+@Composable
+@Preview(locale = "ar")
+private fun PreviewSoraCardImage2() {
+    SoraCardImage(
+        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+    )
+}
+
+@Composable
+@Preview(locale = "he")
+private fun PreviewSoraCardImage3() {
+    SoraCardImage(
+        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+    )
 }

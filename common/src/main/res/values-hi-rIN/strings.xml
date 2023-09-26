@@ -66,7 +66,6 @@
   <string name="common_activity">गतिविधि</string>
   <string name="common_and">और</string>
   <string name="common_app_version">ऐप संस्करण</string>
-  <string name="common_apy">APY</string>
   <string name="common_arab">अरब</string>
   <string name="common_azerbaijani">Azerbaijani</string>
   <string name="common_back">पीछे</string>
@@ -279,8 +278,6 @@
   <string name="invoice_scan_error_user_not_found">क्यूआर से उपयोगकर्ता नहीं मिल रहा है</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">चल परिसंपत्ति</string>
-  <string name="liquidity_pair_creation_description">आपके द्वारा जोड़े गए टोकन का अनुपात इस पूल का मूल्य निर्धारित करेगा। एक बार जब आप दर से खुश हो जाते हैं तो समीक्षा के लिए आपूर्ति पर क्लिक करें।</string>
-  <string name="liquidity_pair_creation_title">आप पहले Liquidity  प्रदाता हैं</string>
   <string name="logout_dialog_body">इस कार्रवाई के परिणामस्वरूप इस डिवाइस से खाता हटा दिया जाएगा। सुनिश्चित करें कि आपने आगे बढ़ने से पहले अपने पदबंध का बैकअप किया है।</string>
   <string name="logout_remove_nodes_body">\n \n आपके सभी कस्टम नोड भी हटा दिए जाएँगे</string>
   <string name="mnemonic_confirmation_select_word_2">आपके द्वारा लिखी गई सूची में से</string>
@@ -341,8 +338,6 @@
   <string name="polkaswap_insufficient_liqudity">अपर्याप्त Liquidity</string>
   <string name="polkaswap_liquidity_fee">LP शुल्क</string>
   <string name="polkaswap_liquidity_fee_info">प्रत्येक व्यापार का एक हिस्सा एक प्रोटोकॉल प्रोत्साहन के रूप में Liquidity  प्रदाताओं को जाता है।</string>
-  <string name="polkaswap_liquidity_synthetic_fee">Synthetic fee</string>
-  <string name="polkaswap_liquidity_synthetic_fee_desc">The synthetic fee is composed of a synthetic asset fee and a dynamic fee to prevent front-running. The synthetic asset fee is determined upon the asset registration and can be changed at any time through governance. The dynamic fee is based on the percentage change in the oracle price.</string>
   <string name="polkaswap_liquidity_total_fee">Swap fee</string>
   <string name="polkaswap_liquidity_total_fee_desc">Your swap involves both a Synthetic fee and an LP fee.\nThe Synthetic fee is accounted when the swap goes through the XST liquidity source for synthetic assets, and the LP fee when the swap goes through liquidity pools.</string>
   <string name="polkaswap_market">बाज़ार</string>
@@ -365,9 +360,6 @@
   <string name="polkaswap_smart">बुद्धिमान</string>
   <string name="polkaswap_swap_title">स्वैप</string>
   <string name="polkaswap_swapped">बदला गया</string>
-  <string name="polkaswap_tbc">टीबीसी</string>
-  <string name="polkaswap_xyk">XYK</string>
-  <string name="pool_apy_title">रणनीतिक बोनस apy</string>
   <string name="pool_button_remove">हटाये</string>
   <string name="pool_details">पूल विवरण</string>
   <string name="pool_liquidity_placeholder">आपके पास अभी तक कोई सक्रिय पूल नहीं है।\n पुरस्कार अर्जित करने के लिए तरलता जोड़ें</string>
@@ -444,6 +436,7 @@
   <string name="route">मार्ग</string>
   <string name="scan_qr_show_my_qr">Show my QR code</string>
   <string name="search_assets">संपत्ति खोजें</string>
+  <string name="search_empty_state">खोजने पर कोई परिणाम नहीं मिला</string>
   <string name="select_account_address">खाता पता खोजें\n</string>
   <string name="select_account_address_1">नया पता खोजें या जोड़ें</string>
   <string name="select_account_import">Select account to import</string>

@@ -68,9 +68,11 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
+import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -157,7 +159,8 @@ fun AssetAmountInput(
                     textStyle = MaterialTheme.customTypography.displayS.copy(textAlign = TextAlign.End),
                     enabled = state?.let { it.enabled && !it.readOnly } ?: false,
                     precision = state?.token?.precision ?: OptionsProvider.defaultScale,
-                    initial = state?.initialAmount,
+                    defaultCursorPosition = DefaultCursorPosition.START,
+                    initial = state?.amount,
                     onValueChanged = onAmountChange,
                     focusRequester = focusRequester,
                     textFieldColors = TextFieldDefaults.textFieldColors(
@@ -215,8 +218,7 @@ val previewAssetAmountInputState = AssetAmountInputState(
     token = previewToken,
     balance = "10.234 ($2.234.23)",
     amountFiat = "$2.342.12",
-    amount = BigDecimal.ZERO,
-    initialAmount = null,
+    amount = null,
     enabled = true,
     error = false,
     errorHint = "",
@@ -237,7 +239,6 @@ private fun PreviewAssetAmountInput() {
         Button(onClick = {
             state.value = state.value.copy(
                 amount = bb.value,
-                initialAmount = bb.value,
             )
             bb.value = bb.value.plus(BigDecimal.ONE)
         }) {
@@ -255,7 +256,7 @@ private fun PreviewAssetAmountInput() {
             onFocusChange = {},
         )
         Spacer(modifier = Modifier.size(10.dp))
-        Text(text = state.value.amount.toPlainString())
+        Text(text = state.value.amount.orZero().toPlainString())
         AssetAmountInput(
             modifier = Modifier,
             state = previewAssetAmountInputState,
