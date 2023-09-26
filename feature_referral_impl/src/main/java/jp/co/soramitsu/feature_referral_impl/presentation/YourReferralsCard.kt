@@ -110,6 +110,7 @@ private fun ReferralsCardHeader(
         Text(
             text = stringResource(id = R.string.referral_your_referrals),
             textAlign = TextAlign.Start,
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.headline2
         )
         Image(
@@ -124,6 +125,7 @@ private fun ReferralsCardHeader(
             text = size,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.headline2
         )
     }
@@ -141,6 +143,7 @@ private fun ReferralsCardHeader(
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textM,
 
         )
@@ -149,6 +152,7 @@ private fun ReferralsCardHeader(
             textAlign = TextAlign.End,
             maxLines = 1,
             modifier = Modifier.wrapContentSize(),
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textM
         )
     }
@@ -164,12 +168,14 @@ private fun ReferralsCardItem(referral: ReferralModel) {
         Text(
             text = referral.address,
             textAlign = TextAlign.Start,
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textM
         )
         Text(
             text = referral.amountFormatted,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f),
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textM
         )
     }

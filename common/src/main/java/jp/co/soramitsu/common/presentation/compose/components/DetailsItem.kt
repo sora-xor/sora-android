@@ -96,12 +96,14 @@ fun DetailsItem(
                 title = {
                     Text(
                         text = text,
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.textSBold
                     )
                 },
                 text = {
                     Text(
                         text = hint,
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.paragraphSBold
                     )
                 },

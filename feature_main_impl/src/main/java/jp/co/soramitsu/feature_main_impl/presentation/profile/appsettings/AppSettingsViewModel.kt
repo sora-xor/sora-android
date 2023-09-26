@@ -35,16 +35,22 @@ package jp.co.soramitsu.feature_main_impl.presentation.profile.appsettings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AppSettingsViewModel @Inject constructor(
     private val mainRouter: MainRouter,
+    private val darkThemeManager: DarkThemeManager
 ) : BaseViewModel() {
 
     internal var state by mutableStateOf(
@@ -59,6 +65,10 @@ class AppSettingsViewModel @Inject constructor(
         _toolbarState.value = initSmallTitle2(
             title = R.string.settings_header_app,
         )
+
+        darkThemeManager.darkModeStatusFlow.onEach { isSwitchEnabled ->
+            state = state.copy(darkModeChecked = isSwitchEnabled)
+        }.launchIn(viewModelScope)
     }
 
     fun onLanguageClick() {
@@ -66,10 +76,24 @@ class AppSettingsViewModel @Inject constructor(
     }
 
     fun toggleSystemAppearance(checked: Boolean) {
-        state = state.copy(systemAppearanceChecked = checked)
+        viewModelScope.launch {
+            tryCatch { darkThemeManager.setSystemDrivenUiEnabled(checked) }
+        }.invokeOnCompletion {
+            state = state.copy(
+                systemAppearanceChecked = checked,
+                darkModeChecked = false // check DarkThemeManager.setDarkThemeEnabled
+            )
+        }
     }
 
     fun toggleDarkMode(checked: Boolean) {
-        state = state.copy(darkModeChecked = checked)
+        viewModelScope.launch {
+            tryCatch { darkThemeManager.setDarkThemeEnabled(checked) }
+        }.invokeOnCompletion {
+            state = state.copy(
+                systemAppearanceChecked = false, // check DarkThemeManager.setDarkThemeEnabled
+                darkModeChecked = checked
+            )
+        }
     }
 }

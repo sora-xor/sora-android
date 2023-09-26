@@ -106,6 +106,7 @@ private fun AccountWithIcon(
                 text = accountName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textM,
             )
 

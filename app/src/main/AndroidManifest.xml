@@ -25,7 +25,6 @@
         <activity
             android:name=".splash.presentation.SplashActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/SplashTheme"
             android:exported="true">
 
             <intent-filter>
@@ -54,7 +53,6 @@
 
         <activity
             android:name="jp.co.soramitsu.feature_assets_impl.presentation.screens.scan.QRCodeScannerActivity"
-            android:theme="@style/SplashTheme"
             android:exported="false"/>
 
         <meta-data

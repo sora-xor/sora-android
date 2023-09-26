@@ -84,6 +84,7 @@ internal fun BackupJsonScreen(
         ) {
             Text(
                 text = stringResource(R.string.export_json_description),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
             Spacer(modifier = Modifier.size(Dimens.x3))

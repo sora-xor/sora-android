@@ -115,12 +115,14 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
                         title = {
                             Text(
                                 text = stringResource(id = R.string.delete_backup_alert_title),
+                                color = MaterialTheme.customColors.fgPrimary,
                                 style = MaterialTheme.customTypography.textSBold
                             )
                         },
                         text = {
                             Text(
                                 text = stringResource(id = R.string.delete_backup_alert_description),
+                                color = MaterialTheme.customColors.fgPrimary,
                                 style = MaterialTheme.customTypography.paragraphSBold
                             )
                         },

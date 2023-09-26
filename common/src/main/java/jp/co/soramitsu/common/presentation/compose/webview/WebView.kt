@@ -34,13 +34,16 @@ package jp.co.soramitsu.common.presentation.compose.webview
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import jp.co.soramitsu.common.base.ProgressDialog
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 fun WebView(
@@ -48,11 +51,15 @@ fun WebView(
     onPageFinished: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .background(color = MaterialTheme.customColors.bgPage)
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(color = MaterialTheme.customColors.bgSurface)
+                .fillMaxSize(),
             factory = { context ->
                 WebView(context).apply {
                     webViewClient = object : WebViewClient() {

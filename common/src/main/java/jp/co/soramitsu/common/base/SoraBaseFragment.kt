@@ -51,6 +51,8 @@ import androidx.compose.material.SnackbarResult
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,6 +70,7 @@ import androidx.navigation.findNavController
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.BarsColorhandler
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
@@ -87,6 +90,9 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
 
     override fun onResume() {
         super.onResume()
@@ -110,7 +116,12 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                SoraAppTheme {
+                val isDarkModeOn: State<Boolean> =
+                    darkThemeManager.darkModeStatusFlow.collectAsState()
+
+                SoraAppTheme(
+                    darkTheme = isDarkModeOn.value
+                ) {
                     val scaffoldState = rememberScaffoldState()
                     val scrollState = rememberScrollState()
                     val coroutineScope = rememberCoroutineScope()

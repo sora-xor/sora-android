@@ -144,6 +144,7 @@ internal fun SwapConfirmScreen(
                         .wrapContentHeight(),
                     textAlign = TextAlign.Center,
                     text = state.confirmText,
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphS,
                 )
                 Divider(color = Color.Transparent, modifier = Modifier.height(Dimens.x2))
@@ -233,6 +234,7 @@ internal fun SwapConfirmScreen(
                             modifier = Modifier.wrapContentSize(),
                             textAlign = TextAlign.Center,
                             text = stringResource(id = if (state.confirmResult == true) R.string.wallet_transaction_submitted_1 else R.string.wallet_transaction_rejected),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.paragraphSBold,
                         )
                     }
