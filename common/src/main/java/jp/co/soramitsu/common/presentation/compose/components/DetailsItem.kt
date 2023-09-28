@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.components
 
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -79,7 +78,7 @@ fun DetailsItem(
     value1: String,
     value2: String? = null,
     value1Bold: Boolean = false,
-    value1Uri: Uri? = null,
+    value1Uri: String? = null,
     value1Percent: Float? = null,
     hint: String? = null,
     valueColor: Color = MaterialTheme.customColors.fgPrimary,
@@ -93,6 +92,7 @@ fun DetailsItem(
     ) {
         if (hintVisible && hint != null) {
             AlertDialog(
+                backgroundColor = MaterialTheme.customColors.bgPage,
                 title = {
                     Text(
                         text = text,

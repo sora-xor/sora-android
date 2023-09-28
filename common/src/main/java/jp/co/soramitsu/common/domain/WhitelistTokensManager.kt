@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
-import android.net.Uri
 import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.io.FileManager
@@ -78,13 +77,14 @@ class WhitelistTokensManager @Inject constructor(
         }
     }
 
-    fun getTokenIconUri(tokenId: String): Uri {
+    fun getTokenIconUri(tokenId: String): String {
         val type = curWhitelist.find { it.id == tokenId }?.type
-        return if (type == null) {
+        val u = if (type == null) {
             DEFAULT_ICON_URI
         } else {
             fileManager.readInternalCacheFileAsUri("$tokenId.$type") ?: DEFAULT_ICON_URI
         }
+        return u.toString()
     }
 
     suspend fun updateWhitelistStorage() {

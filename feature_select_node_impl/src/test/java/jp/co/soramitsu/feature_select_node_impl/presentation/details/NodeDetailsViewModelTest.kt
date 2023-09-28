@@ -43,7 +43,6 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
 import jp.co.soramitsu.feature_select_node_impl.TestData.CUSTOM_NODES
-import jp.co.soramitsu.feature_select_node_impl.TestData.FOCUS_STATE
 import jp.co.soramitsu.feature_select_node_impl.TestData.NODE_DETAILS_ADDRESS
 import jp.co.soramitsu.feature_select_node_impl.TestData.NODE_DETAILS_NAME
 import jp.co.soramitsu.feature_select_node_impl.TestData.NODE_DETAIL_NODE
@@ -243,24 +242,6 @@ class NodeDetailsViewModelTest {
         viewModel.onNameChanged(TextFieldValue())
 
         assertFalse(viewModel.state.submitButtonEnabled)
-    }
-
-    @Test
-    fun `name input focused EXPECT update state`() {
-        addNodeViewModel()
-
-        viewModel.onNameFocusChanged(FOCUS_STATE)
-
-        assertEquals(FOCUS_STATE.isFocused, viewModel.state.nameState.focused)
-    }
-
-    @Test
-    fun `address input focused EXPECT update state`() {
-        addNodeViewModel()
-
-        viewModel.onAddressFocusChanged(FOCUS_STATE)
-
-        assertEquals(FOCUS_STATE.isFocused, viewModel.state.addressState.focused)
     }
 
     @Test

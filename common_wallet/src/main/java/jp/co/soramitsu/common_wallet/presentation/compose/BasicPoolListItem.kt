@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common_wallet.presentation.compose
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -68,8 +67,8 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 data class BasicPoolListItemState(
     val ids: StringPair,
     val number: String,
-    val token1Icon: Uri,
-    val token2Icon: Uri,
+    val token1Icon: String,
+    val token2Icon: String,
     val text1: String,
     val text2: String,
     val text3: String,

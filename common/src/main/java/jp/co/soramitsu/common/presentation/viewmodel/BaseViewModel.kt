@@ -63,6 +63,9 @@ open class BaseViewModel : ViewModel() {
     protected val _navEvent = SingleLiveEvent<Pair<String, NavOptionsBuilder.() -> Unit>>()
     val navEvent: LiveData<Pair<String, NavOptionsBuilder.() -> Unit>> = _navEvent
 
+    protected val _navToStart = SingleLiveEvent<String>()
+    val navToStart: LiveData<String> = _navToStart
+
     protected var currentDestination: String = ""
         get() = field.ifEmpty { startScreen() }
 

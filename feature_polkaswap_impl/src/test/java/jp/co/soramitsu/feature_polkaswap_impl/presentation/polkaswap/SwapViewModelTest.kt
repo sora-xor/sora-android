@@ -32,10 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.polkaswap
 
-import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.every
-import io.mockk.mockkStatic
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Market
@@ -66,7 +63,6 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
@@ -74,7 +70,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyDouble
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
@@ -105,8 +100,6 @@ class SwapViewModelTest {
     @Mock
     private lateinit var swapInteractor: SwapInteractor
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
-
     private val numbersFormatter: NumbersFormatter = NumbersFormatter()
 
     @Mock
@@ -126,12 +119,6 @@ class SwapViewModelTest {
 
     private val assetsListItems: List<AssetItemCardState> by lazy {
         mapAssetsToCardState(assets, numbersFormatter)
-    }
-
-    @Before
-    fun setUp() = runTest {
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
     }
 
     private suspend fun initViewModel(

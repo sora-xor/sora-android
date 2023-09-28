@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory
 
-import android.net.Uri
 import androidx.annotation.StringRes
 
 sealed class EventUiModel {
@@ -49,7 +48,7 @@ sealed class EventUiModel {
             hash: String,
             timestamp: Long,
             status: TransactionStatus,
-            val tokenIcon: Uri,
+            val tokenIcon: String,
             @StringRes val title: Int,
             val description: String,
             val plusAmount: Boolean,
@@ -61,8 +60,8 @@ sealed class EventUiModel {
             hash: String,
             timestamp: Long,
             status: TransactionStatus,
-            val tokenUri: Uri,
-            val ethTokenUri: Uri,
+            val tokenUri: String,
+            val ethTokenUri: String,
             val dateTime: String,
             val amountFormatted: String,
             val fiatFormatted: String,
@@ -72,7 +71,7 @@ sealed class EventUiModel {
 
         class EventTransferInUiModel(
             hash: String,
-            val tokenIcon: Uri,
+            val tokenIcon: String,
             val peerAddress: String,
             val dateTime: String,
             timestamp: Long,
@@ -83,7 +82,7 @@ sealed class EventUiModel {
 
         class EventTransferOutUiModel(
             hash: String,
-            val tokenIcon: Uri,
+            val tokenIcon: String,
             val peerAddress: String,
             val dateTime: String,
             timestamp: Long,
@@ -94,8 +93,8 @@ sealed class EventUiModel {
 
         class EventLiquiditySwapUiModel(
             hash: String,
-            val iconFrom: Uri,
-            val iconTo: Uri,
+            val iconFrom: String,
+            val iconTo: String,
             val amountFrom: String,
             val amountTo: String,
             val tickers: String,
@@ -110,8 +109,8 @@ sealed class EventUiModel {
             timestamp: Long,
             status: TransactionStatus,
             val dateTime: String,
-            val icon1: Uri,
-            val icon2: Uri,
+            val icon1: String,
+            val icon2: String,
             val amounts: String,
             val type: String,
             val tickers: String,

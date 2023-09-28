@@ -81,7 +81,7 @@ dependencies {
 
     implementation roomDep
     implementation roomKtxDep
-    kapt roomKaptDep
+    //kapt roomKaptDep
 
     implementation sharedUtilsDep
     implementation xNetworkingDep

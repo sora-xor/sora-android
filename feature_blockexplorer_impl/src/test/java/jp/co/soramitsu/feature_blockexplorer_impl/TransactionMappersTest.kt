@@ -37,6 +37,7 @@ import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -75,7 +76,7 @@ class TransactionMappersTest {
         "token symbol",
         18,
         true,
-        mockedUri,
+        DEFAULT_ICON_URI,
         null,
         null,
         null
@@ -100,7 +101,7 @@ class TransactionMappersTest {
     private val transactionsWithHeaders = listOf(
         EventUiModel.EventTxUiModel.EventTransferInUiModel(
             "",
-            mockedUri,
+            DEFAULT_ICON_URI,
             "peerId",
             "01 Jan 1970 00:00",
             1000000,

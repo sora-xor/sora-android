@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_select_node_impl.presentation.details
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -210,22 +209,6 @@ internal class NodeDetailsViewModel @AssistedInject constructor(
                 error = false
             ),
             submitButtonEnabled = submitButtonEnabled()
-        )
-    }
-
-    fun onNameFocusChanged(focusState: FocusState) {
-        state = state.copy(
-            nameState = state.nameState.copy(
-                focused = focusState.isFocused
-            )
-        )
-    }
-
-    fun onAddressFocusChanged(focusState: FocusState) {
-        state = state.copy(
-            addressState = state.addressState.copy(
-                focused = focusState.isFocused
-            )
         )
     }
 

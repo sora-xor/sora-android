@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_referral_impl.presentation
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -62,6 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
@@ -297,6 +299,7 @@ fun InvitationsEnterField(
                 maxLines = 1,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 colors = TextFieldDefaults.textFieldColors(
+                    textColor = MaterialTheme.customColors.fgPrimary,
                     cursorColor = MaterialTheme.customColors.fgPrimary,
                     backgroundColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
@@ -343,25 +346,53 @@ fun InvitationsEnterField(
 }
 
 @Composable
-@Preview
-fun PreviewReferralBondXor() {
-    ReferralBondXor(
-        common = ReferralCommonState(
-            activate = true,
-            progress = false,
-            referrer = "address",
-            referrerFee = "0.005 XOR",
-            extrinsicFee = "0.002 XOR",
-            extrinsicFeeFiat = "$12"
-        ),
-        state = ReferralBondState(
-            invitationsCount = 2,
-            invitationsAmount = "0.098 XOR",
-            balance = "123.56743 XOR"
-        ),
-        onBondInvitationsCountChange = {},
-        onBondMinus = {},
-        onBondPlus = {},
-        onBondClick = {}
-    )
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
+fun PreviewReferralBondXor01() {
+    SoraAppTheme {
+        ReferralBondXor(
+            common = ReferralCommonState(
+                activate = true,
+                progress = false,
+                referrer = "address",
+                referrerFee = "0.005 XOR",
+                extrinsicFee = "0.002 XOR",
+                extrinsicFeeFiat = "$12"
+            ),
+            state = ReferralBondState(
+                invitationsCount = 2,
+                invitationsAmount = "0.098 XOR",
+                balance = "123.56743 XOR"
+            ),
+            onBondInvitationsCountChange = {},
+            onBondMinus = {},
+            onBondPlus = {},
+            onBondClick = {}
+        )
+    }
+}
+
+@Composable
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+fun PreviewReferralBondXor02() {
+    SoraAppTheme {
+        ReferralBondXor(
+            common = ReferralCommonState(
+                activate = true,
+                progress = false,
+                referrer = "address",
+                referrerFee = "0.005 XOR",
+                extrinsicFee = "0.002 XOR",
+                extrinsicFeeFiat = "$12"
+            ),
+            state = ReferralBondState(
+                invitationsCount = 2,
+                invitationsAmount = "0.098 XOR",
+                balance = "123.56743 XOR"
+            ),
+            onBondInvitationsCountChange = {},
+            onBondMinus = {},
+            onBondPlus = {},
+            onBondClick = {}
+        )
+    }
 }

@@ -33,21 +33,16 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_main_impl.presentation
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
 import io.mockk.mockkObject
-import io.mockk.verify
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.RepeatStrategy
 import jp.co.soramitsu.common.domain.RepeatStrategyBuilder
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.feature_main_impl.domain.PinCodeInteractor
 import jp.co.soramitsu.feature_main_impl.domain.subs.GlobalSubscriptionManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
-import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.getOrAwaitValue
@@ -61,8 +56,15 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
+@RunWith(MockitoJUnitRunner::class)
 class MainViewModelTest {
 
     @Rule
@@ -72,25 +74,22 @@ class MainViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
-
-    @MockK
+    @Mock
     private lateinit var nodeManager: NodeManager
 
-    @MockK
+    @Mock
     private lateinit var assetsInteractor: AssetsInteractor
 
-    @MockK
+    @Mock
     private lateinit var pinCodeInteractor: PinCodeInteractor
 
-    @MockK
+    @Mock
     private lateinit var globalSubscriptionManager: GlobalSubscriptionManager
 
-    @MockK
+    @Mock
     private lateinit var blockExplorerManager: BlockExplorerManager
 
-    @MockK
+    @Mock
     private lateinit var coroutineManager: CoroutineManager
 
     private lateinit var mainViewModel: MainViewModel
@@ -98,15 +97,13 @@ class MainViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        every { globalSubscriptionManager.start() } returns flowOf("")
-        every { nodeManager.connectionState } returns flowOf(true)
-        every { assetsInteractor.flowCurSoraAccount() } returns flowOf(TestAccounts.soraAccount)
-        coEvery { assetsInteractor.getCurSoraAccount() } returns TestAccounts.soraAccount
-        every { coroutineManager.io } returns this.coroutineContext[CoroutineDispatcher]!!
-        coEvery { blockExplorerManager.updateFiat() } returns Unit
-        coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
-        coEvery { assetsInteractor.getTokensList() } returns emptyList()
-        coEvery { blockExplorerManager.getTokensLiquidity(emptyList()) } returns emptyList()
+        whenever(globalSubscriptionManager.start()).thenReturn(flowOf(""))
+        whenever(nodeManager.connectionState).thenReturn(flowOf(true))
+        whenever(assetsInteractor.flowCurSoraAccount()).thenReturn(flowOf(TestAccounts.soraAccount))
+        whenever(coroutineManager.io).thenReturn(this.coroutineContext[CoroutineDispatcher]!!)
+        whenever(assetsInteractor.getTokensList()).thenReturn(emptyList())
+        whenever(blockExplorerManager.getTokensLiquidity(emptyList())).thenReturn(emptyList())
+
         mockkObject(RepeatStrategyBuilder)
         every { RepeatStrategyBuilder.infinite() } returns object : RepeatStrategy {
             override suspend fun repeat(block: suspend () -> Unit) {
@@ -128,9 +125,9 @@ class MainViewModelTest {
             coroutineManager
         )
         advanceTimeBy(22000)
-        verify { globalSubscriptionManager.start() }
-        coVerify { assetsInteractor.updateWhitelistBalances() }
-        coVerify(exactly = 3) { blockExplorerManager.updateFiat() }
+        verify(globalSubscriptionManager).start()
+        verify(assetsInteractor).updateWhitelistBalances()
+        verify(blockExplorerManager, times(3)).updateFiat()
         assertFalse(mainViewModel.badConnectionVisibilityLiveData.getOrAwaitValue())
     }
 }

@@ -75,7 +75,7 @@ dependencies {
     //implementation irohaDep
 
     implementation roomDep
-    kapt roomKaptDep
+    //kapt roomKaptDep
 
     testImplementation project(":test_shared")
 }

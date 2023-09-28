@@ -34,6 +34,7 @@ package jp.co.soramitsu.feature_referral_impl.presentation
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
@@ -82,14 +83,14 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         animatedComposable(
             route = ReferralFeatureRoutes.WELCOME_PROGRESS
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 WelcomeProgress()
             }
         }
         animatedComposable(
             route = ReferralFeatureRoutes.WELCOME_PAGE
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 ReferralWelcomePageScreen(
                     state = viewModel.referralScreenState.collectAsStateWithLifecycle().value,
                     onStartInviting = {
@@ -107,7 +108,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         animatedComposable(
             route = ReferralFeatureRoutes.REFERRAL_PROGRAM
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 ReferralProgramPage(
                     state = viewModel.referralScreenState.collectAsStateWithLifecycle().value,
                     onGetMoreInvitations = {
@@ -133,7 +134,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         animatedComposable(
             route = ReferralFeatureRoutes.BOND_XOR
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 val state = viewModel.referralScreenState.collectAsStateWithLifecycle().value
                 ReferralBondXor(
                     common = state.common,
@@ -149,7 +150,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         animatedComposable(
             route = ReferralFeatureRoutes.UNBOND_XOR
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 val state = viewModel.referralScreenState.collectAsStateWithLifecycle().value
                 ReferralUnbondXor(
                     common = state.common,
@@ -165,7 +166,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         animatedComposable(
             route = ReferralFeatureRoutes.REFERRER_INPUT
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 ReferrerInput(
                     common = viewModel.referralScreenState.collectAsStateWithLifecycle().value.common,
                     state = viewModel.referralScreenState.collectAsStateWithLifecycle().value.referrerInputState,
@@ -180,7 +181,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
         animatedComposable(
             route = ReferralFeatureRoutes.REFERRER_FILLED
         ) {
-            FooWrapper(scrollState) {
+            ReferralWrapper(scrollState) {
                 val state = viewModel.referralScreenState.collectAsStateWithLifecycle().value
                 ReferrerFilled(
                     state = state.common,
@@ -203,7 +204,7 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
     }
 
     @Composable
-    private fun FooWrapper(
+    private fun ReferralWrapper(
         scrollState: ScrollState,
         content: @Composable BoxScope.() -> Unit
     ) {
@@ -214,6 +215,9 @@ class ReferralFragment : SoraBaseFragment<ReferralViewModel>() {
                 .verticalScroll(scrollState),
             contentAlignment = Alignment.TopCenter,
         ) {
+            BackHandler {
+                viewModel.onBackPressed()
+            }
             content()
         }
     }

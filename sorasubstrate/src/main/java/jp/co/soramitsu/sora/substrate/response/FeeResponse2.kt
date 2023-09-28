@@ -32,23 +32,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.response
 
-import androidx.annotation.Keep
 import java.math.BigInteger
+import jp.co.soramitsu.common.util.ParseModel
 import jp.co.soramitsu.shared_utils.extensions.fromHex
 import jp.co.soramitsu.shared_utils.extensions.fromUnsignedBytes
 import jp.co.soramitsu.shared_utils.extensions.requireHexPrefix
 
-@Keep
 class FeeResponse2(
     val inclusionFee: InclusionFee
-)
+) : ParseModel()
 
-@Keep
 class InclusionFee(
     private val baseFee: String?,
     private val lenFee: String?,
     private val adjustedWeightFee: String?
-) {
+) : ParseModel() {
     val sum: BigInteger
         get() = BrokenSubstrateHex(baseFee).decodeBigInt() + BrokenSubstrateHex(lenFee).decodeBigInt() + BrokenSubstrateHex(adjustedWeightFee).decodeBigInt()
 }

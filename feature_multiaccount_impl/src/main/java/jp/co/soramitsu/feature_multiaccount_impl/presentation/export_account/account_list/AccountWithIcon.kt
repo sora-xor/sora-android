@@ -49,7 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.AccountIcon
 import jp.co.soramitsu.common.util.ext.truncateUserAddress
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -96,7 +96,7 @@ private fun AccountWithIcon(
     accountIcon: Drawable,
 ) {
     Row {
-        TokenIcon(uri = accountIcon, size = 40.dp, modifier = Modifier.padding(start = Dimens.x2))
+        AccountIcon(drawable = accountIcon, size = 40.dp, modifier = Modifier.padding(start = Dimens.x2))
 
         Column(
             modifier = Modifier

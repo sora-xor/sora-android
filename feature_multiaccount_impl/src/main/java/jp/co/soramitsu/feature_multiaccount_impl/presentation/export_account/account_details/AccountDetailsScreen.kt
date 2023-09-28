@@ -32,21 +32,21 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
-import androidx.compose.foundation.background
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.Option
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -63,7 +64,6 @@ import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputText
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
@@ -73,20 +73,15 @@ internal fun AccountName(
     onValueChanged: (TextFieldValue) -> Unit,
 ) {
     val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
 
     InputText(
-        modifier = Modifier
-            .background(
-                color = MaterialTheme.customColors.bgSurface,
-                shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
-            )
-            .fillMaxWidth()
-            .wrapContentHeight(),
+        modifier = Modifier.fillMaxWidth(),
         maxLines = 1,
         singleLine = true,
         state = inputTextState,
         onValueChange = onValueChanged,
-        onFocusChanged = { if (!it.isFocused) focusManager.clearFocus() },
+        focusRequester = focusRequester,
         keyboardActions = KeyboardActions(
             onDone = {
                 focusManager.clearFocus()
@@ -173,7 +168,7 @@ internal fun BackupOptions(
                 icon = painterResource(R.drawable.ic_arrow_up_rectangle_24),
                 label = stringResource(R.string.export_protection_json_title),
                 onClick = onExportJson,
-                bottomDivider = false,
+                bottomDivider = isBackupAvailable != null,
             )
 
             isBackupAvailable?.let {
@@ -193,7 +188,7 @@ internal fun BackupOptions(
                         icon = painterResource(R.drawable.ic_arrow_up_rectangle_24),
                         label = text,
                         onClick = onBackupGoogle,
-                        textColor = if (isBackupAvailable) MaterialTheme.customColors.statusError else Color.Unspecified,
+                        textColor = if (isBackupAvailable) MaterialTheme.customColors.statusError else MaterialTheme.customColors.fgPrimary,
                         enabled = !isBackupLoading,
                         bottomDivider = false,
                     )
@@ -210,16 +205,34 @@ internal fun BackupOptions(
     }
 }
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewBackup() {
-    BackupOptions(
-        isMnemonicAvailable = true,
-        isBackupAvailable = true,
-        isBackupLoading = false,
-        onShowPassphrase = { },
-        onShowRawSeed = { },
-        onExportJson = { },
-        onBackupGoogle = {}
-    )
+private fun PreviewBackup01() {
+    SoraAppTheme {
+        BackupOptions(
+            isMnemonicAvailable = true,
+            isBackupAvailable = true,
+            isBackupLoading = false,
+            onShowPassphrase = { },
+            onShowRawSeed = { },
+            onExportJson = { },
+            onBackupGoogle = {}
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewBackup02() {
+    SoraAppTheme {
+        BackupOptions(
+            isMnemonicAvailable = true,
+            isBackupAvailable = true,
+            isBackupLoading = false,
+            onShowPassphrase = { },
+            onShowRawSeed = { },
+            onExportJson = { },
+            onBackupGoogle = {}
+        )
+    }
 }

@@ -39,6 +39,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetHolder
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
@@ -90,7 +91,7 @@ class AssetSettingsViewModelTest {
     @Mock
     private lateinit var router: AssetsRouter
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = DEFAULT_ICON_URI
 
     private val nf = NumbersFormatter()
 
@@ -98,16 +99,8 @@ class AssetSettingsViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
-        mockkStatic(Token::iconUri)
         mockkObject(AssetHolder)
         every { AssetHolder.knownCount() } returns 5
-        every { xorToken.iconUri() } returns mockedUri
-        every { valToken.iconUri() } returns mockedUri
-        every { pswapToken.iconUri() } returns mockedUri
-        every { xstusdToken.iconUri() } returns mockedUri
-        every { xstToken.iconUri() } returns mockedUri
     }
 
     private suspend fun setUpStartList(

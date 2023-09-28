@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails
 
-import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -53,7 +52,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 fun TxDetailsReferralOrTransferScreen(
     modifier: Modifier,
     state: BasicTxDetailsState,
-    icon: Uri,
+    icon: String,
     isAmountGreen: Boolean = false,
     amount: String,
     onCloseClick: () -> Unit,

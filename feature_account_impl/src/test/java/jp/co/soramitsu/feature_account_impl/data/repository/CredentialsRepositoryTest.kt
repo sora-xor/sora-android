@@ -32,31 +32,25 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_account_impl.data.repository
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.runs
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
+import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
+import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.SubstrateKeypairFactory
 import jp.co.soramitsu.shared_utils.encrypt.mnemonic.Mnemonic
 import jp.co.soramitsu.shared_utils.encrypt.mnemonic.MnemonicCreator
 import jp.co.soramitsu.shared_utils.encrypt.seed.SeedFactory
 import jp.co.soramitsu.shared_utils.encrypt.seed.substrate.SubstrateSeedFactory
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.extensions.toHexString
-import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
-import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -67,55 +61,66 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
-import java.security.KeyPair
-import java.security.PublicKey
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
+@RunWith(MockitoJUnitRunner::class)
 class CredentialsRepositoryTest {
-
-    @get:Rule
-    val rule: TestRule = InstantTaskExecutorRule()
 
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
-
     private lateinit var credentialsRepository: CredentialsRepositoryImpl
 
-    @MockK
+    @Mock
     lateinit var datasource: CredentialsDatasource
 
-    @MockK
+    @Mock
     lateinit var cryptoAssistant: CryptoAssistant
 
-    @MockK
+    @Mock
     lateinit var runtimeManager: RuntimeManager
 
-    @MockK
+    @Mock
     lateinit var soraConfigManager: SoraConfigManager
 
-    @MockK
+    @Mock
     lateinit var jsonAccountsEncoder: JsonAccountsEncoder
+
+    @Mock
+    lateinit var keypair: Sr25519Keypair
+
+    private val fooaddress = "fooaddress"
 
     @Before
     fun setup() {
-        credentialsRepository =
-            CredentialsRepositoryImpl(
-                datasource,
-                cryptoAssistant,
-                runtimeManager,
-                jsonAccountsEncoder,
-                soraConfigManager,
-            )
+        mockkObject(MnemonicCreator)
+        mockkObject(SubstrateKeypairFactory)
+        mockkObject(FirebaseWrapper)
+        mockkStatic(SubstrateSeedFactory::deriveSeed32)
+        val derivationResult = mockk<SeedFactory.Result>()
+        every { SubstrateSeedFactory.deriveSeed32(any(), any()) } returns derivationResult
+        every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
+        every { SubstrateKeypairFactory.generate(any(), any(), any()) } returns keypair
+        every { FirebaseWrapper.log("Keys were created") } just runs
+        every { derivationResult.seed } returns "seed".toByteArray()
+        credentialsRepository = CredentialsRepositoryImpl(
+            datasource,
+            cryptoAssistant,
+            runtimeManager,
+            jsonAccountsEncoder,
+            soraConfigManager,
+        )
     }
 
     @Test
     fun `is mnemonic valid returns true`() = runTest {
         val mnemonic = "mnemonic"
-        mockkObject(MnemonicCreator)
         every { MnemonicCreator.fromWords(any()) } returns Mnemonic(
             "",
             emptyList(),
@@ -126,7 +131,6 @@ class CredentialsRepositoryTest {
     @Test
     fun `is mnemonic valid returns false`() = runTest {
         val mnemonic = "mnemonic2"
-        mockkObject(MnemonicCreator)
         every { MnemonicCreator.fromWords(any()) } throws IllegalArgumentException()
         assertFalse(credentialsRepository.isMnemonicValid(mnemonic))
     }
@@ -148,30 +152,17 @@ class CredentialsRepositoryTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
         val entropy = mnemonic.toByteArray()
-        val seed = "seed".toByteArray()
         val publicKey = "publicKey".toByteArray()
-        val keypair = mockk<Sr25519Keypair>()
-        every { keypair.publicKey } returns publicKey
-        val derivationResult = mockk<SeedFactory.Result>()
-        every { derivationResult.seed } returns seed
+        whenever(keypair.publicKey).thenReturn(publicKey)
         val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), entropy)
-        mockkObject(MnemonicCreator)
         every { MnemonicCreator.randomMnemonic(any()) } returns mnmnc
-        mockkObject(SubstrateKeypairFactory)
-        every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
-        mockkStatic(SubstrateSeedFactory::deriveSeed32)
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log("Keys were created") } returns Unit
-        every { SubstrateSeedFactory.deriveSeed32(any(), any()) } returns derivationResult
-        every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
-        coEvery { datasource.saveKeys(any(), any()) } returns Unit
-        coEvery { datasource.retrieveKeys(any()) } returns null
-        coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
+        whenever(runtimeManager.toSoraAddress(any())).thenReturn(fooaddress)
+        whenever(datasource.retrieveKeys(any())).thenReturn(null)
 
         credentialsRepository.generateUserCredentials("")
 
-        coVerify { datasource.saveKeys(keypair, "fooaddress") }
-        coVerify { datasource.saveMnemonic(mnemonic, "fooaddress") }
+        verify(datasource).saveKeys(keypair, fooaddress)
+        verify(datasource).saveMnemonic(mnemonic, fooaddress)
     }
 
     @Test
@@ -179,90 +170,48 @@ class CredentialsRepositoryTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
         val entropy = mnemonic.toByteArray()
-        val seed = "seed".toByteArray()
         val publicKeyBytes = "publicKeyBytespublicKeyBytespublicKeyBytes".toByteArray()
-        val irohaKeypair = mockk<KeyPair>()
-        val irohaAddress = "did_sora_7075626c69634b657942@sora"
-        val message = irohaAddress + publicKeyBytes.toHexString()
-        val signature = irohaAddress.toByteArray()
-        val keypair = mockk<Sr25519Keypair>()
-        every { keypair.publicKey } returns publicKeyBytes
-        every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
-        val publicKey = mockk<PublicKey>()
-        val derivationResult = mockk<SeedFactory.Result>()
-        every { derivationResult.seed } returns seed
+        whenever(keypair.publicKey).thenReturn(publicKeyBytes)
         val mnmnc = Mnemonic(mnemonic, mnemonic.split(" "), entropy)
-        mockkObject(MnemonicCreator)
         every { MnemonicCreator.fromWords(mnemonic) } returns mnmnc
-        mockkObject(SubstrateKeypairFactory)
-        every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
-        mockkStatic(SubstrateSeedFactory::deriveSeed32)
-        every { SubstrateSeedFactory.deriveSeed32(any(), any()) } returns derivationResult
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log("Keys were created") } returns Unit
-        every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
-        coEvery { datasource.saveKeys(any(), any()) } returns Unit
-        coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
-        coEvery { datasource.retrieveKeys(any()) } returns null
+        whenever(runtimeManager.toSoraAddress(any())).thenReturn(fooaddress)
+        whenever(datasource.retrieveKeys(any())).thenReturn(null)
 
         credentialsRepository.restoreUserCredentialsFromMnemonic(mnemonic, "")
-
-        coVerify { datasource.saveMnemonic(mnemonic, "fooaddress") }
+        verify(datasource).saveMnemonic(mnemonic, fooaddress)
     }
 
     @Test
     fun `restore user credentials from seed called`() = runTest {
         val rawSeed = "0xcf0010cf0010cf0010cf0010cf0010cfcf0010cf0010cf0010cf0010cf0010cf"
-        val rawSeedBytes = rawSeed.fromHex()
         val publicKeyBytes = "publicKeyBytespublicKeyBytespublicKeyBytes".toByteArray()
-        every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
-
-        val keypair = mockk<Sr25519Keypair>()
-        every { keypair.publicKey } returns publicKeyBytes
-        mockkObject(SubstrateKeypairFactory)
-        every {
-            SubstrateKeypairFactory.generate(
-                SubstrateOptionsProvider.encryptionType,
-                rawSeedBytes,
-                emptyList()
-            )
-        } returns keypair
-        mockkObject(FirebaseWrapper)
-        every { FirebaseWrapper.log("Keys were created") } returns Unit
-        every { runtimeManager.toSoraAddress(any()) } returns "fooaddress"
-        coEvery { datasource.saveKeys(any(), any()) } returns Unit
-        coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
-        coEvery { datasource.saveSeed(any(), any()) } returns Unit
-        coEvery { datasource.retrieveKeys(any()) } returns null
+        whenever(keypair.publicKey).thenReturn(publicKeyBytes)
+        whenever(runtimeManager.toSoraAddress(any())).thenReturn(fooaddress)
+        whenever(datasource.retrieveKeys(any())).thenReturn(null)
 
         credentialsRepository.restoreUserCredentialsFromRawSeed(rawSeed, "")
-
-        coVerify { datasource.saveKeys(keypair, "fooaddress") }
+        verify(datasource).saveKeys(keypair, fooaddress)
     }
 
     @Test
     fun `save mnemonic called`() = runTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
-        coEvery { datasource.saveMnemonic(any(), any()) } returns Unit
         credentialsRepository.saveMnemonic(mnemonic, SoraAccount("", ""))
-        coVerify { datasource.saveMnemonic(mnemonic, "") }
+        verify(datasource).saveMnemonic(mnemonic, "")
     }
 
     @Test
     fun `retrieve mnemonic called`() = runTest {
         val mnemonic =
             "airport wish wish loan width country acoustic country ceiling good enact penalty"
-        coEvery { datasource.retrieveMnemonic("") } returns mnemonic
-
+        whenever(datasource.retrieveMnemonic("")).thenReturn(mnemonic)
         assertEquals(credentialsRepository.retrieveMnemonic(SoraAccount("", "")), mnemonic)
     }
 
     @Test
     fun `retrieve keypair called`() = runTest {
-        val keypair = mockk<Sr25519Keypair>()
-        coEvery { datasource.retrieveKeys("") } returns keypair
-
+        whenever(datasource.retrieveKeys("")).thenReturn(keypair)
         assertEquals(keypair, credentialsRepository.retrieveKeyPair(SoraAccount("", "")))
     }
 }

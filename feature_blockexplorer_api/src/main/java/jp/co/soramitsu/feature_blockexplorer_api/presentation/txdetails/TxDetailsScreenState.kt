@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails
 
-import android.net.Uri
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
@@ -64,8 +63,8 @@ data class TxDetailsScreenState(
     val amount1: String,
     val amount2: String? = null,
     val amountFiat: String,
-    val icon1: Uri,
-    val icon2: Uri? = null,
+    val icon1: String,
+    val icon2: String? = null,
     val isAmountGreen: Boolean = false,
     val txType: TxType
 )
