@@ -178,6 +178,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         viewModel.skipDialogState.observeAsState().value?.let {
             if (it) {
                 AlertDialog(
+                    backgroundColor = MaterialTheme.customColors.bgPage,
                     title = {
                         Text(
                             text = stringResource(id = R.string.import_account_not_backed_up),
@@ -233,6 +234,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 val recoveryDialog = viewModel.recoveryDialog.collectAsStateWithLifecycle()
                 if (recoveryDialog.value) {
                     AlertDialog(
+                        backgroundColor = MaterialTheme.customColors.bgPage,
                         onDismissRequest = viewModel::onRecoverySourceDismiss,
                         text = {
                             Text(

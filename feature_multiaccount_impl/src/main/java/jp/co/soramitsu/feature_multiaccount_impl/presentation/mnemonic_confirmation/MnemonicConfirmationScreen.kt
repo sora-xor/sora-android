@@ -71,7 +71,9 @@ fun MnemonicConfirmationScreen(
                 .padding(bottom = Dimens.x3, top = Dimens.x1),
         ) {
             Column(
-                modifier = Modifier.padding(Dimens.x3),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.x3),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -106,7 +108,11 @@ fun MnemonicConfirmationScreen(
                             .size(Dimens.x3)
                             .padding(vertical = Dimens.x1_2),
                         painter = painterResource(R.drawable.ic_circle_unchecked),
-                        tint = if (mnemonicConfirmationState.confirmationStep > 1) { MaterialTheme.customColors.accentPrimary } else { MaterialTheme.customColors.bgSurfaceVariant },
+                        tint = if (mnemonicConfirmationState.confirmationStep > 1) {
+                            MaterialTheme.customColors.accentPrimary
+                        } else {
+                            MaterialTheme.customColors.bgSurfaceVariant
+                        },
                         contentDescription = null
                     )
 
@@ -115,7 +121,11 @@ fun MnemonicConfirmationScreen(
                             .size(Dimens.x3)
                             .padding(vertical = Dimens.x1_2),
                         painter = painterResource(R.drawable.ic_circle_unchecked),
-                        tint = if (mnemonicConfirmationState.confirmationStep > 2) { MaterialTheme.customColors.accentPrimary } else { MaterialTheme.customColors.bgSurfaceVariant },
+                        tint = if (mnemonicConfirmationState.confirmationStep > 2) {
+                            MaterialTheme.customColors.accentPrimary
+                        } else {
+                            MaterialTheme.customColors.bgSurfaceVariant
+                        },
                         contentDescription = null
                     )
 
@@ -124,7 +134,11 @@ fun MnemonicConfirmationScreen(
                             .size(Dimens.x3)
                             .padding(vertical = Dimens.x1_2),
                         painter = painterResource(R.drawable.ic_circle_unchecked),
-                        tint = if (mnemonicConfirmationState.confirmationStep > 3) { MaterialTheme.customColors.accentPrimary } else { MaterialTheme.customColors.bgSurfaceVariant },
+                        tint = if (mnemonicConfirmationState.confirmationStep > 3) {
+                            MaterialTheme.customColors.accentPrimary
+                        } else {
+                            MaterialTheme.customColors.bgSurfaceVariant
+                        },
                         contentDescription = null
                     )
                 }
@@ -171,7 +185,6 @@ fun PreviewMnemonicConfirmationScreen() {
             0,
             listOf("First", "Second", "Thrird"),
             0
-        ),
-        {}
-    )
+        )
+    ) {}
 }

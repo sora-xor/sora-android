@@ -121,12 +121,14 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Image(
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                        painter = painterResource(id = R.drawable.bg_image),
-                        contentDescription = ""
-                    )
+                    if (!isDarkModeOn.value) {
+                        Image(
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.FillBounds,
+                            painter = painterResource(id = R.drawable.bg_image),
+                            contentDescription = ""
+                        )
+                    }
                     Scaffold(
                         modifier = Modifier
                             .navigationBarsPadding()
