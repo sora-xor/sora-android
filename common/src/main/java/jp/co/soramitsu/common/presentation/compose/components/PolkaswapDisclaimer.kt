@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.view.PolkaswapDisclaimerView
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.TonalButton
@@ -102,10 +104,22 @@ fun PolkaswapDisclaimer(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewPolkaswapDisclaimer() {
-    PolkaswapDisclaimer(
-        onDisclaimerClose = {},
-    )
+private fun PreviewPolkaswapDisclaimer01() {
+    SoraAppTheme {
+        PolkaswapDisclaimer(
+            onDisclaimerClose = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewPolkaswapDisclaimer02() {
+    SoraAppTheme {
+        PolkaswapDisclaimer(
+            onDisclaimerClose = {},
+        )
+    }
 }

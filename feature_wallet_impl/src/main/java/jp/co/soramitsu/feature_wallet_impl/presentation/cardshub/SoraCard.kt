@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common_wallet.presentation.compose.states.SoraCardState
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
@@ -79,10 +81,12 @@ fun SoraCard(
 
         CardStateButton(
             modifier = Modifier
-                .wrapContentWidth().run {
+                .wrapContentWidth()
+                .run {
                     if (state.success.not())
                         padding(bottom = Dimens.x3) else padding(all = Dimens.x1)
-                }.run {
+                }
+                .run {
                     if (state.success.not())
                         align(Alignment.BottomCenter) else align(Alignment.BottomEnd)
                 },
@@ -156,12 +160,27 @@ private fun PreviewSoraCard1() {
 }
 
 @Composable
-@Preview(locale = "he")
+@Preview(locale = "he", uiMode = Configuration.UI_MODE_NIGHT_NO)
 private fun PreviewSoraCard2() {
-    SoraCard(
-        modifier = Modifier.fillMaxWidth(),
-        state = SoraCardState(kycStatus = "Pending", success = false, visible = true),
-        onCloseClicked = {},
-        onCardStateClicked = {}
-    )
+    SoraAppTheme {
+        SoraCard(
+            modifier = Modifier.fillMaxWidth(),
+            state = SoraCardState(kycStatus = "Pending", success = false, visible = true),
+            onCloseClicked = {},
+            onCardStateClicked = {}
+        )
+    }
+}
+
+@Composable
+@Preview(locale = "en", uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun PreviewSoraCard3() {
+    SoraAppTheme {
+        SoraCard(
+            modifier = Modifier.fillMaxWidth(),
+            state = SoraCardState(kycStatus = null, success = false, visible = true),
+            onCloseClicked = {},
+            onCardStateClicked = {}
+        )
+    }
 }

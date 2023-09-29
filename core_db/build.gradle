@@ -1,8 +1,15 @@
-apply plugin: 'com.android.library'
-apply plugin: 'dagger.hilt.android.plugin'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
+plugins {
+    id 'com.android.library'
+    id 'dagger.hilt.android.plugin'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
+}
 apply from: '../tests.gradle'
+
+kotlin {
+    jvmToolchain(11)
+}
 
 android {
     compileSdkVersion compileVersion
@@ -11,13 +18,13 @@ android {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
 
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += [
-                        "room.schemaLocation":"$projectDir/schemas".toString(),
-                        "room.incremental":"true"]
-            }
-        }
+//        javaCompileOptions {
+//            annotationProcessorOptions {
+//                arguments += [
+//                        "room.schemaLocation":"$projectDir/schemas".toString(),
+//                        "room.incremental":"true"]
+//            }
+//        }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,14 +36,13 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.VERSION_1_8
+//    }
 
     flavorDimensions "default"
 
@@ -57,6 +63,29 @@ android {
             dimension 'default'
         }
     }
+    namespace 'com.example.core_db'
+}
+
+class RoomSchemaArgProvider implements CommandLineArgumentProvider {
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    File schemaDir
+
+    RoomSchemaArgProvider(File schemaDir) {
+        this.schemaDir = schemaDir
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        // Note: If you're using KSP, change the line below to return
+        // ["room.schemaLocation=${schemaDir.path}".toString()].
+        return ["room.schemaLocation=${schemaDir.path}".toString()]
+    }
+}
+
+ksp {
+    arg(new RoomSchemaArgProvider(new File(projectDir, "schemas")))
 }
 
 dependencies {
@@ -72,7 +101,7 @@ dependencies {
 
     implementation roomDep
     implementation roomKtxDep
-    kapt roomKaptDep
+    ksp roomKaptDep
 
     androidTestImplementation project(":test_shared")
     androidTestImplementation project(":test_data")

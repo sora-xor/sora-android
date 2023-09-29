@@ -32,13 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.states
 
-import android.net.Uri
 import jp.co.soramitsu.common.util.StringPair
 
 data class PoolSettingsState(
     val id: StringPair,
-    val token1Icon: Uri,
-    val token2Icon: Uri,
+    val token1Icon: String,
+    val token2Icon: String,
     val tokenName: String,
     val tokenSymbol: String,
     val assetAmount: String,

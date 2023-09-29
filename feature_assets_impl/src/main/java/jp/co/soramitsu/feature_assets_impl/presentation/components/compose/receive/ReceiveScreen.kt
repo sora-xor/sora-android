@@ -58,7 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.AccountIcon
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -112,8 +112,8 @@ internal fun ReceiveScreen(
                 .wrapContentHeight(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            TokenIcon(
-                uri = avatar,
+            AccountIcon(
+                drawable = avatar,
                 size = Size.Small,
             )
             Spacer(modifier = Modifier.size(Dimens.x1))

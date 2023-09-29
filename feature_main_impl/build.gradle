@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -21,14 +25,13 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+//    kotlinOptions {
+//        jvmTarget = JavaVersion.VERSION_1_8
+//    }
 
     flavorDimensions "default"
 
@@ -58,6 +61,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion versions.composeCompiler
     }
+    namespace 'jp.co.soramitsu.feature_main_impl'
 }
 
 dependencies {
@@ -111,7 +115,7 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
 
     implementation gsonDep
     implementation webSocketLibDep

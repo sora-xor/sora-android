@@ -33,16 +33,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_impl.domain
 
 import android.net.Uri
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.verify
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.resourses.LanguagesHolder
@@ -67,7 +64,6 @@ import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.test_shared.test
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
@@ -77,51 +73,54 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
-import java.util.Locale
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.Mockito
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.stub
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
+@RunWith(MockitoJUnitRunner::class)
 class TransactionHistoryHandlerTest {
-
-    @Rule
-    @JvmField
-    val rule: TestRule = InstantTaskExecutorRule()
 
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
+//    @get:Rule
+//    val mockkRule = MockKRule(this)
 
-    @MockK
+    @Mock
     private lateinit var assetsRepository: AssetsRepository
 
-    @MockK
+    @Mock
     private lateinit var transactionHistoryRepository: TransactionHistoryRepository
 
-    @MockK
+    @Mock
     private lateinit var resourceManager: ResourceManager
 
-    @MockK
+    @Mock
     private lateinit var userRepository: UserRepository
 
-    @MockK
+    @Mock
     private lateinit var language: LanguagesHolder
 
-    @MockK
+    @Mock
     private lateinit var coroutineManager: CoroutineManager
 
-    @MockK
-    private lateinit var coroutineScope: CoroutineScope
-
-    @MockK
+    @Mock
     private lateinit var dateTimeFormatter: DateTimeFormatter
 
     private val txMapper: TransactionMappers by lazy {
         TransactionMappersImpl(resourceManager, NumbersFormatter(), dateTimeFormatter)
     }
 
-    private val mockedUri = mockk<Uri>()
+    private var mockedUri = DEFAULT_ICON_URI
 
     private val tokens = listOf(TestTokens.xorToken)
     private val txHash = "txHash"
@@ -154,43 +153,71 @@ class TransactionHistoryHandlerTest {
 
     @Before
     fun setUp() = runTest {
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
-        mockkStatic(Token::iconUri)
-        every { TestTokens.xorToken.iconUri() } returns mockedUri
-        every { TestTokens.valToken.iconUri() } returns mockedUri
-        every { language.getCurrentLocale() } returns Locale.ENGLISH
-        every { dateTimeFormatter.formatTimeWithoutSeconds(any()) } returns "01 Feb 1970"
-        every { dateTimeFormatter.dateToDayWithoutCurrentYear(any(), any(), any()) } returns "01 Feb 1970"
-        every { resourceManager.getString(any()) } returns ""
-        every { transactionHistoryRepository.state } returns flowOf(true)
-        every { coroutineManager.applicationScope } returns coroutineScope
-        every { coroutineScope.coroutineContext } returns coroutineContext
-        every { transactionHistoryRepository.onSoraAccountChange() } returns Unit
-        coEvery { assetsRepository.tokensList() } returns tokens
-        every { userRepository.flowCurSoraAccount() } returns flow {
+//        mockkStatic(Uri::parse)
+//        every { Uri.parse(any()) } returns mockedUri
+//        mockkStatic(Token::iconUri)
+//        every { TestTokens.xorToken.iconUri() } returns mockedUri
+//        every { TestTokens.valToken.iconUri() } returns mockedUri
+
+//        Mockito.mockStatic(Token::class.java).use { mocked ->
+//            mocked.`when`<Any> { Token.iconUri() }.thenReturn(mockedUri)
+//        }
+
+        //whenever(language.getCurrentLocale()).thenReturn(Locale.ENGLISH)
+        whenever(dateTimeFormatter.formatTimeWithoutSeconds(any())).thenReturn("01 Feb 1970")
+        whenever(
+            dateTimeFormatter.dateToDayWithoutCurrentYear(
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn("01 Feb 1970")
+        whenever(resourceManager.getString(any())).thenReturn("")
+        whenever(transactionHistoryRepository.state).thenReturn(flowOf(true))
+        whenever(coroutineManager.applicationScope).thenReturn(this)
+        //whenever(transactionHistoryRepository.onSoraAccountChange()).thenReturn(Unit)
+        assetsRepository.stub {
+            onBlocking { tokensList() } doReturn tokens
+        }
+        whenever(userRepository.flowCurSoraAccount()).thenReturn(flow {
             emit(TestAccounts.soraAccount)
             emit(TestAccounts.soraAccount2)
+        })
+        transactionHistoryRepository.stub {
+            onBlocking {
+                getTransaction(
+                    txHash,
+                    tokens,
+                    TestAccounts.soraAccount
+                )
+            } doReturn TestTransactions.sendSuccessfulTx
         }
-        coEvery {
-            transactionHistoryRepository.getTransaction(txHash, tokens, TestAccounts.soraAccount)
-        } returns TestTransactions.sendSuccessfulTx
-        coEvery { userRepository.getCurSoraAccount() } returns TestAccounts.soraAccount
-        coEvery {
-            transactionHistoryRepository.getTransactionHistory(any(), any(), any(), any())
-        } returns TransactionsInfo(
-            listOf(TestTransactions.sendSuccessfulTx),
-            true
-        )
-        coEvery {
-            transactionHistoryRepository.getLastTransactions(
-                TestAccounts.soraAccount,
-                listOf(TestTokens.xorToken),
-                1,
-                null
+        userRepository.stub {
+            onBlocking { getCurSoraAccount() } doReturn TestAccounts.soraAccount
+        }
+        transactionHistoryRepository.stub {
+            onBlocking {
+                getTransactionHistory(
+                    anyOrNull(),
+                    anyOrNull(),
+                    anyOrNull(),
+                    anyOrNull(),
+                )
+            } doReturn TransactionsInfo(
+                listOf(TestTransactions.sendSuccessfulTx),
+                true
             )
-        } returns listOf(TestTransactions.sendFailedTx)
-
+        }
+        transactionHistoryRepository.stub {
+            onBlocking {
+                getLastTransactions(
+                    TestAccounts.soraAccount,
+                    listOf(TestTokens.xorToken),
+                    1,
+                    null
+                )
+            } doReturn listOf(TestTransactions.sendFailedTx)
+        }
         transactionHistoryHandler = TransactionHistoryHandlerImpl(
             assetsRepository,
             txMapper,
@@ -227,7 +254,8 @@ class TransactionHistoryHandlerTest {
 
     @Test
     fun `init successful`() = runTest {
-        verify { transactionHistoryRepository.onSoraAccountChange() }
+        advanceUntilIdle()
+        verify(transactionHistoryRepository).onSoraAccountChange()
     }
 
     @Test

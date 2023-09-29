@@ -32,10 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.models
 
-import androidx.annotation.Keep
+import jp.co.soramitsu.common.util.ParseModel
 
-@Keep
-data class BlockResponse(val justification: Any?, val block: BlockEntry)
+data class BlockResponse(val justification: Any?, val block: BlockEntry) : ParseModel()
 
-@Keep
-data class BlockEntry(val header: Any?, val extrinsics: List<String>)
+data class BlockEntry(val header: Any?, val extrinsics: List<String>) : ParseModel()

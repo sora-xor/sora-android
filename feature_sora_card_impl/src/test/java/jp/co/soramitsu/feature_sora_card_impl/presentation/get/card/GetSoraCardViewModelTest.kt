@@ -103,7 +103,7 @@ class GetSoraCardViewModelTest {
     private lateinit var connectionManager: ConnectionManager
 
     @Before
-     fun setUp() = runTest {
+     fun setUp() {
         given(connectionManager.connectionState).willReturn(flowOf(true))
 
         mockkObject(OptionsProvider)

@@ -101,6 +101,13 @@ interface AssetDao {
         whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME
     ): List<AssetTokenWithFiatLocal>
 
+    @Query(QUERY_ASSET_TOKEN_ACTIVE)
+    suspend fun getAssetsActive(
+        address: String,
+        isoCode: String,
+        whitelist: String = AssetHolder.DEFAULT_WHITE_LIST_NAME
+    ): List<AssetTokenWithFiatLocal>
+
     @Query(QUERY_ASSET_TOKEN_VISIBLE)
     fun subscribeAssetsVisible(
         address: String,

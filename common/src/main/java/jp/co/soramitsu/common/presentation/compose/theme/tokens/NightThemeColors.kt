@@ -33,11 +33,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown5
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green40
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green5
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey5
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey50
+import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey60
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey70
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey80
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Grey90
@@ -78,7 +78,7 @@ object NightThemeColors {
 
     val FgInverted = Grey90
 
-    val FgOutline = Brown5
+    val FgOutline = Grey60
 
     val StatusSuccess = Green40
 

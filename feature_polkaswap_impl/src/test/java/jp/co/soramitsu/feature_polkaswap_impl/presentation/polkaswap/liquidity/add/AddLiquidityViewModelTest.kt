@@ -117,8 +117,6 @@ class AddLiquidityViewModelTest {
     @Mock
     private lateinit var router: WalletRouter
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
-
     private lateinit var viewModel: LiquidityAddViewModel
 
     private fun setUpViewModel(
@@ -143,14 +141,6 @@ class AddLiquidityViewModelTest {
     @Before
     fun setUp() = runTest {
         mockkObject(FirebaseWrapper)
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
-        mockkStatic(Token::iconUri)
-        every { TestTokens.xorToken.iconUri() } returns mockedUri
-        every { TestTokens.valToken.iconUri() } returns mockedUri
-        every { TestTokens.pswapToken.iconUri() } returns mockedUri
-        every { TestTokens.xstusdToken.iconUri() } returns mockedUri
-        every { TestTokens.xstToken.iconUri() } returns mockedUri
         given(
             assetsInteractor.isNotEnoughXorLeftAfterTransaction(
                 networkFeeInXor = any(),

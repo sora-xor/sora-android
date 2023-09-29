@@ -33,19 +33,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_referral_impl.data
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.room.withTransaction
-import io.mockk.coEvery
-import io.mockk.mockkStatic
-import io.mockk.slot
-import jp.co.soramitsu.common.R
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.ReferralsDao
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.BlockExplorerManager
+import jp.co.soramitsu.feature_referral_api.data.ReferralRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
-import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.referral.ReferrerReward
@@ -59,10 +53,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -83,9 +78,6 @@ class ReferralRepositoryTest {
 
     @Mock
     private lateinit var blockExplorerManager: BlockExplorerManager
-
-    @Mock
-    private lateinit var substrateApi: SubstrateApi
 
     @Mock
     private lateinit var runtimeManager: RuntimeManager
@@ -114,8 +106,7 @@ class ReferralRepositoryTest {
 
     @Before
     fun setUp() = runTest {
-        given(db.referralsDao()).willReturn(referralsDao)
-
+        whenever(db.referralsDao()).thenReturn(referralsDao)
         referralRepository = ReferralRepositoryImpl(
             db,
             extrinsicManager,
@@ -128,13 +119,14 @@ class ReferralRepositoryTest {
     @Test
     fun `update referral rewards called`() = runTest {
         val address = "address"
-        given(blockExplorerManager.updateReferrerRewards(address)).willReturn(Unit)
+//        val captor = argumentCaptor<suspend () -> R>()
+//        whenever(db.withTransaction(captor.capture())).thenReturn(captor.firstValue.invoke())
 
-        mockkStatic("androidx.room.RoomDatabaseKt")
-        val lambda = slot<suspend () -> R>()
-        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
-            lambda.captured.invoke()
-        }
+//        mockkStatic("androidx.room.RoomDatabaseKt")
+//        val lambda = slot<suspend () -> R>()
+//        coEvery { db.withTransaction(capture(lambda)) } coAnswers {
+//            lambda.captured.invoke()
+//        }
         referralRepository.updateReferralRewards(address)
 
         verify(blockExplorerManager).updateReferrerRewards(address)
@@ -142,10 +134,8 @@ class ReferralRepositoryTest {
 
     @Test
     fun `get referral rewards`() = runTest {
-        given(referralsDao.getReferrals()).willReturn(flow { emit(REFERRER_LOCAL) })
-
+        whenever(referralsDao.getReferrals()).thenReturn(flow { emit(REFERRER_LOCAL) })
         val result = referralRepository.getReferralRewards()
-
         assertEquals(REFERRER_REWARDS, result.toList()[0])
     }
 

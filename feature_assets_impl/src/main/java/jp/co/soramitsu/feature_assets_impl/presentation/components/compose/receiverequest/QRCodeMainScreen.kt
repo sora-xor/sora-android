@@ -76,16 +76,21 @@ fun QrCodeMainScreen(
     requestToken_onCreateRequestClick: () -> Unit,
     requestToken_onTryAgainClick: () -> Unit,
 ) {
-    val pagerState = rememberPagerState()
-
-    val coroutineScope = rememberCoroutineScope()
-
     val qrCodeMainScreenPages = remember {
         mutableListOf<QrCodeMainScreenPage>().apply {
             add(QrCodeMainScreenPage.RECEIVE)
             add(QrCodeMainScreenPage.REQUEST)
         }.toList()
     }
+
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) {
+        qrCodeMainScreenPages.size
+    }
+
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -114,7 +119,6 @@ fun QrCodeMainScreen(
 
         HorizontalPager(
             state = pagerState,
-            pageCount = qrCodeMainScreenPages.size
         ) {
             when (qrCodeMainScreenPages[it]) {
                 QrCodeMainScreenPage.RECEIVE -> {

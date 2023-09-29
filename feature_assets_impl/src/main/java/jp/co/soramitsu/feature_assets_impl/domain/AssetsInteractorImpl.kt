@@ -104,11 +104,6 @@ class AssetsInteractorImpl constructor(
             .toHexString(withPrefix)
     }
 
-    override suspend fun getVisibleAssets(): List<Asset> {
-        val address = userRepository.getCurSoraAccount().substrateAddress
-        return assetsRepository.getAssetsFavorite(address)
-    }
-
     override suspend fun getWhitelistAssets(): List<Asset> {
         val address = userRepository.getCurSoraAccount().substrateAddress
         return assetsRepository.getAssetsWhitelist(address)

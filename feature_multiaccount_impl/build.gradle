@@ -5,6 +5,10 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -15,13 +19,13 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+//        jvmTarget = JavaVersion.VERSION_1_8
+        freeCompilerArgs += ["-Xstring-concat=inline"]
     }
 
     composeOptions {
@@ -59,6 +63,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_multiaccount_impl'
 }
 
 dependencies {
@@ -114,7 +119,7 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeLiveDataDep
     implementation navigationComposeDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
     implementation sharedFeaturesBackupDep
     implementation sharedFeaturesModelsDep
     debugImplementation composeToolingDep

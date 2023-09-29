@@ -60,11 +60,7 @@ interface AssetsRepository {
 
     suspend fun getAsset(assetId: String, address: String): Asset?
 
-    suspend fun getAssetsFavorite(address: String,): List<Asset>
-
-    suspend fun getAssetsVisible(
-        address: String,
-    ): List<Asset>
+    suspend fun getAssetsActive(address: String,): List<Asset>
 
     suspend fun getAssetsWhitelist(address: String): List<Asset>
 

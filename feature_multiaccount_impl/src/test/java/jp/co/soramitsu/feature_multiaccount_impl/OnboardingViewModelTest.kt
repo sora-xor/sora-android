@@ -36,7 +36,6 @@ import android.content.Intent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.navigation.NavController
-import io.mockk.mockk
 import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
@@ -60,9 +59,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -91,17 +90,15 @@ class OnboardingViewModelTest {
     private lateinit var backupService: BackupService
 
     @Mock
+    private lateinit var navController: NavController
+
+    @Mock
     private lateinit var avatarGenerator: AccountAvatarGenerator
 
     @Mock
     private lateinit var coroutineManager: CoroutineManager
 
-    @Mock
-    private lateinit var accountResultLauncher: ActivityResultLauncher<Intent>
-
     private lateinit var onboardingViewModel: OnboardingViewModel
-
-    private val account = SoraAccount("address", "accountName")
 
     @Before
     fun setUp() = runTest {
@@ -118,7 +115,7 @@ class OnboardingViewModelTest {
 
     @Test
     fun `onRecoveryClicked() called test`() = runTest {
-        given(resourceManager.getString(R.string.recovery_mnemonic_passphrase)).willReturn("passphrase label")
+        whenever(resourceManager.getString(R.string.recovery_mnemonic_passphrase)).thenReturn("passphrase label")
         val passphraseRecoveryState =
             RecoveryState(
                 title = R.string.recovery_enter_passphrase_title,
@@ -127,15 +124,10 @@ class OnboardingViewModelTest {
                     label = resourceManager.getString(R.string.recovery_mnemonic_passphrase)
                 )
             )
-
-        val navController: NavController = mockk(relaxed = true)
-
         onboardingViewModel.onRecoveryClicked(navController, 1)
+        assertEquals(onboardingViewModel.recoveryState?.value, passphraseRecoveryState)
 
-        assertEquals(onboardingViewModel?.recoveryState?.value, passphraseRecoveryState)
-
-
-        given(resourceManager.getString(R.string.recovery_input_raw_seed_hint)).willReturn("raw label")
+        whenever(resourceManager.getString(R.string.recovery_input_raw_seed_hint)).thenReturn("raw label")
         val seedRecoveryState =
             RecoveryState(
                 title = R.string.recovery_enter_seed_title,
@@ -144,14 +136,9 @@ class OnboardingViewModelTest {
                     label = resourceManager.getString(R.string.recovery_input_raw_seed_hint)
                 )
             )
-
         onboardingViewModel.onRecoveryClicked(navController, 2)
-
         assertEquals(onboardingViewModel?.recoveryState?.value, seedRecoveryState)
-
-
         onboardingViewModel.onRecoveryClicked(navController, 0)
-
         assertNull(onboardingViewModel?.recoveryState?.value)
     }
 }

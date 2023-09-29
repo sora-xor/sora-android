@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose
 
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -40,16 +41,33 @@ import androidx.compose.ui.unit.Dp
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
+import jp.co.soramitsu.common.R
 
 @Composable
 fun TokenIcon(
     modifier: Modifier = Modifier,
-    uri: Any,
+    uri: String?,
     size: Dp,
 ) {
     AsyncImage(
         model = ImageRequest.Builder(LocalContext.current)
-            .data(uri).build(),
+            .data(uri ?: R.drawable.ic_token_default).build(),
+        modifier = modifier
+            .size(size = size),
+        contentDescription = null,
+        imageLoader = LocalContext.current.imageLoader,
+    )
+}
+
+@Composable
+fun AccountIcon(
+    modifier: Modifier = Modifier,
+    drawable: Drawable?,
+    size: Dp,
+) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(drawable ?: R.drawable.ic_token_default).build(),
         modifier = modifier
             .size(size = size),
         contentDescription = null,

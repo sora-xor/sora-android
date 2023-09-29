@@ -65,8 +65,8 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -168,7 +168,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     )
     @Composable
     override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        navController = rememberAnimatedNavController()
+        navController = rememberNavController()
         LaunchedEffect(Unit) {
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 viewModel.onDestinationChanged(destination.route ?: "")
@@ -219,7 +219,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             }
         }
 
-        AnimatedNavHost(
+        NavHost(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()

@@ -117,6 +117,7 @@ private fun MarketScreenItem(
         var hintVisible by remember { mutableStateOf(false) }
         if (hintVisible) {
             AlertDialog(
+                backgroundColor = MaterialTheme.customColors.bgPage,
                 title = {
                     Text(
                         text = stringResource(id = market.titleResource),

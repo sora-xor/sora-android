@@ -36,6 +36,7 @@ import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.AssetBalance
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.dao.GlobalCardsHubDao
@@ -106,7 +107,7 @@ class WalletRepositoryTest {
     @Mock
     private lateinit var soraConfigManager: SoraConfigManager
 
-    private val mockedUri = mock(Uri::class.java)
+    private val mockedUri = DEFAULT_ICON_URI
 
     private lateinit var runtime: RuntimeSnapshot
 

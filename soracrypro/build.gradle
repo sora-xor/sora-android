@@ -4,6 +4,10 @@ plugins {
 }
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdk compileVersion
 
@@ -21,13 +25,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_8
+//        targetCompatibility JavaVersion.VERSION_1_8
+//    }
+//    kotlinOptions {
+//        jvmTarget = '1.8'
+//    }
     flavorDimensions "default"
 
     productFlavors {
@@ -47,6 +51,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.soracrypro'
 }
 
 dependencies {

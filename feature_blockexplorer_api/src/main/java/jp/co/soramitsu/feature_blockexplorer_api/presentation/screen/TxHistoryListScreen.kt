@@ -57,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.view.LoadMoreHandler
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
@@ -65,6 +64,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiM
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography

@@ -55,8 +55,8 @@
         <item name="balanceColorPositive">@color/neu_positive</item>
         <item name="balanceColorNegative">@color/neu_negative</item>
         <item name="fiatBalanceColorDefault">@color/neu_fiat_balance_color</item>
-        <item name="tintColorDark">@color/neu_tint_dark</item>
-        <item name="bottomMenuInactiveColor">@color/neu_bottom_menu_inactive</item>
+        <item name="tintColorDark">@color/neu_bottom_menu_inactive_night</item>
+        <item name="bottomMenuInactiveColor">@color/neu_bottom_menu_inactive_night</item>
         <item name="tintColorLight">@color/neu_tint_light</item>
         <item name="onBackgroundColor">@color/neu_on_background</item>
         <item name="selectedPrimaryColor">@color/neu_selected_primary</item>

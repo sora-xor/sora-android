@@ -30,8 +30,9 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
+package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -47,6 +48,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -63,6 +65,7 @@ import java.math.BigDecimal
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -84,7 +87,7 @@ internal fun SwapSlippageScreen(
     value: Double,
     onDone: (Double) -> Unit,
 ) {
-    var currentValueLocalStorage by remember { mutableStateOf(value) }
+    var currentValueLocalStorage by remember { mutableDoubleStateOf(value) }
     val desc = remember { mutableStateOf<String?>(null) }
 
     val frontrun = stringResource(id = R.string.polkaswap_slippage_frontrun)
@@ -142,17 +145,20 @@ internal fun SwapSlippageScreen(
                         .focusRequester(focusRequester)
                         .onFocusChanged {
                             focused.value = it.isFocused
-                        }.border(
+                        }
+                        .border(
                             border = BorderStroke(
                                 width = 1.dp,
                                 color = if (focused.value) MaterialTheme.customColors.fgPrimary
                                 else MaterialTheme.customColors.fgOutline
                             ),
                             shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
-                        ).background(
+                        )
+                        .background(
                             color = MaterialTheme.customColors.bgSurface,
                             shape = RoundedCornerShape(MaterialTheme.borderRadius.ml)
-                        ).clip(RoundedCornerShape(MaterialTheme.borderRadius.ml))
+                        )
+                        .clip(RoundedCornerShape(MaterialTheme.borderRadius.ml))
                         .padding(vertical = Dimens.x1_2, horizontal = Dimens.x2)
                         .defaultMinSize(minHeight = Dimens.InputHeight)
                         .wrapContentHeight()
@@ -160,7 +166,7 @@ internal fun SwapSlippageScreen(
                 ) {
                     BasicNumberInput(
                         modifier = Modifier,
-                        textStyle = MaterialTheme.customTypography.textM,
+                        textStyle = MaterialTheme.customTypography.textM.copy(color = MaterialTheme.customColors.fgPrimary),
                         initial = value.toBigDecimal(), // input value is used; no locally stored data!!!
                         precision = 2,
                         enabled = true,
@@ -208,11 +214,24 @@ internal fun SwapSlippageScreen(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewSwapSlippageScreen() {
-    SwapSlippageScreen(
-        value = 0.5,
-        onDone = {},
-    )
+private fun PreviewSwapSlippageScreen01() {
+    SoraAppTheme {
+        SwapSlippageScreen(
+            value = 0.5,
+            onDone = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewSwapSlippageScreen02() {
+    SoraAppTheme {
+        SwapSlippageScreen(
+            value = 0.5,
+            onDone = {},
+        )
+    }
 }

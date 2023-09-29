@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.common.base.SoraBaseFragment

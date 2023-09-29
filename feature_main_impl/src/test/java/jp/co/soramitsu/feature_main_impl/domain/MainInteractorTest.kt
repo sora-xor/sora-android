@@ -37,7 +37,6 @@ import io.mockk.mockkObject
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.resourses.Language
-import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -61,9 +60,6 @@ class MainInteractorTest {
     private lateinit var userRepository: UserRepository
 
     @Mock
-    private lateinit var credentialsRepository: CredentialsRepository
-
-    @Mock
     private lateinit var selectNodeRepository: SelectNodeRepository
 
     private lateinit var interactor: MainInteractor
@@ -71,7 +67,12 @@ class MainInteractorTest {
     private val soraAccount = SoraAccount("a", "n")
 
     @Before
-    fun setUp() = runTest {
+    fun setUp() {
+        mockkObject(OptionsProvider)
+        every { OptionsProvider.CURRENT_VERSION_NAME } returns "version"
+    }
+
+    private suspend fun setUpModel() {
         given(userRepository.getCurSoraAccount()).willReturn(soraAccount)
         interactor = MainInteractor(
             userRepository,
@@ -81,6 +82,7 @@ class MainInteractorTest {
 
     @Test
     fun `getCurUserAddress is called`() = runTest {
+        setUpModel()
         val actualUser = SoraAccount("address", "user")
         given(userRepository.getCurSoraAccount()).willReturn(actualUser)
 
@@ -90,6 +92,7 @@ class MainInteractorTest {
 
     @Test
     fun `getAvailableLanguagesWithSelected is called`() = runTest {
+        setUpModel()
         val actual = Pair(listOf(Language("ru_Ru", 0, 0)), 0)
         given(userRepository.getAvailableLanguages()).willReturn(actual)
 
@@ -99,6 +102,7 @@ class MainInteractorTest {
 
     @Test
     fun `changeLanguage is called`() = runTest {
+        setUpModel()
         val language = "ru_Ru"
 
         interactor.changeLanguage(language)
@@ -108,6 +112,7 @@ class MainInteractorTest {
 
     @Test
     fun `set biometry enabled is called`() = runTest {
+        setUpModel()
         val biometetryEnabled = false
 
         interactor.setBiometryEnabled(biometetryEnabled)
@@ -117,6 +122,7 @@ class MainInteractorTest {
 
     @Test
     fun `is biometry enabled is called`() = runTest {
+        setUpModel()
         val biometetryEnabled = false
 
         given(userRepository.isBiometryEnabled()).willReturn(biometetryEnabled)
@@ -126,6 +132,7 @@ class MainInteractorTest {
 
     @Test
     fun `is biometry available is called`() = runTest {
+        setUpModel()
         val biometetryAvailable = false
 
         given(userRepository.isBiometryAvailable()).willReturn(biometetryAvailable)
@@ -135,6 +142,7 @@ class MainInteractorTest {
 
     @Test
     fun `save account name is called`() = runTest {
+        setUpModel()
         val accountname = "accountName"
         val curUser = SoraAccount("address", "user")
         given(userRepository.getCurSoraAccount()).willReturn(curUser)
@@ -146,6 +154,7 @@ class MainInteractorTest {
 
     @Test
     fun `get account name is called`() = runTest {
+        setUpModel()
         val curUser = SoraAccount("address", "user")
 
         given(userRepository.getCurSoraAccount()).willReturn(curUser)
@@ -155,6 +164,7 @@ class MainInteractorTest {
 
     @Test
     fun `get sora account list is called`() = runTest {
+        setUpModel()
         val accounts = listOf(SoraAccount("address", "user"), SoraAccount("address2", "user2"))
 
         given(userRepository.soraAccountsList()).willReturn(accounts)
@@ -164,6 +174,7 @@ class MainInteractorTest {
 
     @Test
     fun `get sora accounts count is called`() = runTest {
+        setUpModel()
         val count = 3
 
         given(userRepository.getSoraAccountsCount()).willReturn(count)
@@ -173,6 +184,7 @@ class MainInteractorTest {
 
     @Test
     fun `flow selected sora account is called`() = runTest {
+        setUpModel()
         val curUser = SoraAccount("address", "user")
 
         given(userRepository.flowCurSoraAccount()).willReturn(flow { emit(curUser) })
@@ -182,14 +194,13 @@ class MainInteractorTest {
 
     @Test
     fun `getAppVersion() calls userRepository getAppVersion()`() = runTest {
-        val expectedResult = "version"
-        mockkObject(OptionsProvider)
-        every { OptionsProvider.CURRENT_VERSION_NAME } returns expectedResult
-        assertEquals(expectedResult, interactor.getAppVersion())
+        setUpModel()
+        assertEquals("version", interactor.getAppVersion())
     }
 
     @Test
     fun `set cur sora account is called`() = runTest {
+        setUpModel()
         val accountAddress = SoraAccount("acc", "nam")
 
         interactor.setCurSoraAccount(accountAddress)
@@ -198,7 +209,8 @@ class MainInteractorTest {
     }
 
     @Test
-    fun `flowSelectedNode() calls selectedNodeRepository getSelectedNode()`() {
+    fun `flowSelectedNode() calls selectedNodeRepository getSelectedNode()`() = runTest {
+        setUpModel()
         interactor.flowSelectedNode()
 
         verify(selectNodeRepository).getSelectedNode()

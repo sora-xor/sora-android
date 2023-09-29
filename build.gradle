@@ -1,9 +1,9 @@
 buildscript {
 
     ext.versions = [
-            kotlin                 : '1.8.20',
-            coroutines             : '1.6.4',
-            dagger                 : '2.45',
+            kotlin                 : '1.9.10',
+            coroutines             : '1.7.3',
+            dagger                 : '2.48',
             hiltWorkManager        : '1.0.0',
             hiltCompose            : '1.0.0',
             timber                 : '5.0.1',
@@ -29,7 +29,7 @@ buildscript {
             archCoreTest           : '2.1.0',
             archFragmentTest       : '1.4.1',
             archComponents         : '2.6.1',
-            room                   : '2.5.1',
+            room                   : '2.6.0-rc01',
             datastore              : '1.0.0',
             biometric              : '1.1.0',
             workManager            : '2.8.1',
@@ -40,12 +40,12 @@ buildscript {
             truth                  : '1.1.5',
             lottie                 : '4.2.0',
             xNetworking            : '0.0.61',
-            compose                : '1.4.3',
+            compose                : '1.5.1',
             composeMaterial        : '1.4.3',
-            composeCompiler        : '1.4.6',
+            composeCompiler        : '1.5.3',
             composeConstraintLayout: '1.1.0-alpha05',
-            uiCore                 : '0.1.4',
-            soraCard               : '0.1.41',
+            uiCore                 : '0.2.6',
+            soraCard               : '0.1.45',
             lazySodium             : '5.0.2',
             jna                    : '5.8.0',
             accompanist            : '0.30.1',
@@ -60,9 +60,9 @@ buildscript {
         appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 110)
         appVersionName = '3.4.0.4'
 
-        compileVersion = 33
+        compileVersion = 34
         minVersion = 24
-        targetVersion = 33
+        targetVersion = 34
         soraMinifyRelease = true
 
         //kotlinDep = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin"
@@ -75,8 +75,8 @@ buildscript {
         cardViewDep = "androidx.cardview:cardview:1.0.0"
         constraintDep = "androidx.constraintlayout:constraintlayout:$versions.constraint"
         activityKtxDep = "androidx.activity:activity-ktx:1.7.1"
-        fragmentKtxDep = "androidx.fragment:fragment-ktx:1.5.7"
-        coreKtxDep = "androidx.core:core-ktx:1.10.1"
+        fragmentKtxDep = "androidx.fragment:fragment-ktx:1.6.1"
+        coreKtxDep = "androidx.core:core-ktx:1.12.0"
 
         workManagerDep = "androidx.work:work-runtime-ktx:$versions.workManager"
         coroutineDep = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.coroutines"
@@ -90,9 +90,6 @@ buildscript {
         daggerDep = "com.google.dagger:hilt-android:$versions.dagger"
         daggerKaptDep = "com.google.dagger:hilt-compiler:$versions.dagger"
         hiltUiTestDep = "com.google.dagger:hilt-android-testing:$versions.dagger"
-        hiltUiTestKaptDep = "com.google.dagger:hilt-compiler:$versions.dagger"
-        hiltUnitTestDep = "com.google.dagger:hilt-android-testing:$versions.dagger"
-        hiltUnitTestKaptDep = "com.google.dagger:hilt-compiler:$versions.dagger"
         hiltNavComposeDep = "androidx.hilt:hilt-navigation-compose:$versions.hiltCompose"
         hiltWorkManagerDep = "androidx.hilt:hilt-work:$versions.hiltWorkManager"
         hiltWorkManagerKaptDep = "androidx.hilt:hilt-compiler:$versions.hiltWorkManager"
@@ -138,7 +135,7 @@ buildscript {
 
         navigationFragmentDep = "androidx.navigation:navigation-fragment-ktx:$versions.navigation"
         navigationUiDep = "androidx.navigation:navigation-ui-ktx:$versions.navigation"
-        navigationComposeDep = "androidx.navigation:navigation-compose:$versions.navigation"
+        navigationComposeDep = "androidx.navigation:navigation-compose:2.7.2"
 
         zXingCoreDep = "com.google.zxing:core:$versions.zXing"
         zXingEmbeddedDep = "com.journeyapps:zxing-android-embedded:$versions.zXingEmbedded"
@@ -154,10 +151,10 @@ buildscript {
 
         jUnitDep = "junit:junit:$versions.jUnit"
         mockitoDep = "org.mockito:mockito-inline:$versions.mockito"
-        mockitoKotlinDep = "org.mockito.kotlin:mockito-kotlin:4.1.0"
+        mockitoKotlinDep = "org.mockito.kotlin:mockito-kotlin:5.1.0"
 
 //        https://github.com/mockk/mockk/issues/243
-        mockkDep = "io.mockk:mockk:1.13.5"
+        mockkDep = "io.mockk:mockk:1.13.8"
 
 //        powerMockDep = "org.powermock:powermock-module-junit4:2.0.2"
 //        powerMockMockitoDep = "org.powermock:powermock-api-mockito2:2.0.2"
@@ -197,7 +194,7 @@ buildscript {
         composeLiveDataDep = "androidx.compose.runtime:runtime-livedata:$versions.compose"
         composeFoundationDep = "androidx.compose.foundation:foundation:$versions.compose"
         composeRuntimeDep = "androidx.compose.runtime:runtime:$versions.compose"
-        composeMaterialDep = "androidx.compose.material:material:$versions.composeMaterial"
+        composeMaterialDep = "androidx.compose.material:material:$versions.compose"
         composeThemeAdapterDep = "com.google.accompanist:accompanist-themeadapter-material:$versions.accompanist"
         composeAnimationDep = "androidx.compose.animation:animation:$versions.compose"
         composeAnimationGraphicsDep = "androidx.compose.animation:animation-graphics:$versions.compose"
@@ -221,17 +218,18 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
         classpath "org.jetbrains.kotlin:kotlin-serialization:${versions.kotlin}"
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.2.0-beta06'
         classpath 'com.google.gms:google-services:4.3.15'
         classpath 'com.google.firebase:firebase-appdistribution-gradle:3.2.0'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.4'
-        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.45'
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.48'
         classpath "com.github.triplet.gradle:play-publisher:3.8.4"
     }
 }
 
 plugins {
     id "org.sonarqube" version "2.7"
+    id 'com.google.devtools.ksp' version '1.9.10-1.0.13' apply false
 }
 
 apply from: 'secrets.gradle'

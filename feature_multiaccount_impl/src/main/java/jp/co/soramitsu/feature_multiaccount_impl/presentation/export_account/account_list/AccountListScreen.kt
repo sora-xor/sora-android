@@ -32,9 +32,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list
 
+import android.content.res.Configuration
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,9 +58,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.presentation.compose.previewDrawable
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountListScreenState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportAccountData
@@ -190,38 +194,88 @@ private fun AccountListItem(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xffffff)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewList() {
-    Column {
-        AccountList(
-            state = AccountListScreenState(
-                isActionMode = false,
-                accountList = listOf(
-                    ExportAccountData(
-                        isSelected = false,
-                        isSelectedAction = false,
-                        icon = previewDrawable,
-                        account = SoraAccount("cnFjl....sllkj", "name 1"),
-                    ),
-                    ExportAccountData(
-                        isSelected = true,
-                        isSelectedAction = false,
-                        icon = previewDrawable,
-                        account = SoraAccount("cnFjl....sllkj", "name 2"),
-                    ),
-                    ExportAccountData(
-                        isSelected = false,
-                        isSelectedAction = true,
-                        icon = previewDrawable,
-                        account = SoraAccount("cnFjl....sllkj", "name 3"),
-                    ),
-                )
-            ),
-            onAccountClicked = {},
-            onAccountLongClicked = {},
-            onSelectOptionsClicked = {},
-            onAccountOptionsClicked = {},
-        )
+private fun PreviewList01() {
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.customColors.bgSurface)
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            AccountList(
+                state = AccountListScreenState(
+                    isActionMode = false,
+                    accountList = listOf(
+                        ExportAccountData(
+                            isSelected = false,
+                            isSelectedAction = false,
+                            icon = previewDrawable,
+                            account = SoraAccount("cnFjl....sllkj", "name 1"),
+                        ),
+                        ExportAccountData(
+                            isSelected = true,
+                            isSelectedAction = false,
+                            icon = previewDrawable,
+                            account = SoraAccount("cnFjl....sllkj", "name 2"),
+                        ),
+                        ExportAccountData(
+                            isSelected = false,
+                            isSelectedAction = true,
+                            icon = previewDrawable,
+                            account = SoraAccount("cnFjl....sllkj", "name 3"),
+                        ),
+                    )
+                ),
+                onAccountClicked = {},
+                onAccountLongClicked = {},
+                onSelectOptionsClicked = {},
+                onAccountOptionsClicked = {},
+            )
+        }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewList02() {
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.customColors.bgSurface)
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            AccountList(
+                state = AccountListScreenState(
+                    isActionMode = false,
+                    accountList = listOf(
+                        ExportAccountData(
+                            isSelected = false,
+                            isSelectedAction = false,
+                            icon = previewDrawable,
+                            account = SoraAccount("cnFjl....sllkj", "name 1"),
+                        ),
+                        ExportAccountData(
+                            isSelected = true,
+                            isSelectedAction = false,
+                            icon = previewDrawable,
+                            account = SoraAccount("cnFjl....sllkj", "name 2"),
+                        ),
+                        ExportAccountData(
+                            isSelected = false,
+                            isSelectedAction = true,
+                            icon = previewDrawable,
+                            account = SoraAccount("cnFjl....sllkj", "name 3"),
+                        ),
+                    )
+                ),
+                onAccountClicked = {},
+                onAccountLongClicked = {},
+                onSelectOptionsClicked = {},
+                onAccountOptionsClicked = {},
+            )
+        }
     }
 }

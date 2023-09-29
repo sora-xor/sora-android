@@ -56,8 +56,6 @@ interface AssetsInteractor {
 
     suspend fun getPublicKeyHex(withPrefix: Boolean = false): String
 
-    suspend fun getVisibleAssets(): List<Asset>
-
     suspend fun getWhitelistAssets(): List<Asset>
 
     suspend fun getXorBalance(precision: Int): XorAssetBalance

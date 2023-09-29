@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common_wallet.presentation.compose.states
 
-import android.net.Uri
 import androidx.annotation.StringRes
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
@@ -70,7 +69,7 @@ class FavoriteAssetsCardState(
 ) : AssetCardState
 
 data class AssetItemCardState(
-    val tokenIcon: Uri,
+    val tokenIcon: String,
     val tokenId: String,
     val tokenName: String,
     val tokenSymbol: String,

@@ -34,7 +34,6 @@ package jp.co.soramitsu.feature_polkaswap_impl.presentation.screens.swap
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,7 +47,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -66,6 +65,7 @@ import jp.co.soramitsu.feature_assets_api.presentation.selectsearchtoken.SelectS
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapConfirmScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMainScreen
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapMarketsScreen
+import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.SwapSlippageScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 
@@ -101,7 +101,6 @@ class SwapFragment : SoraBaseFragment<SwapViewModel>() {
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController

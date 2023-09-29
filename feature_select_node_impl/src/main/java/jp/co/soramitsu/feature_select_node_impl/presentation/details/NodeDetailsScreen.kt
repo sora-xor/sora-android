@@ -47,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -83,8 +82,6 @@ internal fun NodeDetailsScreen(
             onHowToRunNode = viewModel::onHowToRunNode,
             onNodeNameChanged = viewModel::onNameChanged,
             onNodeAddressChanged = viewModel::onAddressChanged,
-            onNodeNameFocused = viewModel::onNameFocusChanged,
-            onNodeAddressFocused = viewModel::onAddressFocusChanged
         )
 
         if (state.loading) {
@@ -101,8 +98,6 @@ private fun NodeDetailsScreenContent(
     onHowToRunNode: () -> Unit,
     onNodeNameChanged: (TextFieldValue) -> Unit,
     onNodeAddressChanged: (TextFieldValue) -> Unit,
-    onNodeNameFocused: (FocusState) -> Unit,
-    onNodeAddressFocused: (FocusState) -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -133,7 +128,6 @@ private fun NodeDetailsScreenContent(
                     }
                 ),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                onFocusChanged = onNodeNameFocused,
                 maxLines = 1,
                 singleLine = true
             )
@@ -150,7 +144,6 @@ private fun NodeDetailsScreenContent(
                     }
                 ),
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                onFocusChanged = onNodeAddressFocused,
                 maxLines = 1,
                 singleLine = true
             )
@@ -192,8 +185,6 @@ private fun PreviewNodeDetailsScreen() {
             onHowToRunNode = {},
             onNodeNameChanged = {},
             onNodeAddressChanged = {},
-            onNodeAddressFocused = {},
-            onNodeNameFocused = {}
         )
     }
 }
