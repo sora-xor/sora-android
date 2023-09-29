@@ -134,6 +134,7 @@ class LiquidityRemoveFragment : SoraBaseFragment<LiquidityRemoveViewModel>() {
                 }
                 if (viewModel.removeState.hintVisible) {
                     AlertDialog(
+                        backgroundColor = MaterialTheme.customColors.bgPage,
                         title = {
                             Text(
                                 text = stringResource(id = R.string.remove_liquidity_title),

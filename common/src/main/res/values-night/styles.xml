@@ -7,8 +7,8 @@
         <item name="android:statusBarColor">?attr/baseBackground</item>
         <item name="android:navigationBarColor">?attr/baseBackground</item>
         <item name="android:windowBackground">?attr/baseBackground</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
         <item name="android:enforceNavigationBarContrast" tools:targetApi="q">true</item>
         <item name="android:textColorHint">?attr/disabledButtonTextColor</item>
 
@@ -26,7 +26,7 @@
         <item name="contentTertiary">@color/grey_500</item>
         <item name="contentQuaternary">@color/grey_400</item>
         <item name="baseBackground">#FF070707</item>
-        <item name="baseBackgroundSecond">@color/neu_color_white</item>
+        <item name="baseBackgroundSecond">#FF171717</item>
         <item name="baseBackgroundDark">@color/backgroundDarkColor</item>
         <item name="baseBorderPrimary">@color/grey_300</item>
         <item name="baseBorderSecondary">@color/grey_200</item>

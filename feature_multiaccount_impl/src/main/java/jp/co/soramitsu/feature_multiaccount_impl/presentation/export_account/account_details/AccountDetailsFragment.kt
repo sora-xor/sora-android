@@ -112,6 +112,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
             viewModel.deleteDialogState.observeAsState().value?.let {
                 if (it) {
                     AlertDialog(
+                        backgroundColor = MaterialTheme.customColors.bgPage,
                         title = {
                             Text(
                                 text = stringResource(id = R.string.delete_backup_alert_title),

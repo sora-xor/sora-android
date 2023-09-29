@@ -47,6 +47,7 @@ fun SwitchNodeAlert(
     onSwitchConfirmed: () -> Unit
 ) {
     AlertDialog(
+        backgroundColor = MaterialTheme.customColors.bgPage,
         title = {
             Text(text = stringResource(R.string.select_node_switch_alert_title))
         },

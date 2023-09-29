@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.presentation.compose.components
 
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.AlertDialogData
 import jp.co.soramitsu.common.util.ext.safeCast
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 fun AlertDialogContent(openAlertDialog: MutableState<AlertDialogData>) {
@@ -49,6 +51,7 @@ fun AlertDialogContent(openAlertDialog: MutableState<AlertDialogData>) {
         val message = openAlertDialog.value.message.message()
         if (title != null && message != null) {
             AlertDialog(
+                backgroundColor = MaterialTheme.customColors.bgPage,
                 title = { Text(text = title) },
                 text = { Text(text = message) },
                 onDismissRequest = {

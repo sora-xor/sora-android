@@ -42,6 +42,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -60,6 +61,7 @@ import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @AndroidEntryPoint
 class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
@@ -97,6 +99,7 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
             )
             if (state.value.logoutDialog) {
                 AlertDialog(
+                    backgroundColor = MaterialTheme.customColors.bgPage,
                     onDismissRequest = viewModel::onLogoutDismiss,
                     buttons = {
                         Row(

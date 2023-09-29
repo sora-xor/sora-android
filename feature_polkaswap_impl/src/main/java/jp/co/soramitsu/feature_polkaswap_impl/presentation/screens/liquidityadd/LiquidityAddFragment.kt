@@ -168,6 +168,7 @@ class LiquidityAddFragment : SoraBaseFragment<LiquidityAddViewModel>() {
                 val state = viewModel.addState.collectAsStateWithLifecycle()
                 if (state.value.hintVisible) {
                     AlertDialog(
+                        backgroundColor = MaterialTheme.customColors.bgPage,
                         title = {
                             Text(
                                 text = stringResource(id = R.string.common_supply),
