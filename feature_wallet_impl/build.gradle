@@ -60,12 +60,8 @@ android {
     }
     namespace 'jp.co.soramitsu.feature_wallet_impl'
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(11)
     }
 }
 
