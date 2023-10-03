@@ -50,7 +50,8 @@ buildscript {
             jna                    : '5.8.0',
             accompanist            : '0.30.1',
             xserializationjson     : '1.5.0',
-            ktor                   : '2.3.1'
+            ktor                   : '2.3.1',
+            xbackup                : '0.0.2-20231002.173502-3'
     ]
 
     ext {
@@ -117,7 +118,6 @@ buildscript {
         webSocketLibDep = "com.neovisionaries:nv-websocket-client:$versions.webSocketLib"
         uiCoreDep = "jp.co.soramitsu:ui-core:$versions.uiCore"
         sharedUtilsDep = "jp.co.soramitsu.shared_features:core:$versions.sharedUtils"
-        sharedFeaturesBackupDep = "jp.co.soramitsu.shared_features:backup:$versions.sharedUtils"
         sharedFeaturesModelsDep = "jp.co.soramitsu.shared_features:models:$versions.sharedUtils"
 
         soraCardDep = "jp.co.soramitsu:android-sora-card:$versions.soraCard"
@@ -145,6 +145,8 @@ buildscript {
         coilComposeDep = "io.coil-kt:coil-compose:$versions.coil"
 
         web3jDep = "org.web3j:core:$versions.web3j"
+
+        xbackupDep = "jp.co.soramitsu:xbackup:$versions.xbackup"
 
         permissionsAccompanistDep = "com.google.accompanist:accompanist-permissions:$versions.accompanist"
         permissionsRuntimeDep = "com.guolindev.permissionx:permissionx:1.7.1"

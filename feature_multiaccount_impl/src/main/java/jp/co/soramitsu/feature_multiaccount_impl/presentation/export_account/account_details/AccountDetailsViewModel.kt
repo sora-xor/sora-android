@@ -43,13 +43,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.net.SocketException
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
-import jp.co.soramitsu.backup.BackupService
-import jp.co.soramitsu.backup.domain.exceptions.AuthConsentException
-import jp.co.soramitsu.backup.domain.exceptions.FileNotFoundException
-import jp.co.soramitsu.backup.domain.models.BackupAccountType
-import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
-import jp.co.soramitsu.backup.domain.models.Json
-import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
@@ -61,12 +54,20 @@ import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.common.resourses.ResourceManager
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
-import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.CreateBackupPasswordState
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
+import jp.co.soramitsu.xbackup.domain.exceptions.FileNotFoundException
+import jp.co.soramitsu.xbackup.domain.exceptions.StorageQuotaExceeded
+import jp.co.soramitsu.xbackup.domain.models.BackupAccountType
+import jp.co.soramitsu.xbackup.domain.models.CryptoType
+import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.xbackup.domain.models.Json
+import jp.co.soramitsu.xbackup.domain.models.Seed
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -262,8 +263,8 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onBackupPasswordClicked() {
         _createBackupPasswordState.value?.let { createBackupPasswordState ->
             _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = true)
-            try {
-                viewModelScope.launch(coroutineManager.io) {
+            viewModelScope.launch(coroutineManager.io) {
+                try {
                     _accountDetailsScreenState.value?.let { accountDetailsScreenState ->
                         account?.let { account ->
                             val passphrase =
@@ -312,11 +313,20 @@ class AccountDetailsViewModel @AssistedInject constructor(
                             }
                         }
                     }
+                } catch (e: SocketException) {
+                    withContext(coroutineManager.main) {
+                        onError(SoraException.networkError(resourceManager, e))
+                    }
+                } catch (e: AuthConsentException) {
+                    withContext(coroutineManager.main) {
+                        _consentExceptionHandler.value = e.intent
+                    }
+                } catch (e: StorageQuotaExceeded) {
+                    withContext(coroutineManager.main) {
+                        onError(R.string.backup_not_enough_space_error)
+                        _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = false)
+                    }
                 }
-            } catch (e: SocketException) {
-                onError(SoraException.networkError(resourceManager, e))
-            } catch (e: AuthConsentException) {
-                _consentExceptionHandler.value = e.intent
             }
         }
     }

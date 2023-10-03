@@ -28,14 +28,6 @@ android {
         }
     }
 
-//    compileOptions {
-//        sourceCompatibility JavaVersion.VERSION_1_8
-//        targetCompatibility JavaVersion.VERSION_1_8
-//    }
-//    kotlinOptions {
-//        jvmTarget = JavaVersion.VERSION_1_8
-//    }
-
     composeOptions {
         kotlinCompilerExtensionVersion versions.composeCompiler
     }
@@ -113,6 +105,7 @@ android {
             buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_PROD")
         }
     }
+
     namespace 'jp.co.soramitsu.common'
 }
 
@@ -157,7 +150,7 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation sharedFeaturesBackupDep
+    implementation xbackupDep
     implementation sharedUtilsDep
 
     implementation gsonDep

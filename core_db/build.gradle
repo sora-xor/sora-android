@@ -18,14 +18,6 @@ android {
         minSdkVersion minVersion
         targetSdkVersion targetVersion
 
-//        javaCompileOptions {
-//            annotationProcessorOptions {
-//                arguments += [
-//                        "room.schemaLocation":"$projectDir/schemas".toString(),
-//                        "room.incremental":"true"]
-//            }
-//        }
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -35,14 +27,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
-//    compileOptions {
-//        sourceCompatibility JavaVersion.VERSION_1_8
-//        targetCompatibility JavaVersion.VERSION_1_8
-//    }
-//    kotlinOptions {
-//        jvmTarget = JavaVersion.VERSION_1_8
-//    }
 
     flavorDimensions "default"
 

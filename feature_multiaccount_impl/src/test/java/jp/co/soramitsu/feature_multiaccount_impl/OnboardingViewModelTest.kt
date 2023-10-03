@@ -32,14 +32,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl
 
-import android.content.Intent
-import androidx.activity.result.ActivityResultLauncher
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.navigation.NavController
-import jp.co.soramitsu.backup.BackupService
+import jp.co.soramitsu.xbackup.BackupService
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
-import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.domain.InvitationHandler
 import jp.co.soramitsu.common.resourses.ResourceManager

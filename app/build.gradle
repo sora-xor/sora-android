@@ -72,14 +72,6 @@ android {
         }
     }
 
-//    compileOptions {
-//        sourceCompatibility JavaVersion.VERSION_1_8
-//        targetCompatibility JavaVersion.VERSION_1_8
-//    }
-//    kotlinOptions {
-//        jvmTarget = JavaVersion.VERSION_1_8
-//    }
-
     buildFeatures {
         viewBinding true
         buildConfig true
@@ -126,6 +118,10 @@ android {
             manifestPlaceholders.appIcon = "@mipmap/ic_prod_launcher"
             manifestPlaceholders.roundedIcon = "@mipmap/ic_prod_launcher_rounded"
         }
+    }
+
+    kotlin {
+        jvmToolchain(11)
     }
 
     applicationVariants.all { variant ->

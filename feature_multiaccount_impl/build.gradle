@@ -19,12 +19,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-//    compileOptions {
-//        sourceCompatibility JavaVersion.VERSION_1_8
-//        targetCompatibility JavaVersion.VERSION_1_8
-//    }
     kotlinOptions {
-//        jvmTarget = JavaVersion.VERSION_1_8
         freeCompilerArgs += ["-Xstring-concat=inline"]
     }
 
@@ -119,8 +114,8 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeLiveDataDep
     implementation navigationComposeDep
-    //implementation accompanistNavAnimationDep
-    implementation sharedFeaturesBackupDep
+
+    implementation xbackupDep
     implementation sharedFeaturesModelsDep
     debugImplementation composeToolingDep
 

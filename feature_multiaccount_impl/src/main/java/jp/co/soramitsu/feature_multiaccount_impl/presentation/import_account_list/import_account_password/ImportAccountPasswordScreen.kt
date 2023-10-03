@@ -55,7 +55,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.AccountIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon
@@ -69,6 +68,7 @@ import jp.co.soramitsu.ui_core.component.input.InputText
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
+import jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta
 
 @Composable
 fun ImportAccountPasswordScreen(
