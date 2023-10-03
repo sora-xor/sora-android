@@ -81,6 +81,7 @@ fun CreateAccountScreen(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x3),
                 text = stringResource(id = R.string.onboarding_create_account_description),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 

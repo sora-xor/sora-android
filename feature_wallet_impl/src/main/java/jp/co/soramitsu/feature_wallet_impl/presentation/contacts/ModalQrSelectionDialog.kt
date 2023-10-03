@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -53,6 +54,7 @@ import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 fun ModalQrSelectionDialog(
@@ -61,6 +63,7 @@ fun ModalQrSelectionDialog(
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
+        backgroundColor = MaterialTheme.customColors.bgPage,
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(Dimens.x3),
         buttons = {

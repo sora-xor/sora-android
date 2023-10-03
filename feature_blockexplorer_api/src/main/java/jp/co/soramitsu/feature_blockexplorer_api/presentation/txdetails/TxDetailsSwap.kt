@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_blockexplorer_api.presentation.txdetails
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -62,8 +61,8 @@ fun TxDetailsSwap(
     state: BasicTxDetailsState,
     amount1: String,
     amount2: String,
-    icon1: Uri,
-    icon2: Uri,
+    icon1: String,
+    icon2: String,
     onCloseClick: () -> Unit,
     onCopyClick: (String) -> Unit,
 ) {

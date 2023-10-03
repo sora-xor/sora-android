@@ -56,7 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.AccountIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.BackupAccountMetaWithIcon
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.ImportAccountPasswordState
 import jp.co.soramitsu.ui_core.component.button.FilledButton
@@ -94,6 +94,7 @@ fun ImportAccountPasswordScreen(
                         bottom = Dimens.x3
                     ),
                 text = stringResource(id = R.string.enter_password_description),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM
             )
             importAccountScreenState.selectedAccount?.let {
@@ -158,8 +159,8 @@ fun AccountWithIcon(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TokenIcon(
-            uri = accountIcon ?: R.drawable.ic_token_default,
+        AccountIcon(
+            drawable = accountIcon,
             size = 40.dp,
         )
 
@@ -171,6 +172,7 @@ fun AccountWithIcon(
                 text = accountName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textS,
             )
 

@@ -57,7 +57,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common.view.LoadMoreHandler
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
@@ -65,6 +64,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiM
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
+import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
@@ -123,6 +123,7 @@ private fun TxHistoryScreen(
 
             Column(
                 modifier = Modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -155,6 +156,7 @@ private fun TxHistoryScreen(
         HistoryState.Loading -> {
             Box(
                 modifier = Modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
@@ -167,6 +169,7 @@ private fun TxHistoryScreen(
         HistoryState.NoData -> {
             Box(
                 modifier = Modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .fillMaxSize()
                     .padding(horizontal = Dimens.x6),
                 contentAlignment = Alignment.Center
@@ -194,6 +197,7 @@ private fun TxHistoryList(
     LazyColumn(
         state = listState,
         modifier = Modifier
+            .background(color = MaterialTheme.customColors.bgSurface)
             .fillMaxSize(),
     ) {
         listItems.forEach { event ->
@@ -226,9 +230,9 @@ private fun EventUiModelItem(
 ) {
     Spacer(
         modifier = Modifier
+            .background(MaterialTheme.customColors.bgSurface)
             .fillMaxWidth()
             .height(Dimens.x1)
-            .background(MaterialTheme.customColors.bgSurface)
     )
     TxHistoryListItem(
         modifier = modifier,

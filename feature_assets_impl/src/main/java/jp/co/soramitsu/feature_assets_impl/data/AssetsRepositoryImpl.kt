@@ -147,17 +147,9 @@ class AssetsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getAssetsFavorite(address: String): List<Asset> {
+    override suspend fun getAssetsActive(address: String): List<Asset> {
         val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        return db.assetDao().getAssetsFavorite(address, selectedCurrency.code)
-            .map {
-                assetLocalToAssetMapper.map(it)
-            }
-    }
-
-    override suspend fun getAssetsVisible(address: String): List<Asset> {
-        val selectedCurrency = soraConfigManager.getSelectedCurrency()
-        return db.assetDao().getAssetsVisible(address, selectedCurrency.code)
+        return db.assetDao().getAssetsActive(address, selectedCurrency.code)
             .map {
                 assetLocalToAssetMapper.map(it)
             }
@@ -352,7 +344,7 @@ class AssetsRepositoryImpl @Inject constructor(
             tokensDeferred.await()
             val selectedCurrency = soraConfigManager.getSelectedCurrency()
             checkDefaultNeed(address, selectedCurrency.code)
-            val assets = db.assetDao().getAssetsVisible(address, selectedCurrency.code)
+            val assets = db.assetDao().getAssetsActive(address, selectedCurrency.code)
             insertAssetsInternal(address, assets, true)
         }
     }

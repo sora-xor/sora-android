@@ -41,6 +41,7 @@ import coil.decode.SvgDecoder
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.resourses.ResourceManager
@@ -68,6 +69,9 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
+
     override fun newImageLoader(): ImageLoader {
         val loader = ImageLoader.Builder(this).components {
             add(svg)
@@ -91,6 +95,8 @@ open class SoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
         OptionsProvider.CURRENT_VERSION_CODE = BuildConfig.VERSION_CODE
         OptionsProvider.CURRENT_VERSION_NAME = BuildConfig.VERSION_NAME
         OptionsProvider.APPLICATION_ID = BuildConfig.APPLICATION_ID
+
+        darkThemeManager.updateUiModeFromCache()
     }
 
     private fun initLogger() {

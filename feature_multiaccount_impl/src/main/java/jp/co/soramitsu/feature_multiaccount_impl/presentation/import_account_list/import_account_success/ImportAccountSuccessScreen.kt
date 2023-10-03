@@ -77,6 +77,7 @@ fun ImportAccountSuccessScreen(
                 modifier = Modifier
                     .padding(Dimens.x3),
                 text = stringResource(id = R.string.succesfully_imported_account_title),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.headline2,
                 textAlign = TextAlign.Center
             )

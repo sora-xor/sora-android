@@ -40,7 +40,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.base.SoraBaseFragment

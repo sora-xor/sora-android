@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -53,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.ui_core.component.asset.changePriceColor
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -66,7 +66,7 @@ internal fun AssetDetailsTokenPriceCard(
     tokenSymbol: String,
     tokenPrice: String,
     tokenPriceChange: String,
-    iconUri: Uri,
+    iconUri: String,
 ) {
     Box(
         modifier = Modifier
@@ -99,6 +99,7 @@ internal fun AssetDetailsTokenPriceCard(
                 Spacer(modifier = Modifier.height(Dimens.x1))
                 Text(
                     modifier = Modifier.wrapContentSize(),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.headline1,
                     textAlign = TextAlign.Center,
                     text = tokenName,
@@ -140,6 +141,6 @@ private fun PreviewAssetDetailsTokenPriceCard() {
         tokenSymbol = "XOR",
         tokenPrice = "$12.34",
         tokenPriceChange = "+4.5%",
-        iconUri = Uri.EMPTY,
+        iconUri = DEFAULT_ICON_URI,
     )
 }

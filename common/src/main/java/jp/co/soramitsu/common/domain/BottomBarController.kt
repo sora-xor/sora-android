@@ -43,7 +43,7 @@ interface BottomBarController {
     fun isBottomBarVisible(): Boolean
 }
 
-interface BarsColorhandler {
+interface BarsColorHandler {
 
     fun setColor(@AttrRes color: Int)
 }

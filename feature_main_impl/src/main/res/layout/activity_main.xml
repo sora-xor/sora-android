@@ -5,7 +5,7 @@
     android:id="@+id/clMainContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_white">
+    android:background="?attr/baseBackground">
 
     <FrameLayout
         android:id="@+id/flContainer"

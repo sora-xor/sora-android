@@ -44,11 +44,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import jp.co.soramitsu.common.presentation.compose.components.ContentCardEndless
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.BasicPoolListItem
 import jp.co.soramitsu.common_wallet.presentation.compose.previewBasicPoolListItemState
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.EcoSystemPoolsState
+import jp.co.soramitsu.ui_core.component.card.ContentCardEndless
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @Composable

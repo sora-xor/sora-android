@@ -13,6 +13,6 @@ def pipeline = new org.android.AppPipeline(steps: this,
     jobParams: jobParams,
     appPushNoti: true,
     gitUpdateSubmodule: true,
-    dockerImage: 'build-tools/android-build-box-jdk11:latest',
+    dockerImage: 'build-tools/android-build-box:jdk17',
     gpgFiles: ['app/google-services.json'])
 pipeline.runPipeline('sora')

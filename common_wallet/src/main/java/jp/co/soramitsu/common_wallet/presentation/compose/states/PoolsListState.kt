@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common_wallet.presentation.compose.states
 
-import android.net.Uri
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.formatFiat
 import jp.co.soramitsu.common.domain.formatFiatChange
@@ -47,8 +46,8 @@ class PoolsListState(
 )
 
 data class PoolsListItemState(
-    val token1Icon: Uri,
-    val token2Icon: Uri,
+    val token1Icon: String,
+    val token2Icon: String,
     val poolName: String,
     val poolAmounts: String,
     val fiat: String,

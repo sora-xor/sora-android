@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.response
 
-import androidx.annotation.Keep
+import jp.co.soramitsu.common.util.ParseModel
 
-@Keep
-data class BalanceResponse(val balance: String)
+data class BalanceResponse(val balance: String) : ParseModel()

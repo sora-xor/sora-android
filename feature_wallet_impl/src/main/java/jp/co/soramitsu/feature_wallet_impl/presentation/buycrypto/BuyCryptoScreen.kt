@@ -73,11 +73,15 @@ fun BuyCryptoScreen(
     onAlertCloseClick: () -> Unit,
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .background(color = MaterialTheme.customColors.bgPage)
+            .fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(color = MaterialTheme.customColors.bgSurface)
+                .fillMaxSize(),
             factory = { context ->
                 WebView(context).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -142,6 +146,7 @@ private fun PaymentWidgetUnavailableAlert(
                 .fillMaxWidth()
                 .padding(top = Dimens.x3),
             style = MaterialTheme.customTypography.headline1.copy(textAlign = TextAlign.Center),
+            color = MaterialTheme.customColors.fgPrimary,
             text = "%s (%d)".format(stringResource(id = SoraCardR.string.payment_widget_unavailable_message), alertCode ?: 0),
         )
         Text(
@@ -149,6 +154,7 @@ private fun PaymentWidgetUnavailableAlert(
                 .fillMaxWidth()
                 .padding(top = Dimens.x3),
             style = MaterialTheme.customTypography.paragraphM.copy(textAlign = TextAlign.Center),
+            color = MaterialTheme.customColors.fgPrimary,
             text = stringResource(id = SoraCardR.string.payment_widget_unavailable_description),
         )
         FilledButton(

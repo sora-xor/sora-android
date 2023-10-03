@@ -140,8 +140,6 @@ class CardsHubViewModelTest {
     @MockK
     private lateinit var connectionManager: ConnectionManager
 
-    private val mockedUri = mockk<Uri>()
-
     private lateinit var cardsHubViewModel: CardsHubViewModel
 
     private val account = SoraAccount("address", "name")
@@ -149,16 +147,8 @@ class CardsHubViewModelTest {
     @OptIn(ExperimentalStdlibApi::class)
     @Before
     fun setUp() = runTest {
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
-        mockkStatic(Token::iconUri)
         mockkObject(BuildConfigWrapper)
         every { BuildConfigWrapper.getSoraCardBackEndUrl() }.returns("soracard backend")
-        every { TestTokens.xorToken.iconUri() } returns mockedUri
-        every { TestTokens.valToken.iconUri() } returns mockedUri
-        every { TestTokens.pswapToken.iconUri() } returns mockedUri
-        every { TestTokens.xstusdToken.iconUri() } returns mockedUri
-        every { TestTokens.xstToken.iconUri() } returns mockedUri
         every { connectionManager.isConnected } returns true
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"

@@ -60,24 +60,6 @@ import jp.co.soramitsu.ui_core.theme.darkColors
 import jp.co.soramitsu.ui_core.theme.defaultCustomTypography
 import jp.co.soramitsu.ui_core.theme.lightColors
 
-private val LightColors = androidx.compose.material.lightColors(
-    primary = ThemeColors.Primary,
-    onPrimary = ThemeColors.OnPrimary,
-    secondary = ThemeColors.Secondary,
-    onSecondary = ThemeColors.OnSecondary,
-    background = ThemeColors.Background,
-    onBackground = ThemeColors.Background
-)
-
-private val DarkColors = androidx.compose.material.lightColors(
-    primary = ThemeColorsDark.Primary,
-    onPrimary = ThemeColorsDark.OnPrimary,
-    secondary = ThemeColorsDark.Secondary,
-    onSecondary = ThemeColorsDark.OnSecondary,
-    background = ThemeColorsDark.Background,
-    onBackground = ThemeColorsDark.Background
-)
-
 @Composable
 fun SoraAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -85,9 +67,8 @@ fun SoraAppTheme(
 ) {
     AppTheme(
         darkTheme = darkTheme,
-        // todo fix
         lightColors = soraLightColors,
-        darkColors = soraLightColors,
+        darkColors = soraDarkColors,
         typography = soraTypography,
         borderRadius = soraBorderRadius,
         content = content

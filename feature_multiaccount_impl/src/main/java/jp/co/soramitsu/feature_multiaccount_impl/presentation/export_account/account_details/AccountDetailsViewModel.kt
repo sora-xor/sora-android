@@ -324,6 +324,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
                 } catch (e: StorageQuotaExceeded) {
                     withContext(coroutineManager.main) {
                         onError(R.string.backup_not_enough_space_error)
+                        _createBackupPasswordState.value = createBackupPasswordState.copy(isLoading = false)
                     }
                 }
             }

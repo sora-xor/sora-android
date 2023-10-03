@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
-import android.net.Uri
 import android.os.Parcelable
 import java.math.BigDecimal
 import jp.co.soramitsu.common.R
@@ -87,7 +86,7 @@ data class Token(
     val symbol: String,
     val precision: Int,
     val isHidable: Boolean,
-    val iconFile: Uri?,
+    val iconFile: String?,
     val fiatPrice: Double?,
     val fiatPriceChange: Double?,
     val fiatSymbol: String?,
@@ -136,7 +135,7 @@ fun List<Token>.getByIdOrEmpty(id: String): Token =
         it.id == id
     } ?: AssetHolder.emptyToken
 
-fun Token.iconUri(): Uri = this.iconFile ?: DEFAULT_ICON_URI
+fun Token.iconUri(): String = this.iconFile ?: DEFAULT_ICON_URI
 
 fun Token.isMatchFilter(filter: String): Boolean =
     name.lowercase().contains(filter.lowercase()) ||
@@ -144,4 +143,4 @@ fun Token.isMatchFilter(filter: String): Boolean =
         id.lowercase().contains(filter.lowercase())
 
 val DEFAULT_ICON: Int = R.drawable.ic_token_default
-val DEFAULT_ICON_URI = Uri.parse("file:///android_asset/ic_token_default.png")
+val DEFAULT_ICON_URI = "file:///android_asset/ic_token_default.png"

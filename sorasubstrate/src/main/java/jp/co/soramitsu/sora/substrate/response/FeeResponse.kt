@@ -32,11 +32,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.response
 
-import androidx.annotation.Keep
 import java.math.BigInteger
+import jp.co.soramitsu.common.util.ParseModel
 
-@Keep
 data class FeeResponse(
     val partialFee: BigInteger,
     val weight: Long
-)
+) : ParseModel()

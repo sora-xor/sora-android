@@ -42,12 +42,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.graphics.Color
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -55,6 +55,7 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
 import jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose.PoolDetailsScreen
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -82,7 +83,11 @@ class PoolDetailsFragment : SoraBaseFragment<PoolDetailsViewModel>() {
     }
 
     @Composable
-    override fun backgroundColorComposable() = colorResource(id = R.color.polkaswap_background_alfa)
+    override fun backgroundColorComposable() = Color(
+        color = requireContext().getColorFromAttrs(
+            R.attr.polkaswapBackground
+        ).data
+    )
 
     override fun backgroundColor(): Int = R.attr.polkaswapBackground
 

@@ -58,8 +58,9 @@ import dev.chrisbanes.insetter.applyInsetter
 import dev.chrisbanes.insetter.windowInsetTypesOf
 import java.util.Date
 import javax.inject.Inject
-import jp.co.soramitsu.common.domain.BarsColorhandler
+import jp.co.soramitsu.common.domain.BarsColorHandler
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.inappupdate.InAppUpdateManager
 import jp.co.soramitsu.common.presentation.view.ToolbarActivity
 import jp.co.soramitsu.common.util.DebounceClickHandler
@@ -82,7 +83,7 @@ import kotlinx.coroutines.launch
 class MainActivity :
     ToolbarActivity<MainViewModel, ActivityMainBinding>(),
     BottomBarController,
-    BarsColorhandler,
+    BarsColorHandler,
     OnboardingNavigator,
     InAppUpdateManager.UpdateManagerListener {
 
@@ -152,6 +153,9 @@ class MainActivity :
 
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
+
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
 
     private var timeInBackground: Date? = null
 
@@ -288,15 +292,6 @@ class MainActivity :
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        intent?.let {
-//            if (ACTION_INVITE == it.action) {
-//                viewModel.startedWithInviteAction()
-//            }
-        }
-    }
-
     override fun setColor(@AttrRes color: Int) {
         curBarsColor = color
         window.statusBarColor = attrColor(color)
@@ -377,6 +372,7 @@ class MainActivity :
     }
 
     override fun onTrimMemory(i: Int) {
+        super.onTrimMemory(i)
         if (i == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
             timeInBackground = Date()
         }

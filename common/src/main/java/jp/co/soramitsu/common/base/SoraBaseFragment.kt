@@ -39,7 +39,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
+import androidx.activity.addCallback
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,6 +51,8 @@ import androidx.compose.material.SnackbarResult
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,12 +64,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.findNavController
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.BarsColorhandler
+import jp.co.soramitsu.common.domain.BarsColorHandler
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
@@ -88,9 +91,19 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     @Inject
     lateinit var debounceClickHandler: DebounceClickHandler
 
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        activity?.onBackPressedDispatcher?.addCallback(this) {
+            onBack()
+        }
+    }
+
     override fun onResume() {
         super.onResume()
-        activity?.safeCast<BarsColorhandler>()?.setColor(backgroundColor())
+        activity?.safeCast<BarsColorHandler>()?.setColor(backgroundColor())
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -110,13 +123,18 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                SoraAppTheme {
+                val isDarkModeOn: State<Boolean> =
+                    darkThemeManager.darkModeStatusFlow.collectAsState()
+
+                SoraAppTheme(
+                    darkTheme = isDarkModeOn.value
+                ) {
                     val scaffoldState = rememberScaffoldState()
                     val scrollState = rememberScrollState()
                     val coroutineScope = rememberCoroutineScope()
                     val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
 
-                    val navController = rememberAnimatedNavController()
+                    val navController = rememberNavController()
                     LaunchedEffect(Unit) {
                         navController.addOnDestinationChangedListener { _, destination, _ ->
                             destination.route?.let {
@@ -137,6 +155,19 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                             navController.navigate(route = it.first) {
                                 it.second.invoke(this)
                             }
+                        }
+                        viewModel.navToStart.observe {
+                            with(navController) {
+                                popBackStack(graph.startDestinationId, true)
+                                graph.setStartDestination(it)
+                                navigate(it)
+                            }
+//                            with(navController) {
+//                                navigate(it) {
+//                                    popUpTo(graph.startDestinationId) {inclusive = true}
+//                                }
+//                                graph.setStartDestination(it)
+//                            }
                         }
                         viewModel.errorLiveData.observe {
                             openAlertDialog.value = AlertDialogData(
@@ -197,10 +228,7 @@ abstract class SoraBaseFragment<T : BaseViewModel> : Fragment() {
                             )
                         }
                     ) { padding ->
-                        BackHandler {
-                            onBack()
-                        }
-                        AnimatedNavHost(
+                        NavHost(
                             modifier = Modifier
                                 .padding(padding)
                                 .fillMaxSize(),

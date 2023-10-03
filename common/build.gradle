@@ -7,8 +7,12 @@ apply plugin: 'kotlinx-serialization'
 apply from: '../tests.gradle'
 apply from: '../secrets.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
-    compileSdkVersion compileVersion
+    compileSdk compileVersion
 
     defaultConfig {
         minSdkVersion minVersion
@@ -22,15 +26,6 @@ android {
             minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     composeOptions {
@@ -110,6 +105,16 @@ android {
             buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_PROD")
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    namespace 'jp.co.soramitsu.common'
 }
 
 dependencies {
@@ -178,7 +183,8 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeAnimationGraphicsDep
     implementation composeToolingPreviewDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
+    implementation navigationComposeDep
     debugImplementation composeToolingDep
 
     testImplementation project(":test_shared")
