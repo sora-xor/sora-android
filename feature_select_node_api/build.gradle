@@ -64,10 +64,6 @@ android {
             dimension 'default'
         }
     }
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

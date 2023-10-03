@@ -46,10 +46,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.soracrypro'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

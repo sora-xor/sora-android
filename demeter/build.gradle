@@ -25,6 +25,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     composeOptions {
         kotlinCompilerExtensionVersion versions.composeCompiler
     }
@@ -51,10 +52,6 @@ android {
         production {
             dimension 'default'
         }
-    }
-
-    kotlin {
-        jvmToolchain(11)
     }
 }
 

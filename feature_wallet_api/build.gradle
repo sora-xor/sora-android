@@ -46,10 +46,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.feature_wallet_api'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

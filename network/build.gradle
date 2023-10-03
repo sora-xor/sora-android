@@ -44,10 +44,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.network'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

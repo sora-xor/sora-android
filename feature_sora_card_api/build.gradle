@@ -45,10 +45,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.feature_sora_card_api'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

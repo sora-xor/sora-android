@@ -53,10 +53,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.common_wallet'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

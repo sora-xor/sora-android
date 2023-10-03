@@ -59,10 +59,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.feature_multiaccount_impl'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {
@@ -118,6 +114,7 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeLiveDataDep
     implementation navigationComposeDep
+
     implementation xbackupDep
     implementation sharedFeaturesModelsDep
     debugImplementation composeToolingDep

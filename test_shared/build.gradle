@@ -22,10 +22,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.test_shared'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

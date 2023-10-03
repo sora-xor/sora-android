@@ -28,7 +28,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
     flavorDimensions "default"
 
     productFlavors {
@@ -49,10 +48,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.sora.substrate'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

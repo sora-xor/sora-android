@@ -106,10 +106,6 @@ android {
         }
     }
 
-    kotlin {
-        jvmToolchain(11)
-    }
-
     namespace 'jp.co.soramitsu.common'
 }
 

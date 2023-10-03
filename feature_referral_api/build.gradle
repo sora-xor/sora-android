@@ -44,10 +44,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.feature_referral_api'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {

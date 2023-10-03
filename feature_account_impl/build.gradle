@@ -45,10 +45,6 @@ android {
         }
     }
     namespace 'jp.co.soramitsu.feature_account_impl'
-
-    kotlin {
-        jvmToolchain(11)
-    }
 }
 
 dependencies {
