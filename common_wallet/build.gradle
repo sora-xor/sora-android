@@ -62,10 +62,10 @@ dependencies {
     implementation project(":common")
     implementation project(":feature_blockexplorer_api")
     implementation project(":core_db")
+    implementation project(":network")
 
     implementation coreKtxDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
@@ -76,7 +76,6 @@ dependencies {
     implementation googlePlayCoreDep
     implementation coilSvgDep
 
-    implementation xNetworkingDep
     implementation webSocketLibDep
     implementation uiCoreDep
 

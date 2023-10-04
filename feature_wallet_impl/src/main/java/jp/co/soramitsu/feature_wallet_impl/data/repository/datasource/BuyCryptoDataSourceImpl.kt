@@ -40,7 +40,7 @@ import jp.co.soramitsu.network.WebSocket
 import jp.co.soramitsu.network.WebSocketListener
 import jp.co.soramitsu.network.WebSocketRequest
 import jp.co.soramitsu.network.WebSocketResponse
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.decodeFromString

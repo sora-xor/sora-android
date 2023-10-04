@@ -70,6 +70,7 @@ dependencies {
     implementation project(":feature_blockexplorer_api")
     implementation project(":sorasubstrate")
     implementation project(":core_di")
+    implementation project(":network")
 
     implementation kotlinxSerializationJsonDep
 
@@ -88,7 +89,6 @@ dependencies {
     implementation navigationUiDep
 
     implementation uiCoreDep
-    implementation xNetworkingDep
 
     implementation timberDep
 

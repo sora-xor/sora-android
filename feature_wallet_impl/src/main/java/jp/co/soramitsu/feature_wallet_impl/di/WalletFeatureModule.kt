@@ -57,7 +57,7 @@ import jp.co.soramitsu.feature_wallet_impl.data.repository.datasource.PrefsWalle
 import jp.co.soramitsu.feature_wallet_impl.domain.PoolsFeatureStorageManager
 import jp.co.soramitsu.feature_wallet_impl.domain.WalletInteractorImpl
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
 import kotlinx.coroutines.FlowPreview
 
 @FlowPreview

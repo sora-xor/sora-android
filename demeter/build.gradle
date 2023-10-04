@@ -64,6 +64,7 @@ dependencies {
     implementation project(":feature_blockexplorer_api")
     implementation project(":feature_account_api")
     implementation project(":sorasubstrate")
+    implementation project(":network")
 
     implementation daggerDep
     kapt daggerKaptDep
@@ -75,10 +76,8 @@ dependencies {
 
     implementation roomDep
     implementation roomKtxDep
-    //kapt roomKaptDep
 
     implementation sharedUtilsDep
-    implementation xNetworkingDep
 
     testImplementation project(":test_shared")
     testImplementation project(":test_data")

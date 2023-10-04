@@ -44,10 +44,12 @@ import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
 import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
-import jp.co.soramitsu.xnetworking.common.Utils.toDoubleNan
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.basic.common.Utils.toDoubleNan
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.sbapy.SbApyInfo
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
@@ -64,6 +66,8 @@ class BlockExplorerManager @Inject constructor(
 
     private var assetsInfo: List<Pair<String, BigInteger>>? = null
 
+    private val mutex = Mutex()
+
     fun getTempApy(id: String) = tempApy.find {
         it.id == id
     }?.sbApy?.times(100)
@@ -73,25 +77,27 @@ class BlockExplorerManager @Inject constructor(
             assetsInfo = it
         }
 
-    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> = runCatching {
-        val selected = soraConfigManager.getSelectedCurrency()
-        val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
-        val yesterdayHour = yesterday()
-        val resultList = mutableListOf<Pair<String, BigInteger>>()
-        val fiats = mutableListOf<FiatTokenPriceLocal>()
-        info.getAssetsInfo(tokenIds, yesterdayHour).forEach { assetInfo ->
-            val dbValue = tokens.find { it.tokenIdFiat == assetInfo.tokenId }
-            val delta = assetInfo.hourDelta
-            if (dbValue != null && delta != null) {
-                fiats.add(dbValue.copy(fiatPricePrevH = delta, fiatPricePrevHTime = yesterdayHour))
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> = mutex.withLock {
+        runCatching {
+            val selected = soraConfigManager.getSelectedCurrency()
+            val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
+            val yesterdayHour = yesterday()
+            val resultList = mutableListOf<Pair<String, BigInteger>>()
+            val fiats = mutableListOf<FiatTokenPriceLocal>()
+            info.getAssetsInfo(tokenIds, yesterdayHour).forEach { assetInfo ->
+                val dbValue = tokens.find { it.tokenIdFiat == assetInfo.tokenId }
+                val delta = assetInfo.hourDelta
+                if (dbValue != null && delta != null) {
+                    fiats.add(dbValue.copy(fiatPricePrevH = delta, fiatPricePrevHTime = yesterdayHour))
+                }
+                resultList.add(assetInfo.tokenId to BigInteger(assetInfo.liquidity))
             }
-            resultList.add(assetInfo.tokenId to BigInteger(assetInfo.liquidity))
+            db.assetDao().insertFiatPrice(fiats)
+            resultList
+        }.getOrElse {
+            FirebaseWrapper.recordException(it)
+            emptyList()
         }
-        db.assetDao().insertFiatPrice(fiats)
-        resultList
-    }.getOrElse {
-        FirebaseWrapper.recordException(it)
-        emptyList()
     }
 
     suspend fun updatePoolsSbApy() {
@@ -99,7 +105,12 @@ class BlockExplorerManager @Inject constructor(
     }
 
     suspend fun updateFiat() {
-        updateFiatInternal()
+        if (appStateProvider.isForeground) {
+            runCatching {
+                val response = info.getFiat()
+                updateFiatPrices(response.map { FiatInfo(it.id, it.priceUsd) })
+            }
+        }
     }
 
     suspend fun updateReferrerRewards(
@@ -136,16 +147,7 @@ class BlockExplorerManager @Inject constructor(
         }
     }
 
-    private suspend fun updateFiatInternal() {
-        if (appStateProvider.isForeground) {
-            runCatching {
-                val response = info.getFiat()
-                updateFiatPrices(response.map { FiatInfo(it.id, it.priceUsd) })
-            }
-        }
-    }
-
-    private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) {
+    private suspend fun updateFiatPrices(fiatData: List<FiatInfo>) = mutex.withLock {
         val selected = soraConfigManager.getSelectedCurrency()
         val tokens = db.assetDao().getTokensWithFiatOfCurrency(selected.code)
 

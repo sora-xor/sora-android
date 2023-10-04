@@ -56,8 +56,8 @@ dependencies {
     implementation project(":common_wallet")
     implementation project(":feature_blockexplorer_api")
     implementation project(":soracrypro")
+    implementation project(":network")
 
-    implementation xNetworkingDep
     implementation gsonDep
     implementation webSocketLibDep
     implementation coroutineAndroidDep

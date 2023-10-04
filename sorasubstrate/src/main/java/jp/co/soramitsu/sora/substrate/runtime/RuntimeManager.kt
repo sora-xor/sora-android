@@ -66,7 +66,7 @@ import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
 import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
 import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.chain.RuntimeVersion
 import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.chain.RuntimeVersionRequest
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
