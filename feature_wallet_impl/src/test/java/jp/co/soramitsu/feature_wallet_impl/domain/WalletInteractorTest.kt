@@ -48,7 +48,7 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.BlockEntry
 import jp.co.soramitsu.sora.substrate.models.BlockResponse
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
@@ -244,7 +244,7 @@ class WalletInteractorTest {
 //        }
 
     private fun accountList() = listOf(
-        "use","contact1","contact2",
+        "use", "contact1", "contact2",
     )
 
     private fun assetList() = listOf(

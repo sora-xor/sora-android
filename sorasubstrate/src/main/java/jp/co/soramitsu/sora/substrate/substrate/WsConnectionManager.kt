@@ -37,9 +37,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
-import jp.co.soramitsu.shared_utils.wsrpc.SocketService
-import jp.co.soramitsu.shared_utils.wsrpc.networkStateFlow
-import jp.co.soramitsu.shared_utils.wsrpc.state.SocketStateMachine
+import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
+import jp.co.soramitsu.xsubstrate.wsrpc.networkStateFlow
+import jp.co.soramitsu.xsubstrate.wsrpc.state.SocketStateMachine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -85,12 +85,15 @@ class WsConnectionManager(
                             socket.start(address, true)
                         }
                     }
+
                     AppStateProvider.AppEvent.ON_RESUME -> {
                         socket.resume()
                     }
+
                     AppStateProvider.AppEvent.ON_PAUSE -> {
                         socket.pause()
                     }
+
                     AppStateProvider.AppEvent.ON_DESTROY -> {
                         socket.stop()
                     }

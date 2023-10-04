@@ -95,13 +95,12 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    //implementation accompanistNavAnimationDep
-
     implementation roomDep
     implementation roomKtxDep
 
     implementation timberDep
-    implementation sharedUtilsDep
+
+    implementation xsubstrateDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

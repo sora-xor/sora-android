@@ -147,7 +147,7 @@
 
 # Keep sora sdk classes
 -keep class jp.co.soramitsu.sora.sdk.** { *; }
--keep class jp.co.soramitsu.shared_utils.** { *; }
+-keep class jp.co.soramitsu.xsubstrate.** { *; }
 -keep class net.jpountz.** { *; }
 -keep class com.sun.jna.** { *; }
 

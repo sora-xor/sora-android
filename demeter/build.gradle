@@ -71,13 +71,15 @@ dependencies {
     implementation coroutineDep
     implementation coroutineAndroidDep
 
+    implementation xsubstrateDep
+
     implementation composeRuntimeDep
 
     implementation roomDep
     implementation roomKtxDep
     //kapt roomKaptDep
 
-    implementation sharedUtilsDep
+//    implementation sharedUtilsDep
     implementation xNetworkingDep
 
     testImplementation project(":test_shared")

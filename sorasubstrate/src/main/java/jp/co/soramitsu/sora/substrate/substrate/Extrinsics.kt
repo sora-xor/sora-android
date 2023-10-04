@@ -34,13 +34,13 @@ package jp.co.soramitsu.sora.substrate.substrate
 
 import java.math.BigInteger
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.DictEnum
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.composite.Struct
-import jp.co.soramitsu.shared_utils.runtime.extrinsic.ExtrinsicBuilder
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.mapCodeToken
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.DictEnum
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.composite.Struct
+import jp.co.soramitsu.xsubstrate.runtime.extrinsic.ExtrinsicBuilder
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 
 fun ExtrinsicBuilder.setReferrer(referrer: String) =
     this.call(

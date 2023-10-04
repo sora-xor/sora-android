@@ -68,7 +68,7 @@ dependencies {
     implementation project(":sorasubstrate")
     implementation project(":feature_blockexplorer_api")
 
-    implementation sharedUtilsDep
+//    implementation sharedUtilsDep
 
     implementation androidDep
     implementation materialDep

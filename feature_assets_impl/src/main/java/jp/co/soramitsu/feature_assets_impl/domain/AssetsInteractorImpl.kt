@@ -52,9 +52,9 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.TransactionHistoryReposito
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionBuilder
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
-import jp.co.soramitsu.shared_utils.extensions.toHexString
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.xcrypto.util.toHexString
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch

@@ -44,7 +44,6 @@ import jp.co.soramitsu.core_db.model.AssetTokenWithFiatLocal
 import jp.co.soramitsu.core_db.model.TokenLocal
 import jp.co.soramitsu.feature_assets_api.data.AssetsRepository
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
 import jp.co.soramitsu.sora.substrate.substrate.ExtrinsicManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateCalls
@@ -52,6 +51,7 @@ import jp.co.soramitsu.test_data.TestAssets
 import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraCurrency
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert

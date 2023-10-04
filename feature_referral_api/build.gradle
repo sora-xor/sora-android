@@ -57,7 +57,7 @@ dependencies {
     implementation navigationUiDep
 
     implementation xNetworkingDep
-    implementation sharedUtilsDep
+    implementation xsubstrateDep
 
     implementation daggerDep
     kapt daggerKaptDep

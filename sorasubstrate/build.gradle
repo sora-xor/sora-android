@@ -57,6 +57,9 @@ dependencies {
     implementation project(":feature_blockexplorer_api")
     implementation project(":soracrypro")
 
+    implementation xsubstrateDep
+    implementation xcryptoDep
+
     implementation xNetworkingDep
     implementation gsonDep
     implementation webSocketLibDep

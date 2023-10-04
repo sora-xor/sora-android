@@ -98,7 +98,7 @@ dependencies {
     implementation roomKtxDep
 
     implementation timberDep
-    implementation sharedUtilsDep
+//    implementation sharedUtilsDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep

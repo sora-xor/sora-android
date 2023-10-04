@@ -35,9 +35,9 @@ package jp.co.soramitsu.feature_account_impl.data.repository.datasource
 import jp.co.soramitsu.common.data.EncryptedPreferences
 import jp.co.soramitsu.common.data.SoraPreferences
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
-import jp.co.soramitsu.shared_utils.extensions.fromHex
-import jp.co.soramitsu.shared_utils.extensions.toHexString
+import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.toHexString
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 
 class PrefsCredentialsDatasource constructor(
     private val encryptedPreferences: EncryptedPreferences,
@@ -68,7 +68,11 @@ class PrefsCredentialsDatasource constructor(
         val publicKeyBytes = encryptedPreferences.getDecryptedString(PREFS_PUBLIC_KEY + suffixAddress).fromHex()
         val nonce = encryptedPreferences.getDecryptedString(PREFS_KEY_NONCE + suffixAddress).fromHex()
 
-        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Sr25519Keypair(privateKeyBytes, publicKeyBytes, nonce)
+        return if (privateKeyBytes.isEmpty() || publicKeyBytes.isEmpty()) null else Sr25519Keypair(
+            privateKeyBytes,
+            publicKeyBytes,
+            nonce
+        )
     }
 
     override suspend fun saveMnemonic(mnemonic: String, suffixAddress: String) {
@@ -88,8 +92,9 @@ class PrefsCredentialsDatasource constructor(
     }
 
     override suspend fun clearAllDataForAddress(suffixAddress: String) {
-        val fields = listOf(PREFS_ADDRESS, PREFS_PRIVATE_KEY, PREFS_PUBLIC_KEY, PREFS_KEY_NONCE, PREFS_MNEMONIC, PREFS_SEED)
-            .map { it + suffixAddress }
+        val fields =
+            listOf(PREFS_ADDRESS, PREFS_PRIVATE_KEY, PREFS_PUBLIC_KEY, PREFS_KEY_NONCE, PREFS_MNEMONIC, PREFS_SEED)
+                .map { it + suffixAddress }
         encryptedPreferences.clear(fields)
     }
 }

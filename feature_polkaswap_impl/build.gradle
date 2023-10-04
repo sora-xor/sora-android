@@ -73,7 +73,8 @@ dependencies {
     implementation project(":feature_main_api")
     implementation project(":feature_blockexplorer_api")
 
-    implementation sharedUtilsDep
+    implementation xsubstrateDep
+    implementation xcryptoDep
 
     implementation androidDep
     implementation materialDep

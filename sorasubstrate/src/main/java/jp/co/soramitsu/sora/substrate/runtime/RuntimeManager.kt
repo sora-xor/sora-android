@@ -41,32 +41,32 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.shared_utils.runtime.RuntimeSnapshot
-import jp.co.soramitsu.shared_utils.runtime.definitions.TypeDefinitionParser
-import jp.co.soramitsu.shared_utils.runtime.definitions.TypeDefinitionsTree
-import jp.co.soramitsu.shared_utils.runtime.definitions.dynamic.DynamicTypeResolver
-import jp.co.soramitsu.shared_utils.runtime.definitions.dynamic.extentsions.GenericsExtension
-import jp.co.soramitsu.shared_utils.runtime.definitions.registry.TypePreset
-import jp.co.soramitsu.shared_utils.runtime.definitions.registry.TypeRegistry
-import jp.co.soramitsu.shared_utils.runtime.definitions.registry.v13Preset
-import jp.co.soramitsu.shared_utils.runtime.definitions.registry.v14Preset
-import jp.co.soramitsu.shared_utils.runtime.definitions.types.fromByteArrayOrNull
-import jp.co.soramitsu.shared_utils.runtime.definitions.v14.TypesParserV14
-import jp.co.soramitsu.shared_utils.runtime.metadata.GetMetadataRequest
-import jp.co.soramitsu.shared_utils.runtime.metadata.RuntimeMetadataReader
-import jp.co.soramitsu.shared_utils.runtime.metadata.builder.VersionedRuntimeBuilder
-import jp.co.soramitsu.shared_utils.runtime.metadata.module
-import jp.co.soramitsu.shared_utils.runtime.metadata.v14.RuntimeMetadataSchemaV14
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAccountId
-import jp.co.soramitsu.shared_utils.ss58.SS58Encoder.toAddress
-import jp.co.soramitsu.shared_utils.wsrpc.SocketService
-import jp.co.soramitsu.shared_utils.wsrpc.executeAsync
-import jp.co.soramitsu.shared_utils.wsrpc.mappers.nonNull
-import jp.co.soramitsu.shared_utils.wsrpc.mappers.pojo
-import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.chain.RuntimeVersion
-import jp.co.soramitsu.shared_utils.wsrpc.request.runtime.chain.RuntimeVersionRequest
 import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
+import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionParser
+import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionsTree
+import jp.co.soramitsu.xsubstrate.runtime.definitions.dynamic.DynamicTypeResolver
+import jp.co.soramitsu.xsubstrate.runtime.definitions.dynamic.extentsions.GenericsExtension
+import jp.co.soramitsu.xsubstrate.runtime.definitions.registry.TypePreset
+import jp.co.soramitsu.xsubstrate.runtime.definitions.registry.TypeRegistry
+import jp.co.soramitsu.xsubstrate.runtime.definitions.registry.v13Preset
+import jp.co.soramitsu.xsubstrate.runtime.definitions.registry.v14Preset
+import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromByteArrayOrNull
+import jp.co.soramitsu.xsubstrate.runtime.definitions.v14.TypesParserV14
+import jp.co.soramitsu.xsubstrate.runtime.metadata.GetMetadataRequest
+import jp.co.soramitsu.xsubstrate.runtime.metadata.RuntimeMetadataReader
+import jp.co.soramitsu.xsubstrate.runtime.metadata.builder.VersionedRuntimeBuilder
+import jp.co.soramitsu.xsubstrate.runtime.metadata.module
+import jp.co.soramitsu.xsubstrate.runtime.metadata.v14.RuntimeMetadataSchemaV14
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAccountId
+import jp.co.soramitsu.xsubstrate.ss58.SS58Encoder.toAddress
+import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
+import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
+import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
+import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
+import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersion
+import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.chain.RuntimeVersionRequest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -193,6 +193,7 @@ class RuntimeManager @Inject constructor(
                     buildTypeRegistry14(sora2TypesRaw, runtimeMetadataReader, runtimeVersion)
                 }
             }
+
             is MetadataSource.SoraNet -> {
                 val sora2Types = networkClient.get(soraConfigManager.getSubstrateTypesUrl())
                 buildTypeRegistry14(sora2Types, runtimeMetadataReader, runtimeVersion).also {

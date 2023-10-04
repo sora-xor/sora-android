@@ -196,6 +196,8 @@ dependencies {
 
     implementation timberDep
 
+    implementation xsubstrateDep
+
     implementation daggerDep
     kapt daggerKaptDep
     implementation hiltWorkManagerDep
