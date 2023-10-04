@@ -52,11 +52,11 @@ dependencies {
     implementation project(":sorasubstrate")
     implementation project(":feature_wallet_api")
     implementation project(":feature_blockexplorer_api")
+    implementation project(":network")
 
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation xNetworkingDep
     implementation sharedUtilsDep
 
     implementation daggerDep

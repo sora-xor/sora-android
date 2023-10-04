@@ -69,10 +69,10 @@ dependencies {
     implementation project(":feature_referral_api")
     implementation project(":feature_blockexplorer_api")
     implementation project(":sorasubstrate")
+    implementation project(":network")
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
@@ -108,8 +108,6 @@ dependencies {
 
     implementation navigationFragmentDep
     implementation navigationUiDep
-
-    implementation xNetworkingDep
 
     implementation daggerDep
     kapt daggerKaptDep

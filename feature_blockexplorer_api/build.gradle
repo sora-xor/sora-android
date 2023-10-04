@@ -64,10 +64,10 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_db")
+    implementation project(":network")
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coilDep
@@ -105,8 +105,6 @@ dependencies {
 
     implementation navigationFragmentDep
     implementation navigationUiDep
-
-    implementation xNetworkingDep
 
     implementation daggerDep
     kapt daggerKaptDep
