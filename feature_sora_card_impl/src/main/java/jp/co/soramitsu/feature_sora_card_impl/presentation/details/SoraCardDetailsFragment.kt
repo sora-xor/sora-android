@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
 import android.os.Bundle
 import android.view.View
@@ -86,6 +86,7 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
         composable(theOnlyRoute) {
             val state = viewModel.soraCardDetailsScreenState.collectAsStateWithLifecycle()
             SoraCardDetailsScreen(
+                scrollState = scrollState,
                 soraCardDetailsScreenState = state.value,
                 onShowSoraCardDetailsClick = viewModel::onShowSoraCardDetailsClick,
                 onSoraCardMenuActionClick = viewModel::onSoraCardMenuActionClick,

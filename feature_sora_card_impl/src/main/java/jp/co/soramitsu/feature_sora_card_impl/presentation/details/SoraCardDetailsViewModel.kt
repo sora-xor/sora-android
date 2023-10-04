@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -65,10 +65,10 @@ class SoraCardDetailsViewModel @Inject constructor(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
                 balance = 0f,
                 isCardEnabled = false,
-                soraCardMenuActions = SoraCardMenuAction.values().toList()
+                soraCardMenuActions = SoraCardMenuAction.entries
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
-                soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
+                soraCardSettingsOptions = SoraCardSettingsOption.entries
             ),
             logoutDialog = false,
         )

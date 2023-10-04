@@ -171,6 +171,12 @@ internal class SoraCardInteractorImpl @Inject constructor(
             sorted.first().iban
         }
 
+    override suspend fun fetchIbanBalance(): Result<Long> =
+        soraCardClientProxy.getIBAN().mapCatching { wrapper ->
+            val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
+            sorted.first().availableBalance
+        }
+
     override suspend fun logOutFromSoraCard() {
         soraCardClientProxy.logout()
         setLogout()

@@ -75,7 +75,7 @@
 
     <fragment
         android:id="@+id/soraCardDetailsFragment"
-        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details.SoraCardDetailsFragment" />
+        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.details.SoraCardDetailsFragment" />
 
     <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />
