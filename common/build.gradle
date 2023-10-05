@@ -113,13 +113,13 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":android-foundation")
     implementation project(":soracrypro")
+    implementation project(":network")
 
     implementation activityKtxDep
     implementation coreKtxDep
     implementation androidDep
     implementation appCompatResourcesDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
@@ -132,7 +132,6 @@ dependencies {
     implementation googlePlayCoreDep
     implementation coilSvgDep
 
-    implementation xNetworkingDep
     implementation webSocketLibDep
     implementation uiCoreDep
 

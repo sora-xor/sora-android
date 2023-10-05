@@ -64,10 +64,10 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_db")
+    implementation project(":network")
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coilDep
@@ -92,13 +92,12 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    //implementation accompanistNavAnimationDep
+    implementation kotlinxSerializationJsonDep
 
     implementation roomDep
     implementation roomKtxDep
 
     implementation timberDep
-//    implementation sharedUtilsDep
 
     implementation lifecycleProcessDep
     kapt lifecycleKaptDep
@@ -106,10 +105,12 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation xNetworkingDep
-
     implementation daggerDep
     kapt daggerKaptDep
 
     testImplementation project(":test_shared")
+}
+
+kapt {
+    correctErrorTypes true
 }

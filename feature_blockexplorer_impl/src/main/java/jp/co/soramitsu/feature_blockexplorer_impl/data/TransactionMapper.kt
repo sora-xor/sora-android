@@ -46,8 +46,8 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.sora.substrate.runtime.Method
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
-import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItem
-import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItemParam
+import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItem
+import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItemParam
 
 fun mapHistoryItemsToTransactions(
     txs: List<TxHistoryItem>,

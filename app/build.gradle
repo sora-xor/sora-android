@@ -120,10 +120,6 @@ android {
         }
     }
 
-    kotlin {
-        jvmToolchain(11)
-    }
-
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
             outputFileName = new File("Sora_" + variant.versionName + "_" + variant.flavorName + "_" + buildType.name + ".apk")
@@ -184,7 +180,6 @@ dependencies {
     implementation androidDep
     implementation appCompatResourcesDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation navigationFragmentDep
@@ -212,7 +207,6 @@ dependencies {
     implementation platform(googleFirebaseBomDep)
     implementation googleCrashlyticsDep
 
-    implementation xNetworkingDep
     implementation webSocketLibDep
 
     implementation zXingCoreDep

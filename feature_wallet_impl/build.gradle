@@ -85,7 +85,6 @@ dependencies {
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation navigationFragmentDep
@@ -137,12 +136,11 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    //implementation accompanistNavAnimationDep
-
-    implementation xNetworkingDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
+
+    implementation kotlinxSerializationJsonDep
 
     testImplementation project(":test_shared")
     testImplementation project(":test_data")

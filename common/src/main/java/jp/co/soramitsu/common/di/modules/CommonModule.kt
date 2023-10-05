@@ -82,14 +82,14 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.xbackup.BackupService
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProviderImpl
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigProvider
 import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
-import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
+import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWalletFactory
 import jp.co.soramitsu.xsubstrate.encrypt.json.JsonSeedEncoder
 
 @InstallIn(SingletonComponent::class)

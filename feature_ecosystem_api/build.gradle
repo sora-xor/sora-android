@@ -54,12 +54,10 @@ dependencies {
     implementation project(":common")
     implementation project(':common_wallet')
     implementation project(":sorasubstrate")
-//    implementation sharedUtilsDep
+    implementation project(":network")
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-
-    implementation xNetworkingDep
 
     implementation daggerDep
     kapt daggerKaptDep

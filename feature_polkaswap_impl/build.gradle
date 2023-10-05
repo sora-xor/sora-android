@@ -72,13 +72,13 @@ dependencies {
     implementation project(":sorasubstrate")
     implementation project(":feature_main_api")
     implementation project(":feature_blockexplorer_api")
+    implementation project(":network")
 
     implementation xsubstrateDep
     implementation xcryptoDep
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation navigationFragmentDep
@@ -127,9 +127,6 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    //implementation accompanistNavAnimationDep
-
-    implementation xNetworkingDep
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep

@@ -41,7 +41,7 @@ import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
 import jp.co.soramitsu.xsubstrate.runtime.RuntimeSnapshot
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionParser
 import jp.co.soramitsu.xsubstrate.runtime.definitions.TypeDefinitionsTree

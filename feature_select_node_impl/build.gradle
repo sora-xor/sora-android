@@ -67,10 +67,10 @@ dependencies {
     implementation project(":core_di")
     implementation project(":sorasubstrate")
     implementation project(":soracrypro")
+    implementation project(":network")
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
