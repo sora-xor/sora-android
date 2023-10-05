@@ -35,7 +35,6 @@ package jp.co.soramitsu.sora.substrate
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.gson.Gson
 import com.neovisionaries.ws.client.WebSocketFactory
-import jp.co.soramitsu.xsubstrate.extensions.fromHex
 import jp.co.soramitsu.xsubstrate.runtime.definitions.types.fromByteArrayOrNull
 import jp.co.soramitsu.xsubstrate.runtime.metadata.module
 import jp.co.soramitsu.xsubstrate.runtime.metadata.storage
@@ -46,18 +45,17 @@ import jp.co.soramitsu.xsubstrate.wsrpc.executeAsync
 import jp.co.soramitsu.xsubstrate.wsrpc.logging.Logger
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.nonNull
 import jp.co.soramitsu.xsubstrate.wsrpc.mappers.pojo
-import jp.co.soramitsu.xsubstrate.wsrpc.mappers.scale
 import jp.co.soramitsu.xsubstrate.wsrpc.recovery.Reconnector
 import jp.co.soramitsu.xsubstrate.wsrpc.request.RequestExecutor
 import jp.co.soramitsu.xsubstrate.wsrpc.request.runtime.RuntimeRequest
 import jp.co.soramitsu.sora.substrate.runtime.Constants
 import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.test_shared.TestRuntimeProvider
+import jp.co.soramitsu.xcrypto.util.fromHex
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule

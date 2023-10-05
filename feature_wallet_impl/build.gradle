@@ -82,6 +82,7 @@ dependencies {
     implementation project(":feature_sora_card_api")
 
     implementation xsubstrateDep
+    implementation xcryptoDep
 
     implementation androidDep
     implementation materialDep

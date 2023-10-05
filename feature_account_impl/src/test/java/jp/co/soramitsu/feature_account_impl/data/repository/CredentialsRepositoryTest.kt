@@ -36,7 +36,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.runs
 import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.logger.FirebaseWrapper
@@ -44,14 +43,7 @@ import jp.co.soramitsu.common.util.CryptoAssistant
 import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsDatasource
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
-//import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
-//import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
-//import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.Mnemonic
-//import jp.co.soramitsu.xsubstrate.encrypt.mnemonic.MnemonicCreator
-//import jp.co.soramitsu.xsubstrate.encrypt.seed.SeedFactory
-//import jp.co.soramitsu.xsubstrate.encrypt.seed.substrate.SubstrateSeedFactory
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
-import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.SubstrateKeypairFactory
@@ -108,7 +100,7 @@ class CredentialsRepositoryTest {
         mockkObject(MnemonicCreator)
         mockkObject(SubstrateKeypairFactory)
         mockkObject(FirebaseWrapper)
-        mockkStatic(SubstrateSeedFactory::deriveSeed)
+        mockkObject(SubstrateSeedFactory)
         val derivationResult = mockk<SeedFactory.Result>()
         every { SubstrateSeedFactory.deriveSeed(any(), any()) } returns derivationResult
         every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
