@@ -107,7 +107,7 @@ fun GetSoraCardScreen(
 
                 AnnualFee()
 
-                FreeCardIssuance()
+                FreeCardIssuance(state.applicationFee)
 
                 Text(
                     modifier = Modifier
@@ -169,7 +169,9 @@ private fun AnnualFee() {
 }
 
 @Composable
-private fun FreeCardIssuance() {
+private fun FreeCardIssuance(
+    applicationFee: String,
+) {
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -203,7 +205,7 @@ private fun FreeCardIssuance() {
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(vertical = Dimens.x2),
-                text = stringResource(R.string.sora_card_free_card_issuance_conditions_euro),
+                text = stringResource(jp.co.soramitsu.oauth.R.string.details_free_card_issuance_conditions_euro, applicationFee),
                 style = MaterialTheme.customTypography.paragraphM,
                 color = MaterialTheme.customColors.fgSecondary,
             )
@@ -216,7 +218,7 @@ private fun FreeCardIssuance() {
 private fun PreviewGetSoraCardScreen() {
     GetSoraCardScreen(
         scrollState = rememberScrollState(),
-        state = GetSoraCardState(),
+        state = GetSoraCardState(applicationFee = "29"),
         {}, {},
     )
 }

@@ -35,4 +35,5 @@ package jp.co.soramitsu.feature_sora_card_impl.presentation
 data class GetSoraCardState(
     val xorRatioAvailable: Boolean = false,
     val connection: Boolean = false,
+    val applicationFee: String,
 )

@@ -58,6 +58,7 @@ import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 class GetSoraCardViewModel @AssistedInject constructor(
     private val assetsRouter: AssetsRouter,
@@ -84,13 +85,21 @@ class GetSoraCardViewModel @AssistedInject constructor(
     private val _launchSoraCardRegistration = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardRegistration: LiveData<SoraCardContractData> = _launchSoraCardRegistration
 
-    var state = mutableStateOf(GetSoraCardState())
+    var state = mutableStateOf(GetSoraCardState(applicationFee = ""))
         private set
 
     init {
         _toolbarState.value = initSmallTitle2(
             title = R.string.get_sora_card_title,
         )
+
+        viewModelScope.launch {
+            tryCatch {
+                state.value = state.value.copy(
+                    applicationFee = soraCardInteractor.fetchApplicationFee()
+                )
+            }
+        }
 
         soraCardInteractor.subscribeToSoraCardAvailabilityFlow()
             .onEach {
@@ -120,12 +129,15 @@ class GetSoraCardViewModel @AssistedInject constructor(
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }
             }
+
             is SoraCardResult.Success -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Failure -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
                 soraCardInteractor.setLogout()
