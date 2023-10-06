@@ -39,6 +39,8 @@
   <string name="asset_details_token_price">トークン価格</string>
   <string name="asset_details_your_pools">%s プール</string>
   <string name="asset_to_send">送信するアセット</string>
+  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
+  <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -48,6 +50,7 @@
   <string name="buy_crypto_buy_xor_banner_title">XORトークンの購入</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">ユーロでXORトークンを売買</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">法定通貨で XOR を購入</string>
+  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">言語の変更</string>
   <string name="change_pin">PINの変更</string>
   <string name="choose_token">トークンの選択</string>
@@ -167,6 +170,7 @@
   <string name="common_refresh">更新</string>
   <string name="common_remove">削除</string>
   <string name="common_request">Request</string>
+  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">ロシア語</string>
   <string name="common_scan">スキャン</string>
   <string name="common_scan_qr">QRをスキャン</string>
@@ -230,6 +234,7 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ネットワーク手数料のための資金が不足しています</string>
+  <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">このデバイスへのアクセスを失った場合、バックアップしない限り、資金は失われます！</string>
@@ -485,7 +490,7 @@
   <string name="sora_card_iban_headline">IBAN account details</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">これ以上の無料試行はありません</string>
-  <string name="sora_card_option_logout">Log out SORA Card</string>
+  <string name="sora_card_option_logout">Log out of SORA Card</string>
   <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
   <string name="sora_card_refer_and_earn_action">Refer &amp; Earn</string>
   <string name="sora_card_referral_headline">Refer SORA Card.\nGet €20 bonus. </string>
@@ -506,6 +511,7 @@
   <string name="status_successful">成功</string>
   <string name="status_title">ステータス</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
+  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">システム外観</string>

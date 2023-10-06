@@ -40,12 +40,12 @@ import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 import jp.co.soramitsu.common.domain.OptionsProvider
+import jp.co.soramitsu.common.domain.OptionsProvider.nbspace
 import kotlin.math.absoluteValue
 import kotlin.math.pow
 
 private const val DECIMAL_PATTERN_BASE = "###,###."
 private const val TWO_DIGITS_PATTERN = "00"
-const val nbspace = ' '
 
 private const val DEFAULT_PRECISION = 2
 

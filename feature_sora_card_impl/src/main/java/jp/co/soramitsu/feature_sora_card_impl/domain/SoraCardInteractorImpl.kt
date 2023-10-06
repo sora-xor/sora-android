@@ -35,6 +35,7 @@ package jp.co.soramitsu.feature_sora_card_impl.domain
 import java.math.BigDecimal
 import javax.inject.Inject
 import jp.co.soramitsu.common.domain.CoroutineManager
+import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.domain.compareByTotal
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.ext.Big100
@@ -169,6 +170,13 @@ internal class SoraCardInteractorImpl @Inject constructor(
         soraCardClientProxy.getIBAN().mapCatching { wrapper ->
             val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
             sorted.first().iban
+        }
+
+    override suspend fun fetchIbanBalance(): Result<String> =
+        soraCardClientProxy.getIBAN().mapCatching { wrapper ->
+            val sorted = wrapper.ibans.sortedByDescending { it.createdDate }
+            val euroValue = (sorted.first().availableBalance / 100.0)
+            "%s%.2f".format(euroSign, euroValue)
         }
 
     override suspend fun logOutFromSoraCard() {

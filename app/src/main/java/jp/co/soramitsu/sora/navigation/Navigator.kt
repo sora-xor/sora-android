@@ -69,7 +69,7 @@ import jp.co.soramitsu.feature_select_node_api.SelectNodeRouter
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeAddress
 import jp.co.soramitsu.feature_select_node_impl.presentation.nodeName
 import jp.co.soramitsu.feature_select_node_impl.presentation.pinCodeChecked
-import jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.GetSoraCardFragment
+import jp.co.soramitsu.feature_sora_card_impl.presentation.GetSoraCardFragment
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.R
 
