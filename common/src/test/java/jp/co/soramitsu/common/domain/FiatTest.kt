@@ -32,8 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
+import jp.co.soramitsu.common.domain.OptionsProvider.nbspace
 import jp.co.soramitsu.common.util.NumbersFormatter
-import jp.co.soramitsu.common.util.nbspace
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before

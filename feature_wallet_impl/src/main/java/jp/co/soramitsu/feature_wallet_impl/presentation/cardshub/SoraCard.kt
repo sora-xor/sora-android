@@ -49,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
@@ -83,19 +84,19 @@ fun SoraCard(
             modifier = Modifier
                 .wrapContentWidth()
                 .run {
-                    if (state.success.not())
+                    if (state.balance == null)
                         padding(bottom = Dimens.x3) else padding(all = Dimens.x1)
                 }
                 .run {
-                    if (state.success.not())
+                    if (state.balance == null)
                         align(Alignment.BottomCenter) else align(Alignment.BottomEnd)
                 },
             kycStatus = state.kycStatus,
-            success = state.success,
+            balance = state.balance,
             onCardStateClicked = onCardStateClicked,
         )
 
-        if (state.success.not())
+        if (state.balance == null)
             BleachedButton(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -114,7 +115,7 @@ fun SoraCard(
 private fun CardStateButton(
     modifier: Modifier = Modifier,
     kycStatus: String?,
-    success: Boolean,
+    balance: String?,
     onCardStateClicked: () -> Unit
 ) {
     if (kycStatus == null) {
@@ -127,7 +128,16 @@ private fun CardStateButton(
             text = stringResource(R.string.sora_card_see_details),
         )
     } else {
-        if (success.not())
+        if (balance != null)
+            BleachedButton(
+                modifier = modifier
+                    .testTagAsId("CardInfo"),
+                size = Size.ExtraSmall,
+                order = Order.SECONDARY,
+                onClick = onCardStateClicked,
+                text = balance,
+            )
+        else
             TonalButton(
                 modifier = modifier
                     .testTagAsId("SoraCardButton"),
@@ -135,15 +145,6 @@ private fun CardStateButton(
                 order = Order.TERTIARY,
                 onClick = onCardStateClicked,
                 text = kycStatus,
-            )
-        else
-            BleachedButton(
-                modifier = modifier
-                    .testTagAsId("CardInfo"),
-                size = Size.ExtraSmall,
-                order = Order.SECONDARY,
-                onClick = onCardStateClicked,
-                text = stringResource(id = R.string.sora_card_banner_title_card_info)
             )
     }
 }
@@ -153,7 +154,7 @@ private fun CardStateButton(
 private fun PreviewSoraCard1() {
     SoraCard(
         modifier = Modifier.fillMaxWidth(),
-        state = SoraCardState(kycStatus = "", success = true, visible = true),
+        state = SoraCardState(kycStatus = "", balance = "${euroSign}345.3", visible = true),
         onCloseClicked = {},
         onCardStateClicked = {}
     )
@@ -165,7 +166,7 @@ private fun PreviewSoraCard2() {
     SoraAppTheme {
         SoraCard(
             modifier = Modifier.fillMaxWidth(),
-            state = SoraCardState(kycStatus = "Pending", success = false, visible = true),
+            state = SoraCardState(kycStatus = "Pending", balance = null, visible = true),
             onCloseClicked = {},
             onCardStateClicked = {}
         )
@@ -178,7 +179,7 @@ private fun PreviewSoraCard3() {
     SoraAppTheme {
         SoraCard(
             modifier = Modifier.fillMaxWidth(),
-            state = SoraCardState(kycStatus = null, success = false, visible = true),
+            state = SoraCardState(kycStatus = null, balance = null, visible = true),
             onCloseClicked = {},
             onCardStateClicked = {}
         )

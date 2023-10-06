@@ -49,7 +49,7 @@ interface SoraCardInteractor {
 
     suspend fun fetchUserIbanAccount(): Result<String>
 
-    suspend fun fetchIbanBalance(): Result<Long>
+    suspend fun fetchIbanBalance(): Result<String>
 
     suspend fun logOutFromSoraCard()
 }

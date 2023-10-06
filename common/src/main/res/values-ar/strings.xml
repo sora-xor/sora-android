@@ -39,6 +39,8 @@
   <string name="asset_details_token_price">سعر الرمز المميز</string>
   <string name="asset_details_your_pools">تجمعات %s الخاصة بك</string>
   <string name="asset_to_send">الأصول المراد إرسالها</string>
+  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
+  <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -48,6 +50,7 @@
   <string name="buy_crypto_buy_xor_banner_title">شراء توكن XOR</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">شراء أو بيع توكن XOR باليورو</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">شراء XOR مع فيات</string>
+  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">تغيير اللغة</string>
   <string name="change_pin">تغيير PIN</string>
   <string name="choose_token">اختر عملة</string>
@@ -172,6 +175,7 @@
   <string name="common_refresh">تحديث</string>
   <string name="common_remove">إزالة</string>
   <string name="common_request">Request</string>
+  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">الروسية</string>
   <string name="common_scan">مسح ضوئي</string>
   <string name="common_scan_qr">مسح QR</string>
@@ -235,6 +239,7 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ارصدة غير كافية لرسوم المعاملة</string>
+  <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">إذا فقدت الوصول إلى هذا الجهاز ، فستفقد أموالك ، ما لم تقم بعمل نسخة احتياطية!</string>
@@ -515,7 +520,7 @@
   <string name="sora_card_iban_headline">IBAN account details</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">لا مزيد من المحاولات المجانية</string>
-  <string name="sora_card_option_logout">Log out SORA Card</string>
+  <string name="sora_card_option_logout">Log out of SORA Card</string>
   <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
   <string name="sora_card_refer_and_earn_action">Refer &amp; Earn</string>
   <string name="sora_card_referral_headline">Refer SORA Card.\nGet €20 bonus. </string>
@@ -536,6 +541,7 @@
   <string name="status_successful">ناجح</string>
   <string name="status_title">الحالة</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
+  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">مظهر النظام</string>

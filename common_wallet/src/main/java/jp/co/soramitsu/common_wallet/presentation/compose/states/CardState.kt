@@ -118,7 +118,7 @@ fun mapAssetsToCardState(
 }
 
 data class SoraCardState(
-    val success: Boolean,
+    val balance: String?,
     val kycStatus: String?,
     val visible: Boolean = false,
 ) : CardState

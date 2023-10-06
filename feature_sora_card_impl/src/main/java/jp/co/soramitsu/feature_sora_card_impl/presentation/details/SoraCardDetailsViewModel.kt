@@ -58,17 +58,18 @@ class SoraCardDetailsViewModel @Inject constructor(
     private val _shareLinkEvent = SingleLiveEvent<String>()
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
 
+    val telegramChat = SingleLiveEvent<Unit>()
+
     private var ibanCache: String? = null
 
     private val _soraCardDetailsScreenState = MutableStateFlow(
         SoraCardDetailsScreenState(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-                balance = 0f,
-                isCardEnabled = false,
-                soraCardMenuActions = SoraCardMenuAction.entries
+                balance = null,
+                soraCardMenuActions = SoraCardMenuAction.entries,
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
-                soraCardSettingsOptions = SoraCardSettingsOption.entries
+                soraCardSettingsOptions = SoraCardSettingsOption.entries,
             ),
             logoutDialog = false,
         )
@@ -86,16 +87,29 @@ class SoraCardDetailsViewModel @Inject constructor(
 
         viewModelScope.launch {
             tryCatch {
+                var local = _soraCardDetailsScreenState.value
                 soraCardInteractor.fetchUserIbanAccount()
                     .onSuccess { iban ->
                         ibanCache = iban
-                        _soraCardDetailsScreenState.value = soraCardDetailsScreenState.value.copy(
+                        local = local.copy(
                             soraCardIBANCardState = SoraCardIBANCardState(iban)
                         )
                     }
                     .onFailure {
                         onError(it)
                     }
+                soraCardInteractor.fetchIbanBalance()
+                    .onFailure {
+                        onError(it)
+                    }
+                    .onSuccess {
+                        local = local.copy(
+                            soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
+                                balance = it
+                            )
+                        )
+                    }
+                _soraCardDetailsScreenState.value = local
             }
         }
     }
@@ -145,6 +159,9 @@ class SoraCardDetailsViewModel @Inject constructor(
             SoraCardSettingsOption.LOG_OUT ->
                 _soraCardDetailsScreenState.value =
                     _soraCardDetailsScreenState.value.copy(logoutDialog = true)
+
+            SoraCardSettingsOption.SUPPORT_CHAT ->
+                telegramChat.trigger()
         }
     }
 

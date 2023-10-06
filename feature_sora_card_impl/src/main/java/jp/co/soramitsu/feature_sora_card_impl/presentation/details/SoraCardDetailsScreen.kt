@@ -147,9 +147,8 @@ private fun PreviewSoraCardDetailsScreen() {
             scrollState = rememberScrollState(),
             soraCardDetailsScreenState = SoraCardDetailsScreenState(
                 soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-                    balance = 3665.50f,
-                    isCardEnabled = false,
-                    soraCardMenuActions = SoraCardMenuAction.values().toList()
+                    balance = "3665.50",
+                    soraCardMenuActions = SoraCardMenuAction.entries
                 ),
                 soraCardReferralBannerCardState = true,
                 soraCardRecentActivitiesCardState = SoraCardRecentActivitiesCardState(
@@ -159,7 +158,7 @@ private fun PreviewSoraCardDetailsScreen() {
                     iban = "LT61 3250 0467 7252 5583",
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
-                    soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
+                    soraCardSettingsOptions = SoraCardSettingsOption.entries
                 ),
                 logoutDialog = false,
             ),

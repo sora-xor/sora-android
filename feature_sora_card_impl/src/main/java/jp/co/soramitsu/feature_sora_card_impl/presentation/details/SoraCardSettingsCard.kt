@@ -39,29 +39,24 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 enum class SoraCardSettingsOption {
-    LOG_OUT
+    SUPPORT_CHAT, LOG_OUT
 }
 
 data class SoraCardSettingsCardState(
     val soraCardSettingsOptions: List<SoraCardSettingsOption>
 ) {
-
-    val headlineText: Text = Text.StringRes(
-        id = R.string.sora_card_settings_headline
-    )
 
     val settings: List<ListTileState> = soraCardSettingsOptions.map {
         when (it) {
@@ -71,6 +66,15 @@ data class SoraCardSettingsCardState(
                     variant = ListTileVariant.TITLE_NAVIGATION_HINT,
                     flag = ListTileFlag.WARNING,
                     title = Text.StringRes(id = R.string.sora_card_option_logout),
+                    icon = Image.ResImage(id = R.drawable.ic_arrow_right)
+                )
+
+            SoraCardSettingsOption.SUPPORT_CHAT ->
+                ListTileState(
+                    testTagId = it.toString(),
+                    variant = ListTileVariant.TITLE_NAVIGATION_HINT,
+                    flag = ListTileFlag.NORMAL,
+                    title = Text.StringRes(id = R.string.support_chat),
                     icon = Image.ResImage(id = R.drawable.ic_arrow_right)
                 )
         }
@@ -95,14 +99,14 @@ fun SoraCardSettingsCard(
                     .wrapContentSize()
                     .padding(horizontal = Dimens.x1)
                     .padding(top = Dimens.x1, bottom = Dimens.x2),
-                text = state.headlineText.retrieveString(),
+                text = stringResource(id = R.string.sora_card_settings_headline),
                 style = MaterialTheme.customTypography.headline2,
                 color = MaterialTheme.customColors.fgPrimary,
             )
             repeat(state.settings.size) {
                 ListTileView(
                     listTileState = state.settings[it],
-                    onItemClick = remember { { onItemClick.invoke(it) } }
+                    onItemClick = { onItemClick.invoke(it) },
                 )
             }
         }
@@ -114,7 +118,7 @@ fun SoraCardSettingsCard(
 private fun PreviewSoraCardSettingsCard() {
     SoraCardSettingsCard(
         state = SoraCardSettingsCardState(
-            soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
+            soraCardSettingsOptions = SoraCardSettingsOption.entries
         ),
         onItemClick = { _ -> }
     )

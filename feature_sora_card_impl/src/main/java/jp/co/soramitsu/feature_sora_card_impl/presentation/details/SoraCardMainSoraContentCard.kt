@@ -40,7 +40,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -53,10 +52,6 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.util.euro
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -67,8 +62,7 @@ enum class SoraCardMenuAction {
 }
 
 data class SoraCardMainSoraContentCardState(
-    val balance: Float,
-    val isCardEnabled: Boolean,
+    val balance: String?,
     val actionsEnabled: Boolean = false,
     val soraCardMenuActions: List<SoraCardMenuAction>,
 ) {
@@ -83,6 +77,7 @@ data class SoraCardMainSoraContentCardState(
                         text = Text.StringRes(id = R.string.sora_card_action_top_up),
                         isEnabled = actionsEnabled,
                     )
+
                 SoraCardMenuAction.TRANSFER ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
@@ -90,6 +85,7 @@ data class SoraCardMainSoraContentCardState(
                         text = Text.StringRes(id = R.string.sora_card_action_transfer),
                         isEnabled = actionsEnabled,
                     )
+
                 SoraCardMenuAction.EXCHANGE ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
@@ -97,6 +93,7 @@ data class SoraCardMainSoraContentCardState(
                         text = Text.StringRes(id = R.string.sora_card_action_exchange),
                         isEnabled = actionsEnabled,
                     )
+
                 SoraCardMenuAction.FREEZE ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
@@ -127,21 +124,24 @@ fun SoraCardMainSoraContentCard(
             Box(
                 modifier = Modifier.wrapContentSize()
             ) {
-                SoraCardImage(modifier = Modifier.fillMaxWidth().wrapContentHeight())
-                if (soraCardMainSoraContentCardState.isCardEnabled)
-                    BleachedButton(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .align(Alignment.BottomEnd)
-                            .padding(Dimens.x1_5),
-                        shape = CircleShape,
-                        size = Size.Small,
-                        order = Order.SECONDARY,
-                        text = stringResource(id = R.string.show_more),
-                        onClick = onShowMoreClick
-                    )
+                SoraCardImage(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                )
+//                BleachedButton(
+//                    modifier = Modifier
+//                        .wrapContentSize()
+//                        .align(Alignment.BottomEnd)
+//                        .padding(Dimens.x1_5),
+//                    shape = CircleShape,
+//                    size = Size.Small,
+//                    order = Order.SECONDARY,
+//                    text = stringResource(id = R.string.show_more),
+//                    onClick = onShowMoreClick,
+//                )
             }
-            if (soraCardMainSoraContentCardState.isCardEnabled)
+            if (soraCardMainSoraContentCardState.balance != null)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -156,7 +156,7 @@ fun SoraCardMainSoraContentCard(
                         color = MaterialTheme.customColors.fgPrimary
                     )
                     Text(
-                        text = "%s%.2f".format(euro, soraCardMainSoraContentCardState.balance),
+                        text = soraCardMainSoraContentCardState.balance,
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary
                     )
@@ -182,8 +182,7 @@ fun SoraCardMainSoraContentCard(
 private fun PreviewMainSoraContentCard() {
     SoraCardMainSoraContentCard(
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-            balance = 3644.50f,
-            isCardEnabled = true,
+            balance = "3644.50",
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
@@ -196,8 +195,7 @@ private fun PreviewMainSoraContentCard() {
 private fun PreviewMainSoraContentCard2() {
     SoraCardMainSoraContentCard(
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-            balance = 3644.50f,
-            isCardEnabled = true,
+            balance = "3644.50",
             soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},

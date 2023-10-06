@@ -159,8 +159,8 @@ class CardsHubViewModel @Inject constructor(
                                     cardHub to listOf(
                                         SoraCardState(
                                             visible = cardHub.visibility,
-                                            kycStatus = mapped.first,
-                                            success = mapped.second,
+                                            kycStatus = mapped,
+                                            balance = if (status == SoraCardCommonVerification.Successful) soraCardInteractor.fetchIbanBalance().getOrDefault("") else null,
                                         )
                                     )
                                 }
@@ -205,26 +205,26 @@ class CardsHubViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    private fun mapKycStatus(kycStatus: SoraCardCommonVerification): Pair<String?, Boolean> {
+    private fun mapKycStatus(kycStatus: SoraCardCommonVerification): String? {
         return when (kycStatus) {
             SoraCardCommonVerification.Failed -> {
-                resourceManager.getString(R.string.sora_card_verification_failed) to false
+                resourceManager.getString(R.string.sora_card_verification_failed)
             }
 
             SoraCardCommonVerification.Rejected -> {
-                resourceManager.getString(R.string.sora_card_verification_rejected) to false
+                resourceManager.getString(R.string.sora_card_verification_rejected)
             }
 
             SoraCardCommonVerification.Pending -> {
-                resourceManager.getString(R.string.sora_card_verification_in_progress) to false
+                resourceManager.getString(R.string.sora_card_verification_in_progress)
             }
 
             SoraCardCommonVerification.Successful -> {
-                resourceManager.getString(R.string.sora_card_verification_successful) to true
+                resourceManager.getString(R.string.sora_card_verification_successful)
             }
 
-            SoraCardCommonVerification.NotFound -> {
-                null to false
+            else -> {
+                null
             }
         }
     }
@@ -338,7 +338,7 @@ class CardsHubViewModel @Inject constructor(
             if (card.kycStatus == null) {
                 if (!connectionManager.isConnected) return
                 mainRouter.showGetSoraCard()
-            } else if (card.success) {
+            } else if (card.balance != null) {
                 mainRouter.showSoraCardDetails()
             } else {
                 currentSoraCardContractData?.let { contractData ->
