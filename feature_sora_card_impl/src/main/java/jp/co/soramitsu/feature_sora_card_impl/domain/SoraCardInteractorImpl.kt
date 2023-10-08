@@ -179,6 +179,8 @@ internal class SoraCardInteractorImpl @Inject constructor(
             "%s%.2f".format(euroSign, euroValue)
         }
 
+    override suspend fun fetchApplicationFee(): String = soraCardClientProxy.getApplicationFee()
+
     override suspend fun logOutFromSoraCard() {
         soraCardClientProxy.logout()
         setLogout()

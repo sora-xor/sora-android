@@ -48,13 +48,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
@@ -63,20 +62,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 
 data class SoraCardIBANCardState(
     val iban: String,
-) {
-
-    val headlineText: Text = Text.StringRes(
-        id = R.string.sora_card_iban_headline
-    )
-
-    val actionIcon: Image = Image.ResImage(
-        id = R.drawable.ic_rectangular_arrow_up
-    )
-
-    val ibanText: Text = Text.SimpleText(
-        text = iban
-    )
-}
+)
 
 @Composable
 fun SoraCardIBANCard(
@@ -107,7 +93,7 @@ fun SoraCardIBANCard(
                 Text(
                     modifier = Modifier
                         .wrapContentSize(),
-                    text = soraCardIBANCardState.headlineText.retrieveString(),
+                    text = stringResource(id = R.string.sora_card_iban_headline),
                     style = MaterialTheme.customTypography.headline2,
                     color = MaterialTheme.customColors.fgPrimary,
                     textAlign = TextAlign.Center
@@ -118,7 +104,7 @@ fun SoraCardIBANCard(
                             .testTagAsId("IbanCardShareClick")
                             .clickable(onClick = onShareClick)
                             .wrapContentSize(),
-                        painter = soraCardIBANCardState.actionIcon.retrievePainter(),
+                        painter = painterResource(id = R.drawable.ic_rectangular_arrow_up),
                         contentDescription = null,
                         tint = MaterialTheme.customColors.fgSecondary
                     )
@@ -127,7 +113,7 @@ fun SoraCardIBANCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = Dimens.x1),
-                text = soraCardIBANCardState.ibanText.retrieveString(),
+                text = soraCardIBANCardState.iban,
                 style = MaterialTheme.customTypography.textM,
                 color = MaterialTheme.customColors.fgPrimary,
             )

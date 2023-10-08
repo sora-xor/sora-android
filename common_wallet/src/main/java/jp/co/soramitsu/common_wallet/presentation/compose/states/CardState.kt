@@ -51,7 +51,9 @@ data class CardsState(
     val cards: List<CardState> = emptyList(),
 )
 
-sealed interface CardState
+sealed class CardState(
+    open val loading: Boolean,
+)
 
 sealed interface AssetCardState
 
@@ -62,7 +64,8 @@ data class TitledAmountCardState(
     val collapsedState: Boolean = false,
     val onCollapseClick: () -> Unit,
     val onExpandClick: (() -> Unit)? = null,
-) : CardState
+    override val loading: Boolean,
+) : CardState(loading)
 
 class FavoriteAssetsCardState(
     val assets: List<AssetItemCardState>
@@ -118,18 +121,22 @@ fun mapAssetsToCardState(
 }
 
 data class SoraCardState(
-    val balance: String?,
+    val success: Boolean,
+    val ibanBalance: String?,
     val kycStatus: String?,
     val visible: Boolean = false,
-) : CardState
+    override val loading: Boolean,
+) : CardState(loading)
 
 data class BuyXorState(
     val visible: Boolean = false,
-) : CardState
+    override val loading: Boolean,
+) : CardState(loading)
 
 data class ReferralState(
     val visible: Boolean = false,
-) : CardState
+    override val loading: Boolean,
+) : CardState(loading)
 
 class FavoritePoolsCardState(
     val state: PoolsListState,

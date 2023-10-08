@@ -33,13 +33,16 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,8 +51,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.OptionsProvider.euroSign
 import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
@@ -61,6 +64,7 @@ import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 fun SoraCard(
@@ -73,30 +77,43 @@ fun SoraCard(
     Box(
         modifier = modifier
             .clip(shape)
-            .clickable { onCardStateClicked() }
+            .clickable(onClick = onCardStateClicked, enabled = state.loading.not())
             .fillMaxWidth()
     ) {
         SoraCardImage(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        CardStateButton(
-            modifier = Modifier
-                .wrapContentWidth()
-                .run {
-                    if (state.balance == null)
-                        padding(bottom = Dimens.x3) else padding(all = Dimens.x1)
-                }
-                .run {
-                    if (state.balance == null)
-                        align(Alignment.BottomCenter) else align(Alignment.BottomEnd)
-                },
-            kycStatus = state.kycStatus,
-            balance = state.balance,
-            onCardStateClicked = onCardStateClicked,
-        )
+        if (state.loading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(bottom = Dimens.x2, end = Dimens.x2)
+                    .size(Dimens.x5)
+                    .background(color = MaterialTheme.customColors.bgSurface, shape = CircleShape)
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                color = MaterialTheme.customColors.fgPrimary,
+            )
+        } else {
+            CardStateButton(
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .run {
+                        if (state.success.not())
+                            padding(bottom = Dimens.x3) else padding(all = Dimens.x1)
+                    }
+                    .run {
+                        if (state.success.not())
+                            align(Alignment.BottomCenter) else align(Alignment.BottomEnd)
+                    },
+                kycStatus = state.kycStatus,
+                balance = state.ibanBalance,
+                success = state.success,
+                onCardStateClicked = onCardStateClicked,
+            )
+        }
 
-        if (state.balance == null)
+        if (state.success.not())
             BleachedButton(
                 modifier = Modifier
                     .wrapContentWidth()
@@ -116,6 +133,7 @@ private fun CardStateButton(
     modifier: Modifier = Modifier,
     kycStatus: String?,
     balance: String?,
+    success: Boolean,
     onCardStateClicked: () -> Unit
 ) {
     if (kycStatus == null) {
@@ -128,14 +146,14 @@ private fun CardStateButton(
             text = stringResource(R.string.sora_card_see_details),
         )
     } else {
-        if (balance != null)
+        if (success)
             BleachedButton(
                 modifier = modifier
                     .testTagAsId("CardInfo"),
                 size = Size.ExtraSmall,
                 order = Order.SECONDARY,
                 onClick = onCardStateClicked,
-                text = balance,
+                text = balance ?: stringResource(id = R.string.cant_load_balance),
             )
         else
             TonalButton(
@@ -154,7 +172,14 @@ private fun CardStateButton(
 private fun PreviewSoraCard1() {
     SoraCard(
         modifier = Modifier.fillMaxWidth(),
-        state = SoraCardState(kycStatus = "", balance = "${euroSign}345.3", visible = true),
+        state = SoraCardState(
+            kycStatus = "",
+//            ibanBalance = "${euroSign}345.3",
+            ibanBalance = null,
+            visible = true,
+            loading = false,
+            success = true,
+        ),
         onCloseClicked = {},
         onCardStateClicked = {}
     )
@@ -166,7 +191,13 @@ private fun PreviewSoraCard2() {
     SoraAppTheme {
         SoraCard(
             modifier = Modifier.fillMaxWidth(),
-            state = SoraCardState(kycStatus = "Pending", balance = null, visible = true),
+            state = SoraCardState(
+                kycStatus = "Pending",
+                ibanBalance = null,
+                visible = true,
+                loading = false,
+                success = false,
+            ),
             onCloseClicked = {},
             onCardStateClicked = {}
         )
@@ -179,7 +210,32 @@ private fun PreviewSoraCard3() {
     SoraAppTheme {
         SoraCard(
             modifier = Modifier.fillMaxWidth(),
-            state = SoraCardState(kycStatus = null, balance = null, visible = true),
+            state = SoraCardState(
+                kycStatus = null,
+                ibanBalance = null,
+                visible = true,
+                loading = false,
+                success = false,
+            ),
+            onCloseClicked = {},
+            onCardStateClicked = {}
+        )
+    }
+}
+
+@Composable
+@Preview(locale = "en", uiMode = Configuration.UI_MODE_NIGHT_NO)
+private fun PreviewSoraCard4() {
+    SoraAppTheme {
+        SoraCard(
+            modifier = Modifier.fillMaxWidth(),
+            state = SoraCardState(
+                kycStatus = null,
+                ibanBalance = null,
+                visible = true,
+                loading = true,
+                success = false,
+            ),
             onCloseClicked = {},
             onCardStateClicked = {}
         )

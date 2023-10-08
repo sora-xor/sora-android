@@ -104,11 +104,12 @@ class GetSoraCardViewModelTest {
     private lateinit var connectionManager: ConnectionManager
 
     @Before
-     fun setUp() {
+     fun setUp() = runTest {
         given(connectionManager.connectionState).willReturn(flowOf(true))
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
+        given(soraCardInteractor.fetchApplicationFee()).willReturn("")
 
         given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(flowOf(
             SoraCardAvailabilityInfo(

@@ -37,6 +37,7 @@ import android.view.View
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -84,9 +85,10 @@ class GetSoraCardFragment : SoraBaseFragment<GetSoraCardViewModel>() {
         composable(
             route = theOnlyRoute,
         ) {
+            val state = viewModel.state.collectAsStateWithLifecycle().value
             GetSoraCardScreen(
                 scrollState = scrollState,
-                state = viewModel.state.value,
+                state = state,
                 viewModel::onSeeBlacklist,
                 viewModel::onEnableCard,
             )

@@ -51,5 +51,7 @@ interface SoraCardInteractor {
 
     suspend fun fetchIbanBalance(): Result<String>
 
+    suspend fun fetchApplicationFee(): String
+
     suspend fun logOutFromSoraCard()
 }
