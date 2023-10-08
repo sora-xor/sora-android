@@ -130,7 +130,6 @@ fun GetSoraCardScreen(
                     ),
                     color = MaterialTheme.customColors.statusError,
                 )
-
                 FilledButton(
                     modifier = Modifier
                         .fillMaxWidth()
