@@ -204,7 +204,6 @@ class CardsHubViewModelTest {
             poolsInteractor,
             cardsHubInteractorImpl,
             numbersFormatter,
-            progress,
             resourceManager,
             router,
             mainRouter,

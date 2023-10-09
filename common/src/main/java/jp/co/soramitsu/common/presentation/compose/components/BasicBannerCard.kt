@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
+package jp.co.soramitsu.common.presentation.compose.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image

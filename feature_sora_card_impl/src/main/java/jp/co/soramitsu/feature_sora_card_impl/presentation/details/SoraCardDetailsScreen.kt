@@ -30,28 +30,34 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 
 data class SoraCardDetailsScreenState(
     val soraCardMainSoraContentCardState: SoraCardMainSoraContentCardState,
-    val soraCardReferralBannerCardState: SoraCardReferralBannerCardState? = null,
+    val soraCardReferralBannerCardState: Boolean = false,
     val soraCardRecentActivitiesCardState: SoraCardRecentActivitiesCardState? = null,
     val soraCardIBANCardState: SoraCardIBANCardState? = null,
     val soraCardSettingsCard: SoraCardSettingsCardState? = null,
@@ -60,6 +66,7 @@ data class SoraCardDetailsScreenState(
 
 @Composable
 fun SoraCardDetailsScreen(
+    scrollState: ScrollState,
     soraCardDetailsScreenState: SoraCardDetailsScreenState,
     onShowSoraCardDetailsClick: () -> Unit,
     onSoraCardMenuActionClick: (position: Int) -> Unit,
@@ -71,66 +78,58 @@ fun SoraCardDetailsScreen(
     onIbanCardClick: () -> Unit,
     onSettingsOptionClick: (position: Int) -> Unit
 ) {
-    LazyColumn(
+    Column(
         modifier = Modifier
+            .verticalScroll(scrollState)
             .fillMaxSize()
             .padding(horizontal = Dimens.x2),
         verticalArrangement = Arrangement
             .spacedBy(Dimens.x2),
         horizontalAlignment = Alignment
-            .CenterHorizontally
+            .CenterHorizontally,
     ) {
-        item {
-            SoraCardMainSoraContentCard(
-                soraCardMainSoraContentCardState = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
-                onShowMoreClick = onShowSoraCardDetailsClick,
-                onIconButtonClick = onSoraCardMenuActionClick
+        SoraCardMainSoraContentCard(
+            soraCardMainSoraContentCardState = soraCardDetailsScreenState.soraCardMainSoraContentCardState,
+            onShowMoreClick = onShowSoraCardDetailsClick,
+            onIconButtonClick = onSoraCardMenuActionClick
+        )
+        if (soraCardDetailsScreenState.soraCardReferralBannerCardState) {
+            BasicBannerCard(
+                imageContent = R.drawable.sora_card_referral_banner,
+                title = stringResource(id = R.string.sora_card_referral_headline),
+                description = "",
+                button = stringResource(id = R.string.sora_card_refer_and_earn_action),
+                onButtonClicked = onReferralBannerClick,
+                onCloseCard = onCloseReferralBannerClick,
             )
-        }
-        soraCardDetailsScreenState.soraCardReferralBannerCardState?.let { state ->
-            item {
-                SoraCardReferralBannerCard(
-                    soraCardReferralBannerCardState = state,
-                    onReferAndEarnClick = onReferralBannerClick,
-                    onCloseClick = onCloseReferralBannerClick
-                )
-            }
         }
         soraCardDetailsScreenState.soraCardRecentActivitiesCardState?.let { state ->
             if (state.data.isNotEmpty())
-                item {
-                    SoraCardRecentActivitiesCard(
-                        soraCardRecentActivitiesCardState = state,
-                        onListTileClick = onRecentActivityClick,
-                        onShowMoreClick = onShowMoreRecentActivitiesClick
-                    )
-                }
+                SoraCardRecentActivitiesCard(
+                    soraCardRecentActivitiesCardState = state,
+                    onListTileClick = onRecentActivityClick,
+                    onShowMoreClick = onShowMoreRecentActivitiesClick
+                )
         }
         soraCardDetailsScreenState.soraCardIBANCardState?.let { state ->
-            item {
-                SoraCardIBANCard(
-                    soraCardIBANCardState = state,
-                    onShareClick = onIbanCardShareClick,
-                    onCardClick = onIbanCardClick,
-                )
-            }
+            SoraCardIBANCard(
+                soraCardIBANCardState = state,
+                onShareClick = onIbanCardShareClick,
+                onCardClick = onIbanCardClick,
+            )
         }
         soraCardDetailsScreenState.soraCardSettingsCard?.let { state ->
             if (state.settings.isNotEmpty())
-                item {
-                    SoraCardSettingsCard(
-                        state = state,
-                        onItemClick = onSettingsOptionClick
-                    )
-                }
+                SoraCardSettingsCard(
+                    state = state,
+                    onItemClick = onSettingsOptionClick
+                )
         }
-        item {
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(Dimens.x5)
-            )
-        }
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(Dimens.x5)
+        )
     }
 }
 
@@ -145,13 +144,13 @@ private fun PreviewSoraCardDetailsScreen() {
             .fillMaxSize()
     ) {
         SoraCardDetailsScreen(
+            scrollState = rememberScrollState(),
             soraCardDetailsScreenState = SoraCardDetailsScreenState(
                 soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-                    balance = 3665.50f,
-                    isCardEnabled = false,
-                    soraCardMenuActions = SoraCardMenuAction.values().toList()
+                    balance = "3665.50",
+                    soraCardMenuActions = SoraCardMenuAction.entries
                 ),
-                soraCardReferralBannerCardState = SoraCardReferralBannerCardState(),
+                soraCardReferralBannerCardState = true,
                 soraCardRecentActivitiesCardState = SoraCardRecentActivitiesCardState(
                     data = listOf()
                 ),
@@ -159,7 +158,7 @@ private fun PreviewSoraCardDetailsScreen() {
                     iban = "LT61 3250 0467 7252 5583",
                 ),
                 soraCardSettingsCard = SoraCardSettingsCardState(
-                    soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
+                    soraCardSettingsOptions = SoraCardSettingsOption.entries
                 ),
                 logoutDialog = false,
             ),

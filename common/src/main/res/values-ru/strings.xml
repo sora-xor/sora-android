@@ -39,6 +39,8 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Отправляемый ассет</string>
+  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
+  <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Обязательное требование к паролю выполнено</string>
   <string name="backup_password_requirments">Минимум шесть символов. По желанию, для повышения безопасности, можно включить заглавные буквы, цифры и неалфавитные символы.</string>
   <string name="backup_password_title">Установка пароля зашифрует резервную копию Google. Его нужно будет ввести при восстановлении кошелька.\nМинимальная длина пароля - 6 символов.</string>
@@ -48,6 +50,7 @@
   <string name="buy_crypto_buy_xor_banner_title">Купить токен XOR</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">Купить или продать токен XOR за евро</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Купить XOR за фиат</string>
+  <string name="cant_load_balance">Не удается загрузить баланс</string>
   <string name="change_language">Изменить язык</string>
   <string name="change_pin">Изменить пин-код</string>
   <string name="choose_token">Выберите токен</string>
@@ -171,6 +174,7 @@
   <string name="common_refresh">Refresh</string>
   <string name="common_remove">Удалить</string>
   <string name="common_request">Запрос</string>
+  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">Русский</string>
   <string name="common_scan">Сканировать</string>
   <string name="common_scan_qr">Сканировать QR-код</string>
@@ -234,13 +238,14 @@
   <string name="enter_password_incorect_title">Неверный пароль</string>
   <string name="enter_password_title">Введите пароль</string>
   <string name="error_transaction_fee_title">Недостаточно средств для оплаты комиссии</string>
+  <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Предоставляйте ликвидность и получайте вознаграждения</string>
   <string name="explore_swap_tokens_on_sora">Меняйте токены в сети SORA</string>
   <string name="export_account_details_backup_description">При потере доступа к этому устройству, ваши средства будут потеряны, если вы не сделаете резервную копию!</string>
   <string name="export_account_details_backup_options">Параметры резервного копирования</string>
   <string name="export_account_details_show_passphrase">Показать парольную фразу</string>
   <string name="export_account_details_show_raw_seed">Показать Raw Seed</string>
-  <string name="export_account_options">Параметры открытия счета</string>
+  <string name="export_account_options">Открыть настройки аккаунта</string>
   <string name="export_json_description">Пароль требуется для шифрования вашей учетной записи и сохранения в виде Restore JSON. Пожалуйста, создайте пароль для продолжения работы.</string>
   <string name="export_json_download_json">Скачать JSON</string>
   <string name="export_json_input_confirmation_label">Подтвердить пароль</string>
@@ -509,7 +514,7 @@
   <string name="sora_card_iban_headline">IBAN account details</string>
   <string name="sora_card_log_in_or_sign_up">Войдите или зарегистрируйтесь</string>
   <string name="sora_card_no_more_free_tries">No more free attempts</string>
-  <string name="sora_card_option_logout">Log out SORA Card</string>
+  <string name="sora_card_option_logout">Выйти из SORA Card</string>
   <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
   <string name="sora_card_refer_and_earn_action">Refer &amp; Earn</string>
   <string name="sora_card_referral_headline">Refer SORA Card.\nGet €20 bonus. </string>
@@ -530,6 +535,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Статус</string>
   <string name="succesfully_imported_account_title">Вы успешно импортировали учетную запись</string>
+  <string name="support_chat">Чат поддержки</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Убедитесь, что у вас останется %s после этой транзакции. Иначе вы не сможете оплатить комиссию сети за другую транзакцию.</string>
   <string name="switch_node">Переключить ноду</string>
   <string name="system_appearance">Внешний вид системы</string>

@@ -30,11 +30,10 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -53,6 +52,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil.shareText
+import jp.co.soramitsu.androidfoundation.intent.openSoraTelegramSupportChat
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
@@ -76,9 +76,11 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
                 shareText(c, getString(R.string.common_share), share)
             }
         }
+        viewModel.telegramChat.observe {
+            openSoraTelegramSupportChat(context)
+        }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -86,6 +88,7 @@ class SoraCardDetailsFragment : SoraBaseFragment<SoraCardDetailsViewModel>() {
         composable(theOnlyRoute) {
             val state = viewModel.soraCardDetailsScreenState.collectAsStateWithLifecycle()
             SoraCardDetailsScreen(
+                scrollState = scrollState,
                 soraCardDetailsScreenState = state.value,
                 onShowSoraCardDetailsClick = viewModel::onShowSoraCardDetailsClick,
                 onSoraCardMenuActionClick = viewModel::onSoraCardMenuActionClick,
