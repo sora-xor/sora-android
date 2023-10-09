@@ -50,7 +50,7 @@ buildscript {
             accompanist            : '0.30.1',
             xserializationjson     : '1.5.1',
             ktor                   : '2.3.1',
-            xbackup                : '0.0.2-20231002.173502-3'
+            xbackup                : '1.0.0'
     ]
 
     ext {
@@ -127,7 +127,7 @@ buildscript {
         googlePlayCoreDep = "com.google.android.play:core:$versions.googlePlayCore"
         googleFirebaseBomDep = "com.google.firebase:firebase-bom:$versions.googleFirebaseBom"
         googlePlayServiceAuth = "com.google.android.gms:play-services-auth:$versions.googlePlayServiceAuth"
-        googleApiServicesDrive = "com.google.apis:google-api-services-drive:$versions.googleApiServiceDrive"
+        googleApiServicesDrive = "com.google.apis:google-api-services-drive:$versions.googleApiServicesDrive"
 
         ed25519Dep = "com.github.warchant:ed25519-sha3-java:$versions.ed25519"
         spongycastleDep = "com.madgag.spongycastle:core:$versions.spongycastle"
