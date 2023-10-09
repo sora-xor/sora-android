@@ -90,7 +90,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -136,16 +135,11 @@ class CardsHubViewModel @Inject constructor(
                 .subscribeVisibleCardsHubList()
                 .catch { onError(it) }
                 .distinctUntilChanged()
-                .withIndex()
-                .flatMapLatest { indexed ->
-                    val data = indexed.value
-                    if (indexed.index == 0) {
-                        _state.value = _state.value.copy(
-                            curAccount = data.first.accountTitle(),
-                            loading = false,
-                            cards = emptyList(),
-                        )
-                    }
+                .flatMapLatest { data ->
+                    _state.value = _state.value.copy(
+                        curAccount = data.first.accountTitle(),
+                        loading = false,
+                    )
                     val flows = data.second.filter { it.visibility }.map { cardHub ->
                         when (cardHub.cardType) {
                             CardHubType.ASSETS -> {
