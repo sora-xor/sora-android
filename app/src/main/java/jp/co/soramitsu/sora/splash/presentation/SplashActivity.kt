@@ -33,18 +33,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.sora.splash.presentation
 
 import android.animation.ValueAnimator
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.airbnb.lottie.LottieProperty
-import com.airbnb.lottie.model.KeyPath
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.util.ext.getColorFromAttrs
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_api.MultiaccountStarter
 import jp.co.soramitsu.sora.databinding.ActivitySplashBinding
@@ -84,27 +78,7 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(ActivitySplashBinding.inflate(layoutInflater).also { viewBinding = it }.root)
 
-        val currentPageColorTypedValue = getColorFromAttrs(R.attr.baseBackground)
-
-        viewBinding.animationView.apply {
-            addValueCallback(
-                KeyPath(
-                    LOTTIE_WILDCARD_GLOBSTAR,
-                    WAVE_ANIMATION_RINGS_PATH,
-                    LOTTIE_WILDCARD_GLOBSTAR,
-                ),
-                LottieProperty.COLOR_FILTER
-            ) {
-                PorterDuffColorFilter(
-                    currentPageColorTypedValue.data,
-                    PorterDuff.Mode.MULTIPLY
-                )
-            }
-
-            addAnimatorUpdateListener(
-                animatorUpdateListener
-            )
-        }
+        viewBinding.animationView.addAnimatorUpdateListener(animatorUpdateListener)
 
         splashViewModel.runtimeInitiated.observe(
             this
@@ -141,10 +115,5 @@ class SplashActivity : AppCompatActivity() {
     private fun goNext() {
         viewBinding.animationView.removeUpdateListener(animatorUpdateListener)
         splashViewModel.nextScreen()
-    }
-
-    private companion object {
-        const val LOTTIE_WILDCARD_GLOBSTAR = "*"
-        const val WAVE_ANIMATION_RINGS_PATH = "Ellipse 1"
     }
 }
