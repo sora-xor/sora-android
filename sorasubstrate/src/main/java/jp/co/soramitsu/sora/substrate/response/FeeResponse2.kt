@@ -35,6 +35,7 @@ package jp.co.soramitsu.sora.substrate.response
 import java.math.BigInteger
 import jp.co.soramitsu.common.util.ParseModel
 import jp.co.soramitsu.xcrypto.util.fromHex
+import jp.co.soramitsu.xcrypto.util.requireHexPrefix
 import jp.co.soramitsu.xsubstrate.extensions.fromUnsignedBytes
 
 class FeeResponse2(
@@ -72,8 +73,3 @@ value class BrokenSubstrateHex(private val originalHex: String?) {
         }.fromHex().fromUnsignedBytes()
     }
 }
-
-fun String.requirePrefix(prefix: String) = if (startsWith(prefix)) this else prefix + this
-fun String.requireHexPrefix() = requirePrefix("0x")
-
-// TODO: add to xcrypto
