@@ -66,6 +66,7 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
+import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
@@ -125,6 +126,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onQrClick = onQrClick,
                     onAssetClick = viewModel::onAssetClick,
                     onPoolClick = viewModel::onPoolClick,
+                    onOpenFullCardClick = viewModel::onOpenFullCard,
                     onSoraCardClick = viewModel::onCardStateClicked,
                     onSoraCardClose = viewModel::onRemoveSoraCard,
                     onBuyXorClick = viewModel::onBuyCrypto,
@@ -147,6 +149,7 @@ private fun CardsMainScreen(
     onQrClick: () -> Unit,
     onAssetClick: (String) -> Unit,
     onPoolClick: (StringPair) -> Unit,
+    onOpenFullCardClick: (AssetCardState) -> Unit,
     onSoraCardClick: () -> Unit,
     onSoraCardClose: () -> Unit,
     onBuyXorClick: () -> Unit,
@@ -180,7 +183,7 @@ private fun CardsMainScreen(
                     CommonHubCard(
                         title = cardState.title,
                         amount = cardState.amount,
-                        onExpandClick = cardState.onExpandClick,
+                        onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
                         collapseState = cardState.collapsedState,
                         onCollapseClick = cardState.onCollapseClick
                     ) {
@@ -256,7 +259,7 @@ private fun PreviewCardsMainScreen() {
                     BuyXorState, ReferralState, BackupWalletState,
                 ),
             ),
-            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
         )
     }
 }

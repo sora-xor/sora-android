@@ -52,6 +52,7 @@ import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
+import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
@@ -91,6 +92,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -137,7 +139,9 @@ class CardsHubViewModel @Inject constructor(
                 .subscribeVisibleCardsHubList()
                 .catch { onError(it) }
                 .distinctUntilChanged()
-                .flatMapLatest { data ->
+                .withIndex()
+                .flatMapLatest { indexed ->
+                    val data = indexed.value
                     _state.value = _state.value.copy(
                         accountAddress = data.first.substrateAddress,
                         curAccount = data.first.accountTitle(),
@@ -148,7 +152,7 @@ class CardsHubViewModel @Inject constructor(
                             CardHubType.ASSETS -> {
                                 assetsInteractor.subscribeAssetsFavoriteOfAccount(data.first)
                                     .onStart {
-                                        this.emit(emptyList())
+                                        if (indexed.index == 0) this.emit(emptyList())
                                     }
                                     .map {
                                         cardHub to it
@@ -158,7 +162,7 @@ class CardsHubViewModel @Inject constructor(
                             CardHubType.POOLS -> {
                                 poolsInteractor.subscribePoolsCacheOfAccount(data.first)
                                     .onStart {
-                                        this.emit(emptyList())
+                                        if (indexed.index == 0) this.emit(emptyList())
                                     }
                                     .map { list ->
                                         cardHub to list.filter { it.user.favorite }
@@ -177,7 +181,7 @@ class CardsHubViewModel @Inject constructor(
                                         )
                                     }
                                     .onStart {
-                                        this.emit(
+                                        if (indexed.index == 0) this.emit(
                                             cardHub to SoraCardState(
                                                 success = false,
                                                 kycStatus = null,
@@ -322,7 +326,6 @@ class CardsHubViewModel @Inject constructor(
             collapsedState = collapsed,
             onCollapseClick = { collapseCardToggle(CardHubType.ASSETS.hubName, !collapsed) },
             loading = false,
-            onExpandClick = ::expandAssetsCard,
         )
     }
 
@@ -334,7 +337,6 @@ class CardsHubViewModel @Inject constructor(
             state = FavoritePoolsCardState(
                 state = data.first
             ),
-            onExpandClick = ::expandPoolsCard,
             loading = false,
             onCollapseClick = { collapseCardToggle(CardHubType.POOLS.hubName, !collapsed) },
             collapsedState = collapsed
@@ -350,12 +352,15 @@ class CardsHubViewModel @Inject constructor(
         }
     }
 
-    private fun expandAssetsCard() {
-        router.showAssetSettings()
-    }
-
-    private fun expandPoolsCard() {
-        polkaswapRouter.showPoolSettings()
+    fun onOpenFullCard(state: AssetCardState) {
+        when (state) {
+            is FavoriteAssetsCardState -> {
+                router.showAssetSettings()
+            }
+            is FavoritePoolsCardState -> {
+                polkaswapRouter.showPoolSettings()
+            }
+        }
     }
 
     fun onCardStateClicked() {

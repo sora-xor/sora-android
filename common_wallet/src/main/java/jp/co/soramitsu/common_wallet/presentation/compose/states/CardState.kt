@@ -68,7 +68,6 @@ data class TitledAmountCardState(
     val state: AssetCardState,
     val collapsedState: Boolean = false,
     val onCollapseClick: () -> Unit,
-    val onExpandClick: (() -> Unit)? = null,
     override val loading: Boolean,
 ) : CardState(loading)
 

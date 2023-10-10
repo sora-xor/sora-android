@@ -126,13 +126,13 @@ fun CommonHubCard(
     @StringRes title: Int,
     amount: String,
     collapseState: Boolean,
-    onExpandClick: (() -> Unit)? = null,
+    onOpenFullCardClick: () -> Unit,
     onCollapseClick: () -> Unit,
     content: @Composable (ColumnScope) -> Unit
 ) {
     ContentCard(
         modifier = Modifier.padding(top = Dimens.x1_5),
-        onClick = onExpandClick
+        onClick = onOpenFullCardClick
     ) {
         Column(
             modifier = Modifier
@@ -183,9 +183,8 @@ fun CommonHubCard(
                     text = stringResource(id = R.string.common_expand),
                     size = Size.ExtraSmall,
                     order = Order.PRIMARY,
-                ) {
-                    onExpandClick?.invoke()
-                }
+                    onClick = onOpenFullCardClick,
+                )
             }
         }
     }
@@ -198,6 +197,7 @@ private fun PreviewCommonHubCard() {
         title = R.string.common_ok,
         amount = "123.123",
         collapseState = false,
+        onOpenFullCardClick = {},
         onCollapseClick = {}
     ) {
         Text(text = "text1")

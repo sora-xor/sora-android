@@ -56,6 +56,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
+import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.domain.ResponseCode
 import jp.co.soramitsu.common.domain.SoraException
 import jp.co.soramitsu.common.presentation.args.address
@@ -96,6 +97,7 @@ class AccountDetailsFragment : SoraBaseFragment<AccountDetailsViewModel>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        (activity as BottomBarController).hideBottomBar()
         viewModel.consentExceptionHandler.observe {
             consentHandlerLauncher.launch(it)
         }
