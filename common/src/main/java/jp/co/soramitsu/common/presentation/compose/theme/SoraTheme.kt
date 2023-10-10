@@ -66,9 +66,9 @@ fun SoraAppTheme(
     content: @Composable () -> Unit
 ) {
     AppTheme(
-        darkTheme = darkTheme,
+        darkTheme = false,
         lightColors = soraLightColors,
-        darkColors = soraDarkColors,
+        darkColors = soraLightColors,
         typography = soraTypography,
         borderRadius = soraBorderRadius,
         content = content
