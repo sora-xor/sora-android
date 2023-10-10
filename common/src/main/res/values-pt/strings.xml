@@ -41,6 +41,7 @@
   <string name="asset_to_send">Asset to send</string>
   <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -238,7 +239,7 @@
   <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
-  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_description">If you lose access to this device, your funds will be lost, unless you back up!</string>
   <string name="export_account_details_backup_options">Backup options</string>
   <string name="export_account_details_show_passphrase">Show Passphrase</string>
   <string name="export_account_details_show_raw_seed">Show Raw Seed</string>
@@ -390,6 +391,7 @@
     <item quantity="other">%s segundos restantes</item>
   </plurals>
   <string name="project_ended_template">Terminou %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">Código QR</string>
   <string name="qr_upload">Da galeria</string>
   <string name="receive_tokens">Receive tokens</string>
@@ -490,7 +492,6 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">Free card issuance</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">or €20 application fee</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
@@ -535,6 +536,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Uma atualização para a aplicação SORA foi descarregada e está pronta para ser instalada.\n\nÉ importante utilizar a versão mais recente da aplicação.\n\nDe modo a atualizar a aplicação, é necessário reiniciar o sistema.</string>
   <string name="update_install_now">Deseja instalar a atualização agora?</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">Trancado</string>
   <string name="wallet_balance_reserved">Reservado</string>
   <string name="wallet_bonded">Vinculado</string>

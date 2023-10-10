@@ -41,6 +41,7 @@
   <string name="asset_to_send">Tài sản cần gửi</string>
   <string name="backup_account_already_exist">Sao lưu đã tồn tại. Tiến hành viết lại nó.</string>
   <string name="backup_not_enough_space_error">Sao lưu không thành công. Không đủ dung lượng trên Google Drive của bạn. Hãy giải phóng một số dung lượng và thử lại.</string>
+  <string name="backup_now">Sao lưu ngay</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Yêu cầu bắt buộc đối với mật khẩu được đáp ứng</string>
   <string name="backup_password_requirments">Tối thiểu sáu ký tự. Tùy chọn, để bảo mật tốt hơn, hãy bao gồm các chữ cái viết hoa, số và các ký tự không phải bảng chữ cái.</string>
   <string name="backup_password_title">Đặt mật khẩu sẽ mã hóa bản sao lưu Google của bạn. Bạn sẽ cần nhập thông tin này khi khôi phục ví của mình.\nĐộ dài mật khẩu tối thiểu là 6 ký tự.</string>
@@ -50,7 +51,7 @@
   <string name="buy_crypto_buy_xor_banner_title">Mua token XOR</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">Mua hoặc bán XOR bằng euro</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Mua XOR bằng tiền pháp định</string>
-  <string name="cant_load_balance">Can\'t load balance</string>
+  <string name="cant_load_balance">Không thể tải số dư</string>
   <string name="change_language">Thay đổi ngôn ngữ</string>
   <string name="change_pin">Thay đổi mã PIN</string>
   <string name="choose_token">Chọn token</string>
@@ -385,6 +386,7 @@
     <item quantity="other">Còn lại %s giây</item>
   </plurals>
   <string name="project_ended_template">Đã kết thúc %s</string>
+  <string name="protect_loss_access_funds">Bảo vệ bạn khỏi mất quyền truy cập vào tiền của bạn</string>
   <string name="qr_code">Mã QR</string>
   <string name="qr_upload">Từ bộ sưu tập</string>
   <string name="receive_tokens">Nhận token</string>
@@ -484,7 +486,6 @@
   <string name="sora_card_details_card_management_coming_soon">Quản lý thẻ sắp ra mắt</string>
   <string name="sora_card_details_title">Chi tiết thẻ</string>
   <string name="sora_card_free_card_issuance">Miễn phí phát hành thẻ</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">hoặc phí đăng ký 20 €</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Nếu bạn nắm giữ, stake hoặc cung cấp thanh khoản cho XOR trị giá ít nhất €100 trong tài khoản SORA của mình</string>
   <string name="sora_card_get_more_xor">Nhận thêm XOR</string>
   <string name="sora_card_iban_headline">Chi tiết tài khoản IBAN</string>
@@ -511,7 +512,7 @@
   <string name="status_successful">Thành công</string>
   <string name="status_title">Trạng thái</string>
   <string name="succesfully_imported_account_title">Bạn đã nhập thành công một tài khoản</string>
-  <string name="support_chat">Support chat</string>
+  <string name="support_chat">Trò chuyện với hỗ trợ</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Đảm bảo rằng bạn còn %s sau giao dịch này. Nếu không, bạn sẽ không thể thực hiện một giao dịch khác.</string>
   <string name="switch_node">Chuyển node</string>
   <string name="system_appearance">Hệ thống hiển thị</string>
@@ -529,6 +530,7 @@
   <string name="unexpected_error">Đã xảy ra lỗi không mong muốn. \n\n Bạn có thể khắc phục sự cố này trong cộng đồng SORA tại cuộc trò chuyện Telegram @SORAhappiness.</string>
   <string name="update_downloaded">Bản cập nhật cho ứng dụng SORA đã được tải xuống và sẵn sàng cài đặt. \n\n Hãy sử dụng phiên bản mới nhất của ứng dụng. \n\n Để cập nhật ứng dụng thành công, bạn cần khởi động lại ứng dụng.</string>
   <string name="update_install_now">Bạn có muốn cài đặt bản cập nhật ngay bây giờ không?</string>
+  <string name="wallet_backup">Sao lưu ví</string>
   <string name="wallet_balance_locked">Đã khóa</string>
   <string name="wallet_balance_reserved">Dự trữ</string>
   <string name="wallet_bonded">Được bảo lãnh</string>

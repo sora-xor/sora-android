@@ -80,7 +80,7 @@ internal fun BackupScreen(
     onBackupWithGoogleButtonPressed: (() -> Unit)? = null,
 ) {
     ContentCard(
-        modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1),
+        modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1).fillMaxWidth().wrapContentHeight(),
     ) {
         Column(
             modifier = Modifier

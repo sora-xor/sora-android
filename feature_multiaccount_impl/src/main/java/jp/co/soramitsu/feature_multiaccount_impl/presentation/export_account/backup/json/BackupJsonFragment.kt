@@ -38,7 +38,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -87,12 +91,17 @@ class BackupJsonFragment : SoraBaseFragment<BackupJsonViewModel>() {
             route = theOnlyRoute,
         ) {
             viewModel.backupJsonScreenState.observeAsState().value?.let {
-                BackupJsonScreen(
-                    state = it,
-                    onChange = viewModel::passwordInputChanged,
-                    onConfirmChange = viewModel::confirmationInputChanged,
-                    onDownloadClick = viewModel::downloadJsonClicked,
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    BackupJsonScreen(
+                        state = it,
+                        onChange = viewModel::passwordInputChanged,
+                        onConfirmChange = viewModel::confirmationInputChanged,
+                        onDownloadClick = viewModel::downloadJsonClicked,
+                    )
+                }
             }
         }
     }

@@ -41,6 +41,7 @@
   <string name="asset_to_send">Отправляемый ассет</string>
   <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Сделать сейчас</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Обязательное требование к паролю выполнено</string>
   <string name="backup_password_requirments">Минимум шесть символов. По желанию, для повышения безопасности, можно включить заглавные буквы, цифры и неалфавитные символы.</string>
   <string name="backup_password_title">Установка пароля зашифрует резервную копию Google. Его нужно будет ввести при восстановлении кошелька.\nМинимальная длина пароля - 6 символов.</string>
@@ -405,6 +406,7 @@
     <item quantity="other">осталось %s секунд</item>
   </plurals>
   <string name="project_ended_template">Завершился %s</string>
+  <string name="protect_loss_access_funds">Защитите себя от потери доступа к своим средствам</string>
   <string name="qr_code">QR код</string>
   <string name="qr_upload">Из галереи</string>
   <string name="receive_tokens">Получить токены</string>
@@ -508,7 +510,6 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">Бесплатный выпуск карты</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">или плата €20 за подачу заявки</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Если вы держите, ставите или предоставляете ликвидность XOR на сумму не менее 100 евро на своем счете SORA.</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
@@ -553,6 +554,7 @@
   <string name="unexpected_error">Произошла непредвиденная ошибка.\n\nВы можете решить эту проблему в сообществе SORA в Telegram чате @SORAhappiness.</string>
   <string name="update_downloaded">Обновление для приложения SORA было загружено и готово к установке. \n\n Важно использовать последнюю версию приложения. \n\n Чтобы обновить приложение, требуется перезагрузка.</string>
   <string name="update_install_now">Хотите установить обновление сейчас?</string>
+  <string name="wallet_backup">Сделайте резервную копию</string>
   <string name="wallet_balance_locked">Заблокировано</string>
   <string name="wallet_balance_reserved">Резерв</string>
   <string name="wallet_bonded">В обеспечении</string>

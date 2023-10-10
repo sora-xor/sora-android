@@ -42,13 +42,19 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
 import jp.co.soramitsu.common.util.StringPair
+import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListItemState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.ui_core.component.asset.changePriceColor
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -70,26 +76,28 @@ fun PoolsList(
                 .padding(horizontal = Dimens.x3)
                 .clickable { onPoolClick?.invoke(poolState.tokenIds) }
         ) {
-            ConstraintLayout(
-                modifier = Modifier.wrapContentSize()
-            ) {
-                val (token1, token2) = createRefs()
-                TokenIcon(
-                    uri = poolState.token1Icon, size = Size.Small,
-                    modifier = Modifier
-                        .constrainAs(token1) {
-                            top.linkTo(parent.top)
-                            start.linkTo(parent.start)
-                        }
-                )
-                TokenIcon(
-                    uri = poolState.token2Icon, size = Size.Small,
-                    modifier = Modifier
-                        .constrainAs(token2) {
-                            top.linkTo(parent.top)
-                            start.linkTo(token1.start, margin = 24.dp)
-                        }
-                )
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                ConstraintLayout(
+                    modifier = Modifier.wrapContentSize()
+                ) {
+                    val (token1, token2) = createRefs()
+                    TokenIcon(
+                        uri = poolState.token1Icon, size = Size.Small,
+                        modifier = Modifier
+                            .constrainAs(token1) {
+                                top.linkTo(parent.top)
+                                start.linkTo(parent.start)
+                            }
+                    )
+                    TokenIcon(
+                        uri = poolState.token2Icon, size = Size.Small,
+                        modifier = Modifier
+                            .constrainAs(token2) {
+                                top.linkTo(parent.top)
+                                start.linkTo(token1.start, margin = 24.dp)
+                            }
+                    )
+                }
             }
             Column(
                 modifier = Modifier
@@ -130,5 +138,37 @@ fun PoolsList(
                 )
             }
         }
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewPoolsList() {
+    Column {
+        PoolsList(
+            onPoolClick = {},
+            cardState = PoolsListState(
+                pools = listOf(
+                    PoolsListItemState(
+                        token1Icon = DEFAULT_ICON_URI,
+                        token2Icon = DEFAULT_ICON_URI,
+                        poolAmounts = "123.456",
+                        poolName = "XOR - VAL",
+                        fiat = "$7908",
+                        fiatChange = "+23.1 %",
+                        tokenIds = "" to "",
+                    ),
+                    PoolsListItemState(
+                        token1Icon = DEFAULT_ICON_URI,
+                        token2Icon = DEFAULT_ICON_URI,
+                        poolAmounts = "98.76",
+                        poolName = "DAI - PSWAP",
+                        fiat = "$ 0.00123",
+                        fiatChange = "-9.88 %",
+                        tokenIds = "" to "",
+                    ),
+                ),
+            ),
+        )
     }
 }

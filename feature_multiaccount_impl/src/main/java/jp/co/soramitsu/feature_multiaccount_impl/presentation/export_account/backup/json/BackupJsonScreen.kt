@@ -74,7 +74,7 @@ internal fun BackupJsonScreen(
     onDownloadClick: () -> Unit,
 ) {
     ContentCard(
-        modifier = Modifier.padding(horizontal = Dimens.x2),
+        modifier = Modifier.padding(horizontal = Dimens.x2).fillMaxWidth().wrapContentHeight(),
     ) {
         Column(
             modifier = Modifier

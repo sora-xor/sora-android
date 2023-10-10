@@ -41,6 +41,7 @@
   <string name="asset_to_send">Asset to send</string>
   <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -395,6 +396,7 @@
     <item quantity="other">секунди преостало</item>
   </plurals>
   <string name="project_ended_template">Завршено %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR kod</string>
   <string name="qr_upload">Пренос из галерије</string>
   <string name="receive_tokens">Receive tokens</string>
@@ -495,7 +497,6 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">Free card issuance</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">or €20 application fee</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
@@ -540,6 +541,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Ажурирање за апликацију SORA је преузето и спремно за инсталирање. \n\nВажно је да користите најновију верзију апликације. \n\nДа бисте ажурирали апликацију, потребно је поновно покретање.</string>
   <string name="update_install_now">Да ли желите да инсталирате ажурирање сада?</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">Zaključano</string>
   <string name="wallet_balance_reserved">Rezervisano</string>
   <string name="wallet_bonded">Vezano</string>

@@ -46,6 +46,7 @@ import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
 
 data class CardsState(
+    val accountAddress: String,
     val curAccount: String,
     val loading: Boolean = false,
     val cards: List<CardState> = emptyList(),
@@ -54,6 +55,10 @@ data class CardsState(
 sealed class CardState(
     open val loading: Boolean,
 )
+
+sealed class BasicBannerCardState(
+    override val loading: Boolean,
+) : CardState(loading)
 
 sealed interface AssetCardState
 
@@ -124,19 +129,14 @@ data class SoraCardState(
     val success: Boolean,
     val ibanBalance: String?,
     val kycStatus: String?,
-    val visible: Boolean = false,
     override val loading: Boolean,
-) : CardState(loading)
+) : BasicBannerCardState(loading)
 
-data class BuyXorState(
-    val visible: Boolean = false,
-    override val loading: Boolean,
-) : CardState(loading)
+data object BuyXorState : BasicBannerCardState(false)
 
-data class ReferralState(
-    val visible: Boolean = false,
-    override val loading: Boolean,
-) : CardState(loading)
+data object ReferralState : BasicBannerCardState(false)
+
+data object BackupWalletState : BasicBannerCardState(false)
 
 class FavoritePoolsCardState(
     val state: PoolsListState,

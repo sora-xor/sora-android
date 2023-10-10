@@ -136,7 +136,7 @@ class Navigator :
     }
 
     override fun popBackStackToAccountDetails() {
-        navController?.popBackStack(R.id.accoundDetailsFragment, false)
+        navController?.popBackStack(R.id.accountDetailsFragment, false)
     }
 
     override fun showSelectLanguage() {
@@ -317,7 +317,7 @@ class Navigator :
 
     override fun showAccountList() {
         navController?.navigate(
-            R.id.export_account_nav_graph,
+            R.id.accountListFragment,
             null,
         )
     }
@@ -355,7 +355,7 @@ class Navigator :
 
     override fun showAccountDetails(address: String) {
         navController?.navigate(
-            R.id.accoundDetailsFragment,
+            R.id.accountDetailsFragment,
             withArgs {
                 this.address = address
             },
