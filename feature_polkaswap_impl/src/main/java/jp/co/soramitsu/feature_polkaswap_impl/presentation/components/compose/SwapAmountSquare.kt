@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_polkaswap_impl.presentation.components.compose
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -60,7 +59,7 @@ import jp.co.soramitsu.ui_core.theme.customTypography
 @Composable
 internal fun SwapAmountSquare(
     modifier: Modifier,
-    icon: Uri,
+    icon: String,
     amount: String,
     amountFiat: String,
 ) {
@@ -86,6 +85,7 @@ internal fun SwapAmountSquare(
                 text = amount,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.displayS,
             )
             Text(

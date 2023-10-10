@@ -32,13 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.response
 
-import androidx.annotation.Keep
+import jp.co.soramitsu.common.util.ParseModel
 
-@Keep
 class StateQueryResponse(
     val block: String,
     private val changes: List<List<String?>>
-) {
+) : ParseModel() {
     fun changesAsMap(): Map<String, String?> {
         return changes.associate { it[0]!! to it[1] }
     }

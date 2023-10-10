@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.response
 
-import androidx.annotation.Keep
+import jp.co.soramitsu.common.util.ParseModel
 
-@Keep
-class ChainHeaderResponse(val parentHash: String, val number: String, val stateRoot: String, val extrinsicsRoot: String)
+class ChainHeaderResponse(val parentHash: String, val number: String, val stateRoot: String, val extrinsicsRoot: String) : ParseModel()

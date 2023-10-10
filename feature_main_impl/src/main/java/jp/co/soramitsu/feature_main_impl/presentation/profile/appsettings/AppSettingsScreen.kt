@@ -68,7 +68,7 @@ internal fun AppSettingsScreen(
                 icon = null,
                 label = stringResource(id = R.string.system_appearance),
                 bottomDivider = false,
-                available = false,
+                available = true,
                 checked = checkedSystem,
                 onClick = onSystemToggle,
             )
@@ -76,7 +76,7 @@ internal fun AppSettingsScreen(
                 icon = null,
                 label = stringResource(id = R.string.dark_mode),
                 bottomDivider = false,
-                available = false,
+                available = true,
                 checked = checkedDark,
                 onClick = onDarkToggle,
             )

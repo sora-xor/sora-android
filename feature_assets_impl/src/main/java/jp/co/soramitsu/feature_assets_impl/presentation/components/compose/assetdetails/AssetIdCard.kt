@@ -72,6 +72,7 @@ internal fun AssetIdCard(
             )
             Text(
                 text = id,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphXS
             )
         }

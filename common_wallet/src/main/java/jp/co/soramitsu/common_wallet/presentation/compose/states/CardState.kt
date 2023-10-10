@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common_wallet.presentation.compose.states
 
-import android.net.Uri
 import androidx.annotation.StringRes
 import java.math.BigDecimal
 import jp.co.soramitsu.androidfoundation.format.formatFiatSuffix
@@ -47,12 +46,19 @@ import jp.co.soramitsu.common.domain.printFiatChange
 import jp.co.soramitsu.common.util.NumbersFormatter
 
 data class CardsState(
+    val accountAddress: String,
     val curAccount: String,
     val loading: Boolean = false,
     val cards: List<CardState> = emptyList(),
 )
 
-sealed interface CardState
+sealed class CardState(
+    open val loading: Boolean,
+)
+
+sealed class BasicBannerCardState(
+    override val loading: Boolean,
+) : CardState(loading)
 
 sealed interface AssetCardState
 
@@ -62,15 +68,15 @@ data class TitledAmountCardState(
     val state: AssetCardState,
     val collapsedState: Boolean = false,
     val onCollapseClick: () -> Unit,
-    val onExpandClick: (() -> Unit)? = null,
-) : CardState
+    override val loading: Boolean,
+) : CardState(loading)
 
 class FavoriteAssetsCardState(
     val assets: List<AssetItemCardState>
 ) : AssetCardState
 
 data class AssetItemCardState(
-    val tokenIcon: Uri,
+    val tokenIcon: String,
     val tokenId: String,
     val tokenName: String,
     val tokenSymbol: String,
@@ -120,17 +126,16 @@ fun mapAssetsToCardState(
 
 data class SoraCardState(
     val success: Boolean,
+    val ibanBalance: String?,
     val kycStatus: String?,
-    val visible: Boolean = false,
-) : CardState
+    override val loading: Boolean,
+) : BasicBannerCardState(loading)
 
-data class BuyXorState(
-    val visible: Boolean = false,
-) : CardState
+data object BuyXorState : BasicBannerCardState(false)
 
-data class ReferralState(
-    val visible: Boolean = false,
-) : CardState
+data object ReferralState : BasicBannerCardState(false)
+
+data object BackupWalletState : BasicBannerCardState(false)
 
 class FavoritePoolsCardState(
     val state: PoolsListState,

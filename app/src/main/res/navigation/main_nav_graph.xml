@@ -75,13 +75,37 @@
 
     <fragment
         android:id="@+id/soraCardDetailsFragment"
-        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details.SoraCardDetailsFragment" />
+        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.details.SoraCardDetailsFragment" />
+
+    <fragment
+        android:id="@+id/accountDetailsFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details.AccountDetailsFragment"
+        android:label="AccountDetailsFragment" />
+
+    <fragment
+        android:id="@+id/accountListFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list.AccountListFragment"
+        android:label="AccountListFragment" />
+
+    <fragment
+        android:id="@+id/exportProtectionFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.protection.ExportProtectionFragment"
+        android:label="ExportProtectionFragment" />
+
+    <fragment
+        android:id="@+id/backupFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.BackupFragment"
+        android:label="BackupFragment" />
+
+    <fragment
+        android:id="@+id/backupJsonFragment"
+        android:name="jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup.json.BackupJsonFragment"
+        android:label="BackupJsonFragment" />
 
     <include app:graph="@navigation/activities_nav_graph" />
     <include app:graph="@navigation/profile_nav_graph" />
     <include app:graph="@navigation/wallet_nav_graph" />
     <include app:graph="@navigation/referral_nav_graph" />
-    <include app:graph="@navigation/export_account_nav_graph" />
     <include app:graph="@navigation/select_node_nav_graph" />
     <include app:graph="@navigation/sora_card_nav_graph" />
 

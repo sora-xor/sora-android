@@ -323,6 +323,10 @@ class PolkaswapSubscriptionRepositoryImpl @Inject constructor(
                 }
             }
         }
+        val minus = db.poolDao().getBasicPools().filter { db ->
+            list.find { it.tokenIdBase == db.tokenIdBase && it.tokenIdTarget == db.tokenIdTarget } == null
+        }
+        db.poolDao().deleteBasicPools(minus)
         db.poolDao().insertBasicPools(list)
     }
 

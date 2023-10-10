@@ -42,7 +42,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.OptionsProvider
@@ -51,6 +50,7 @@ import jp.co.soramitsu.common.presentation.compose.components.initSmallTitle2
 import jp.co.soramitsu.common.presentation.trigger
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
+import jp.co.soramitsu.xbackup.BackupService
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -73,21 +73,46 @@ class DebugMenuViewModel @Inject constructor(
         state = state.copy(
             settings = mutableListOf<SettingOption>().apply {
                 add(SettingOption(name = "App ID:", value = OptionsProvider.APPLICATION_ID))
-                add(SettingOption(name = "Version Name:", value = OptionsProvider.CURRENT_VERSION_NAME))
-                add(SettingOption(name = "Version Code:", value = OptionsProvider.CURRENT_VERSION_CODE.toString()))
+                add(
+                    SettingOption(
+                        name = "Version Name:",
+                        value = OptionsProvider.CURRENT_VERSION_NAME
+                    )
+                )
+                add(
+                    SettingOption(
+                        name = "Version Code:",
+                        value = OptionsProvider.CURRENT_VERSION_CODE.toString()
+                    )
+                )
                 add(SettingOption(name = "Manufacturer:", value = Build.MANUFACTURER))
                 add(SettingOption(name = "Model:", value = Build.MODEL))
                 add(SettingOption(name = "Version:", value = Build.VERSION.RELEASE))
                 add(SettingOption(name = "API level:", value = Build.VERSION.SDK_INT.toString()))
                 add(SettingOption(name = "Arch:", value = Build.SUPPORTED_ABIS.joinToString(",")))
-                add(SettingOption(name = "Java:", value = System.getProperty("java.specification.version").orEmpty()))
-                add(SettingOption(name = "Java:", value = System.getProperty("java.vm.name").orEmpty()))
+                add(
+                    SettingOption(
+                        name = "Java:",
+                        value = System.getProperty("java.specification.version").orEmpty()
+                    )
+                )
+                add(
+                    SettingOption(
+                        name = "Java:",
+                        value = System.getProperty("java.vm.name").orEmpty()
+                    )
+                )
                 add(SettingOption(name = "Build Type:", value = BuildConfig.BUILD_TYPE))
                 add(SettingOption(name = "Build Flavor:", value = BuildConfig.FLAVOR))
 
                 add(SettingOption(name = "X1:", value = BuildConfig.X1_WIDGET_ID))
                 add(SettingOption(name = "X1:", value = BuildConfig.X1_ENDPOINT_URL))
-                add(SettingOption(name = "SoraCard Backend:", value = BuildConfigWrapper.getSoraCardBackEndUrl()))
+                add(
+                    SettingOption(
+                        name = "SoraCard Backend:",
+                        value = BuildConfigWrapper.getSoraCardBackEndUrl()
+                    )
+                )
             }
         )
     }

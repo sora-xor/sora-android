@@ -130,19 +130,19 @@ class UserRepositoryImpl(
         return db.accountDao().getAccountsCount()
     }
 
-    override suspend fun insertSoraAccount(soraAccount: SoraAccount) {
+    override suspend fun insertSoraAccount(soraAccount: SoraAccount, newAccount: Boolean) {
         db.withTransaction {
             db.accountDao().insertSoraAccount(
                 SoraAccountMapper.map(soraAccount)
             )
             db.cardsHubDao().insert(
-                CardHubType.values()
+                CardHubType.entries
                     .filter { it.boundToAccount }
                     .mapIndexed { _, type ->
                         CardHubLocal(
                             cardId = type.hubName,
                             accountAddress = soraAccount.substrateAddress,
-                            visibility = true,
+                            visibility = if (type == CardHubType.BACKUP) newAccount else true,
                             sortOrder = type.order,
                             collapsed = false,
                         )

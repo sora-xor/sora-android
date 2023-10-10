@@ -5,6 +5,10 @@ apply plugin: 'kotlinx-serialization'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -13,15 +17,6 @@ android {
         targetSdkVersion targetVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -50,6 +45,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_wallet_api'
 }
 
 dependencies {
@@ -58,12 +54,11 @@ dependencies {
     implementation project(":common")
     implementation project(':common_wallet')
     implementation project(":sorasubstrate")
+    implementation project(":network")
     implementation sharedUtilsDep
 
     implementation coroutineAndroidDep
     implementation coroutineDep
-
-    implementation xNetworkingDep
 
     implementation daggerDep
     kapt daggerKaptDep

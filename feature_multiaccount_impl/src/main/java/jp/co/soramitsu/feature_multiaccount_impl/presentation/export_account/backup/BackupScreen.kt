@@ -80,7 +80,7 @@ internal fun BackupScreen(
     onBackupWithGoogleButtonPressed: (() -> Unit)? = null,
 ) {
     ContentCard(
-        modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1),
+        modifier = Modifier.padding(horizontal = Dimens.x2, vertical = Dimens.x1).fillMaxWidth().wrapContentHeight(),
     ) {
         Column(
             modifier = Modifier
@@ -94,6 +94,7 @@ internal fun BackupScreen(
                     .wrapContentHeight()
                     .fillMaxWidth(),
                 text = stringResource(id = R.string.mnemonic_text),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 
@@ -109,6 +110,7 @@ internal fun BackupScreen(
                         end = Dimens.x4
                     ),
                     text = state.seedString,
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphMBold,
                     textAlign = TextAlign.Center
                 )
@@ -158,6 +160,7 @@ internal fun BackupScreen(
 
                         Text(
                             style = MaterialTheme.customTypography.buttonM,
+                            color = MaterialTheme.customColors.fgPrimary,
                             text = stringResource(id = R.string.account_options_backup_google)
                         )
                     }

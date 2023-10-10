@@ -30,8 +30,9 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,7 +44,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.component.card.ContentCard
@@ -51,39 +51,46 @@ import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
-enum class SoraCardSettingsOption {
-    LOG_OUT
+data class SoraCardRecentActivity(
+    val t: String
+) {
+    /* implementation will be added in further releases */
 }
 
-data class SoraCardSettingsCardState(
-    val soraCardSettingsOptions: List<SoraCardSettingsOption>
+data class SoraCardRecentActivitiesCardState(
+    val data: List<SoraCardRecentActivity>
 ) {
 
     val headlineText: Text = Text.StringRes(
-        id = R.string.sora_card_settings_headline
+        id = R.string.asset_details_recent_activity
     )
 
-    val settings: List<ListTileState> = soraCardSettingsOptions.map {
-        when (it) {
-            SoraCardSettingsOption.LOG_OUT ->
-                ListTileState(
-                    testTagId = it.toString(),
-                    variant = ListTileVariant.TITLE_NAVIGATION_HINT,
-                    flag = ListTileFlag.WARNING,
-                    title = Text.StringRes(id = R.string.sora_card_option_logout),
-                    icon = Image.ResImage(id = R.drawable.ic_arrow_right)
-                )
-        }
+    val visibleListTileCount: Int = data.size
+
+    val recentActivitiesState: List<ListTileState> = data.map {
+        ListTileState(
+            variant = ListTileVariant.TITLE_SUBTITLE_BODY,
+            flag = ListTileFlag.NORMAL,
+            title = Text.SimpleText(text = it.t),
+            subtitle = Text.SimpleText(text = it.t),
+            body = Text.SimpleText(text = it.t)
+        )
     }
+
+    val showMoreText: Text = Text.StringRes(
+        id = R.string.show_more
+    )
 }
 
 @Composable
-fun SoraCardSettingsCard(
-    state: SoraCardSettingsCardState,
-    onItemClick: (position: Int) -> Unit
+fun SoraCardRecentActivitiesCard(
+    soraCardRecentActivitiesCardState: SoraCardRecentActivitiesCardState,
+    onListTileClick: (position: Int) -> Unit,
+    onShowMoreClick: () -> Unit,
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
+        onClick = onShowMoreClick
     ) {
         Column(
             modifier = Modifier
@@ -95,27 +102,44 @@ fun SoraCardSettingsCard(
                     .wrapContentSize()
                     .padding(horizontal = Dimens.x1)
                     .padding(top = Dimens.x1, bottom = Dimens.x2),
-                text = state.headlineText.retrieveString(),
+                text = soraCardRecentActivitiesCardState.headlineText.retrieveString(),
                 style = MaterialTheme.customTypography.headline2,
                 color = MaterialTheme.customColors.fgPrimary,
             )
-            repeat(state.settings.size) {
+            repeat(
+                soraCardRecentActivitiesCardState.visibleListTileCount
+            ) {
                 ListTileView(
-                    listTileState = state.settings[it],
-                    onItemClick = remember { { onItemClick.invoke(it) } }
+                    listTileState = soraCardRecentActivitiesCardState.recentActivitiesState[it],
+                    onItemClick = remember { { onListTileClick.invoke(it) } }
                 )
             }
+            Text(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .padding(top = Dimens.x1)
+                    .clickable { onShowMoreClick.invoke() }
+                    .padding(all = Dimens.x1),
+                text = soraCardRecentActivitiesCardState.showMoreText.retrieveString(),
+                style = MaterialTheme.customTypography.textSBold,
+                color = MaterialTheme.customColors.accentPrimary,
+            )
         }
     }
 }
 
 @Preview
 @Composable
-private fun PreviewSoraCardSettingsCard() {
-    SoraCardSettingsCard(
-        state = SoraCardSettingsCardState(
-            soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
+private fun PreviewRecentActivitiesCard() {
+    SoraCardRecentActivitiesCard(
+        soraCardRecentActivitiesCardState = SoraCardRecentActivitiesCardState(
+            data = listOf(
+                SoraCardRecentActivity(
+                    t = "Something"
+                )
+            )
         ),
-        onItemClick = { _ -> }
+        onListTileClick = { _ -> },
+        onShowMoreClick = {},
     )
 }

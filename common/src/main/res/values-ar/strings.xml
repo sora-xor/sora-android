@@ -39,6 +39,9 @@
   <string name="asset_details_token_price">سعر الرمز المميز</string>
   <string name="asset_details_your_pools">تجمعات %s الخاصة بك</string>
   <string name="asset_to_send">الأصول المراد إرسالها</string>
+  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
+  <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -48,6 +51,7 @@
   <string name="buy_crypto_buy_xor_banner_title">شراء توكن XOR</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">شراء أو بيع توكن XOR باليورو</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">شراء XOR مع فيات</string>
+  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">تغيير اللغة</string>
   <string name="change_pin">تغيير PIN</string>
   <string name="choose_token">اختر عملة</string>
@@ -172,6 +176,7 @@
   <string name="common_refresh">تحديث</string>
   <string name="common_remove">إزالة</string>
   <string name="common_request">Request</string>
+  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">الروسية</string>
   <string name="common_scan">مسح ضوئي</string>
   <string name="common_scan_qr">مسح QR</string>
@@ -235,6 +240,7 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">ارصدة غير كافية لرسوم المعاملة</string>
+  <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">إذا فقدت الوصول إلى هذا الجهاز ، فستفقد أموالك ، ما لم تقم بعمل نسخة احتياطية!</string>
@@ -282,8 +288,6 @@
   <string name="invoice_scan_error_user_not_found">تعذر العثور على مستخدم من مسح QR</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">الأصول السائلة</string>
-  <string name="liquidity_pair_creation_description">سعر هذا الحوض سيحدد بناء على تقييم العملات الي تضيفها عندما يكون معدل التقييم مرضياً بالنسبة لك، انقر للبت بالعرض.</string>
-  <string name="liquidity_pair_creation_title">انت اول موفر سيولة</string>
   <string name="logout_dialog_body">سيؤدي هذا الإجراء إلى حذف الحساب من هذا الجهاز. تأكد من حفظ نسخة احتياطية من كدمات الإستذكار الأولية قبل المتابعة.</string>
   <string name="logout_remove_nodes_body">\n \n ستتم إزالة جميع العقد المخصصة أيضًا</string>
   <string name="mnemonic_confirmation_select_word_2">من القائمة التي كتبتها</string>
@@ -407,6 +411,7 @@
     <item quantity="other">%s ثواني</item>
   </plurals>
   <string name="project_ended_template">انتهى %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">رمز الاستجابة السريعة QR</string>
   <string name="qr_upload">التحميل من معرض الصور</string>
   <string name="receive_tokens">تلقي العملات</string>
@@ -511,13 +516,12 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">اصدار بطاقة مجاني</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">أو 20 € رسوم الطلب</string>
   <string name="sora_card_free_card_issuance_conditions_xor">إذا كنت تحتفظ أو تشارك أو توفر السيولة لما لا يقل عن 100 يورو من XOR في حساب SORA الخاص بك</string>
   <string name="sora_card_get_more_xor">احصل على المزيد من XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">لا مزيد من المحاولات المجانية</string>
-  <string name="sora_card_option_logout">Log out SORA Card</string>
+  <string name="sora_card_option_logout">Log out of SORA Card</string>
   <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
   <string name="sora_card_refer_and_earn_action">Refer &amp; Earn</string>
   <string name="sora_card_referral_headline">Refer SORA Card.\nGet €20 bonus. </string>
@@ -538,6 +542,7 @@
   <string name="status_successful">ناجح</string>
   <string name="status_title">الحالة</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
+  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">مظهر النظام</string>
@@ -555,6 +560,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">تم اصدار تحديث تطبيق SORA وهو جاهز للتثبيت.\n\nمن المهم استخدام أحدث إصدار من التطبيق.\n\nلتحديث التطبيق، يلزمك إعادة التشغيل.</string>
   <string name="update_install_now">هل تود تثبيت التحديث الآن؟</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">المقفل</string>
   <string name="wallet_balance_reserved">المدخر</string>
   <string name="wallet_bonded">المسند</string>

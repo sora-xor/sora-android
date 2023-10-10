@@ -46,16 +46,6 @@ import androidx.navigation.NavOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.net.SocketException
 import javax.inject.Inject
-import jp.co.soramitsu.backup.BackupService
-import jp.co.soramitsu.backup.domain.exceptions.AuthConsentException
-import jp.co.soramitsu.backup.domain.exceptions.DecodingException
-import jp.co.soramitsu.backup.domain.exceptions.DecryptionException
-import jp.co.soramitsu.backup.domain.exceptions.UnauthorizedException
-import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
-import jp.co.soramitsu.backup.domain.models.BackupAccountType
-import jp.co.soramitsu.backup.domain.models.DecryptedBackupAccount
-import jp.co.soramitsu.backup.domain.models.Json
-import jp.co.soramitsu.backup.domain.models.Seed
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.account.SoraAccount
@@ -72,7 +62,6 @@ import jp.co.soramitsu.common.util.Const.SORA_PRIVACY_PAGE
 import jp.co.soramitsu.common.util.Const.SORA_TERMS_PAGE
 import jp.co.soramitsu.common.util.ext.isAccountNameLongerThen32Bytes
 import jp.co.soramitsu.common.util.ext.isPasswordSecure
-import jp.co.soramitsu.core.models.CryptoType
 import jp.co.soramitsu.feature_main_api.launcher.MainStarter
 import jp.co.soramitsu.feature_multiaccount_impl.domain.MultiaccountInteractor
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.BackupScreenState
@@ -80,6 +69,18 @@ import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.mod
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.ExportProtectionSelectableModel
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.xbackup.domain.exceptions.AuthConsentException
+import jp.co.soramitsu.xbackup.domain.exceptions.DecodingException
+import jp.co.soramitsu.xbackup.domain.exceptions.DecryptionException
+import jp.co.soramitsu.xbackup.domain.exceptions.StorageQuotaExceeded
+import jp.co.soramitsu.xbackup.domain.exceptions.UnauthorizedException
+import jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta
+import jp.co.soramitsu.xbackup.domain.models.BackupAccountType
+import jp.co.soramitsu.xbackup.domain.models.CryptoType
+import jp.co.soramitsu.xbackup.domain.models.DecryptedBackupAccount
+import jp.co.soramitsu.xbackup.domain.models.Json
+import jp.co.soramitsu.xbackup.domain.models.Seed
 import kotlin.random.Random
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -643,6 +644,12 @@ class OnboardingViewModel @Inject constructor(
                         _createBackupPasswordState.value =
                             createBackupPasswordState.copy(isLoading = false)
                         _consentExceptionHandler.value = e.intent
+                    }
+                } catch (e: StorageQuotaExceeded) {
+                    withContext(coroutineManager.main) {
+                        _createBackupPasswordState.value =
+                            createBackupPasswordState.copy(isLoading = false)
+                        onError(R.string.backup_not_enough_space_error)
                     }
                 }
             }

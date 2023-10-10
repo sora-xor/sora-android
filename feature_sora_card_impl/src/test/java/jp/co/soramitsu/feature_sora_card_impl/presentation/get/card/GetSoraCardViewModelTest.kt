@@ -43,6 +43,7 @@ import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_polkaswap_api.launcher.PolkaswapRouter
 import jp.co.soramitsu.feature_sora_card_api.domain.SoraCardInteractor
 import jp.co.soramitsu.feature_sora_card_api.domain.models.SoraCardAvailabilityInfo
+import jp.co.soramitsu.feature_sora_card_impl.presentation.GetSoraCardViewModel
 import jp.co.soramitsu.feature_wallet_api.launcher.WalletRouter
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
@@ -108,6 +109,7 @@ class GetSoraCardViewModelTest {
 
         mockkObject(OptionsProvider)
         every { OptionsProvider.header } returns "test android client"
+        given(soraCardInteractor.fetchApplicationFee()).willReturn("")
 
         given(soraCardInteractor.subscribeToSoraCardAvailabilityFlow()).willReturn(flowOf(
             SoraCardAvailabilityInfo(

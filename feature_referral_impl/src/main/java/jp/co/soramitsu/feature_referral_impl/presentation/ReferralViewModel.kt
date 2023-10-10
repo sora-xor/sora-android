@@ -35,7 +35,6 @@ package jp.co.soramitsu.feature_referral_impl.presentation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavOptionsBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -116,10 +115,6 @@ class ReferralViewModel @Inject constructor(
 
     private var referrer: String? = null
 
-    private val singleTopTrue: NavOptionsBuilder.() -> Unit = {
-        launchSingleTop = true
-    }
-
     override fun startScreen(): String = ReferralFeatureRoutes.WELCOME_PROGRESS
 
     init {
@@ -190,8 +185,7 @@ class ReferralViewModel @Inject constructor(
                         )
                     }
                 if (currentDestination == ReferralFeatureRoutes.WELCOME_PROGRESS) {
-                    _navEvent.value =
-                        if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
+                    _navToStart.value = if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM else WELCOME_PAGE
                 }
             }
             .launchIn(viewModelScope)
@@ -310,7 +304,7 @@ class ReferralViewModel @Inject constructor(
                     _referralScreenState.value.copy(common = _referralScreenState.value.common.copy(progress = true))
                 val result = interactor.observeBond(calcInvitationsAmount(bondInvitationsCount))
                 assetsRouter.showTxDetails(result)
-                _navEvent.value = REFERRAL_PROGRAM to singleTopTrue
+                _navToStart.value = REFERRAL_PROGRAM
             }
         }
     }
@@ -325,7 +319,7 @@ class ReferralViewModel @Inject constructor(
                 )
 
                 assetsRouter.showTxDetails(result)
-                _navEvent.value = REFERRAL_PROGRAM to singleTopTrue
+                _navToStart.value = REFERRAL_PROGRAM
             }
         }
     }
@@ -341,8 +335,8 @@ class ReferralViewModel @Inject constructor(
                 val result = interactor.observeSetReferrer(referrerOk.second)
 
                 assetsRouter.showTxDetails(result)
-                _navEvent.value =
-                    if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM to singleTopTrue else WELCOME_PAGE to singleTopTrue
+                _navToStart.value =
+                    if (_referralScreenState.value.isInitialized()) REFERRAL_PROGRAM else WELCOME_PAGE
             }
         }
     }

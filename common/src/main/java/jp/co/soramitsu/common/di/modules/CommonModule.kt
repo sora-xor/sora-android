@@ -53,7 +53,6 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Singleton
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
-import jp.co.soramitsu.backup.BackupService
 import jp.co.soramitsu.common.BuildConfig
 import jp.co.soramitsu.common.account.AccountAvatarGenerator
 import jp.co.soramitsu.common.data.AppStateProviderImpl
@@ -83,14 +82,15 @@ import jp.co.soramitsu.common.util.json_decoder.JsonAccountsEncoder
 import jp.co.soramitsu.common.vibration.DeviceVibrator
 import jp.co.soramitsu.crypto.ed25519.Ed25519Sha3
 import jp.co.soramitsu.shared_utils.encrypt.json.JsonSeedEncoder
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProvider
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuHttpClientProviderImpl
-import jp.co.soramitsu.xnetworking.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xbackup.BackupService
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProvider
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuHttpClientProviderImpl
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigProvider
 import jp.co.soramitsu.xnetworking.sorawallet.tokenwhitelist.SoraTokensWhitelistManager
-import jp.co.soramitsu.xnetworking.txhistory.client.sorawallet.SubQueryClientForSoraWalletFactory
+import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWalletFactory
 
 @InstallIn(SingletonComponent::class)
 @Module
@@ -173,7 +173,7 @@ class CommonModule {
     @Singleton
     @Provides
     fun provideSoramitsuNetworkClient(): SoramitsuNetworkClient =
-        SoramitsuNetworkClient(logging = BuildConfig.DEBUG)
+        SoramitsuNetworkClient(logging = BuildConfig.DEBUG, timeout = 20000)
 
     @Singleton
     @Provides

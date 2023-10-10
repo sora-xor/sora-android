@@ -5,6 +5,10 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'kotlinx-serialization'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     namespace 'jp.co.soramitsu.feature_blockexplorer_api'
     compileSdk compileVersion
@@ -15,15 +19,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     buildFeatures {
@@ -69,10 +64,10 @@ dependencies {
 
     implementation project(":common")
     implementation project(":core_db")
+    implementation project(":network")
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coilDep
@@ -97,7 +92,7 @@ dependencies {
     implementation composeLiveDataDep
     debugImplementation composeToolingDep
 
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
 
     implementation roomDep
     implementation roomKtxDep
@@ -110,8 +105,6 @@ dependencies {
 
     implementation navigationFragmentDep
     implementation navigationUiDep
-
-    implementation xNetworkingDep
 
     implementation daggerDep
     kapt daggerKaptDep

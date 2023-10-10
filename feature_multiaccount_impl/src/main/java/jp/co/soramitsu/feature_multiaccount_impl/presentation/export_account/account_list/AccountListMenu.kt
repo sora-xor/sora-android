@@ -33,7 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_list
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.MaterialTheme
@@ -41,10 +41,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.R
-import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
 internal fun AccountMenu(
@@ -54,25 +55,37 @@ internal fun AccountMenu(
     address: String,
     expanded: Boolean,
 ) {
-    MaterialTheme(shapes = MaterialTheme.shapes.copy(medium = RoundedCornerShape(Dimens.x3))) {
-        DropdownMenu(
-            modifier = Modifier.background(MaterialTheme.customColors.bgSurface),
-            expanded = expanded,
-            onDismissRequest = onDismissMenu,
+    DropdownMenu(
+        modifier = Modifier.background(MaterialTheme.customColors.bgSurface),
+        expanded = expanded,
+        onDismissRequest = onDismissMenu,
+    ) {
+        DropdownMenuItem(
+            modifier = Modifier.testTagAsId("SelectAccountForBatchExport"),
+            onClick = { onSelectOptionsClicked(address) }
         ) {
-            DropdownMenuItem(
-                modifier = Modifier.testTagAsId("SelectAccountForBatchExport"),
-                onClick = { onSelectOptionsClicked(address) }
-            ) {
-                Text(stringResource(id = R.string.export_select_account))
-            }
+            Text(
+                modifier = Modifier.wrapContentHeight(),
+                color = MaterialTheme.customColors.fgPrimary,
+                style = MaterialTheme.customTypography.textM,
+                text = stringResource(id = R.string.export_select_account),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
 
-            DropdownMenuItem(
-                modifier = Modifier.testTagAsId("OpenAccountOptions"),
-                onClick = { onAccountOptionsClicked(address) }
-            ) {
-                Text(stringResource(id = R.string.export_account_options))
-            }
+        DropdownMenuItem(
+            modifier = Modifier.testTagAsId("OpenAccountOptions"),
+            onClick = { onAccountOptionsClicked(address) }
+        ) {
+            Text(
+                modifier = Modifier.wrapContentHeight(),
+                color = MaterialTheme.customColors.fgPrimary,
+                style = MaterialTheme.customTypography.textM,
+                text = stringResource(id = R.string.export_account_options),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

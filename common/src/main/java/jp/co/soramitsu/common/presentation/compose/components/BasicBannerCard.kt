@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
+package jp.co.soramitsu.common.presentation.compose.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -47,9 +47,11 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.common.R
@@ -69,6 +71,7 @@ fun BasicBannerCard(
     description: String,
     button: String,
     onButtonClicked: () -> Unit,
+    closeEnabled: Boolean,
     onCloseCard: () -> Unit,
 ) {
     ContentCard(
@@ -85,13 +88,12 @@ fun BasicBannerCard(
                     .wrapContentHeight(),
             ) {
                 val (card, image) = createRefs()
-                val guideLine = createGuidelineFromStart(0.66f)
                 CardContent(
                     modifier = Modifier
                         .constrainAs(card) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)
-                            end.linkTo(guideLine)
+                            end.linkTo(image.start)
                             width = Dimension.fillToConstraints
                             height = Dimension.wrapContent
                         },
@@ -103,31 +105,33 @@ fun BasicBannerCard(
 
                 Image(
                     modifier = Modifier.constrainAs(image) {
-                        start.linkTo(guideLine)
                         top.linkTo(parent.top)
-                        end.linkTo(parent.end)
                         bottom.linkTo(parent.bottom)
-                        width = Dimension.fillToConstraints
+                        end.linkTo(parent.end)
+                        width = Dimension.value(128.dp)
                         height = Dimension.fillToConstraints
                     },
                     contentScale = ContentScale.Fit,
-                    alignment = Alignment.Center,
+                    alignment = Alignment.BottomEnd,
                     painter = painterResource(imageContent),
                     contentDescription = null,
                 )
             }
 
-            BleachedButton(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .align(Alignment.TopEnd)
-                    .padding(Dimens.x1),
-                size = Size.ExtraSmall,
-                order = Order.TERTIARY,
-                shape = CircleShape,
-                onClick = onCloseCard,
-                leftIcon = painterResource(R.drawable.ic_cross),
-            )
+            if (closeEnabled) {
+                BleachedButton(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .align(Alignment.TopEnd)
+                        .padding(Dimens.x1)
+                        .alpha(0.8f),
+                    size = Size.ExtraSmall,
+                    order = Order.TERTIARY,
+                    shape = CircleShape,
+                    onClick = onCloseCard,
+                    leftIcon = painterResource(R.drawable.ic_cross),
+                )
+            }
         }
     }
 }
@@ -147,7 +151,7 @@ private fun CardContent(
                 top = Dimens.x3,
                 bottom = Dimens.x2,
             ),
-        verticalArrangement = Arrangement.SpaceEvenly,
+        verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = title,
@@ -182,6 +186,21 @@ private fun PreviewBasicBannerCard1() {
         title = "Some title of banner card, let it be longeeerr",
         description = "Long description of banner card, The quick brown fox jumps over the lazy dog, The quick brown fox jumps over the lazy dog.And I, even I Artaxerxes the king, do make a decree to all the treasurers which are beyond the river, that whatsoever Ezra the priest, the scribe of the law of the God of heaven, shall require of you, it be done speedily",
         button = "Just button title",
+        closeEnabled = true,
+        onCloseCard = {},
+        onButtonClicked = {},
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewBasicBannerCard12() {
+    BasicBannerCard(
+        imageContent = R.drawable.image_friends,
+        title = "Some title",
+        description = "Long description of banner",
+        button = "Just button title",
+        closeEnabled = false,
         onCloseCard = {},
         onButtonClicked = {},
     )
@@ -195,6 +214,7 @@ private fun PreviewBasicBannerCard2() {
         title = "Title",
         description = "Description",
         button = "Button",
+        closeEnabled = true,
         onCloseCard = {},
         onButtonClicked = {},
     )

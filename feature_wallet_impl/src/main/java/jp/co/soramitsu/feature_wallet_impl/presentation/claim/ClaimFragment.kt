@@ -36,7 +36,6 @@ import android.Manifest
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
@@ -50,7 +49,7 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
 import jp.co.soramitsu.androidfoundation.intent.ShareUtil
@@ -64,7 +63,7 @@ class ClaimFragment : SoraBaseFragment<ClaimViewModel>() {
 
     override val viewModel: ClaimViewModel by viewModels()
 
-    @OptIn(ExperimentalUnitApi::class, ExperimentalAnimationApi::class)
+    @OptIn(ExperimentalUnitApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController

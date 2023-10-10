@@ -57,8 +57,8 @@ class AssetLocalToAssetMapper @Inject constructor(
             precision = token.token.precision,
             isHidable = token.token.isHidable,
             iconFile = whitelistTokensManager.getTokenIconUri(token.token.id),
-            fiatPrice = token.fiat.fiatPrice,
-            fiatPriceChange = token.fiat.fiatChange,
+            fiatPrice = token.fiat?.fiatPrice,
+            fiatPriceChange = token.fiat?.fiatChange,
             fiatSymbol = soraConfigManager.getSelectedCurrency().sign,
         )
     }

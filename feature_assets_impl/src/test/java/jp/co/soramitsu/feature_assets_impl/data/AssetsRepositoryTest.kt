@@ -99,7 +99,7 @@ class AssetsRepositoryTest {
     @Mock
     private lateinit var soraConfigManager: SoraConfigManager
 
-    private val mockedUri = Mockito.mock(Uri::class.java)
+    private val mockedUri = DEFAULT_ICON_URI
 
     private lateinit var assetsRepository: AssetsRepository
 
@@ -134,7 +134,7 @@ class AssetsRepositoryTest {
     @Test
     fun `get assets`() = runTest {
         BDDMockito.given(
-            assetDao.getAssetsFavorite(
+            assetDao.getAssetsActive(
                 BDDMockito.anyString(),
                 BDDMockito.anyString(),
                 BDDMockito.anyString()
@@ -142,7 +142,7 @@ class AssetsRepositoryTest {
         ).willReturn(
             assetTokenList()
         )
-        val assets = assetsRepository.getAssetsFavorite("address")
+        val assets = assetsRepository.getAssetsActive("address")
         val expected = assetList().subList(0, 2)
         Assert.assertEquals(expected.size, assets.size)
         repeat(2) {

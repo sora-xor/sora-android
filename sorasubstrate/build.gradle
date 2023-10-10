@@ -7,6 +7,10 @@ plugins {
 }
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdk compileVersion
 
@@ -23,13 +27,6 @@ android {
             minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
     }
     flavorDimensions "default"
 
@@ -50,6 +47,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.sora.substrate'
 }
 
 dependencies {
@@ -58,8 +56,8 @@ dependencies {
     implementation project(":common_wallet")
     implementation project(":feature_blockexplorer_api")
     implementation project(":soracrypro")
+    implementation project(":network")
 
-    implementation xNetworkingDep
     implementation gsonDep
     implementation webSocketLibDep
     implementation coroutineAndroidDep

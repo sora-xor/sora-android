@@ -48,8 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
-import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.AccountIcon
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -75,7 +74,7 @@ fun AccountWithIcon(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(uri = accountIcon ?: DEFAULT_ICON_URI, size = Size.Small)
+        AccountIcon(drawable = accountIcon, size = Size.Small)
         Text(
             modifier = Modifier
                 .weight(1f)

@@ -32,12 +32,11 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.data.network.dto
 
-import androidx.annotation.Keep
 import java.math.BigInteger
+import jp.co.soramitsu.common.util.ParseModel
 
-@Keep
 data class SwapFeeDto(
     val amount: BigInteger,
     val fee: BigInteger,
     val route: List<String>? = null,
-)
+) : ParseModel()

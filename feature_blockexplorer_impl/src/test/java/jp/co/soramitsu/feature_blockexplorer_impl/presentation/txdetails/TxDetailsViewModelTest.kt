@@ -44,6 +44,7 @@ import io.mockk.verify
 import jp.co.soramitsu.androidfoundation.phone.BasicClipboardManager
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.date.DateTimeFormatter
+import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.domain.printFiat
@@ -110,7 +111,7 @@ class TxDetailsViewModelTest {
 
     private val nf = NumbersFormatter()
 
-    private val mockedUri = mockk<Uri>()
+    private val mockedUri = DEFAULT_ICON_URI
 
     private val txHash = "txHash"
     private val date = "10 Jan. 2021 12:12"
@@ -155,11 +156,6 @@ class TxDetailsViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
-        mockkStatic(Token::iconUri)
-        every { TestTokens.xorToken.iconUri() } returns mockedUri
-        every { TestTokens.valToken.iconUri() } returns mockedUri
         coEvery { assetsInteractor.getCurSoraAccount() } returns TestAccounts.soraAccount
         coEvery { walletInteractor.getFeeToken() } returns TestTokens.xorToken
         coEvery { router.popBackStackFragment() } returns Unit

@@ -40,6 +40,13 @@ object TestData {
 
     val CARD_HUB_LOCAL = listOf(
         CardHubLocal(
+            cardId = CardHubType.BACKUP.hubName,
+            accountAddress = "accountAddress",
+            visibility = true,
+            sortOrder = CardHubType.BACKUP.order,
+            collapsed = false
+        ),
+        CardHubLocal(
             cardId = CardHubType.ASSETS.hubName,
             accountAddress = "accountAddress",
             visibility = true,

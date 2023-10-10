@@ -71,13 +71,16 @@ fun MnemonicConfirmationScreen(
                 .padding(bottom = Dimens.x3, top = Dimens.x1),
         ) {
             Column(
-                modifier = Modifier.padding(Dimens.x3),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.x3),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     modifier = Modifier
                         .padding(bottom = Dimens.x2),
                     text = stringResource(id = R.string.mnemonic_confirmation_select_word_number),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 
@@ -85,6 +88,7 @@ fun MnemonicConfirmationScreen(
                     modifier = Modifier
                         .padding(bottom = Dimens.x2),
                     text = mnemonicConfirmationState.currentWordIndex.toString(),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphXSBold.copy(
                         fontSize = 128.sp
                     ),
@@ -94,6 +98,7 @@ fun MnemonicConfirmationScreen(
                     modifier = Modifier
                         .padding(bottom = Dimens.x2),
                     text = stringResource(id = R.string.mnemonic_confirmation_select_word_2),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 
@@ -103,7 +108,11 @@ fun MnemonicConfirmationScreen(
                             .size(Dimens.x3)
                             .padding(vertical = Dimens.x1_2),
                         painter = painterResource(R.drawable.ic_circle_unchecked),
-                        tint = if (mnemonicConfirmationState.confirmationStep > 1) { MaterialTheme.customColors.accentPrimary } else { MaterialTheme.customColors.bgSurfaceVariant },
+                        tint = if (mnemonicConfirmationState.confirmationStep > 1) {
+                            MaterialTheme.customColors.accentPrimary
+                        } else {
+                            MaterialTheme.customColors.bgSurfaceVariant
+                        },
                         contentDescription = null
                     )
 
@@ -112,7 +121,11 @@ fun MnemonicConfirmationScreen(
                             .size(Dimens.x3)
                             .padding(vertical = Dimens.x1_2),
                         painter = painterResource(R.drawable.ic_circle_unchecked),
-                        tint = if (mnemonicConfirmationState.confirmationStep > 2) { MaterialTheme.customColors.accentPrimary } else { MaterialTheme.customColors.bgSurfaceVariant },
+                        tint = if (mnemonicConfirmationState.confirmationStep > 2) {
+                            MaterialTheme.customColors.accentPrimary
+                        } else {
+                            MaterialTheme.customColors.bgSurfaceVariant
+                        },
                         contentDescription = null
                     )
 
@@ -121,7 +134,11 @@ fun MnemonicConfirmationScreen(
                             .size(Dimens.x3)
                             .padding(vertical = Dimens.x1_2),
                         painter = painterResource(R.drawable.ic_circle_unchecked),
-                        tint = if (mnemonicConfirmationState.confirmationStep > 3) { MaterialTheme.customColors.accentPrimary } else { MaterialTheme.customColors.bgSurfaceVariant },
+                        tint = if (mnemonicConfirmationState.confirmationStep > 3) {
+                            MaterialTheme.customColors.accentPrimary
+                        } else {
+                            MaterialTheme.customColors.bgSurfaceVariant
+                        },
                         contentDescription = null
                     )
                 }
@@ -168,7 +185,6 @@ fun PreviewMnemonicConfirmationScreen() {
             0,
             listOf("First", "Second", "Thrird"),
             0
-        ),
-        {}
-    )
+        )
+    ) {}
 }

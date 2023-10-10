@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.account_details
 
+import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,10 +41,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.model.AccountDetailsScreenState
 import jp.co.soramitsu.ui_core.component.button.TonalButton
@@ -93,29 +97,68 @@ internal fun AccountDetailsScreenBasic(
     )
 }
 
-@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewAccountDetailsScreenBasic() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-    ) {
-        AccountDetailsScreenBasic(
-            state = AccountDetailsScreenState(
-                accountNameState = InputTextState(value = TextFieldValue("bla"), label = "Name"),
-                isMnemonicAvailable = false,
-                isBackupLoading = false,
-                isBackupAvailable = false,
-                "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
-            ),
-            onValueChanged = {},
-            onShowPassphrase = {},
-            onShowRawSeed = {},
-            onExportJson = {},
-            onLogout = {},
-            onAddressClick = {},
-            onBackupClicked = {}
-        )
+private fun PreviewAccountDetailsScreenBasic01() {
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .fillMaxWidth()
+                .wrapContentHeight()
+        ) {
+            AccountDetailsScreenBasic(
+                state = AccountDetailsScreenState(
+                    accountNameState = InputTextState(
+                        value = TextFieldValue("bla"),
+                        label = "Name"
+                    ),
+                    isMnemonicAvailable = false,
+                    isBackupLoading = false,
+                    isBackupAvailable = false,
+                    "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
+                ),
+                onValueChanged = {},
+                onShowPassphrase = {},
+                onShowRawSeed = {},
+                onExportJson = {},
+                onLogout = {},
+                onAddressClick = {},
+                onBackupClicked = {}
+            )
+        }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewAccountDetailsScreenBasic02() {
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .fillMaxWidth()
+                .wrapContentHeight()
+        ) {
+            AccountDetailsScreenBasic(
+                state = AccountDetailsScreenState(
+                    accountNameState = InputTextState(
+                        value = TextFieldValue("bla"),
+                        label = "Name"
+                    ),
+                    isMnemonicAvailable = false,
+                    isBackupLoading = false,
+                    isBackupAvailable = false,
+                    "cnVkoGs3rEMqLqY27c2nfVXJRGdzNJk2ns78DcqtppaSRe8qm",
+                ),
+                onValueChanged = {},
+                onShowPassphrase = {},
+                onShowRawSeed = {},
+                onExportJson = {},
+                onLogout = {},
+                onAddressClick = {},
+                onBackupClicked = {}
+            )
+        }
     }
 }

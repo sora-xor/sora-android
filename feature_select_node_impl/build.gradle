@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -12,15 +16,6 @@ android {
         targetSdkVersion targetVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     composeOptions {
@@ -58,6 +53,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_select_node_impl'
 }
 
 dependencies {
@@ -71,10 +67,10 @@ dependencies {
     implementation project(":core_di")
     implementation project(":sorasubstrate")
     implementation project(":soracrypro")
+    implementation project(":network")
 
     implementation androidDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
@@ -86,8 +82,6 @@ dependencies {
 
     implementation navigationFragmentDep
     implementation navigationUiDep
-
-    implementation xNetworkingDep
 
     implementation roomDep
     implementation roomKtxDep
@@ -107,7 +101,7 @@ dependencies {
     implementation composeLifecycleDep
     debugImplementation composeToolingDep
     implementation navigationComposeDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
 
     implementation daggerDep
     kapt daggerKaptDep

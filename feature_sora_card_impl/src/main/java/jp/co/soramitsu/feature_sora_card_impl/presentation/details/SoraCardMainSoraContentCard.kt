@@ -30,34 +30,28 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrievePainter
-import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
-import jp.co.soramitsu.ui_core.component.button.BleachedButton
-import jp.co.soramitsu.ui_core.component.button.properties.Order
-import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -68,35 +62,10 @@ enum class SoraCardMenuAction {
 }
 
 data class SoraCardMainSoraContentCardState(
-    val balance: Float,
-    val isCardEnabled: Boolean,
-    val soraCardMenuActions: List<SoraCardMenuAction>
+    val balance: String?,
+    val actionsEnabled: Boolean = false,
+    val soraCardMenuActions: List<SoraCardMenuAction>,
 ) {
-
-    val soraImage: Image
-        get() = Image.ResImage(
-            id = R.drawable.sora_card
-        )
-
-    val showDetailsText: Text
-        get() = Text.StringRes(
-            id = R.string.show_more
-        )
-
-    val soraCardText: Text
-        get() = Text.StringRes(
-            id = R.string.more_menu_sora_card_title
-        )
-
-    val soraCardBalanceText: Text
-        get() = Text.SimpleText(
-            text = "$balance"
-        )
-
-    val soraCardManagementComingSoonText: Text
-        get() = Text.StringRes(
-            id = R.string.sora_card_details_card_management_coming_soon
-        )
 
     val menuState: List<IconButtonMenuState>
         get() = soraCardMenuActions.map {
@@ -106,28 +75,31 @@ data class SoraCardMainSoraContentCardState(
                         testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_new_arrow_down_24),
                         text = Text.StringRes(id = R.string.sora_card_action_top_up),
-                        isEnabled = isCardEnabled
+                        isEnabled = actionsEnabled,
                     )
+
                 SoraCardMenuAction.TRANSFER ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_new_arrow_up_24),
                         text = Text.StringRes(id = R.string.sora_card_action_transfer),
-                        isEnabled = isCardEnabled
+                        isEnabled = actionsEnabled,
                     )
+
                 SoraCardMenuAction.EXCHANGE ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_refresh_24),
                         text = Text.StringRes(id = R.string.sora_card_action_exchange),
-                        isEnabled = isCardEnabled
+                        isEnabled = actionsEnabled,
                     )
+
                 SoraCardMenuAction.FREEZE ->
                     IconButtonMenuState(
                         testTagId = it.toString(),
                         image = Image.ResImage(id = R.drawable.ic_snow_flake),
                         text = Text.StringRes(id = R.string.sora_card_action_freeze),
-                        isEnabled = isCardEnabled
+                        isEnabled = actionsEnabled,
                     )
             }
         }
@@ -141,7 +113,6 @@ fun SoraCardMainSoraContentCard(
 ) {
     ContentCard(
         cornerRadius = Dimens.x4,
-        onClick = remember { { /* DO NOTHING */ } }
     ) {
         Column(
             modifier = Modifier
@@ -153,26 +124,24 @@ fun SoraCardMainSoraContentCard(
             Box(
                 modifier = Modifier.wrapContentSize()
             ) {
-                Image(
-                    modifier = Modifier.fillMaxWidth(),
-                    painter = soraCardMainSoraContentCardState.soraImage.retrievePainter(),
-                    contentDescription = "",
-                    contentScale = ContentScale.FillWidth
+                SoraCardImage(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
                 )
-                if (soraCardMainSoraContentCardState.isCardEnabled)
-                    BleachedButton(
-                        modifier = Modifier
-                            .wrapContentSize()
-                            .align(Alignment.BottomEnd)
-                            .padding(Dimens.x1_5),
-                        shape = CircleShape,
-                        size = Size.Small,
-                        order = Order.SECONDARY,
-                        text = soraCardMainSoraContentCardState.showDetailsText.retrieveString(),
-                        onClick = onShowMoreClick
-                    )
+//                BleachedButton(
+//                    modifier = Modifier
+//                        .wrapContentSize()
+//                        .align(Alignment.BottomEnd)
+//                        .padding(Dimens.x1_5),
+//                    shape = CircleShape,
+//                    size = Size.Small,
+//                    order = Order.SECONDARY,
+//                    text = stringResource(id = R.string.show_more),
+//                    onClick = onShowMoreClick,
+//                )
             }
-            if (soraCardMainSoraContentCardState.isCardEnabled)
+            if (soraCardMainSoraContentCardState.balance != null)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -182,12 +151,12 @@ fun SoraCardMainSoraContentCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = soraCardMainSoraContentCardState.soraCardText.retrieveString(),
+                        text = stringResource(id = R.string.more_menu_sora_card_title),
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary
                     )
                     Text(
-                        text = soraCardMainSoraContentCardState.soraCardBalanceText.retrieveString(),
+                        text = soraCardMainSoraContentCardState.balance,
                         style = MaterialTheme.customTypography.headline2,
                         color = MaterialTheme.customColors.fgPrimary
                     )
@@ -195,7 +164,7 @@ fun SoraCardMainSoraContentCard(
             else
                 Text(
                     modifier = Modifier.fillMaxWidth(),
-                    text = soraCardMainSoraContentCardState.soraCardManagementComingSoonText.retrieveString(),
+                    text = stringResource(id = R.string.sora_card_details_card_management_coming_soon),
                     style = MaterialTheme.customTypography.textS,
                     color = MaterialTheme.customColors.fgSecondary,
                     textAlign = TextAlign.Center
@@ -208,14 +177,26 @@ fun SoraCardMainSoraContentCard(
     }
 }
 
-@Preview
+@Preview(locale = "ru")
 @Composable
 private fun PreviewMainSoraContentCard() {
     SoraCardMainSoraContentCard(
         soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-            balance = 3644.50f,
-            isCardEnabled = false,
-            soraCardMenuActions = SoraCardMenuAction.values().toList()
+            balance = "3644.50",
+            soraCardMenuActions = SoraCardMenuAction.entries
+        ),
+        onShowMoreClick = {},
+        onIconButtonClick = { _ -> }
+    )
+}
+
+@Preview(locale = "ar")
+@Composable
+private fun PreviewMainSoraContentCard2() {
+    SoraCardMainSoraContentCard(
+        soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
+            balance = "3644.50",
+            soraCardMenuActions = SoraCardMenuAction.entries
         ),
         onShowMoreClick = {},
         onIconButtonClick = { _ -> }

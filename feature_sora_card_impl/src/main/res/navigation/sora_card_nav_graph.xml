@@ -6,6 +6,6 @@
 
     <fragment
         android:id="@+id/getSoraCardFragment"
-        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.GetSoraCardFragment" />
+        android:name="jp.co.soramitsu.feature_sora_card_impl.presentation.GetSoraCardFragment" />
 
 </navigation>

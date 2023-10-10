@@ -10,6 +10,10 @@ apply plugin: 'com.google.firebase.crashlytics'
 apply plugin: 'com.github.triplet.play'
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
     flavorDimensions "default"
@@ -66,15 +70,6 @@ android {
             }
 
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     buildFeatures {
@@ -134,6 +129,7 @@ android {
     configurations {
         all*.exclude module: 'bcprov-jdk15on'
     }
+    namespace 'jp.co.soramitsu.sora'
 }
 
 hilt {
@@ -184,7 +180,6 @@ dependencies {
     implementation androidDep
     implementation appCompatResourcesDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation navigationFragmentDep
@@ -210,7 +205,6 @@ dependencies {
     implementation platform(googleFirebaseBomDep)
     implementation googleCrashlyticsDep
 
-    implementation xNetworkingDep
     implementation webSocketLibDep
 
     implementation zXingCoreDep
