@@ -99,6 +99,7 @@ fun SoraCardDetailsScreen(
                 title = stringResource(id = R.string.sora_card_referral_headline),
                 description = "",
                 button = stringResource(id = R.string.sora_card_refer_and_earn_action),
+                closeEnabled = false,
                 onButtonClicked = onReferralBannerClick,
                 onCloseCard = onCloseReferralBannerClick,
             )

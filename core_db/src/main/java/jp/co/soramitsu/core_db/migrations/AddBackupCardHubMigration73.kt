@@ -30,35 +30,35 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
+package jp.co.soramitsu.core_db.migrations
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import jp.co.soramitsu.common.R
-import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.core_db.converters.map
 
-@Composable
-fun ReferralCard(
-    onStartClicked: () -> Unit,
-    onCloseCard: () -> Unit,
-) {
-    BasicBannerCard(
-        imageContent = R.drawable.image_friends,
-        title = stringResource(id = R.string.settings_invite_title),
-        description = stringResource(id = R.string.referral_title),
-        button = stringResource(id = R.string.referral_start_inviting),
-        closeEnabled = true,
-        onButtonClicked = onStartClicked,
-        onCloseCard = onCloseCard,
-    )
-}
+val migration_addBackupCardHub_72_73 = object : Migration(72, 73) {
 
-@Preview
-@Composable
-private fun PreviewReferralCard() {
-    ReferralCard(
-        onCloseCard = {},
-        onStartClicked = {},
-    )
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        val cursor = database.query("select substrateAddress from accounts")
+        val addresses = cursor.map {
+            getString(getColumnIndexOrThrow("substrateAddress"))
+        }
+        addresses.forEach { address ->
+            val type = CardHubType.BACKUP
+            val values = ContentValues().apply {
+                put("cardId", type.hubName)
+                put("accountAddress", address)
+                put("visibility", true)
+                put("collapsed", false)
+                put("sortOrder", type.order)
+            }
+            database.insert("cardsHub", SQLiteDatabase.CONFLICT_REPLACE, values)
+        }
+        database.setTransactionSuccessful()
+        database.endTransaction()
+    }
 }

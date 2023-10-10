@@ -41,6 +41,7 @@
   <string name="asset_to_send">נכס לשליחה</string>
   <string name="backup_account_already_exist">גיבוי כבר קיים. המשך לשכתב אותו.</string>
   <string name="backup_not_enough_space_error">הגיבוי נכשל. אין מספיק מקום בגוגל דרייב שלך. פנה קצת מקום ונסה שוב.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">דרישת חובה למילוי הסיסמה</string>
   <string name="backup_password_requirments">מינימום שישה תווים. לחלופין, לאבטחה טובה יותר, כלול אותיות רישיות, מספרים ותווים שאינם אלפביתיים.</string>
   <string name="backup_password_title">הגדרת סיסמה תצפין את גיבוי הגוגל שלך. יהיה עליך להזין אותה בעת שחזור הארנק שלך.</string>
@@ -400,6 +401,7 @@
     <item quantity="other">%s שניות נותרו</item>
   </plurals>
   <string name="project_ended_template">הסתיים %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">קוד QR</string>
   <string name="qr_upload">מתוך גלריה</string>
   <string name="receive_tokens">קבל טוקנים</string>
@@ -502,7 +504,6 @@
   <string name="sora_card_details_card_management_coming_soon">ניהול כרטיסים יגיע בקרוב</string>
   <string name="sora_card_details_title">פרטי כרטיס</string>
   <string name="sora_card_free_card_issuance">הנפקת כרטיס חינם</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">או 20 € דמי רישום</string>
   <string name="sora_card_free_card_issuance_conditions_xor">אם אתה מחזיק, נועל או מספק נזילות בשווי של לפחות 100 אירו של XOR בחשבון סורה שלך</string>
   <string name="sora_card_get_more_xor">השג עוד XOR</string>
   <string name="sora_card_iban_headline">פרטי חשבון IBAN</string>
@@ -547,6 +548,7 @@
   <string name="unexpected_error">אירעה שגיאה בלתי צפויה. \n\n אתה יכול לפתור בעיה זו בצ\'אט הטלגרם של קהילת סורה @SORAhappiness.</string>
   <string name="update_downloaded">עדכון עבור אפליקצית סורה הורד והוא מוכן להתקנה.\n\nחשוב להשתמש בגירסה העדכנית ביותר של האפליקציה.\n\nכדי לעדכן את האפליקציה, נדרשת הפעלה מחדש.</string>
   <string name="update_install_now">האם ברצונך להתקין את העדכון כעת?</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">נעול</string>
   <string name="wallet_balance_reserved">שמור</string>
   <string name="wallet_bonded">צורף למאגר</string>

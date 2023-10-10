@@ -64,6 +64,7 @@ enum class HubCardVisibility {
     VISIBLE_AND_ENABLED,
     VISIBLE_AND_DISABLED,
     NOT_VISIBLE_ENABLED,
+    NOT_VISIBLE_DISABLED,
 }
 
 class HubCardState(
@@ -77,6 +78,7 @@ class HubCardState(
             HubCardVisibility.VISIBLE_AND_ENABLED,
             HubCardVisibility.VISIBLE_AND_DISABLED -> R.drawable.ic_selected_accent_pin_24
 
+            HubCardVisibility.NOT_VISIBLE_DISABLED,
             HubCardVisibility.NOT_VISIBLE_ENABLED -> R.drawable.ic_selected_pin_empty_24
         }
 
@@ -85,6 +87,7 @@ class HubCardState(
             HubCardVisibility.VISIBLE_AND_ENABLED,
             HubCardVisibility.NOT_VISIBLE_ENABLED -> 1f
 
+            HubCardVisibility.NOT_VISIBLE_DISABLED,
             HubCardVisibility.VISIBLE_AND_DISABLED -> .3f
         }
 
@@ -93,6 +96,7 @@ class HubCardState(
             HubCardVisibility.VISIBLE_AND_ENABLED,
             HubCardVisibility.NOT_VISIBLE_ENABLED -> true
 
+            HubCardVisibility.NOT_VISIBLE_DISABLED,
             HubCardVisibility.VISIBLE_AND_DISABLED -> false
         }
 }

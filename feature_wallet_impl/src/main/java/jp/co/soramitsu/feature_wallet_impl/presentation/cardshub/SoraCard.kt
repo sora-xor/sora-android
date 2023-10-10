@@ -176,7 +176,6 @@ private fun PreviewSoraCard1() {
             kycStatus = "",
 //            ibanBalance = "${euroSign}345.3",
             ibanBalance = null,
-            visible = true,
             loading = false,
             success = true,
         ),
@@ -194,7 +193,6 @@ private fun PreviewSoraCard2() {
             state = SoraCardState(
                 kycStatus = "Pending",
                 ibanBalance = null,
-                visible = true,
                 loading = false,
                 success = false,
             ),
@@ -213,7 +211,6 @@ private fun PreviewSoraCard3() {
             state = SoraCardState(
                 kycStatus = null,
                 ibanBalance = null,
-                visible = true,
                 loading = false,
                 success = false,
             ),
@@ -232,7 +229,6 @@ private fun PreviewSoraCard4() {
             state = SoraCardState(
                 kycStatus = null,
                 ibanBalance = null,
-                visible = true,
                 loading = true,
                 success = false,
             ),

@@ -40,6 +40,7 @@ const val POOLS_HUB_NAME = "pools"
 const val GET_SORA_CARD_HUB_NAME = "get sora card"
 const val BUY_XOR_TOKEN_HUB_NAME = "buy xor token"
 const val REFERRAL_SYSTEM_HUB_NAME = "referral system"
+const val BACKUP_WALLET_HUB_NAME = "backup wallet"
 
 data class CardHub(
     val cardType: CardHubType,
@@ -73,6 +74,7 @@ enum class CardHubType(
         R.string.referral_toolbar_title,
     ),
 
+    BACKUP(BACKUP_WALLET_HUB_NAME, order = -1, boundToAccount = true, R.string.wallet_backup),
     ASSETS(ASSETS_HUB_NAME, order = 0, boundToAccount = true, R.string.liquid_assets),
     POOLS(POOLS_HUB_NAME, order = 1, boundToAccount = true, R.string.pooled_assets),
 }

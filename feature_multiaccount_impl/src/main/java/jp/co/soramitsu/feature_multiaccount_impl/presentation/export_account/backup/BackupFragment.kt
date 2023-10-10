@@ -32,9 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_multiaccount_impl.presentation.export_account.backup
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -62,7 +65,6 @@ class BackupFragment : SoraBaseFragment<BackupViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -71,10 +73,15 @@ class BackupFragment : SoraBaseFragment<BackupViewModel>() {
             route = theOnlyRoute,
         ) {
             viewModel.backupScreenState.observeAsState().value?.let {
-                BackupScreen(
-                    state = it,
-                    onButtonPressed = viewModel::backupPressed,
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    BackupScreen(
+                        state = it,
+                        onButtonPressed = viewModel::backupPressed,
+                    )
+                }
             }
         }
     }

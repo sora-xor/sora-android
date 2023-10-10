@@ -50,6 +50,7 @@ fun BuyXorCard(
         title = stringResource(id = R.string.buy_crypto_buy_xor_banner_title),
         description = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
         button = stringResource(id = R.string.common_buy_xor),
+        closeEnabled = true,
         onButtonClicked = onBuyXorClicked,
         onCloseCard = onCloseCard,
     )

@@ -52,6 +52,7 @@ import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common.util.ext.safeCast
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 import jp.co.soramitsu.common_wallet.domain.model.fiatSymbol
+import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
@@ -115,6 +116,7 @@ class CardsHubViewModel @Inject constructor(
             loading = true,
             cards = emptyList(),
             curAccount = "",
+            accountAddress = "",
         )
     )
     val state = _state.asStateFlow()
@@ -137,6 +139,7 @@ class CardsHubViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .flatMapLatest { data ->
                     _state.value = _state.value.copy(
+                        accountAddress = data.first.substrateAddress,
                         curAccount = data.first.accountTitle(),
                         loading = false,
                     )
@@ -167,7 +170,6 @@ class CardsHubViewModel @Inject constructor(
                                     .map { status ->
                                         val mapped = mapKycStatus(status)
                                         cardHub to SoraCardState(
-                                            visible = cardHub.visibility,
                                             kycStatus = mapped.first,
                                             loading = false,
                                             success = mapped.second,
@@ -179,7 +181,6 @@ class CardsHubViewModel @Inject constructor(
                                             cardHub to SoraCardState(
                                                 success = false,
                                                 kycStatus = null,
-                                                visible = cardHub.visibility,
                                                 loading = true,
                                                 ibanBalance = null,
                                             )
@@ -189,19 +190,17 @@ class CardsHubViewModel @Inject constructor(
 
                             CardHubType.REFERRAL_SYSTEM -> {
                                 flowOf(
-                                    cardHub to ReferralState(
-                                        visible = cardHub.visibility,
-                                        loading = false,
-                                    )
+                                    cardHub to ReferralState
                                 )
+                            }
+
+                            CardHubType.BACKUP -> {
+                                flowOf(cardHub to BackupWalletState)
                             }
 
                             CardHubType.BUY_XOR_TOKEN -> {
                                 flowOf(
-                                    cardHub to BuyXorState(
-                                        visible = cardHub.visibility,
-                                        loading = false,
-                                    )
+                                    cardHub to BuyXorState
                                 )
                             }
                         }
@@ -307,6 +306,7 @@ class CardsHubViewModel @Inject constructor(
                     it.second as List<CommonUserPoolData>
                 )
 
+                CardHubType.BACKUP -> (it.second as BackupWalletState)
                 CardHubType.GET_SORA_CARD -> (it.second as SoraCardState)
                 CardHubType.BUY_XOR_TOKEN -> (it.second as BuyXorState)
                 CardHubType.REFERRAL_SYSTEM -> (it.second as ReferralState)
@@ -402,6 +402,10 @@ class CardsHubViewModel @Inject constructor(
 
     fun onStartReferral() {
         referralRouter.showReferrals()
+    }
+
+    fun onBackupBannerClick() {
+        mainRouter.showAccountDetails(_state.value.accountAddress)
     }
 
     fun onBuyCrypto() {

@@ -39,26 +39,24 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
 
 @Composable
-fun ReferralCard(
+fun BackupCard(
     onStartClicked: () -> Unit,
-    onCloseCard: () -> Unit,
 ) {
     BasicBannerCard(
-        imageContent = R.drawable.image_friends,
-        title = stringResource(id = R.string.settings_invite_title),
-        description = stringResource(id = R.string.referral_title),
-        button = stringResource(id = R.string.referral_start_inviting),
-        closeEnabled = true,
+        imageContent = R.drawable.ic_banner_backup,
+        title = stringResource(id = R.string.wallet_backup),
+        description = stringResource(id = R.string.protect_loss_access_funds),
+        button = stringResource(id = R.string.backup_now),
+        closeEnabled = false,
         onButtonClicked = onStartClicked,
-        onCloseCard = onCloseCard,
+        onCloseCard = {},
     )
 }
 
 @Preview
 @Composable
-private fun PreviewReferralCard() {
-    ReferralCard(
-        onCloseCard = {},
+private fun PreviewBackupCard() {
+    BackupCard(
         onStartClicked = {},
     )
 }

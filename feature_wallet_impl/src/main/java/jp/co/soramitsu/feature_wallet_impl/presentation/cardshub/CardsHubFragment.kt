@@ -66,6 +66,8 @@ import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
+import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
@@ -129,6 +131,7 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     onBuyXorClose = viewModel::onRemoveBuyXorToken,
                     onReferralClick = viewModel::onStartReferral,
                     onReferralClose = viewModel::onRemoveReferralCard,
+                    onBackupBannerClick = viewModel::onBackupBannerClick,
                     onEdit = viewModel::onEditViewClick,
                 )
             }
@@ -150,6 +153,7 @@ private fun CardsMainScreen(
     onBuyXorClose: () -> Unit,
     onReferralClick: () -> Unit,
     onReferralClose: () -> Unit,
+    onBackupBannerClick: () -> Unit,
     onEdit: () -> Unit,
 ) {
     TopBar(
@@ -193,26 +197,33 @@ private fun CardsMainScreen(
                     }
                 }
 
-                is SoraCardState -> {
-                    SoraCard(
-                        state = cardState,
-                        onCardStateClicked = onSoraCardClick,
-                        onCloseClicked = onSoraCardClose,
-                    )
-                }
-
-                is BuyXorState -> {
-                    BuyXorCard(
-                        onBuyXorClicked = onBuyXorClick,
-                        onCloseCard = onBuyXorClose,
-                    )
-                }
-
-                is ReferralState -> {
-                    ReferralCard(
-                        onStartClicked = onReferralClick,
-                        onCloseCard = onReferralClose,
-                    )
+                is BasicBannerCardState -> {
+                    when (cardState) {
+                        BackupWalletState -> {
+                            BackupCard(
+                                onStartClicked = onBackupBannerClick,
+                            )
+                        }
+                        BuyXorState -> {
+                            BuyXorCard(
+                                onBuyXorClicked = onBuyXorClick,
+                                onCloseCard = onBuyXorClose,
+                            )
+                        }
+                        ReferralState -> {
+                            ReferralCard(
+                                onStartClicked = onReferralClick,
+                                onCloseCard = onReferralClose,
+                            )
+                        }
+                        is SoraCardState -> {
+                            SoraCard(
+                                state = cardState,
+                                onCardStateClicked = onSoraCardClick,
+                                onCloseClicked = onSoraCardClose,
+                            )
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.size(size = 16.dp))
@@ -239,10 +250,13 @@ private fun PreviewCardsMainScreen() {
             scrollState = rememberScrollState(),
             state = CardsState(
                 curAccount = "cnVko",
+                accountAddress = "",
                 loading = true,
-                cards = emptyList(),
+                cards = listOf(
+                    BuyXorState, ReferralState, BackupWalletState,
+                ),
             ),
-            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
         )
     }
 }

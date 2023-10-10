@@ -41,6 +41,7 @@
   <string name="asset_to_send">الأصول المراد إرسالها</string>
   <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -410,6 +411,7 @@
     <item quantity="other">%s ثواني</item>
   </plurals>
   <string name="project_ended_template">انتهى %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">رمز الاستجابة السريعة QR</string>
   <string name="qr_upload">التحميل من معرض الصور</string>
   <string name="receive_tokens">تلقي العملات</string>
@@ -514,7 +516,6 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">اصدار بطاقة مجاني</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">أو 20 € رسوم الطلب</string>
   <string name="sora_card_free_card_issuance_conditions_xor">إذا كنت تحتفظ أو تشارك أو توفر السيولة لما لا يقل عن 100 يورو من XOR في حساب SORA الخاص بك</string>
   <string name="sora_card_get_more_xor">احصل على المزيد من XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
@@ -559,6 +560,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">تم اصدار تحديث تطبيق SORA وهو جاهز للتثبيت.\n\nمن المهم استخدام أحدث إصدار من التطبيق.\n\nلتحديث التطبيق، يلزمك إعادة التشغيل.</string>
   <string name="update_install_now">هل تود تثبيت التحديث الآن؟</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">المقفل</string>
   <string name="wallet_balance_reserved">المدخر</string>
   <string name="wallet_bonded">المسند</string>

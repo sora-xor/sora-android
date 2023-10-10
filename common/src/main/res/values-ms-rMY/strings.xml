@@ -41,6 +41,7 @@
   <string name="asset_to_send">Aset untuk dihantar</string>
   <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
   <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Menetapkan kata laluan akan menyulitkan sandaran Google anda. Anda perlu memasukkannya semasa memulihkan dompet anda.</string>
@@ -385,6 +386,7 @@
     <item quantity="other">%s saat lagi</item>
   </plurals>
   <string name="project_ended_template">Tamat %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">Kod QR</string>
   <string name="qr_upload">Muat naik dari galeri</string>
   <string name="receive_tokens">Terima token</string>
@@ -484,7 +486,6 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">Pengeluaran kad percuma</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">atau 20 € yuran permohonan</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Jika anda memegang, mempertaruhkan atau menyediakan kecairan untuk sekurang-kurangnya €100 nilai XOR dalam akaun SORA anda</string>
   <string name="sora_card_get_more_xor">Dapatkan lebih banyak XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
@@ -529,6 +530,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Kemas kini untuk aplikasi SORA telah dimuat turun dan sedia untuk dipasang.\n\nAdalah penting untuk menggunakan versi terkini aplikasi.\n\nUntuk mengemas kini aplikasi, mulakan semula diperlukan.</string>
   <string name="update_install_now">Adakah anda ingin memasang kemas kini sekarang?</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">Dikunci</string>
   <string name="wallet_balance_reserved">Ditempah</string>
   <string name="wallet_bonded">Terikat</string>
