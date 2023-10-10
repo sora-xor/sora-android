@@ -68,7 +68,7 @@ class MultiaccountInteractor @Inject constructor(
     suspend fun accountExists(address: String) = userRepository.accountExists(address)
 
     suspend fun continueRecoverFlow(soraAccount: SoraAccount) {
-        insertAndSetCurAccount(soraAccount)
+        insertAndSetCurAccount(soraAccount, false)
         userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED)
     }
 
@@ -89,8 +89,8 @@ class MultiaccountInteractor @Inject constructor(
         return credentialsRepository.retrieveMnemonic(soraAccount ?: userRepository.getCurSoraAccount())
     }
 
-    private suspend fun insertAndSetCurAccount(soraAccount: SoraAccount) {
-        userRepository.insertSoraAccount(soraAccount)
+    private suspend fun insertAndSetCurAccount(soraAccount: SoraAccount, newAccount: Boolean) {
+        userRepository.insertSoraAccount(soraAccount, newAccount)
         userRepository.setCurSoraAccount(soraAccount)
     }
 
@@ -107,7 +107,7 @@ class MultiaccountInteractor @Inject constructor(
     }
 
     suspend fun createUser(soraAccount: SoraAccount) {
-        insertAndSetCurAccount(soraAccount)
+        insertAndSetCurAccount(soraAccount, true)
         userRepository.saveRegistrationState(OnboardingState.INITIAL)
         userRepository.saveNeedsMigration(false, soraAccount)
         userRepository.saveIsMigrationFetched(true, soraAccount)
