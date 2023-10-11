@@ -100,7 +100,6 @@ dependencies {
     implementation runtimeKtxDep
     implementation fragmentKtxDep
 
-    implementation permissionsAccompanistDep
     implementation permissionsRuntimeDep
 
     implementation daggerDep
@@ -119,7 +118,6 @@ dependencies {
     implementation uiCoreDep
 
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep
