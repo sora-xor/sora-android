@@ -43,8 +43,8 @@ import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.feature_select_node_api.NodeManager
 import jp.co.soramitsu.feature_select_node_api.NodeManagerEvent
 import jp.co.soramitsu.feature_select_node_api.data.SelectNodeRepository
-import jp.co.soramitsu.shared_utils.wsrpc.state.SocketStateMachine
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import jp.co.soramitsu.xsubstrate.wsrpc.state.SocketStateMachine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged

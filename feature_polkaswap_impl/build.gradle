@@ -74,7 +74,8 @@ dependencies {
     implementation project(":feature_blockexplorer_api")
     implementation project(":network")
 
-    implementation sharedUtilsDep
+    implementation xsubstrateDep
+    implementation xcryptoDep
 
     implementation androidDep
     implementation materialDep

@@ -45,11 +45,6 @@ import jp.co.soramitsu.common.data.network.connection.NetworkStateListener
 import jp.co.soramitsu.common.domain.AppStateProvider
 import jp.co.soramitsu.common.domain.CoroutineManager
 import jp.co.soramitsu.common.util.Const
-import jp.co.soramitsu.shared_utils.wsrpc.SocketService
-import jp.co.soramitsu.shared_utils.wsrpc.logging.Logger
-import jp.co.soramitsu.shared_utils.wsrpc.recovery.ConstantReconnectStrategy
-import jp.co.soramitsu.shared_utils.wsrpc.recovery.Reconnector
-import jp.co.soramitsu.shared_utils.wsrpc.request.RequestExecutor
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApi
 import jp.co.soramitsu.sora.substrate.substrate.SubstrateApiImpl
@@ -59,6 +54,11 @@ import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
 import jp.co.soramitsu.xnetworking.sorawallet.mainconfig.SoraRemoteConfigBuilder
 import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWallet
 import jp.co.soramitsu.xnetworking.sorawallet.txhistory.client.SubQueryClientForSoraWalletFactory
+import jp.co.soramitsu.xsubstrate.wsrpc.SocketService
+import jp.co.soramitsu.xsubstrate.wsrpc.logging.Logger
+import jp.co.soramitsu.xsubstrate.wsrpc.recovery.ConstantReconnectStrategy
+import jp.co.soramitsu.xsubstrate.wsrpc.recovery.Reconnector
+import jp.co.soramitsu.xsubstrate.wsrpc.request.RequestExecutor
 
 @InstallIn(SingletonComponent::class)
 @Module

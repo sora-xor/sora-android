@@ -147,7 +147,7 @@
 
 # Keep sora sdk classes
 -keep class jp.co.soramitsu.sora.sdk.** { *; }
--keep class jp.co.soramitsu.shared_utils.** { *; }
+-keep class jp.co.soramitsu.xsubstrate.** { *; }
 -keep class net.jpountz.** { *; }
 -keep class com.sun.jna.** { *; }
 
@@ -175,6 +175,25 @@
 # Needed by google-play-services when linking against an older platform version
 
 -dontwarn com.google.android.gms.**
+
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn com.sun.jna.platform.win32.Kernel32
+-dontwarn com.sun.jna.platform.win32.Win32Exception
+-dontwarn com.sun.jna.platform.win32.WinDef$LPVOID
+-dontwarn com.sun.jna.platform.win32.WinNT$HANDLE
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+-dontwarn io.mockk.proxy.jvm.dispatcher.JvmMockKDispatcher
+-dontwarn io.mockk.proxy.jvm.dispatcher.JvmMockKWeakMap
+-dontwarn java.lang.instrument.ClassDefinition
+-dontwarn java.lang.instrument.IllegalClassFormatException
+-dontwarn java.lang.instrument.UnmodifiableClassException
+-dontwarn org.junit.jupiter.api.extension.AfterAllCallback
+-dontwarn org.junit.jupiter.api.extension.ParameterContext
+-dontwarn org.junit.jupiter.api.extension.ParameterResolver
+-dontwarn org.junit.jupiter.api.extension.TestInstancePostProcessor
+-dontwarn org.mockito.internal.creation.bytebuddy.inject.MockMethodDispatcher
+-dontwarn org.opentest4j.AssertionFailedError
 
 -keep class com.google.** { *;}
 -keep interface com.google.** { *;}

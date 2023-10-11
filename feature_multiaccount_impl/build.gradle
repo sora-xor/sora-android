@@ -77,6 +77,9 @@ dependencies {
 
     implementation timberDep
 
+    implementation xcryptoDep
+    implementation xsubstrateDep
+
     implementation androidDep
     implementation materialDep
     implementation constraintDep
@@ -96,7 +99,7 @@ dependencies {
 
     kapt lifecycleKaptDep
 
-    implementation sharedUtilsDep
+//    implementation sharedUtilsDep
 
     implementation navigationFragmentDep
     implementation navigationUiDep

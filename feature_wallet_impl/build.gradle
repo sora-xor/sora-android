@@ -81,7 +81,8 @@ dependencies {
     implementation project(":feature_referral_api")
     implementation project(":feature_sora_card_api")
 
-    implementation sharedUtilsDep
+    implementation xsubstrateDep
+    implementation xcryptoDep
 
     implementation androidDep
     implementation materialDep
@@ -139,6 +140,8 @@ dependencies {
 
     implementation zXingCoreDep
     implementation zXingEmbeddedDep
+
+    implementation kotlinxSerializationJsonDep
 
     testImplementation project(":test_shared")
     testImplementation project(":test_data")

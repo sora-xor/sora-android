@@ -37,8 +37,8 @@ import jp.co.soramitsu.common.account.SoraAccount
 import jp.co.soramitsu.common.domain.Asset
 import jp.co.soramitsu.common.domain.Token
 import jp.co.soramitsu.common_wallet.data.XorAssetBalance
-import jp.co.soramitsu.shared_utils.encrypt.keypair.substrate.Sr25519Keypair
 import jp.co.soramitsu.sora.substrate.models.ExtrinsicSubmitStatus
+import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
 import kotlinx.coroutines.flow.Flow
 
 interface AssetsRepository {
@@ -60,7 +60,7 @@ interface AssetsRepository {
 
     suspend fun getAsset(assetId: String, address: String): Asset?
 
-    suspend fun getAssetsActive(address: String,): List<Asset>
+    suspend fun getAssetsActive(address: String): List<Asset>
 
     suspend fun getAssetsWhitelist(address: String): List<Asset>
 

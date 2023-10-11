@@ -32,12 +32,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.sora.substrate.substrate
 
-import jp.co.soramitsu.shared_utils.scale.Schema
-import jp.co.soramitsu.shared_utils.scale.compactInt
-import jp.co.soramitsu.shared_utils.scale.sizedByteArray
-import jp.co.soramitsu.shared_utils.scale.uint128
-import jp.co.soramitsu.shared_utils.scale.uint32
-import jp.co.soramitsu.shared_utils.scale.vector
+import jp.co.soramitsu.xsubstrate.scale.Schema
+import jp.co.soramitsu.xsubstrate.scale.compactInt
+import jp.co.soramitsu.xsubstrate.scale.sizedByteArray
+import jp.co.soramitsu.xsubstrate.scale.uint128
+import jp.co.soramitsu.xsubstrate.scale.uint32
+import jp.co.soramitsu.xsubstrate.scale.vector
 
 object ReservesResponse : Schema<ReservesResponse>() {
     val first by uint128()
@@ -62,7 +62,7 @@ object StakingLedger : Schema<StakingLedger>() {
     val total by compactInt()
     val active by compactInt()
     val unlocking by vector(UnlockChunk)
-    val claimedRewards by vector(jp.co.soramitsu.shared_utils.scale.dataType.uint32)
+    val claimedRewards by vector(jp.co.soramitsu.xsubstrate.scale.datatype.uint32)
 }
 
 object UnlockChunk : Schema<UnlockChunk>() {

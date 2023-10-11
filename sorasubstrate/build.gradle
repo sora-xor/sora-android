@@ -58,6 +58,10 @@ dependencies {
     implementation project(":soracrypro")
     implementation project(":network")
 
+    implementation xsubstrateDep
+    implementation xcryptoDep
+    implementation xNetworkingDep
+
     implementation gsonDep
     implementation webSocketLibDep
     implementation coroutineAndroidDep

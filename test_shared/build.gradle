@@ -29,7 +29,7 @@ dependencies {
 
     api coroutineTestDep
     api gsonDep
-    api sharedUtilsDep
+    api xsubstrateDep
 
     api jUnitDep
     api mockitoDep
