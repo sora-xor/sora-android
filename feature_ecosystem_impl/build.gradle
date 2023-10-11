@@ -107,7 +107,6 @@ dependencies {
     implementation uiCoreDep
 
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep

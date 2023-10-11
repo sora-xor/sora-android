@@ -74,7 +74,6 @@ dependencies {
     implementation hiltNavComposeDep
 
     implementation composeUiDep
-    implementation composeThemeAdapterDep
     implementation composeFoundationDep
     implementation composeMaterialDep
     implementation composeAnimationDep
