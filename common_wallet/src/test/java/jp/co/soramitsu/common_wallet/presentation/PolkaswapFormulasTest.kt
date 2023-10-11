@@ -35,10 +35,12 @@ package jp.co.soramitsu.common_wallet.presentation
 import jp.co.soramitsu.common.util.ext.Big100
 import java.math.BigDecimal
 import jp.co.soramitsu.common.util.ext.divideBy
+import jp.co.soramitsu.common.util.ext.equalTo
 import jp.co.soramitsu.common.util.ext.safeDivide
 import jp.co.soramitsu.common_wallet.domain.model.WithDesired
 import jp.co.soramitsu.common_wallet.presentation.compose.util.PolkaswapFormulas
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PolkaswapFormulasTest {
@@ -64,13 +66,12 @@ class PolkaswapFormulasTest {
         val pooledValue =
             RESERVES_FIRST.multiply(POOL_PROVIDERS_BALANCE).divideBy(TOTAL_ISSUANCE)
 
-        assertEquals(
-            pooledValue,
+        assertTrue(
             PolkaswapFormulas.calculatePooledValue(
                 RESERVES_FIRST,
                 POOL_PROVIDERS_BALANCE,
                 TOTAL_ISSUANCE
-            )
+            ).equalTo(BigDecimal("132.337834284157373294"))
         )
     }
 
@@ -79,11 +80,12 @@ class PolkaswapFormulasTest {
         val shareOfPool = POOL_PROVIDERS_BALANCE.divideBy(TOTAL_ISSUANCE).multiply(Big100)
 
         assertEquals(
-            shareOfPool,
-            PolkaswapFormulas.calculateShareOfPool(
+            shareOfPool.toDouble(),
+            PolkaswapFormulas.calculateShareOfPoolFromAmount(
                 POOL_PROVIDERS_BALANCE,
                 TOTAL_ISSUANCE
-            )
+            ),
+            0.001,
         )
     }
 
@@ -128,8 +130,8 @@ class PolkaswapFormulasTest {
     fun `test estimateAddingShareOfPool`() {
         val shareOfPool = SECOND_POOLED
             .plus(TARGET_AMOUNT)
-            .safeDivide(TARGET_AMOUNT.plus(RESERVES_SECOND))
             .multiply(Big100)
+            .safeDivide(TARGET_AMOUNT.plus(RESERVES_SECOND))
 
         assertEquals(
             shareOfPool,
@@ -145,8 +147,8 @@ class PolkaswapFormulasTest {
     fun `test estimateRemovingShareOfPool`() {
         val shareOfPool = SECOND_POOLED
             .minus(TARGET_AMOUNT)
-            .safeDivide(RESERVES_SECOND.minus(TARGET_AMOUNT))
             .multiply(Big100)
+            .safeDivide(RESERVES_SECOND.minus(TARGET_AMOUNT))
 
         assertEquals(
             shareOfPool,

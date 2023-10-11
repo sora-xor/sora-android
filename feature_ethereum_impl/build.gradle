@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android'
 apply plugin: "kotlin-kapt"
 apply from: '../tests.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -18,15 +22,6 @@ android {
             minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     flavorDimensions "default"
@@ -48,6 +43,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_ethereum_impl'
 }
 
 dependencies {
@@ -71,7 +67,7 @@ dependencies {
     //implementation irohaDep
 
     implementation roomDep
-    kapt roomKaptDep
+    //kapt roomKaptDep
 
     testImplementation project(":test_shared")
 }

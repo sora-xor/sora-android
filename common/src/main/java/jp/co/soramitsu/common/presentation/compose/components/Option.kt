@@ -69,7 +69,7 @@ fun Option(
     bottomDivider: Boolean,
     @DrawableRes iconEnd: Int = R.drawable.ic_chevron_right_24,
     tint: Boolean = true,
-    textColor: Color = Color.Unspecified,
+    textColor: Color = MaterialTheme.customColors.fgPrimary,
     enabled: Boolean = true,
     onClick: () -> Unit
 ) {

@@ -117,15 +117,18 @@ private fun MarketScreenItem(
         var hintVisible by remember { mutableStateOf(false) }
         if (hintVisible) {
             AlertDialog(
+                backgroundColor = MaterialTheme.customColors.bgPage,
                 title = {
                     Text(
                         text = stringResource(id = market.titleResource),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.textSBold
                     )
                 },
                 text = {
                     Text(
                         text = stringResource(id = market.descriptionResource),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.paragraphSBold
                     )
                 },

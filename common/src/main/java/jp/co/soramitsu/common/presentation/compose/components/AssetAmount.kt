@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,9 +69,12 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.domain.AssetAmountInputState
 import jp.co.soramitsu.common.domain.OptionsProvider
 import jp.co.soramitsu.common.presentation.compose.TokenIcon
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.util.ext.orZero
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.component.input.number.BasicNumberInput
+import jp.co.soramitsu.ui_core.component.input.number.DefaultCursorPosition
 import jp.co.soramitsu.ui_core.resources.Dimens
 import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
@@ -106,7 +110,7 @@ fun AssetAmountInput(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenIcon(
-            uri = state?.token?.iconFile ?: R.drawable.ic_token_default,
+            uri = state?.token?.iconFile,
             size = Size.Small,
             modifier = Modifier
                 .testTagAsId("TokenIcon")
@@ -154,10 +158,11 @@ fun AssetAmountInput(
                         focusedInput.value = it
                         onFocusChange.invoke(it)
                     },
-                    textStyle = MaterialTheme.customTypography.displayS.copy(textAlign = TextAlign.End),
+                    textStyle = MaterialTheme.customTypography.displayS.copy(textAlign = TextAlign.End, color = MaterialTheme.customColors.fgPrimary),
                     enabled = state?.let { it.enabled && !it.readOnly } ?: false,
                     precision = state?.token?.precision ?: OptionsProvider.defaultScale,
-                    initial = state?.initialAmount,
+                    defaultCursorPosition = DefaultCursorPosition.START,
+                    initial = state?.amount,
                     onValueChanged = onAmountChange,
                     focusRequester = focusRequester,
                     textFieldColors = TextFieldDefaults.textFieldColors(
@@ -215,53 +220,98 @@ val previewAssetAmountInputState = AssetAmountInputState(
     token = previewToken,
     balance = "10.234 ($2.234.23)",
     amountFiat = "$2.342.12",
-    amount = BigDecimal.ZERO,
-    initialAmount = null,
+    amount = null,
     enabled = true,
     error = false,
     errorHint = "",
 )
 
-@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewAssetAmountInput() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .background(color = Color.Red)
-            .padding(10.dp)
-    ) {
-        val bb = remember { mutableStateOf(BigDecimal.valueOf(12345.67890988765)) }
-        val state = remember { mutableStateOf(previewAssetAmountInputState) }
-        Button(onClick = {
-            state.value = state.value.copy(
-                amount = bb.value,
-                initialAmount = bb.value,
-            )
-            bb.value = bb.value.plus(BigDecimal.ONE)
-        }) {
-            Text(text = "click")
-        }
-        AssetAmountInput(
-            modifier = Modifier,
-            state = state.value,
-            onAmountChange = {
+private fun PreviewAssetAmountInput01() {
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(color = MaterialTheme.customColors.bgPage)
+                .padding(10.dp)
+        ) {
+            val bb = remember { mutableStateOf(BigDecimal.valueOf(12345.67890988765)) }
+            val state = remember { mutableStateOf(previewAssetAmountInputState) }
+            Button(onClick = {
                 state.value = state.value.copy(
-                    amount = it,
+                    amount = bb.value,
                 )
-            },
-            onSelectToken = {},
-            onFocusChange = {},
-        )
-        Spacer(modifier = Modifier.size(10.dp))
-        Text(text = state.value.amount.toPlainString())
-        AssetAmountInput(
-            modifier = Modifier,
-            state = previewAssetAmountInputState,
-            onAmountChange = {},
-            onSelectToken = {},
-            onFocusChange = {},
-        )
+                bb.value = bb.value.plus(BigDecimal.ONE)
+            }) {
+                Text(text = "click")
+            }
+            AssetAmountInput(
+                modifier = Modifier,
+                state = state.value,
+                onAmountChange = {
+                    state.value = state.value.copy(
+                        amount = it,
+                    )
+                },
+                onSelectToken = {},
+                onFocusChange = {},
+            )
+            Spacer(modifier = Modifier.size(10.dp))
+            Text(text = state.value.amount.orZero().toPlainString())
+            AssetAmountInput(
+                modifier = Modifier,
+                state = previewAssetAmountInputState,
+                onAmountChange = {},
+                onSelectToken = {},
+                onFocusChange = {},
+            )
+        }
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewAssetAmountInput02() {
+    SoraAppTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .background(color = MaterialTheme.customColors.bgPage)
+                .padding(10.dp)
+        ) {
+            val bb = remember { mutableStateOf(BigDecimal.valueOf(12345.67890988765)) }
+            val state = remember { mutableStateOf(previewAssetAmountInputState) }
+            Button(onClick = {
+                state.value = state.value.copy(
+                    amount = bb.value,
+                )
+                bb.value = bb.value.plus(BigDecimal.ONE)
+            }) {
+                Text(text = "click")
+            }
+            AssetAmountInput(
+                modifier = Modifier,
+                state = state.value,
+                onAmountChange = {
+                    state.value = state.value.copy(
+                        amount = it,
+                    )
+                },
+                onSelectToken = {},
+                onFocusChange = {},
+            )
+            Spacer(modifier = Modifier.size(10.dp))
+            Text(text = state.value.amount.orZero().toPlainString())
+            AssetAmountInput(
+                modifier = Modifier,
+                state = previewAssetAmountInputState,
+                onAmountChange = {},
+                onSelectToken = {},
+                onFocusChange = {},
+            )
+        }
     }
 }

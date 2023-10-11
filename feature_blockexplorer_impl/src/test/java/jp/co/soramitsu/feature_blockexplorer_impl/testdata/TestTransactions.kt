@@ -38,12 +38,10 @@ import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.Transact
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionLiquidityType
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionStatus
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.TransactionTransferType
-import jp.co.soramitsu.sora.substrate.runtime.Method
-import jp.co.soramitsu.sora.substrate.runtime.Pallete
 import jp.co.soramitsu.test_data.TestAccounts
 import jp.co.soramitsu.test_data.TestTokens
-import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItem
-import jp.co.soramitsu.xnetworking.txhistory.TxHistoryItemParam
+import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItem
+import jp.co.soramitsu.xnetworking.basic.txhistory.TxHistoryItemParam
 import java.math.BigDecimal
 
 object TestTransactions {

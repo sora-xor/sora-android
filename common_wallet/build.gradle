@@ -3,6 +3,10 @@ apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -18,15 +22,6 @@ android {
             minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     composeOptions {
@@ -57,6 +52,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.common_wallet'
 }
 
 dependencies {
@@ -66,10 +62,10 @@ dependencies {
     implementation project(":common")
     implementation project(":feature_blockexplorer_api")
     implementation project(":core_db")
+    implementation project(":network")
 
     implementation coreKtxDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
@@ -80,7 +76,6 @@ dependencies {
     implementation googlePlayCoreDep
     implementation coilSvgDep
 
-    implementation xNetworkingDep
     implementation webSocketLibDep
     implementation uiCoreDep
 
@@ -118,7 +113,7 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeAnimationGraphicsDep
     implementation composeToolingPreviewDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
     debugImplementation composeToolingDep
 
     testImplementation project(":test_shared")

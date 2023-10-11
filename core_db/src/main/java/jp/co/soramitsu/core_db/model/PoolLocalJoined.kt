@@ -53,7 +53,7 @@ data class TokenFiatLocal(
     @Embedded
     val token: TokenLocal,
     @Relation(parentColumn = "id", entityColumn = "tokenIdFiat")
-    val fiat: FiatTokenPriceLocal,
+    val fiat: FiatTokenPriceLocal?,
 )
 
 data class BasicPoolWithTokenFiatLocal(

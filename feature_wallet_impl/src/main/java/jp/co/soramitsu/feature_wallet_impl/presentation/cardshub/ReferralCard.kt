@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
 
 @Composable
 fun ReferralCard(
@@ -47,6 +48,7 @@ fun ReferralCard(
         title = stringResource(id = R.string.settings_invite_title),
         description = stringResource(id = R.string.referral_title),
         button = stringResource(id = R.string.referral_start_inviting),
+        closeEnabled = true,
         onButtonClicked = onStartClicked,
         onCloseCard = onCloseCard,
     )

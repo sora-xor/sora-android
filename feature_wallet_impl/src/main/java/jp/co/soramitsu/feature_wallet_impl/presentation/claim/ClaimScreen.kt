@@ -115,6 +115,7 @@ internal fun ClaimScreen(
                             .fillMaxWidth(),
                         textAlign = TextAlign.Center,
                         text = stringResource(id = R.string.claim_subtitle_confirmed),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.headline3,
                     )
 
@@ -124,6 +125,7 @@ internal fun ClaimScreen(
                             .padding(top = Dimens.x2),
                         textAlign = TextAlign.Center,
                         text = stringResource(id = R.string.claim_subtitle_confirmed_v2),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.paragraphS,
                     )
                 } else {
@@ -132,6 +134,7 @@ internal fun ClaimScreen(
                             .padding(top = Dimens.x2)
                             .fillMaxWidth(),
                         text = stringResource(id = R.string.claim_subtitle_v2),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.paragraphS,
                     )
                 }

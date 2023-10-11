@@ -72,6 +72,7 @@ fun TxHistoryListItem(
         is EventUiModel.EventTxUiModel.EventLiquidityAddUiModel -> {
             EventLiquidity(
                 modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
                 eventUiModel = eventUiModel
             )
@@ -79,6 +80,7 @@ fun TxHistoryListItem(
         is EventUiModel.EventTxUiModel.EventLiquiditySwapUiModel -> {
             EventSwap(
                 modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
                 eventUiModel = eventUiModel
             )
@@ -86,6 +88,7 @@ fun TxHistoryListItem(
         is EventUiModel.EventTxUiModel.EventReferralProgramUiModel -> {
             EventReferral(
                 modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
                 eventUiModel = eventUiModel
             )
@@ -93,6 +96,7 @@ fun TxHistoryListItem(
         is EventUiModel.EventTxUiModel.EventTransferInUiModel -> {
             EventTransferReceived(
                 modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
                 eventUiModel = eventUiModel
             )
@@ -100,6 +104,7 @@ fun TxHistoryListItem(
         is EventUiModel.EventTxUiModel.EventTransferOutUiModel -> {
             EventTransferSent(
                 modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
                 eventUiModel = eventUiModel
             )
@@ -107,12 +112,16 @@ fun TxHistoryListItem(
         is EventUiModel.EventTxUiModel.EventEthTransfer -> {
             EventEthTransfer(
                 modifier = modifier
+                    .background(color = MaterialTheme.customColors.bgSurface)
                     .clickable { onTxHistoryItemClick(eventUiModel.txHash) },
                 eventUiModel = eventUiModel,
             )
         }
         EventUiModel.EventUiLoading -> {
-            CircularProgressIndicator(modifier = Modifier.size(Size.Small))
+            CircularProgressIndicator(
+                modifier = Modifier.size(Size.Small),
+                color = MaterialTheme.customColors.accentPrimary
+            )
         }
     }
 }

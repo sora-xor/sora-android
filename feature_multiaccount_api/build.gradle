@@ -3,6 +3,10 @@ apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -11,15 +15,6 @@ android {
         targetSdkVersion targetVersion
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -48,6 +43,7 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.feature_multiaccount_api'
 }
 
 dependencies {

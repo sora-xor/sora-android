@@ -30,9 +30,35 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
+package jp.co.soramitsu.core_db.migrations
 
-data class GetSoraCardState(
-    val xorRatioAvailable: Boolean = false,
-    val connection: Boolean = false,
-)
+import android.content.ContentValues
+import android.database.sqlite.SQLiteDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+import jp.co.soramitsu.common.domain.CardHubType
+import jp.co.soramitsu.core_db.converters.map
+
+val migration_addBackupCardHub_72_73 = object : Migration(72, 73) {
+
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        val cursor = database.query("select substrateAddress from accounts")
+        val addresses = cursor.map {
+            getString(getColumnIndexOrThrow("substrateAddress"))
+        }
+        addresses.forEach { address ->
+            val type = CardHubType.BACKUP
+            val values = ContentValues().apply {
+                put("cardId", type.hubName)
+                put("accountAddress", address)
+                put("visibility", true)
+                put("collapsed", false)
+                put("sortOrder", type.order)
+            }
+            database.insert("cardsHub", SQLiteDatabase.CONFLICT_REPLACE, values)
+        }
+        database.setTransactionSuccessful()
+        database.endTransaction()
+    }
+}

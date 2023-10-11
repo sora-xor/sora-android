@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_assets_impl.presentation.states
 
-import android.net.Uri
 import jp.co.soramitsu.common.domain.DEFAULT_ICON_URI
 import jp.co.soramitsu.common_wallet.presentation.compose.states.PoolsListState
 import jp.co.soramitsu.feature_blockexplorer_api.presentation.txhistory.EventUiModel
@@ -45,7 +44,7 @@ internal data class AssetCardState(
 internal data class AssetCardStateData(
     val tokenId: String,
     val tokenName: String,
-    val tokenIcon: Uri,
+    val tokenIcon: String,
     val tokenSymbol: String,
     val price: String,
     val priceChange: String,

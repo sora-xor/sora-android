@@ -74,7 +74,7 @@ internal fun BackupJsonScreen(
     onDownloadClick: () -> Unit,
 ) {
     ContentCard(
-        modifier = Modifier.padding(horizontal = Dimens.x2),
+        modifier = Modifier.padding(horizontal = Dimens.x2).fillMaxWidth().wrapContentHeight(),
     ) {
         Column(
             modifier = Modifier
@@ -84,6 +84,7 @@ internal fun BackupJsonScreen(
         ) {
             Text(
                 text = stringResource(R.string.export_json_description),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
             Spacer(modifier = Modifier.size(Dimens.x3))

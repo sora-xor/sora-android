@@ -30,9 +30,8 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
+package jp.co.soramitsu.feature_sora_card_impl.presentation
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import dagger.assisted.Assisted
@@ -55,7 +54,10 @@ import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardContractData
 import jp.co.soramitsu.oauth.base.sdk.contract.SoraCardResult
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
 import jp.co.soramitsu.sora.substrate.substrate.ConnectionManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -84,8 +86,10 @@ class GetSoraCardViewModel @AssistedInject constructor(
     private val _launchSoraCardRegistration = SingleLiveEvent<SoraCardContractData>()
     val launchSoraCardRegistration: LiveData<SoraCardContractData> = _launchSoraCardRegistration
 
-    var state = mutableStateOf(GetSoraCardState())
-        private set
+    private val _state = MutableStateFlow(GetSoraCardState(applicationFee = "."))
+    val state = _state.asStateFlow()
+
+    private var applicationFeeCache: String? = null
 
     init {
         _toolbarState.value = initSmallTitle2(
@@ -93,23 +97,28 @@ class GetSoraCardViewModel @AssistedInject constructor(
         )
 
         soraCardInteractor.subscribeToSoraCardAvailabilityFlow()
-            .onEach {
-                currentSoraCardContractData = createSoraCardContract(
-                    userAvailableXorAmount = it.xorBalance.toDouble(),
-                    isEnoughXorAvailable = it.enoughXor,
-                )
-                state.value = state.value.copy(
-                    xorRatioAvailable = it.xorRatioAvailable,
-                )
-            }.launchIn(viewModelScope)
-
-        connectionManager.connectionState
+            .combine(connectionManager.connectionState) { f1, f2 ->
+                f1 to f2
+            }
             .catch { onError(it) }
-            .onEach {
-                state.value = state.value.copy(connection = it)
+            .onEach { (info, connection) ->
+                currentSoraCardContractData = createSoraCardContract(
+                    userAvailableXorAmount = info.xorBalance.toDouble(),
+                    isEnoughXorAvailable = info.enoughXor,
+                )
+                _state.value = _state.value.copy(
+                    connection = connection,
+                    applicationFee = fetchApplicationFee(),
+                    xorRatioAvailable = info.xorRatioAvailable,
+                )
             }
             .launchIn(viewModelScope)
     }
+
+    private suspend fun fetchApplicationFee(): String =
+        applicationFeeCache ?: soraCardInteractor.fetchApplicationFee().also {
+            applicationFeeCache = it
+        }
 
     fun handleSoraCardResult(soraCardResult: SoraCardResult) {
         when (soraCardResult) {
@@ -120,12 +129,15 @@ class GetSoraCardViewModel @AssistedInject constructor(
                     OutwardsScreen.BUY -> assetsRouter.showBuyCrypto()
                 }
             }
+
             is SoraCardResult.Success -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Failure -> {
                 soraCardInteractor.setStatus(soraCardResult.status)
             }
+
             is SoraCardResult.Canceled -> {}
             is SoraCardResult.Logout -> {
                 soraCardInteractor.setLogout()

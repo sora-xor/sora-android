@@ -30,79 +30,57 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.presentation.compose.components
+package jp.co.soramitsu.feature_sora_card_impl.presentation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import jp.co.soramitsu.ui_core.modifier.applyIf
 import jp.co.soramitsu.ui_core.resources.Dimens
-import jp.co.soramitsu.ui_core.theme.borderRadius
 import jp.co.soramitsu.ui_core.theme.customColors
+import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
-fun ContentCardEndless(
+fun BalanceIndicator(
     modifier: Modifier = Modifier,
-    innerPadding: PaddingValues = PaddingValues(0.dp),
-    onClick: (() -> Unit)? = null,
-    content: @Composable () -> Unit,
+    percent: Float,
+    label: String,
+    onClick: () -> Unit,
 ) {
-    Card(
-        modifier = modifier
-            .shadow(
-                elevation = Dimens.x4,
-                ambientColor = Color(0xFF999999),
-                spotColor = Color(0xFF999999),
-                shape = RoundedCornerShape(
-                    topStart = MaterialTheme.borderRadius.xl,
-                    topEnd = MaterialTheme.borderRadius.xl,
-                ),
-            )
-            .clip(
-                RoundedCornerShape(
-                    topStart = MaterialTheme.borderRadius.xl,
-                    topEnd = MaterialTheme.borderRadius.xl,
-                )
-            )
-            .applyIf(onClick != null) {
-                clickable { onClick?.invoke() }
-            }
-            .background(MaterialTheme.customColors.bgSurface)
-            .padding(innerPadding),
-        elevation = 0.dp,
-        content = content,
-    )
+    Column(
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
+        horizontalAlignment = Alignment.End,
+    ) {
+        LinearProgressIndicator(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(Dimens.x2)),
+            progress = percent,
+            color = MaterialTheme.customColors.accentPrimary,
+            backgroundColor = MaterialTheme.customColors.bgSurfaceVariant,
+        )
+
+        Text(
+            text = label,
+            style = MaterialTheme.customTypography.textSBold,
+            color = MaterialTheme.customColors.accentPrimary,
+        )
+    }
 }
 
-@Preview(showBackground = true)
 @Composable
-private fun Preview() {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        ContentCardEndless(
-            modifier = Modifier.padding(8.dp),
-            innerPadding = PaddingValues(18.dp),
-        ) {
-            Text(
-                text = "df\nfgfg",
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
+@Preview
+private fun PreviewBalanceIndicator() {
+    BalanceIndicator(
+        modifier = Modifier.fillMaxWidth().padding(Dimens.x3),
+        percent = 0.75f,
+        label = "You have enough balance",
+    ) {}
 }

@@ -32,10 +32,13 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
+import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 
 @Composable
 fun BuyXorCard(
@@ -47,16 +50,30 @@ fun BuyXorCard(
         title = stringResource(id = R.string.buy_crypto_buy_xor_banner_title),
         description = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
         button = stringResource(id = R.string.common_buy_xor),
+        closeEnabled = true,
         onButtonClicked = onBuyXorClicked,
         onCloseCard = onCloseCard,
     )
 }
 
-@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-private fun PreviewBuyXorCard() {
-    BuyXorCard(
-        onCloseCard = {},
-        onBuyXorClicked = {},
-    )
+private fun PreviewBuyXorCard01() {
+    SoraAppTheme {
+        BuyXorCard(
+            onCloseCard = {},
+            onBuyXorClicked = {},
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun PreviewBuyXorCard02() {
+    SoraAppTheme {
+        BuyXorCard(
+            onCloseCard = {},
+            onBuyXorClicked = {},
+        )
+    }
 }

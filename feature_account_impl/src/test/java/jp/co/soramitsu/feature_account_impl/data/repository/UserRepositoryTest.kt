@@ -245,7 +245,7 @@ class UserRepositoryTest {
         coEvery { hubDao.insert(any()) } returns Unit
 
         val soraAccount = SoraAccount("accountAddress", "accountName")
-        userRepository.insertSoraAccount(soraAccount)
+        userRepository.insertSoraAccount(soraAccount, true)
 
         coVerify {
             accountDao.insertSoraAccount(
@@ -271,14 +271,14 @@ class UserRepositoryTest {
         coEvery { hubDao.insert(TestData.CARD_HUB_LOCAL) } returns Unit
         mockkStatic("androidx.room.RoomDatabaseKt")
         mockkStatic(CardHubType::class)
-        every { CardHubType.values() } returns arrayOf(CardHubType.GET_SORA_CARD, CardHubType.ASSETS, CardHubType.POOLS)
+        //every { CardHubType.entries } returns arrayOf(CardHubType.GET_SORA_CARD, CardHubType.ASSETS, CardHubType.POOLS)
         val lambda = slot<suspend () -> R>()
         coEvery { db.withTransaction(capture(lambda)) } coAnswers {
             lambda.captured.invoke()
         }
 
         val soraAccount = SoraAccount("accountAddress", "accountName")
-        userRepository.insertSoraAccount(soraAccount)
+        userRepository.insertSoraAccount(soraAccount, true)
 
         coVerify { hubDao.insert(TestData.CARD_HUB_LOCAL) }
     }

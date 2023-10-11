@@ -33,11 +33,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_blockexplorer_impl.presentation.screen
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.junit4.MockKRule
 import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
 import jp.co.soramitsu.feature_assets_api.presentation.AssetsRouter
 import jp.co.soramitsu.feature_blockexplorer_api.domain.HistoryState
@@ -45,7 +40,6 @@ import jp.co.soramitsu.feature_blockexplorer_api.domain.TransactionHistoryHandle
 import jp.co.soramitsu.feature_main_api.launcher.MainRouter
 import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletInteractor
 import jp.co.soramitsu.test_data.TestAccounts
-import jp.co.soramitsu.test_data.TestTokens
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,7 +51,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -70,64 +68,57 @@ class ActivitiesViewModelTest {
     @get:Rule
     var mainCoroutineRule = MainCoroutineRule()
 
-    @get:Rule
-    val mockkRule = MockKRule(this)
-
-    @MockK
+    @Mock
     private lateinit var assetsInteractor: AssetsInteractor
 
-    @MockK
+    @Mock
     private lateinit var walletInteractor: WalletInteractor
 
-    @MockK
+    @Mock
     private lateinit var transactionHistoryHandler: TransactionHistoryHandler
 
-    @MockK
+    @Mock
     private lateinit var assetsRouter: AssetsRouter
 
-    @MockK
+    @Mock
     private lateinit var router: MainRouter
 
     private lateinit var viewModel: ActivitiesViewModel
 
     @Before
     fun setUp() = runTest {
-        every { assetsRouter.showTxDetails(any()) } returns Unit
-        every { assetsInteractor.flowCurSoraAccount() } returns flowOf(TestAccounts.soraAccount)
-        coEvery { walletInteractor.getFeeToken() } returns TestTokens.xorToken
-        coEvery { transactionHistoryHandler.refreshHistoryEvents() } returns Unit
-        coEvery { transactionHistoryHandler.onMoreHistoryEventsRequested() } returns Unit
-        coEvery { transactionHistoryHandler.flowLocalTransactions() } returns flowOf(true)
-        coEvery { transactionHistoryHandler.historyState } returns MutableStateFlow(HistoryState.Loading)
+        whenever(assetsInteractor.flowCurSoraAccount()).thenReturn(flowOf(TestAccounts.soraAccount))
+        whenever(transactionHistoryHandler.flowLocalTransactions()).thenReturn(flowOf(true))
+        whenever(transactionHistoryHandler.historyState).thenReturn(MutableStateFlow(HistoryState.Loading))
 
         viewModel = ActivitiesViewModel(
-                assetsInteractor,
-                assetsRouter,
-                walletInteractor,
-                transactionHistoryHandler,
-                router
+            assetsInteractor,
+            assetsRouter,
+            walletInteractor,
+            transactionHistoryHandler,
+            router,
         )
     }
 
     @Test
     fun `init successful`() = runTest {
-        coVerify { transactionHistoryHandler.refreshHistoryEvents() }
+        advanceUntilIdle()
+        verify(transactionHistoryHandler, times(2)).refreshHistoryEvents()
     }
 
     @Test
     fun `onTxHistoryItemClick() called`() = runTest {
+        advanceUntilIdle()
         val txHash = "txHash"
-
         viewModel.onTxHistoryItemClick(txHash)
-
         assetsRouter.showTxDetails(txHash)
     }
 
     @Test
     fun `onMoreHistoryEventsRequested() called`() = runTest {
+        advanceUntilIdle()
         viewModel.onMoreHistoryEventsRequested()
         advanceUntilIdle()
-
-        coVerify { transactionHistoryHandler.onMoreHistoryEventsRequested() }
+        verify(transactionHistoryHandler).onMoreHistoryEventsRequested()
     }
 }

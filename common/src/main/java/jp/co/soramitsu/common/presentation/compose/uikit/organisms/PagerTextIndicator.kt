@@ -52,7 +52,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -63,6 +62,7 @@ import jp.co.soramitsu.common.presentation.compose.extension.noRippleClickable
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
 import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 import kotlin.math.abs
 
@@ -79,6 +79,11 @@ fun PagerTextIndicator(
     }
 
     val layoutDirection = LocalLayoutDirection.current
+
+    val surfaceColor = MaterialTheme.customColors.bgSurfaceInverted
+
+    val selectedItemTextColor = MaterialTheme.customColors.fgInverted
+    val notSelectedItemTextColor = MaterialTheme.customColors.fgPrimary
 
     Row(
         modifier = modifier
@@ -118,7 +123,7 @@ fun PagerTextIndicator(
                         val sectorHeight = size.height
 
                         drawRoundRect(
-                            color = Color.Black,
+                            color = surfaceColor,
                             topLeft = Offset(sectorOffsetXLerp, sectorOffsetY),
                             size = Size(sectorWidthLerp, sectorHeight),
                             cornerRadius = cornerRadius
@@ -142,7 +147,7 @@ fun PagerTextIndicator(
                 text = indicatorsArray[index].retrieveString(),
                 style = MaterialTheme.customTypography.textSBold,
                 color = if (index == currentPageRetriever())
-                    Color.White else Color.Black,
+                    selectedItemTextColor else notSelectedItemTextColor,
             )
         }
     }

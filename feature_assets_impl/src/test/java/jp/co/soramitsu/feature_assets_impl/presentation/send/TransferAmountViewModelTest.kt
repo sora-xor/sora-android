@@ -101,8 +101,6 @@ class TransferAmountViewModelTest {
     @MockK
     private lateinit var avatarGenerator: AccountAvatarGenerator
 
-    private val mockedUri = mockk<Uri>()
-
     @MockK
     private lateinit var clipboardManager: BasicClipboardManager
 
@@ -114,11 +112,6 @@ class TransferAmountViewModelTest {
 
     @Before
     fun setUp() = runTest {
-        mockkStatic(Uri::parse)
-        every { Uri.parse(any()) } returns mockedUri
-        mockkStatic(Token::iconUri)
-        every { TestTokens.xorToken.iconUri() } returns mockedUri
-        every { TestTokens.valToken.iconUri() } returns mockedUri
         every { resourceManager.getString(R.string.error_transaction_fee_title) } returns "Not enough funds"
         every { avatarGenerator.createAvatar(any(), any()) } returns drawable
         coEvery {

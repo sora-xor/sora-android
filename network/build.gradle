@@ -3,6 +3,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlinx-serialization'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     compileSdkVersion compileVersion
 
@@ -18,15 +22,6 @@ android {
             minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     flavorDimensions "default"
@@ -48,12 +43,16 @@ android {
             dimension 'default'
         }
     }
+    namespace 'jp.co.soramitsu.network'
 }
 
 dependencies {
 
     implementation kotlinxSerializationJsonDep
 
-    implementation xNetworkingDep
+    api(xNetworkingDep)
+    api(xNetworkingSoraWalletDep) {
+        exclude group: 'jp.co.soramitsu.xnetworking', module: 'basic'
+    }
     implementation ktorWebSocketDep
 }

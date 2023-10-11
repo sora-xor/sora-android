@@ -7,8 +7,12 @@ apply plugin: 'kotlinx-serialization'
 apply from: '../tests.gradle'
 apply from: '../secrets.gradle'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
-    compileSdkVersion compileVersion
+    compileSdk compileVersion
 
     defaultConfig {
         minSdkVersion minVersion
@@ -22,15 +26,6 @@ android {
             minifyEnabled soraMinifyRelease
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
     }
 
     composeOptions {
@@ -110,19 +105,21 @@ android {
             buildConfigField "String", "GOOGLE_API_TOKEN", readSecretInQuotes("SORA_GOOGLE_TOKEN_PROD")
         }
     }
+
+    namespace 'jp.co.soramitsu.common'
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":android-foundation")
     implementation project(":soracrypro")
+    implementation project(":network")
 
     implementation activityKtxDep
     implementation coreKtxDep
     implementation androidDep
     implementation appCompatResourcesDep
     implementation materialDep
-    implementation cardViewDep
     implementation constraintDep
 
     implementation coroutineAndroidDep
@@ -135,7 +132,6 @@ dependencies {
     implementation googlePlayCoreDep
     implementation coilSvgDep
 
-    implementation xNetworkingDep
     implementation webSocketLibDep
     implementation uiCoreDep
 
@@ -153,7 +149,7 @@ dependencies {
     implementation navigationFragmentDep
     implementation navigationUiDep
 
-    implementation sharedFeaturesBackupDep
+    implementation xbackupDep
     implementation sharedUtilsDep
 
     implementation gsonDep
@@ -178,7 +174,8 @@ dependencies {
     implementation composeConstraintLayoutDep
     implementation composeAnimationGraphicsDep
     implementation composeToolingPreviewDep
-    implementation accompanistNavAnimationDep
+    //implementation accompanistNavAnimationDep
+    implementation navigationComposeDep
     debugImplementation composeToolingDep
 
     testImplementation project(":test_shared")

@@ -117,12 +117,6 @@ class AssetsInteractorTest {
     }
 
     @Test
-    fun `get assets`() = runTest {
-        coEvery { assetsRepository.getAssetsFavorite("address") } returns assetList()
-        Assert.assertEquals(assetList(), interactor.getVisibleAssets())
-    }
-
-    @Test
     fun `just transfer`() = runTest {
         val kp = Sr25519Keypair(ByteArray(32), ByteArray(32), ByteArray(32))
         coEvery { credentialsRepository.retrieveKeyPair(soraAccount) } returns kp

@@ -83,6 +83,7 @@ fun EnterPassphraseScreen(
                     .fillMaxWidth()
                     .padding(bottom = Dimens.x3),
                 text = stringResource(id = recoveryState.title),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM,
             )
 

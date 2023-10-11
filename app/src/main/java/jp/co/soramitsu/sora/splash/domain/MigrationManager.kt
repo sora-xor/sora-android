@@ -61,7 +61,7 @@ class MigrationManager @Inject constructor(
                 credentialsRepository.saveMnemonic(mnemonic, soraAccount)
                 val soraKeys = credentialsRepository.retrieveKeyPair(emptySoraAccount)
                 credentialsRepository.saveKeyPair(soraKeys, soraAccount)
-                userRepository.insertSoraAccount(soraAccount)
+                userRepository.insertSoraAccount(soraAccount, false)
                 userRepository.setCurSoraAccount(soraAccount)
                 FirebaseWrapper.log("Migration ma done")
             }

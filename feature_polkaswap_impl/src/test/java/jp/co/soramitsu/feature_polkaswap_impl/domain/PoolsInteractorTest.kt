@@ -148,6 +148,6 @@ class PoolsInteractorTest {
         assertEquals(BigDecimal("5.051548910147228600"), details.targetAmount)
         assertEquals(BigDecimal("1.979590849830759653"), details.perFirst)
         assertEquals(BigDecimal("0.505154891014722860"), details.perSecond)
-        assertEquals(BigDecimal("66.298112417815485325766582281222800"), details.shareOfPool)
+        assertEquals(BigDecimal("66.298112417815485326"), details.shareOfPool)
     }
 }

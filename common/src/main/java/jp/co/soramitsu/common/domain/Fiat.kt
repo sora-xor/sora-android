@@ -33,6 +33,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.common.domain
 
 import java.math.BigDecimal
+import jp.co.soramitsu.common.domain.OptionsProvider.nbspace
 import jp.co.soramitsu.common.util.NumbersFormatter
 
 fun formatFiatAmount(
@@ -43,7 +44,7 @@ fun formatFiatAmount(
 ) = "$currencySymbol%s".format(nf.format(value, 2, checkFraction))
 
 fun formatFiatChange(value: Double, nf: NumbersFormatter) =
-    String.format("%s%s %%", if (value >= 0.0001) "+" else "", nf.format(value * 100, 2)).trim()
+    String.format("%s%s$nbspace%%", if (value >= 0.0001) "+" else "", nf.format(value * 100, 2)).trim()
 
 fun List<Asset>.fiatSum(): Double =
     if (isNotEmpty()) map { it.fiat ?: 0.0 }.reduce { acc, d -> acc + d } else 0.0

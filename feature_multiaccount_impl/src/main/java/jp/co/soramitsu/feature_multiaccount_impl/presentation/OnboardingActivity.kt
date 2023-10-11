@@ -65,8 +65,8 @@ import androidx.compose.ui.unit.ExperimentalUnitApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import jp.co.soramitsu.common.R
@@ -168,7 +168,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
     )
     @Composable
     override fun Content(padding: PaddingValues, scrollState: ScrollState) {
-        navController = rememberAnimatedNavController()
+        navController = rememberNavController()
         LaunchedEffect(Unit) {
             navController.addOnDestinationChangedListener { _, destination, _ ->
                 viewModel.onDestinationChanged(destination.route ?: "")
@@ -178,15 +178,18 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
         viewModel.skipDialogState.observeAsState().value?.let {
             if (it) {
                 AlertDialog(
+                    backgroundColor = MaterialTheme.customColors.bgPage,
                     title = {
                         Text(
                             text = stringResource(id = R.string.import_account_not_backed_up),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.textSBold
                         )
                     },
                     text = {
                         Text(
                             text = stringResource(id = R.string.import_account_not_backed_up_alert_description),
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.paragraphSBold
                         )
                     },
@@ -207,6 +210,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                             onClick = viewModel::skipDialogDismiss
                         ) {
                             Text(
+                                color = MaterialTheme.customColors.fgPrimary,
                                 text = stringResource(id = R.string.common_cancel),
                             )
                         }
@@ -216,7 +220,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
             }
         }
 
-        AnimatedNavHost(
+        NavHost(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
@@ -230,6 +234,7 @@ class OnboardingActivity : SoraBaseActivity<OnboardingViewModel>() {
                 val recoveryDialog = viewModel.recoveryDialog.collectAsStateWithLifecycle()
                 if (recoveryDialog.value) {
                     AlertDialog(
+                        backgroundColor = MaterialTheme.customColors.bgPage,
                         onDismissRequest = viewModel::onRecoverySourceDismiss,
                         text = {
                             Text(

@@ -63,6 +63,7 @@ import jp.co.soramitsu.ui_core.component.card.ContentCard
 import jp.co.soramitsu.ui_core.component.input.InputTextState
 import jp.co.soramitsu.ui_core.component.wrappedtext.WrappedTextState
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 import jp.co.soramitsu.ui_core.theme.customTypography
 
 @Composable
@@ -136,6 +137,7 @@ fun ReferralWelcomePageScreen(
                         width = Dimension.fillToConstraints
                     },
                 text = stringResource(id = R.string.referral_title),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.headline2
             )
 
@@ -150,6 +152,7 @@ fun ReferralWelcomePageScreen(
                     },
                 text = stringResource(id = R.string.referral_subtitle),
                 textAlign = TextAlign.Start,
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.paragraphM
             )
 

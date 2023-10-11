@@ -50,28 +50,41 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import javax.inject.Inject
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.AlertDialogData
+import jp.co.soramitsu.common.domain.DarkThemeManager
 import jp.co.soramitsu.common.presentation.compose.components.AlertDialogContent
 import jp.co.soramitsu.common.presentation.compose.components.Toolbar
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 import jp.co.soramitsu.common.presentation.viewmodel.BaseViewModel
+import jp.co.soramitsu.common.util.ext.attrColor
 import jp.co.soramitsu.ui_core.theme.customColors
 
 abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
 
     abstract val viewModel: T
 
+    @Inject
+    lateinit var darkThemeManager: DarkThemeManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SoraAppTheme {
+            val isDarkModeOn: State<Boolean> =
+                darkThemeManager.darkModeStatusFlow.collectAsState()
+
+            SoraAppTheme(
+                darkTheme = isDarkModeOn.value
+            ) {
                 val scaffoldState = rememberScaffoldState()
                 val scrollState = rememberScrollState()
                 val openAlertDialog = remember { mutableStateOf(AlertDialogData()) }
@@ -108,19 +121,21 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    Image(
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds,
-                        painter = painterResource(id = R.drawable.bg_image),
-                        contentDescription = ""
-                    )
+                    if (!isDarkModeOn.value) {
+                        Image(
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.FillBounds,
+                            painter = painterResource(id = R.drawable.bg_image),
+                            contentDescription = ""
+                        )
+                    }
                     Scaffold(
                         modifier = Modifier
                             .navigationBarsPadding()
                             .statusBarsPadding()
                             .imePadding(),
                         scaffoldState = scaffoldState,
-                        backgroundColor = MaterialTheme.customColors.fgPrimary.copy(alpha = 0f),
+                        backgroundColor = MaterialTheme.customColors.bgPage.copy(alpha = 0f),
                         topBar = {
                             Toolbar(
                                 toolbarState = viewModel.toolbarState.observeAsState().value,
@@ -146,7 +161,15 @@ abstract class SoraBaseActivity<T : BaseViewModel> : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        window.statusBarColor = attrColor(backgroundColor())
+        window.navigationBarColor = attrColor(backgroundColor())
+    }
+
     abstract fun onToolbarNavigation()
+
+    open fun backgroundColor() = R.attr.baseBackground
 
     @Composable
     abstract fun Content(padding: PaddingValues, scrollState: ScrollState)

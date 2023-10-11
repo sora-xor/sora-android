@@ -33,9 +33,9 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package jp.co.soramitsu.feature_multiaccount_impl.presentation
 
 import android.graphics.drawable.Drawable
-import jp.co.soramitsu.backup.domain.models.BackupAccountMeta
 import jp.co.soramitsu.common.presentation.compose.webview.WebViewState
 import jp.co.soramitsu.ui_core.component.input.InputTextState
+import jp.co.soramitsu.xbackup.domain.models.BackupAccountMeta
 
 data class RecoveryState(
     val recoveryType: RecoveryType,

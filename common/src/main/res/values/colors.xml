@@ -69,6 +69,7 @@
     <color name="neu_pressed_polkaswap">#DD0066</color>
     <color name="neu_brown_color">#9D8181</color>
     <color name="neu_bottom_menu_inactive">#443333</color>
+    <color name="neu_bottom_menu_inactive_night">#808080</color>
     <color name="neu_background_search_view">#f0ecec</color>
     <color name="neu_hint_background">#d0c5c5</color>
     <color name="neu_text_background">#efe9e9</color>

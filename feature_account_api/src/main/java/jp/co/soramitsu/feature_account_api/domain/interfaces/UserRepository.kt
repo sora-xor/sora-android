@@ -51,7 +51,7 @@ interface UserRepository {
 
     suspend fun soraAccountsList(): List<SoraAccount>
 
-    suspend fun insertSoraAccount(soraAccount: SoraAccount)
+    suspend fun insertSoraAccount(soraAccount: SoraAccount, newAccount: Boolean)
 
     suspend fun updateAccountName(soraAccount: SoraAccount, newName: String)
 

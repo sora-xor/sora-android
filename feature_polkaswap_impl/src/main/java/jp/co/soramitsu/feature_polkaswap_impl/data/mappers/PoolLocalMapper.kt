@@ -87,13 +87,15 @@ object PoolLocalMapper {
             poolLocal.basicPoolLocal.reserveBase,
             poolLocal.userPoolLocal.poolProvidersBalance,
             poolLocal.basicPoolLocal.totalIssuance,
+            baseToken.precision,
         )
         val secondPooled = PolkaswapFormulas.calculatePooledValue(
             poolLocal.basicPoolLocal.reserveTarget,
             poolLocal.userPoolLocal.poolProvidersBalance,
             poolLocal.basicPoolLocal.totalIssuance,
+            token.precision,
         )
-        val share = PolkaswapFormulas.calculateShareOfPool(
+        val share = PolkaswapFormulas.calculateShareOfPoolFromAmount(
             poolLocal.userPoolLocal.poolProvidersBalance,
             poolLocal.basicPoolLocal.totalIssuance,
         )
@@ -110,7 +112,7 @@ object PoolLocalMapper {
             user = UserPoolData(
                 basePooled = basePooled,
                 targetPooled = secondPooled,
-                share.toDouble(),
+                share,
                 poolLocal.userPoolLocal.poolProvidersBalance,
                 poolLocal.userPoolLocal.favorite,
                 poolLocal.userPoolLocal.sortOrder,

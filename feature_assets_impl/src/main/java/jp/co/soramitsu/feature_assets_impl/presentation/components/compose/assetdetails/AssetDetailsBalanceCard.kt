@@ -105,10 +105,12 @@ internal fun AssetDetailsBalanceCard(
                 ) {
                     Text(
                         text = stringResource(id = R.string.asset_details_liquid_balance),
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.headline2
                     )
                     Text(
                         text = amountFiat,
+                        color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.headline2
                     )
                 }
@@ -148,6 +150,7 @@ internal fun AssetDetailsBalanceCard(
                         }
                         Text(
                             text = frozenAmountFiat,
+                            color = MaterialTheme.customColors.fgPrimary,
                             style = MaterialTheme.customTypography.headline2
                         )
                     }

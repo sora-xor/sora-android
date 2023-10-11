@@ -30,9 +30,8 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
+package jp.co.soramitsu.feature_sora_card_impl.presentation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -47,12 +46,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.SoraCardImage
 import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -84,10 +83,8 @@ fun GetSoraCardScreen(
                     .fillMaxSize()
                     .padding(Dimens.x2)
             ) {
-                Image(
+                SoraCardImage(
                     modifier = Modifier.fillMaxWidth(),
-                    painter = painterResource(R.drawable.sora_card),
-                    contentDescription = null
                 )
 
                 Text(
@@ -95,6 +92,7 @@ fun GetSoraCardScreen(
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
                     text = stringResource(R.string.sora_card_title),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.headline2,
                 )
 
@@ -103,18 +101,20 @@ fun GetSoraCardScreen(
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
                     text = stringResource(jp.co.soramitsu.oauth.R.string.details_description),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphM,
                 )
 
                 AnnualFee()
 
-                FreeCardIssuance()
+                FreeCardIssuance(state.applicationFee)
 
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
                     text = stringResource(R.string.sora_card_blacklisted_countires_warning),
+                    color = MaterialTheme.customColors.fgPrimary,
                     style = MaterialTheme.customTypography.paragraphXS.copy(textAlign = TextAlign.Center),
                 )
                 Text(
@@ -130,7 +130,6 @@ fun GetSoraCardScreen(
                     ),
                     color = MaterialTheme.customColors.statusError,
                 )
-
                 FilledButton(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -152,7 +151,7 @@ private fun AnnualFee() {
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1)
+            .padding(top = Dimens.x2, start = Dimens.x1, end = Dimens.x1),
     ) {
         Text(
             modifier = Modifier
@@ -162,13 +161,16 @@ private fun AnnualFee() {
                     top = Dimens.x2, bottom = Dimens.x2, start = Dimens.x3, end = Dimens.x3,
                 ),
             text = stringResource(R.string.sora_card_annual_service_fee),
+            color = MaterialTheme.customColors.fgPrimary,
             style = MaterialTheme.customTypography.textL,
         )
     }
 }
 
 @Composable
-private fun FreeCardIssuance() {
+private fun FreeCardIssuance(
+    applicationFee: String,
+) {
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,6 +186,7 @@ private fun FreeCardIssuance() {
                     .fillMaxWidth()
                     .wrapContentHeight(),
                 text = stringResource(R.string.sora_card_free_card_issuance),
+                color = MaterialTheme.customColors.fgPrimary,
                 style = MaterialTheme.customTypography.textL,
             )
 
@@ -201,7 +204,7 @@ private fun FreeCardIssuance() {
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(vertical = Dimens.x2),
-                text = stringResource(R.string.sora_card_free_card_issuance_conditions_euro),
+                text = stringResource(jp.co.soramitsu.oauth.R.string.details_free_card_issuance_conditions_euro, applicationFee),
                 style = MaterialTheme.customTypography.paragraphM,
                 color = MaterialTheme.customColors.fgSecondary,
             )
@@ -214,7 +217,7 @@ private fun FreeCardIssuance() {
 private fun PreviewGetSoraCardScreen() {
     GetSoraCardScreen(
         scrollState = rememberScrollState(),
-        state = GetSoraCardState(),
+        state = GetSoraCardState(applicationFee = "29"),
         {}, {},
     )
 }

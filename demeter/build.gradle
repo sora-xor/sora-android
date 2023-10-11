@@ -3,6 +3,10 @@ apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
     namespace 'jp.co.soramitsu.demeter'
     compileSdk compileVersion
@@ -21,13 +25,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
+
     composeOptions {
         kotlinCompilerExtensionVersion versions.composeCompiler
     }
@@ -66,6 +64,7 @@ dependencies {
     implementation project(":feature_blockexplorer_api")
     implementation project(":feature_account_api")
     implementation project(":sorasubstrate")
+    implementation project(":network")
 
     implementation daggerDep
     kapt daggerKaptDep
@@ -77,10 +76,8 @@ dependencies {
 
     implementation roomDep
     implementation roomKtxDep
-    kapt roomKaptDep
 
     implementation sharedUtilsDep
-    implementation xNetworkingDep
 
     testImplementation project(":test_shared")
     testImplementation project(":test_data")

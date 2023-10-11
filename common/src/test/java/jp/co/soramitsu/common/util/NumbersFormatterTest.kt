@@ -32,6 +32,7 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.util
 
+import jp.co.soramitsu.common.domain.OptionsProvider.nbspace
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

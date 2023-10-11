@@ -32,6 +32,8 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.util
 
+open class ParseModel
+
 object Const {
 
     const val SORA = "SORA"

@@ -35,9 +35,8 @@ package jp.co.soramitsu.common.inappupdate
 import android.app.Activity
 import android.content.Context
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.install.InstallStateUpdatedListener
@@ -54,7 +53,7 @@ import kotlin.coroutines.suspendCoroutine
 class InAppUpdateManager(
     context: Context,
     private val soraPreferences: SoraPreferences
-) : LifecycleObserver {
+) : LifecycleEventObserver {
 
     interface UpdateManagerListener : LifecycleOwner {
         fun readyToShowFlexible(): Int?
@@ -74,6 +73,7 @@ class InAppUpdateManager(
             InstallStatus.DOWNLOADED -> {
                 mainActivity?.askUserToInstall()
             }
+
             else -> {
             }
         }
@@ -127,6 +127,7 @@ class InAppUpdateManager(
                                         )
                                     }
                                 }
+
                                 AppUpdateType.IMMEDIATE -> {
                                     soraPreferences.putLong(ARG_TIME, now)
                                     googleUpdateManager.startUpdateFlowForResult(
@@ -136,6 +137,7 @@ class InAppUpdateManager(
                                         1
                                     )
                                 }
+
                                 else -> {
                                 }
                             }
@@ -171,9 +173,10 @@ class InAppUpdateManager(
         ) == true
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
-        mainActivity?.lifecycle?.removeObserver(this)
-        mainActivity = null
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        if (event == Lifecycle.Event.ON_STOP) {
+            mainActivity?.lifecycle?.removeObserver(this)
+            mainActivity = null
+        }
     }
 }

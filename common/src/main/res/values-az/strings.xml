@@ -39,6 +39,9 @@
   <string name="asset_details_token_price">Token price</string>
   <string name="asset_details_your_pools">Your %s pools</string>
   <string name="asset_to_send">Asset to send</string>
+  <string name="backup_account_already_exist">Yedək artıq mövcuddur. Yenidən yazmağa davam edin.</string>
+  <string name="backup_not_enough_space_error">Yedəkləmə alınmadı. Google Diskinizdə kifayət qədər yer yoxdur. Bir az yer boşaltın və yenidən cəhd edin.</string>
+  <string name="backup_now">İndi yedəkləyin</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Parol üçün məcburi tələb yerinə yetirildi</string>
   <string name="backup_password_requirments">Minimum altı simvol. İsteğe bağlı olaraq, daha yaxşı təhlükəsizlik üçün böyük hərflər, rəqəmlər və qeyri-əlifba simvolları daxil edin.</string>
   <string name="backup_password_title">Parolun təyin edilməsi Google ehtiyat nüsxənizi şifrələyəcək. Pul kisəsini bərpa edərkən bunu daxil etməlisiniz.\n Minimum parol uzunluğu 6 simvoldur.</string>
@@ -48,6 +51,7 @@
   <string name="buy_crypto_buy_xor_banner_title">Buy XOR token</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">Buy or sell XOR token with euro</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Buy XOR with fiat</string>
+  <string name="cant_load_balance">Balansı yükləmək mümkün deyil</string>
   <string name="change_language">Change language</string>
   <string name="change_pin">Change PIN</string>
   <string name="choose_token">Token seçin</string>
@@ -168,6 +172,7 @@
   <string name="common_refresh">Refresh</string>
   <string name="common_remove">Sil</string>
   <string name="common_request">Request</string>
+  <string name="common_rewrite">Yenidən yazmaq</string>
   <string name="common_russian">Rus dili</string>
   <string name="common_scan">Tara</string>
   <string name="common_scan_qr">Scan QR</string>
@@ -231,9 +236,10 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">Əməliyyat haqqı üçün kifayət qədər vəsait yoxdur</string>
+  <string name="explore_create_pool">Hovuz yaradın</string>
   <string name="explore_provide_and_earn">Likvidliyi təmin edin və mükafatlar qazanın</string>
   <string name="explore_swap_tokens_on_sora">SORA şəbəkəsində tokenləri dəyişdirin</string>
-  <string name="export_account_details_backup_description">If you loose access to this device, your funds will be lost, unless you back up!</string>
+  <string name="export_account_details_backup_description">Bu cihaza girişi itirsəniz, ehtiyat nüsxəsini çıxarmasanız, vəsaitiniz itiriləcək!</string>
   <string name="export_account_details_backup_options">Yedəkləmə seçimləri</string>
   <string name="export_account_details_show_passphrase">Parol ifadəsini göstərin</string>
   <string name="export_account_details_show_raw_seed">Xam Toxumu göstərin</string>
@@ -278,8 +284,6 @@
   <string name="invoice_scan_error_user_not_found">QR-dən istifadəçi tapa bilinmir</string>
   <string name="launch_screen_loading_title">It\'s loading for a little longer this time</string>
   <string name="liquid_assets">Liquid assets</string>
-  <string name="liquidity_pair_creation_description">Əlavə etdiyiniz tokenlərin nisbəti bu hovuzun qiymətini təyin edəcək. Məzənnədən məmnun olduqdan sonra nəzərdən keçirmək üçün təchizatı klikləyin.</string>
-  <string name="liquidity_pair_creation_title">Siz ilk likvidlik təminatçısısınız</string>
   <string name="logout_dialog_body">Bu əməliyyat hesabın bu cihazdan silinməsi ilə nəticələnəcəkdir. Davam etmədən əvvəl parol keçidinizi yedəklədiyinizə əmin olun.</string>
   <string name="logout_remove_nodes_body">\n\nBütün fərdi qovşaqlarınız da silinəcək</string>
   <string name="mnemonic_confirmation_select_word_2">from the list you have written down</string>
@@ -387,6 +391,7 @@
     <item quantity="other">saniyələr qalıb</item>
   </plurals>
   <string name="project_ended_template">Tamamlandı</string>
+  <string name="protect_loss_access_funds">Özünüzü pulunuza girişi itirməkdən qoruyun</string>
   <string name="qr_code">QR kodu</string>
   <string name="qr_upload">Qalereyadan yükləyin</string>
   <string name="receive_tokens">Receive tokens</string>
@@ -487,7 +492,6 @@
   <string name="sora_card_details_card_management_coming_soon">Kart idarəçiliyi tezliklə gələcək</string>
   <string name="sora_card_details_title">Kart təfərrüatları</string>
   <string name="sora_card_free_card_issuance">Free card issuance</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">və ya €20 ərizə haqqı</string>
   <string name="sora_card_free_card_issuance_conditions_xor">If you hold, stake or provide liquidity for at least €100 worth of XOR in your SORA account</string>
   <string name="sora_card_get_more_xor">Get more XOR</string>
   <string name="sora_card_iban_headline">IBAN hesabı təfərrüatları</string>
@@ -514,6 +518,7 @@
   <string name="status_successful">Successful</string>
   <string name="status_title">Status</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
+  <string name="support_chat">Dəstək söhbəti</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Bu əməliyyatdan sonra %s qaldığınıza əmin olun. Əks halda, başqa sövdələşmə edə bilməyəcəksiniz.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">System appearance</string>
@@ -531,6 +536,7 @@
   <string name="unexpected_error">Gözlənilməz xəta baş verdi. \n\n Siz @SORAhappiness Telegram çatında SORA icmasında bu problemi həll edə bilərsiniz.</string>
   <string name="update_downloaded">SORA tətbiqi üçün yeniləmə endirilib və quraşdırılmağa hazırdır. \n\n Proqramın ən son versiyasından istifadə etmək vacibdir. \n\n Proqramı yeniləmək üçün yenidən başladın tələb olunur.</string>
   <string name="update_install_now">Güncəlləməni indi quraşdırmaq istərdinizmi?</string>
+  <string name="wallet_backup">Pulqabı ehtiyat nüsxəsi</string>
   <string name="wallet_balance_locked">Kilidlənmiş</string>
   <string name="wallet_balance_reserved">Rezerv edilmiş</string>
   <string name="wallet_bonded">Bağlı</string>
