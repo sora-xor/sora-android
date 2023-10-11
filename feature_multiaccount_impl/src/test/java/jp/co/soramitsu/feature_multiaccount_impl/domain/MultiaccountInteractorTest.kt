@@ -44,7 +44,7 @@ import jp.co.soramitsu.common.io.FileManager
 import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsRepository
 import jp.co.soramitsu.feature_account_api.domain.interfaces.UserRepository
 import jp.co.soramitsu.feature_account_api.domain.model.OnboardingState
-import jp.co.soramitsu.feature_assets_api.domain.AssetsInteractor
+import jp.co.soramitsu.feature_wallet_api.domain.interfaces.WalletRepository
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.test_shared.MainCoroutineRule
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -68,7 +68,6 @@ class MultiaccountInteractorTest {
     @get:Rule
     var mockKRule = MockKRule(this)
 
-
     private lateinit var multiaccountInteractor: MultiaccountInteractor
 
     @MockK
@@ -81,7 +80,7 @@ class MultiaccountInteractorTest {
     lateinit var fileManager: FileManager
 
     @MockK
-    lateinit var assetsInteractor: AssetsInteractor
+    lateinit var walletRepository: WalletRepository
 
     @MockK
     lateinit var runtimeManager: RuntimeManager
@@ -93,9 +92,8 @@ class MultiaccountInteractorTest {
     fun setup() {
         coEvery { credentialsRepository.isMnemonicValid(any()) } returns true
         coEvery { credentialsRepository.isRawSeedValid(any()) } returns true
-        coEvery { userRepository.insertSoraAccount(any()) } returns Unit
+        coEvery { userRepository.insertSoraAccount(any(), any()) } returns Unit
         coEvery { userRepository.setCurSoraAccount(any()) } returns Unit
-        coEvery { assetsInteractor.updateWhitelistBalances() } returns Unit
         coEvery { userRepository.saveRegistrationState(any()) } returns Unit
         coEvery { credentialsRepository.restoreUserCredentialsFromMnemonic(any(), any()) } returns account
         coEvery { credentialsRepository.restoreUserCredentialsFromRawSeed(any(), any()) } returns account
@@ -104,11 +102,11 @@ class MultiaccountInteractorTest {
         coEvery { userRepository.updateAccountName(any(), any()) } returns Unit
         coEvery { fileManager.writeExternalCacheText(any(), any()) } returns uri
         multiaccountInteractor = MultiaccountInteractor(
-            assetsInteractor,
             userRepository,
             credentialsRepository,
             fileManager,
             runtimeManager,
+            walletRepository
         )
     }
 
@@ -129,7 +127,7 @@ class MultiaccountInteractorTest {
     @Test
     fun `continueRecoverFlow is called`() = runTest {
         multiaccountInteractor.continueRecoverFlow(account)
-        coVerify { userRepository.insertSoraAccount(account) }
+        coVerify { userRepository.insertSoraAccount(account, false) }
         coVerify { userRepository.setCurSoraAccount(account) }
         coVerify { userRepository.saveRegistrationState(OnboardingState.REGISTRATION_FINISHED) }
     }
@@ -153,7 +151,7 @@ class MultiaccountInteractorTest {
     @Test
     fun `createUser is called`() = runTest {
         multiaccountInteractor.createUser(account)
-        coVerify { userRepository.insertSoraAccount(account) }
+        coVerify { userRepository.insertSoraAccount(account, true) }
         coVerify { userRepository.setCurSoraAccount(account) }
         coVerify { userRepository.saveRegistrationState(OnboardingState.INITIAL) }
         coVerify { userRepository.saveNeedsMigration(false, account) }

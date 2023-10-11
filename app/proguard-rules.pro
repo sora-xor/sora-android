@@ -194,3 +194,17 @@
 -dontwarn org.junit.jupiter.api.extension.TestInstancePostProcessor
 -dontwarn org.mockito.internal.creation.bytebuddy.inject.MockMethodDispatcher
 -dontwarn org.opentest4j.AssertionFailedError
+
+-keep class com.google.** { *;}
+-keep interface com.google.** { *;}
+-dontwarn com.google.**
+
+-dontwarn sun.misc.Unsafe
+-dontwarn com.google.common.collect.MinMaxPriorityQueue
+-keepattributes *Annotation*,Signature
+-keep class * extends com.google.api.client.json.GenericJson {
+*;
+}
+-keep class com.google.api.services.drive.** {
+*;
+}

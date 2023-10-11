@@ -39,6 +39,9 @@
   <string name="asset_details_token_price">टोकन मूल्य</string>
   <string name="asset_details_your_pools">आपके %s पूल</string>
   <string name="asset_to_send">भेजने के लिए संपत्ति</string>
+  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
+  <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Mandatory requirement for the password fulfilled</string>
   <string name="backup_password_requirments">Minimum six characters. Optionally, for better security, include uppercase letters, numbers and non-alphabetic characters.</string>
   <string name="backup_password_title">Setting a password will encrypt your Google backup. You’ll need to enter this when restoring your wallet.\nMinimum password length is 6 characters.</string>
@@ -48,6 +51,7 @@
   <string name="buy_crypto_buy_xor_banner_title">XOR टोकन खरीदें</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">यूरो के साथ XOR टोकन खरीदें या बेचें</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">फिएट के साथ XOR खरीदें</string>
+  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">भाषा बदलें</string>
   <string name="change_pin">पिन बदलिए</string>
   <string name="choose_token">टोकन चुनें</string>
@@ -168,6 +172,7 @@
   <string name="common_refresh">ताज़ा करना</string>
   <string name="common_remove">हटाये</string>
   <string name="common_request">Request</string>
+  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">रूसी</string>
   <string name="common_scan">स्कैन</string>
   <string name="common_scan_qr">QR स्कैन करें</string>
@@ -231,6 +236,7 @@
   <string name="enter_password_incorect_title">Incorrect password</string>
   <string name="enter_password_title">Enter password</string>
   <string name="error_transaction_fee_title">नेटवर्क शुल्क के लिए पर्याप्त धनराशि नहीं है</string>
+  <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Provide liquidity and earn rewards</string>
   <string name="explore_swap_tokens_on_sora">Swap tokens on SORA network</string>
   <string name="export_account_details_backup_description">अगर आप इस डिवाइस का एक्सेस खो देते हैं, तो आपके फंड का नुकसान हो जाएगा, जब तक कि आप बैकअप नहीं लेते!</string>
@@ -385,6 +391,7 @@
     <item quantity="other">सेकंड्‌स शेष</item>
   </plurals>
   <string name="project_ended_template">समाप्त%s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">क्यूआर कोड</string>
   <string name="qr_upload">गैलरी से</string>
   <string name="receive_tokens">टोकन प्राप्त करें</string>
@@ -485,13 +492,12 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">नि: शुल्क कार्ड जारी करना</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">या 20 € आवेदन शुल्क</string>
   <string name="sora_card_free_card_issuance_conditions_xor">यदि आप अपने SORA खाते में कम से कम €100 मूल्य के XOR को रखते हैं, Staking पर लगाते हैं या Liquidity  प्रदान करते हैं</string>
   <string name="sora_card_get_more_xor">अधिक XOR प्राप्त करें</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
   <string name="sora_card_log_in_or_sign_up">Log in or Sign up</string>
   <string name="sora_card_no_more_free_tries">कोई और मुफ़्त प्रयास नहीं</string>
-  <string name="sora_card_option_logout">Log out SORA Card</string>
+  <string name="sora_card_option_logout">Log out of SORA Card</string>
   <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
   <string name="sora_card_refer_and_earn_action">Refer &amp; Earn</string>
   <string name="sora_card_referral_headline">Refer SORA Card.\nGet €20 bonus. </string>
@@ -512,6 +518,7 @@
   <string name="status_successful">सफल</string>
   <string name="status_title">स्थिति</string>
   <string name="succesfully_imported_account_title">You have succesfully imported an account</string>
+  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Ensure that you have %s left after this transaction. Otherwise, you won’t be able to do another transaction.</string>
   <string name="switch_node">Switch node</string>
   <string name="system_appearance">सिस्टम स्थिति</string>
@@ -529,6 +536,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">SORA एप्लिकेशन के लिए एक अपडेट डाउनलोड किया गया है और इंस्टॉल करने के लिए तैयार है। \n\n एप्लिकेशन के नवीनतम संस्करण का उपयोग करना महत्वपूर्ण है। \n\n ऐप को अपडेट करने के लिए, पुनरारंभ करना आवश्यक है।</string>
   <string name="update_install_now">क्या आप Update अभी Install  करना चाहेंगे?</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">अवरोधित</string>
   <string name="wallet_balance_reserved">आरक्षित</string>
   <string name="wallet_bonded">बॉन्डेड</string>

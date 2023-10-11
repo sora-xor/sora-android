@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
+package jp.co.soramitsu.common.presentation.compose.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
@@ -71,6 +71,7 @@ fun BasicBannerCard(
     description: String,
     button: String,
     onButtonClicked: () -> Unit,
+    closeEnabled: Boolean,
     onCloseCard: () -> Unit,
 ) {
     ContentCard(
@@ -117,18 +118,20 @@ fun BasicBannerCard(
                 )
             }
 
-            BleachedButton(
-                modifier = Modifier
-                    .wrapContentWidth()
-                    .align(Alignment.TopEnd)
-                    .padding(Dimens.x1)
-                    .alpha(0.8f),
-                size = Size.ExtraSmall,
-                order = Order.TERTIARY,
-                shape = CircleShape,
-                onClick = onCloseCard,
-                leftIcon = painterResource(R.drawable.ic_cross),
-            )
+            if (closeEnabled) {
+                BleachedButton(
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .align(Alignment.TopEnd)
+                        .padding(Dimens.x1)
+                        .alpha(0.8f),
+                    size = Size.ExtraSmall,
+                    order = Order.TERTIARY,
+                    shape = CircleShape,
+                    onClick = onCloseCard,
+                    leftIcon = painterResource(R.drawable.ic_cross),
+                )
+            }
         }
     }
 }
@@ -183,6 +186,7 @@ private fun PreviewBasicBannerCard1() {
         title = "Some title of banner card, let it be longeeerr",
         description = "Long description of banner card, The quick brown fox jumps over the lazy dog, The quick brown fox jumps over the lazy dog.And I, even I Artaxerxes the king, do make a decree to all the treasurers which are beyond the river, that whatsoever Ezra the priest, the scribe of the law of the God of heaven, shall require of you, it be done speedily",
         button = "Just button title",
+        closeEnabled = true,
         onCloseCard = {},
         onButtonClicked = {},
     )
@@ -196,6 +200,7 @@ private fun PreviewBasicBannerCard12() {
         title = "Some title",
         description = "Long description of banner",
         button = "Just button title",
+        closeEnabled = false,
         onCloseCard = {},
         onButtonClicked = {},
     )
@@ -209,6 +214,7 @@ private fun PreviewBasicBannerCard2() {
         title = "Title",
         description = "Description",
         button = "Button",
+        closeEnabled = true,
         onCloseCard = {},
         onButtonClicked = {},
     )

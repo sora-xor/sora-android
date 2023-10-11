@@ -39,6 +39,9 @@
   <string name="asset_details_token_price">Prix du jeton</string>
   <string name="asset_details_your_pools">Vos %s pool(s)</string>
   <string name="asset_to_send">Actif à envoyer</string>
+  <string name="backup_account_already_exist">Backup already exists. Proceed to rewrite it.</string>
+  <string name="backup_not_enough_space_error">Backup failed. Not enough space on your Google Drive. Free some space and try again.</string>
+  <string name="backup_now">Backup now</string>
   <string name="backup_password_mandatory_reqs_fulfilled">Critères de sécurité obligatoires remplis</string>
   <string name="backup_password_requirments">Minimum six caractères. Pour une meilleure sécurité, inclure des lettres majuscules, des nombres et des caractères spéciaux.</string>
   <string name="backup_password_title">Définir un mot de passe va encrypter votre sauvegarde. Vous devred entrer le mot de passe pour restaurer votre portefeuille.\nLe mot de passe doit être d\'au moins six caractères.</string>
@@ -48,6 +51,7 @@
   <string name="buy_crypto_buy_xor_banner_title">Acheter des jetons XOR</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">Acheter ou vendre des jetons XOR avec des euros</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">Acheter du XOR avec des euros</string>
+  <string name="cant_load_balance">Can\'t load balance</string>
   <string name="change_language">Changer la langue</string>
   <string name="change_pin">Changer le code PIN</string>
   <string name="choose_token">Choisissez le jeton</string>
@@ -168,6 +172,7 @@
   <string name="common_refresh">Rafraîchir</string>
   <string name="common_remove">Supprimer</string>
   <string name="common_request">Demander</string>
+  <string name="common_rewrite">Rewrite</string>
   <string name="common_russian">Russe</string>
   <string name="common_scan">Analyse</string>
   <string name="common_scan_qr">Scanner code QR</string>
@@ -231,6 +236,7 @@
   <string name="enter_password_incorect_title">Mot de passe incorrect</string>
   <string name="enter_password_title">Entrer le mot de passe</string>
   <string name="error_transaction_fee_title">Pas assez de fonds pour les frais de transaction</string>
+  <string name="explore_create_pool">Create pool</string>
   <string name="explore_provide_and_earn">Fournir des liquidités et gagner des récompenses</string>
   <string name="explore_swap_tokens_on_sora">Échanger des tokens sur le réseau SORA</string>
   <string name="export_account_details_backup_description">Si vous perdez l\'accès à cet appareil, vos fonds seront perdus, sauf si vous sauvegardez!</string>
@@ -385,6 +391,7 @@
     <item quantity="other">%s secondes restantes</item>
   </plurals>
   <string name="project_ended_template">Terminé %s</string>
+  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
   <string name="qr_code">QR Code</string>
   <string name="qr_upload">Depuis la galerie</string>
   <string name="receive_tokens">Recevoir des jetons</string>
@@ -485,13 +492,12 @@
   <string name="sora_card_details_card_management_coming_soon">Card management is coming soon</string>
   <string name="sora_card_details_title">Card details</string>
   <string name="sora_card_free_card_issuance">Émission gratuite de la carte</string>
-  <string name="sora_card_free_card_issuance_conditions_euro">ou 20€ de frais de demande</string>
   <string name="sora_card_free_card_issuance_conditions_xor">Si vous détenez, stakez, ou fournissez des liquidités pour un montant d\'au moins 100€ de XOR avec votre compte SORA</string>
   <string name="sora_card_get_more_xor">Obtenir plus de XOR</string>
   <string name="sora_card_iban_headline">IBAN account details</string>
   <string name="sora_card_log_in_or_sign_up">Se connecter ou s\'inscrire</string>
   <string name="sora_card_no_more_free_tries">Nombre d\'essais gratuits épuisé</string>
-  <string name="sora_card_option_logout">Log out SORA Card</string>
+  <string name="sora_card_option_logout">Log out of SORA Card</string>
   <string name="sora_card_option_logout_description">You are about to log out of SORA Card. You will still have access to the SORA Card standalone app, but the balance will no longer be available to you in the SORA Wallet.</string>
   <string name="sora_card_refer_and_earn_action">Parrainer et gagner</string>
   <string name="sora_card_referral_headline">Refer SORA Card.\nGet €20 bonus. </string>
@@ -512,6 +518,7 @@
   <string name="status_successful">Confirmée</string>
   <string name="status_title">Statut</string>
   <string name="succesfully_imported_account_title">Vous avez importé votre compte avec succès</string>
+  <string name="support_chat">Support chat</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">Assurez-vous qu’il vous reste %s après cette transaction. Sinon, vous ne pourrez pas effectuer une autre transaction.</string>
   <string name="switch_node">Changer de nœud</string>
   <string name="system_appearance">Apparence du système</string>
@@ -529,6 +536,7 @@
   <string name="unexpected_error">An unexpected error has occured.\n\nYou may troubleshoot this issue in SORA community at the @SORAhappiness Telegram chat.</string>
   <string name="update_downloaded">Une mise à jour de l\'application SORA a été téléchargée et est prête à être installée.\n\nIl est important d\'utiliser la dernière version de l\'application.\n\nAfin de mettre à jour l\'application, un redémarrage est requis.</string>
   <string name="update_install_now">Voulez-vous installer la mise à jour maintenant ?</string>
+  <string name="wallet_backup">Wallet backup</string>
   <string name="wallet_balance_locked">Bloqué</string>
   <string name="wallet_balance_reserved">Réservé</string>
   <string name="wallet_bonded">Lié</string>

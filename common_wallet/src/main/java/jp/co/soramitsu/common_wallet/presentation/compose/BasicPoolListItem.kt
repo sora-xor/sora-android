@@ -47,12 +47,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import jp.co.soramitsu.common.R
@@ -128,26 +131,28 @@ fun BasicPoolListItem(
             style = MaterialTheme.customTypography.textXSBold,
             color = MaterialTheme.customColors.fgSecondary,
         )
-        ConstraintLayout(
-            modifier = Modifier.wrapContentSize()
-        ) {
-            val (token1, token2) = createRefs()
-            TokenIcon(
-                modifier = Modifier.constrainAs(token1) {
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                },
-                uri = state.token1Icon,
-                size = Size.Small,
-            )
-            TokenIcon(
-                modifier = Modifier.constrainAs(token2) {
-                    top.linkTo(parent.top)
-                    start.linkTo(token1.start, margin = 24.dp)
-                },
-                uri = state.token2Icon,
-                size = Size.Small,
-            )
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            ConstraintLayout(
+                modifier = Modifier.wrapContentSize()
+            ) {
+                val (token1, token2) = createRefs()
+                TokenIcon(
+                    modifier = Modifier.constrainAs(token1) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    },
+                    uri = state.token1Icon,
+                    size = Size.Small,
+                )
+                TokenIcon(
+                    modifier = Modifier.constrainAs(token2) {
+                        top.linkTo(parent.top)
+                        start.linkTo(token1.start, margin = 24.dp)
+                    },
+                    uri = state.token2Icon,
+                    size = Size.Small,
+                )
+            }
         }
         Column(
             modifier = Modifier

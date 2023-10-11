@@ -84,6 +84,7 @@ class EditCardsHubViewModel @Inject constructor(
         CardHubType.GET_SORA_CARD -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
         CardHubType.BUY_XOR_TOKEN -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
         CardHubType.REFERRAL_SYSTEM -> if (isVisible) HubCardVisibility.VISIBLE_AND_ENABLED else HubCardVisibility.NOT_VISIBLE_ENABLED
+        CardHubType.BACKUP -> if (isVisible) HubCardVisibility.VISIBLE_AND_DISABLED else HubCardVisibility.NOT_VISIBLE_DISABLED
     }
 
     init {

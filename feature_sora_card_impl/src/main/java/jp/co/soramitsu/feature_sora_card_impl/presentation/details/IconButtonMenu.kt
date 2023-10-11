@@ -30,39 +30,42 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.common.domain
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
-import jp.co.soramitsu.common.BuildConfig
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Image
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.Text
+import jp.co.soramitsu.common.presentation.compose.uikit.tokens.retrieveString
+import jp.co.soramitsu.common.view.AmountCardIcon
 
-object OptionsProvider {
-    var CURRENT_VERSION_CODE: Int = 0
-    var CURRENT_VERSION_NAME: String = ""
-    var APPLICATION_ID: String = ""
-    const val configCommon = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/common.json"
-    const val configMobile = "https://config.polkaswap2.io/${FlavorOptionsProvider.typesFilePath}/mobile.json"
-    val fileProviderAuthority: String get() = "$APPLICATION_ID.soraFileProvider"
-    val header: String by lazy {
-        "$APPLICATION_ID/$CURRENT_VERSION_NAME/$CURRENT_VERSION_CODE/${BuildConfig.BUILD_TYPE}/${BuildConfig.FLAVOR}"
+data class IconButtonMenuState(
+    val testTagId: String? = null,
+    val image: Image.ResImage,
+    val text: Text,
+    val isEnabled: Boolean
+)
+
+@Composable
+fun IconButtonMenu(
+    iconButtonMenuStates: List<IconButtonMenuState>,
+    onButtonClick: (position: Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        repeat(iconButtonMenuStates.size) {
+            AmountCardIcon(
+                testTagId = iconButtonMenuStates[it].testTagId,
+                res = iconButtonMenuStates[it].image.id,
+                text = iconButtonMenuStates[it].text.retrieveString(),
+                isEnabled = iconButtonMenuStates[it].isEnabled,
+                onClick = { onButtonClick.invoke(it) }
+            )
+        }
     }
-
-    const val substrate = "substrate"
-    const val hexPrefix = "0x"
-    const val defaultScale = 18
-    const val nameByteLimit = 32
-    const val fiatSymbol = "$"
-    const val nbspace = ' '
-    const val euroSign = '€'
-
-    const val website = "https://sora.org"
-    const val sourceLink = "https://github.com/sora-xor/Sora-Android"
-    const val telegramLink = "https://t.me/sora_xor"
-    const val telegramAnnouncementsLink = "https://t.me/sora_announcements"
-    const val telegramHappinessLink = "https://t.me/sorahappiness"
-    const val email = "support@sora.org"
-    const val twitterLink = "https://twitter.com/sora_xor"
-    const val youtubeLink = "https://youtube.com/sora_xor"
-    const val instagramLink = "https://instagram.com/sora_xor"
-    const val mediumLink = "https://medium.com/sora-xor"
-    const val wikiLink = "https://wiki.sora.org"
-    const val soraCardBlackList = "https://soracard.com/blacklist/"
 }

@@ -173,7 +173,7 @@ class CommonModule {
     @Singleton
     @Provides
     fun provideSoramitsuNetworkClient(): SoramitsuNetworkClient =
-        SoramitsuNetworkClient(logging = BuildConfig.DEBUG)
+        SoramitsuNetworkClient(logging = BuildConfig.DEBUG, timeout = 20000)
 
     @Singleton
     @Provides

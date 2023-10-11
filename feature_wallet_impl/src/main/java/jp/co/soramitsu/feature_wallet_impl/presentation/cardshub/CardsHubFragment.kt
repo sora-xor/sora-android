@@ -34,14 +34,17 @@ package jp.co.soramitsu.feature_wallet_impl.presentation.cardshub
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,8 +64,13 @@ import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
+import jp.co.soramitsu.common.util.StringPair
 import jp.co.soramitsu.common_wallet.presentation.compose.components.PoolsList
+import jp.co.soramitsu.common_wallet.presentation.compose.states.AssetCardState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.BackupWalletState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.BasicBannerCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.BuyXorState
+import jp.co.soramitsu.common_wallet.presentation.compose.states.CardsState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoriteAssetsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.FavoritePoolsCardState
 import jp.co.soramitsu.common_wallet.presentation.compose.states.ReferralState
@@ -72,6 +81,7 @@ import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @AndroidEntryPoint
 class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
@@ -90,7 +100,6 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -110,78 +119,147 @@ class CardsHubFragment : SoraBaseFragment<CardsHubViewModel>() {
                     .fillMaxSize()
             ) {
                 val state = viewModel.state.collectAsStateWithLifecycle().value
-                TopBar(
-                    account = state.curAccount,
+                CardsMainScreen(
+                    scrollState = scrollState,
+                    state = state,
                     onAccountClick = viewModel::onAccountClick,
                     onQrClick = onQrClick,
+                    onAssetClick = viewModel::onAssetClick,
+                    onPoolClick = viewModel::onPoolClick,
+                    onOpenFullCardClick = viewModel::onOpenFullCard,
+                    onSoraCardClick = viewModel::onCardStateClicked,
+                    onSoraCardClose = viewModel::onRemoveSoraCard,
+                    onBuyXorClick = viewModel::onBuyCrypto,
+                    onBuyXorClose = viewModel::onRemoveBuyXorToken,
+                    onReferralClick = viewModel::onStartReferral,
+                    onReferralClose = viewModel::onRemoveReferralCard,
+                    onBackupBannerClick = viewModel::onBackupBannerClick,
+                    onEdit = viewModel::onEditViewClick,
                 )
-                Spacer(modifier = Modifier.size(size = 16.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(horizontal = Dimens.x2)
-                ) {
-                    state.cards.forEach { cardState ->
-                        when (cardState) {
-                            is TitledAmountCardState -> {
-                                CommonHubCard(
-                                    title = cardState.title,
-                                    amount = cardState.amount,
-                                    onExpandClick = cardState.onExpandClick,
-                                    collapseState = cardState.collapsedState,
-                                    onCollapseClick = cardState.onCollapseClick
-                                ) {
-                                    when (cardState.state) {
-                                        is FavoriteAssetsCardState -> AssetsCard(
-                                            cardState.state as FavoriteAssetsCardState,
-                                            viewModel::onAssetClick,
-                                        )
-                                        is FavoritePoolsCardState -> PoolsList(
-                                            (cardState.state as FavoritePoolsCardState).state,
-                                            viewModel::onPoolClick,
-                                        )
-                                    }
-                                }
-                            }
-
-                            is SoraCardState -> {
-                                SoraCard(
-                                    state = cardState,
-                                    onCardStateClicked = viewModel::onCardStateClicked,
-                                    onCloseClicked = viewModel::onRemoveSoraCard,
-                                )
-                            }
-
-                            is BuyXorState -> {
-                                BuyXorCard(
-                                    onBuyXorClicked = viewModel::onBuyCrypto,
-                                    onCloseCard = viewModel::onRemoveBuyXorToken,
-                                )
-                            }
-
-                            is ReferralState -> {
-                                ReferralCard(
-                                    onStartClicked = viewModel::onStartReferral,
-                                    onCloseCard = viewModel::onRemoveReferralCard,
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.size(size = 16.dp))
-                    }
-
-                    if (state.cards.isNotEmpty())
-                        BleachedButton(
-                            modifier = Modifier
-                                .padding(bottom = Dimens.x4)
-                                .align(Alignment.CenterHorizontally),
-                            size = Size.Small,
-                            order = Order.SECONDARY,
-                            text = stringResource(id = R.string.edit_view),
-                            onClick = { viewModel.onEditViewClick() }
-                        )
-                }
             }
         }
+    }
+}
+
+@Composable
+private fun CardsMainScreen(
+    scrollState: ScrollState,
+    state: CardsState,
+    onAccountClick: () -> Unit,
+    onQrClick: () -> Unit,
+    onAssetClick: (String) -> Unit,
+    onPoolClick: (StringPair) -> Unit,
+    onOpenFullCardClick: (AssetCardState) -> Unit,
+    onSoraCardClick: () -> Unit,
+    onSoraCardClose: () -> Unit,
+    onBuyXorClick: () -> Unit,
+    onBuyXorClose: () -> Unit,
+    onReferralClick: () -> Unit,
+    onReferralClose: () -> Unit,
+    onBackupBannerClick: () -> Unit,
+    onEdit: () -> Unit,
+) {
+    TopBar(
+        account = state.curAccount,
+        onAccountClick = onAccountClick,
+        onQrClick = onQrClick,
+    )
+    Spacer(modifier = Modifier.size(size = 16.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+            .padding(horizontal = Dimens.x2),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (state.loading) {
+            CircularProgressIndicator(
+                color = MaterialTheme.customColors.fgPrimary,
+            )
+        }
+        state.cards.forEach { cardState ->
+            when (cardState) {
+                is TitledAmountCardState -> {
+                    CommonHubCard(
+                        title = cardState.title,
+                        amount = cardState.amount,
+                        onOpenFullCardClick = { onOpenFullCardClick.invoke(cardState.state) },
+                        collapseState = cardState.collapsedState,
+                        onCollapseClick = cardState.onCollapseClick
+                    ) {
+                        when (cardState.state) {
+                            is FavoriteAssetsCardState -> AssetsCard(
+                                cardState.state as FavoriteAssetsCardState,
+                                onAssetClick,
+                            )
+                            is FavoritePoolsCardState -> PoolsList(
+                                (cardState.state as FavoritePoolsCardState).state,
+                                onPoolClick,
+                            )
+                        }
+                    }
+                }
+
+                is BasicBannerCardState -> {
+                    when (cardState) {
+                        BackupWalletState -> {
+                            BackupCard(
+                                onStartClicked = onBackupBannerClick,
+                            )
+                        }
+                        BuyXorState -> {
+                            BuyXorCard(
+                                onBuyXorClicked = onBuyXorClick,
+                                onCloseCard = onBuyXorClose,
+                            )
+                        }
+                        ReferralState -> {
+                            ReferralCard(
+                                onStartClicked = onReferralClick,
+                                onCloseCard = onReferralClose,
+                            )
+                        }
+                        is SoraCardState -> {
+                            SoraCard(
+                                state = cardState,
+                                onCardStateClicked = onSoraCardClick,
+                                onCloseClicked = onSoraCardClose,
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.size(size = 16.dp))
+        }
+
+        if (state.cards.isNotEmpty())
+            BleachedButton(
+                modifier = Modifier
+                    .padding(bottom = Dimens.x4)
+                    .align(Alignment.CenterHorizontally),
+                size = Size.Small,
+                order = Order.SECONDARY,
+                text = stringResource(id = R.string.edit_view),
+                onClick = onEdit,
+            )
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewCardsMainScreen() {
+    Column() {
+        CardsMainScreen(
+            scrollState = rememberScrollState(),
+            state = CardsState(
+                curAccount = "cnVko",
+                accountAddress = "",
+                loading = true,
+                cards = listOf(
+                    BuyXorState, ReferralState, BackupWalletState,
+                ),
+            ),
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+        )
     }
 }

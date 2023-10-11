@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card.details
+package jp.co.soramitsu.feature_sora_card_impl.presentation.details
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -58,17 +58,18 @@ class SoraCardDetailsViewModel @Inject constructor(
     private val _shareLinkEvent = SingleLiveEvent<String>()
     val shareLinkEvent: LiveData<String> = _shareLinkEvent
 
+    val telegramChat = SingleLiveEvent<Unit>()
+
     private var ibanCache: String? = null
 
     private val _soraCardDetailsScreenState = MutableStateFlow(
         SoraCardDetailsScreenState(
             soraCardMainSoraContentCardState = SoraCardMainSoraContentCardState(
-                balance = 0f,
-                isCardEnabled = false,
-                soraCardMenuActions = SoraCardMenuAction.values().toList()
+                balance = null,
+                soraCardMenuActions = SoraCardMenuAction.entries,
             ),
             soraCardSettingsCard = SoraCardSettingsCardState(
-                soraCardSettingsOptions = SoraCardSettingsOption.values().toList()
+                soraCardSettingsOptions = SoraCardSettingsOption.entries,
             ),
             logoutDialog = false,
         )
@@ -86,16 +87,29 @@ class SoraCardDetailsViewModel @Inject constructor(
 
         viewModelScope.launch {
             tryCatch {
+                var local = _soraCardDetailsScreenState.value
                 soraCardInteractor.fetchUserIbanAccount()
                     .onSuccess { iban ->
                         ibanCache = iban
-                        _soraCardDetailsScreenState.value = soraCardDetailsScreenState.value.copy(
+                        local = local.copy(
                             soraCardIBANCardState = SoraCardIBANCardState(iban)
                         )
                     }
                     .onFailure {
                         onError(it)
                     }
+                soraCardInteractor.fetchIbanBalance()
+                    .onFailure {
+                        onError(it)
+                    }
+                    .onSuccess {
+                        local = local.copy(
+                            soraCardMainSoraContentCardState = local.soraCardMainSoraContentCardState.copy(
+                                balance = it
+                            )
+                        )
+                    }
+                _soraCardDetailsScreenState.value = local
             }
         }
     }
@@ -145,6 +159,9 @@ class SoraCardDetailsViewModel @Inject constructor(
             SoraCardSettingsOption.LOG_OUT ->
                 _soraCardDetailsScreenState.value =
                     _soraCardDetailsScreenState.value.copy(logoutDialog = true)
+
+            SoraCardSettingsOption.SUPPORT_CHAT ->
+                telegramChat.trigger()
         }
     }
 

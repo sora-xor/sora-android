@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.presentation.compose.components.BasicBannerCard
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
 
 @Composable
@@ -49,6 +50,7 @@ fun BuyXorCard(
         title = stringResource(id = R.string.buy_crypto_buy_xor_banner_title),
         description = stringResource(id = R.string.buy_crypto_buy_xor_with_fiat_subtitle),
         button = stringResource(id = R.string.common_buy_xor),
+        closeEnabled = true,
         onButtonClicked = onBuyXorClicked,
         onCloseCard = onCloseCard,
     )

@@ -168,19 +168,28 @@ class AccountDetailsViewModel @AssistedInject constructor(
         }
     }
 
+    private fun startBackup() {
+        viewModelScope.launch {
+            interactor.anyBackupStarted()
+        }
+    }
+
     fun onShowPassphrase() {
+        startBackup()
         _accountDetailsScreenState.value?.let {
             router.showExportPassphraseProtection(address)
         }
     }
 
     fun onShowRawSeed() {
+        startBackup()
         _accountDetailsScreenState.value?.let {
             router.showExportSeedProtection(address)
         }
     }
 
     fun onExportJson() {
+        startBackup()
         _accountDetailsScreenState.value?.let {
             router.showExportJSONProtection(mutableListOf(address))
         }
@@ -334,6 +343,7 @@ class AccountDetailsViewModel @AssistedInject constructor(
     fun onBackupClicked(
         launcher: ActivityResultLauncher<Intent>
     ) {
+        startBackup()
         viewModelScope.launch {
             try {
                 _accountDetailsScreenState.value?.let {

@@ -30,7 +30,7 @@ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-package jp.co.soramitsu.feature_sora_card_impl.presentation.get.card
+package jp.co.soramitsu.feature_sora_card_impl.presentation
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -107,7 +107,7 @@ fun GetSoraCardScreen(
 
                 AnnualFee()
 
-                FreeCardIssuance()
+                FreeCardIssuance(state.applicationFee)
 
                 Text(
                     modifier = Modifier
@@ -130,7 +130,6 @@ fun GetSoraCardScreen(
                     ),
                     color = MaterialTheme.customColors.statusError,
                 )
-
                 FilledButton(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -169,7 +168,9 @@ private fun AnnualFee() {
 }
 
 @Composable
-private fun FreeCardIssuance() {
+private fun FreeCardIssuance(
+    applicationFee: String,
+) {
     ContentCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -203,7 +204,7 @@ private fun FreeCardIssuance() {
                     .fillMaxWidth()
                     .wrapContentHeight()
                     .padding(vertical = Dimens.x2),
-                text = stringResource(R.string.sora_card_free_card_issuance_conditions_euro),
+                text = stringResource(jp.co.soramitsu.oauth.R.string.details_free_card_issuance_conditions_euro, applicationFee),
                 style = MaterialTheme.customTypography.paragraphM,
                 color = MaterialTheme.customColors.fgSecondary,
             )
@@ -216,7 +217,7 @@ private fun FreeCardIssuance() {
 private fun PreviewGetSoraCardScreen() {
     GetSoraCardScreen(
         scrollState = rememberScrollState(),
-        state = GetSoraCardState(),
+        state = GetSoraCardState(applicationFee = "29"),
         {}, {},
     )
 }
