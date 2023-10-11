@@ -108,6 +108,7 @@ class DarkThemeManager @Inject constructor(
                              */
                             true
                         }
+
                         currentAppUiMode == AppCompatDelegate.MODE_NIGHT_NO && !isDarkModeEnabled -> {
                             /*
                                 Saved state matches system configuration;
@@ -115,6 +116,7 @@ class DarkThemeManager @Inject constructor(
                              */
                             false
                         }
+
                         else -> {
                             /*
                                 Something went wrong, saved state is different from system config;
@@ -136,22 +138,23 @@ class DarkThemeManager @Inject constructor(
         }.flowOn(coroutineManager.main.immediate).stateIn(
             scope = coroutineManager.applicationScope,
             started = SharingStarted.Eagerly, // Eager mode is used to apply changes as soon as possible
-            initialValue = AppCompatDelegate.getDefaultNightMode()
-                .equals(AppCompatDelegate.MODE_NIGHT_YES)
+            initialValue = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_NO
         )
 
     fun updateUiModeFromCache() {
         coroutineManager.applicationScope.launch {
             mutableDarkThemeSharedFlow.emit(
                 value = DarkModeSettings(
-                    isSystemDrivenUiEnabled = soraPreferences.getBoolean(
-                        field = KEY_SYSTEM_DRIVEN_UI_ENABLED,
-                        defaultValue = false
-                    ),
-                    isDarkModeEnabled = soraPreferences.getBoolean(
-                        field = KEY_DARK_THEME_ENABLED,
-                        defaultValue = false
-                    )
+//                    isSystemDrivenUiEnabled = soraPreferences.getBoolean(
+//                        field = KEY_SYSTEM_DRIVEN_UI_ENABLED,
+//                        defaultValue = false
+//                    ),
+                    isSystemDrivenUiEnabled = false,
+//                    isDarkModeEnabled = soraPreferences.getBoolean(
+//                        field = KEY_DARK_THEME_ENABLED,
+//                        defaultValue = false
+//                    )
+                    isDarkModeEnabled = false,
                 )
             )
         }
