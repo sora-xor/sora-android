@@ -50,8 +50,8 @@ buildscript {
             xserializationjson     : '1.5.1',
             ktor                   : '2.3.1',
             xbackup                : '1.0.0',
-            xcrypto                : '1.0.2',
-            xsubstrate             : '1.0.1'
+            xcrypto                : '1.0.3',
+            xsubstrate             : '1.0.2'
     ]
 
     ext {

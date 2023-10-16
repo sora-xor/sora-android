@@ -48,6 +48,7 @@ import jp.co.soramitsu.feature_account_api.domain.interfaces.CredentialsReposito
 import jp.co.soramitsu.feature_blockexplorer_api.data.SoraConfigManager
 import jp.co.soramitsu.sora.substrate.runtime.RuntimeManager
 import jp.co.soramitsu.sora.substrate.runtime.SubstrateOptionsProvider
+import jp.co.soramitsu.sora.substrate.substrate.deriveSeed32
 import jp.co.soramitsu.xcrypto.util.fromHex
 import jp.co.soramitsu.xcrypto.util.toHexString
 import jp.co.soramitsu.xsubstrate.encrypt.keypair.substrate.Sr25519Keypair
@@ -81,7 +82,7 @@ class CredentialsRepositoryImpl constructor(
     }
 
     private suspend fun generateEntropyAndKeysFromMnemonic(mnemonic: Mnemonic): String {
-        val derivationResult = SubstrateSeedFactory.deriveSeed(mnemonic.words, null)
+        val derivationResult = SubstrateSeedFactory.deriveSeed32(mnemonic.words, null)
         val keyPair = SubstrateKeypairFactory.generate(
             SubstrateOptionsProvider.encryptionType,
             derivationResult.seed,
