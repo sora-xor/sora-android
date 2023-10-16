@@ -106,7 +106,12 @@ class CredentialsRepositoryTest {
         every { SubstrateKeypairFactory.generate(any(), any()) } returns keypair
         every { SubstrateKeypairFactory.generate(any(), any(), any()) } returns keypair
         every { FirebaseWrapper.log("Keys were created") } just runs
-        every { derivationResult.seed } returns "seed".toByteArray()
+        every { derivationResult.seed } returns "seedseedseedseedseedseedseedseedseedseedseedseedseedseed".toByteArray()
+        every { derivationResult.mnemonic } returns Mnemonic(
+            "",
+            emptyList(),
+            ByteArray(1) { 1 })
+        
         credentialsRepository = CredentialsRepositoryImpl(
             datasource,
             cryptoAssistant,
