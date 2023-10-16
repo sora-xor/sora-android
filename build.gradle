@@ -39,7 +39,7 @@ buildscript {
             insetter               : '0.6.0',
             truth                  : '1.1.5',
             lottie                 : '4.2.0',
-            xNetworking            : '0.2.2',
+            xNetworking            : '0.2.3',
             compose                : '1.5.2',
             composeCompiler        : '1.5.3',
             composeConstraintLayout: '1.1.0-alpha05',
@@ -55,10 +55,10 @@ buildscript {
 
     ext {
         // soralution 113 3.5.0.0 2023.10.10
-        // sora dae 103 3.4.0.0 2023.10.10
+        // sora dae 104 3.5.0.0 2023.10.16
 //        appVersionCode = Integer.valueOf(System.env.BUILD_NUMBER ?: 96)
-        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 103)
-        appVersionName = '3.4.0.0'
+        appVersionCode = Integer.valueOf(System.env.CI_BUILD_ID ?: 104)
+        appVersionName = '3.5.0.0'
 
         compileVersion = 34
         minVersion = 24
