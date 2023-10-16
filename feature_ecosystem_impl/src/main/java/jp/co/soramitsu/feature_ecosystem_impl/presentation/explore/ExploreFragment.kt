@@ -32,7 +32,6 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.feature_ecosystem_impl.presentation.explore
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +44,7 @@ import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.ExploreRoutes
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allcurrencies.AllCurrenciesScreen
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.allpools.AllPoolsScreen
+import jp.co.soramitsu.feature_ecosystem_impl.presentation.start.StartScreen
 
 @AndroidEntryPoint
 class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
@@ -63,7 +63,6 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -71,17 +70,13 @@ class ExploreFragment : SoraBaseFragment<ExploreViewModel>() {
         composable(
             route = ExploreRoutes.START,
         ) {
-            DiscoverScreen(
-                onAddLiquidityClicked = viewModel::onPoolPlus,
+            StartScreen(
                 scrollState = scrollState,
+                onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
+                onPoolShowMore = { navController.navigate(ExploreRoutes.ALL_POOLS) },
+                onTokenClicked = viewModel::onTokenClicked,
+                onPoolClicked = viewModel::onPoolClicked,
             )
-//            StartScreen(
-//                scrollState = scrollState,
-//                onCurrencyShowMore = { navController.navigate(ExploreRoutes.ALL_CURRENCIES) },
-//                onPoolShowMore = { navController.navigate(ExploreRoutes.ALL_POOLS) },
-//                onTokenClicked = viewModel::onTokenClicked,
-//                onPoolClicked = viewModel::onPoolClicked,
-//            )
         }
         composable(
             route = ExploreRoutes.ALL_CURRENCIES,
