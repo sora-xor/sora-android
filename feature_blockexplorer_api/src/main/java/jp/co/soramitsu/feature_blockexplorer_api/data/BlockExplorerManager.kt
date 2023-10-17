@@ -39,6 +39,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import jp.co.soramitsu.common.config.BuildConfigWrapper
 import jp.co.soramitsu.common.domain.AppStateProvider
+import jp.co.soramitsu.common.domain.RetryStrategyBuilder
 import jp.co.soramitsu.common.domain.fiatChange
 import jp.co.soramitsu.common.logger.FirebaseWrapper
 import jp.co.soramitsu.core_db.AppDatabase
@@ -46,6 +47,7 @@ import jp.co.soramitsu.core_db.model.FiatTokenPriceLocal
 import jp.co.soramitsu.core_db.model.ReferralLocal
 import jp.co.soramitsu.xnetworking.basic.common.Utils.toDoubleNan
 import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkClient
+import jp.co.soramitsu.xnetworking.basic.networkclient.SoramitsuNetworkException
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.SoraWalletBlockExplorerInfo
 import jp.co.soramitsu.xnetworking.sorawallet.blockexplorerinfo.sbapy.SbApyInfo
 import kotlinx.coroutines.sync.Mutex
@@ -73,22 +75,33 @@ class BlockExplorerManager @Inject constructor(
     }?.sbApy?.times(100)
 
     suspend fun getTokensLiquidity(tokenIds: List<String>): List<Pair<String, BigInteger>> =
-        assetsInfo ?: getAssetsInfoInternal(tokenIds).also {
-            assetsInfo = it
+        assetsInfo ?: mutex.withLock {
+            assetsInfo ?: getAssetsInfoInternal(tokenIds).also {
+                assetsInfo = it
+            }
         }
 
-    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> = mutex.withLock {
+    private suspend fun getAssetsInfoInternal(tokenIds: List<String>): List<Pair<String, BigInteger>> =
         runCatching {
             val selected = soraConfigManager.getSelectedCurrency()
             val tokens = db.assetDao().getFiatTokenPriceLocal(selected.code)
             val yesterdayHour = yesterday()
             val resultList = mutableListOf<Pair<String, BigInteger>>()
             val fiats = mutableListOf<FiatTokenPriceLocal>()
-            info.getAssetsInfo(tokenIds, yesterdayHour).forEach { assetInfo ->
+            RetryStrategyBuilder.build().retryIf(
+                retries = 3,
+                predicate = { t -> t is SoramitsuNetworkException },
+                block = { info.getAssetsInfo(tokenIds, yesterdayHour) },
+            ).forEach { assetInfo ->
                 val dbValue = tokens.find { it.tokenIdFiat == assetInfo.tokenId }
                 val delta = assetInfo.hourDelta
                 if (dbValue != null && delta != null) {
-                    fiats.add(dbValue.copy(fiatPricePrevH = delta, fiatPricePrevHTime = yesterdayHour))
+                    fiats.add(
+                        dbValue.copy(
+                            fiatPricePrevH = delta,
+                            fiatPricePrevHTime = yesterdayHour
+                        )
+                    )
                 }
                 resultList.add(assetInfo.tokenId to BigInteger(assetInfo.liquidity))
             }
@@ -98,7 +111,6 @@ class BlockExplorerManager @Inject constructor(
             FirebaseWrapper.recordException(it)
             emptyList()
         }
-    }
 
     suspend fun updatePoolsSbApy() {
         updateSbApyInternal()
