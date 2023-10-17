@@ -32,62 +32,63 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.domain
 
-import kotlinx.coroutines.delay
+import jp.co.soramitsu.test_shared.MainCoroutineRule
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Rule
+import org.junit.Test
 
-interface RepeatStrategy {
-    suspend fun repeat(block: suspend () -> Unit)
-}
+class RetryStrategyTests {
+    @get:Rule
+    var mainCoroutineRule = MainCoroutineRule()
 
-interface RetryStrategy {
-    @Throws(RuntimeException::class)
-    suspend fun <T> retryIf(
-        retries: Int,
-        predicate: suspend (cause: Throwable) -> Boolean,
-        block: suspend () -> T,
-    ): T
-}
-
-object RepeatStrategyBuilder {
-    fun infinite(): RepeatStrategy = InfiniteRepeatStrategy()
-}
-
-object RetryStrategyBuilder {
-    fun build(): RetryStrategy = RetryStrategyImpl()
-}
-
-private class InfiniteRepeatStrategy : RepeatStrategy {
-    override suspend fun repeat(block: suspend () -> Unit) {
-        while (true) {
-            block.invoke()
-        }
+    @Test
+    fun `retry test 01`() = runTest {
+        val retry = RetryStrategyBuilder.build()
+        val res = retry.retryIf(
+            3,
+            { t -> t is IllegalArgumentException },
+            { okTime1() },
+        )
+        assertEquals(12, res)
     }
-}
 
-private class RetryStrategyImpl : RetryStrategy {
+    @Test
+    fun `retry test 02`() = runTest {
+        val retry = RetryStrategyBuilder.build()
+        val res = retry.retryIf(
+            3,
+            { t -> t is IllegalArgumentException },
+            { okTime2() },
+        )
+        assertEquals(2, res)
+    }
 
-    override suspend fun <T> retryIf(
-        retries: Int,
-        predicate: suspend (cause: Throwable) -> Boolean,
-        block: suspend () -> T,
-    ): T {
-        var attempt = 0
-        var shallRetry: Boolean
-        do {
-            shallRetry = false
-            runCatching {
-                block.invoke()
-            }.onSuccess {
-                return it
-            }.onFailure { t ->
-                if (predicate(t) && attempt < retries) {
-                    shallRetry = true
-                    attempt++
-                    delay(500)
-                } else {
-                    throw t
-                }
-            }
-        } while (shallRetry)
-        throw RuntimeException("RetryStrategy")
+    @Test(expected = IllegalArgumentException::class)
+    fun `retry test 03`() = runTest {
+        val retry = RetryStrategyBuilder.build()
+        retry.retryIf(
+            3,
+            { t -> t is IllegalArgumentException },
+            { okTime3() },
+        )
+    }
+
+    private fun okTime1(): Int {
+        return 12
+    }
+
+    private var count2 = 0
+    private fun okTime2(): Int {
+        count2++
+        if (count2 == 1) throw IllegalArgumentException("count2=$count2")
+        return count2
+    }
+
+    private var count3 = 0
+    private fun okTime3(): Int {
+        count3++
+        if (count3 < 5) throw IllegalArgumentException("count3=$count3")
+        return count3
     }
 }

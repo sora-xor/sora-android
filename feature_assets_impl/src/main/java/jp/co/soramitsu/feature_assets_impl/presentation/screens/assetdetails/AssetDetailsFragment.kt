@@ -34,15 +34,10 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.assetdetails
 
 import android.os.Bundle
 import android.view.View
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -59,11 +54,6 @@ import jp.co.soramitsu.common.base.SoraBaseFragment
 import jp.co.soramitsu.common.base.theOnlyRoute
 import jp.co.soramitsu.common.domain.BottomBarController
 import jp.co.soramitsu.core_di.viewmodel.CustomViewModelFactory
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsBalanceCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsPooledCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsRecentActivityCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetDetailsTokenPriceCard
-import jp.co.soramitsu.feature_assets_impl.presentation.components.compose.assetdetails.AssetIdCard
 import jp.co.soramitsu.ui_core.resources.Dimens
 
 @AndroidEntryPoint
@@ -90,7 +80,7 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
         }
     }
 
-    @OptIn(ExperimentalAnimationApi::class, ExperimentalMaterialApi::class)
+    @OptIn(ExperimentalMaterialApi::class)
     override fun NavGraphBuilder.content(
         scrollState: ScrollState,
         navController: NavHostController
@@ -110,63 +100,24 @@ class AssetDetailsFragment : SoraBaseFragment<AssetDetailsViewModel>() {
                     .padding(horizontal = Dimens.x2)
                     .pullRefresh(pullRefresh, true)
             ) {
-                if (stateData.xorBalance != null) {
-                    XorBalancesDialog(
-                        state = stateData.xorBalance,
-                        onClick = viewModel::onBalanceClick
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                ) {
-                    AssetDetailsTokenPriceCard(
-                        tokenName = stateData.tokenName,
-                        tokenSymbol = stateData.tokenSymbol,
-                        tokenPrice = stateData.price,
-                        tokenPriceChange = stateData.priceChange,
-                        iconUri = stateData.tokenIcon,
-                    )
-                    Spacer(modifier = Modifier.size(Dimens.x2))
-                    AssetDetailsBalanceCard(
-                        amount = stateData.transferableBalance,
-                        amountFiat = stateData.transferableBalanceFiat,
-                        frozenAmount = stateData.frozenBalance,
-                        frozenAmountFiat = stateData.frozenBalanceFiat,
-                        buyCryptoAvailable = stateData.buyCryptoAvailable,
-                        isTransferableAmountAvailable = stateData.isTransferableBalanceAvailable,
-                        hasHistory = stateData.events.isNotEmpty(),
-                        onSendClick = viewModel::sendClicked,
-                        onReceiveClick = viewModel::receiveClicked,
-                        onSwapClick = viewModel::swapClicked,
-                        onBalanceClick = viewModel::onBalanceClick,
-                        onBuyCryptoClick = viewModel::onBuyCrypto
-                    )
-                    if (stateData.poolsState.pools.isNotEmpty()) {
-                        Spacer(modifier = Modifier.size(Dimens.x2))
-                        AssetDetailsPooledCard(
-                            title = stateData.poolsCardTitle,
-                            state = stateData.poolsState,
-                            onPoolClick = viewModel::onPoolClick
-                        )
-                    }
-                    if (stateData.events.isNotEmpty()) {
-                        Spacer(modifier = Modifier.size(Dimens.x2))
-                        AssetDetailsRecentActivityCard(
-                            events = stateData.events,
-                            onShowMoreActivity = viewModel::onRecentClick,
-                            onHistoryItemClick = viewModel::onHistoryItemClick
-                        )
-                    }
-                    Spacer(modifier = Modifier.size(Dimens.x2))
-                    AssetIdCard(
-                        id = stateData.tokenId,
-                        onClick = viewModel::onAssetIdClick
-                    )
-                    Spacer(modifier = Modifier.size(Dimens.x2))
-                }
-                PullRefreshIndicator(assetState.loading, pullRefresh, Modifier.align(Alignment.TopCenter))
+                AssetDetailsScreen(
+                    stateData = stateData,
+                    scrollState = scrollState,
+                    onBalanceClick = viewModel::onBalanceClick,
+                    onSendClick = viewModel::sendClicked,
+                    onReceiveClick = viewModel::receiveClicked,
+                    onSwapClick = viewModel::swapClicked,
+                    onBuyCrypto = viewModel::onBuyCrypto,
+                    onPoolClick = viewModel::onPoolClick,
+                    onRecentClick = viewModel::onRecentClick,
+                    onHistoryItemClick = viewModel::onHistoryItemClick,
+                    onAssetIdClick = viewModel::onAssetIdClick,
+                )
+                PullRefreshIndicator(
+                    assetState.loading,
+                    pullRefresh,
+                    Modifier.align(Alignment.TopCenter)
+                )
             }
         }
     }
