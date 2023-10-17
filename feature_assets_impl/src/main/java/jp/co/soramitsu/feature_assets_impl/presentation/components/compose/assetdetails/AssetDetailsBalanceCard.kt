@@ -74,7 +74,6 @@ internal fun AssetDetailsBalanceCard(
     frozenAmount: String? = null,
     frozenAmountFiat: String? = null,
     isTransferableAmountAvailable: Boolean = false,
-    hasHistory: Boolean = false,
     buyCryptoAvailable: Boolean = false,
     onSendClick: () -> Unit,
     onReceiveClick: () -> Unit,
@@ -96,20 +95,59 @@ internal fun AssetDetailsBalanceCard(
                 .fillMaxWidth()
                 .wrapContentHeight()
         ) {
-            if (hasHistory) {
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = Dimens.x3)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(id = R.string.asset_details_liquid_balance),
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.headline2
+                )
+                Text(
+                    text = amountFiat,
+                    color = MaterialTheme.customColors.fgPrimary,
+                    style = MaterialTheme.customTypography.headline2
+                )
+            }
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = Dimens.x3)
+                    .fillMaxWidth(),
+                text = amount,
+                style = MaterialTheme.customTypography.textXSBold,
+                color = MaterialTheme.customColors.fgSecondary
+            )
+
+            Spacer(modifier = Modifier.height(Dimens.x2))
+
+            if (frozenAmount != null && frozenAmountFiat != null) {
                 Row(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    Row {
+                        Text(
+                            text = stringResource(id = R.string.details_frozen),
+                            style = MaterialTheme.customTypography.headline2,
+                            color = MaterialTheme.customColors.fgSecondary
+                        )
+                        Icon(
+                            modifier = Modifier
+                                .padding(start = Dimens.x1)
+                                .align(Alignment.CenterVertically)
+                                .size(Dimens.x2),
+                            painter = painterResource(id = R.drawable.ic_neu_lock),
+                            tint = MaterialTheme.customColors.fgSecondary,
+                            contentDescription = "",
+                        )
+                    }
                     Text(
-                        text = stringResource(id = R.string.asset_details_liquid_balance),
-                        color = MaterialTheme.customColors.fgPrimary,
-                        style = MaterialTheme.customTypography.headline2
-                    )
-                    Text(
-                        text = amountFiat,
+                        text = frozenAmountFiat,
                         color = MaterialTheme.customColors.fgPrimary,
                         style = MaterialTheme.customTypography.headline2
                     )
@@ -118,60 +156,19 @@ internal fun AssetDetailsBalanceCard(
                     modifier = Modifier
                         .padding(horizontal = Dimens.x3)
                         .fillMaxWidth(),
-                    text = amount,
+                    text = frozenAmount,
                     style = MaterialTheme.customTypography.textXSBold,
                     color = MaterialTheme.customColors.fgSecondary
                 )
-
-                Spacer(modifier = Modifier.height(Dimens.x2))
-
-                if (frozenAmount != null && frozenAmountFiat != null) {
-                    Row(
-                        modifier = Modifier
-                            .padding(horizontal = Dimens.x3)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.details_frozen),
-                                style = MaterialTheme.customTypography.headline2,
-                                color = MaterialTheme.customColors.fgSecondary
-                            )
-                            Icon(
-                                modifier = Modifier
-                                    .padding(start = Dimens.x1)
-                                    .align(Alignment.CenterVertically)
-                                    .size(Dimens.x2),
-                                painter = painterResource(id = R.drawable.ic_neu_lock),
-                                tint = MaterialTheme.customColors.fgSecondary,
-                                contentDescription = "",
-                            )
-                        }
-                        Text(
-                            text = frozenAmountFiat,
-                            color = MaterialTheme.customColors.fgPrimary,
-                            style = MaterialTheme.customTypography.headline2
-                        )
-                    }
-                    Text(
-                        modifier = Modifier
-                            .padding(horizontal = Dimens.x3)
-                            .fillMaxWidth(),
-                        text = frozenAmount,
-                        style = MaterialTheme.customTypography.textXSBold,
-                        color = MaterialTheme.customColors.fgSecondary
-                    )
-                }
-                Divider(
-                    color = MaterialTheme.customColors.fgOutline,
-                    thickness = 1.dp,
-                    modifier = Modifier
-                        .padding(horizontal = Dimens.x3, vertical = Dimens.x2)
-                        .height(1.dp)
-                        .fillMaxWidth()
-                )
             }
+            Divider(
+                color = MaterialTheme.customColors.fgOutline,
+                thickness = 1.dp,
+                modifier = Modifier
+                    .padding(horizontal = Dimens.x3, vertical = Dimens.x2)
+                    .height(1.dp)
+                    .fillMaxWidth()
+            )
             Row(
                 modifier = Modifier
                     .wrapContentHeight()
@@ -255,7 +252,6 @@ private fun PreviewAssetDetailsBalanceCard() {
         frozenAmount = "12.3 XOR",
         frozenAmountFiat = "$ 1000.1",
         buyCryptoAvailable = true,
-        hasHistory = true,
         isTransferableAmountAvailable = true,
         onSendClick = { },
         onReceiveClick = { },
