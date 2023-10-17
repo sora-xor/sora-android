@@ -50,5 +50,5 @@ internal data class EcoSystemPoolsState(
 )
 
 internal val initialEcoSystemPoolsState = EcoSystemPoolsState(
-    pools = List(5) { i -> basicPoolListItemStateEmpty },
+    pools = List(5) { _ -> basicPoolListItemStateEmpty },
 )

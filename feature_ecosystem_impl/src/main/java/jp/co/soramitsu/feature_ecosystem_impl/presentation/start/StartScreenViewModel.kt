@@ -49,7 +49,6 @@ import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemPools
 import jp.co.soramitsu.feature_ecosystem_impl.presentation.initialEcoSystemTokensState
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -66,7 +65,7 @@ internal class StartScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            poolsUpdateSubscription.start().collect()
+            poolsUpdateSubscription.updateBasicPools()
         }
     }
 

@@ -34,11 +34,9 @@ package jp.co.soramitsu.common_wallet.presentation.compose.states
 
 import jp.co.soramitsu.common.domain.AssetHolder
 import jp.co.soramitsu.common.domain.formatFiat
-import jp.co.soramitsu.common.domain.formatFiatChange
 import jp.co.soramitsu.common.domain.iconUri
 import jp.co.soramitsu.common.util.NumbersFormatter
 import jp.co.soramitsu.common.util.StringPair
-import jp.co.soramitsu.common.util.ext.isNanZero
 import jp.co.soramitsu.common_wallet.domain.model.CommonUserPoolData
 
 class PoolsListState(
@@ -86,12 +84,13 @@ fun mapPoolsData(
                 token2Icon = poolData.basic.targetToken.iconUri(),
                 fiat = formatted[i]?.first?.let { poolData.basic.baseToken.formatFiat(it, numbersFormatter) }
                     .orEmpty(),
-                fiatChange = formatted[i]?.second?.let {
-                    formatFiatChange(
-                        it.isNanZero(),
-                        numbersFormatter
-                    )
-                }.orEmpty(),
+                fiatChange = "",
+//                fiatChange = formatted[i]?.second?.let {
+//                    formatFiatChange(
+//                        it.isNanZero(),
+//                        numbersFormatter
+//                    )
+//                }.orEmpty(),
                 tokenIds = poolData.basic.baseToken.id to poolData.basic.targetToken.id,
             )
         }

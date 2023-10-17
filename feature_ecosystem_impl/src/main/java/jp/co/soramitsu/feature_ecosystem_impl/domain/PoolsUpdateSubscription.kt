@@ -37,9 +37,11 @@ import jp.co.soramitsu.feature_polkaswap_api.domain.interfaces.PolkaswapSubscrip
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 
 internal interface PoolsUpdateSubscription {
     fun start(): Flow<String>
+    suspend fun updateBasicPools()
 }
 
 internal class PoolsUpdateSubscriptionImpl(
@@ -54,4 +56,9 @@ internal class PoolsUpdateSubscriptionImpl(
                 repository.updateBasicPools()
             }
             .flowOn(coroutineManager.io)
+
+    override suspend fun updateBasicPools() =
+        withContext(coroutineManager.io) {
+            repository.updateBasicPools()
+        }
 }
