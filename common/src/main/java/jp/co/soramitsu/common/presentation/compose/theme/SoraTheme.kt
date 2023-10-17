@@ -63,7 +63,7 @@ import jp.co.soramitsu.ui_core.theme.lightColors
 @Composable
 fun SoraAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     AppTheme(
         darkTheme = darkTheme,
@@ -71,7 +71,7 @@ fun SoraAppTheme(
         darkColors = soraDarkColors,
         typography = soraTypography,
         borderRadius = soraBorderRadius,
-        content = content
+        content = content,
     )
 }
 

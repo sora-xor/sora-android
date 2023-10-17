@@ -194,7 +194,7 @@ class QRCodeFlowViewModel @Inject constructor(
             type = SoramitsuToolbarType.SmallCentered(),
             basic = BasicToolbarState(
                 title = R.string.qr_code,
-                navIcon = R.drawable.ic_cross,
+                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross,
             ),
         )
         loadReceiveByQrCodeScreenData()

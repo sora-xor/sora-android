@@ -129,7 +129,7 @@ fun BasicBannerCard(
                     order = Order.TERTIARY,
                     shape = CircleShape,
                     onClick = onCloseCard,
-                    leftIcon = painterResource(R.drawable.ic_cross),
+                    leftIcon = painterResource(jp.co.soramitsu.ui_core.R.drawable.ic_cross),
                 )
             }
         }

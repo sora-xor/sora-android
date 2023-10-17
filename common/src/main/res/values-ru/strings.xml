@@ -234,7 +234,7 @@
   <string name="edit_view">Режим редактирования</string>
   <string name="empty_recent_recipients">Адрес получателя будет отображен здесь.</string>
   <string name="empty_recent_recipients_2">Получатели появятся здесь</string>
-  <string name="enter_backup_password_title">Ввдите пароль резервной копии</string>
+  <string name="enter_backup_password_title">Введите пароль резервной копии</string>
   <string name="enter_password_description">Введите пароль резервной копии для выбранного аккаунта</string>
   <string name="enter_password_incorect_title">Неверный пароль</string>
   <string name="enter_password_title">Введите пароль</string>

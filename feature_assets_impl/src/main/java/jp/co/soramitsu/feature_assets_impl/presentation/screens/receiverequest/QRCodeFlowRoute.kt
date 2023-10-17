@@ -34,9 +34,9 @@ package jp.co.soramitsu.feature_assets_impl.presentation.screens.receiverequest
 
 sealed class QRCodeFlowRoute(val route: String) {
 
-    object MainScreen : QRCodeFlowRoute("QRCodeFlowMainScreen")
+    data object MainScreen : QRCodeFlowRoute("QRCodeFlowMainScreen")
 
-    object SelectToken : QRCodeFlowRoute("QRCodeFlowSelectToken")
+    data object SelectToken : QRCodeFlowRoute("QRCodeFlowSelectToken")
 
-    object ConfirmRequestByQRCode : QRCodeFlowRoute("QRCodeFlowConfirmRequest")
+    data object ConfirmRequestByQRCode : QRCodeFlowRoute("QRCodeFlowConfirmRequest")
 }

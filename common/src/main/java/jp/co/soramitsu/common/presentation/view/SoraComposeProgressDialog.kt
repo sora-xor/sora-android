@@ -36,10 +36,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import jp.co.soramitsu.common.presentation.compose.theme.ThemeColors
 import jp.co.soramitsu.ui_core.resources.Dimens
+import jp.co.soramitsu.ui_core.theme.customColors
 
 @Composable
 fun SoraProgressDialog(modifier: Modifier = Modifier) {
@@ -49,7 +50,7 @@ fun SoraProgressDialog(modifier: Modifier = Modifier) {
     ) {
         CircularProgressIndicator(
             Modifier.padding(Dimens.x2),
-            color = ThemeColors.Primary
+            color = MaterialTheme.customColors.accentPrimary,
         )
     }
 }
