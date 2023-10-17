@@ -140,7 +140,7 @@ play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.5.0.0 - SORA IBAN Balance"
+    releaseName = "3.6.0.0 - Night Mode"
 }
 
 dependencies {
