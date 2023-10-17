@@ -123,7 +123,7 @@ fun SoraCard(
                 order = Order.TERTIARY,
                 shape = CircleShape,
                 onClick = onCloseClicked,
-                leftIcon = painterResource(R.drawable.ic_cross),
+                leftIcon = painterResource(jp.co.soramitsu.ui_core.R.drawable.ic_cross),
             )
     }
 }

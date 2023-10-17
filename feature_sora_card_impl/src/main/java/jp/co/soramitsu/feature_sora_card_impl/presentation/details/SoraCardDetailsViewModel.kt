@@ -81,7 +81,7 @@ class SoraCardDetailsViewModel @Inject constructor(
             type = SoramitsuToolbarType.SmallCentered(),
             basic = BasicToolbarState(
                 title = R.string.sora_card_details_title,
-                navIcon = R.drawable.ic_cross,
+                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross,
             )
         )
 

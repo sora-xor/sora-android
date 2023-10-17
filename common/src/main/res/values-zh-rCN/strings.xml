@@ -41,7 +41,7 @@
   <string name="asset_to_send">待发送的资产</string>
   <string name="backup_account_already_exist">备份已存在。继续覆盖它。</string>
   <string name="backup_not_enough_space_error">备份失败。您的Google Drive空间不足，请释放一些空间并重试。</string>
-  <string name="backup_now">Backup now</string>
+  <string name="backup_now">立即备份</string>
   <string name="backup_password_mandatory_reqs_fulfilled">密码的强制要求已满足</string>
   <string name="backup_password_requirments">至少六个字符。为了更好的安全性，可以包含大写字母、数字和非字母字符。</string>
   <string name="backup_password_title">设置密码将加密您的Google备份。在恢复钱包时，您需要输入此密码。\n最小密码长度为6个字符。</string>
@@ -51,7 +51,7 @@
   <string name="buy_crypto_buy_xor_banner_title">购买XOR代币</string>
   <string name="buy_crypto_buy_xor_with_fiat_subtitle">用欧元购买或出售XOR代币</string>
   <string name="buy_crypto_buy_xor_with_fiat_title">用法币购买XOR</string>
-  <string name="cant_load_balance">Can\'t load balance</string>
+  <string name="cant_load_balance">无法加载余额</string>
   <string name="change_language">更改语言</string>
   <string name="change_pin">更改PIN码</string>
   <string name="choose_token">选择代币</string>
@@ -238,7 +238,7 @@
   <string name="explore_create_pool">创建池子</string>
   <string name="explore_provide_and_earn">提供流动性并获得奖励</string>
   <string name="explore_swap_tokens_on_sora">在SORA网络上进行代币兑换</string>
-  <string name="export_account_details_backup_description">如果您无法访问此设备，您的资金将会丢失，除非您备份！</string>
+  <string name="export_account_details_backup_description">如果你无法访问这台设备，除非你进行备份，否则你的资金将会丢失！</string>
   <string name="export_account_details_backup_options">备份选项</string>
   <string name="export_account_details_show_passphrase">显示密码短语</string>
   <string name="export_account_details_show_raw_seed">显示原始种子</string>
@@ -386,7 +386,7 @@
     <item quantity="other"> %s 秒剩余</item>
   </plurals>
   <string name="project_ended_template">结束%s</string>
-  <string name="protect_loss_access_funds">Protect yourself from losing access to your funds</string>
+  <string name="protect_loss_access_funds">保护自己免于失去对资金的访问权限</string>
   <string name="qr_code">QR 代码</string>
   <string name="qr_upload">从相册</string>
   <string name="receive_tokens">接收代币</string>
@@ -491,7 +491,7 @@
   <string name="sora_card_iban_headline">IBAN账户详情</string>
   <string name="sora_card_log_in_or_sign_up">登录或注册</string>
   <string name="sora_card_no_more_free_tries">没有更多的免费尝试</string>
-  <string name="sora_card_option_logout">退出 SORA 卡</string>
+  <string name="sora_card_option_logout">退出SORA卡</string>
   <string name="sora_card_option_logout_description">您即将退出 SORA Card。您仍然可以使用 SORA Card 独立应用程序，但余额将不再在 SORA 钱包中可用。</string>
   <string name="sora_card_refer_and_earn_action">推荐并赚取</string>
   <string name="sora_card_referral_headline">推荐SORA卡。\n获得20欧元奖金。</string>
@@ -512,7 +512,7 @@
   <string name="status_successful">成功的</string>
   <string name="status_title">状态</string>
   <string name="succesfully_imported_account_title">您已成功导入一个账户</string>
-  <string name="support_chat">Support chat</string>
+  <string name="support_chat">支持聊天</string>
   <string name="swap_confirmation_screen_warning_balance_afterwards_transaction_is_too_small">确保在此事务之后还剩下 %s。否则，您将无法进行其他交易。</string>
   <string name="switch_node">切换节点</string>
   <string name="system_appearance">系统外观</string>
@@ -530,7 +530,7 @@
   <string name="unexpected_error">发生了意外错误。\n\n您可以在SORA社区的@SORAhappiness Telegram聊天中解决此问题。</string>
   <string name="update_downloaded">SORA 应用程序的更新已下载并可以安装。 \n\n使用最新版本的应用程序很重要。 \n\n为了更新应用程序，需要重新启动。</string>
   <string name="update_install_now">您想现在安装更新吗？</string>
-  <string name="wallet_backup">Wallet backup</string>
+  <string name="wallet_backup">钱包备份</string>
   <string name="wallet_balance_locked">已被锁定</string>
   <string name="wallet_balance_reserved">已保留</string>
   <string name="wallet_bonded">已绑定</string>

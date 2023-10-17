@@ -91,7 +91,7 @@ class EditCardsHubViewModel @Inject constructor(
         _toolbarState.value = SoramitsuToolbarState(
             basic = BasicToolbarState(
                 title = R.string.edit_view,
-                navIcon = R.drawable.ic_cross_24
+                navIcon = jp.co.soramitsu.ui_core.R.drawable.ic_cross
             ),
             type = SoramitsuToolbarType.SmallCentered(),
         )

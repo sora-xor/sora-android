@@ -32,25 +32,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package jp.co.soramitsu.common.presentation.compose.theme.tokens
 
+import androidx.compose.ui.graphics.Color
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown10
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown30
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown5
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown50
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Brown90
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Green50
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Polkaswap5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Polkaswap50
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red5
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red50
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Red60
-import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.White100
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow30
 import jp.co.soramitsu.common.presentation.compose.theme.tokens.Colors.Yellow5
 
 object DayThemeColors {
 
-    val AccentPrimary = Red50
+    val AccentPrimary = Color(0xFFEE2233)
 
     val AccentPrimaryContainer = Red5
 
@@ -64,7 +59,7 @@ object DayThemeColors {
 
     val BgPage = Brown5
 
-    val BgSurface = White100
+    val BgSurface = Color(0xffffffff)
 
     val BgSurfaceVariant = Brown10
 
@@ -80,7 +75,7 @@ object DayThemeColors {
 
     val FgOutline = Brown5
 
-    val StatusSuccess = Green50
+    val StatusSuccess = Color(0xFF169974)
 
     val StatusSuccessContainer = Green5
 
@@ -88,11 +83,7 @@ object DayThemeColors {
 
     val StatusWarningContainer = Yellow5
 
-    val StatusError = Red60
+    val StatusError = Color(0xFFCB0F1F)
 
     val StatusErrorContainer = Red5
-
-    val AdditionalPolkaswap = Polkaswap50
-
-    val AdditionalPolkaswapContainer = Polkaswap5
 }
