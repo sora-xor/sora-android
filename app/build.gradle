@@ -140,7 +140,7 @@ play {
     serviceAccountCredentials = file(System.env.CI_PLAY_KEY ?: "../key/fake.json")
     track = "internal"
     releaseStatus = ReleaseStatus.DRAFT
-    releaseName = "3.6.0.0 - Night Mode"
+    releaseName = "3.6.0.1 - Night Mode"
 }
 
 dependencies {
