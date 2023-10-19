@@ -171,7 +171,6 @@ dependencies {
     implementation project(":feature_blockexplorer_impl")
     implementation project(":feature_sora_card_api")
     implementation project(":feature_sora_card_impl")
-    implementation project(":feature_ecosystem_api")
     implementation project(":feature_ecosystem_impl")
     implementation project(":sorasubstrate")
     implementation project(":soracrypro")

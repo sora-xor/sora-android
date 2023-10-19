@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.BleachedButton
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -90,6 +91,7 @@ fun BasicBannerCard(
                 val (card, image) = createRefs()
                 CardContent(
                     modifier = Modifier
+                        .testTagAsId("StartInviting")
                         .constrainAs(card) {
                             top.linkTo(parent.top)
                             start.linkTo(parent.start)

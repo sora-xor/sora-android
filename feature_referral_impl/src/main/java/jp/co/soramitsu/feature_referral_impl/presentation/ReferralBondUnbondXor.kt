@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import jp.co.soramitsu.common.R
 import jp.co.soramitsu.common.presentation.compose.components.DetailsItemNetworkFee
 import jp.co.soramitsu.common.presentation.compose.theme.SoraAppTheme
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.common.view.WarningTextCard
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
@@ -152,6 +153,7 @@ fun ReferralBondXor(
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
+                        .testTagAsId("BondXor")
                         .fillMaxWidth(),
                     size = Size.Large,
                     order = Order.PRIMARY,
@@ -241,6 +243,7 @@ fun ReferralUnbondXor(
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
+                        .testTagAsId("UnbondXor")
                         .fillMaxWidth(),
                     size = Size.Large,
                     order = Order.PRIMARY,
@@ -289,7 +292,9 @@ fun InvitationsEnterField(
                 tint = MaterialTheme.customColors.fgSecondary,
             )
             TextField(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .testTagAsId("InvitationsInput")
+                    .weight(1f),
                 value = count.toString(),
                 onValueChange = {
                     onCountChange.invoke(it.toIntOrNull() ?: 0)
