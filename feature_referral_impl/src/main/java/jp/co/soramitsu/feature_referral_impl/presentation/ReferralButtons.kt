@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -71,6 +72,7 @@ internal fun ReferralButtons(
 
         TonalButton(
             modifier = Modifier
+                .testTagAsId("BottomButton")
                 .padding(top = Dimens.x1)
                 .fillMaxWidth(),
             text = stringResource(bottomButtonText),

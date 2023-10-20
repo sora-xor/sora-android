@@ -25,7 +25,6 @@ include ':feature_polkaswap_impl'
 include ':feature_assets_api'
 include ':feature_assets_impl'
 
-include ':feature_ecosystem_api'
 include ':feature_ecosystem_impl'
 
 include ':android-foundation'

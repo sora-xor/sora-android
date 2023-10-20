@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.TonalButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
 import jp.co.soramitsu.ui_core.component.button.properties.Size
@@ -81,6 +82,7 @@ fun YourReferrerCard(
             } else {
                 TonalButton(
                     modifier = Modifier
+                        .testTagAsId("EnterReferrersLink")
                         .fillMaxWidth(),
                     text = stringResource(R.string.referral_enter_link_title),
                     onClick = onEnterReferrersLink,

@@ -49,6 +49,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.LoaderWrapper
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -89,6 +90,7 @@ fun ReferrerInput(
 
             InputText(
                 modifier = Modifier
+                    .testTagAsId("LinkAddressInput")
                     .background(MaterialTheme.customColors.bgSurface)
                     .fillMaxWidth()
                     .wrapContentHeight(),
@@ -109,6 +111,7 @@ fun ReferrerInput(
             ) { modifier, elevation ->
                 FilledButton(
                     modifier = modifier
+                        .testTagAsId("Activate")
                         .fillMaxWidth()
                         .padding(top = Dimens.x3),
                     size = Size.Large,

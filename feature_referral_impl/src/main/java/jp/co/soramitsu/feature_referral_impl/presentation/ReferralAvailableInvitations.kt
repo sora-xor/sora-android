@@ -47,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import jp.co.soramitsu.common.R
+import jp.co.soramitsu.common.util.ext.testTagAsId
 import jp.co.soramitsu.ui_core.component.button.FilledButton
 import jp.co.soramitsu.ui_core.component.button.TextButton
 import jp.co.soramitsu.ui_core.component.button.properties.Order
@@ -136,6 +137,7 @@ fun ReferralAvailableInvitationsCard(
 
             FilledButton(
                 modifier = Modifier
+                    .testTagAsId("GetMoreInvitations")
                     .padding(top = Dimens.x1)
                     .fillMaxWidth(),
                 text = stringResource(R.string.referral_get_more_invitation_button_title),
@@ -147,6 +149,7 @@ fun ReferralAvailableInvitationsCard(
             if (state.invitationsCount > 0) {
                 TextButton(
                     modifier = Modifier
+                        .testTagAsId("UnbondXor")
                         .padding(top = Dimens.x1)
                         .fillMaxWidth(),
                     text = stringResource(id = R.string.referral_unbond_button_title),
@@ -166,7 +169,10 @@ fun PreviewReferralAvailableInvitationsCard() {
         state = ReferralInvitationsCardState(
             "Available invitations",
             5,
-            WrappedTextState(title = "Invitations Link", text = "polkaswap.io/#/referral/cnVyaue39dssBc2bReZycusLdys3vbeoz2irRF8BbwVcdCNmm"),
+            WrappedTextState(
+                title = "Invitations Link",
+                text = "polkaswap.io/#/referral/cnVyaue39dssBc2bReZycusLdys3vbeoz2irRF8BbwVcdCNmm"
+            ),
             "0.0008 XOR",
             referrals = ReferralsCardState()
         ),
