@@ -80,7 +80,7 @@ fun Modifier.shake(enabled: Boolean, onAnimationEnd: () -> Unit = {}) = composed
                 animation = tween(durationMillis = 50, easing = LinearEasing),
                 repeatMode = RepeatMode.Reverse
             ),
-            finishedListener = { onAnimationEnd() }
+            finishedListener = { onAnimationEnd() }, label = ""
         )
 
         Modifier.graphicsLayer {
